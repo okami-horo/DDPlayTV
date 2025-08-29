@@ -78,29 +78,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 10.提取下载链接
-      - name: extract download links
-        if: steps.generate_release.outputs.assets
-        run: |
-          echo "${{ steps.generate_release.outputs.assets }}" > download_link.txt
-          echo `grep -P -o "(?<=browser_download_url:)\w\S+?(?=})" download_link.txt` > download_link.txt
-          echo 'DOWNLOAD_LINKS<<EOF' >> $GITHUB_ENV
-          cat download_link.txt | sed 's/ /\\n/g' >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
-
-      # 11.推送打包消息到钉钉
-      - name: push package message
-        if: steps.generate_release.outputs.assets
-        uses: ghostoy/dingtalk-action@master
-        with:
-          webhook: ${{ secrets.DINGTALK_WEBHOOK}}
-          secret: ${{ secrets.DINGTALK_SECRET }}
-          msgtype: text
-          content: |
-            {
-              "content": "打包版本：v${{ env.BUILD_VERSION }}\n下载链接：\n${{ env.DOWNLOAD_LINKS }}\n"
-            }
-          at: |
-            {
-              "isAtAll": true
-            }
