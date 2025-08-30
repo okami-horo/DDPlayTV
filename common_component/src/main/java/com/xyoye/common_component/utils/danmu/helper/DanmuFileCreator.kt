@@ -4,6 +4,7 @@ import com.xyoye.common_component.extension.checkDirectory
 import com.xyoye.common_component.extension.isValid
 import com.xyoye.common_component.extension.toText
 import com.xyoye.common_component.utils.DiskUtils
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.PathHelper
 import java.io.File
 import java.io.IOException
@@ -39,6 +40,11 @@ object DanmuFileCreator {
             danmuFile.createNewFile()
             return danmuFile
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "DanmuFileCreator.create",
+                "创建弹幕文件失败: $animeTitle - $episodeTitle"
+            )
             return null
         }
     }

@@ -4,6 +4,7 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.extension.isInvalid
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.isVideoFile
 import com.xyoye.data_component.entity.VideoEntity
 import java.io.File
@@ -21,6 +22,11 @@ object VideoScan {
         return try {
             traverse(File(filePath))
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "VideoScan.traverse",
+                "遍历视频文件失败: $filePath"
+            )
             e.printStackTrace()
             emptyList()
         }
@@ -81,6 +87,11 @@ object VideoScan {
                 ?.toLongOrNull()
                 ?: 0
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "VideoScan.getVideoDuration",
+                "获取视频时长失败: ${videoFile.absolutePath}"
+            )
             e.printStackTrace()
             0
         } finally {

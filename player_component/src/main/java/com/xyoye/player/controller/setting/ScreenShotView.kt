@@ -27,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2021/5/2.
@@ -165,6 +166,12 @@ class ScreenShotView(
         return try {
             PlayRecorder.generateRenderImage(renderView, videoSize)
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ScreenShotView",
+                "generateVideoImage",
+                "Failed to generate video screenshot"
+            )
             e.printStackTrace()
             null
         }

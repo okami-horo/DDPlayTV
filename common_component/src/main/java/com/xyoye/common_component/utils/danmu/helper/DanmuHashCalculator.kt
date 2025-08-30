@@ -1,6 +1,7 @@
 package com.xyoye.common_component.utils.danmu.helper
 
 import com.xyoye.common_component.extension.toHexString
+import com.xyoye.common_component.utils.ErrorReportHelper
 import java.io.InputStream
 import java.security.MessageDigest
 
@@ -43,6 +44,11 @@ object DanmuHashCalculator {
             }
             MD5.digest().toHexString()
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "DanmuHashCalculator.calculate",
+                "计算弹幕哈希值失败"
+            )
             e.printStackTrace()
             null
         }

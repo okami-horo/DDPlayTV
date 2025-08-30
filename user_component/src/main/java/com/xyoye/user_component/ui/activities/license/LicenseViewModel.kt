@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.base.app.BaseApplication
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
 import com.xyoye.common_component.utils.getFileNameNoExtension
 import kotlinx.coroutines.Dispatchers
@@ -65,6 +66,12 @@ class LicenseViewModel : BaseViewModel() {
 
             pair = Pair(projectName, licenseBuilder.toString())
         } catch (t: Throwable) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                t,
+                "LicenseViewModel",
+                "getLicense",
+                "Failed to read license file: $fileName"
+            )
             t.printStackTrace()
         } finally {
             IOUtils.closeIO(bufferedReader)

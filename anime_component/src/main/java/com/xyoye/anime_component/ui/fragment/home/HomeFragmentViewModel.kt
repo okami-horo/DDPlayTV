@@ -6,6 +6,7 @@ import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.AnimeRepository
 import com.xyoye.common_component.network.repository.OtherRepository
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.data.BangumiAnimeData
 import com.xyoye.data_component.data.BannerData
 import kotlinx.coroutines.launch
@@ -24,7 +25,14 @@ class HomeFragmentViewModel : BaseViewModel() {
             val result = AnimeRepository.getWeeklyAnime()
 
             if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
+                val exception = result.exceptionOrNull()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    exception ?: RuntimeException("Get weekly anime failed with unknown error"),
+                    "HomeFragmentViewModel",
+                    "getWeeklyAnime",
+                    "获取每周动画数据失败"
+                )
+                exception?.message?.toastError()
                 return@launch
             }
 
@@ -39,7 +47,14 @@ class HomeFragmentViewModel : BaseViewModel() {
             val result = OtherRepository.getHomeBanner()
 
             if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
+                val exception = result.exceptionOrNull()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    exception ?: RuntimeException("Get home banner failed with unknown error"),
+                    "HomeFragmentViewModel",
+                    "getBanners",
+                    "获取首页横幅数据失败"
+                )
+                exception?.message?.toastError()
                 return@launch
             }
 

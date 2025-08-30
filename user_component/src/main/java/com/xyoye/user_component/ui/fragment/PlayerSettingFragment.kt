@@ -7,6 +7,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import com.xyoye.common_component.config.PlayerConfig
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.enums.*
 import com.xyoye.user_component.R
 
@@ -145,18 +146,29 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
     inner class PlayerSettingDataStore : PreferenceDataStore() {
 
         override fun getString(key: String?, defValue: String?): String? {
-            return when (key) {
+            return try {
+                when (key) {
                 "player_type" -> PlayerConfig.getUsePlayerType().toString()
                 "pixel_format_type" -> PlayerConfig.getUsePixelFormat()
                 "vlc_pixel_format_type" -> PlayerConfig.getUseVLCPixelFormat()
                 "vlc_hardware_acceleration" -> PlayerConfig.getUseVLCHWDecoder().toString()
                 "vlc_audio_output" -> PlayerConfig.getUseVLCAudioOutput()
-                else -> super.getString(key, defValue)
+                    else -> super.getString(key, defValue)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayerSettingDataStore",
+                    "getString",
+                    "Failed to get string value for key: $key"
+                )
+                defValue
             }
         }
 
         override fun putString(key: String?, value: String?) {
-            if (value != null) {
+            try {
+                if (value != null) {
                 when (key) {
                     "player_type" -> PlayerConfig.putUsePlayerType(value.toInt())
                     "pixel_format_type" -> PlayerConfig.putUsePixelFormat(value)
@@ -165,28 +177,55 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                     "vlc_audio_output" -> PlayerConfig.putUseVLCAudioOutput(value)
                     else -> super.putString(key, value)
                 }
-            } else {
-                super.putString(key, value)
+                } else {
+                    super.putString(key, value)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayerSettingDataStore",
+                    "putString",
+                    "Failed to put string value for key: $key, value: $value"
+                )
             }
         }
 
         override fun getBoolean(key: String?, defValue: Boolean): Boolean {
-            return when (key) {
+            return try {
+                when (key) {
                 "media_code_c" -> PlayerConfig.isUseMediaCodeC()
                 "media_code_c_h265" -> PlayerConfig.isUseMediaCodeCH265()
                 "open_sl_es" -> PlayerConfig.isUseOpenSlEs()
                 "surface_renders" -> PlayerConfig.isUseSurfaceView()
-                else -> super.getBoolean(key, defValue)
+                    else -> super.getBoolean(key, defValue)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayerSettingDataStore",
+                    "getBoolean",
+                    "Failed to get boolean value for key: $key"
+                )
+                defValue
             }
         }
 
         override fun putBoolean(key: String?, value: Boolean) {
-            when (key) {
+            try {
+                when (key) {
                 "media_code_c" -> PlayerConfig.putUseMediaCodeC(value)
                 "media_code_c_h265" -> PlayerConfig.putUseMediaCodeCH265(value)
                 "open_sl_es" -> PlayerConfig.putUseOpenSlEs(value)
                 "surface_renders" -> PlayerConfig.putUseSurfaceView(value)
-                else -> super.putBoolean(key, value)
+                    else -> super.putBoolean(key, value)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayerSettingDataStore",
+                    "putBoolean",
+                    "Failed to put boolean value for key: $key, value: $value"
+                )
             }
         }
     }

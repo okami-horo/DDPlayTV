@@ -14,6 +14,7 @@ import java.io.InputStream
 import java.io.InterruptedIOException
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * <pre>
@@ -65,6 +66,12 @@ class OkHttpUrlSource : Source {
             sourceInfo = SourceInfo(sourceInfo.url, length, mineType)
             sourceInfoStorage.put(sourceInfo.url, sourceInfo)
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "OkHttpUrlSource",
+                "open",
+                "Error opening connection for ${sourceInfo.url} with offset $offset"
+            )
             throw ProxyCacheException(
                 "Error opening connection for " + sourceInfo.url + " with offset " + offset, e
             )
@@ -85,11 +92,23 @@ class OkHttpUrlSource : Source {
         return try {
             inputStream!!.read(buffer, 0, buffer!!.size)
         } catch (e: InterruptedIOException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "OkHttpUrlSource",
+                "read",
+                "Reading source ${sourceInfo.url} is interrupted"
+            )
             throw InterruptedProxyCacheException(
                 "Reading source ${sourceInfo.url} is interrupted",
                 e
             )
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "OkHttpUrlSource",
+                "read",
+                "Error reading data from ${sourceInfo.url}"
+            )
             throw ProxyCacheException("Error reading data from ${sourceInfo.url}", e)
         }
     }
@@ -115,6 +134,12 @@ class OkHttpUrlSource : Source {
             sourceInfoStorage.put(sourceInfo.url, sourceInfo)
             Log.d("Source info fetched: $sourceInfo")
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "OkHttpUrlSource",
+                "fetchContentInfo",
+                "Error fetching info from ${sourceInfo.url}"
+            )
             Log.e("Error fetching info from ${sourceInfo.url}", e)
         }
     }

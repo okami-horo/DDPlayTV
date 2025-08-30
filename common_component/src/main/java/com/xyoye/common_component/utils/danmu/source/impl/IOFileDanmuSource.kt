@@ -1,6 +1,7 @@
 package com.xyoye.common_component.utils.danmu.source.impl
 
 import com.xyoye.common_component.utils.danmu.source.AbstractDanmuSource
+import com.xyoye.common_component.utils.ErrorReportHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -22,6 +23,11 @@ class IOFileDanmuSource(
                 FileInputStream(file)
             }
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "IOFileDanmuSource.getStream",
+                "打开弹幕IO文件流失败: $path"
+            )
             e.printStackTrace()
             null
         }

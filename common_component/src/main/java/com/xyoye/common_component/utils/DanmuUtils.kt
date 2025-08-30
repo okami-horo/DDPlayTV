@@ -58,6 +58,11 @@ object DanmuUtils {
 
             tempFile.renameTo(danmuFile)
         } catch (e: Throwable) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "DanmuUtils.appendDanmu",
+                "写入弹幕失败: $danmuPath"
+            )
             DDLog.i("写入弹幕失败", e)
         } finally {
             IOUtils.closeIO(fileOutputStream)

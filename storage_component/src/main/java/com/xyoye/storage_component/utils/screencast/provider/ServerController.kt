@@ -10,6 +10,7 @@ import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.helper.ScreencastConstants
 import com.xyoye.common_component.storage.helper.ScreencastConstants.ProviderApi
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.RangeUtils
 import com.xyoye.common_component.utils.getFileExtension
 import com.xyoye.data_component.enums.ResourceType
@@ -142,6 +143,13 @@ class ServerController(
         val skipped = try {
             inputStream.skip(range.first)
         } catch (e: IOException) {
+            // 上报I/O异常，投屏过程中的关键异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ServerController",
+                "createVideoResponseDirect",
+                "跳过Range字节时发生I/O异常，rangeFirst=${range.first}"
+            )
             e.printStackTrace()
             -1L
         }

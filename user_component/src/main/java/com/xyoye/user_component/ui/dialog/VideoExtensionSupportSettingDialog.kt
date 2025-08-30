@@ -1,6 +1,7 @@
 package com.xyoye.user_component.ui.dialog
 
 import android.app.Activity
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.meida.VideoExtension
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.BaseBottomDialog
@@ -31,21 +32,41 @@ class VideoExtensionSupportSettingDialog(
     }
 
     private fun resetExtension(binding: DialogVideoExtensionSupportSettingBinding) {
-        VideoExtension.resetDefault()
-        binding.etVideoExtension.setText(VideoExtension.supportText)
+        try {
+            VideoExtension.resetDefault()
+            binding.etVideoExtension.setText(VideoExtension.supportText)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "VideoExtensionSupportSettingDialog",
+                "resetExtension",
+                "Failed to reset video extension settings"
+            )
+            ToastCenter.showError("重置扩展名设置失败")
+        }
     }
 
     private fun updateExtension(binding: DialogVideoExtensionSupportSettingBinding) {
-        val extensionText = binding.etVideoExtension.text.toString()
-        if (extensionText.isEmpty()) {
-            ToastCenter.showError("输入的扩展名不能为空")
-            return
+        try {
+            val extensionText = binding.etVideoExtension.text.toString()
+            if (extensionText.isEmpty()) {
+                ToastCenter.showError("输入的扩展名不能为空")
+                return
+            }
+            val updateSuccess = VideoExtension.update(extensionText)
+            if (updateSuccess.not()) {
+                ToastCenter.showError("输入的内容有误")
+                return
+            }
+            dismiss()
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "VideoExtensionSupportSettingDialog",
+                "updateExtension",
+                "Failed to update video extension settings with text: ${binding.etVideoExtension.text}"
+            )
+            ToastCenter.showError("更新扩展名设置失败")
         }
-        val updateSuccess = VideoExtension.update(extensionText)
-        if (updateSuccess.not()) {
-            ToastCenter.showError("输入的内容有误")
-            return
-        }
-        dismiss()
     }
 }

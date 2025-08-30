@@ -28,8 +28,18 @@ object JsonHelper {
             val jsonAdapter = MO_SHI.adapter(T::class.java)
             return jsonAdapter.fromJson(jsonStr)
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "JsonHelper.parseJson",
+                "JSON解析IO异常: $jsonStr"
+            )
             e.printStackTrace()
         } catch (e: JsonDataException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "JsonHelper.parseJson",
+                "JSON数据格式异常: $jsonStr"
+            )
             e.printStackTrace()
         }
         return null
@@ -44,8 +54,18 @@ object JsonHelper {
             val adapter = MO_SHI.adapter<List<T>>(type)
             return adapter.fromJson(jsonStr) ?: emptyList()
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "JsonHelper.parseJsonList",
+                "JSON列表解析IO异常: $jsonStr"
+            )
             e.printStackTrace()
         } catch (e: JsonDataException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "JsonHelper.parseJsonList",
+                "JSON列表数据格式异常: $jsonStr"
+            )
             e.printStackTrace()
         }
         return emptyList()
@@ -61,8 +81,18 @@ object JsonHelper {
             val adapter = MO_SHI.adapter<Map<String, String>>(type)
             return adapter.fromJson(jsonStr) ?: emptyMap()
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "JsonHelper.parseJsonMap",
+                "JSON映射解析IO异常: $jsonStr"
+            )
             e.printStackTrace()
         } catch (e: JsonDataException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "JsonHelper.parseJsonMap",
+                "JSON映射数据格式异常: $jsonStr"
+            )
             e.printStackTrace()
         }
 
@@ -76,8 +106,18 @@ object JsonHelper {
             val adapter = MO_SHI.adapter(T::class.java)
             return adapter.toJson(t)
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "JsonHelper.toJson",
+                "对象转JSON IO异常"
+            )
             e.printStackTrace()
         } catch (e: JsonDataException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "JsonHelper.toJson",
+                "对象转JSON数据格式异常"
+            )
             e.printStackTrace()
         }
         return null

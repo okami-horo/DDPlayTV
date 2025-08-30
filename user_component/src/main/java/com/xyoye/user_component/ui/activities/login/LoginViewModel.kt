@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.UserRepository
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SecurityHelper
 import com.xyoye.common_component.utils.UserInfoHelper
 import com.xyoye.common_component.weight.ToastCenter
@@ -22,44 +23,77 @@ class LoginViewModel : BaseViewModel() {
     val loginLiveData = MutableLiveData<LoginData>()
 
     fun login() {
+        try {
+            val account = accountField.get()
+            val password = passwordField.get()
 
-        val account = accountField.get()
-        val password = passwordField.get()
+            val allowLogin = checkAccount(account) && checkPassword(password)
+            if (!allowLogin)
+                return
 
-        val allowLogin = checkAccount(account) && checkPassword(password)
-        if (!allowLogin)
-            return
+            val appId = SecurityHelper.getInstance().appId
+            val unixTimestamp = System.currentTimeMillis() / 1000
+            val hashInfo = appId + password + unixTimestamp + account
+            val hash = SecurityHelper.getInstance().buildHash(hashInfo)
 
-        val appId = SecurityHelper.getInstance().appId
-        val unixTimestamp = System.currentTimeMillis() / 1000
-        val hashInfo = appId + password + unixTimestamp + account
-        val hash = SecurityHelper.getInstance().buildHash(hashInfo)
+            viewModelScope.launch {
+                try {
+                    showLoading()
+                    val result = UserRepository.login(
+                        account!!,
+                        password!!,
+                        appId,
+                        unixTimestamp.toString(),
+                        hash
+                    )
+                    hideLoading()
 
-        viewModelScope.launch {
-            showLoading()
-            val result = UserRepository.login(
-                account!!,
-                password!!,
-                appId,
-                unixTimestamp.toString(),
-                hash
+                    if (result.isFailure) {
+                        val exception = result.exceptionOrNull()
+                        exception?.let {
+                            ErrorReportHelper.postCatchedExceptionWithContext(
+                                it,
+                                "LoginViewModel",
+                                "login",
+                                "Login network request failed for user: $account"
+                            )
+                        }
+                        result.exceptionOrNull()?.message?.toastError()
+                        return@launch
+                    }
+
+                    val data = result.getOrNull()
+                    if (data != null && UserInfoHelper.login(data)) {
+                        ToastCenter.showSuccess("登录成功")
+                        loginLiveData.postValue(data)
+                    } else {
+                        ErrorReportHelper.postException(
+                            "Login successful but UserInfoHelper.login failed",
+                            "LoginViewModel",
+                            null
+                        )
+                        ToastCenter.showError("登录错误，请稍后再试")
+                    }
+                } catch (e: Exception) {
+                    hideLoading()
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        e,
+                        "LoginViewModel",
+                        "login",
+                        "Unexpected error during login process for user: $account"
+                    )
+                    ToastCenter.showError("登录过程中发生错误，请稍后再试")
+                }
+            }
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "LoginViewModel",
+                "login",
+                "Error in login method initialization"
             )
-            hideLoading()
-
-            if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
-                return@launch
-            }
-
-            val data = result.getOrNull()
-            if (data != null && UserInfoHelper.login(data)) {
-                ToastCenter.showSuccess("登录成功")
-                loginLiveData.postValue(data)
-            } else {
-                ToastCenter.showError("登录错误，请稍后再试")
-            }
+            ToastCenter.showError("登录初始化失败，请稍后再试")
         }
-
     }
 
     private fun checkAccount(account: String?): Boolean {

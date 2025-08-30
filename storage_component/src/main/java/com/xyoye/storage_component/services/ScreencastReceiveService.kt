@@ -20,6 +20,7 @@ import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.impl.ScreencastStorage
 import com.xyoye.common_component.utils.ActivityHelper
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.screencast.ScreencastHandler
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.screeencast.ScreencastData
@@ -239,6 +240,13 @@ class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
             httpServer.start(2000)
             httpServer
         } catch (e: Exception) {
+            // 上报投屏接收HTTP服务器创建异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ScreencastReceiveService",
+                "createHttpServer",
+                "创建投屏接收HTTP服务器失败，port=$port, hasPassword=${password != null}"
+            )
             e.printStackTrace()
             null
         }

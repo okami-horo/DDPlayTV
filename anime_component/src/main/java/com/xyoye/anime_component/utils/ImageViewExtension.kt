@@ -5,6 +5,7 @@ import coil.load
 import coil.size.Scale
 import coil.transform.RoundedCornersTransformation
 import com.xyoye.anime_component.R
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2024/2/1
@@ -20,5 +21,17 @@ fun ImageView.loadAnimeCover(
         error(R.drawable.background_anime_cover_error)
         crossfade(true)
         transformations(RoundedCornersTransformation(radius))
+        
+        // 添加错误监听器，用于上报图片加载失败
+        listener(
+            onError = { _, result ->
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    result.throwable,
+                    "ImageViewExtension",
+                    "loadAnimeCover",
+                    "图片URL: $source"
+                )
+            }
+        )
     }
 }

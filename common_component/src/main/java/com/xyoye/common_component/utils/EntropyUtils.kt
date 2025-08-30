@@ -50,6 +50,11 @@ object EntropyUtils {
             }
             return messageDigest.digest().toHexString()
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "EntropyUtils.file2Md5",
+                "计算文件MD5失败: ${file.absolutePath}"
+            )
             e.printStackTrace()
         } finally {
             IOUtils.closeIO(fileInputStream)
@@ -72,6 +77,11 @@ object EntropyUtils {
             val byteAES = cipher.doFinal(byteEncode)
             return Base64.encodeToString(byteAES, base64Flag)
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "EntropyUtils.aesEncode",
+                "AES加密失败"
+            )
             e.printStackTrace()
         }
         return null
@@ -92,6 +102,11 @@ object EntropyUtils {
 
             return String(byteDecode, Charsets.UTF_8)
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "EntropyUtils.aesDecode",
+                "AES解密失败"
+            )
             e.printStackTrace()
         }
         return null

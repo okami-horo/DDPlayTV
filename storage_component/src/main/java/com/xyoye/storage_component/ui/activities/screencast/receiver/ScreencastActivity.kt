@@ -14,6 +14,7 @@ import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.ScreencastConfig
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.storage.helper.ScreencastConstants
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.weight.ToastCenter
@@ -236,6 +237,13 @@ class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastB
                 options
             )
         } catch (e: Exception) {
+            // 上报二维码生成异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ScreencastActivity",
+                "createQRCode",
+                "生成投屏二维码失败，content长度=${content.length}, enable=$enable"
+            )
             e.printStackTrace()
         }
 

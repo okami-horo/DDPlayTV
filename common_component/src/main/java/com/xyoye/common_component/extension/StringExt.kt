@@ -6,6 +6,7 @@ import android.content.Context
 import android.util.Base64
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.utils.EntropyUtils
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.PathHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.enums.ResourceType
@@ -42,6 +43,11 @@ fun String.decodeUrl(charset: Charset = Charsets.UTF_8): String {
     return try {
         URLDecoder.decode(this, charset.name())
     } catch (e: Exception) {
+        ErrorReportHelper.postCatchedException(
+            e,
+            "StringExt.decodeUrl",
+            "URL解码失败: $this"
+        )
         this
     }
 }

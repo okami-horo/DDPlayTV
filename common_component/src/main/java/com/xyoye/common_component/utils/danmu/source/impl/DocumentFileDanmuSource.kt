@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.utils.danmu.source.AbstractDanmuSource
+import com.xyoye.common_component.utils.ErrorReportHelper
 import java.io.InputStream
 
 /**
@@ -20,6 +21,11 @@ class DocumentFileDanmuSource(
         return try {
             getContext().contentResolver.openInputStream(documentFile.uri)
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "DocumentFileDanmuSource.getStream",
+                "打开弹幕文档文件流失败: $uri"
+            )
             e.printStackTrace()
             null
         }

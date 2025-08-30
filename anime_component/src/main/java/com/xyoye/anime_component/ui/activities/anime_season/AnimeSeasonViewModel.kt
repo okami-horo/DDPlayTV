@@ -8,6 +8,7 @@ import com.xyoye.common_component.config.UserConfig
 import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.AnimeRepository
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.stringCompare
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.AnimeData
@@ -195,7 +196,14 @@ class AnimeSeasonViewModel : BaseViewModel() {
             val result = AnimeRepository.getSeasonAnime(year, month)
 
             if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
+                val exception = result.exceptionOrNull()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    exception ?: RuntimeException("Get season anime failed with unknown error"),
+                    "AnimeSeasonViewModel",
+                    "getSeasonAnime",
+                    "年份: $year, 月份: $month"
+                )
+                exception?.message?.toastError()
                 return@launch
             }
 

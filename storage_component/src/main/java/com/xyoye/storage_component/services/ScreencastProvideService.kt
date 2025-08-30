@@ -16,6 +16,7 @@ import com.xyoye.common_component.notification.Notifications
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.media.StorageVideoSource
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.screeencast.ScreencastData
 import com.xyoye.data_component.data.screeencast.ScreencastVideoData
@@ -137,6 +138,13 @@ class ScreencastProvideService : Service(), ScreencastProvideHandler {
             httpServer.start(2000)
             httpServer
         } catch (e: Exception) {
+            // 上报HTTP服务器创建异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ScreencastProvideService",
+                "createHttpServer",
+                "创建投屏HTTP服务器失败，port=$port, retry=$retry"
+            )
             e.printStackTrace()
             if (retry < 0) {
                 createHttpServer(videoSource, port + 1, retry - 1)

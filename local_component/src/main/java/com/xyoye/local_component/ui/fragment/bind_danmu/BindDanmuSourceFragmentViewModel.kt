@@ -6,6 +6,7 @@ import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.collectable
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.utils.danmu.DanmuFinder
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.danmu.source.DanmuSourceFactory
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.DanmuAnimeData
@@ -68,14 +69,24 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
             ?: return
 
         viewModelScope.launch {
-            showLoading()
-            val matched = DanmuFinder.instance.getMatched(danmuSource)
-            hideLoading()
+            try {
+                showLoading()
+                val matched = DanmuFinder.instance.getMatched(danmuSource)
+                hideLoading()
 
-            // 保存匹配结果
-            _matchedAnimeFlow.emit(matched)
-            // 选中匹配结果
-            _selectedAnimeFlow.emit(matched)
+                // 保存匹配结果
+                _matchedAnimeFlow.emit(matched)
+                // 选中匹配结果
+                _selectedAnimeFlow.emit(matched)
+            } catch (e: Exception) {
+                hideLoading()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "BindDanmuSourceFragmentViewModel",
+                    "matchDanmu",
+                    "File: ${storageFile.fileName()}"
+                )
+            }
         }
     }
 
@@ -84,44 +95,80 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
             return
 
         viewModelScope.launch {
-            showLoading()
-            val result = DanmuFinder.instance.search(searchText)
-            hideLoading()
+            try {
+                showLoading()
+                val result = DanmuFinder.instance.search(searchText)
+                hideLoading()
 
-            _searchedAnimeFlow.emit(result)
-            // 自动选择第一个动画。
-            if (result.isNotEmpty()) {
-                _selectedAnimeFlow.emit(result[0])
+                _searchedAnimeFlow.emit(result)
+                // 自动选择第一个动画。
+                if (result.isNotEmpty()) {
+                    _selectedAnimeFlow.emit(result[0])
+                }
+            } catch (e: Exception) {
+                hideLoading()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "BindDanmuSourceFragmentViewModel",
+                    "searchDanmu",
+                    "Search text: $searchText"
+                )
             }
         }
     }
 
     fun getDanmuThirdSource(episode: DanmuEpisodeData) {
         viewModelScope.launch {
-            showLoading()
-            val result = DanmuFinder.instance.getRelated(episode.episodeId)
-            hideLoading()
+            try {
+                showLoading()
+                val result = DanmuFinder.instance.getRelated(episode.episodeId)
+                hideLoading()
 
-            _downloadDialogShowFlow.emit(episode to result)
+                _downloadDialogShowFlow.emit(episode to result)
+            } catch (e: Exception) {
+                hideLoading()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "BindDanmuSourceFragmentViewModel",
+                    "getDanmuThirdSource",
+                    "Episode ID: ${episode.episodeId}, Title: ${episode.episodeTitle}"
+                )
+            }
         }
     }
 
     fun downloadDanmu(episode: DanmuEpisodeData, withRelated: Boolean = true) {
         viewModelScope.launch {
-            showLoading()
-            val localDanmu = DanmuFinder.instance.downloadEpisode(episode, withRelated)
+            try {
+                showLoading()
+                val localDanmu = DanmuFinder.instance.downloadEpisode(episode, withRelated)
 
-            if (localDanmu == null) {
+                if (localDanmu == null) {
+                    hideLoading()
+                    ErrorReportHelper.postException(
+                        "Danmu download failed",
+                        "BindDanmuSourceFragmentViewModel",
+                        null
+                    )
+                    ToastCenter.showError("保存弹幕失败")
+                    return@launch
+                }
+
+                databaseDanmu(localDanmu.danmuPath, localDanmu.episodeId)
+
                 hideLoading()
+                ToastCenter.showSuccess("保存弹幕成功！")
+                _downloadDialogDismissFlow.emit(Any())
+            } catch (e: Exception) {
+                hideLoading()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "BindDanmuSourceFragmentViewModel",
+                    "downloadDanmu",
+                    "Episode ID: ${episode.episodeId}, Title: ${episode.episodeTitle}"
+                )
                 ToastCenter.showError("保存弹幕失败")
-                return@launch
             }
-
-            databaseDanmu(localDanmu.danmuPath, localDanmu.episodeId)
-
-            hideLoading()
-            ToastCenter.showSuccess("保存弹幕成功！")
-            _downloadDialogDismissFlow.emit(Any())
         }
     }
 
@@ -132,20 +179,36 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
         }
 
         viewModelScope.launch {
-            showLoading()
-            val localDanmu = DanmuFinder.instance.downloadRelated(episode, related)
+            try {
+                showLoading()
+                val localDanmu = DanmuFinder.instance.downloadRelated(episode, related)
 
-            if (localDanmu == null) {
+                if (localDanmu == null) {
+                    hideLoading()
+                    ErrorReportHelper.postException(
+                        "Related danmu download failed",
+                        "BindDanmuSourceFragmentViewModel",
+                        null
+                    )
+                    ToastCenter.showError("保存弹幕失败")
+                    return@launch
+                }
+
+                databaseDanmu(localDanmu.danmuPath, localDanmu.episodeId)
+
                 hideLoading()
+                ToastCenter.showSuccess("保存弹幕成功！")
+                _downloadDialogDismissFlow.emit(Any())
+            } catch (e: Exception) {
+                hideLoading()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "BindDanmuSourceFragmentViewModel",
+                    "downloadDanmu",
+                    "Episode ID: ${episode.episodeId}, Related sources count: ${related.size}"
+                )
                 ToastCenter.showError("保存弹幕失败")
-                return@launch
             }
-
-            databaseDanmu(localDanmu.danmuPath, localDanmu.episodeId)
-
-            hideLoading()
-            ToastCenter.showSuccess("保存弹幕成功！")
-            _downloadDialogDismissFlow.emit(Any())
         }
     }
 
@@ -157,38 +220,82 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
 
     fun unbindDanmu() {
         viewModelScope.launch(Dispatchers.IO) {
-            databaseDanmu(null)
+            try {
+                databaseDanmu(null)
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "BindDanmuSourceFragmentViewModel",
+                    "unbindDanmu",
+                    "File: ${storageFile.fileName()}"
+                )
+            }
         }
     }
 
     fun bindLocalDanmu(filePath: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            databaseDanmu(filePath)
+            try {
+                databaseDanmu(filePath)
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "BindDanmuSourceFragmentViewModel",
+                    "bindLocalDanmu",
+                    "File path: $filePath"
+                )
+            }
         }
     }
 
     private suspend fun databaseDanmu(danmuPath: String?, episodeId: String? = null) {
-        val historyEntity = getStorageFileHistory().copy(
-            danmuPath = danmuPath,
-            episodeId = episodeId
-        )
-        DatabaseManager.instance.getPlayHistoryDao().insert(historyEntity)
+        try {
+            val historyEntity = getStorageFileHistory().copy(
+                danmuPath = danmuPath,
+                episodeId = episodeId
+            )
+            DatabaseManager.instance.getPlayHistoryDao().insert(historyEntity)
 
-        _boundEpisodeFlow.emit(historyEntity)
+            _boundEpisodeFlow.emit(historyEntity)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "BindDanmuSourceFragmentViewModel",
+                "databaseDanmu",
+                "Danmu path: $danmuPath, Episode ID: $episodeId"
+            )
+        }
     }
 
     private suspend fun getStorageFileHistory(): PlayHistoryEntity {
-        return DatabaseManager.instance.getPlayHistoryDao().getPlayHistory(
-            storageFile.uniqueKey(),
-            storageFile.storage.library.id
-        ) ?: PlayHistoryEntity(
-            0,
-            "",
-            "",
-            mediaType = storageFile.storage.library.mediaType,
-            uniqueKey = storageFile.uniqueKey(),
-            storageId = storageFile.storage.library.id,
-        )
+        return try {
+            DatabaseManager.instance.getPlayHistoryDao().getPlayHistory(
+                storageFile.uniqueKey(),
+                storageFile.storage.library.id
+            ) ?: PlayHistoryEntity(
+                0,
+                "",
+                "",
+                mediaType = storageFile.storage.library.mediaType,
+                uniqueKey = storageFile.uniqueKey(),
+                storageId = storageFile.storage.library.id,
+            )
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "BindDanmuSourceFragmentViewModel",
+                "getStorageFileHistory",
+                "File: ${storageFile.fileName()}"
+            )
+            PlayHistoryEntity(
+                0,
+                "",
+                "",
+                mediaType = storageFile.storage.library.mediaType,
+                uniqueKey = storageFile.uniqueKey(),
+                storageId = storageFile.storage.library.id,
+            )
+        }
     }
 
     private fun mapDanmuAnimeList(

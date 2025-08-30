@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.core.app.NotificationManagerCompat
 import com.xyoye.common_component.extension.buildNotificationChannel
 import com.xyoye.common_component.extension.buildNotificationChannelGroup
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2022/9/14
@@ -29,6 +30,11 @@ object Notifications {
         try {
             createChannels(context)
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "Notifications.setupNotificationChannels",
+                "设置通知渠道失败"
+            )
             e.printStackTrace()
         }
     }

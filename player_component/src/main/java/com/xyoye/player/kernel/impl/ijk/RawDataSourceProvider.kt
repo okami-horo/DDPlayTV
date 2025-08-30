@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 class RawDataSourceProvider(private var mDescriptor: AssetFileDescriptor?) : IMediaDataSource {
     private var mMediaBytes: ByteArray? = null
@@ -88,6 +89,12 @@ class RawDataSourceProvider(private var mDescriptor: AssetFileDescriptor?) : IMe
                 val fileDescriptor = context.contentResolver.openAssetFileDescriptor(uri, "r")
                 return RawDataSourceProvider(fileDescriptor)
             } catch (e: FileNotFoundException) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "RawDataSourceProvider",
+                    "create",
+                    "File not found for URI: $uri"
+                )
                 e.printStackTrace()
             }
             return null

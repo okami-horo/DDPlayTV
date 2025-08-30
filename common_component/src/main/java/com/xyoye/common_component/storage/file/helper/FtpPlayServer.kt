@@ -2,6 +2,7 @@ package com.xyoye.common_component.storage.file.helper
 
 import com.xyoye.common_component.storage.file.impl.FtpStorageFile
 import com.xyoye.common_component.storage.impl.FtpStorage
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.RangeUtils
 import com.xyoye.common_component.utils.getFileExtension
 import fi.iki.elonen.NanoHTTPD
@@ -136,15 +137,20 @@ class FtpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         if (wasStarted()) {
             return true
         }
-        return withTimeout(timeoutMs) {
-            start()
-            while (isActive) {
-                if (wasStarted()) {
-                    return@withTimeout true
+        return try {
+            withTimeout(timeoutMs) {
+                start()
+                while (isActive) {
+                    if (wasStarted()) {
+                        return@withTimeout true
+                    }
                 }
+                stop()
+                return@withTimeout false
             }
-            stop()
-            return@withTimeout false
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(e, "FTPPlayServer", "启动播放服务器失败: timeout=${timeoutMs}ms")
+            false
         }
     }
 

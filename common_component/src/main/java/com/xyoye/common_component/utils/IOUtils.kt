@@ -2,6 +2,7 @@ package com.xyoye.common_component.utils
 
 import android.content.ContentUris
 import android.provider.MediaStore
+import com.xyoye.common_component.utils.ErrorReportHelper
 import java.io.Closeable
 import java.io.File
 import java.io.IOException
@@ -46,7 +47,11 @@ object IOUtils {
         try {
             closeable?.close()
         } catch (e: IOException) {
-            // ignore
+            ErrorReportHelper.postCatchedException(
+                e,
+                "IOUtils.closeIO",
+                "关闭IO流失败"
+            )
         }
     }
 }

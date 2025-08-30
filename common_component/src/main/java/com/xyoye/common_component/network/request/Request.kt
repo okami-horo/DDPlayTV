@@ -1,5 +1,6 @@
 package com.xyoye.common_component.network.request
 
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.data.CommonJsonData
 import com.xyoye.data_component.data.CommonJsonModel
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +56,12 @@ class Request {
 
                 return@withContext Result.success(result)
             } catch (e: Exception) {
-                e.printStackTrace()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "Request",
+                    "doGet",
+                    "请求参数: $requestParams"
+                )
                 return@withContext Result.failure(NetworkException.formException(e))
             }
         }
@@ -77,7 +83,12 @@ class Request {
 
                 return@withContext Result.success(result)
             } catch (e: Exception) {
-                e.printStackTrace()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "Request",
+                    "doPost",
+                    "请求参数: $requestParams, JSON: $requestJson"
+                )
                 return@withContext Result.failure(NetworkException.formException(e))
             }
         }
@@ -87,8 +98,18 @@ class Request {
      * Post请求体
      */
     private fun requestBody(): RequestBody {
-        val mediaType = "application/json;charset=utf-8".toMediaType()
-        return requestJson?.toRequestBody(mediaType)
-            ?: requestParams.toRequestBody(mediaType)
+        return try {
+            val mediaType = "application/json;charset=utf-8".toMediaType()
+            requestJson?.toRequestBody(mediaType)
+                ?: requestParams.toRequestBody(mediaType)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "Request",
+                "requestBody",
+                "请求参数: $requestParams, JSON: $requestJson"
+            )
+            throw e
+        }
     }
 }

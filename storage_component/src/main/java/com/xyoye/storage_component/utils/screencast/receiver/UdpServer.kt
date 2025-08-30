@@ -7,6 +7,7 @@ import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.storage.helper.ScreencastConstants
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.EntropyUtils
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
 import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.data_component.bean.UDPDeviceBean
@@ -78,6 +79,13 @@ object UdpServer {
             }
             multicastSocket = MulticastSocket()
         } catch (e: Exception) {
+            // 上报组播Socket初始化异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "UdpServer",
+                "initMulticastSocket",
+                "组播Socket初始化失败，host=${ScreencastConstants.Multicast.host}"
+            )
             e.printStackTrace()
         }
 
@@ -112,6 +120,13 @@ object UdpServer {
 
             multicastCount++
         } catch (e: Exception) {
+            // 上报组播发送异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "UdpServer",
+                "sendMulticast",
+                "发送组播消息失败，httpPort=$httpPort, multicastCount=$multicastCount"
+            )
             e.printStackTrace()
         }
     }

@@ -3,6 +3,7 @@ package com.xyoye.storage_component.ui.activities.screencast.receiver
 import androidx.databinding.ObservableField
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
+import com.xyoye.common_component.utils.ErrorReportHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.net.Inet4Address
@@ -43,6 +44,13 @@ class ScreencastViewModel : BaseViewModel() {
                     }
                 }
             } catch (e: SocketException) {
+                // 上报网络接口获取异常
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "ScreencastViewModel",
+                    "initIpPort",
+                    "获取网络接口IP地址时发生Socket异常"
+                )
                 e.printStackTrace()
             }
             hideLoading()

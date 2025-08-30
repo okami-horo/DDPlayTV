@@ -11,6 +11,7 @@ import com.xyoye.common_component.network.repository.ResourceRepository
 
 import com.xyoye.common_component.utils.PathHelper
 import com.xyoye.common_component.utils.danmu.DanmuFinder
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.AnimeCidData
 import com.xyoye.data_component.data.DanmuEpisodeData
@@ -151,6 +152,12 @@ class BilibiliDanmuViewModel : BaseViewModel() {
                 .get()
                 .toString()
         } catch (t: Throwable) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                t,
+                "BilibiliDanmuViewModel",
+                "findVideoCidInJavaScript",
+                "URL: $url"
+            )
             t.printStackTrace()
             sendDownloadMessage("错误：${t.message}")
             return null
@@ -168,6 +175,12 @@ class BilibiliDanmuViewModel : BaseViewModel() {
         val jsonObject = try {
             JSONObject(matcher.group(0)?.removeSurrounding(header, footer).orEmpty())
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "BilibiliDanmuViewModel",
+                "findVideoCidInJavaScript",
+                "JSON parsing error"
+            )
             return null
         }
 
@@ -188,6 +201,12 @@ class BilibiliDanmuViewModel : BaseViewModel() {
                 .get()
                 .toString()
         } catch (t: Throwable) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                t,
+                "BilibiliDanmuViewModel",
+                "findAnimeCidInJavaScript",
+                "URL: $url"
+            )
             t.printStackTrace()
             sendDownloadMessage("错误：${t.message}")
             return null
@@ -211,6 +230,12 @@ class BilibiliDanmuViewModel : BaseViewModel() {
 
             JSONObject(content)
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "BilibiliDanmuViewModel",
+                "findAnimeCidInJavaScript",
+                "JSON parsing error"
+            )
             return null
         }
 

@@ -5,6 +5,7 @@ import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.FtpPlayServer
 import com.xyoye.common_component.storage.file.impl.FtpStorageFile
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -35,6 +36,7 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "FTP", "获取文件列表失败: ${file.filePath()}")
             showErrorToast("获取文件列表失败", e)
             close()
         }
@@ -60,6 +62,7 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             playingInputStream = mFtpClient.retrieveFileStream(file.filePath())
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "FTP", "打开文件失败: ${file.filePath()}")
             close()
         }
         return playingInputStream
@@ -86,6 +89,7 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             return FtpStorageFile(this, parentPath, ftpFile)
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "FTP", "获取文件信息失败: $path")
         }
 
         val fileType = if (isDirectory) FTPFile.DIRECTORY_TYPE else FTPFile.FILE_TYPE
@@ -140,6 +144,7 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             return true
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "FTP", "连接至FTP服务失败: ${library.ftpAddress}:${library.port}")
             showErrorToast("连接至FTP服务失败", e)
             close()
         }
@@ -168,6 +173,7 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             mFtpClient.changeWorkingDirectory("/")
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "FTP", "切换工作目录失败")
         }
         if (switch) {
             checkWorkDirectory(false)
@@ -183,6 +189,7 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "FTP", "登录FTP服务失败")
             showErrorToast("登录FTP服务失败", e)
             close()
         }
@@ -203,6 +210,7 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             mFtpClient.disconnect()
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "FTP", "断开FTP连接失败")
         }
     }
 
@@ -220,6 +228,7 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "FTP", "完成挂起命令失败")
             close()
         }
     }

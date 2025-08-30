@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.utils.*
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.CacheBean
 import com.xyoye.data_component.enums.CacheType
 import kotlinx.coroutines.Dispatchers
@@ -26,41 +27,77 @@ class CacheManagerViewModel : BaseViewModel() {
     val cacheDirsLiveData = MutableLiveData<List<CacheBean>>()
 
     fun refreshCache() {
-        val appCacheDirSize = IOUtils.getDirectorySize(appCacheDir)
-        systemCacheSizeText.set(formatFileSize(appCacheDirSize))
+        try {
+            val appCacheDirSize = IOUtils.getDirectorySize(appCacheDir)
+            systemCacheSizeText.set(formatFileSize(appCacheDirSize))
 
-        val externalCacheDirSize = IOUtils.getDirectorySize(externalCacheDir)
-        externalCacheSizeText.set(formatFileSize(externalCacheDirSize))
+            val externalCacheDirSize = IOUtils.getDirectorySize(externalCacheDir)
+            externalCacheSizeText.set(formatFileSize(externalCacheDirSize))
 
-        val cacheDirs = mutableListOf<CacheBean>()
-        CacheType.values().forEach {
-            var fileCount = 0
-            if (it == CacheType.DANMU_CACHE) {
-                fileCount = getDanmuFileCount(PathHelper.getDanmuDirectory())
-            } else if (it == CacheType.SUBTITLE_CACHE) {
-                fileCount = getSubtitleFileCount(PathHelper.getSubtitleDirectory())
+            val cacheDirs = mutableListOf<CacheBean>()
+            CacheType.values().forEach {
+                var fileCount = 0
+                try {
+                    if (it == CacheType.DANMU_CACHE) {
+                        fileCount = getDanmuFileCount(PathHelper.getDanmuDirectory())
+                    } else if (it == CacheType.SUBTITLE_CACHE) {
+                        fileCount = getSubtitleFileCount(PathHelper.getSubtitleDirectory())
+                    }
+                } catch (e: Exception) {
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        e,
+                        "CacheManagerViewModel",
+                        "refreshCache",
+                        "Failed to count files for cache type: ${it.name}"
+                    )
+                }
+                val cacheBean = CacheBean(it, fileCount, getCacheSize(it))
+                cacheDirs.add(cacheBean)
             }
-            val cacheBean = CacheBean(it, fileCount, getCacheSize(it))
-            cacheDirs.add(cacheBean)
+
+            val otherCacheBean = CacheBean(null, 0, getCacheSize(null))
+            cacheDirs.add(otherCacheBean)
+
+            cacheDirsLiveData.postValue(cacheDirs)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "CacheManagerViewModel",
+                "refreshCache",
+                "Failed to refresh cache information"
+            )
         }
-
-        val otherCacheBean = CacheBean(null, 0, getCacheSize(null))
-        cacheDirs.add(otherCacheBean)
-
-        cacheDirsLiveData.postValue(cacheDirs)
     }
 
     fun clearAppCache() {
         viewModelScope.launch(Dispatchers.IO) {
-            clearCacheDirectory(appCacheDir)
+            try {
+                clearCacheDirectory(appCacheDir)
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "CacheManagerViewModel",
+                    "clearAppCache",
+                    "Failed to clear app cache directory: ${appCacheDir.absolutePath}"
+                )
+            }
         }
     }
 
     fun clearCacheByType(cacheType: CacheType?) {
         if (cacheType != null) {
             viewModelScope.launch(Dispatchers.IO) {
-                clearCacheDirectory(PathHelper.getCacheDirectory(cacheType))
-                refreshCache()
+                try {
+                    clearCacheDirectory(PathHelper.getCacheDirectory(cacheType))
+                    refreshCache()
+                } catch (e: Exception) {
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        e,
+                        "CacheManagerViewModel",
+                        "clearCacheByType",
+                        "Failed to clear cache directory for type: ${cacheType.name}"
+                    )
+                }
             }
             return
         }
@@ -71,26 +108,45 @@ class CacheManagerViewModel : BaseViewModel() {
             PathHelper.getCacheDirectory(it).absolutePath
         }
         viewModelScope.launch(Dispatchers.IO) {
-            childCacheDirs.forEach {
-                if (it.absolutePath !in namedCacheDirPaths) {
-                    clearCacheDirectory(it)
+            try {
+                childCacheDirs.forEach {
+                    if (it.absolutePath !in namedCacheDirPaths) {
+                        clearCacheDirectory(it)
+                    }
                 }
+                refreshCache()
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "CacheManagerViewModel",
+                    "clearCacheByType",
+                    "Failed to clear other cache directories"
+                )
             }
-            refreshCache()
         }
     }
 
     private fun getCacheSize(cacheType: CacheType?): Long {
-        return if (cacheType != null) {
-            val cacheTypeDir = PathHelper.getCacheDirectory(cacheType)
-            IOUtils.getDirectorySize(cacheTypeDir)
-        } else {
-            val totalCacheSize = IOUtils.getDirectorySize(externalCacheDir)
-            var namedCacheSize = 0L
-            CacheType.values().forEach {
-                namedCacheSize += getCacheSize(it)
+        return try {
+            if (cacheType != null) {
+                val cacheTypeDir = PathHelper.getCacheDirectory(cacheType)
+                IOUtils.getDirectorySize(cacheTypeDir)
+            } else {
+                val totalCacheSize = IOUtils.getDirectorySize(externalCacheDir)
+                var namedCacheSize = 0L
+                CacheType.values().forEach {
+                    namedCacheSize += getCacheSize(it)
+                }
+                totalCacheSize - namedCacheSize
             }
-            totalCacheSize - namedCacheSize
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "CacheManagerViewModel",
+                "getCacheSize",
+                "Failed to get cache size for type: ${cacheType?.name ?: "other"}"
+            )
+            0L
         }
     }
 
@@ -98,20 +154,28 @@ class CacheManagerViewModel : BaseViewModel() {
      * 删除文件夹内所有文件
      */
     private fun clearCacheDirectory(directory: File) {
-        if (!directory.exists())
-            return
+        try {
+            if (!directory.exists())
+                return
 
-        if (directory.isFile)
-            directory.delete()
+            if (directory.isFile)
+                directory.delete()
 
-        directory.listFiles()?.forEach {
-            if (it.isDirectory) {
-                clearCacheDirectory(it)
-            } else {
-                it.delete()
+            directory.listFiles()?.forEach {
+                if (it.isDirectory) {
+                    clearCacheDirectory(it)
+                } else {
+                    it.delete()
+                }
             }
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "CacheManagerViewModel",
+                "clearCacheDirectory",
+                "Failed to clear cache directory: ${directory.absolutePath}"
+            )
         }
-
     }
 
     /**

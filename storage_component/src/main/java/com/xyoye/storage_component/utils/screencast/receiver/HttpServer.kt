@@ -2,6 +2,7 @@ package com.xyoye.storage_component.utils.screencast.receiver
 
 import com.xyoye.common_component.extension.aesDecode
 import com.xyoye.common_component.network.config.HeaderKey
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.data_component.data.CommonJsonData
 import com.xyoye.storage_component.services.ScreencastReceiveHandler
@@ -63,6 +64,13 @@ class HttpServer(
         try {
             return password == authorization.substring("Bearer ".length).aesDecode()
         } catch (e: Exception) {
+            // 上报身份验证异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "HttpServer",
+                "authentication",
+                "投屏接收身份验证时发生异常，authorization长度=${authorization?.length ?: 0}"
+            )
             e.printStackTrace()
         }
         return false

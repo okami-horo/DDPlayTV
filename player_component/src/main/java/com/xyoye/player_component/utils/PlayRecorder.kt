@@ -34,6 +34,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import org.videolan.libvlc.util.VLCVideoLayout
 import java.io.File
 import java.util.Date
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2022/1/15.
@@ -99,6 +100,12 @@ object PlayRecorder {
             val bitmap = try {
                 generateRenderImage(view)
             } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayRecorder",
+                    "recordImage",
+                    "Failed to generate render image for key: $key"
+                )
                 e.printStackTrace()
                 null
             } ?: return@launch

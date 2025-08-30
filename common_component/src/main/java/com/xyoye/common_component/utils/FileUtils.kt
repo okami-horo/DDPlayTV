@@ -6,6 +6,7 @@ import android.os.Build
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.extension.isValid
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.utils.ErrorReportHelper
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -106,6 +107,11 @@ fun isFileExist(filePath: String?): Boolean {
             try {
                 afd.close()
             } catch (ignore: IOException) {
+                ErrorReportHelper.postCatchedException(
+                    ignore,
+                    "FileUtils.isFileExist",
+                    "关闭AssetFileDescriptor失败: $filePath"
+                )
             }
         } catch (e: FileNotFoundException) {
             return false
@@ -165,7 +171,14 @@ private val SEASON_REGEX = Regex("^Season \\d+\$")
 fun getRecognizableFileName(storageFile: StorageFile): String {
     return if (storageFile.isDirectory() && storageFile.fileName().matches(SEASON_REGEX)) {
         // For kodi TV show library's season directory, add the parent directory name as the prefix
-        val parent = try { Uri.parse(storageFile.filePath()).pathSegments } catch (e: Exception) { null }
+        val parent = try { Uri.parse(storageFile.filePath()).pathSegments } catch (e: Exception) { 
+            ErrorReportHelper.postCatchedException(
+                e,
+                "FileUtils.getRecognizableFileName",
+                "解析文件路径URI失败: ${storageFile.filePath()}"
+            )
+            null
+        }
             ?.takeIf { it.size > 1 }
             ?.let { it[it.size - 2] }
         if (parent != null) "$parent (${storageFile.fileName()})" else storageFile.fileName()

@@ -26,6 +26,7 @@ import org.videolan.libvlc.interfaces.IMedia
 import org.videolan.libvlc.interfaces.IMedia.VideoTrack
 import org.videolan.libvlc.util.VLCVideoLayout
 import java.io.File
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2021/4/12.
@@ -342,6 +343,12 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
             videoSourceFd = try {
                 mContext.contentResolver.openAssetFileDescriptor(videoUri, "r")
             } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "VlcVideoPlayer",
+                    "createVlcMedia",
+                    "Failed to open asset file descriptor for URI: $videoUri"
+                )
                 e.printStackTrace()
                 null
             }

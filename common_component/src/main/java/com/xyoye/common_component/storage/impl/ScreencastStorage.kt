@@ -11,6 +11,7 @@ import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.ScreencastStorageFile
 import com.xyoye.common_component.storage.helper.ScreencastConstants
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.common_component.utils.danmu.DanmuFinder
 import com.xyoye.common_component.utils.getFileName
@@ -129,6 +130,7 @@ class ScreencastStorage(library: MediaLibraryEntity) : AbstractStorage(library) 
             )
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "Screencast", "缓存字幕失败: $subtitleFileName")
         }
         return null
     }
@@ -139,7 +141,13 @@ class ScreencastStorage(library: MediaLibraryEntity) : AbstractStorage(library) 
             library.password?.aesEncode()?.authorizationValue()
         )
         if (result.isFailure) {
-            result.exceptionOrNull()?.message?.toastError()
+            val exception = result.exceptionOrNull()
+            ErrorReportHelper.postCatchedException(
+                exception ?: RuntimeException("Unknown screencast init error"), 
+                "Screencast", 
+                "初始化投屏服务失败: ${library.screencastAddress}:${library.port}"
+            )
+            exception?.message?.toastError()
             return false
         }
         return true

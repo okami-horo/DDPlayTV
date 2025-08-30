@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
@@ -176,6 +177,13 @@ class ExternalStorageEditDialog(
             activity.contentResolver.takePersistableUriPermission(uri, modeFlags)
             return true
         } catch (e: Exception) {
+            // 上报URI权限获取异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ExternalStorageEditDialog",
+                "takePersistableUriPermission",
+                "获取URI持久访问权限失败，uri=${uri}"
+            )
             e.printStackTrace()
         }
         return false

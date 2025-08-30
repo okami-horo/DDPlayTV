@@ -4,6 +4,7 @@ import android.text.TextUtils
 import com.xyoye.common_component.storage.helper.ScreencastConstants
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.EntropyUtils
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
 import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.data_component.bean.UDPDeviceBean
@@ -72,6 +73,13 @@ object UdpClient {
             multicastSocket = MulticastSocket(ScreencastConstants.Multicast.port)
             multicastSocket!!.joinGroup(group)
         } catch (e: Exception) {
+            // 上报组播Socket初始化异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "UdpClient",
+                "initMulticastSocket",
+                "组播Socket初始化失败，host=${ScreencastConstants.Multicast.host}, port=${ScreencastConstants.Multicast.port}"
+            )
             e.printStackTrace()
         }
 
@@ -106,6 +114,13 @@ object UdpClient {
 
             receiveCallback?.invoke(udpDeviceBean)
         } catch (e: Exception) {
+            // 上报UDP组播接收异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "UdpClient",
+                "receiveMulticast",
+                "UDP组播接收异常，数据包长度=${datagramPacket.length}"
+            )
             e.printStackTrace()
         }
     }

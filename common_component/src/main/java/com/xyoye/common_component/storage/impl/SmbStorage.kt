@@ -15,6 +15,7 @@ import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.SmbPlayServer
 import com.xyoye.common_component.storage.file.impl.SmbStorageFile
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -91,6 +92,7 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             mDiskShare?.openFile(file.filePath())?.inputStream
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "SMB", "打开文件失败: ${file.filePath()}")
             null
         }
     }
@@ -119,6 +121,7 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             return SmbStorageFile(this, shareName, filePath, fileLength, directory)
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "SMB", "获取文件信息失败: $filePath")
             showErrorToast("获取文件信息失败", e)
             null
         }
@@ -174,6 +177,7 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "SMB", "连接至SMB服务失败: ${library.url}:${library.port}")
             showErrorToast("连接至SMB服务失败", e)
             close()
         }
@@ -203,6 +207,7 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "SMB", "获取共享目录列表失败")
             showErrorToast("获取共享目录列表失败", e)
             emptyList()
         }
@@ -228,12 +233,14 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                         return@map SmbStorageFile(this, shareName, childPath, fileLength, isDirectory)
                     } catch (e: Exception) {
                         e.printStackTrace()
+                        ErrorReportHelper.postCatchedException(e, "SMB", "列表目录文件信息获取失败: ${it.fileName}")
                         return@map SmbStorageFile(this, shareName, "")
                     }
                 }
                 .filter { it.filePath().isNotEmpty() }
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "SMB", "获取文件列表失败: $filePath")
             showErrorToast("获取文件列表失败", e)
             emptyList()
         }
@@ -258,6 +265,7 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "SMB", "切换共享目录失败: $shareName")
             if (showToast) {
                 showErrorToast("切换共享目录失败", e)
             }
@@ -271,6 +279,7 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    ErrorReportHelper.postCatchedException(e, "SMB", "切换回旧共享目录失败: $currentShareName")
                 }
             }
         }
@@ -289,6 +298,7 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             mDiskShare!!.close()
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "SMB", "关闭共享目录失败")
         }
     }
 

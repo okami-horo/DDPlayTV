@@ -119,12 +119,32 @@ object MediaUtils {
             cursor.moveToFirst()
             return Uri.fromFile(File(cursor.getString(columnIndex))).toString()
         } catch (e: IllegalArgumentException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "MediaUtils.getPathFromURI",
+                "从 URI 获取路径时参数异常: $contentUri"
+            )
             return ""
         } catch (e: SecurityException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "MediaUtils.getPathFromURI",
+                "从 URI 获取路径时权限异常: $contentUri"
+            )
             return ""
         } catch (e: SQLiteException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "MediaUtils.getPathFromURI",
+                "从 URI 获取路径时数据库异常: $contentUri"
+            )
             return ""
         } catch (e: NullPointerException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "MediaUtils.getPathFromURI",
+                "从 URI 获取路径时空指针异常: $contentUri"
+            )
             return ""
         } finally {
             if (cursor != null && !cursor.isClosed) cursor.close()
@@ -144,6 +164,11 @@ object MediaUtils {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream)
             return true
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "MediaUtils.saveImage",
+                "保存图片到ContentResolver时IO异常"
+            )
             e.printStackTrace()
         } finally {
             IOUtils.closeIO(fileOutputStream)
@@ -159,6 +184,11 @@ object MediaUtils {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream)
             return true
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "MediaUtils.saveImage",
+                "保存图片到文件时IO异常: ${file.absolutePath}"
+            )
             e.printStackTrace()
         } finally {
             IOUtils.closeIO(fileOutputStream)

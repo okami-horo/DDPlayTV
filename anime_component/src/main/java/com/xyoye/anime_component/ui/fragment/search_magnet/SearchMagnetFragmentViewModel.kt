@@ -8,6 +8,7 @@ import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.MagnetRepository
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.MagnetData
 import com.xyoye.data_component.entity.MagnetScreenEntity
@@ -59,7 +60,14 @@ class SearchMagnetFragmentViewModel : BaseViewModel() {
             hideLoading()
 
             if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
+                val exception = result.exceptionOrNull()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    exception ?: RuntimeException("Search magnet failed with unknown error"),
+                    "SearchMagnetFragmentViewModel",
+                    "search",
+                    "搜索关键字: $keyword, 类型ID: $typeId, 字幕组ID: $subgroupId, 域名: $magnetDomain"
+                )
+                exception?.message?.toastError()
                 return@launch
             }
 
@@ -103,7 +111,14 @@ class SearchMagnetFragmentViewModel : BaseViewModel() {
             hideLoading()
 
             if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
+                val exception = result.exceptionOrNull()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    exception ?: RuntimeException("Get magnet subgroup failed with unknown error"),
+                    "SearchMagnetFragmentViewModel",
+                    "getMagnetSubgroup",
+                    "域名: $magnetDomain"
+                )
+                exception?.message?.toastError()
                 return@launch
             }
 
@@ -134,7 +149,14 @@ class SearchMagnetFragmentViewModel : BaseViewModel() {
             hideLoading()
 
             if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
+                val exception = result.exceptionOrNull()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    exception ?: RuntimeException("Get magnet type failed with unknown error"),
+                    "SearchMagnetFragmentViewModel",
+                    "getMagnetType",
+                    "域名: $magnetDomain"
+                )
+                exception?.message?.toastError()
                 return@launch
             }
 

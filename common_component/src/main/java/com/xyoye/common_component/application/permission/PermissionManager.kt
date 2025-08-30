@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2020/7/29.
@@ -69,6 +70,11 @@ class PermissionManager : Fragment() {
         try {
             parentFragmentManager.beginTransaction().remove(this).commitNow()
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "PermissionManager.onRequestComplete",
+                "移除权限请求Fragment失败"
+            )
             e.printStackTrace()
         }
     }

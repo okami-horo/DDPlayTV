@@ -9,6 +9,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2020/7/7.
@@ -111,6 +112,11 @@ class BaseAdapter : AnimatedAdapter<RecyclerView.ViewHolder>() {
             try {
                 setDiffData(data, diffCreator!!)
             } catch (e: Exception) {
+                ErrorReportHelper.postCatchedException(
+                    e,
+                    "BaseAdapter.setData",
+                    "DiffUtil计算差异失败，回退到全量刷新"
+                )
                 setNotifyData(data)
             }
         } else {

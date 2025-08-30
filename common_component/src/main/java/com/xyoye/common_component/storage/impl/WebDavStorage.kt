@@ -6,6 +6,7 @@ import com.xyoye.common_component.network.helper.UnsafeOkHttpClient
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.WebDavStorageFile
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
@@ -44,6 +45,7 @@ class WebDavStorage(
             sardine.get(file.fileUrl())
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "WebDAV", "打开文件失败: ${file.fileUrl()}")
             null
         }
     }
@@ -55,6 +57,7 @@ class WebDavStorage(
                 .map { WebDavStorageFile(it, this) }
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "WebDAV", "获取文件列表失败: ${file.fileUrl()}")
             emptyList()
         }
     }
@@ -89,6 +92,7 @@ class WebDavStorage(
             true
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "WebDAV", "连接测试失败: ${library.url}")
             ToastCenter.showError("连接失败: ${e.message}")
             false
         }
@@ -108,6 +112,7 @@ class WebDavStorage(
             return parentPath != childPath
         } catch (e: Exception) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "WebDAV", "路径解析失败: parent=$parent, child=$child")
         }
         return false
     }

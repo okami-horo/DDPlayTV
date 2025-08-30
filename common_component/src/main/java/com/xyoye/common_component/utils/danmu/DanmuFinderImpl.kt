@@ -4,6 +4,7 @@ import com.xyoye.common_component.utils.danmu.helper.DanmuContentGenerator
 import com.xyoye.common_component.utils.danmu.helper.DanmuFileCreator
 import com.xyoye.common_component.utils.danmu.query.DanmuQuery
 import com.xyoye.common_component.utils.danmu.source.DanmuSource
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuEpisodeData
@@ -51,6 +52,11 @@ class DanmuFinderImpl(
             FileUtils.write(file, xmlContent, Charsets.UTF_8)
             return LocalDanmuBean(file.absolutePath, episode.episodeId)
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "DanmuFinderImpl.downloadEpisode",
+                "下载弹幕失败: ${episode.animeTitle} - ${episode.episodeTitle}"
+            )
             e.printStackTrace()
         }
 
@@ -75,6 +81,11 @@ class DanmuFinderImpl(
             FileUtils.write(file, xmlContent, Charsets.UTF_8)
             return LocalDanmuBean(file.absolutePath, episode.episodeId)
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "DanmuFinderImpl.downloadRelated",
+                "下载相关弹幕失败: ${episode.animeTitle} - ${episode.episodeTitle}"
+            )
             e.printStackTrace()
         }
 
@@ -97,6 +108,11 @@ class DanmuFinderImpl(
             FileUtils.copyToFile(inputStream, file)
             return LocalDanmuBean(file.absolutePath, episode.episodeId)
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "DanmuFinderImpl.saveStream",
+                "保存弹幕流失败: ${episode.animeTitle} - ${episode.episodeTitle}"
+            )
             e.printStackTrace()
         }
         return null

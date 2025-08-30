@@ -4,6 +4,7 @@ import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.SmbStorageFile
 import com.xyoye.common_component.storage.impl.SmbStorage
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
 import com.xyoye.common_component.utils.RangeUtils
 import com.xyoye.common_component.utils.getFileExtension
@@ -87,6 +88,7 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
             inputStream.skip(rangeArray[0])
         } catch (e: IOException) {
             e.printStackTrace()
+            ErrorReportHelper.postCatchedException(e, "SMBPlayServer", "设置偏移量失败: offset=${rangeArray[0]}")
         }
         //响应内容
         val response = newFixedLengthResponse(
@@ -139,15 +141,20 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
         if (wasStarted()) {
             release()
         }
-        return withTimeout(timeoutMs) {
-            start()
-            while (isActive) {
-                if (wasStarted()) {
-                    return@withTimeout true
+        return try {
+            withTimeout(timeoutMs) {
+                start()
+                while (isActive) {
+                    if (wasStarted()) {
+                        return@withTimeout true
+                    }
                 }
+                stop()
+                return@withTimeout false
             }
-            stop()
-            return@withTimeout false
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(e, "SMBPlayServer", "启动播放服务器失败: timeout=${timeoutMs}ms")
+            false
         }
     }
 

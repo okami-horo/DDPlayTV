@@ -1,6 +1,7 @@
 package com.xyoye.storage_component.utils.screencast.receiver
 
 import com.xyoye.common_component.storage.helper.ScreencastConstants
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.data_component.data.CommonJsonData
 import com.xyoye.data_component.data.screeencast.ScreencastData
@@ -35,12 +36,26 @@ object ServerController {
         try {
             session.parseBody(postData)
         } catch (ioe: IOException) {
+            // 上报I/O异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                ioe,
+                "ServerController",
+                "handlePostRequest",
+                "解析POST请求体时发生I/O异常，uri=${session.uri}"
+            )
             return NanoHTTPD.newFixedLengthResponse(
                 NanoHTTPD.Response.Status.INTERNAL_ERROR,
                 NanoHTTPD.MIME_PLAINTEXT,
                 "SERVER INTERNAL ERROR: IOException: " + ioe.message
             )
         } catch (re: NanoHTTPD.ResponseException) {
+            // 上报响应异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                re,
+                "ServerController",
+                "handlePostRequest",
+                "解析POST请求体时发生响应异常，uri=${session.uri}, status=${re.status}"
+            )
             return NanoHTTPD.newFixedLengthResponse(re.status, NanoHTTPD.MIME_PLAINTEXT, re.message)
         }
 

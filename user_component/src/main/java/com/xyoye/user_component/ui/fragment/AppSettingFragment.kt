@@ -14,6 +14,7 @@ import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.network.config.Api
 import com.xyoye.common_component.utils.AppUtils
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SecurityHelperConfig
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.user_component.R
@@ -29,8 +30,17 @@ class AppSettingFragment : PreferenceFragmentCompat() {
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        preferenceManager.preferenceDataStore = AppSettingDataStore()
-        addPreferencesFromResource(R.xml.preference_app_setting)
+        try {
+            preferenceManager.preferenceDataStore = AppSettingDataStore()
+            addPreferencesFromResource(R.xml.preference_app_setting)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "AppSettingFragment",
+                "onCreatePreferences",
+                "Failed to create preferences from resource"
+            )
+        }
     }
 
 
@@ -47,51 +57,89 @@ class AppSettingFragment : PreferenceFragmentCompat() {
         }
 
         findPreference<Preference>("app_version")?.apply {
-            summary = AppUtils.getVersionName()
-            setOnPreferenceClickListener {
-                AppUtils.checkUpdate()
-                return@setOnPreferenceClickListener true
+            try {
+                summary = AppUtils.getVersionName()
+                setOnPreferenceClickListener {
+                    try {
+                        AppUtils.checkUpdate()
+                    } catch (e: Exception) {
+                        ErrorReportHelper.postCatchedExceptionWithContext(
+                            e,
+                            "AppSettingFragment",
+                            "app_version_click",
+                            "Failed to check for app updates"
+                        )
+                        ToastCenter.showError("检查更新失败，请稍后再试")
+                    }
+                    return@setOnPreferenceClickListener true
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "AppSettingFragment",
+                    "app_version_setup",
+                    "Failed to setup app version preference"
+                )
             }
         }
 
         findPreference<Preference>("bugly_status")?.apply {
-            // 设置标题和摘要
-            title = "错误上报状态"
-            val statusInfo = SecurityHelperConfig.getBuglyStatusInfo()
-            summary = if (statusInfo.isInitialized) {
-                if (statusInfo.isDebugMode) {
-                    "✅ 已启用 | ID: 测试模式 | 来源: Debug Mode"
-                } else {
-                    val shortId = if (statusInfo.appId.length > 8) {
-                        statusInfo.appId.substring(0, 8) + "..."
-                    } else {
-                        statusInfo.appId
-                    }
-                    "✅ 已启用 | ID: $shortId | 来源: ${statusInfo.source}"
-                }
-            } else {
-                "❌ 未配置 Bugly"
-            }
-            
-            setOnPreferenceClickListener {
+            try {
+                // 设置标题和摘要
+                title = "错误上报状态"
                 val statusInfo = SecurityHelperConfig.getBuglyStatusInfo()
-                val message = buildString {
-                    append("Bugly 错误上报状态详情:\n\n")
-                    append("状态: ${if (statusInfo.isInitialized) "✅ 已初始化" else "❌ 未初始化"}\n")
-                    append("App ID: ${if (statusInfo.isDebugMode) "test_debug_id (测试模式)" else statusInfo.appId}\n")
-                    append("配置来源: ${statusInfo.source}\n")
-                    append("调试模式: ${if (statusInfo.isDebugMode) "是" else "否"}\n\n")
-                    if (statusInfo.isInitialized) {
-                        append("✓ 错误上报功能正常工作\n")
-                        if (statusInfo.isDebugMode) {
-                            append("注意: 测试模式下不会实际上报错误")
-                        }
+                summary = if (statusInfo.isInitialized) {
+                    if (statusInfo.isDebugMode) {
+                        "✅ 已启用 | ID: 测试模式 | 来源: Debug Mode"
                     } else {
-                        append("⚠ 请配置 Bugly App ID 以启用错误上报")
+                        val shortId = if (statusInfo.appId.length > 8) {
+                            statusInfo.appId.substring(0, 8) + "..."
+                        } else {
+                            statusInfo.appId
+                        }
+                        "✅ 已启用 | ID: $shortId | 来源: ${statusInfo.source}"
                     }
+                } else {
+                    "❌ 未配置 Bugly"
                 }
-                ToastCenter.showSuccess(message)
-                return@setOnPreferenceClickListener true
+                
+                setOnPreferenceClickListener {
+                    try {
+                        val statusInfo = SecurityHelperConfig.getBuglyStatusInfo()
+                        val message = buildString {
+                            append("Bugly 错误上报状态详情:\n\n")
+                            append("状态: ${if (statusInfo.isInitialized) "✅ 已初始化" else "❌ 未初始化"}\n")
+                            append("App ID: ${if (statusInfo.isDebugMode) "test_debug_id (测试模式)" else statusInfo.appId}\n")
+                            append("配置来源: ${statusInfo.source}\n")
+                            append("调试模式: ${if (statusInfo.isDebugMode) "是" else "否"}\n\n")
+                            if (statusInfo.isInitialized) {
+                                append("✓ 错误上报功能正常工作\n")
+                                if (statusInfo.isDebugMode) {
+                                    append("注意: 测试模式下不会实际上报错误")
+                                }
+                            } else {
+                                append("⚠ 请配置 Bugly App ID 以启用错误上报")
+                            }
+                        }
+                        ToastCenter.showSuccess(message)
+                    } catch (e: Exception) {
+                        ErrorReportHelper.postCatchedExceptionWithContext(
+                            e,
+                            "AppSettingFragment",
+                            "bugly_status_click",
+                            "Failed to show Bugly status information"
+                        )
+                        ToastCenter.showError("获取错误上报状态失败")
+                    }
+                    return@setOnPreferenceClickListener true
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "AppSettingFragment",
+                    "bugly_status_setup",
+                    "Failed to setup Bugly status preference"
+                )
             }
         }
 
@@ -160,33 +208,71 @@ class AppSettingFragment : PreferenceFragmentCompat() {
 
     inner class AppSettingDataStore : PreferenceDataStore() {
         override fun getBoolean(key: String?, defValue: Boolean): Boolean {
-            return when (key) {
-                "hide_file" -> AppConfig.isShowHiddenFile()
-                "splash_page" -> AppConfig.isShowSplashAnimation()
-                "backup_domain_enable" -> AppConfig.isBackupDomainEnable()
-                else -> super.getBoolean(key, defValue)
+            return try {
+                when (key) {
+                    "hide_file" -> AppConfig.isShowHiddenFile()
+                    "splash_page" -> AppConfig.isShowSplashAnimation()
+                    "backup_domain_enable" -> AppConfig.isBackupDomainEnable()
+                    else -> super.getBoolean(key, defValue)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "AppSettingDataStore",
+                    "getBoolean",
+                    "Failed to get boolean value for key: $key"
+                )
+                defValue
             }
         }
 
         override fun putBoolean(key: String?, value: Boolean) {
-            when (key) {
-                "hide_file" -> AppConfig.putShowHiddenFile(value)
-                "splash_page" -> AppConfig.putShowSplashAnimation(value)
-                "backup_domain_enable" -> AppConfig.putBackupDomainEnable(value)
+            try {
+                when (key) {
+                    "hide_file" -> AppConfig.putShowHiddenFile(value)
+                    "splash_page" -> AppConfig.putShowSplashAnimation(value)
+                    "backup_domain_enable" -> AppConfig.putBackupDomainEnable(value)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "AppSettingDataStore",
+                    "putBoolean",
+                    "Failed to put boolean value for key: $key, value: $value"
+                )
             }
         }
 
         override fun getString(key: String?, defValue: String?): String? {
-            return when (key) {
-                "backup_domain_address" -> AppConfig.getBackupDomain()
-                else -> super.getString(key, defValue)
+            return try {
+                when (key) {
+                    "backup_domain_address" -> AppConfig.getBackupDomain()
+                    else -> super.getString(key, defValue)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "AppSettingDataStore",
+                    "getString",
+                    "Failed to get string value for key: $key"
+                )
+                defValue
             }
         }
 
         override fun putString(key: String?, value: String?) {
-            when (key) {
-                "backup_domain_address" -> AppConfig.putBackupDomain(value ?: Api.DAN_DAN_SPARE)
-                else -> super.putString(key, value)
+            try {
+                when (key) {
+                    "backup_domain_address" -> AppConfig.putBackupDomain(value ?: Api.DAN_DAN_SPARE)
+                    else -> super.putString(key, value)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "AppSettingDataStore",
+                    "putString",
+                    "Failed to put string value for key: $key, value: $value"
+                )
             }
         }
     }

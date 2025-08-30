@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.UserRepository
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SecurityHelper
 import com.xyoye.common_component.utils.UserInfoHelper
 import com.xyoye.common_component.weight.ToastCenter
@@ -27,48 +28,83 @@ class RegisterViewModel : BaseViewModel() {
     val registerLiveData = MutableLiveData<LoginData>()
 
     fun register() {
-        val account = accountField.get()
-        val email = emailField.get()
-        val password = passwordField.get()
-        val screenName = screenNameField.get()
+        try {
+            val account = accountField.get()
+            val email = emailField.get()
+            val password = passwordField.get()
+            val screenName = screenNameField.get()
 
-        val allowRegister = checkAccount(account)
-            && checkPassword(password)
-            && checkEmail(email)
-            && checkScreenName(screenName)
-        if (!allowRegister)
-            return
+            val allowRegister = checkAccount(account)
+                && checkPassword(password)
+                && checkEmail(email)
+                && checkScreenName(screenName)
+            if (!allowRegister)
+                return
 
-        val appId = SecurityHelper.getInstance().appId
-        val unixTimestamp = System.currentTimeMillis() / 1000
-        val hashInfo = appId + email + password + screenName + unixTimestamp + account
-        val hash = SecurityHelper.getInstance().buildHash(hashInfo)
+            val appId = SecurityHelper.getInstance().appId
+            val unixTimestamp = System.currentTimeMillis() / 1000
+            val hashInfo = appId + email + password + screenName + unixTimestamp + account
+            val hash = SecurityHelper.getInstance().buildHash(hashInfo)
 
-        viewModelScope.launch {
-            showLoading()
-            val result = UserRepository.register(
-                account!!,
-                password!!,
-                screenName!!,
-                email!!,
-                appId,
-                unixTimestamp.toString(),
-                hash
+            viewModelScope.launch {
+                try {
+                    showLoading()
+                    val result = UserRepository.register(
+                        account!!,
+                        password!!,
+                        screenName!!,
+                        email!!,
+                        appId,
+                        unixTimestamp.toString(),
+                        hash
+                    )
+                    hideLoading()
+
+                    if (result.isFailure) {
+                        val exception = result.exceptionOrNull()
+                        exception?.let {
+                            ErrorReportHelper.postCatchedExceptionWithContext(
+                                it,
+                                "RegisterViewModel",
+                                "register",
+                                "Register network request failed for user: $account"
+                            )
+                        }
+                        result.exceptionOrNull()?.message?.toastError()
+                        return@launch
+                    }
+
+                    val data = result.getOrNull()
+                    if (data != null && UserInfoHelper.login(data)) {
+                        ToastCenter.showSuccess("注册成功")
+                        registerLiveData.postValue(data)
+                    } else {
+                        ErrorReportHelper.postException(
+                            "Registration successful but login failed",
+                            "RegisterViewModel",
+                            null
+                        )
+                        ToastCenter.showError("注册错误，请稍后再试")
+                    }
+                } catch (e: Exception) {
+                    hideLoading()
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        e,
+                        "RegisterViewModel",
+                        "register",
+                        "Unexpected error during registration process for user: $account"
+                    )
+                    ToastCenter.showError("注册过程中发生错误，请稍后再试")
+                }
+            }
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "RegisterViewModel",
+                "register",
+                "Error in register method initialization"
             )
-            hideLoading()
-
-            if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
-                return@launch
-            }
-
-            val data = result.getOrNull()
-            if (data != null && UserInfoHelper.login(data)) {
-                ToastCenter.showSuccess("注册成功")
-                registerLiveData.postValue(data)
-            } else {
-                ToastCenter.showError("注册错误，请稍后再试")
-            }
+            ToastCenter.showError("注册初始化失败，请稍后再试")
         }
     }
 

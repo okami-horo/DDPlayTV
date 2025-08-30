@@ -1,5 +1,6 @@
 package com.xyoye.common_component.utils.seven_zip
 
+import com.xyoye.common_component.utils.ErrorReportHelper
 import net.sf.sevenzipjbinding.ISequentialOutStream
 import net.sf.sevenzipjbinding.SevenZipException
 import java.io.File
@@ -30,6 +31,11 @@ class SequentialOutStream constructor(
                 fileOutputStream.flush()
             }
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "SequentialOutStream.write",
+                "写入7z文件失败: $fileName"
+            )
             throw SevenZipException("failed to write file: $fileName")
         }
         return data.size

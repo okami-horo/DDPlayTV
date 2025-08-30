@@ -4,6 +4,7 @@ import com.xunlei.downloadlib.XLDownloadManager
 import com.xunlei.downloadlib.XLTaskHelper
 import com.xunlei.downloadlib.parameter.*
 import com.xyoye.common_component.storage.file.helper.TorrentBean
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.MagnetUtils
 import com.xyoye.common_component.utils.PathHelper
 import kotlinx.coroutines.delay
@@ -50,66 +51,129 @@ class ThunderManager private constructor() {
      * @return 种子文件路径
      */
     suspend fun downloadTorrentFile(magnet: String): String? {
-        val hash = MagnetUtils.getMagnetHash(magnet)
-        if (hash.isEmpty())
-            return null
+        return try {
+            val hash = MagnetUtils.getMagnetHash(magnet)
+            if (hash.isEmpty()) {
+                ErrorReportHelper.postException(
+                    "Invalid magnet link format",
+                    "ThunderManager",
+                    RuntimeException("Magnet link hash extraction failed: $magnet")
+                )
+                return null
+            }
 
-        val torrentTaskParam = MagnetTaskParam().apply {
-            setFileName("$hash.torrent")
-            setFilePath(torrentDirectory.absolutePath)
-            setUrl("magnet:?xt=urn:btih:$hash")
+            val torrentTaskParam = MagnetTaskParam().apply {
+                setFileName("$hash.torrent")
+                setFilePath(torrentDirectory.absolutePath)
+                setUrl("magnet:?xt=urn:btih:$hash")
+            }
+
+            val torrentTaskId = XLTaskHelper.getInstance().addMagnetTask(torrentTaskParam)
+            if (torrentTaskId == INVALID_ID) {
+                ErrorReportHelper.postException(
+                    "Failed to create torrent download task",
+                    "ThunderManager",
+                    RuntimeException("XLTaskHelper.addMagnetTask returned INVALID_ID for magnet: $magnet")
+                )
+                return null
+            }
+
+            waitTorrentDownloaded(torrentTaskId, torrentTaskParam)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ThunderManager",
+                "downloadTorrentFile",
+                "磁链: $magnet"
+            )
+            null
         }
-
-        val torrentTaskId = XLTaskHelper.getInstance().addMagnetTask(torrentTaskParam)
-        if (torrentTaskId == INVALID_ID) {
-            return null
-        }
-
-        return waitTorrentDownloaded(torrentTaskId, torrentTaskParam)
     }
 
     /**
      * 生成视频播放地址
      */
     suspend fun generatePlayUrl(torrent: TorrentBean, index: Int): String? {
-        // 停止其它任务
-        stopAllTask()
+        return try {
+            // 停止其它任务
+            stopAllTask()
 
-        //启动下载任务
-        val taskId = createPlayTask(torrent, index)
-        if (taskId == INVALID_ID) {
-            return null
+            //启动下载任务
+            val taskId = createPlayTask(torrent, index)
+            if (taskId == INVALID_ID) {
+                ErrorReportHelper.postException(
+                    "Failed to create play task",
+                    "ThunderManager",
+                    RuntimeException("createPlayTask returned INVALID_ID for torrent: ${torrent.torrentPath}, index: $index")
+                )
+                return null
+            }
+
+            // 保存任务ID
+            mTaskList[torrent.torrentPath] = taskId
+
+            val fileName = torrent.mSubFileInfo.find { it.mFileIndex == index }?.mFileName ?: "temp.mp4"
+            val filePath = "${cacheDirectory.absolutePath}/$fileName"
+            val playUrl = XLTaskLocalUrl()
+            XLDownloadManager.getInstance().getLocalUrl(filePath, playUrl)
+            playUrl.mStrUrl
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ThunderManager",
+                "generatePlayUrl",
+                "种子路径: ${torrent.torrentPath}, 文件索引: $index"
+            )
+            null
         }
-
-        // 保存任务ID
-        mTaskList[torrent.torrentPath] = taskId
-
-        val fileName = torrent.mSubFileInfo.find { it.mFileIndex == index }?.mFileName ?: "temp.mp4"
-        val filePath = "${cacheDirectory.absolutePath}/$fileName"
-        val playUrl = XLTaskLocalUrl()
-        XLDownloadManager.getInstance().getLocalUrl(filePath, playUrl)
-        return playUrl.mStrUrl
     }
 
     /**
      * 停止并移除任务
      */
     fun stopTask(taskId: Long) {
-        mTaskList.entries.find { it.value == taskId }?.let {
-            mTaskList.remove(it.key)
+        try {
+            mTaskList.entries.find { it.value == taskId }?.let {
+                mTaskList.remove(it.key)
+            }
+            XLTaskHelper.getInstance().deleteTask(taskId, cacheDirectory.absolutePath)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ThunderManager",
+                "stopTask",
+                "任务ID: $taskId"
+            )
         }
-        XLTaskHelper.getInstance().deleteTask(taskId, cacheDirectory.absolutePath)
     }
 
     /**
-     * 停止所有认为你
+     * 停止所有任务
      */
     private fun stopAllTask() {
-        val iterator = mTaskList.iterator()
-        while (iterator.hasNext()) {
-            val entity = iterator.next()
-            XLTaskHelper.getInstance().deleteTask(entity.value, cacheDirectory.absolutePath)
-            iterator.remove()
+        try {
+            val iterator = mTaskList.iterator()
+            while (iterator.hasNext()) {
+                val entity = iterator.next()
+                try {
+                    XLTaskHelper.getInstance().deleteTask(entity.value, cacheDirectory.absolutePath)
+                } catch (e: Exception) {
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        e,
+                        "ThunderManager",
+                        "stopAllTask",
+                        "删除单个任务失败，任务ID: ${entity.value}"
+                    )
+                }
+                iterator.remove()
+            }
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ThunderManager",
+                "stopAllTask",
+                "停止所有任务时发生异常"
+            )
         }
     }
 
@@ -120,22 +184,53 @@ class ThunderManager private constructor() {
         torrentTaskId: Long,
         param: MagnetTaskParam
     ): String? {
-        return withTimeoutOrNull(TIME_OUT_DOWNLOAD_TORRENT) {
-            var taskInfo = XLTaskHelper.getInstance().getTaskInfo(torrentTaskId)
-            while (taskInfo.mTaskStatus == XLConstant.XLTaskStatus.TASK_IDLE
-                || taskInfo.mTaskStatus == XLConstant.XLTaskStatus.TASK_RUNNING
-            ) {
-                delay(300L)
-                taskInfo = XLTaskHelper.getInstance().getTaskInfo(torrentTaskId)
-            }
-            XLTaskHelper.getInstance().stopTask(torrentTaskId)
-            return@withTimeoutOrNull if (
-                taskInfo.mTaskStatus == XLConstant.XLTaskStatus.TASK_SUCCESS
-            ) {
-                "${param.mFilePath}/${param.mFileName}"
-            } else {
+        return try {
+            withTimeoutOrNull(TIME_OUT_DOWNLOAD_TORRENT) {
+                var taskInfo = XLTaskHelper.getInstance().getTaskInfo(torrentTaskId)
+                while (taskInfo.mTaskStatus == XLConstant.XLTaskStatus.TASK_IDLE
+                    || taskInfo.mTaskStatus == XLConstant.XLTaskStatus.TASK_RUNNING
+                ) {
+                    delay(300L)
+                    taskInfo = XLTaskHelper.getInstance().getTaskInfo(torrentTaskId)
+                }
+                try {
+                    XLTaskHelper.getInstance().stopTask(torrentTaskId)
+                } catch (e: Exception) {
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        e,
+                        "ThunderManager",
+                        "waitTorrentDownloaded",
+                        "停止种子下载任务失败，任务ID: $torrentTaskId"
+                    )
+                }
+                return@withTimeoutOrNull if (
+                    taskInfo.mTaskStatus == XLConstant.XLTaskStatus.TASK_SUCCESS
+                ) {
+                    "${param.mFilePath}/${param.mFileName}"
+                } else {
+                    ErrorReportHelper.postException(
+                        "Torrent download failed",
+                        "ThunderManager",
+                        RuntimeException("Task status: ${taskInfo.mTaskStatus}, error code: ${taskInfo.mErrorCode}")
+                    )
+                    null
+                }
+            } ?: run {
+                ErrorReportHelper.postException(
+                    "Torrent download timeout",
+                    "ThunderManager",
+                    RuntimeException("Timeout waiting for torrent download, task ID: $torrentTaskId")
+                )
                 null
             }
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ThunderManager",
+                "waitTorrentDownloaded",
+                "任务ID: $torrentTaskId, 文件名: ${param.mFileName}"
+            )
+            null
         }
     }
 
@@ -174,57 +269,115 @@ class ThunderManager private constructor() {
         selectedIndexes: BtIndexSet,
         deSelectIndexes: BtIndexSet
     ): Long {
-        //启动下载任务
-        var taskId = XLTaskHelper.getInstance()
-            .startTask(btTaskParam, selectedIndexes, deSelectIndexes)
-        if (taskId == INVALID_ID) {
-            stopTask(taskId)
-            delay(200)
-            taskId = XLTaskHelper.getInstance()
+        return try {
+            //启动下载任务
+            var taskId = XLTaskHelper.getInstance()
                 .startTask(btTaskParam, selectedIndexes, deSelectIndexes)
-        }
+            if (taskId == INVALID_ID) {
+                stopTask(taskId)
+                delay(200)
+                taskId = XLTaskHelper.getInstance()
+                    .startTask(btTaskParam, selectedIndexes, deSelectIndexes)
+            }
 
-        if (taskId == INVALID_ID) {
-            stopTask(taskId)
-            return INVALID_ID
-        }
+            if (taskId == INVALID_ID) {
+                stopTask(taskId)
+                ErrorReportHelper.postException(
+                    "Failed to start torrent task after retry",
+                    "ThunderManager",
+                    RuntimeException("XLTaskHelper.startTask returned INVALID_ID twice for torrent: ${btTaskParam.mTorrentPath}")
+                )
+                return INVALID_ID
+            }
 
-        //任务无法下载
-        if (checkTaskFailed(taskId)) {
-            stopTask(taskId)
-            return INVALID_ID
-        }
+            //任务无法下载
+            if (checkTaskFailed(taskId)) {
+                stopTask(taskId)
+                ErrorReportHelper.postException(
+                    "Torrent task failed during check",
+                    "ThunderManager",
+                    RuntimeException("Task failed check, task ID: $taskId, torrent: ${btTaskParam.mTorrentPath}")
+                )
+                return INVALID_ID
+            }
 
-        return taskId
+            taskId
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ThunderManager",
+                "createTorrentTask",
+                "种子路径: ${btTaskParam.mTorrentPath}"
+            )
+            INVALID_ID
+        }
     }
 
     /**
      * 检查下载任务是否失败
      */
     private suspend fun checkTaskFailed(taskId: Long): Boolean {
-        delay(2000)
+        return try {
+            delay(2000)
 
-        //任务下载失败
-        val taskStatus = XLTaskHelper.getInstance().getTaskInfo(taskId).mTaskStatus
-        if (taskStatus == XLConstant.XLTaskStatus.TASK_FAILED) {
-            return true
+            //任务下载失败
+            val taskInfo = XLTaskHelper.getInstance().getTaskInfo(taskId)
+            val taskStatus = taskInfo.mTaskStatus
+            if (taskStatus == XLConstant.XLTaskStatus.TASK_FAILED) {
+                ErrorReportHelper.postException(
+                    "Download task failed",
+                    "ThunderManager",
+                    RuntimeException("Task ID: $taskId, Status: $taskStatus, Error Code: ${taskInfo.mErrorCode}")
+                )
+                return true
+            }
+
+            false
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ThunderManager",
+                "checkTaskFailed",
+                "任务ID: $taskId"
+            )
+            true // 如果检查过程出错，认为任务失败
         }
-
-        return false
     }
 
     /**
      * 获取种子文件信息
      */
     fun getTaskInfo(torrentPath: String): TorrentInfo {
-        return XLTaskHelper.getInstance().getTorrentInfo(torrentPath)
+        return try {
+            XLTaskHelper.getInstance().getTorrentInfo(torrentPath)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ThunderManager",
+                "getTaskInfo",
+                "种子路径: $torrentPath"
+            )
+            // 返回默认的空TorrentInfo或重新抛出异常
+            throw e
+        }
     }
 
     /**
      * 获取下载任务信息
      */
     fun getTaskInfo(taskId: Long): XLTaskInfo {
-        return XLTaskHelper.getInstance().getTaskInfo(taskId)
+        return try {
+            XLTaskHelper.getInstance().getTaskInfo(taskId)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ThunderManager",
+                "getTaskInfo",
+                "任务ID: $taskId"
+            )
+            // 返回默认的空XLTaskInfo或重新抛出异常
+            throw e
+        }
     }
 
     /**

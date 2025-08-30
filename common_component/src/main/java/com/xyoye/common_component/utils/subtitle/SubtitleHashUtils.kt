@@ -1,6 +1,7 @@
 package com.xyoye.common_component.utils.subtitle
 
 import com.xyoye.common_component.extension.toHexString
+import com.xyoye.common_component.utils.ErrorReportHelper
 import java.io.IOException
 import java.io.RandomAccessFile
 import java.security.MessageDigest
@@ -38,13 +39,28 @@ object SubtitleHashUtils {
             }
             return messageDigest.digest().toHexString().uppercase(Locale.ROOT)
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "SubtitleHashUtils.getThunderHash",
+                "计算迅雷哈希时IO异常: $videoPath"
+            )
             e.printStackTrace()
         } catch (e: NoSuchAlgorithmException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "SubtitleHashUtils.getThunderHash",
+                "计算迅雷哈希时算法异常: $videoPath"
+            )
             e.printStackTrace()
         } finally {
             try {
                 file?.close()
             } catch (e: IOException) {
+                ErrorReportHelper.postCatchedException(
+                    e,
+                    "SubtitleHashUtils.getThunderHash",
+                    "关闭文件时IO异常: $videoPath"
+                )
                 e.printStackTrace()
             }
         }
@@ -76,8 +92,18 @@ object SubtitleHashUtils {
             stringBuilder.deleteCharAt(stringBuilder.length - 1)
             return stringBuilder.toString()
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "SubtitleHashUtils.getShooterHash",
+                "计算Shooter哈希时IO异常: $videoPath"
+            )
             e.printStackTrace()
         } catch (e: NoSuchAlgorithmException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "SubtitleHashUtils.getShooterHash",
+                "计算Shooter哈希时算法异常: $videoPath"
+            )
             e.printStackTrace()
         }
         return null

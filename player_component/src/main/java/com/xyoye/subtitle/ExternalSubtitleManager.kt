@@ -7,6 +7,7 @@ import com.xyoye.subtitle.info.TimedTextObject
 import java.io.File
 import kotlin.math.max
 import kotlin.math.min
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2020/12/14.
@@ -104,6 +105,12 @@ class ExternalSubtitleManager {
                 }
             }
         } catch (e: FatalParsingException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "ExternalSubtitleManager",
+                "parserSource",
+                "Fatal error parsing subtitle file: $subtitlePath"
+            )
             e.printStackTrace()
             ToastCenter.showOriginalToast("解析外挂字幕文件失败")
         }

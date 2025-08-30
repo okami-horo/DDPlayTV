@@ -11,6 +11,7 @@ import com.xyoye.common_component.network.repository.AnimeRepository
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.storage.StorageFactory
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.BangumiData
 import com.xyoye.data_component.data.EpisodeData
@@ -170,7 +171,12 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
         return try {
             utcTimeFormat.parse(time)
         } catch (e: Exception) {
-            e.printStackTrace()
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "AnimeEpisodeFragmentViewModel",
+                "getCloudPlayTime",
+                "解析UTC时间失败: $time"
+            )
             null
         }
     }
@@ -308,7 +314,14 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
             hideLoading()
 
             if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
+                val exception = result.exceptionOrNull()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    exception ?: RuntimeException("Add episode play history failed with unknown error"),
+                    "AnimeEpisodeFragmentViewModel",
+                    "submitEpisodesViewed",
+                    "剧集ID列表: ${episodeIds.joinToString(", ")}"
+                )
+                exception?.message?.toastError()
                 return@launch
             }
 

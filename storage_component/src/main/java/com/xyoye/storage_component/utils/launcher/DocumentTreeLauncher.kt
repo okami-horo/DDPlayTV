@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 
 /**
@@ -41,8 +42,25 @@ class DocumentTreeLauncher(
         try {
             openDocumentTree.launch(null)
         } catch (e: ActivityNotFoundException) {
+            // 上报ActivityNotFoundException异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "DocumentTreeLauncher",
+                "launch",
+                "SAF授权页启动失败"
+            )
             e.printStackTrace()
             ToastCenter.showError("无法启动SAF授权页")
+        } catch (e: Exception) {
+            // 上报其他未预期的异常
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "DocumentTreeLauncher",
+                "launch",
+                "启动document tree时发生意外异常"
+            )
+            e.printStackTrace()
+            ToastCenter.showError("启动文件选择器失败")
         }
     }
 }

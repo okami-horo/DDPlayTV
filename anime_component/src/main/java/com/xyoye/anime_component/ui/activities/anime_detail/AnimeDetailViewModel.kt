@@ -9,6 +9,7 @@ import com.xyoye.common_component.config.UserConfig
 import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.AnimeRepository
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.BangumiData
 import kotlinx.coroutines.launch
@@ -31,7 +32,14 @@ class AnimeDetailViewModel : BaseViewModel() {
             val result = AnimeRepository.getAnimeDetail(animeId)
 
             if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
+                val exception = result.exceptionOrNull()
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    exception ?: RuntimeException("Get anime detail failed with unknown error"),
+                    "AnimeDetailViewModel",
+                    "getAnimeDetail",
+                    "动画ID: $animeId"
+                )
+                exception?.message?.toastError()
                 return@launch
             }
 
@@ -64,7 +72,14 @@ class AnimeDetailViewModel : BaseViewModel() {
             }
 
             if (result.isFailure) {
+                val exception = result.exceptionOrNull()
                 val status = if (isFollowed) "取消关注" else "关注"
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    exception ?: RuntimeException("$status anime failed with unknown error"),
+                    "AnimeDetailViewModel",
+                    "followAnime",
+                    "动画ID: $animeId, 操作: $status"
+                )
                 ToastCenter.showError("${status}失败，请重试")
                 return@launch
             }

@@ -18,6 +18,7 @@ import com.xyoye.subtitle.MixedSubtitle
 import kotlinx.coroutines.launch
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
 import tv.danmaku.ijk.media.player.misc.IjkTrackInfo
+import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2020/10/29.
@@ -61,6 +62,12 @@ class IjkVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
                 mMediaPlayer.setDataSource(mContext, uri, headers)
             }
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "IjkVideoPlayer",
+                "setDataSource",
+                "Failed to set data source: $path"
+            )
             mPlayerEventListener.onError(e)
         }
     }
@@ -73,6 +80,12 @@ class IjkVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
         try {
             mMediaPlayer.prepareAsync()
         } catch (e: IllegalStateException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "IjkVideoPlayer",
+                "prepareAsync",
+                "Failed to prepare player"
+            )
             mPlayerEventListener.onError(e)
         }
     }
@@ -81,6 +94,12 @@ class IjkVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
         try {
             mMediaPlayer.start()
         } catch (e: IllegalStateException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "IjkVideoPlayer",
+                "start",
+                "Failed to start player"
+            )
             mPlayerEventListener.onError(e)
         }
     }
@@ -89,6 +108,12 @@ class IjkVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
         try {
             mMediaPlayer.pause()
         } catch (e: IllegalStateException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "IjkVideoPlayer",
+                "pause",
+                "Failed to pause player"
+            )
             mPlayerEventListener.onError(e)
         }
     }
@@ -97,6 +122,12 @@ class IjkVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
         try {
             mMediaPlayer.stop()
         } catch (e: IllegalStateException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "IjkVideoPlayer",
+                "stop",
+                "Failed to stop player"
+            )
             mPlayerEventListener.onError(e)
         }
     }
@@ -123,6 +154,12 @@ class IjkVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
         try {
             mMediaPlayer.seekTo(timeMs)
         } catch (e: java.lang.IllegalStateException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "IjkVideoPlayer",
+                "seekTo",
+                "Failed to seek to position: $timeMs"
+            )
             mPlayerEventListener.onError(e)
         }
     }

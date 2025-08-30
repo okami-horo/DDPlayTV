@@ -1,6 +1,7 @@
 package com.xyoye.common_component.network.helper
 
 import com.xyoye.common_component.BuildConfig
+import com.xyoye.common_component.utils.ErrorReportHelper
 import okhttp3.*
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.internal.http.promisesBody
@@ -39,6 +40,11 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
             val response: Response = try {
                 chain.proceed(request)
             } catch (e: Exception) {
+                ErrorReportHelper.postCatchedException(
+                    e,
+                    "LoggerInterceptor.intercept",
+                    "HTTP请求失败: ${request.url}"
+                )
                 log("<-- HTTP FAILED: $e")
                 throw e
             }
@@ -113,6 +119,11 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
                 }
             }
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "LoggerInterceptor.logForRequest",
+                "记录请求日志失败: ${request.url}"
+            )
             e.printStackTrace()
         } finally {
             log("--> END " + request.method)
@@ -165,6 +176,11 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
                 }
             }
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "LoggerInterceptor.logForResponse",
+                "记录响应日志失败: ${clone.request.url}"
+            )
             e.printStackTrace()
         } finally {
             log("<-- END HTTP")
@@ -184,6 +200,11 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
                 )
             log("\tbody:" + buffer.readString(charset))
         } catch (e: Exception) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "LoggerInterceptor.bodyToString",
+                "记录请求体日志失败"
+            )
             e.printStackTrace()
         }
     }

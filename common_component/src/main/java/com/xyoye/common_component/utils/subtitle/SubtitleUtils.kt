@@ -1,6 +1,7 @@
 package com.xyoye.common_component.utils.subtitle
 
 import com.xyoye.common_component.extension.formatFileName
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
 import com.xyoye.common_component.utils.PathHelper
 import com.xyoye.common_component.utils.seven_zip.SevenZipUtils
@@ -51,6 +52,11 @@ object SubtitleUtils {
             outputStream.flush()
             return subtitleFile.absolutePath
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "SubtitleUtils.saveSubtitle",
+                "保存字幕文件失败: $fileName"
+            )
             e.printStackTrace()
             return null
         } finally {
@@ -83,6 +89,11 @@ object SubtitleUtils {
             //解压
             return SevenZipUtils.extractFile(zipFile)
         } catch (e: IOException) {
+            ErrorReportHelper.postCatchedException(
+                e,
+                "SubtitleUtils.saveAndUnzipFile",
+                "保存并解压字幕文件失败: $fileName"
+            )
             e.printStackTrace()
         } finally {
             IOUtils.closeIO(inputStream)
