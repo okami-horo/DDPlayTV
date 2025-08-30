@@ -12,7 +12,7 @@ import com.tencent.mmkv.MMKV
 import com.xyoye.common_component.BuildConfig
 import com.xyoye.common_component.notification.Notifications
 import com.xyoye.common_component.utils.ActivityHelper
-import com.xyoye.common_component.utils.SecurityHelper
+import com.xyoye.common_component.utils.SecurityHelperConfig
 import com.xyoye.common_component.utils.aliyun.EMASHelper
 import com.xyoye.open_cc.OpenCCFile
 
@@ -49,7 +49,7 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         ARouter.init(this)
         CrashReport.initCrashReport(
             this,
-            SecurityHelper.getInstance().buglyId,
+            SecurityHelperConfig.BUGLY_APP_ID,
             BuildConfig.DEBUG
         )
         Notifications.setupNotificationChannels(this)

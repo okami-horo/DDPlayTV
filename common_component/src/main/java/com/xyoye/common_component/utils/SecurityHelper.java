@@ -36,11 +36,22 @@ public class SecurityHelper {
     }
 
     public String getBuglyId() {
-        return getKey(KEY_BUGLY, appContext);
+        // 现在直接使用SecurityHelperConfig，不再需要复杂的fallback逻辑
+        return SecurityHelperConfig.INSTANCE.getBUGLY_APP_ID();
     }
 
     public String getAppId() {
-        return getKey(KEY_DANDAN, appContext);
+        try {
+            String nativeKey = getKey(KEY_DANDAN, appContext);
+            // 如果native方法返回错误或为空，使用配置文件中的ID
+            if (ERROR_RESULT.equals(nativeKey) || nativeKey == null || nativeKey.isEmpty()) {
+                return SecurityHelperConfig.INSTANCE.getDANDAN_APP_ID();
+            }
+            return nativeKey;
+        } catch (Exception e) {
+            // 如果native库加载失败，使用配置文件中的ID
+            return SecurityHelperConfig.INSTANCE.getDANDAN_APP_ID();
+        }
     }
 
     public String getAliyunSecret() {

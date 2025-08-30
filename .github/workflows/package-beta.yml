@@ -23,7 +23,17 @@ jobs:
           java-version: 11
           distribution: adopt
 
-      # 3.获取签名密钥
+      # 3.注入密钥到环境变量
+      - name: inject secrets to environment  
+        env:
+          BUGLY_APP_ID: ${{ secrets.BUGLY_APP_ID }}
+          DANDAN_APP_ID: ${{ secrets.DANDAN_APP_ID }}
+          ALIYUN_SECRET: ${{ secrets.ALIYUN_SECRET }}
+        run: |
+          echo "✅ Secrets injected for beta build"
+          echo "BUGLY_APP_ID length: ${#BUGLY_APP_ID}"
+
+      # 4.获取签名密钥
       - name: decrypt key
         run: |
           gpg --quiet --batch --yes --decrypt \
@@ -34,12 +44,17 @@ jobs:
       - name: setup build type
         run: echo "BUILD_TYPE=beta" >> $GITHUB_ENV
 
-      # 5.构建安装包
+      # 6.构建安装包
       - name: assemble apk
         env:
+          # 签名相关密钥
           KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
           ALIAS_NAME: ${{ secrets.ALIAS_NAME }}
           ALIAS_PASS: ${{ secrets.ALIAS_PASS }}
+          # 应用密钥 - 从Secrets注入
+          BUGLY_APP_ID: ${{ secrets.BUGLY_APP_ID }}
+          DANDAN_APP_ID: ${{ secrets.DANDAN_APP_ID }}
+          ALIYUN_SECRET: ${{ secrets.ALIYUN_SECRET }}
         run: chmod +x gradlew &&./gradlew clean assemble${{ env.BUILD_TYPE }} --stacktrace
 
       # 6.配置构建版本

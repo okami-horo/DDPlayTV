@@ -32,7 +32,9 @@ fun DocumentFile.fileNameAndMineType(): Pair<String, String> {
             mimeType = cursor.getString(1) ?: ""
         }
     } catch (e: Exception) {
-        e.printStackTrace()
+        com.xyoye.common_component.utils.ErrorReportHelper.postCatchedException(
+            e, "DocumentFileExt", "Failed to query document file info for uri: $uri"
+        )
     } finally {
         IOUtils.closeIO(cursor)
     }

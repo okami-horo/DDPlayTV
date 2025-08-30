@@ -10,7 +10,7 @@ import com.taobao.update.datasource.UpdateDataSource
 import com.xyoye.common_component.R
 import com.xyoye.common_component.extension.isNightMode
 import com.xyoye.common_component.extension.toResString
-import com.xyoye.common_component.utils.SecurityHelper
+import com.xyoye.common_component.utils.SecurityHelperConfig
 
 /**
  * Created by xyoye on 2022/10/22.
@@ -18,7 +18,7 @@ import com.xyoye.common_component.utils.SecurityHelper
 
 object EMASHelper {
     private const val appKey = "333777779"
-    private val appSecret = SecurityHelper.getInstance().aliyunSecret
+    private val appSecret = SecurityHelperConfig.ALIYUN_SECRET
 
     fun init(application: Application) {
         initFeedback(application)

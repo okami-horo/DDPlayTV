@@ -18,6 +18,23 @@ android {
 
     defaultConfig {
         buildConfigField("String", "APPLICATION_ID", "\"${Versions.applicationId}\"")
+        
+        // 从环境变量或属性读取密钥，用于GitHub Actions注入
+        // 本地开发时使用默认值，CI/CD时从Secrets注入
+        val buglyAppId = System.getenv("BUGLY_APP_ID") 
+            ?: project.findProperty("BUGLY_APP_ID")?.toString() 
+            ?: "DEFAULT_BUGLY_ID"
+        buildConfigField("String", "BUGLY_APP_ID", "\"$buglyAppId\"")
+        
+        val dandanAppId = System.getenv("DANDAN_APP_ID") 
+            ?: project.findProperty("DANDAN_APP_ID")?.toString() 
+            ?: "DEFAULT_DANDAN_ID"
+        buildConfigField("String", "DANDAN_APP_ID", "\"$dandanAppId\"")
+        
+        val aliyunSecret = System.getenv("ALIYUN_SECRET") 
+            ?: project.findProperty("ALIYUN_SECRET")?.toString() 
+            ?: "DEFAULT_ALIYUN_SECRET"
+        buildConfigField("String", "ALIYUN_SECRET", "\"$aliyunSecret\"")
     }
     namespace = "com.xyoye.common_component"
 }

@@ -1,0 +1,23 @@
+# 本地开发配置文件
+# 请将此文件添加到 .gitignore 中，避免提交敏感信息到版本控制
+
+# Bugly 配置
+# 1. 登录腾讯Bugly控制台: https://bugly.qq.com/
+# 2. 创建或选择您的应用
+# 3. 在应用设置中找到App ID和App Key
+# 4. 将下面的YOUR_BUGLY_APP_ID_HERE替换为您的实际App ID
+
+BUGLY_APP_ID=YOUR_BUGLY_APP_ID_HERE
+
+# DanDan API 配置
+# 如果您需要使用弹弹play的API服务，请配置以下信息
+DANDAN_APP_ID=YOUR_DANDAN_APP_ID_HERE
+
+# 阿里云配置（可选）
+# 如果您使用阿里云服务，请配置以下信息
+ALIYUN_SECRET=YOUR_ALIYUN_SECRET_HERE
+
+# 配置说明：
+# 1. 配置完成后，请重新编译项目
+# 2. 如果您只需要本地调试，Bugly ID是必需的
+# 3. 其他配置项根据您的实际需求填写

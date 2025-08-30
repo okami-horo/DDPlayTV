@@ -20,7 +20,7 @@ class SignatureInterceptor : Interceptor {
         SecurityHelper.getInstance().getSignatureMap(
             oldRequest.url.encodedPath,
             BaseApplication.getAppContext()
-        ).forEach {
+        )?.forEach {
             newRequest.addHeader(it.key, it.value ?: "")
         }
 

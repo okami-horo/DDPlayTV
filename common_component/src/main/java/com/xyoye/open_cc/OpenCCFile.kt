@@ -43,7 +43,9 @@ object OpenCCFile {
                 copyFileFromAssets(context, assetsFilePath, destFilePath)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            com.xyoye.common_component.utils.ErrorReportHelper.postCatchedException(
+                e, "OpenCCFile", "Failed to initialize OpenCC files"
+            )
         }
     }
 

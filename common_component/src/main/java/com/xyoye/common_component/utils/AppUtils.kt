@@ -10,7 +10,7 @@ import com.xyoye.common_component.base.app.BaseApplication
 
 object AppUtils {
     fun getVersionCode(): Long {
-        if (SecurityHelper.getInstance().isOfficialApplication) {
+        if (SecurityHelperConfig.DANDAN_APP_ID.isNotEmpty()) {
             val packageName = BaseApplication.getAppContext().applicationInfo.packageName
             val packageInfo =
                 BaseApplication.getAppContext().packageManager.getPackageInfo(packageName, 0)
@@ -20,7 +20,7 @@ object AppUtils {
     }
 
     fun getVersionName(): String {
-        if (SecurityHelper.getInstance().isOfficialApplication) {
+        if (SecurityHelperConfig.DANDAN_APP_ID.isNotEmpty()) {
             val packageName = BaseApplication.getAppContext().applicationInfo.packageName
             val packageInfo =
                 BaseApplication.getAppContext().packageManager.getPackageInfo(packageName, 0)

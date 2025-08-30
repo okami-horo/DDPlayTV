@@ -36,7 +36,9 @@ object OpenCC {
         return try {
             convert(text, config.absolutePath)
         } catch (t: Throwable) {
-            t.printStackTrace()
+            com.xyoye.common_component.utils.ErrorReportHelper.postCatchedException(
+                t, "OpenCC", "Failed to convert text with config: ${config.absolutePath}"
+            )
             text
         }
     }

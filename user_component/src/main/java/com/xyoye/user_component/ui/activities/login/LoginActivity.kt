@@ -36,7 +36,7 @@ class LoginActivity : BaseActivity<LoginViewModel, ActivityLoginBinding>() {
 
         title = ""
 
-        val isOfficialApplication = SecurityHelper.getInstance().isOfficialApplication!!
+        val isOfficialApplication = SecurityHelper.getInstance().isOfficialApplication
         if (!isOfficialApplication) {
             showLimitDialog()
             return
