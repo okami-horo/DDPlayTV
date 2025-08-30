@@ -67,11 +67,6 @@ class DeveloperMenus private constructor(
      * 考虑显示认证弹窗
      */
     private fun considerShowAuthenticateDialog() {
-        // 官方应用，不做处理
-        if (SecurityHelper.getInstance().isOfficialApplication) {
-            return
-        }
-
         // 已认证，不做处理
         if (isDeveloperAuthenticate) {
             return
@@ -93,10 +88,6 @@ class DeveloperMenus private constructor(
      * 更新菜单项
      */
     private fun updateItem() {
-        if (SecurityHelper.getInstance().isOfficialApplication) {
-            item.isVisible = false
-            return
-        }
         item.isVisible = true
 
         val (title, iconRes) = if (isDeveloperAuthenticate) {

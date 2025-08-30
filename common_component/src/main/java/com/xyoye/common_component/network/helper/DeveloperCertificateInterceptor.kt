@@ -20,11 +20,6 @@ class DeveloperCertificateInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val oldRequest = chain.request()
 
-        // 官方应用，不做处理
-        if (SecurityHelper.getInstance().isOfficialApplication) {
-            return chain.proceed(oldRequest)
-        }
-
         // 请求自带凭证，不做处理
         val requestAppId = oldRequest.header(HEADER_APP_ID)
         val requestAppSecret = oldRequest.header(HEADER_APP_SECRET)

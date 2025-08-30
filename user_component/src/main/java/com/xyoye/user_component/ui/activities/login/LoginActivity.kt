@@ -36,11 +36,9 @@ class LoginActivity : BaseActivity<LoginViewModel, ActivityLoginBinding>() {
 
         title = ""
 
-        val isOfficialApplication = SecurityHelper.getInstance().isOfficialApplication
-        if (!isOfficialApplication) {
-            showLimitDialog()
-            return
-        }
+        // 注意：由于用户相关功能已关闭，显示限制对话框
+        showLimitDialog()
+        return
 
         if (!userAccount.isNullOrEmpty()) {
             viewModel.accountField.set(userAccount)

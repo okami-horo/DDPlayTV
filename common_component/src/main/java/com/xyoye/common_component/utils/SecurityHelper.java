@@ -63,7 +63,8 @@ public class SecurityHelper {
     }
 
     public Boolean isOfficialApplication() {
-        return !ERROR_RESULT.equals(getAppId());
+        // 对于fork的开源项目，始终返回false以确保认证流程正常工作
+        return false;
     }
 
     public Map<String, String> getSignatureMap(String path, Context context) {
