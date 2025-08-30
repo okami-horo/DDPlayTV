@@ -159,13 +159,37 @@ object PlayRecorder {
             return@suspendCancellableCoroutine
         }
 
-        PixelCopy.request(surface, recordBitmap, { result ->
-            if (result == PixelCopy.SUCCESS) {
-                it.resumeWhenAlive(recordBitmap)
-            } else {
+        try {
+            // 在调用前再次检查 Surface 有效性
+            if (surface.isValid.not()) {
                 it.resumeWhenAlive(null)
+                return@suspendCancellableCoroutine
             }
-        }, Handler(Looper.getMainLooper()))
+            
+            PixelCopy.request(surface, recordBitmap, { result ->
+                if (result == PixelCopy.SUCCESS) {
+                    it.resumeWhenAlive(recordBitmap)
+                } else {
+                    it.resumeWhenAlive(null)
+                }
+            }, Handler(Looper.getMainLooper()))
+        } catch (e: IllegalArgumentException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "PlayRecorder",
+                "recordSurfaceView",
+                "Surface became invalid during PixelCopy.request call"
+            )
+            it.resumeWhenAlive(null)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "PlayRecorder",
+                "recordSurfaceView",
+                "Unexpected error during surface recording"
+            )
+            it.resumeWhenAlive(null)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -191,13 +215,37 @@ object PlayRecorder {
             return@suspendCancellableCoroutine
         }
 
-        PixelCopy.request(surface, recordBitmap, { result ->
-            if (result == PixelCopy.SUCCESS) {
-                it.resumeWhenAlive(recordBitmap)
-            } else {
+        try {
+            // 在调用前再次检查 Surface 有效性
+            if (surface.isValid.not()) {
                 it.resumeWhenAlive(null)
+                return@suspendCancellableCoroutine
             }
-        }, Handler(Looper.getMainLooper()))
+            
+            PixelCopy.request(surface, recordBitmap, { result ->
+                if (result == PixelCopy.SUCCESS) {
+                    it.resumeWhenAlive(recordBitmap)
+                } else {
+                    it.resumeWhenAlive(null)
+                }
+            }, Handler(Looper.getMainLooper()))
+        } catch (e: IllegalArgumentException) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "PlayRecorder",
+                "recordTextureView",
+                "Surface became invalid during PixelCopy.request call"
+            )
+            it.resumeWhenAlive(null)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "PlayRecorder",
+                "recordTextureView",
+                "Unexpected error during texture view recording"
+            )
+            it.resumeWhenAlive(null)
+        }
     }
 
     private fun createBitmap(view: View, imageSize: Point?): Bitmap? {
