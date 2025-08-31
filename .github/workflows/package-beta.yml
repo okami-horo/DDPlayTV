@@ -4,7 +4,7 @@ name: package beta
 on:
   push:
     branches:
-      - master
+      - '**'  # 匹配所有分支
   workflow_dispatch:  # 允许手动触发
 
 jobs:
