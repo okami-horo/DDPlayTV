@@ -44,6 +44,17 @@ jobs:
       - name: setup build type
         run: echo "BUILD_TYPE=beta" >> $GITHUB_ENV
 
+      # 5.获取分支名称
+      - name: get branch name
+        run: |
+          # 提取分支名，移除 refs/heads/ 前缀
+          branch_name=${GITHUB_REF#refs/heads/}
+          # 将特殊字符替换为 - ，确保tag名称有效
+          safe_branch_name=$(echo "$branch_name" | sed 's/[^a-zA-Z0-9._-]/-/g')
+          echo "BRANCH_NAME=$safe_branch_name" >> $GITHUB_ENV
+          echo "原始分支名: $branch_name"
+          echo "安全分支名: $safe_branch_name"
+
       # 6.构建安装包
       - name: assemble apk
         env:
@@ -69,8 +80,11 @@ jobs:
           abis=(arm64-v8a armeabi-v7a universal)
           for abi in ${abis[@]}
           do
-            file_name="dandanplay_v${{ env.BUILD_VERSION }}_${abi}-${{ env.BUILD_TYPE }}.apk"
-            mv app/build/outputs/apk/${{ env.BUILD_TYPE }}/${file_name} $file_name
+            # 原文件名
+            original_name="dandanplay_v${{ env.BUILD_VERSION }}_${abi}-${{ env.BUILD_TYPE }}.apk"
+            # 新文件名（包含分支信息）
+            new_name="dandanplay_v${{ env.BUILD_VERSION }}_${abi}-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk"
+            mv app/build/outputs/apk/${{ env.BUILD_TYPE }}/${original_name} ${new_name}
           done
 
       # 8.创建Release
@@ -78,13 +92,17 @@ jobs:
         id: generate_release
         uses: softprops/action-gh-release@v1
         with:
-          name: 弹弹play概念版 v${{ env.BUILD_VERSION }} Beta
-          tag_name: dandanplay-v${{ env.BUILD_VERSION }}-beta
-          body: 最新测试包，与主分支代码同步
+          name: 弹弹play概念版 v${{ env.BUILD_VERSION }} Beta (${{ env.BRANCH_NAME }})
+          tag_name: dandanplay-v${{ env.BUILD_VERSION }}-beta-${{ env.BRANCH_NAME }}
+          body: |
+            🚀 最新测试包 - 分支: ${{ env.BRANCH_NAME }}
+            📅 构建时间: ${{ github.event.head_commit.timestamp }}
+            📝 最新提交: ${{ github.event.head_commit.message }}
+            👤 提交者: ${{ github.event.head_commit.author.name }}
           prerelease: true
           files: |
-            dandanplay_v${{ env.BUILD_VERSION }}_arm64-v8a-${{ env.BUILD_TYPE }}.apk
-            dandanplay_v${{ env.BUILD_VERSION }}_armeabi-v7a-${{ env.BUILD_TYPE }}.apk
-            dandanplay_v${{ env.BUILD_VERSION }}_universal-${{ env.BUILD_TYPE }}.apk
+            dandanplay_v${{ env.BUILD_VERSION }}_arm64-v8a-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
+            dandanplay_v${{ env.BUILD_VERSION }}_armeabi-v7a-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
+            dandanplay_v${{ env.BUILD_VERSION }}_universal-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
