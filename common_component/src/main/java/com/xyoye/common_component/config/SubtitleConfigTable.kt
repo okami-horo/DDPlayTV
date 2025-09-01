@@ -30,6 +30,10 @@ object SubtitleConfigTable {
     @MMKVFiled
     const val strokeColor = Color.BLACK
 
+    //字幕透明度百分比
+    @MMKVFiled
+    const val alpha = 100
+
     /**
      * -------------播放器设置-----------
      */

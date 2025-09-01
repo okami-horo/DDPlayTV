@@ -43,6 +43,10 @@ class SubtitleController(context: Context) : InterSubtitleController {
         subtitleTextView.updateStrokeColor()
     }
 
+    override fun updateAlpha() {
+        subtitleTextView.updateAlpha()
+    }
+
     override fun onSubtitleTextOutput(subtitle: MixedSubtitle) {
         when (subtitle.type) {
             SubtitleType.TEXT -> {

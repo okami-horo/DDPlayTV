@@ -1,6 +1,7 @@
 package com.xyoye.player.controller.subtitle
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Point
 import android.util.AttributeSet
 import com.xyoye.data_component.enums.PlayState
@@ -32,6 +33,7 @@ class SubtitleTextView(
         updateStrokeWidth()
         updateTextColor()
         updateStrokeColor()
+        updateAlpha()
     }
 
     override fun attach(controlWrapper: ControlWrapper) {
@@ -104,5 +106,10 @@ class SubtitleTextView(
     fun updateStrokeColor() {
         val strokeColor = PlayerInitializer.Subtitle.strokeColor
         setStrokeColor(strokeColor)
+    }
+
+    fun updateAlpha() {
+        val alpha = PlayerInitializer.Subtitle.alpha
+        setAlpha(alpha)
     }
 }

@@ -83,6 +83,12 @@ class SettingSubtitleStyleView(
             viewBinding.subtitleStrokeColorTv.text = strokeColorText
         }
 
+        //透明度
+        val alphaPercent = PlayerInitializer.Subtitle.alpha
+        val alphaText = "$alphaPercent%"
+        viewBinding.subtitleAlphaTv.text = alphaText
+        viewBinding.subtitleAlphaSb.progress = alphaPercent
+
         viewBinding.tvResetSubtitleConfig.isVisible = isConfigChanged()
     }
 
@@ -105,6 +111,10 @@ class SettingSubtitleStyleView(
 
         viewBinding.subtitleStrokeColorSb.setOnColorChangeListener { position, color ->
             updateStrokeColor(position, color)
+        }
+
+        viewBinding.subtitleAlphaSb.observeProgressChange {
+            updateAlpha(it)
         }
     }
 
@@ -168,9 +178,24 @@ class SettingSubtitleStyleView(
         onConfigChanged()
     }
 
+    private fun updateAlpha(progress: Int) {
+        if (PlayerInitializer.Subtitle.alpha == progress)
+            return
+
+        val progressText = "$progress%"
+        viewBinding.subtitleAlphaTv.text = progressText
+        viewBinding.subtitleAlphaSb.progress = progress
+
+        SubtitleConfig.putAlpha(progress)
+        PlayerInitializer.Subtitle.alpha = progress
+        mControlWrapper.updateAlpha()
+        onConfigChanged()
+    }
+
     private fun resetConfig() {
         updateSize(PlayerInitializer.Subtitle.DEFAULT_SIZE)
         updateStrokeWidth(PlayerInitializer.Subtitle.DEFAULT_STROKE)
+        updateAlpha(PlayerInitializer.Subtitle.DEFAULT_ALPHA)
 
         val defaultTextColor = PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR
         val textColorPosition = viewBinding.subtitleColorSb.getPositionFromColor(defaultTextColor)
@@ -191,12 +216,13 @@ class SettingSubtitleStyleView(
                 || PlayerInitializer.Subtitle.strokeWidth != PlayerInitializer.Subtitle.DEFAULT_STROKE
                 || PlayerInitializer.Subtitle.textColor != PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR
                 || PlayerInitializer.Subtitle.strokeColor != PlayerInitializer.Subtitle.DEFAULT_STROKE_COLOR
+                || PlayerInitializer.Subtitle.alpha != PlayerInitializer.Subtitle.DEFAULT_ALPHA
     }
 
     private fun handleKeyCode(keyCode: Int) {
         if (viewBinding.tvResetSubtitleConfig.hasFocus()) {
             when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleStrokeColorSb.requestFocus()
+                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleAlphaSb.requestFocus()
                 KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleSizeSb.requestFocus()
             }
         } else if (viewBinding.subtitleSizeSb.hasFocus()) {
@@ -205,7 +231,7 @@ class SettingSubtitleStyleView(
                     if (isConfigChanged()) {
                         viewBinding.tvResetSubtitleConfig.requestFocus()
                     } else {
-                        viewBinding.subtitleStrokeColorSb.requestFocus()
+                        viewBinding.subtitleAlphaSb.requestFocus()
                     }
                 }
                 KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleStrokeWidthSb.requestFocus()
@@ -227,6 +253,11 @@ class SettingSubtitleStyleView(
                 KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.subtitleStrokeColorSb.previousPosition()
                 KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.subtitleStrokeColorSb.nextPosition()
                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleColorSb.requestFocus()
+                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleAlphaSb.requestFocus()
+            }
+        } else if (viewBinding.subtitleAlphaSb.hasFocus()) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleStrokeColorSb.requestFocus()
                 KeyEvent.KEYCODE_DPAD_DOWN -> {
                     if (isConfigChanged()) {
                         viewBinding.tvResetSubtitleConfig.requestFocus()

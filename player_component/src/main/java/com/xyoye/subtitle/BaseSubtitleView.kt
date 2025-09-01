@@ -23,6 +23,7 @@ open class BaseSubtitleView @JvmOverloads constructor(
     private var defaultStokeWidth = dp2px(5f).toFloat()
     private var defaultTextColor = Color.WHITE
     private var defaultStokeColor = Color.BLACK
+    private var defaultAlpha = 100
 
     private val mTextPaint = TextPaint().apply {
         isAntiAlias = true
@@ -134,6 +135,23 @@ open class BaseSubtitleView @JvmOverloads constructor(
 
     protected fun setStrokeColor(@ColorInt color: Int) {
         mStrokePaint.color = color
+        invalidate()
+    }
+
+    protected fun setAlpha(alpha: Int) {
+        // 将百分比转换为0-255的alpha值
+        val alphaValue = (255 * alpha / 100).coerceIn(0, 255)
+        
+        // 设置文字颜色的alpha值
+        val textColor = mTextPaint.color
+        val newTextColor = Color.argb(alphaValue, Color.red(textColor), Color.green(textColor), Color.blue(textColor))
+        mTextPaint.color = newTextColor
+        
+        // 设置描边颜色的alpha值
+        val strokeColor = mStrokePaint.color
+        val newStrokeColor = Color.argb(alphaValue, Color.red(strokeColor), Color.green(strokeColor), Color.blue(strokeColor))
+        mStrokePaint.color = newStrokeColor
+        
         invalidate()
     }
 
