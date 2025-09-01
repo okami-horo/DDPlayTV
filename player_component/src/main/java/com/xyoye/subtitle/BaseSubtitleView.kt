@@ -45,9 +45,14 @@ open class BaseSubtitleView @JvmOverloads constructor(
         style = Paint.Style.FILL_AND_STROKE
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
-        updateShadowLayer()
+        setShadowLayer(3f, 1f, 1f, Color.GRAY)
     }
     private val mTextBounds = Rect()
+
+    init {
+        // 在所有Paint对象初始化完成后，调用updateShadowLayer来应用阴影设置
+        updateShadowLayer()
+    }
 
     //底部字幕
     private val mBottomSubtitles = mutableListOf<SubtitleText>()
