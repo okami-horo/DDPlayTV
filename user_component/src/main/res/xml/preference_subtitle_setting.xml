@@ -22,5 +22,11 @@
             android:title="自动匹配网络字幕"
             app:icon="@drawable/ic_player_setting_subtitle_network" />
 
+        <SwitchPreference
+            android:key="subtitle_shadow_enabled"
+            android:summary="为字幕文字添加阴影效果，提高可读性"
+            android:title="字幕阴影效果"
+            app:icon="@drawable/ic_player_setting_subtitle_setting" />
+
     </PreferenceCategory>
 </PreferenceScreen>

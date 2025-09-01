@@ -34,6 +34,10 @@ object SubtitleConfigTable {
     @MMKVFiled
     const val alpha = 100
 
+    //字幕阴影开关
+    @MMKVFiled
+    const val shadowEnabled = true
+
     /**
      * -------------播放器设置-----------
      */

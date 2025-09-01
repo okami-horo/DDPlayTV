@@ -39,6 +39,11 @@ interface InterSubtitleController : InterVideoTrack {
     fun updateAlpha()
 
     /**
+     * 更新字幕阴影
+     */
+    fun updateShadow()
+
+    /**
      * 字幕输出
      */
     fun onSubtitleTextOutput(subtitle: MixedSubtitle)

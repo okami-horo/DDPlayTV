@@ -51,6 +51,7 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
             return when (key) {
                 "auto_load_same_name_subtitle" -> SubtitleConfig.isAutoLoadSameNameSubtitle()
                 "auto_match_subtitle" -> SubtitleConfig.isAutoMatchSubtitle()
+                "subtitle_shadow_enabled" -> SubtitleConfig.isShadowEnabled()
                 else -> super.getBoolean(key, defValue)
             }
         }
@@ -66,6 +67,7 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
             when (key) {
                 "auto_load_same_name_subtitle" -> SubtitleConfig.putAutoLoadSameNameSubtitle(value)
                 "auto_match_subtitle" -> SubtitleConfig.putAutoMatchSubtitle(value)
+                "subtitle_shadow_enabled" -> SubtitleConfig.putShadowEnabled(value)
                 else -> super.putBoolean(key, value)
             }
         }

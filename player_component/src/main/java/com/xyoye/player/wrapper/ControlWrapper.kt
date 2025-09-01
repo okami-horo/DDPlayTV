@@ -334,6 +334,10 @@ class ControlWrapper(
         mSubtitleController.updateAlpha()
     }
 
+    override fun updateShadow() {
+        mSubtitleController.updateShadow()
+    }
+
     override fun updateSubtitleOffsetTime() {
         mSubtitleController.updateSubtitleOffsetTime()
         mVideoPlayer.updateSubtitleOffsetTime()

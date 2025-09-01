@@ -34,6 +34,7 @@ class SubtitleTextView(
         updateTextColor()
         updateStrokeColor()
         updateAlpha()
+        updateShadow()
     }
 
     override fun attach(controlWrapper: ControlWrapper) {
@@ -111,5 +112,10 @@ class SubtitleTextView(
     fun updateAlpha() {
         val alpha = PlayerInitializer.Subtitle.alpha
         setAlpha(alpha)
+    }
+
+    fun updateShadow() {
+        // 直接调用父类的updateShadowLayer方法来更新阴影设置
+        updateShadowLayer()
     }
 }

@@ -47,6 +47,10 @@ class SubtitleController(context: Context) : InterSubtitleController {
         subtitleTextView.updateAlpha()
     }
 
+    override fun updateShadow() {
+        subtitleTextView.updateShadow()
+    }
+
     override fun onSubtitleTextOutput(subtitle: MixedSubtitle) {
         when (subtitle.type) {
             SubtitleType.TEXT -> {

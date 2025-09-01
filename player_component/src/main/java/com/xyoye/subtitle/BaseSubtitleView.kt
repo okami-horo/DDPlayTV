@@ -7,6 +7,7 @@ import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.ColorInt
+import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.utils.dp2px
 
 /**
@@ -44,7 +45,7 @@ open class BaseSubtitleView @JvmOverloads constructor(
         style = Paint.Style.FILL_AND_STROKE
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
-        setShadowLayer(3f, 1f, 1f, Color.GRAY)
+        updateShadowLayer()
     }
     private val mTextBounds = Rect()
 
@@ -155,12 +156,27 @@ open class BaseSubtitleView @JvmOverloads constructor(
         invalidate()
     }
 
+    protected fun updateShadowLayer() {
+        if (SubtitleConfig.isShadowEnabled()) {
+            mStrokePaint.setShadowLayer(3f, 1f, 1f, Color.GRAY)
+        } else {
+            mStrokePaint.clearShadowLayer()
+        }
+    }
+
+    protected fun setShadowEnabled(enabled: Boolean) {
+        SubtitleConfig.putShadowEnabled(enabled)
+        updateShadowLayer()
+        invalidate()
+    }
+
     protected fun resetParams() {
         mTextPaint.textSize = defaultTextSize
         mStrokePaint.textSize = defaultTextSize
         mTextPaint.color = defaultTextColor
         mTextPaint.strokeWidth = defaultStokeWidth
         mStrokePaint.color = defaultStokeColor
+        updateShadowLayer()
         invalidate()
     }
 }
