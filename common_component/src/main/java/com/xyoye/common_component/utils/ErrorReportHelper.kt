@@ -1,6 +1,7 @@
 package com.xyoye.common_component.utils
 
 import com.tencent.bugly.crashreport.CrashReport
+import kotlinx.coroutines.CancellationException
 
 /**
  * 错误上报工具类
@@ -20,6 +21,15 @@ object ErrorReportHelper {
      */
     fun postCatchedException(throwable: Throwable, tag: String = "", extraInfo: String = "") {
         try {
+            // 过滤掉 CancellationException，这是协程正常取消的标志，不应当作错误上报
+            if (throwable is CancellationException) {
+                // 在调试模式下仍然打印信息，便于本地调试
+                if (com.xyoye.common_component.BuildConfig.DEBUG) {
+                    println("[$tag] CancellationException ignored: $extraInfo")
+                }
+                return
+            }
+            
             // 遵循 CLAUDE.md 约定：统一使用 CrashReport.postCatchedException()
             CrashReport.postCatchedException(throwable)
             
@@ -78,6 +88,14 @@ object ErrorReportHelper {
         methodName: String,
         extraInfo: String = ""
     ) {
+        // 过滤掉 CancellationException，这是协程正常取消的标志，不应当作错误上报
+        if (throwable is CancellationException) {
+            if (com.xyoye.common_component.BuildConfig.DEBUG) {
+                println("[$className.$methodName] CancellationException ignored: $extraInfo")
+            }
+            return
+        }
+        
         val contextInfo = "Class: $className, Method: $methodName"
         val fullInfo = if (extraInfo.isNotEmpty()) {
             "$contextInfo, Extra: $extraInfo"

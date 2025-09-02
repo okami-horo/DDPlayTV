@@ -6,6 +6,7 @@ import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.utils.DanmuUtils
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.SendDanmuBean
@@ -83,28 +84,49 @@ class PlayerViewModel : BaseViewModel() {
 
     private fun sendDanmuToServer(sendDanmuBean: SendDanmuBean, episodeId: String) {
         viewModelScope.launch {
-            val time = BigDecimal(sendDanmuBean.position.toDouble() / 1000)
-                .setScale(2, BigDecimal.ROUND_HALF_UP).toString()
+            try {
+                val time = BigDecimal(sendDanmuBean.position.toDouble() / 1000)
+                    .setScale(2, BigDecimal.ROUND_HALF_UP).toString()
 
-            val mode = when {
-                sendDanmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
-                sendDanmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
-                else -> BaseDanmaku.TYPE_FIX_BOTTOM
-            }
+                val mode = when {
+                    sendDanmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
+                    sendDanmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
+                    else -> BaseDanmaku.TYPE_FIX_BOTTOM
+                }
 
-            val color = sendDanmuBean.color and 0x00FFFFFF
+                val color = sendDanmuBean.color and 0x00FFFFFF
 
-            val result = ResourceRepository.sendOneDanmu(
-                episodeId,
-                time,
-                mode,
-                color,
-                sendDanmuBean.text
-            )
+                val result = ResourceRepository.sendOneDanmu(
+                    episodeId,
+                    time,
+                    mode,
+                    color,
+                    sendDanmuBean.text
+                )
 
-            if (result.isFailure) {
-                val message = result.exceptionOrNull()?.message.orEmpty()
-                ToastCenter.showOriginalToast("发送弹幕失败\n$message")
+                if (result.isFailure) {
+                    val exception = result.exceptionOrNull()
+                    val message = exception?.message.orEmpty()
+                    ToastCenter.showOriginalToast("发送弹幕失败\n$message")
+                    
+                    // 上报网络请求失败的异常
+                    if (exception != null) {
+                        ErrorReportHelper.postCatchedExceptionWithContext(
+                            exception,
+                            "PlayerViewModel",
+                            "sendDanmuToServer",
+                            "发送弹幕到服务器失败: $episodeId"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayerViewModel",
+                    "sendDanmuToServer",
+                    "发送弹幕异常: $episodeId"
+                )
+                ToastCenter.showOriginalToast("发送弹幕失败: ${e.message}")
             }
         }
     }

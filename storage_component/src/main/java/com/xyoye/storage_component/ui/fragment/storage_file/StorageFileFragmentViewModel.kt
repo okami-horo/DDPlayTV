@@ -10,6 +10,8 @@ import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageSortOption
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.TrackType
@@ -46,21 +48,33 @@ class StorageFileFragmentViewModel : BaseViewModel() {
      */
     fun listFile(directory: StorageFile?, refresh: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
-            val target = directory ?: storage.getRootFile()
-            if (target == null) {
-                emptyList<StorageFile>()
+            try {
+                val target = directory ?: storage.getRootFile()
+                if (target == null) {
+                    emptyList<StorageFile>()
+                        .apply { _fileLiveData.postValue(this) }
+                        .also { filesSnapshot = it }
+                    return@launch
+                }
+
+                refreshStorageLastPlay()
+                storage.openDirectory(target, refresh)
+                    .filter { isDisplayFile(it) }
+                    .sortedWith(StorageSortOption.comparator())
+                    .onEach { it.playHistory = getHistory(it) }
                     .apply { _fileLiveData.postValue(this) }
                     .also { filesSnapshot = it }
-                return@launch
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "StorageFileFragmentViewModel",
+                    "listFile",
+                    "加载文件列表失败: ${directory?.fileName() ?: "root"}"
+                )
+                ToastCenter.showError("加载文件列表失败: ${e.message}")
+                // 发生错误时显示空列表
+                _fileLiveData.postValue(emptyList())
             }
-
-            refreshStorageLastPlay()
-            storage.openDirectory(target, refresh)
-                .filter { isDisplayFile(it) }
-                .sortedWith(StorageSortOption.comparator())
-                .onEach { it.playHistory = getHistory(it) }
-                .apply { _fileLiveData.postValue(this) }
-                .also { filesSnapshot = it }
         }
     }
 
@@ -69,12 +83,22 @@ class StorageFileFragmentViewModel : BaseViewModel() {
      */
     fun changeSortOption() {
         viewModelScope.launch(Dispatchers.IO) {
-            val currentFiles = _fileLiveData.value ?: return@launch
-            mutableListOf<StorageFile>()
-                .plus(currentFiles)
-                .sortedWith(StorageSortOption.comparator())
-                .apply { _fileLiveData.postValue(this) }
-                .also { filesSnapshot = it }
+            try {
+                val currentFiles = _fileLiveData.value ?: return@launch
+                mutableListOf<StorageFile>()
+                    .plus(currentFiles)
+                    .sortedWith(StorageSortOption.comparator())
+                    .apply { _fileLiveData.postValue(this) }
+                    .also { filesSnapshot = it }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "StorageFileFragmentViewModel",
+                    "changeSortOption",
+                    "文件排序失败"
+                )
+                ToastCenter.showError("文件排序失败: ${e.message}")
+            }
         }
     }
 
@@ -85,12 +109,24 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         //媒体库支持文件搜索，由媒体库处理搜索
         if (storage.supportSearch()) {
             viewModelScope.launch(Dispatchers.IO) {
-                refreshStorageLastPlay()
-                storage.search(text)
-                    .filter { isDisplayFile(it) }
-                    .sortedWith(StorageSortOption.comparator())
-                    .onEach { it.playHistory = getHistory(it) }
-                    .let { _fileLiveData.postValue(it) }
+                try {
+                    refreshStorageLastPlay()
+                    storage.search(text)
+                        .filter { isDisplayFile(it) }
+                        .sortedWith(StorageSortOption.comparator())
+                        .onEach { it.playHistory = getHistory(it) }
+                        .let { _fileLiveData.postValue(it) }
+                } catch (e: Exception) {
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        e,
+                        "StorageFileFragmentViewModel",
+                        "searchByText",
+                        "搜索文件失败: $text"
+                    )
+                    ToastCenter.showError("搜索失败: ${e.message}")
+                    // 发生错误时显示空列表
+                    _fileLiveData.postValue(emptyList())
+                }
             }
             return
         }
