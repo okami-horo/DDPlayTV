@@ -145,10 +145,19 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
 
                 if (localDanmu == null) {
                     hideLoading()
+                    val extraInfo = buildString {
+                        append("Anime: ${episode.animeTitle}\n")
+                        append("Episode: ${episode.episodeTitle}\n")
+                        append("Episode ID: ${episode.episodeId}\n")
+                        append("With Related: $withRelated\n")
+                        append("Video File: ${storageFile.fileName()}\n")
+                        append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
+                        append("File Path: ${storageFile.filePath()}")
+                    }
                     ErrorReportHelper.postException(
-                        "Danmu download failed",
+                        "Danmu download failed - ${episode.animeTitle} - ${episode.episodeTitle}",
                         "BindDanmuSourceFragmentViewModel",
-                        null
+                        RuntimeException("Download returned null, extra info: $extraInfo")
                     )
                     ToastCenter.showError("保存弹幕失败")
                     return@launch
@@ -161,11 +170,21 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                 _downloadDialogDismissFlow.emit(Any())
             } catch (e: Exception) {
                 hideLoading()
+                val extraInfo = buildString {
+                    append("Anime: ${episode.animeTitle}\n")
+                    append("Episode: ${episode.episodeTitle}\n")
+                    append("Episode ID: ${episode.episodeId}\n")
+                    append("With Related: $withRelated\n")
+                    append("Video File: ${storageFile.fileName()}\n")
+                    append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
+                    append("File Path: ${storageFile.filePath()}\n")
+                    append("Exception: ${e.javaClass.simpleName}: ${e.message}")
+                }
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "BindDanmuSourceFragmentViewModel",
                     "downloadDanmu",
-                    "Episode ID: ${episode.episodeId}, Title: ${episode.episodeTitle}"
+                    extraInfo
                 )
                 ToastCenter.showError("保存弹幕失败")
             }
@@ -185,10 +204,20 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
 
                 if (localDanmu == null) {
                     hideLoading()
+                    val extraInfo = buildString {
+                        append("Anime: ${episode.animeTitle}\n")
+                        append("Episode: ${episode.episodeTitle}\n")
+                        append("Episode ID: ${episode.episodeId}\n")
+                        append("Related Sources: ${related.joinToString(", ") { it.url }}\n")
+                        append("Related Count: ${related.size}\n")
+                        append("Video File: ${storageFile.fileName()}\n")
+                        append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
+                        append("File Path: ${storageFile.filePath()}")
+                    }
                     ErrorReportHelper.postException(
-                        "Related danmu download failed",
+                        "Related danmu download failed - ${episode.animeTitle} - ${episode.episodeTitle}",
                         "BindDanmuSourceFragmentViewModel",
-                        null
+                        RuntimeException("Download related returned null, extra info: $extraInfo")
                     )
                     ToastCenter.showError("保存弹幕失败")
                     return@launch
@@ -201,11 +230,22 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                 _downloadDialogDismissFlow.emit(Any())
             } catch (e: Exception) {
                 hideLoading()
+                val extraInfo = buildString {
+                    append("Anime: ${episode.animeTitle}\n")
+                    append("Episode: ${episode.episodeTitle}\n")
+                    append("Episode ID: ${episode.episodeId}\n")
+                    append("Related Sources: ${related.joinToString(", ") { it.url }}\n")
+                    append("Related Count: ${related.size}\n")
+                    append("Video File: ${storageFile.fileName()}\n")
+                    append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
+                    append("File Path: ${storageFile.filePath()}\n")
+                    append("Exception: ${e.javaClass.simpleName}: ${e.message}")
+                }
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "BindDanmuSourceFragmentViewModel",
                     "downloadDanmu",
-                    "Episode ID: ${episode.episodeId}, Related sources count: ${related.size}"
+                    extraInfo
                 )
                 ToastCenter.showError("保存弹幕失败")
             }
