@@ -7,6 +7,7 @@ import com.xyoye.common_component.network.helper.BackupDomainInterceptor
 import com.xyoye.common_component.network.helper.DecompressInterceptor
 import com.xyoye.common_component.network.helper.DeveloperCertificateInterceptor
 import com.xyoye.common_component.network.helper.DynamicBaseUrlInterceptor
+import com.xyoye.common_component.network.helper.ForbiddenErrorInterceptor
 import com.xyoye.common_component.network.helper.LoggerInterceptor
 import com.xyoye.common_component.network.helper.SignatureInterceptor
 import com.xyoye.common_component.network.service.AlistService
@@ -49,6 +50,7 @@ class Retrofit private constructor() {
             .addInterceptor(DeveloperCertificateInterceptor())
             .addInterceptor(AgentInterceptor())
             .addInterceptor(AuthInterceptor())
+            .addInterceptor(ForbiddenErrorInterceptor())
             .addInterceptor(DecompressInterceptor())
             .addInterceptor(BackupDomainInterceptor())
             .addInterceptor(LoggerInterceptor().retrofit())

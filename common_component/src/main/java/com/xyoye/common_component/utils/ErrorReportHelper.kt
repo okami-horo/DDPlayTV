@@ -2,6 +2,7 @@ package com.xyoye.common_component.utils
 
 import com.tencent.bugly.crashreport.CrashReport
 import kotlinx.coroutines.CancellationException
+import retrofit2.HttpException
 
 /**
  * 错误上报工具类
@@ -104,5 +105,36 @@ object ErrorReportHelper {
         }
         
         postCatchedException(throwable, "Context", fullInfo)
+    }
+
+    /**
+     * 上报HTTP 403 Forbidden错误，包含详细的认证诊断信息
+     *
+     * @param httpException HTTP异常
+     * @param className 发生异常的类名
+     * @param methodName 发生异常的方法名
+     * @param extraInfo 额外的上下文信息
+     */
+    fun post403Exception(
+        httpException: HttpException,
+        className: String,
+        methodName: String,
+        extraInfo: String = ""
+    ) {
+        val authDiagnosis = AuthenticationHelper.getAuthenticationDiagnosis()
+        val fullExtraInfo = buildString {
+            append(extraInfo)
+            if (extraInfo.isNotEmpty()) {
+                append("\n\n")
+            }
+            append(authDiagnosis)
+        }
+
+        postCatchedExceptionWithContext(
+            httpException,
+            className,
+            methodName,
+            fullExtraInfo
+        )
     }
 }
