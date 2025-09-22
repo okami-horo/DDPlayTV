@@ -3,6 +3,9 @@ package com.xyoye.common_component.utils.danmu.helper
 import com.xyoye.common_component.extension.toHexString
 import com.xyoye.common_component.utils.ErrorReportHelper
 import java.io.InputStream
+import java.io.InterruptedIOException
+import java.net.SocketException
+import java.net.SocketTimeoutException
 import java.security.MessageDigest
 
 /**
@@ -32,6 +35,11 @@ object DanmuHashCalculator {
         var target = buffer.size
 
         return try {
+            // 检查流是否已关闭或不可用
+            if (inputStream.available() < 0) {
+                return null
+            }
+
             MD5.reset()
             while (
                 inputStream.read(buffer, 0, target).also { current = it } != -1
@@ -43,13 +51,21 @@ object DanmuHashCalculator {
                 target = minOf(HASH_CALCULATE_SIZE - total, bufferSize)
             }
             MD5.digest().toHexString()
+        } catch (e: SocketException) {
+            // 专门处理Socket异常，避免重复上报
+            null
+        } catch (e: SocketTimeoutException) {
+            // 处理超时异常
+            null
+        } catch (e: InterruptedIOException) {
+            // 处理中断异常
+            null
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "DanmuHashCalculator.calculate",
                 "计算弹幕哈希值失败"
             )
-            e.printStackTrace()
             null
         }
     }

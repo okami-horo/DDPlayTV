@@ -42,9 +42,9 @@ class Retrofit private constructor() {
 
     private val danDanClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(4, TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
             .hostnameVerifier { _, _ -> true }
             .addInterceptor(SignatureInterceptor())
             .addInterceptor(DeveloperCertificateInterceptor())
@@ -59,9 +59,9 @@ class Retrofit private constructor() {
 
     private val commonClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(4, TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
             .hostnameVerifier { _, _ -> true }
             .addInterceptor(AgentInterceptor())
             .addInterceptor(DecompressInterceptor())
