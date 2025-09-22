@@ -105,6 +105,15 @@ DanDanPlayForAndroid 是一个安卓本地视频播放器应用，支持视频+�
 - 需要 MultiDex 支持
 - 支持 ABI 分包构建
 
+### Surface 有效性处理
+在使用 `PixelCopy.request()` 时，需要注意 Surface 有效性检查：
+1. 在调用 `PixelCopy.request()` 前必须检查 `surface.isValid()`
+2. 确保 Surface 引用没有被回收或替换
+3. 处理竞态条件，即使在检查后 Surface 仍可能变为无效
+4. 对 `IllegalArgumentException` 进行异常捕获和上报
+
+参考：`player_component/utils/PlayRecorder.kt:169`
+
 ### 模块依赖关系
 所有功能模块都依赖 common_component 基础模块，app 模块作为入口集成所有功能模块。
 

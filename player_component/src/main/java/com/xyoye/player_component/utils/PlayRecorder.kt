@@ -160,12 +160,19 @@ object PlayRecorder {
         }
 
         try {
-            // 在调用前再次检查 Surface 有效性
+            // 在调用前最后一次检查 Surface 有效性
             if (surface.isValid.not()) {
                 it.resumeWhenAlive(null)
                 return@suspendCancellableCoroutine
             }
-            
+
+            // 确保 Surface 引用在调用期间有效
+            val surfaceHolder = surfaceView.holder
+            if (surfaceHolder.surface !== surface || surface.isValid.not()) {
+                it.resumeWhenAlive(null)
+                return@suspendCancellableCoroutine
+            }
+
             PixelCopy.request(surface, recordBitmap, { result ->
                 if (result == PixelCopy.SUCCESS) {
                     it.resumeWhenAlive(recordBitmap)
@@ -216,12 +223,18 @@ object PlayRecorder {
         }
 
         try {
-            // 在调用前再次检查 Surface 有效性
+            // 在调用前最后一次检查 Surface 有效性
             if (surface.isValid.not()) {
                 it.resumeWhenAlive(null)
                 return@suspendCancellableCoroutine
             }
-            
+
+            // 确保 SurfaceTexture 仍然有效且未被回收
+            if (textureView.surfaceTexture !== surfaceTexture) {
+                it.resumeWhenAlive(null)
+                return@suspendCancellableCoroutine
+            }
+
             PixelCopy.request(surface, recordBitmap, { result ->
                 if (result == PixelCopy.SUCCESS) {
                     it.resumeWhenAlive(recordBitmap)
