@@ -950,7 +950,10 @@ public class NumberPicker extends LinearLayout {
                     case KeyEvent.ACTION_DOWN:
                         if (mWrapSelectorWheel || (keyCode == KeyEvent.KEYCODE_DPAD_DOWN)
                                 ? getValue() < getMaxValue() : getValue() > getMinValue()) {
-                            requestFocus();
+                            // 修复焦点问题：确保View已正确附加到窗口且具有有效父容器
+                            if (isAttachedToWindow() && getParent() != null) {
+                                requestFocus();
+                            }
                             mLastHandledDownDpadKeyCode = keyCode;
                             removeAllCallbacks();
                             if (mFlingScroller.isFinished()) {
@@ -1186,8 +1189,11 @@ public class NumberPicker extends LinearLayout {
             if (mHasSelectorWheel) {
                 mInputText.setVisibility(View.VISIBLE);
             }
-            mInputText.requestFocus();
-            inputMethodManager.showSoftInput(mInputText, 0);
+            // 修复焦点问题：确保View已正确附加到窗口且具有有效父容器
+            if (mInputText.isAttachedToWindow() && mInputText.getParent() != null) {
+                mInputText.requestFocus();
+                inputMethodManager.showSoftInput(mInputText, 0);
+            }
         }
     }
 
@@ -2332,7 +2338,11 @@ public class NumberPicker extends LinearLayout {
                     switch (action) {
                         case AccessibilityNodeInfo.ACTION_FOCUS: {
                             if (NumberPicker.this.isEnabled() && !mInputText.isFocused()) {
-                                return mInputText.requestFocus();
+                                // 修复焦点问题：确保View已正确附加到窗口且具有有效父容器
+                                if (mInputText.isAttachedToWindow() && mInputText.getParent() != null) {
+                                    return mInputText.requestFocus();
+                                }
+                                return false;
                             }
                         }
                         break;
