@@ -45,19 +45,30 @@ fun RecyclerView.setData(items: List<Any>) {
 }
 
 fun RecyclerView.requestIndexChildFocus(index: Int): Boolean {
+    val layoutManager = layoutManager ?: return false
+    val adapter = adapter ?: return false
+    if (index < 0 || index >= adapter.itemCount) {
+        return false
+    }
+
     scrollToPosition(index)
 
     val targetTag = R.string.focusable_item.toResString()
-    val indexView = layoutManager?.findViewByPosition(index)
-    if (indexView != null) {
-        indexView.findViewWithTag<View>(targetTag)?.requestFocus()
+
+    fun tryRequestFocus(target: View?): Boolean {
+        if (target == null) {
+            return false
+        }
+        val focusView = target.findViewWithTag<View>(targetTag) ?: target.takeIf { it.isFocusable }
+        return focusView?.requestFocus() == true
+    }
+
+    if (tryRequestFocus(layoutManager.findViewByPosition(index))) {
         return true
     }
 
     post {
-        layoutManager?.findViewByPosition(index)
-            ?.findViewWithTag<View>(targetTag)
-            ?.requestFocus()
+        tryRequestFocus(layoutManager.findViewByPosition(index))
     }
-    return true
+    return false
 }

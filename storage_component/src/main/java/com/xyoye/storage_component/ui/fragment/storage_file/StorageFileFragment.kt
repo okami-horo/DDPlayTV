@@ -1,9 +1,12 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
+import android.view.View
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import com.xyoye.common_component.base.BaseFragment
+import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
+import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.storage_component.BR
@@ -68,8 +71,11 @@ class StorageFileFragment :
     }
 
     private fun setRecyclerViewItemFocusAble(focusAble: Boolean) {
-        dataBinding.storageFileRv.children.forEach {
-            it.isFocusable = focusAble
+        val focusTag = R.string.focusable_item.toResString()
+        dataBinding.storageFileRv.children.forEach { child ->
+            val target = child.findViewWithTag<View>(focusTag) ?: child
+            target.isFocusable = focusAble
+            target.isFocusableInTouchMode = focusAble
         }
     }
 
@@ -85,8 +91,17 @@ class StorageFileFragment :
         if (isDestroyed()) {
             return
         }
-        val targetIndex = if (reversed) dataBinding.storageFileRv.childCount - 1 else 0
-        dataBinding.storageFileRv.getChildAt(targetIndex)?.requestFocus()
+        val adapter = dataBinding.storageFileRv.adapter ?: return
+        if (adapter.itemCount == 0) {
+            return
+        }
+        val targetIndex = if (reversed) adapter.itemCount - 1 else 0
+        if (dataBinding.storageFileRv.requestIndexChildFocus(targetIndex)) {
+            return
+        }
+        dataBinding.storageFileRv.post {
+            dataBinding.storageFileRv.requestIndexChildFocus(targetIndex)
+        }
     }
 
     /**

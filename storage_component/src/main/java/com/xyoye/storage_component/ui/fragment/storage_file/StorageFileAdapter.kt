@@ -142,17 +142,17 @@ class StorageFileAdapter(
 
             setupVideoTag(tagRv, data)
 
-            mainActionFl.setOnClickListener {
+            itemLayout.setOnClickListener {
                 activity.openFile(data)
+            }
+
+            itemLayout.setOnLongClickListener {
+                showMoreAction(data, createShareOptions(itemLayout))
+                return@setOnLongClickListener true
             }
 
             moreActionIv.setOnClickListener {
                 showMoreAction(data, createShareOptions(itemLayout))
-            }
-
-            mainActionFl.setOnLongClickListener {
-                showMoreAction(data, createShareOptions(itemLayout))
-                return@setOnLongClickListener true
             }
         }
     }

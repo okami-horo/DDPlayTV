@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.coroutineScope
+import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
@@ -16,6 +17,7 @@ import com.google.android.material.shape.ShapeAppearanceModel
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
+import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.services.ScreencastProvideService
 import com.xyoye.common_component.storage.Storage
@@ -122,8 +124,12 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
         dataBinding.pathRv.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                // 将RecyclerView焦点转移到子View
-                currentFocus?.requestFocus(View.FOCUS_UP)
+                val lastIndex = dataBinding.pathRv.adapter?.itemCount?.let { count ->
+                    if (count > 0) count - 1 else RecyclerView.NO_POSITION
+                } ?: RecyclerView.NO_POSITION
+                if (lastIndex != RecyclerView.NO_POSITION) {
+                    dataBinding.pathRv.requestIndexChildFocus(lastIndex)
+                }
             }
         }
 
