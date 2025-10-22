@@ -72,7 +72,8 @@ class StorageFileFragment :
 
     private fun setRecyclerViewItemFocusAble(focusAble: Boolean) {
         val focusTag = R.string.focusable_item.toResString()
-        dataBinding.storageFileRv.children.forEach { child ->
+        val binding = bindingOrNull ?: return
+        binding.storageFileRv.children.forEach { child ->
             val target = child.findViewWithTag<View>(focusTag) ?: child
             target.isFocusable = focusAble
             target.isFocusableInTouchMode = focusAble
@@ -88,19 +89,17 @@ class StorageFileFragment :
     }
 
     fun requestFocus(reversed: Boolean = false) {
-        if (isDestroyed()) {
-            return
-        }
-        val adapter = dataBinding.storageFileRv.adapter ?: return
+        val binding = bindingOrNull ?: return
+        val adapter = binding.storageFileRv.adapter ?: return
         if (adapter.itemCount == 0) {
             return
         }
         val targetIndex = if (reversed) adapter.itemCount - 1 else 0
-        if (dataBinding.storageFileRv.requestIndexChildFocus(targetIndex)) {
+        if (binding.storageFileRv.requestIndexChildFocus(targetIndex)) {
             return
         }
-        dataBinding.storageFileRv.post {
-            dataBinding.storageFileRv.requestIndexChildFocus(targetIndex)
+        binding.storageFileRv.post {
+            bindingOrNull?.storageFileRv?.requestIndexChildFocus(targetIndex)
         }
     }
 

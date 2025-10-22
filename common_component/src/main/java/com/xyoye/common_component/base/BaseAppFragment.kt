@@ -18,6 +18,7 @@ abstract class BaseAppFragment<V : ViewDataBinding> : Fragment() {
     private var _binding: V? = null
 
     protected val dataBinding get() = _binding!!
+    protected val bindingOrNull get() = _binding
 
     protected lateinit var mAttachActivity: BaseAppCompatActivity<*>
 
