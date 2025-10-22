@@ -459,6 +459,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         if (popupManager.isShowing()) {
             return
         }
+        currentFocus?.clearFocus()
         dataBinding.playerContainer.removeAllViews()
         popupManager.show(danDanPlayer)
 
@@ -473,6 +474,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
         dataBinding.playerContainer.removeAllViews()
         dataBinding.playerContainer.addView(danDanPlayer)
+        danDanPlayer.requestFocus()
 
         danDanPlayer.exitPopupMode()
     }
