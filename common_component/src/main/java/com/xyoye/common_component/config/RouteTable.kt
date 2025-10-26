@@ -42,6 +42,7 @@ object RouteTable {
         const val AboutUs = "/user/about_us"
         const val License = "/user/license"
         const val SwitchTheme = "/user/switch_theme"
+        const val SettingDeveloper = "/user/setting_developer"
     }
 
     object Player {

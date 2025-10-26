@@ -3,9 +3,10 @@ package com.xyoye.user_component.ui.weight
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.config.DevelopConfig
+import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.toResDrawable
-import com.xyoye.common_component.utils.SecurityHelper
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.user_component.R
 import com.xyoye.user_component.ui.dialog.DeveloperAuthenticateDialog
@@ -29,7 +30,8 @@ class DeveloperMenus private constructor(
     }
 
     // 菜单项
-    private val item = menu.findItem(R.id.item_source_authenticate)
+    private val authItem = menu.findItem(R.id.item_source_authenticate)
+    private val settingItem = menu.findItem(R.id.item_developer_setting)
 
     // 验证弹窗
     private var authenticateDialog: DeveloperAuthenticateDialog? = null
@@ -46,9 +48,17 @@ class DeveloperMenus private constructor(
     }
 
     fun onOptionsItemSelected(item: MenuItem) {
-        if (item.itemId == R.id.item_source_authenticate) {
-            showAuthenticateDialog()
-            return
+        when (item.itemId) {
+            R.id.item_source_authenticate -> {
+                showAuthenticateDialog()
+                return
+            }
+            R.id.item_developer_setting -> {
+                ARouter.getInstance()
+                    .build(RouteTable.User.SettingDeveloper)
+                    .navigation(activity)
+                return
+            }
         }
     }
 
@@ -88,7 +98,8 @@ class DeveloperMenus private constructor(
      * 更新菜单项
      */
     private fun updateItem() {
-        item.isVisible = true
+        authItem.isVisible = true
+        settingItem.isVisible = true
 
         val (title, iconRes) = if (isDeveloperAuthenticate) {
             "已认证" to R.drawable.ic_developer_authenticated
@@ -96,7 +107,7 @@ class DeveloperMenus private constructor(
             "未认证" to R.drawable.ic_developer_unauthenticated
         }
 
-        item.title = title
-        item.icon = iconRes.toResDrawable(activity)
+        authItem.title = title
+        authItem.icon = iconRes.toResDrawable(activity)
     }
 }

@@ -10,6 +10,7 @@ import com.alibaba.android.arouter.launcher.ARouter
 import com.tencent.bugly.crashreport.CrashReport
 import com.tencent.mmkv.MMKV
 import com.xyoye.common_component.BuildConfig
+import com.xyoye.common_component.log.AppLogger
 import com.xyoye.common_component.notification.Notifications
 import com.xyoye.common_component.utils.ActivityHelper
 import com.xyoye.common_component.utils.SecurityHelperConfig
@@ -40,6 +41,8 @@ open class BaseApplication : Application(), ImageLoaderFactory {
 
         APPLICATION_CONTEXT = this
         mMainHandler = Handler(getAppContext().mainLooper)
+
+        AppLogger.init(this)
 
         if (BuildConfig.DEBUG) {
             ARouter.openLog()

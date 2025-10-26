@@ -7,4 +7,9 @@
         android:title=""
         android:visible="false"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/item_developer_setting"
+        android:title="开发者设置"
+        app:showAsAction="never" />
 </menu>

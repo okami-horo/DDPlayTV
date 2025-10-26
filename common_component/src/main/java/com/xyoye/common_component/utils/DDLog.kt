@@ -1,6 +1,7 @@
 package com.xyoye.common_component.utils
 
 import android.util.Log
+import com.xyoye.common_component.log.AppLogger
 import java.util.logging.Level
 
 /**
@@ -47,5 +48,7 @@ object DDLog {
             Level.WARNING -> Log.w(logTag, logMsg, throwable)
             Level.SEVERE -> Log.e(logTag, logMsg, throwable)
         }
+
+        AppLogger.log(level, tag, message, throwable)
     }
 }
