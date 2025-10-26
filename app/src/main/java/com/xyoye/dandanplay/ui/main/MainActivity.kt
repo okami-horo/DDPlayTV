@@ -18,6 +18,7 @@ import com.xyoye.common_component.extension.hideFragment
 import com.xyoye.common_component.extension.showFragment
 import com.xyoye.common_component.services.ScreencastProvideService
 import com.xyoye.common_component.services.ScreencastReceiveService
+import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.dandanplay.BR
@@ -72,6 +73,7 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         //默认显示媒体库页面
         //标题
         title = "媒体库"
+        DDLog.i("MAIN-Nav", "init default tab=media")
         //移除所有已添加的fragment，防止如旋转屏幕后导致的屏幕错乱
         supportFragmentManager.findAndRemoveFragment(
             TAG_FRAGMENT_HOME,
@@ -90,16 +92,19 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
             when (it.itemId) {
                 R.id.navigation_home -> {
                     title = "弹弹play"
+                    DDLog.i("MAIN-Nav", "switch tab=home")
                     switchFragment(TAG_FRAGMENT_HOME)
                 }
 
                 R.id.navigation_media -> {
                     title = "媒体库"
+                    DDLog.i("MAIN-Nav", "switch tab=media")
                     switchFragment(TAG_FRAGMENT_MEDIA)
                 }
 
                 R.id.navigation_personal -> {
                     title = "个人中心"
+                    DDLog.i("MAIN-Nav", "switch tab=personal")
                     switchFragment(TAG_FRAGMENT_PERSONAL)
                 }
             }

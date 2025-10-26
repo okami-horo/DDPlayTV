@@ -37,6 +37,26 @@ object AppLogger {
         Thread(runnable, "AppLogger").apply { isDaemon = true }
     }
 
+    private fun internalLog(level: Level, tag: String, message: String, throwable: Throwable? = null) {
+        if (!initialized.get()) {
+            return
+        }
+        executor.execute {
+            try {
+                val now = Date()
+                val logLine = buildLogLine(level, tag, message, throwable, now)
+                val file = resolveCurrentFile(now)
+                FileWriter(file, true).use { writer ->
+                    writer.appendLine(logLine)
+                    throwable?.let { writer.appendLine(Log.getStackTraceString(it)) }
+                }
+                rotateIfNeed(file)
+            } catch (e: Exception) {
+                Log.e("AppLogger", "write log failed", e)
+            }
+        }
+    }
+
     private val logDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
     private val dayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
@@ -53,6 +73,7 @@ object AppLogger {
         logDir = resolveLogDirectory(appContext)
         currentDay = dayFormat.format(Date())
         currentLogFile = resolveLogFile(currentDay)
+        internalLog(Level.INFO, "APP-Logger", "initialized dir=${logDir.absolutePath}")
     }
 
     private fun resolveLogDirectory(context: Context): File {
@@ -74,6 +95,16 @@ object AppLogger {
         if (!initialized.get()) {
             return
         }
+        enqueueLog(level, tag, message, throwable, true)
+    }
+
+    private fun enqueueLog(
+        level: Level,
+        tag: String?,
+        message: String,
+        throwable: Throwable?,
+        checkUpload: Boolean
+    ) {
         executor.execute {
             try {
                 val now = Date()
@@ -84,7 +115,9 @@ object AppLogger {
                     throwable?.let { writer.appendLine(Log.getStackTraceString(it)) }
                 }
                 rotateIfNeed(file)
-                maybeUpload(file)
+                if (checkUpload) {
+                    maybeUpload(file)
+                }
             } catch (e: Exception) {
                 Log.e("AppLogger", "write log failed", e)
             }
@@ -161,15 +194,20 @@ object AppLogger {
         triggerUpload()
     }
 
-    fun triggerUpload() {
+    fun triggerUpload() = triggerUpload("auto")
+
+    fun triggerUpload(reason: String) {
         if (uploading.get()) {
             return
         }
         uploading.set(true)
+        internalLog(Level.INFO, "APP-Upload", "trigger start reason=${reason}")
         SupervisorScope.IO.launch {
             try {
-                uploadInternal()
+                val uploaded = uploadInternal()
+                internalLog(Level.INFO, "APP-Upload", "trigger success reason=${reason} uploaded=${uploaded}")
             } catch (e: Exception) {
+                internalLog(Level.WARNING, "APP-Upload", "trigger failed reason=${reason} error=${e.message}", e)
                 Log.e("AppLogger", "upload failed", e)
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
@@ -183,31 +221,52 @@ object AppLogger {
         }
     }
 
-    private fun uploadInternal() {
+    private fun uploadInternal(): Int {
         val enabled = DevelopConfig.isLogUploadEnable()
         if (!enabled) {
-            return
+            internalLog(Level.INFO, "APP-Upload", "skip upload disabled")
+            return 0
         }
         val baseUrl = DevelopConfig.getLogUploadUrl()?.trim().orEmpty()
         if (baseUrl.isEmpty()) {
-            return
+            internalLog(Level.WARNING, "APP-Upload", "skip upload missing url")
+            return 0
         }
         val username = DevelopConfig.getLogUploadUsername().orEmpty()
         val password = DevelopConfig.getLogUploadPassword().orEmpty()
         val remotePath = DevelopConfig.getLogUploadRemotePath().orEmpty()
         val files = logDir.listFiles()?.sortedByDescending { it.lastModified() }.orEmpty()
         if (files.isEmpty()) {
-            return
+            internalLog(Level.INFO, "APP-Upload", "skip upload empty files")
+            return 0
         }
         val uploader = WebDavUploader(UnsafeOkHttpClient.client, baseUrl, username, password)
         ensureRemoteDirectory(uploader, remotePath)
+        var uploadCount = 0
         for (logFile in files) {
             if (!logFile.isFile) {
                 continue
             }
-            uploadSingleFile(uploader, remotePath, logFile)
+            try {
+                uploadSingleFile(uploader, remotePath, logFile)
+                internalLog(
+                    Level.INFO,
+                    "APP-Upload",
+                    "upload file=${logFile.name} size=${logFile.length()}"
+                )
+            } catch (e: Exception) {
+                internalLog(
+                    Level.WARNING,
+                    "APP-Upload",
+                    "upload file failed name=${logFile.name} error=${e.message}",
+                    e
+                )
+                throw e
+            }
+            uploadCount += 1
         }
         DevelopConfig.putLogUploadLastTime(System.currentTimeMillis())
+        return uploadCount
     }
 
     private fun ensureRemoteDirectory(

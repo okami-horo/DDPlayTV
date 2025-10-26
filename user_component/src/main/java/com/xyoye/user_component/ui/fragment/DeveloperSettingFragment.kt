@@ -10,6 +10,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.log.AppLogger
+import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.user_component.R
@@ -74,6 +75,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                 } else {
                     getString(R.string.developer_log_upload_enable_summary_off)
                 }
+                DDLog.i("DEV-LogUpload", "toggle enable=$enable")
                 true
             }
         }
@@ -91,6 +93,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                     return@setOnPreferenceChangeListener false
                 }
                 summary = url
+                DDLog.i("DEV-LogUpload", "update url length=${url.length}")
                 true
             }
         }
@@ -104,6 +107,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             setOnPreferenceChangeListener { _, newValue ->
                 val username = (newValue as? String)?.trim().orEmpty()
                 summary = maskCredential(username)
+                DDLog.i("DEV-LogUpload", "update username length=${username.length}")
                 true
             }
         }
@@ -117,6 +121,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             setOnPreferenceChangeListener { _, newValue ->
                 val password = (newValue as? String)?.trim().orEmpty()
                 summary = maskCredential(password)
+                DDLog.i("DEV-LogUpload", "update password length=${password.length}")
                 true
             }
         }
@@ -130,13 +135,15 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             setOnPreferenceChangeListener { _, newValue ->
                 val remotePath = (newValue as? String)?.trim().orEmpty()
                 summary = remotePath
+                DDLog.i("DEV-LogUpload", "update remote path=${remotePath}")
                 true
             }
         }
 
         findPreference<Preference>(KEY_LOG_UPLOAD_TRIGGER)?.apply {
             setOnPreferenceClickListener {
-                AppLogger.triggerUpload()
+                DDLog.i("DEV-LogUpload", "manual trigger upload")
+                AppLogger.triggerUpload("manual")
                 ToastCenter.showSuccess(getString(R.string.developer_log_upload_trigger_toast))
                 updateLastUploadSummary()
                 true

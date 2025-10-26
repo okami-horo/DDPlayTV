@@ -13,6 +13,7 @@ import com.xyoye.common_component.BuildConfig
 import com.xyoye.common_component.log.AppLogger
 import com.xyoye.common_component.notification.Notifications
 import com.xyoye.common_component.utils.ActivityHelper
+import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.SecurityHelperConfig
 import com.xyoye.common_component.utils.aliyun.EMASHelper
 import com.xyoye.open_cc.OpenCCFile
@@ -39,14 +40,21 @@ open class BaseApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
 
+        DDLog.i("APP-Init", "application onCreate start process=${android.os.Process.myPid()}")
+
         APPLICATION_CONTEXT = this
         mMainHandler = Handler(getAppContext().mainLooper)
 
         AppLogger.init(this)
+        DDLog.i(
+            "APP-Init",
+            "app logger ready external=${getExternalFilesDir(null)?.absolutePath ?: "null"}"
+        )
 
         if (BuildConfig.DEBUG) {
             ARouter.openLog()
             ARouter.openDebug()
+            DDLog.i("APP-Init", "router debug mode enabled")
         }
         MMKV.initialize(this)
         ARouter.init(this)
@@ -59,6 +67,8 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         ActivityHelper.instance.init(this)
         EMASHelper.init(this)
         OpenCCFile.init(this)
+
+        DDLog.i("APP-Init", "application onCreate finished")
     }
 
     override fun newImageLoader(): ImageLoader {
