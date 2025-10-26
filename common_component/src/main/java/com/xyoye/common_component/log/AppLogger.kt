@@ -4,12 +4,11 @@ import android.content.Context
 import android.util.Log
 import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.network.helper.UnsafeOkHttpClient
-import com.xyoye.common_component.storage.impl.WebDavClient
+import com.xyoye.common_component.storage.impl.WebDavUploader
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SupervisorScope
 import kotlinx.coroutines.launch
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -188,41 +187,36 @@ object AppLogger {
         if (files.isEmpty()) {
             return
         }
-        val client = WebDavClient(UnsafeOkHttpClient.client).apply {
-            updateEndpoint(baseUrl)
-            if (username.isNotEmpty()) {
-                updateAccount(username, password)
-            }
-        }
-        ensureRemoteDirectory(client, remotePath)
+        val uploader = WebDavUploader(UnsafeOkHttpClient.client, baseUrl, username, password)
+        ensureRemoteDirectory(uploader, remotePath)
         for (logFile in files) {
             if (!logFile.isFile) {
                 continue
             }
-            uploadSingleFile(client, remotePath, logFile)
+            uploadSingleFile(uploader, remotePath, logFile)
         }
         DevelopConfig.putLogUploadLastTime(System.currentTimeMillis())
     }
 
     private fun ensureRemoteDirectory(
-        client: WebDavClient,
+        uploader: WebDavUploader,
         remotePath: String
     ) {
         val segments = remotePath.trim('/').split('/').filter { it.isNotEmpty() }
         var current = ""
         for (segment in segments) {
             current = if (current.isEmpty()) segment else "$current/$segment"
-            client.ensureDirectory(current)
+            uploader.ensureDirectory(current)
         }
     }
 
     private fun uploadSingleFile(
-        client: WebDavClient,
+        uploader: WebDavUploader,
         remotePath: String,
         file: File
     ) {
         val targetPath = buildRemotePath(remotePath, file.name)
-        client.uploadFile(targetPath, file)
+        uploader.uploadFile(targetPath, file)
     }
 
     private fun buildRemotePath(remotePath: String, fileName: String): String {
