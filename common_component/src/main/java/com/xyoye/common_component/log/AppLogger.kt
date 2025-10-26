@@ -50,12 +50,24 @@ object AppLogger {
             return
         }
         appContext = context.applicationContext
-        logDir = File(appContext.filesDir, LOG_FOLDER)
-        if (!logDir.exists()) {
-            logDir.mkdirs()
-        }
+        logDir = resolveLogDirectory(appContext)
         currentDay = dayFormat.format(Date())
         currentLogFile = resolveLogFile(currentDay)
+    }
+
+    private fun resolveLogDirectory(context: Context): File {
+        context.getExternalFilesDir(null)?.let { externalRoot ->
+            val externalDir = File(externalRoot, LOG_FOLDER)
+            if (externalDir.exists() || externalDir.mkdirs()) {
+                return externalDir
+            }
+        }
+
+        val internalDir = File(context.filesDir, LOG_FOLDER)
+        if (!internalDir.exists()) {
+            internalDir.mkdirs()
+        }
+        return internalDir
     }
 
     fun log(level: Level, tag: String?, message: String, throwable: Throwable?) {
