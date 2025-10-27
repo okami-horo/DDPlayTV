@@ -1,8 +1,10 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
+import android.view.KeyEvent
 import android.view.View
 import androidx.core.view.children
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
@@ -85,6 +87,42 @@ class StorageFileFragment :
             layoutManager = vertical()
 
             adapter = StorageFileAdapter(ownerActivity, viewModel).create()
+
+            setOnKeyListener { _, keyCode, event ->
+                if (event?.action != KeyEvent.ACTION_DOWN) {
+                    return@setOnKeyListener false
+                }
+
+                val adapter = adapter ?: return@setOnKeyListener false
+                val focusedChild = focusedChild ?: return@setOnKeyListener false
+                val currentIndex = getChildAdapterPosition(focusedChild)
+                if (currentIndex == RecyclerView.NO_POSITION) {
+                    return@setOnKeyListener false
+                }
+
+                return@setOnKeyListener when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        val nextIndex = currentIndex + 1
+                        if (nextIndex < adapter.itemCount) {
+                            // 遥控器按下时手动分发焦点，保证列表可继续向下滚动
+                            requestIndexChildFocus(nextIndex)
+                        } else {
+                            false
+                        }
+                    }
+
+                    KeyEvent.KEYCODE_DPAD_UP -> {
+                        val previousIndex = currentIndex - 1
+                        if (previousIndex >= 0) {
+                            requestIndexChildFocus(previousIndex)
+                        } else {
+                            false
+                        }
+                    }
+
+                    else -> false
+                }
+            }
         }
     }
 
