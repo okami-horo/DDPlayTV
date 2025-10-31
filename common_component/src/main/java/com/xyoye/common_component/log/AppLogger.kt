@@ -58,12 +58,12 @@ object AppLogger {
     }
 
     private val logDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
-    private val dayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    private val startupTimeFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss_SSS", Locale.US)
 
     private lateinit var appContext: Context
     private lateinit var logDir: File
     private var currentLogFile: File? = null
-    private var currentDay: String = ""
+    private var startupTime: Long = 0L
 
     fun init(context: Context) {
         if (!initialized.compareAndSet(false, true)) {
@@ -71,8 +71,8 @@ object AppLogger {
         }
         appContext = context.applicationContext
         logDir = resolveLogDirectory(appContext)
-        currentDay = dayFormat.format(Date())
-        currentLogFile = resolveLogFile(currentDay)
+        startupTime = System.currentTimeMillis()
+        currentLogFile = resolveLogFile(startupTime)
         internalLog(Level.INFO, "APP-Logger", "initialized dir=${logDir.absolutePath}")
     }
 
@@ -139,16 +139,15 @@ object AppLogger {
     }
 
     private fun resolveCurrentFile(date: Date): File {
-        val day = dayFormat.format(date)
-        if (day != currentDay || currentLogFile == null) {
-            currentDay = day
-            currentLogFile = resolveLogFile(day)
+        if (currentLogFile == null) {
+            currentLogFile = resolveLogFile(startupTime)
         }
         return currentLogFile!!
     }
 
-    private fun resolveLogFile(day: String): File {
-        val primaryFile = File(logDir, "$LOG_FILE_PREFIX-$day.log")
+    private fun resolveLogFile(startMillis: Long): File {
+        val formatted = startupTimeFormat.format(Date(startMillis))
+        val primaryFile = File(logDir, "$LOG_FILE_PREFIX-$formatted-$startMillis.log")
         if (!primaryFile.exists()) {
             primaryFile.createNewFile()
         }
@@ -243,8 +242,13 @@ object AppLogger {
         val uploader = WebDavUploader(UnsafeOkHttpClient.client, baseUrl, username, password)
         ensureRemoteDirectory(uploader, remotePath)
         var uploadCount = 0
+        val currentName = currentLogFile?.name
         for (logFile in files) {
             if (!logFile.isFile) {
+                continue
+            }
+            if (currentName != null && logFile.name == currentName) {
+                // 跳过当前会话正在写入的日志文件
                 continue
             }
             try {
@@ -254,6 +258,14 @@ object AppLogger {
                     "APP-Upload",
                     "upload file=${logFile.name} size=${logFile.length()}"
                 )
+                // 上传成功后删除本地日志
+                if (!logFile.delete()) {
+                    internalLog(
+                        Level.WARNING,
+                        "APP-Upload",
+                        "delete local after upload failed name=${logFile.name}"
+                    )
+                }
             } catch (e: Exception) {
                 internalLog(
                     Level.WARNING,
@@ -261,7 +273,7 @@ object AppLogger {
                     "upload file failed name=${logFile.name} error=${e.message}",
                     e
                 )
-                throw e
+                // 不中断后续文件上传，继续处理其他日志
             }
             uploadCount += 1
         }

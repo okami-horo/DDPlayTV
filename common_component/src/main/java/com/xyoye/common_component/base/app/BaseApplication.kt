@@ -50,6 +50,8 @@ open class BaseApplication : Application(), ImageLoaderFactory {
             "APP-Init",
             "app logger ready external=${getExternalFilesDir(null)?.absolutePath ?: "null"}"
         )
+        // 启动时尝试上传历史日志（当前会话文件会被跳过），上传成功后在内部删除本地文件
+        AppLogger.triggerUpload("startup")
 
         if (BuildConfig.DEBUG) {
             ARouter.openLog()
