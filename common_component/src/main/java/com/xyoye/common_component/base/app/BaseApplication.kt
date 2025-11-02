@@ -3,6 +3,7 @@ package com.xyoye.common_component.base.app
 import android.app.Application
 import android.content.Context
 import android.os.Handler
+import android.os.Looper
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.VideoFrameDecoder
@@ -37,13 +38,17 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         }
     }
 
+    override fun attachBaseContext(base: Context?) {
+        super.attachBaseContext(base)
+        // 提前初始化全局上下文与主线程Handler，避免在ContentProvider或静态初始化阶段访问导致空指针
+        APPLICATION_CONTEXT = this
+        mMainHandler = Handler(Looper.getMainLooper())
+    }
+
     override fun onCreate() {
         super.onCreate()
 
         DDLog.i("APP-Init", "application onCreate start process=${android.os.Process.myPid()}")
-
-        APPLICATION_CONTEXT = this
-        mMainHandler = Handler(getAppContext().mainLooper)
 
         AppLogger.init(this)
         DDLog.i(
