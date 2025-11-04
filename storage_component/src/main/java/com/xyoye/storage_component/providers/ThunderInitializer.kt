@@ -10,9 +10,15 @@ import com.xyoye.common_component.utils.thunder.ThunderManager
 class ThunderInitializer : Initializer<Unit> {
 
     override fun create(context: Context) {
+        // Guard initialization to avoid crashing process on devices without proper native support.
         val supportXL = ThunderManager.SUPPORTED_ABI.any { Build.SUPPORTED_ABIS.contains(it) }
         if (supportXL) {
-            XLTaskHelper.init(context)
+            try {
+                XLTaskHelper.init(context)
+            } catch (t: Throwable) {
+                // Avoid hard crash during provider initialization; log and continue.
+                android.util.Log.e("ThunderInitializer", "XLTaskHelper.init failed", t)
+            }
         }
     }
 
