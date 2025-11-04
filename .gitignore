@@ -12,3 +12,6 @@ dadanplay.jks
 keystore.properties
 scripts/
 .tmp/
+.windsurf/
+.specify/
+specs/
