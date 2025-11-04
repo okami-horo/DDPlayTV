@@ -74,15 +74,15 @@ class ExoVideoPlayer(private val mContext: Context) : AbstractVideoPlayer(), Pla
             .setPreferredAudioLanguage("jap")
             .build()
 
-        exoplayer = ExoPlayer.Builder(
-            mContext,
-            mRenderersFactory,
-            DefaultMediaSourceFactory(mContext),
-            mTrackSelector,
-            mLoadControl,
-            DefaultBandwidthMeter.getSingletonInstance(mContext),
-            DefaultAnalyticsCollector(Clock.DEFAULT)
-        ).build()
+        // Build ExoPlayer with setter-based Builder API (2.19.x)
+        exoplayer = ExoPlayer.Builder(mContext)
+            .setRenderersFactory(mRenderersFactory)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(mContext))
+            .setTrackSelector(mTrackSelector)
+            .setLoadControl(mLoadControl)
+            // Note: DefaultBandwidthMeter singleton factory changed; use a fresh instance
+            .setBandwidthMeter(DefaultBandwidthMeter.Builder(mContext).build())
+            .build()
 
         setOptions()
 
