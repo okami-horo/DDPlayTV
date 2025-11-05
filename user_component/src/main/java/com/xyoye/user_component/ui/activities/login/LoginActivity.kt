@@ -7,7 +7,6 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.utils.SecurityHelper
 import com.xyoye.common_component.utils.showKeyboard
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.dialog.CommonDialog
