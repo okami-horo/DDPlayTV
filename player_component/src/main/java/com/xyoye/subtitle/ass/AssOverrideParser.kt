@@ -1,6 +1,6 @@
 package com.xyoye.subtitle.ass
 
-import kotlin.math.abs
+import kotlin.math.absoluteValue
 
 /**
  * ASS 覆写标签解析工具：负责提取首个覆写块并解析常用标签。
@@ -27,6 +27,9 @@ object AssOverrideParser {
     const val DEFAULT_PLAY_RES_X = 1280
     const val DEFAULT_PLAY_RES_Y = 720
     val DEFAULT_PLAY_RES = PlayRes(DEFAULT_PLAY_RES_X, DEFAULT_PLAY_RES_Y)
+
+    private const val MAX_COORDINATE_ABS = 100_000f
+    private const val MAX_TIME_ABS = 3_600_000f
 
     private val anPattern = Regex("""\\\\an(\\d)""", RegexOption.IGNORE_CASE)
     private val posPattern = Regex(
@@ -123,6 +126,9 @@ object AssOverrideParser {
         }
         val x = tokens[0].toFloatOrNull() ?: return null
         val y = tokens[1].toFloatOrNull() ?: return null
+        if (!isFiniteCoordinate(x) || !isFiniteCoordinate(y)) {
+            return null
+        }
         return Position(x, y)
     }
 
@@ -141,8 +147,25 @@ object AssOverrideParser {
         val x2 = tokens[2].toFloatOrNull() ?: return null
         val y2 = tokens[3].toFloatOrNull() ?: return null
 
+        if (
+            !isFiniteCoordinate(x1) ||
+            !isFiniteCoordinate(y1) ||
+            !isFiniteCoordinate(x2) ||
+            !isFiniteCoordinate(y2)
+        ) {
+            return null
+        }
+
         val t1 = tokens.getOrNull(4)?.toFloatOrNull()
         val t2 = tokens.getOrNull(5)?.toFloatOrNull()
+
+        if (!isFiniteTime(t1) || !isFiniteTime(t2)) {
+            return null
+        }
+
+        if (t1 != null && t2 != null && t1 > t2) {
+            return null
+        }
 
         return Move(x1, y1, x2, y2, t1, t2)
     }
@@ -153,9 +176,25 @@ object AssOverrideParser {
     fun parseFrz(tagMap: Map<String, String>): Rotation? {
         val raw = tagMap["frz"]?.trim() ?: return null
         val angle = raw.toFloatOrNull() ?: return null
-        if (angle.isNaN() || angle.isInfinite()) {
+        if (!angle.isFinite()) {
             return null
         }
-        return Rotation(angle)
+        return Rotation(normalizeAngle(angle))
+    }
+
+    private fun normalizeAngle(angle: Float): Float {
+        val remainder = angle % 360f
+        return if (remainder == 0f) 0f else remainder
+    }
+
+    private fun isFiniteCoordinate(value: Float): Boolean {
+        return value.isFinite() && value.absoluteValue <= MAX_COORDINATE_ABS
+    }
+
+    private fun isFiniteTime(value: Float?): Boolean {
+        if (value == null) {
+            return true
+        }
+        return value.isFinite() && value.absoluteValue <= MAX_TIME_ABS
     }
 }

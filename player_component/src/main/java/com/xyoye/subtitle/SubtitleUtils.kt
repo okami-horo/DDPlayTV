@@ -1,9 +1,11 @@
 package com.xyoye.subtitle
 
 import android.graphics.Color
+import android.os.SystemClock
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.subtitle.ass.AssOverrideParser
 import com.xyoye.subtitle.info.Caption
+import java.util.Locale
 
 /**
  * Created by xyoye on 2020/12/15.
@@ -18,6 +20,9 @@ object SubtitleUtils {
     private val ASS_NEWLINE_REGEX = Regex("""\\\\N""", RegexOption.IGNORE_CASE)
     private val WHITESPACE_COLLAPSE_REGEX = Regex("\\s+")
     private var frzMergeCounter = 0
+    private var captionPerfCounter = 0
+    private const val PERFORMANCE_SAMPLE_LIMIT = 5
+    private const val PERFORMANCE_SAMPLE_INTERVAL = 50
 
     /**
      * 文字转换显示需要字幕格式
@@ -46,6 +51,8 @@ object SubtitleUtils {
         val rawContent = caption.rawContent.orEmpty()
         val subtitle = caption.content.replace("<br />", "\n")
 
+        val startNs = SystemClock.elapsedRealtimeNanos()
+
         val tagMap = AssOverrideParser.parseFirstBlock(rawContent)
         val alignment = AssOverrideParser.parseAn(tagMap)?.value
         val move = AssOverrideParser.parseMove(tagMap)
@@ -57,66 +64,70 @@ object SubtitleUtils {
         val effectivePlayResX = playResX?.takeIf { it > 0 }
         val effectivePlayResY = playResY?.takeIf { it > 0 }
 
-        if (shouldMergeVerticalLines(rawContent)) {
-            val mergedLine = WHITESPACE_COLLAPSE_REGEX
-                .replace(subtitle.replace("\n", " "), " ")
-                .trim()
+        val result = when {
+            shouldMergeVerticalLines(rawContent) -> {
+                val mergedLine = WHITESPACE_COLLAPSE_REGEX
+                    .replace(subtitle.replace("\n", " "), " ")
+                    .trim()
 
-            if (mergedLine.isEmpty()) {
-                return mutableListOf()
+                if (mergedLine.isEmpty()) {
+                    mutableListOf()
+                } else {
+                    logFrzMerge(rawContent, mergedLine)
+                    buildSubtitleList(
+                        subtitleColor,
+                        listOf(mergedLine),
+                        alignment,
+                        scriptX,
+                        scriptY,
+                        rotation,
+                        effectivePlayResX,
+                        effectivePlayResY
+                    )
+                }
             }
 
-            logFrzMerge(rawContent, mergedLine)
-            return buildSubtitleList(
-                subtitleColor,
-                listOf(mergedLine),
-                alignment,
-                scriptX,
-                scriptY,
-                rotation,
-                effectivePlayResX,
-                effectivePlayResY
-            )
+            subtitle.contains("\\\\N") -> {
+                buildSubtitleList(
+                    subtitleColor,
+                    subtitle.split("\\\\N"),
+                    alignment,
+                    scriptX,
+                    scriptY,
+                    rotation,
+                    effectivePlayResX,
+                    effectivePlayResY
+                )
+            }
+
+            subtitle.contains('\n') -> {
+                buildSubtitleList(
+                    subtitleColor,
+                    subtitle.split('\n'),
+                    alignment,
+                    scriptX,
+                    scriptY,
+                    rotation,
+                    effectivePlayResX,
+                    effectivePlayResY
+                )
+            }
+
+            else -> {
+                buildSubtitleList(
+                    subtitleColor,
+                    listOf(subtitle),
+                    alignment,
+                    scriptX,
+                    scriptY,
+                    rotation,
+                    effectivePlayResX,
+                    effectivePlayResY
+                )
+            }
         }
 
-        val upperRegex = "\\\\N"
-        val lowerRegex = "\n"
-        if (subtitle.contains(upperRegex)) {
-            return buildSubtitleList(
-                subtitleColor,
-                subtitle.split(upperRegex),
-                alignment,
-                scriptX,
-                scriptY,
-                rotation,
-                effectivePlayResX,
-                effectivePlayResY
-            )
-        }
-
-        if (subtitle.contains(lowerRegex)) {
-            return buildSubtitleList(
-                subtitleColor,
-                subtitle.split(lowerRegex),
-                alignment,
-                scriptX,
-                scriptY,
-                rotation,
-                effectivePlayResX,
-                effectivePlayResY
-            )
-        }
-
-        return buildSubtitleList(
-            subtitleColor,
-            listOf(subtitle),
-            alignment,
-            scriptX,
-            scriptY,
-            rotation,
-            effectivePlayResX,
-            effectivePlayResY
-        )
+        return logCaptionPerformance(startNs, result, rawContent, tagMap)
     }
 
     private fun shouldMergeVerticalLines(rawContent: String): Boolean {
@@ -202,6 +213,36 @@ object SubtitleUtils {
         }
 
         return subtitleList
+    }
+
+    private fun logCaptionPerformance(
+        startNs: Long,
+        subtitleList: MutableList<SubtitleText>,
+        rawContent: String,
+        tagMap: Map<String, String>
+    ): MutableList<SubtitleText> {
+        val durationNs = SystemClock.elapsedRealtimeNanos() - startNs
+        captionPerfCounter++
+        if (shouldSample(captionPerfCounter, PERFORMANCE_SAMPLE_LIMIT, PERFORMANCE_SAMPLE_INTERVAL)) {
+            val durationMs = durationNs / 1_000_000.0
+            val tagSummary = if (tagMap.isEmpty()) "-" else tagMap.keys.joinToString("/")
+            DDLog.i(
+                TAG,
+                String.format(
+                    Locale.US,
+                    "[FR-010] caption2Subtitle %.3fms lines=%d tags=%s rawLen=%d",
+                    durationMs,
+                    subtitleList.size,
+                    tagSummary,
+                    rawContent.length
+                )
+            )
+        }
+        return subtitleList
+    }
+
+    private fun shouldSample(counter: Int, limit: Int, interval: Int): Boolean {
+        return counter <= limit || counter % interval == 0
     }
 
 

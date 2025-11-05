@@ -2,14 +2,17 @@ package com.xyoye.subtitle
 
 import android.content.Context
 import android.graphics.*
+import android.os.SystemClock
 import android.text.TextPaint
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.ColorInt
 import com.xyoye.common_component.config.SubtitleConfig
+import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.subtitle.ass.AssOverrideParser
+import java.util.Locale
 
 /**
  * Created by xyoye on 2020/12/14.
@@ -20,6 +23,14 @@ open class BaseSubtitleView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+
+    companion object {
+        private const val TAG = "BaseSubtitleView"
+        private const val POSITIONED_SAMPLE_LIMIT = 5
+        private const val POSITIONED_SAMPLE_INTERVAL = 50
+        private const val FALLBACK_SAMPLE_LIMIT = 5
+        private const val FALLBACK_SAMPLE_INTERVAL = 50
+    }
 
     private var defaultTextSize = dp2px(20f).toFloat()
     private var defaultStokeWidth = dp2px(5f).toFloat()
@@ -63,6 +74,8 @@ open class BaseSubtitleView @JvmOverloads constructor(
 
     //定点字幕
     private val mPositionedSubtitles = mutableListOf<SubtitleText>()
+    private var positionedRenderCounter = 0
+    private var fallbackRenderCounter = 0
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -198,9 +211,20 @@ open class BaseSubtitleView @JvmOverloads constructor(
             return
         }
 
-        for (subtitle in mPositionedSubtitles) {
-            drawPositionedSubtitle(canvas, subtitle, viewWidth, viewHeight)
+        if (mPositionedSubtitles.isEmpty()) {
+            return
         }
+
+        val startNs = SystemClock.elapsedRealtimeNanos()
+        var drawnCount = 0
+
+        mPositionedSubtitles.forEach { subtitle ->
+            if (drawPositionedSubtitle(canvas, subtitle, viewWidth, viewHeight)) {
+                drawnCount++
+            }
+        }
+
+        logPositionedRender(startNs, drawnCount, mPositionedSubtitles.size)
     }
 
     private fun drawPositionedSubtitle(
@@ -208,10 +232,10 @@ open class BaseSubtitleView @JvmOverloads constructor(
         subtitle: SubtitleText,
         viewWidth: Int,
         viewHeight: Int
-    ) {
+    ): Boolean {
         val text = subtitle.text
         if (text.isEmpty()) {
-            return
+            return false
         }
 
         mTextPaint.getTextBounds(text, 0, text.length, mTextBounds)
@@ -224,7 +248,8 @@ open class BaseSubtitleView @JvmOverloads constructor(
         val scaledY = scaleCoordinate(subtitle.y, scriptHeight, viewHeight)
 
         if (scaledX == null || scaledY == null) {
-            return
+            drawFallbackSubtitle(canvas, subtitle, viewWidth, viewHeight)
+            return false
         }
 
         val align = subtitle.align
@@ -238,6 +263,11 @@ open class BaseSubtitleView @JvmOverloads constructor(
             fontMetrics
         )
 
+        if (!drawX.isFinite() || !baseline.isFinite()) {
+            drawFallbackSubtitle(canvas, subtitle, viewWidth, viewHeight)
+            return false
+        }
+
         val rotation = subtitle.rotation
         if (rotation != null) {
             val textCenterY = baseline + (fontMetrics.top + fontMetrics.bottom) / 2f
@@ -248,6 +278,8 @@ open class BaseSubtitleView @JvmOverloads constructor(
         } else {
             drawText(canvas, text, drawX, baseline)
         }
+
+        return true
     }
 
     private fun drawText(canvas: Canvas, text: String, x: Float, y: Float) {
@@ -284,6 +316,75 @@ open class BaseSubtitleView @JvmOverloads constructor(
         }
 
         return lineAnchorY - fontMetrics.top - anchorRatio * (fontMetrics.bottom - fontMetrics.top)
+    }
+
+    private fun drawFallbackSubtitle(
+        canvas: Canvas,
+        subtitle: SubtitleText,
+        viewWidth: Int,
+        viewHeight: Int
+    ) {
+        fallbackRenderCounter++
+        if (shouldSample(fallbackRenderCounter, FALLBACK_SAMPLE_LIMIT, FALLBACK_SAMPLE_INTERVAL)) {
+            DDLog.w(
+                TAG,
+                String.format(
+                    Locale.US,
+                    "[FR-009] fallback render textLen=%d align=%s",
+                    subtitle.text.length,
+                    subtitle.align?.toString() ?: "-"
+                )
+            )
+        }
+
+        val text = subtitle.text
+        if (text.isEmpty()) {
+            return
+        }
+
+        mTextPaint.getTextBounds(text, 0, text.length, mTextBounds)
+        val textWidth = mTextPaint.measureText(text)
+        val fontMetrics = mTextPaint.fontMetrics
+
+        val baseX = viewWidth / 2f
+        val lineHeight = fontMetrics.descent - fontMetrics.ascent
+        val baseY = if (subtitle.top) {
+            dp2px(10f) + (subtitle.lineIndex + 0.5f) * lineHeight
+        } else {
+            viewHeight - dp2px(10f) - (subtitle.lineCount - 1 - subtitle.lineIndex + 0.5f) * lineHeight
+        }
+
+        val baseline = baseY - (fontMetrics.ascent + fontMetrics.descent) / 2f
+        val alignedX = when {
+            subtitle.align == null -> baseX
+            subtitle.align in listOf(1, 4, 7) -> baseX - textWidth / 2f
+            subtitle.align in listOf(3, 6, 9) -> baseX + textWidth / 2f
+            else -> baseX
+        }
+
+        drawText(canvas, text, alignedX, baseline)
+    }
+
+    private fun logPositionedRender(startNs: Long, drawnCount: Int, total: Int) {
+        positionedRenderCounter++
+        if (!shouldSample(positionedRenderCounter, POSITIONED_SAMPLE_LIMIT, POSITIONED_SAMPLE_INTERVAL)) {
+            return
+        }
+        val durationMs = (SystemClock.elapsedRealtimeNanos() - startNs) / 1_000_000.0
+        DDLog.i(
+            TAG,
+            String.format(
+                Locale.US,
+                "[FR-010] drawPositioned %.3fms drawn=%d total=%d",
+                durationMs,
+                drawnCount,
+                total
+            )
+        )
+    }
+
+    private fun shouldSample(counter: Int, limit: Int, interval: Int): Boolean {
+        return counter <= limit || counter % interval == 0
     }
 
     private fun scaleCoordinate(value: Float?, scriptSize: Int, viewSize: Int): Float? {
