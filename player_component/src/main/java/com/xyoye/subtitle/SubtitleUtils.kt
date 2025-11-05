@@ -53,7 +53,7 @@ object SubtitleUtils {
 
         val startNs = SystemClock.elapsedRealtimeNanos()
 
-        val tagMap = AssOverrideParser.parseFirstBlock(rawContent)
+        val tagMap = AssOverrideParser.parseAllBlocks(rawContent)
         val alignment = AssOverrideParser.parseAn(tagMap)?.value
         val move = AssOverrideParser.parseMove(tagMap)
         val position = AssOverrideParser.parsePos(tagMap)

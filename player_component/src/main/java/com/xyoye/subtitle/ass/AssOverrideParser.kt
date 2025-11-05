@@ -71,6 +71,42 @@ object AssOverrideParser {
         return emptyMap()
     }
 
+    fun parseAllBlocks(raw: String): Map<String, String> {
+        if (raw.isEmpty()) {
+            return emptyMap()
+        }
+
+        val result = mutableMapOf<String, String>()
+        var depth = 0
+        var blockStart = -1
+        var index = 0
+        while (index < raw.length) {
+            when (raw[index]) {
+                '{' -> {
+                    if (depth == 0) {
+                        blockStart = index + 1
+                    }
+                    depth++
+                }
+                '}' -> {
+                    if (depth > 0) {
+                        depth--
+                        if (depth == 0 && blockStart >= 0) {
+                            val block = raw.substring(blockStart, index)
+                            val map = extractRecognizedTags(block)
+                            if (map.isNotEmpty()) {
+                                result.putAll(map)
+                            }
+                            blockStart = -1
+                        }
+                    }
+                }
+            }
+            index++
+        }
+        return result
+    }
+
     private fun extractRecognizedTags(block: String): Map<String, String> {
         if (block.isBlank()) {
             return emptyMap()
