@@ -17,7 +17,7 @@ object SubtitleUtils {
     private const val FRZ_BREAK_THRESHOLD = 3
     private const val SAMPLE_LIMIT = 5
     private const val SAMPLE_INTERVAL = 50
-    private val ASS_NEWLINE_REGEX = Regex("""\\\\N""", RegexOption.IGNORE_CASE)
+    private val ASS_NEWLINE_REGEX = Regex("""\\N""", RegexOption.IGNORE_CASE)
     private val WHITESPACE_COLLAPSE_REGEX = Regex("\\s+")
     private var frzMergeCounter = 0
     private var captionPerfCounter = 0
@@ -87,10 +87,10 @@ object SubtitleUtils {
                 }
             }
 
-            subtitle.contains("\\\\N") -> {
+            subtitle.contains("\\N") -> {
                 buildSubtitleList(
                     subtitleColor,
-                    subtitle.split("\\\\N"),
+                    subtitle.split("\\N"),
                     alignment,
                     scriptX,
                     scriptY,

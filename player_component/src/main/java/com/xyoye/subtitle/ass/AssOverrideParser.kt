@@ -31,16 +31,16 @@ object AssOverrideParser {
     private const val MAX_COORDINATE_ABS = 100_000f
     private const val MAX_TIME_ABS = 3_600_000f
 
-    private val anPattern = Regex("""\\\\an(\\d)""", RegexOption.IGNORE_CASE)
+    private val anPattern = Regex("""\\an(\d)""", RegexOption.IGNORE_CASE)
     private val posPattern = Regex(
-        """\\\\pos\\(\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)\\s*\\)""",
+        """\\pos\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)""",
         RegexOption.IGNORE_CASE
     )
     private val movePattern = Regex(
-        """\\\\move\\(\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)\\s*(?:,\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*(-?\\d+(?:\\.\\d+)?)\\s*)?\\)""",
+        """\\move\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*(?:,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*)?\)""",
         RegexOption.IGNORE_CASE
     )
-    private val frzPattern = Regex("""\\\\frz\\s*(-?\\d+(?:\\.\\d+)?)""", RegexOption.IGNORE_CASE)
+    private val frzPattern = Regex("""\\frz\s*(-?\d+(?:\.\d+)?)""", RegexOption.IGNORE_CASE)
 
     /**
      * 解析原始字幕文本，提取首个覆写块内的可识别标签。
