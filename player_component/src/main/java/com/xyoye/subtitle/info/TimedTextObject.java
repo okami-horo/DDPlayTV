@@ -65,6 +65,10 @@ public class TimedTextObject {
 	//to delay or advance the subtitles, parsed into +/- milliseconds
 	public int offset = 0;
 	
+	//script resolution information (ASS PlayResX/Y)
+	private Integer playResX = null;
+	private Integer playResY = null;
+
 	//to know if a parsing method has been applied
 	public boolean built = false;
 	
@@ -79,6 +83,22 @@ public class TimedTextObject {
 		
 		warnings = "List of non fatal errors produced during parsing:\n\n";
 		
+	}
+
+	public Integer getPlayResX() {
+		return playResX;
+	}
+
+	public void setPlayResX(Integer playResX) {
+		this.playResX = playResX;
+	}
+
+	public Integer getPlayResY() {
+		return playResY;
+	}
+
+	public void setPlayResY(Integer playResY) {
+		this.playResY = playResY;
 	}
 	
 	

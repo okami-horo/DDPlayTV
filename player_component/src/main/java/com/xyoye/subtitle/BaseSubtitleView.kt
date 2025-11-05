@@ -9,6 +9,7 @@ import android.view.View
 import androidx.annotation.ColorInt
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.utils.dp2px
+import com.xyoye.subtitle.ass.AssOverrideParser
 
 /**
  * Created by xyoye on 2020/12/14.
@@ -60,6 +61,9 @@ open class BaseSubtitleView @JvmOverloads constructor(
     //顶部字幕
     private val mTopSubtitles = mutableListOf<SubtitleText>()
 
+    //定点字幕
+    private val mPositionedSubtitles = mutableListOf<SubtitleText>()
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         setLayerType(LAYER_TYPE_SOFTWARE, null)
@@ -68,6 +72,8 @@ open class BaseSubtitleView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         //绘制前，清除上一次的字幕
         clearSubtitle(canvas)
+
+        drawPositionedSubtitles(canvas)
 
         //底部字幕倒序绘制，从下往上绘制
         var mSubtitleY = measuredHeight - dp2px(10f)
@@ -109,16 +115,16 @@ open class BaseSubtitleView @JvmOverloads constructor(
     }
 
     fun showSubtitle(subtitleList: List<SubtitleText>) {
-        val subtitleMap = subtitleList.groupBy { it.top }
-
         mBottomSubtitles.clear()
         mTopSubtitles.clear()
+        mPositionedSubtitles.clear()
 
-        subtitleMap[true]?.let {
-            mTopSubtitles.addAll(it)
-        }
-        subtitleMap[false]?.let {
-            mBottomSubtitles.addAll(it)
+        subtitleList.forEach { subtitle ->
+            when {
+                subtitle.x != null && subtitle.y != null -> mPositionedSubtitles.add(subtitle)
+                subtitle.top -> mTopSubtitles.add(subtitle)
+                else -> mBottomSubtitles.add(subtitle)
+            }
         }
         invalidate()
     }
@@ -183,5 +189,124 @@ open class BaseSubtitleView @JvmOverloads constructor(
         mStrokePaint.color = defaultStokeColor
         updateShadowLayer()
         invalidate()
+    }
+
+    private fun drawPositionedSubtitles(canvas: Canvas) {
+        val viewWidth = measuredWidth
+        val viewHeight = measuredHeight
+        if (viewWidth <= 0 || viewHeight <= 0) {
+            return
+        }
+
+        for (subtitle in mPositionedSubtitles) {
+            drawPositionedSubtitle(canvas, subtitle, viewWidth, viewHeight)
+        }
+    }
+
+    private fun drawPositionedSubtitle(
+        canvas: Canvas,
+        subtitle: SubtitleText,
+        viewWidth: Int,
+        viewHeight: Int
+    ) {
+        val text = subtitle.text
+        if (text.isEmpty()) {
+            return
+        }
+
+        mTextPaint.getTextBounds(text, 0, text.length, mTextBounds)
+        val textWidth = mTextPaint.measureText(text)
+
+        val scriptWidth = subtitle.playResX ?: AssOverrideParser.DEFAULT_PLAY_RES_X
+        val scriptHeight = subtitle.playResY ?: AssOverrideParser.DEFAULT_PLAY_RES_Y
+
+        val scaledX = scaleCoordinate(subtitle.x, scriptWidth, viewWidth)
+        val scaledY = scaleCoordinate(subtitle.y, scriptHeight, viewHeight)
+
+        if (scaledX == null || scaledY == null) {
+            return
+        }
+
+        val align = subtitle.align
+        val fontMetrics = mTextPaint.fontMetrics
+        val drawX = calculateAlignedCenterX(scaledX, textWidth, align)
+        val baseline = calculateBaseline(
+            scaledY,
+            align,
+            subtitle.lineIndex,
+            subtitle.lineCount,
+            fontMetrics
+        )
+
+        val rotation = subtitle.rotation
+        if (rotation != null) {
+            val textCenterY = baseline + (fontMetrics.top + fontMetrics.bottom) / 2f
+            canvas.save()
+            canvas.rotate(rotation, drawX, textCenterY)
+            drawText(canvas, text, drawX, baseline)
+            canvas.restore()
+        } else {
+            drawText(canvas, text, drawX, baseline)
+        }
+    }
+
+    private fun drawText(canvas: Canvas, text: String, x: Float, y: Float) {
+        canvas.drawText(text, x, y, mStrokePaint)
+        canvas.drawText(text, x, y, mTextPaint)
+    }
+
+    private fun calculateAlignedCenterX(baseX: Float, textWidth: Float, align: Int?): Float {
+        return when {
+            isLeftAligned(align) -> baseX + textWidth / 2f
+            isRightAligned(align) -> baseX - textWidth / 2f
+            else -> baseX
+        }
+    }
+
+    private fun calculateBaseline(
+        anchorY: Float,
+        align: Int?,
+        lineIndex: Int,
+        lineCount: Int,
+        fontMetrics: Paint.FontMetrics
+    ): Float {
+        val lineHeight = fontMetrics.descent - fontMetrics.ascent
+        val anchorRatio = when {
+            isTopAligned(align) -> 0f
+            isBottomAligned(align) -> 1f
+            else -> 0.5f
+        }
+
+        val lineAnchorY = when {
+            isTopAligned(align) -> anchorY + lineIndex * lineHeight
+            isBottomAligned(align) -> anchorY - (lineCount - 1 - lineIndex) * lineHeight
+            else -> anchorY + (lineIndex - (lineCount - 1) / 2f) * lineHeight
+        }
+
+        return lineAnchorY - fontMetrics.top - anchorRatio * (fontMetrics.bottom - fontMetrics.top)
+    }
+
+    private fun scaleCoordinate(value: Float?, scriptSize: Int, viewSize: Int): Float? {
+        val coordinate = value ?: return null
+        if (scriptSize <= 0) {
+            return null
+        }
+        return coordinate * (viewSize.toFloat() / scriptSize)
+    }
+
+    private fun isLeftAligned(align: Int?): Boolean {
+        return align == 1 || align == 4 || align == 7
+    }
+
+    private fun isRightAligned(align: Int?): Boolean {
+        return align == 3 || align == 6 || align == 9
+    }
+
+    private fun isTopAligned(align: Int?): Boolean {
+        return align == 7 || align == 8 || align == 9
+    }
+
+    private fun isBottomAligned(align: Int?): Boolean {
+        return align == 1 || align == 2 || align == 3
     }
 }

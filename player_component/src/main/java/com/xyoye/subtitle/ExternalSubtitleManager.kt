@@ -39,13 +39,12 @@ class ExternalSubtitleManager {
      */
     private fun findSubtitle(position: Long): MutableList<SubtitleText> {
         val subtitleList = mutableListOf<SubtitleText>()
-        if (mTimedTextObject == null)
-            return subtitleList
+        val timedTextObject = mTimedTextObject ?: return subtitleList
 
         //字幕初始时间
-        val minMs: Long = mTimedTextObject!!.captions.firstKey()
+        val minMs: Long = timedTextObject.captions.firstKey()
         //字幕结束时间
-        val maxMs: Long = mTimedTextObject!!.captions.lastKey()
+        val maxMs: Long = timedTextObject.captions.lastKey()
 
         //当前进度未达字幕初始时间
         if (position < minMs || minMs > maxMs)
@@ -62,7 +61,7 @@ class ExternalSubtitleManager {
         }
 
         //获取二十秒间所有字幕
-        val subtitleCaptions = mTimedTextObject!!.captions.subMap(startMs, endMs)
+        val subtitleCaptions = timedTextObject.captions.subMap(startMs, endMs)
 
         //遍历字幕，取当前时间字幕
         for (caption in subtitleCaptions.values) {
@@ -76,7 +75,13 @@ class ExternalSubtitleManager {
 
             //1ms容错
             if (position >= captionStartMs - 1L && position <= captionEndMs) {
-                subtitleList.addAll(SubtitleUtils.caption2Subtitle(caption))
+                subtitleList.addAll(
+                    SubtitleUtils.caption2Subtitle(
+                        caption,
+                        timedTextObject.playResX,
+                        timedTextObject.playResY
+                    )
+                )
             }
         }
 

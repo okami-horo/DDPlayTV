@@ -13,5 +13,13 @@ data class SubtitleText(
 
     var align: Int? = null,
 
-    var rotation: Float? = null
+    var rotation: Float? = null,
+
+    var playResX: Int? = null,
+
+    var playResY: Int? = null,
+
+    var lineIndex: Int = 0,
+
+    var lineCount: Int = 1
 )

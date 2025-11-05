@@ -2,6 +2,7 @@ package com.xyoye.subtitle
 
 import android.graphics.Color
 import com.xyoye.common_component.utils.DDLog
+import com.xyoye.subtitle.ass.AssOverrideParser
 import com.xyoye.subtitle.info.Caption
 
 /**
@@ -33,13 +34,28 @@ object SubtitleUtils {
     /**
      * caption转换显示需要字幕格式
      */
-    fun caption2Subtitle(caption: Caption): MutableList<SubtitleText> {
+    fun caption2Subtitle(
+        caption: Caption,
+        playResX: Int? = null,
+        playResY: Int? = null
+    ): MutableList<SubtitleText> {
         //字幕颜色
         val subtitleColor = getCaptionColor(caption.style?.color)
 
         //分割每行字幕
         val rawContent = caption.rawContent.orEmpty()
         val subtitle = caption.content.replace("<br />", "\n")
+
+        val tagMap = AssOverrideParser.parseFirstBlock(rawContent)
+        val alignment = AssOverrideParser.parseAn(tagMap)?.value
+        val move = AssOverrideParser.parseMove(tagMap)
+        val position = AssOverrideParser.parsePos(tagMap)
+        val rotation = AssOverrideParser.parseFrz(tagMap)?.angle
+
+        val scriptX = move?.toX ?: position?.x
+        val scriptY = move?.toY ?: position?.y
+        val effectivePlayResX = playResX?.takeIf { it > 0 }
+        val effectivePlayResY = playResY?.takeIf { it > 0 }
 
         if (shouldMergeVerticalLines(rawContent)) {
             val mergedLine = WHITESPACE_COLLAPSE_REGEX
@@ -51,20 +67,56 @@ object SubtitleUtils {
             }
 
             logFrzMerge(rawContent, mergedLine)
-            return strings2Subtitle(subtitleColor, mergedLine)
+            return buildSubtitleList(
+                subtitleColor,
+                listOf(mergedLine),
+                alignment,
+                scriptX,
+                scriptY,
+                rotation,
+                effectivePlayResX,
+                effectivePlayResY
+            )
         }
 
-        val upperRegex = "\\N"
+        val upperRegex = "\\\\N"
         val lowerRegex = "\n"
         if (subtitle.contains(upperRegex)) {
-            return strings2Subtitle(subtitleColor, *(subtitle.split(upperRegex).toTypedArray()))
+            return buildSubtitleList(
+                subtitleColor,
+                subtitle.split(upperRegex),
+                alignment,
+                scriptX,
+                scriptY,
+                rotation,
+                effectivePlayResX,
+                effectivePlayResY
+            )
         }
 
         if (subtitle.contains(lowerRegex)) {
-            return strings2Subtitle(subtitleColor, *(subtitle.split(lowerRegex).toTypedArray()))
+            return buildSubtitleList(
+                subtitleColor,
+                subtitle.split(lowerRegex),
+                alignment,
+                scriptX,
+                scriptY,
+                rotation,
+                effectivePlayResX,
+                effectivePlayResY
+            )
         }
 
-        return strings2Subtitle(subtitleColor, subtitle)
+        return buildSubtitleList(
+            subtitleColor,
+            listOf(subtitle),
+            alignment,
+            scriptX,
+            scriptY,
+            rotation,
+            effectivePlayResX,
+            effectivePlayResY
+        )
     }
 
     private fun shouldMergeVerticalLines(rawContent: String): Boolean {
@@ -89,38 +141,61 @@ object SubtitleUtils {
         }
     }
 
-    private fun strings2Subtitle(
+    private fun buildSubtitleList(
         subtitleColor: Int,
-        vararg subtitles: String
+        subtitles: List<String>,
+        align: Int?,
+        x: Float?,
+        y: Float?,
+        rotation: Float?,
+        playResX: Int?,
+        playResY: Int?
     ): MutableList<SubtitleText> {
         val subtitleList = mutableListOf<SubtitleText>()
 
-        for (subtitle in subtitles) {
-            //第一行以{开头，则认为是特殊字幕，现显示在顶部
+        val totalLines = subtitles.size.coerceAtLeast(1)
+
+        subtitles.forEachIndexed { index, subtitle ->
+            if (subtitle.isEmpty()) {
+                return@forEachIndexed
+            }
+
             if (subtitle.startsWith("{")) {
                 val endIndex = subtitle.lastIndexOf("}") + 1
+                val content = if (endIndex != 0 && endIndex <= subtitle.length) {
+                    subtitle.substring(endIndex)
+                } else {
+                    subtitle
+                }
                 subtitleList.add(
-                    if (endIndex != 0 && endIndex <= subtitle.length) {
-                        //忽略{}中内容
-                        SubtitleText(
-                            subtitle.substring(
-                                endIndex
-                            ), true, subtitleColor
-                        )
-                    } else {
-                        SubtitleText(
-                            subtitle,
-                            true,
-                            subtitleColor
-                        )
-                    }
+                    SubtitleText(
+                        text = content,
+                        top = true,
+                        color = subtitleColor,
+                        x = x,
+                        y = y,
+                        align = align,
+                        rotation = rotation,
+                        playResX = playResX,
+                        playResY = playResY,
+                        lineIndex = index,
+                        lineCount = totalLines
+                    )
                 )
             } else {
                 subtitleList.add(
                     SubtitleText(
-                        subtitle,
-                        false,
-                        subtitleColor
+                        text = subtitle,
+                        top = false,
+                        color = subtitleColor,
+                        x = x,
+                        y = y,
+                        align = align,
+                        rotation = rotation,
+                        playResX = playResX,
+                        playResY = playResY,
+                        lineIndex = index,
+                        lineCount = totalLines
                     )
                 )
             }

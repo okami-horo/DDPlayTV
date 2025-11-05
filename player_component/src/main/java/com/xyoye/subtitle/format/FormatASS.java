@@ -59,6 +59,9 @@ public class FormatASS implements TimedTextFileFormat {
         //if the file is .SSA or .ASS
         boolean isASS = false;
 
+        Integer playResX = null;
+        Integer playResY = null;
+
         //variables to store the formats
         String[] styleFormat;
         String[] dialogueFormat;
@@ -109,6 +112,22 @@ public class FormatASS implements TimedTextFileFormat {
                                 String[] time = line.split(":");
                                 if (time.length > 1)
                                     timer = Float.parseFloat(time[1].trim().replace(',', '.'));
+                            } else if (line.startsWith("PlayResX")) {
+                                String[] playRes = line.split(":");
+                                if (playRes.length > 1) {
+                                    Integer parsedValue = parseIntegerSafe(playRes[1]);
+                                    if (parsedValue != null && parsedValue > 0) {
+                                        playResX = parsedValue;
+                                    }
+                                }
+                            } else if (line.startsWith("PlayResY")) {
+                                String[] playRes = line.split(":");
+                                if (playRes.length > 1) {
+                                    Integer parsedValue = parseIntegerSafe(playRes[1]);
+                                    if (parsedValue != null && parsedValue > 0) {
+                                        playResY = parsedValue;
+                                    }
+                                }
                             }
                             //we go to the next line
                             lineCounter++;
@@ -228,8 +247,18 @@ public class FormatASS implements TimedTextFileFormat {
             br.close();
         }
 
+        tto.setPlayResX(playResX);
+        tto.setPlayResY(playResY);
         tto.built = true;
         return tto;
+    }
+
+    private Integer parseIntegerSafe(String rawValue) {
+        try {
+            return Integer.parseInt(rawValue.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
 
