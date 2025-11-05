@@ -1,6 +1,7 @@
 package com.xyoye.common_component.utils;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.xyoye.common_component.base.app.BaseApplication;
 
@@ -19,8 +20,19 @@ public class SecurityHelper {
 
     private final Context appContext;
 
+    private static final String TAG = "SecurityHelper";
+    private static final boolean NATIVE_LIBRARY_LOADED;
+
     static {
-        System.loadLibrary("security");
+        boolean loaded;
+        try {
+            System.loadLibrary("security");
+            loaded = true;
+        } catch (UnsatisfiedLinkError | SecurityException e) {
+            Log.w(TAG, "Failed to load native security library, falling back to safe defaults", e);
+            loaded = false;
+        }
+        NATIVE_LIBRARY_LOADED = loaded;
     }
 
     private SecurityHelper() {
@@ -41,6 +53,10 @@ public class SecurityHelper {
     }
 
     public String getAppId() {
+        if (!NATIVE_LIBRARY_LOADED) {
+            return SecurityHelperConfig.INSTANCE.getDANDAN_APP_ID();
+        }
+
         try {
             String nativeKey = getKey(KEY_DANDAN, appContext);
             // 如果native方法返回错误或为空，使用配置文件中的ID
@@ -55,10 +71,19 @@ public class SecurityHelper {
     }
 
     public String getAliyunSecret() {
+        if (!NATIVE_LIBRARY_LOADED) {
+            return SecurityHelperConfig.INSTANCE.getALIYUN_SECRET();
+        }
+
         return getKey(KEY_ALIYUN, appContext);
     }
 
     public String buildHash(String hashInfo) {
+        if (!NATIVE_LIBRARY_LOADED) {
+            Log.w(TAG, "buildHash invoked without native library; returning raw value");
+            return hashInfo;
+        }
+
         return buildHash(hashInfo, appContext);
     }
 
@@ -68,6 +93,10 @@ public class SecurityHelper {
     }
 
     public Map<String, String> getSignatureMap(String path, Context context) {
+        if (!NATIVE_LIBRARY_LOADED) {
+            return null;
+        }
+
         Object signature = getSignature(path, context);
         if (signature == null) {
             return null;

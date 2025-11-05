@@ -8,13 +8,25 @@ import java.io.File
 
 object OpenCC {
 
-    init {
+    private val isNativeLibraryLoaded: Boolean = try {
         System.loadLibrary("open_cc")
+        true
+    } catch (error: Throwable) {
+        android.util.Log.w(
+            "OpenCC",
+            "Failed to load native open_cc library, simplified/traditional conversion will be disabled",
+            error
+        )
+        false
     }
 
     private external fun convert(text: String, configJsonPath: String): String
 
     fun convertSC(text: String): String {
+        if (!isNativeLibraryLoaded) {
+            return text
+        }
+
         val config = OpenCCFile.t2s
         if (config.exists().not()) {
             return text
@@ -24,6 +36,10 @@ object OpenCC {
     }
 
     fun convertTC(text: String): String {
+        if (!isNativeLibraryLoaded) {
+            return text
+        }
+
         val config = OpenCCFile.s2t
         if (config.exists().not()) {
             return text
@@ -33,6 +49,10 @@ object OpenCC {
     }
 
     private fun convert(text: String, config: File): String {
+        if (!isNativeLibraryLoaded) {
+            return text
+        }
+
         return try {
             convert(text, config.absolutePath)
         } catch (t: Throwable) {
