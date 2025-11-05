@@ -43,6 +43,12 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         // 提前初始化全局上下文与主线程Handler，避免在ContentProvider或静态初始化阶段访问导致空指针
         APPLICATION_CONTEXT = this
         mMainHandler = Handler(Looper.getMainLooper())
+        // 尽早初始化 Bugly，保证 Application onCreate 之前的崩溃也能被捕获
+        CrashReport.initCrashReport(
+            this,
+            SecurityHelperConfig.BUGLY_APP_ID,
+            BuildConfig.DEBUG
+        )
     }
 
     override fun onCreate() {
@@ -65,11 +71,6 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         }
         MMKV.initialize(this)
         ARouter.init(this)
-        CrashReport.initCrashReport(
-            this,
-            SecurityHelperConfig.BUGLY_APP_ID,
-            BuildConfig.DEBUG
-        )
         Notifications.setupNotificationChannels(this)
         ActivityHelper.instance.init(this)
         EMASHelper.init(this)
