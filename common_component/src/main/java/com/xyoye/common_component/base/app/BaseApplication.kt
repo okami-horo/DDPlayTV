@@ -53,6 +53,7 @@ open class BaseApplication : Application(), ImageLoaderFactory {
 
     override fun onCreate() {
         super.onCreate()
+        MMKV.initialize(this)
 
         DDLog.i("APP-Init", "application onCreate start process=${android.os.Process.myPid()}")
 
@@ -69,7 +70,6 @@ open class BaseApplication : Application(), ImageLoaderFactory {
             ARouter.openDebug()
             DDLog.i("APP-Init", "router debug mode enabled")
         }
-        MMKV.initialize(this)
         ARouter.init(this)
         Notifications.setupNotificationChannels(this)
         ActivityHelper.instance.init(this)
