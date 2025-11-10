@@ -1,5 +1,6 @@
 package com.xyoye.common_component.extension
 
+import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -51,24 +52,38 @@ fun RecyclerView.requestIndexChildFocus(index: Int): Boolean {
         return false
     }
 
-    scrollToPosition(index)
-
     val targetTag = R.string.focusable_item.toResString()
 
-    fun tryRequestFocus(target: View?): Boolean {
-        if (target == null) {
-            return false
-        }
+    fun tryRequestFocus(): Boolean {
+        val target = layoutManager.findViewByPosition(index) ?: return false
+        ensureChildFullyVisible(target)
         val focusView = target.findViewWithTag<View>(targetTag) ?: target.takeIf { it.isFocusable }
         return focusView?.requestFocus() == true
     }
 
-    if (tryRequestFocus(layoutManager.findViewByPosition(index))) {
+    if (tryRequestFocus()) {
         return true
     }
 
+    alignPosition(index, layoutManager)
     post {
-        tryRequestFocus(layoutManager.findViewByPosition(index))
+        tryRequestFocus()
     }
-    return false
+    return true
+}
+
+private fun RecyclerView.alignPosition(index: Int, layoutManager: RecyclerView.LayoutManager) {
+    if (layoutManager is LinearLayoutManager) {
+        val offset = if (layoutManager.orientation == RecyclerView.VERTICAL) paddingTop else paddingLeft
+        layoutManager.scrollToPositionWithOffset(index, offset)
+    } else {
+        layoutManager.scrollToPosition(index)
+    }
+}
+
+private fun RecyclerView.ensureChildFullyVisible(target: View) {
+    val rect = Rect()
+    target.getDrawingRect(rect)
+    offsetDescendantRectToMyCoords(target, rect)
+    requestChildRectangleOnScreen(target, rect, true)
 }
