@@ -101,9 +101,9 @@
 - [X] T030 [P] [US3] Implement telemetry submission + batching in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/network/repository/Media3TelemetryRepository.kt` targeting `POST /v1/media3/telemetry`.  
 - [X] T031 [US3] Emit STARTUP, FIRST_FRAME, ERROR, and CAST_TRANSFER events from the Media3 delegate in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/media3/Media3PlayerDelegate.kt`.  
 - [X] T032 [US3] Persist `RolloutToggleSnapshot` and `DownloadAssetCheck` history via a Room DAO inside `/workspace/DanDanPlayForAndroid/data_component/src/main/java/com/xyoye/data_component/database/dao/Media3Dao.kt`.  
-- [ ] T033 [US3] Document alert routing, dashboards, and rollback steps for ops inside `/workspace/DanDanPlayForAndroid/document/monitoring/media3-telemetry.md`.  
+- [X] T033 [US3] Document alert routing, dashboards, and rollback steps for ops inside `/workspace/DanDanPlayForAndroid/document/monitoring/media3-telemetry.md`.  
 - [X] T034 [P] [US3] Tag crashes/ANRs with Media3 cohort metadata by updating Bugly/Firebase initialization in `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/App.kt` and adding verification instrumentation in `/workspace/DanDanPlayForAndroid/app/src/androidTest/java/com/xyoye/dandanplay/app/CrashTaggingTest.kt` to keep the ≤0.2% KPI enforceable.  
-- [ ] T035 [US3] Automate crash/telemetry alert dashboards (Grafana/DataStudio) documenting thresholds and on-call rotation in `/workspace/DanDanPlayForAndroid/document/monitoring/media3-stability.md`.  
+- [X] T035 [US3] Automate crash/telemetry alert dashboards (Grafana/DataStudio) documenting thresholds and on-call rotation in `/workspace/DanDanPlayForAndroid/document/monitoring/media3-stability.md`.  
 
 **Checkpoint**: Monitoring cleanly differentiates Media3 cohorts and supports rapid rollback/triage.
 
