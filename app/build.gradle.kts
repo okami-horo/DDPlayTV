@@ -8,6 +8,9 @@ plugins {
 
 applicationSetup()
 
+val media3FallbackFlag =
+    project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
+
 android {
     namespace = "com.xyoye.dandanplay"
     compileSdk = Versions.compileSdkVersion
@@ -20,6 +23,11 @@ android {
         versionName = Versions.versionName
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField(
+            "boolean",
+            "MEDIA3_ENABLED_FALLBACK",
+            media3FallbackFlag.toString()
+        )
 
         ndk {
             abiFilters.add("armeabi-v7a")

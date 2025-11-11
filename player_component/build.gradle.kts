@@ -8,6 +8,16 @@ plugins {
 
 moduleSetup()
 
+val media3Version = project.findProperty("media3Version")?.toString() ?: "1.8.0"
+
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "androidx.media3") {
+            useVersion(media3Version)
+        }
+    }
+}
+
 android {
     sourceSets {
         getByName("main") {
@@ -24,6 +34,7 @@ kapt {
 }
 
 dependencies {
+    // Media3 dependencies will be switched on once the migration is ready.
 
     implementation(project(":common_component"))
     implementation(project(":repository:panel_switch"))

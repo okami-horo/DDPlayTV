@@ -1,6 +1,6 @@
 object Dependencies {
     private object Versions {
-        const val kotlin = "1.7.21"
+        const val kotlin = "1.7.22"
         const val kotlin_coroutines = "1.6.4"
         const val arouter = "1.5.2"
         const val room = "2.4.3"

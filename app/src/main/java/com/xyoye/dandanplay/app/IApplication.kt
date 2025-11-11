@@ -15,4 +15,8 @@ class IApplication : BaseApplication(){
         MultiDex.install(this)
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        AppConfig.init(this)
+    }
 }

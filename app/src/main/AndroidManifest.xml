@@ -25,7 +25,8 @@
             android:name="com.xyoye.dandanplay.ui.splash.SplashActivity"
             android:configChanges="orientation|screenSize"
             android:theme="@style/SplashTheme"
-            android:banner="@mipmap/ic_leanback_banner">
+            android:banner="@mipmap/ic_leanback_banner"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
