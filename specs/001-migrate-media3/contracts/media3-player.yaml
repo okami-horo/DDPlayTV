@@ -1,0 +1,350 @@
+openapi: 3.0.3
+info:
+  title: Media3 Capability & Telemetry API
+  version: "0.1.0"
+  description: >
+    Contracts between feature modules and the unified Media3 capability layer.
+servers:
+  - url: https://player-component.internal/api
+paths:
+  /v1/media3/sessions:
+    post:
+      summary: Create a Media3-backed playback session
+      operationId: createMedia3Session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaybackSessionRequest'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaybackSessionResponse'
+  /v1/media3/sessions/{sessionId}:
+    get:
+      summary: Fetch the canonical session state/capability contract
+      operationId: getMedia3Session
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      responses:
+        '200':
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaybackSessionResponse'
+  /v1/media3/sessions/{sessionId}/commands:
+    post:
+      summary: Dispatch a capability command (play/pause/seek/speed/etc.)
+      operationId: dispatchCapabilityCommand
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CapabilityCommandRequest'
+      responses:
+        '202':
+          description: Command accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapabilityCommandResponse'
+  /v1/media3/telemetry:
+    post:
+      summary: Emit Media3 telemetry for analytics/monitoring
+      operationId: emitTelemetry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemetryEvent'
+      responses:
+        '202':
+          description: Telemetry accepted
+  /v1/media3/rollout:
+    patch:
+      summary: Override or inspect the Media3 rollout toggle
+      operationId: updateRolloutToggle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RolloutTogglePatch'
+      responses:
+        '200':
+          description: Updated toggle snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolloutToggleSnapshot'
+  /v1/media3/downloads/validate:
+    post:
+      summary: Validate an offline asset before exposing playback
+      operationId: validateDownload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DownloadValidationRequest'
+      responses:
+        '200':
+          description: Validation outcome
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadValidationResponse'
+
+components:
+  parameters:
+    SessionIdParam:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    PlaybackSessionRequest:
+      type: object
+      required:
+        - mediaId
+        - sourceType
+      properties:
+        mediaId:
+          type: string
+        sourceType:
+          type: string
+          enum: [STREAM, DOWNLOAD, CAST, PREVIEW]
+        autoplay:
+          type: boolean
+          default: true
+        requestedCapabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapabilityName'
+    PlaybackSessionResponse:
+      type: object
+      required:
+        - sessionId
+        - playbackState
+        - capabilityContract
+        - toggleSnapshot
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        playbackState:
+          type: string
+          enum: [INITIALIZING, READY, PLAYING, BUFFERING, PAUSED, COMPLETED, FAILED]
+        playerEngine:
+          type: string
+          enum: [EXO_LEGACY, MEDIA3]
+        capabilityContract:
+          $ref: '#/components/schemas/PlayerCapabilityContract'
+        toggleSnapshot:
+          $ref: '#/components/schemas/RolloutToggleSnapshot'
+        metrics:
+          type: object
+          properties:
+            firstFrameTargetMs:
+              type: integer
+              description: SLA threshold for first frame (defaults to 2000 ms)
+    PlayerCapabilityContract:
+      type: object
+      required:
+        - sessionId
+        - capabilities
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        capabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapabilityName'
+        seekIncrementMs:
+          type: integer
+          default: 5000
+        speedOptions:
+          type: array
+          items:
+            type: number
+            format: float
+        subtitleLanguages:
+          type: array
+          items:
+            type: string
+        backgroundModes:
+          type: array
+          items:
+            type: string
+            enum: [AUDIO_ONLY, PIP, NOTIFICATION]
+        castTargets:
+          type: array
+          items:
+            $ref: '#/components/schemas/CastTarget'
+        offlineSupport:
+          $ref: '#/components/schemas/OfflineSupport'
+        sessionCommands:
+          type: array
+          items:
+            type: string
+    CapabilityCommandRequest:
+      type: object
+      required:
+        - capability
+      properties:
+        capability:
+          $ref: '#/components/schemas/CapabilityName'
+        payload:
+          type: object
+          additionalProperties: true
+    CapabilityCommandResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        acceptedAt:
+          type: string
+          format: date-time
+        resultingState:
+          type: string
+          enum: [READY, PLAYING, BUFFERING, PAUSED, COMPLETED]
+    TelemetryEvent:
+      type: object
+      required:
+        - eventId
+        - sessionId
+        - eventType
+        - timestamp
+        - playerEngine
+        - media3Version
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          enum: [STARTUP, FIRST_FRAME, BUFFERING, ERROR, TOGGLE_CHANGE, DOWNLOAD_VALIDATION, CAST_TRANSFER]
+        timestamp:
+          type: string
+          format: date-time
+        playerEngine:
+          type: string
+          enum: [EXO_LEGACY, MEDIA3]
+        media3Version:
+          type: string
+        metrics:
+          type: object
+          additionalProperties: true
+        deviceInfo:
+          type: object
+          additionalProperties: true
+        isForeground:
+          type: boolean
+    RolloutTogglePatch:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          type: boolean
+        source:
+          type: string
+          enum: [REMOTE_CONFIG, GRADLE_FALLBACK, MANUAL_OVERRIDE]
+        reason:
+          type: string
+    RolloutToggleSnapshot:
+      type: object
+      required:
+        - snapshotId
+        - flagName
+        - value
+        - source
+        - evaluatedAt
+      properties:
+        snapshotId:
+          type: string
+          format: uuid
+        flagName:
+          type: string
+          default: media3_enabled
+        value:
+          type: boolean
+        source:
+          type: string
+          enum: [REMOTE_CONFIG, GRADLE_FALLBACK, MANUAL_OVERRIDE]
+        evaluatedAt:
+          type: string
+          format: date-time
+    DownloadValidationRequest:
+      type: object
+      required:
+        - downloadId
+        - mediaId
+      properties:
+        downloadId:
+          type: string
+          format: uuid
+        mediaId:
+          type: string
+        media3Version:
+          type: string
+        lastVerifiedAt:
+          type: string
+          format: date-time
+    DownloadValidationResponse:
+      type: object
+      required:
+        - downloadId
+        - isCompatible
+        - requiredAction
+      properties:
+        downloadId:
+          type: string
+          format: uuid
+        isCompatible:
+          type: boolean
+        requiredAction:
+          type: string
+          enum: [NONE, REVALIDATE, REDOWNLOAD, AUDIO_ONLY_FALLBACK]
+        verificationLogs:
+          type: array
+          items:
+            type: string
+    CastTarget:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [CHROMECAST, DLNA, LOCAL]
+    OfflineSupport:
+      type: object
+      properties:
+        downloadResume:
+          type: boolean
+        verifyBeforePlay:
+          type: boolean
+        audioOnlyFallback:
+          type: boolean
+    CapabilityName:
+      type: string
+      enum: [PLAY, PAUSE, SEEK, SPEED, SUBTITLE, AUDIO_TRACK, BACKGROUND, PIP, CAST, DOWNLOAD_VALIDATE, SESSION_COMMAND]

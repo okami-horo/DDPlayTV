@@ -20,7 +20,6 @@ scripts/
 .tmp/
 .windsurf/
 .specify/
-specs/
 .codex/
 .DS_Store
 Thumbs.db
