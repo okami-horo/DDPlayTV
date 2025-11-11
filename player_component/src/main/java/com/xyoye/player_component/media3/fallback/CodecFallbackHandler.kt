@@ -10,10 +10,28 @@ sealed class CodecFallbackDecision {
 
 /**
  * Evaluates legacy capability results to determine Media3 fallback strategy.
- * Actual logic provided when tackling T019b.
+ * - No blocking issues => proceed with normal playback.
+ * - Blocking codec issues => switch to audio-only while surfacing reason.
+ * - Other blocking issues (e.g., DRM) => block playback entirely.
  */
 class CodecFallbackHandler {
+
     fun evaluate(result: LegacyCapabilityResult): CodecFallbackDecision {
-        TODO("Not yet implemented")
+        if (!result.hasBlockingIssue) {
+            return CodecFallbackDecision.None
+        }
+
+        val codecIssues = result.blockingIssues.filter { it.code == CODEC_UNSUPPORTED }
+        if (codecIssues.isNotEmpty()) {
+            val message = codecIssues.joinToString("; ") { it.message }
+            return CodecFallbackDecision.AudioOnly(message)
+        }
+
+        val reason = result.blockingIssues.joinToString("; ") { it.message }
+        return CodecFallbackDecision.BlockPlayback(reason.ifEmpty { "Media3 blocking issue detected" })
+    }
+
+    private companion object {
+        const val CODEC_UNSUPPORTED = "UNSUPPORTED_CODEC"
     }
 }

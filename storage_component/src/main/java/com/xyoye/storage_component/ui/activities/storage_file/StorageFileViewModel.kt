@@ -4,8 +4,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.DatabaseManager
+import com.xyoye.common_component.extension.toMedia3SourceType
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
+import com.xyoye.common_component.source.media3.Media3LaunchParams
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
@@ -125,6 +127,13 @@ class StorageFileViewModel : BaseViewModel() {
             ToastCenter.showError("播放失败，找不到播放资源")
             return false
         }
+        val mediaType = file.storage.library.mediaType
+        VideoSourceManager.getInstance().attachMedia3LaunchParams(
+            Media3LaunchParams(
+                mediaId = file.uniqueKey(),
+                sourceType = mediaType.toMedia3SourceType()
+            )
+        )
         VideoSourceManager.getInstance().setSource(mediaSource)
         return true
     }

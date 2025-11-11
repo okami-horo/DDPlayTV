@@ -303,6 +303,10 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         }
         VideoSourceManager.getInstance().setSource(videoSource!!)
 
+        val overrideParams = VideoSourceManager.getInstance().consumeMedia3LaunchParams()
+        val launchParams = viewModel.buildMedia3LaunchParams(videoSource!!, overrideParams)
+        viewModel.prepareMedia3Session(launchParams)
+
         updatePlayer(videoSource!!)
 
         afterInitPlayer()

@@ -11,6 +11,7 @@ import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
 import com.xyoye.player_component.media3.Media3PlayerDelegate
 import com.xyoye.player_component.media3.session.Media3SessionController
+import com.xyoye.player_component.media3.session.RolloutSnapshotManager
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -27,7 +28,7 @@ class Media3ToggleSnapshotTest {
         val toggleScript = ToggleScript(listOf(true, false))
         val delegate = Media3PlayerDelegate(
             sessionController = controller,
-            toggleResolver = toggleScript::nextSnapshot
+            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() }
         )
 
         val firstResult = delegate.prepareSession("media-a", Media3SourceType.STREAM)

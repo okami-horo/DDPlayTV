@@ -9,6 +9,7 @@ import com.xyoye.data_component.entity.media3.PlaybackSession
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
 import com.xyoye.player_component.media3.session.Media3SessionController
+import com.xyoye.player_component.media3.session.RolloutSnapshotManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -22,9 +23,10 @@ class Media3PlayerDelegateTest {
     @Test
     fun prepareSession_shortCircuits_whenToggleDisabled() = runTest {
         val controller = FakeSessionController()
+        val toggleScript = ToggleScript(listOf(false))
         val delegate = Media3PlayerDelegate(
             sessionController = controller,
-            toggleResolver = ToggleScript(listOf(false))::nextSnapshot
+            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() }
         )
 
         val result = delegate.prepareSession(
@@ -42,9 +44,10 @@ class Media3PlayerDelegateTest {
         val controller = FakeSessionController()
         val expected = sessionBundle("session-42")
         controller.prepareResult = Result.success(expected)
+        val toggleScript = ToggleScript(listOf(true))
         val delegate = Media3PlayerDelegate(
             sessionController = controller,
-            toggleResolver = ToggleScript(listOf(true))::nextSnapshot
+            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() }
         )
 
         val result = delegate.prepareSession(
@@ -55,7 +58,9 @@ class Media3PlayerDelegateTest {
         assertTrue(result.isSuccess)
         assertEquals(expected.session.sessionId, delegate.currentSession()?.sessionId)
         assertEquals(expected.capabilityContract, delegate.currentCapability())
-        assertEquals(expected.toggleSnapshot, delegate.rolloutSnapshot())
+        val snapshot = delegate.rolloutSnapshot()
+        assertEquals(expected.toggleSnapshot.value, snapshot?.value)
+        assertEquals(expected.session.sessionId, snapshot?.appliesToSession)
     }
 
     @Test
@@ -63,9 +68,10 @@ class Media3PlayerDelegateTest {
         val controller = FakeSessionController()
         val failure = IllegalStateException("network down")
         controller.prepareResult = Result.failure(failure)
+        val toggleScript = ToggleScript(listOf(true))
         val delegate = Media3PlayerDelegate(
             sessionController = controller,
-            toggleResolver = ToggleScript(listOf(true))::nextSnapshot
+            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() }
         )
 
         val result = delegate.prepareSession(

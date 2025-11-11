@@ -5,11 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.collectable
+import com.xyoye.common_component.extension.toMedia3SourceType
 import com.xyoye.common_component.extension.toText
 import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.AnimeRepository
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
+import com.xyoye.common_component.source.media3.Media3LaunchParams
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
@@ -255,7 +257,18 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
             return false
         }
         VideoSourceManager.getInstance().setSource(mediaSource)
+        VideoSourceManager.getInstance().attachMedia3LaunchParams(media3LaunchParams(episodeHistory))
         return true
+    }
+
+    private fun media3LaunchParams(history: EpisodeHistoryEntity): Media3LaunchParams {
+        val mediaId = history.entity.episodeId?.takeIf { it.isNotBlank() }
+            ?: history.entity.uniqueKey
+        val mediaType = history.library?.mediaType ?: history.entity.mediaType
+        return Media3LaunchParams(
+            mediaId = mediaId,
+            sourceType = mediaType.toMedia3SourceType()
+        )
     }
 
     /**

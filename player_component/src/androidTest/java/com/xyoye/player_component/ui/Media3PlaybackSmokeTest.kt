@@ -11,6 +11,7 @@ import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
 import com.xyoye.player_component.media3.Media3PlayerDelegate
 import com.xyoye.player_component.media3.session.Media3SessionController
+import com.xyoye.player_component.media3.session.RolloutSnapshotManager
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -26,7 +27,7 @@ class Media3PlaybackSmokeTest {
         val clock = FakeClock()
         val delegate = Media3PlayerDelegate(
             sessionController = controller,
-            toggleResolver = { snapshot(value = true, now = clock.now()) },
+            snapshotManager = RolloutSnapshotManager { snapshot(value = true, now = clock.now()) },
             timeProvider = clock::now
         )
 
