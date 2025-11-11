@@ -35,6 +35,7 @@ class SubtitleTextView(
         updateStrokeColor()
         updateAlpha()
         updateShadow()
+        updateVerticalOffset()
     }
 
     override fun attach(controlWrapper: ControlWrapper) {
@@ -112,6 +113,11 @@ class SubtitleTextView(
     fun updateAlpha() {
         val alpha = PlayerInitializer.Subtitle.alpha
         setAlpha(alpha)
+    }
+
+    fun updateVerticalOffset() {
+        val offsetPercent = PlayerInitializer.Subtitle.verticalOffset
+        setVerticalOffset(offsetPercent)
     }
 
     fun updateShadow() {

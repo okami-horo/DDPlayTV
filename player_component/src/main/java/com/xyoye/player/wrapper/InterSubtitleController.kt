@@ -39,6 +39,11 @@ interface InterSubtitleController : InterVideoTrack {
     fun updateAlpha()
 
     /**
+     * 更新字幕垂直偏移
+     */
+    fun updateVerticalOffset()
+
+    /**
      * 更新字幕阴影
      */
     fun updateShadow()

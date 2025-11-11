@@ -38,6 +38,10 @@ object SubtitleConfigTable {
     @MMKVFiled
     const val shadowEnabled = true
 
+    //字幕垂直偏移百分比
+    @MMKVFiled
+    const val verticalOffset = 0
+
     /**
      * -------------播放器设置-----------
      */

@@ -47,6 +47,10 @@ class SubtitleController(context: Context) : InterSubtitleController {
         subtitleTextView.updateAlpha()
     }
 
+    override fun updateVerticalOffset() {
+        subtitleTextView.updateVerticalOffset()
+    }
+
     override fun updateShadow() {
         subtitleTextView.updateShadow()
     }
