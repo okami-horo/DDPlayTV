@@ -18,6 +18,10 @@ android {
 
     defaultConfig {
         buildConfigField("String", "APPLICATION_ID", "\"${Versions.applicationId}\"")
+
+        val media3FallbackFlag =
+            project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
+        buildConfigField("boolean", "MEDIA3_ENABLED_FALLBACK", media3FallbackFlag.toString())
         
         // 从环境变量或属性读取密钥，用于GitHub Actions注入
         // 本地开发时使用默认值，CI/CD时从Secrets注入

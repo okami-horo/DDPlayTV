@@ -48,6 +48,7 @@ object RouteTable {
     object Player {
         const val Player = "/player/player_interceptor"
         const val PlayerCenter = "/player/player"
+        const val Media3CapabilityProvider = "/player/media3_capability_provider"
     }
 
     object Stream {

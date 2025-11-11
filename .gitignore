@@ -22,3 +22,7 @@ scripts/
 .specify/
 specs/
 .codex/
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/

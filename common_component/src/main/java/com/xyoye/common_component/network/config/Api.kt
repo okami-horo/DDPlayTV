@@ -38,4 +38,7 @@ object Api {
 
     // HanLP
     const val HAN_LP = "https://www.hanlp.com/"
+
+    // Media3 internal gateway
+    const val MEDIA3 = "https://player-component.internal/api/"
 }
