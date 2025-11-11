@@ -95,6 +95,8 @@ object Dependencies {
             "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.kotlin_coroutines}"
         const val coroutines_android =
             "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.kotlin_coroutines}"
+        const val coroutines_test =
+            "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.kotlin_coroutines}"
     }
 
     object Square {

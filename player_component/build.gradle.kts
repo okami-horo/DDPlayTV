@@ -56,4 +56,7 @@ dependencies {
     implementation(Dependencies.VLC.vlc)
 
     kapt(Dependencies.Alibaba.arouter_compiler)
+
+    testImplementation(Dependencies.Kotlin.coroutines_test)
+    androidTestImplementation(Dependencies.Kotlin.coroutines_test)
 }
