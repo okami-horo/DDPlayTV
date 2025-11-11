@@ -27,7 +27,9 @@
                 android:id="@+id/storage_file_rv"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:nestedScrollingEnabled="true" />
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="true"
+                android:paddingBottom="@dimen/storage_file_list_bottom_padding" />
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <ProgressBar
