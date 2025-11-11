@@ -11,9 +11,11 @@ import com.xyoye.common_component.source.media3.Media3LaunchParams
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
+import com.xyoye.storage_component.download.validator.DownloadValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -22,11 +24,12 @@ class StorageFileViewModel : BaseViewModel() {
     val castLiveData = MutableLiveData<MediaLibraryEntity>()
 
     val selectDeviceLiveData = MutableLiveData<Pair<StorageFile, List<MediaLibraryEntity>>>()
+    private val downloadValidator = DownloadValidator()
 
     fun playItem(file: StorageFile) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (setupVideoSource(file)) {
+                if (setupVideoSource(file) && ensureDownloadAllowed(file)) {
                     playLiveData.postValue(Any())
                 }
             } catch (e: Exception) {
@@ -73,7 +76,7 @@ class StorageFileViewModel : BaseViewModel() {
     fun castItem(file: StorageFile, device: MediaLibraryEntity) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (setupVideoSource(file)) {
+                if (setupVideoSource(file) && ensureDownloadAllowed(file)) {
                     castLiveData.postValue(device)
                 }
             } catch (e: Exception) {
@@ -130,11 +133,52 @@ class StorageFileViewModel : BaseViewModel() {
         val mediaType = file.storage.library.mediaType
         VideoSourceManager.getInstance().attachMedia3LaunchParams(
             Media3LaunchParams(
-                mediaId = file.uniqueKey(),
+                mediaId = media3DownloadId(file),
                 sourceType = mediaType.toMedia3SourceType()
             )
         )
         VideoSourceManager.getInstance().setSource(mediaSource)
         return true
+    }
+
+    private suspend fun ensureDownloadAllowed(file: StorageFile): Boolean {
+        if (!requiresOfflineValidation(file)) {
+            return true
+        }
+        val downloadId = media3DownloadId(file)
+        val lastVerified = file.playHistory?.playTime?.time
+        val outcome = downloadValidator.validate(
+            downloadId = downloadId,
+            mediaId = downloadId,
+            lastVerifiedAt = lastVerified
+        )
+        return when (outcome) {
+            is DownloadValidator.ValidationOutcome.AllowPlayback -> {
+                if (outcome.audioOnly) {
+                    ToastCenter.showWarning(outcome.message ?: "当前资源仅支持音频播放")
+                } else if (!outcome.message.isNullOrEmpty()) {
+                    ToastCenter.showOriginalToast(outcome.message)
+                }
+                true
+            }
+
+            is DownloadValidator.ValidationOutcome.Blocked -> {
+                ToastCenter.showError(outcome.reason)
+                false
+            }
+        }
+    }
+
+    private fun requiresOfflineValidation(file: StorageFile): Boolean {
+        return file.storage.library.mediaType == MediaType.MAGNET_LINK
+    }
+
+    private fun media3DownloadId(file: StorageFile): String {
+        if (file.storage.library.mediaType == MediaType.MAGNET_LINK) {
+            val source = file.playHistory?.torrentPath ?: file.storage.library.url
+            val index = file.playHistory?.torrentIndex ?: -1
+            return ThunderManager.media3DownloadId(source, index)
+        }
+        return file.uniqueKey()
     }
 }

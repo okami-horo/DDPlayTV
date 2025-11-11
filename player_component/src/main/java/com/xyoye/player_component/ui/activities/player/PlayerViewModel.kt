@@ -9,6 +9,7 @@ import com.xyoye.common_component.config.Media3ToggleProvider
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.toMedia3SourceType
 import com.xyoye.common_component.network.repository.ResourceRepository
+import com.xyoye.common_component.media3.Media3SessionStore
 import com.xyoye.common_component.service.Media3CapabilityProvider
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.media3.Media3LaunchParams
@@ -68,6 +69,7 @@ class PlayerViewModel : BaseViewModel() {
             _media3SessionLiveData.postValue(null)
             _media3CapabilityLiveData.postValue(null)
             _media3ToggleLiveData.postValue(null)
+            Media3SessionStore.clear()
             activeSessionId = null
             return
         }
@@ -80,12 +82,14 @@ class PlayerViewModel : BaseViewModel() {
                 params.autoplay
             ).onSuccess { bundle ->
                 activeSessionId = bundle.session.sessionId
+                Media3SessionStore.update(bundle)
                 _media3SessionLiveData.postValue(bundle.session)
                 _media3CapabilityLiveData.postValue(bundle.capabilityContract)
                 _media3ToggleLiveData.postValue(bundle.toggleSnapshot)
             }.onFailure {
                 DDLog.e("Media3-PlayerVM", "prepareSession failed: ${it.message}")
                 _media3ErrorLiveData.postValue(it.message)
+                Media3SessionStore.clear()
             }
         }
     }

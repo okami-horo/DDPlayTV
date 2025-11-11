@@ -50,7 +50,7 @@
 
 - [X] T015 [P] [US1] Implement `Media3PlayerDelegate` that wraps `androidx.media3.exoplayer.ExoPlayer` and maps Media3 events to `PlayerCapabilityContract` in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/media3/Media3PlayerDelegate.kt`.  
 - [X] T016 [P] [US1] Create `Media3SessionController` to call `POST/GET /v1/media3/sessions` and hydrate capability metadata in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/media3/session/Media3SessionController.kt`.  
-- [ ] T017 [US1] Update the player factory selection logic in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/kernel/facoty/PlayerFactory.kt` to prefer the Media3 delegate whenever `media3_enabled` is true while leaving the legacy Exo path as fallback.  
+- [X] T017 [US1] Update the player factory selection logic in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/kernel/facoty/PlayerFactory.kt` to prefer the Media3 delegate whenever `media3_enabled` is true while leaving the legacy Exo path as fallback.  
 - [X] T018 [US1] Adapt `PlayerViewModel` to bind `PlaybackSession` state (position, bitrate, errors) and dispatch commands via the capability provider inside `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerViewModel.kt`.  
 - [X] T019 [US1] Ensure playback launchers pass source metadata and toggle cohorts by updating `/workspace/DanDanPlayForAndroid/anime_component/src/main/java/com/xyoye/anime_component/ui/fragment/anime_episode/AnimeEpisodeFragment.kt` before routing to `RouteTable.Player.Player`.  
 - [X] T019a [US1] Update remote streaming launchers (SMB/WebDav/FTP) by wiring `/workspace/DanDanPlayForAndroid/storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragment.kt` to the Media3 capability provider so non-anime streams also instantiate the Media3 delegate.  
@@ -68,19 +68,19 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T021 [P] [US2] Add background/notification regression covering MediaSession command sync in `/workspace/DanDanPlayForAndroid/app/src/androidTest/java/com/xyoye/dandanplay/app/Media3BackgroundTest.kt`.  
-- [ ] T022 [P] [US2] Add offline download resume instrumentation validating `/v1/media3/downloads/validate` responses in `/workspace/DanDanPlayForAndroid/storage_component/src/androidTest/java/com/xyoye/storage_component/download/Media3DownloadValidationTest.kt`.  
-- [ ] T022a [P] [US2] Add cast instrumentation that injects an unsupported codec stream and verifies the session falls back to audio-only mode with the correct notification/banner in `/workspace/DanDanPlayForAndroid/app/src/androidTest/java/com/xyoye/dandanplay/app/Media3CastFallbackTest.kt`.  
+- [X] T021 [P] [US2] Add background/notification regression covering MediaSession command sync in `/workspace/DanDanPlayForAndroid/app/src/androidTest/java/com/xyoye/dandanplay/app/Media3BackgroundTest.kt`.  
+- [X] T022 [P] [US2] Add offline download resume instrumentation validating `/v1/media3/downloads/validate` responses in `/workspace/DanDanPlayForAndroid/storage_component/src/androidTest/java/com/xyoye/storage_component/download/Media3DownloadValidationTest.kt`.  
+- [X] T022a [P] [US2] Add cast instrumentation that injects an unsupported codec stream and verifies the session falls back to audio-only mode with the correct notification/banner in `/workspace/DanDanPlayForAndroid/app/src/androidTest/java/com/xyoye/dandanplay/app/Media3CastFallbackTest.kt`.  
 
 ### Implementation for User Story 2
 
-- [ ] T023 [P] [US2] Create `Media3SessionService` that binds the player delegate to `MediaSession`, notifications, and widgets in `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/service/Media3SessionService.kt`.  
-- [ ] T024 [P] [US2] Wire PiP/background state observers to the Media3 session by updating `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt`.  
-- [ ] T025 [US2] Implement Media3 Cast integration (device discovery, session transfer) in `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/cast/Media3CastManager.kt`.  
-- [ ] T025a [US2] Surface codec fallback messaging for cast targets by extending `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/cast/Media3CastManager.kt` to consume `CodecFallbackHandler` output and relay audio-only handoffs.  
-- [ ] T026 [US2] Integrate offline validation + audio-only fallback before enabling Play in `/workspace/DanDanPlayForAndroid/storage_component/src/main/java/com/xyoye/storage_component/download/DownloadValidator.kt`.  
-- [ ] T027 [US2] Refactor local media resume flow to use the shared `PlayerCapabilityContract` inside `/workspace/DanDanPlayForAndroid/local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaFragment.kt`.  
-- [ ] T027a [US2] Update magnet/torrent playback prompts in `/workspace/DanDanPlayForAndroid/local_component/src/main/java/com/xyoye/local_component/ui/dialog/MagnetPlayDialog.kt` (and supporting helpers in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/utils/thunder/ThunderManager.kt`) so download-based launches pass Media3 session metadata before routing to the player.  
+- [X] T023 [P] [US2] Create `Media3SessionService` that binds the player delegate to `MediaSession`, notifications, and widgets in `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/service/Media3SessionService.kt`.  
+- [X] T024 [P] [US2] Wire PiP/background state observers to the Media3 session by updating `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt`.  
+- [X] T025 [US2] Implement Media3 Cast integration (device discovery, session transfer) in `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/cast/Media3CastManager.kt`.  
+- [X] T025a [US2] Surface codec fallback messaging for cast targets by extending `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/cast/Media3CastManager.kt` to consume `CodecFallbackHandler` output and relay audio-only handoffs.  
+- [X] T026 [US2] Integrate offline validation + audio-only fallback before enabling Play in `/workspace/DanDanPlayForAndroid/storage_component/src/main/java/com/xyoye/storage_component/download/DownloadValidator.kt`.  
+- [X] T027 [US2] Refactor local media resume flow to use the shared `PlayerCapabilityContract` inside `/workspace/DanDanPlayForAndroid/local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaFragment.kt`.  
+- [X] T027a [US2] Update magnet/torrent playback prompts in `/workspace/DanDanPlayForAndroid/local_component/src/main/java/com/xyoye/local_component/ui/dialog/MagnetPlayDialog.kt` (and supporting helpers in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/utils/thunder/ThunderManager.kt`) so download-based launches pass Media3 session metadata before routing to the player.  
 
 **Checkpoint**: All playback surfaces now consume the shared Media3 session, keeping controls and metadata synchronized.
 

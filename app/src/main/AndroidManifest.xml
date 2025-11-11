@@ -44,6 +44,10 @@
         <activity
             android:name="com.xyoye.dandanplay.ui.main.MainActivity"
             android:launchMode="singleTask" />
+
+        <service
+            android:name="com.xyoye.dandanplay.app.service.Media3SessionService"
+            android:exported="false" />
     </application>
 
 </manifest>
