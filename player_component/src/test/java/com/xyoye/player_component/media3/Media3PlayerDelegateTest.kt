@@ -1,6 +1,7 @@
 package com.xyoye.player_component.media3
 
 import com.xyoye.common_component.network.repository.Media3SessionBundle
+import com.xyoye.common_component.network.repository.Media3TelemetrySink
 import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.data_component.entity.media3.Media3PlayerEngine
 import com.xyoye.data_component.entity.media3.Media3RolloutSource
@@ -26,7 +27,8 @@ class Media3PlayerDelegateTest {
         val toggleScript = ToggleScript(listOf(false))
         val delegate = Media3PlayerDelegate(
             sessionController = controller,
-            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() }
+            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() },
+            telemetrySink = NoOpTelemetrySink()
         )
 
         val result = delegate.prepareSession(
@@ -40,6 +42,44 @@ class Media3PlayerDelegateTest {
     }
 
     @Test
+    fun prepareSession_emitsStartupTelemetry() = runTest {
+        val controller = FakeSessionController()
+        val toggleScript = ToggleScript(listOf(true))
+        val telemetry = RecordingTelemetrySink()
+        val delegate = Media3PlayerDelegate(
+            sessionController = controller,
+            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() },
+            telemetrySink = telemetry,
+            timeProvider = { 0L }
+        )
+
+        delegate.prepareSession("media-telemetry", Media3SourceType.STREAM)
+
+        assertEquals(listOf("session-media-telemetry"), telemetry.startupSessionIds)
+    }
+
+    @Test
+    fun markFirstFrame_recordsLatencyTelemetry() = runTest {
+        val controller = FakeSessionController()
+        val toggleScript = ToggleScript(listOf(true))
+        val telemetry = RecordingTelemetrySink()
+        var now = 0L
+        val delegate = Media3PlayerDelegate(
+            sessionController = controller,
+            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() },
+            telemetrySink = telemetry,
+            timeProvider = { now }
+        )
+
+        delegate.prepareSession("media-latency", Media3SourceType.STREAM)
+
+        now = 1_500L
+        delegate.markFirstFrame()
+
+        assertEquals(listOf(1_500L), telemetry.firstFrameLatencies)
+    }
+
+    @Test
     fun prepareSession_cachesBundle_whenControllerSucceeds() = runTest {
         val controller = FakeSessionController()
         val expected = sessionBundle("session-42")
@@ -47,7 +87,8 @@ class Media3PlayerDelegateTest {
         val toggleScript = ToggleScript(listOf(true))
         val delegate = Media3PlayerDelegate(
             sessionController = controller,
-            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() }
+            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() },
+            telemetrySink = NoOpTelemetrySink()
         )
 
         val result = delegate.prepareSession(
@@ -71,7 +112,8 @@ class Media3PlayerDelegateTest {
         val toggleScript = ToggleScript(listOf(true))
         val delegate = Media3PlayerDelegate(
             sessionController = controller,
-            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() }
+            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() },
+            telemetrySink = NoOpTelemetrySink()
         )
 
         val result = delegate.prepareSession(
@@ -115,6 +157,33 @@ class Media3PlayerDelegateTest {
                 evaluatedAt = counter.toLong()
             )
         }
+    }
+}
+
+private class RecordingTelemetrySink : Media3TelemetrySink {
+    val startupSessionIds = mutableListOf<String>()
+    val firstFrameLatencies = mutableListOf<Long>()
+    val errorEvents = mutableListOf<String>()
+    val castTargets = mutableListOf<String?>()
+
+    override suspend fun recordStartup(
+        session: PlaybackSession,
+        snapshot: RolloutToggleSnapshot?,
+        autoplay: Boolean
+    ) {
+        startupSessionIds += session.sessionId
+    }
+
+    override suspend fun recordFirstFrame(session: PlaybackSession, latencyMs: Long) {
+        firstFrameLatencies += latencyMs
+    }
+
+    override suspend fun recordError(session: PlaybackSession, throwable: Throwable) {
+        errorEvents += throwable.message
+    }
+
+    override suspend fun recordCastTransfer(session: PlaybackSession, targetId: String?) {
+        castTargets += targetId
     }
 }
 

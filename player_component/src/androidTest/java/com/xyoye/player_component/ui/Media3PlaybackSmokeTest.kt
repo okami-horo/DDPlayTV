@@ -28,6 +28,7 @@ class Media3PlaybackSmokeTest {
         val delegate = Media3PlayerDelegate(
             sessionController = controller,
             snapshotManager = RolloutSnapshotManager { snapshot(value = true, now = clock.now()) },
+            telemetrySink = NoOpTelemetrySink(),
             timeProvider = clock::now
         )
 

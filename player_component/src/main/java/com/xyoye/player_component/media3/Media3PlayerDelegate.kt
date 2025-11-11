@@ -1,7 +1,11 @@
 package com.xyoye.player_component.media3
 
 import com.xyoye.common_component.config.Media3ToggleProvider
+import com.xyoye.common_component.media3.Media3CrashTagger
+import com.xyoye.common_component.media3.Media3LocalStore
 import com.xyoye.common_component.network.repository.Media3SessionBundle
+import com.xyoye.common_component.network.repository.Media3TelemetryRepository
+import com.xyoye.common_component.network.repository.Media3TelemetrySink
 import com.xyoye.data_component.data.media3.CapabilityCommandResponseData
 import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.data_component.entity.media3.Media3SourceType
@@ -19,6 +23,7 @@ import kotlin.jvm.JvmSuppressWildcards
 class Media3PlayerDelegate(
     private val sessionController: Media3SessionController,
     private val snapshotManager: RolloutSnapshotManager = RolloutSnapshotManager { Media3ToggleProvider.snapshot() },
+    private val telemetrySink: Media3TelemetrySink = Media3TelemetryRepository(),
     private val timeProvider: () -> Long = { System.currentTimeMillis() }
 ) {
 
@@ -44,15 +49,17 @@ class Media3PlayerDelegate(
             requestedCapabilities = requestedCapabilities,
             autoplay = autoplay
         )
+        val bundle = result.getOrElse { return Result.failure(it) }
 
-        return result
-            .onSuccess { bundle ->
-                sessionStartAt = startAt
-                firstFrameAt = null
-                activeBundle = bundle
-                snapshotManager.bind(bundle.session.sessionId, snapshot)
-            }
-            .map { it.capabilityContract }
+        sessionStartAt = startAt
+        firstFrameAt = null
+        activeBundle = bundle
+        snapshotManager.bind(bundle.session.sessionId, snapshot)
+        telemetrySink.recordStartup(bundle.session, snapshot, autoplay)
+        Media3LocalStore.recordSnapshot(bundle.toggleSnapshot)
+        Media3CrashTagger.tagSnapshot(snapshot)
+        Media3CrashTagger.tagSession(bundle.session)
+        return Result.success(bundle.capabilityContract)
     }
 
     suspend fun refreshSession(): Result<PlayerCapabilityContract> {
@@ -60,6 +67,11 @@ class Media3PlayerDelegate(
             ?: return Result.failure(IllegalStateException("No active Media3 session"))
         return sessionController.refreshSession(sessionId)
             .onSuccess { activeBundle = it }
+            .onFailure { error ->
+                activeBundle?.session?.let { session ->
+                    telemetrySink.recordError(session, error)
+                }
+            }
             .map { it.capabilityContract }
     }
 
@@ -69,12 +81,29 @@ class Media3PlayerDelegate(
     ): Result<CapabilityCommandResponseData> {
         val sessionId = activeBundle?.session?.sessionId
             ?: return Result.failure(IllegalStateException("No active Media3 session"))
+        val session = activeBundle?.session
+            ?: return Result.failure(IllegalStateException("No active Media3 session"))
         return sessionController.dispatchCapability(sessionId, capability, payload)
             .onSuccess {
                 // Update cached snapshot of session state if the backend mutated it.
                 sessionController.refreshSession(sessionId)
                     .onSuccess { activeBundle = it }
+                if (capability == Media3Capability.CAST) {
+                    telemetrySink.recordCastTransfer(session, payload?.get("targetId")?.toString())
+                }
             }
+            .onFailure { telemetrySink.recordError(session, it) }
+    }
+
+    suspend fun markFirstFrame() {
+        val start = sessionStartAt ?: return
+        if (firstFrameAt != null) {
+            return
+        }
+        val now = timeProvider()
+        firstFrameAt = now
+        val session = activeBundle?.session ?: return
+        telemetrySink.recordFirstFrame(session, now - start)
     }
 
     fun currentSession(): PlaybackSession? = activeBundle?.session
@@ -95,13 +124,6 @@ class Media3PlayerDelegate(
     fun isStartupWithinTarget(targetMs: Long = STARTUP_BUDGET_MS): Boolean {
         val latency = startupLatencyMs() ?: return false
         return latency <= targetMs
-    }
-
-    fun markFirstFrame() {
-        if (sessionStartAt == null) {
-            return
-        }
-        firstFrameAt = timeProvider()
     }
 
     companion object {

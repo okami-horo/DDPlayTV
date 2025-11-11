@@ -1,7 +1,9 @@
 package com.xyoye.common_component.network.repository
 
+import androidx.annotation.VisibleForTesting
 import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.network.request.NetworkException
+import com.xyoye.common_component.network.service.Media3Service
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.data.media3.CapabilityCommandRequestData
 import com.xyoye.data_component.data.media3.CapabilityCommandResponseData
@@ -23,6 +25,8 @@ object Media3Repository : BaseRepository() {
 
     private const val TAG = "Media3Repository"
 
+    @Volatile
+    private var media3Service: Media3Service = Retrofit.media3Service
     private val sessionCache = ConcurrentHashMap<String, PlaybackSession>()
     private val capabilityCache = ConcurrentHashMap<String, PlayerCapabilityContract>()
     private val toggleCache = ConcurrentHashMap<String, RolloutToggleSnapshot>()
@@ -31,7 +35,7 @@ object Media3Repository : BaseRepository() {
         request: PlaybackSessionRequestData
     ): Result<Media3SessionBundle> {
         return execute("createSession") {
-            Retrofit.media3Service.createSession(request)
+            media3Service.createSession(request)
         }.map {
             cacheBundle(it, request.mediaId, request.sourceType)
         }
@@ -45,7 +49,7 @@ object Media3Repository : BaseRepository() {
         cachedBundle(sessionId)?.let { return Result.success(it) }
 
         return execute("fetchSession") {
-            Retrofit.media3Service.fetchSession(sessionId)
+            media3Service.fetchSession(sessionId)
         }.map {
             val mediaId = it.mediaId ?: mediaIdHint ?: sessionCache[sessionId]?.mediaId ?: ""
             val source = it.sourceType ?: sourceTypeHint ?: sessionCache[sessionId]?.sourceType
@@ -61,7 +65,7 @@ object Media3Repository : BaseRepository() {
     ): Result<CapabilityCommandResponseData> {
         val request = CapabilityCommandRequestData(capability, payload)
         return execute("dispatchCapability") {
-            Retrofit.media3Service.dispatchCommand(sessionId, request)
+            media3Service.dispatchCommand(sessionId, request)
         }.onSuccess {
             val newState = it.resultingState
             if (newState != null) {
@@ -74,13 +78,13 @@ object Media3Repository : BaseRepository() {
 
     suspend fun emitTelemetry(event: TelemetryEvent): Result<Unit> {
         return execute("emitTelemetry") {
-            Retrofit.media3Service.emitTelemetry(event)
+            media3Service.emitTelemetry(event)
         }.map { }
     }
 
     suspend fun updateRollout(patch: RolloutTogglePatchData): Result<RolloutToggleSnapshot> {
         return execute("updateRollout") {
-            Retrofit.media3Service.updateRollout(patch)
+            media3Service.updateRollout(patch)
         }.onSuccess { snapshot ->
             snapshot.appliesToSession?.let { toggleCache[it] = snapshot }
         }
@@ -90,7 +94,7 @@ object Media3Repository : BaseRepository() {
         request: DownloadValidationRequestData
     ): Result<DownloadValidationResponseData> {
         return execute("validateDownload") {
-            Retrofit.media3Service.validateDownload(request)
+            media3Service.validateDownload(request)
         }
     }
 
@@ -104,6 +108,23 @@ object Media3Repository : BaseRepository() {
         sessionCache.remove(sessionId)
         capabilityCache.remove(sessionId)
         toggleCache.remove(sessionId)
+    }
+
+    @VisibleForTesting
+    internal fun replaceServiceForTest(service: Media3Service) {
+        media3Service = service
+    }
+
+    @VisibleForTesting
+    internal fun resetServiceForTest() {
+        media3Service = Retrofit.media3Service
+    }
+
+    @VisibleForTesting
+    internal fun clearCachesForTest() {
+        sessionCache.clear()
+        capabilityCache.clear()
+        toggleCache.clear()
     }
 
     private fun cacheBundle(

@@ -8,6 +8,7 @@ import com.xyoye.common_component.database.dao.ExtendFolderDao
 import com.xyoye.common_component.database.dao.MagnetScreenDao
 import com.xyoye.common_component.database.dao.MagnetSearchHistoryDao
 import com.xyoye.common_component.database.dao.MediaLibraryDao
+import com.xyoye.common_component.database.dao.Media3Dao
 import com.xyoye.common_component.database.dao.PlayHistoryDao
 import com.xyoye.common_component.database.dao.VideoDao
 import com.xyoye.data_component.entity.AnimeSearchHistoryEntity
@@ -18,6 +19,8 @@ import com.xyoye.data_component.entity.MagnetSearchHistoryEntity
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.entity.VideoEntity
+import com.xyoye.data_component.entity.media3.DownloadAssetCheck
+import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
 
 /**
  * Created by xyoye on 2020/7/29.
@@ -32,9 +35,11 @@ import com.xyoye.data_component.entity.VideoEntity
         MediaLibraryEntity::class,
         PlayHistoryEntity::class,
         DanmuBlockEntity::class,
-        ExtendFolderEntity::class
+        ExtendFolderEntity::class,
+        RolloutToggleSnapshot::class,
+        DownloadAssetCheck::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 abstract class DatabaseInfo : RoomDatabase() {
@@ -54,4 +59,6 @@ abstract class DatabaseInfo : RoomDatabase() {
     abstract fun getDanmuBlockDao(): DanmuBlockDao
 
     abstract fun getExtendFolderDao(): ExtendFolderDao
+
+    abstract fun getMedia3Dao(): Media3Dao
 }

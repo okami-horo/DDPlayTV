@@ -28,7 +28,8 @@ class Media3ToggleSnapshotTest {
         val toggleScript = ToggleScript(listOf(true, false))
         val delegate = Media3PlayerDelegate(
             sessionController = controller,
-            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() }
+            snapshotManager = RolloutSnapshotManager { toggleScript.nextSnapshot() },
+            telemetrySink = NoOpTelemetrySink()
         )
 
         val firstResult = delegate.prepareSession("media-a", Media3SourceType.STREAM)

@@ -1,8 +1,10 @@
 package com.xyoye.storage_component.download.validator
 
+import com.xyoye.common_component.media3.Media3LocalStore
 import com.xyoye.common_component.network.repository.Media3Repository
 import com.xyoye.data_component.data.media3.DownloadValidationRequestData
 import com.xyoye.data_component.data.media3.DownloadValidationResponseData
+import com.xyoye.data_component.entity.media3.DownloadAssetCheck
 import com.xyoye.data_component.entity.media3.DownloadRequiredAction
 import com.xyoye.storage_component.BuildConfig
 
@@ -27,6 +29,15 @@ class DownloadValidator(
         val response = validateCall(request).getOrElse {
             return ValidationOutcome.Blocked(it.message ?: "Download validation failed")
         }
+        val history = DownloadAssetCheck(
+            downloadId = response.downloadId,
+            mediaId = request.mediaId,
+            lastVerifiedAt = System.currentTimeMillis(),
+            isCompatible = response.isCompatible,
+            requiredAction = response.requiredAction,
+            verificationLogs = response.verificationLogs
+        )
+        Media3LocalStore.upsertDownloadCheck(history)
         return when (response.requiredAction) {
             DownloadRequiredAction.NONE -> ValidationOutcome.AllowPlayback(
                 audioOnly = false,
