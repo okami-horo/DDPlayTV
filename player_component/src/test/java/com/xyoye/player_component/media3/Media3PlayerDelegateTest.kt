@@ -1,7 +1,12 @@
 package com.xyoye.player_component.media3
 
+import com.xyoye.common_component.database.dao.Media3Dao
+import com.xyoye.common_component.media3.Media3CrashTagger
+import com.xyoye.common_component.media3.Media3LocalStore
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.common_component.network.repository.Media3SessionBundle
 import com.xyoye.common_component.network.repository.Media3TelemetrySink
+import com.xyoye.data_component.entity.media3.DownloadAssetCheck
 import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.data_component.entity.media3.Media3PlayerEngine
 import com.xyoye.data_component.entity.media3.Media3RolloutSource
@@ -13,13 +18,31 @@ import com.xyoye.player_component.media3.session.Media3SessionController
 import com.xyoye.player_component.media3.session.RolloutSnapshotManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
+@Media3Dependent("Delegates cover toggle, telemetry, and cast flows")
 @OptIn(ExperimentalCoroutinesApi::class)
 class Media3PlayerDelegateTest {
+
+    private val fakeDao = FakeMedia3Dao()
+
+    @Before
+    fun setUp() {
+        Media3LocalStore.overrideDao(fakeDao)
+        Media3CrashTagger.setReporterForTest(NoopCrashReporter)
+    }
+
+    @After
+    fun tearDown() {
+        Media3LocalStore.overrideDao(null)
+        Media3CrashTagger.resetReporterForTest()
+        fakeDao.reset()
+    }
 
     @Test
     fun prepareSession_shortCircuits_whenToggleDisabled() = runTest {
@@ -44,6 +67,12 @@ class Media3PlayerDelegateTest {
     @Test
     fun prepareSession_emitsStartupTelemetry() = runTest {
         val controller = FakeSessionController()
+        controller.prepareResult = Result.success(
+            sessionBundle(
+                sessionId = "session-media-telemetry",
+                mediaId = "media-telemetry"
+            )
+        )
         val toggleScript = ToggleScript(listOf(true))
         val telemetry = RecordingTelemetrySink()
         val delegate = Media3PlayerDelegate(
@@ -163,7 +192,7 @@ class Media3PlayerDelegateTest {
 private class RecordingTelemetrySink : Media3TelemetrySink {
     val startupSessionIds = mutableListOf<String>()
     val firstFrameLatencies = mutableListOf<Long>()
-    val errorEvents = mutableListOf<String>()
+    val errorEvents = mutableListOf<String?>()
     val castTargets = mutableListOf<String?>()
 
     override suspend fun recordStartup(
@@ -209,4 +238,33 @@ private fun sessionBundle(
         playerEngine = Media3PlayerEngine.MEDIA3
     )
     return Media3SessionBundle(session, capability, snapshot)
+}
+
+private class FakeMedia3Dao : Media3Dao {
+    private val snapshots = mutableListOf<RolloutToggleSnapshot>()
+    private val downloads = LinkedHashMap<String, DownloadAssetCheck>()
+
+    override suspend fun insertSnapshot(snapshot: RolloutToggleSnapshot) {
+        snapshots.add(0, snapshot)
+    }
+
+    override suspend fun recentSnapshots(limit: Int): List<RolloutToggleSnapshot> =
+        snapshots.take(limit)
+
+    override suspend fun upsertDownloadCheck(check: DownloadAssetCheck) {
+        downloads[check.downloadId] = check
+    }
+
+    override suspend fun findDownloadCheck(downloadId: String): DownloadAssetCheck? =
+        downloads[downloadId]
+
+    fun reset() {
+        snapshots.clear()
+        downloads.clear()
+    }
+}
+
+private object NoopCrashReporter : Media3CrashTagger.CrashReporterBridge {
+    override fun putUserData(key: String, value: String) = Unit
+    override fun setUserSceneTag(tagId: Int) = Unit
 }

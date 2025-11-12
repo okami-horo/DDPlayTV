@@ -1,6 +1,7 @@
 package com.xyoye.storage_component.download
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.data_component.data.media3.DownloadValidationRequestData
 import com.xyoye.data_component.data.media3.DownloadValidationResponseData
 import com.xyoye.data_component.entity.media3.DownloadRequiredAction
@@ -11,6 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@Media3Dependent("Download validator must enforce Media3 compatibility gates")
 @RunWith(AndroidJUnit4::class)
 class Media3DownloadValidationTest {
 
@@ -71,4 +73,3 @@ class Media3DownloadValidationTest {
         }
     }
 }
-

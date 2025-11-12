@@ -113,13 +113,13 @@
 
 **Purpose**: Wrap-up tasks that improve quality, documentation, and readiness across the stack.
 
-- [ ] T036 [P] Remove unused legacy Exo factories/adapters once telemetry confirms Media3 stability inside `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/kernel/impl/exo/`.  
-- [ ] T037 [P] Author a migration FAQ + user-facing release notes covering codec fallbacks in `/workspace/DanDanPlayForAndroid/document/release-notes/media3-migration.md`.  
-- [ ] T038 Harden CI by adding `/workspace/DanDanPlayForAndroid/scripts/ci/verify-media3.sh` to run `lint`, `testDebugUnitTest`, and `connectedDebugAndroidTest` gates on demand.  
-- [ ] T039 Capture rollout verification results and KPI deltas in `/workspace/DanDanPlayForAndroid/specs/001-migrate-media3/checklists/requirements.md`.  
-- [ ] T040 [P] Publish a support runbook + ticket tags that flag Media3 playback issues and outline troubleshooting (codec fallback, toggle snapshot, telemetry capture) inside `/workspace/DanDanPlayForAndroid/document/support/media3-playback-support.md`, enabling the 30% ticket reduction goal.  
-- [ ] T041 [P] Implement `scripts/testing/media3-regression-report.sh` that parses `testDebugUnitTest` and `connectedDebugAndroidTest` results for `@Media3Dependent` suites, confirms ≥90% of cases run on the Media3 delegate, and writes the summary to `/workspace/DanDanPlayForAndroid/specs/001-migrate-media3/checklists/requirements.md` for SC-003 evidence.  
-- [ ] T042 [P] Add support-ticket analytics by updating `/workspace/DanDanPlayForAndroid/document/support/media3-ticket-dashboard.md` with baseline vs. post-migration queries and instrumenting the helpdesk export pipeline so SC-004’s 30% reduction is measurable.  
+ - [X] T036 [P] Remove unused legacy Exo factories/adapters once telemetry confirms Media3 stability inside `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/kernel/impl/exo/`.  
+ - [X] T037 [P] Author a migration FAQ + user-facing release notes covering codec fallbacks in `/workspace/DanDanPlayForAndroid/document/release-notes/media3-migration.md`.  
+ - [X] T038 Harden CI by adding `/workspace/DanDanPlayForAndroid/scripts/ci/verify-media3.sh` to run `lint`, `testDebugUnitTest`, and `connectedDebugAndroidTest` gates on demand.  
+ - [X] T039 Capture rollout verification results and KPI deltas in `/workspace/DanDanPlayForAndroid/specs/001-migrate-media3/checklists/requirements.md`.  
+ - [X] T040 [P] Publish a support runbook + ticket tags that flag Media3 playback issues and outline troubleshooting (codec fallback, toggle snapshot, telemetry capture) inside `/workspace/DanDanPlayForAndroid/document/support/media3-playback-support.md`, enabling the 30% ticket reduction goal.  
+ - [X] T041 [P] Implement `scripts/testing/media3-regression-report.sh` that parses `testDebugUnitTest` and `connectedDebugAndroidTest` results for `@Media3Dependent` suites, confirms ≥90% of cases run on the Media3 delegate, and writes the summary to `/workspace/DanDanPlayForAndroid/specs/001-migrate-media3/checklists/requirements.md` for SC-003 evidence.  
+ - [X] T042 [P] Add support-ticket analytics by updating `/workspace/DanDanPlayForAndroid/document/support/media3-ticket-dashboard.md` with baseline vs. post-migration queries and instrumenting the helpdesk export pipeline so SC-004’s 30% reduction is measurable.  
 
 ---
 

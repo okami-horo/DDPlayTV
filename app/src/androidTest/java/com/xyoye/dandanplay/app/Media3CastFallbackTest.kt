@@ -1,6 +1,7 @@
 package com.xyoye.dandanplay.app
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.dandanplay.app.cast.Media3CastManager
 import com.xyoye.data_component.entity.media3.CastTarget
 import com.xyoye.data_component.entity.media3.CastTargetType
@@ -18,6 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@Media3Dependent("Cast manager must honor Media3 codec fallback decisions")
 @RunWith(AndroidJUnit4::class)
 class Media3CastFallbackTest {
 
@@ -90,4 +92,3 @@ class Media3CastFallbackTest {
         )
     }
 }
-

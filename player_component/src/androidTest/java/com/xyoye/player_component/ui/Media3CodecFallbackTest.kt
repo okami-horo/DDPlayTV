@@ -1,6 +1,7 @@
 package com.xyoye.player_component.ui
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.player_component.media3.fallback.CodecFallbackDecision
 import com.xyoye.player_component.media3.fallback.CodecFallbackHandler
 import com.xyoye.player_component.media3.mapper.LegacyCapabilityIssue
@@ -9,6 +10,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@Media3Dependent("Validates codec fallback decisions for Media3 pipelines")
 @RunWith(AndroidJUnit4::class)
 class Media3CodecFallbackTest {
 

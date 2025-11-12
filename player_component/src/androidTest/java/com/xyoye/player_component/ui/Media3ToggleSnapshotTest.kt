@@ -1,6 +1,7 @@
 package com.xyoye.player_component.ui
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.common_component.network.repository.Media3SessionBundle
 import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.data_component.entity.media3.Media3PlayerEngine
@@ -19,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@Media3Dependent("Ensures toggle snapshots persist per Media3 session")
 @RunWith(AndroidJUnit4::class)
 class Media3ToggleSnapshotTest {
 

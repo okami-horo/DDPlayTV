@@ -1,6 +1,7 @@
 package com.xyoye.dandanplay.app
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.dandanplay.app.service.Media3BackgroundCoordinator
 import com.xyoye.dandanplay.app.service.MediaSessionCommandBridge
 import com.xyoye.data_component.entity.media3.Media3BackgroundMode
@@ -11,6 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@Media3Dependent("Background coordinator must invoke Media3 session commands")
 @RunWith(AndroidJUnit4::class)
 class Media3BackgroundTest {
 
@@ -107,4 +109,3 @@ class Media3BackgroundTest {
         }
     }
 }
-

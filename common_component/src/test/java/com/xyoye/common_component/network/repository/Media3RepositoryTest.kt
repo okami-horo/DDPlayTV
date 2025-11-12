@@ -1,5 +1,6 @@
 package com.xyoye.common_component.network.repository
 
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.common_component.network.service.Media3Service
 import com.xyoye.data_component.data.media3.CapabilityCommandRequestData
 import com.xyoye.data_component.data.media3.CapabilityCommandResponseData
@@ -18,6 +19,7 @@ import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
 
+@Media3Dependent("Repository orchestrates Media3 network + cache layers")
 class Media3RepositoryTest {
 
     private val fakeService = FakeMedia3Service()

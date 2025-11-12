@@ -1,6 +1,7 @@
 package com.xyoye.dandanplay.app
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.common_component.media3.Media3CrashTagger
 import com.xyoye.data_component.entity.media3.Media3PlayerEngine
 import com.xyoye.data_component.entity.media3.Media3RolloutSource
@@ -14,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@Media3Dependent("Crash reporter tagging must include Media3 cohorts")
 @RunWith(AndroidJUnit4::class)
 class CrashTaggingTest {
 

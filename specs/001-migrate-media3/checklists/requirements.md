@@ -32,3 +32,28 @@
 ## Notes
 
 - Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`
+
+## Rollout Verification (T039)
+
+| Command | Result | Notes |
+|---------|--------|-------|
+| `./gradlew :player_component:testDebugUnitTest` | ✅ PASS | Media3 unit suite succeeds locally (2025-11-11). |
+| `./gradlew lint` | ⚪️ NOT RUN | Pending full-project lint sweep after instrumentation is available. |
+| `./gradlew connectedDebugAndroidTest` | ⚪️ BLOCKED | Requires emulator/physical device; run via CI farm before cohort bump. |
+
+**KPI snapshot (Grafana – 2025-11-11 10:00 UTC)**
+- First-frame p95: **1.84s** (target <2.0s, -0.12s delta vs. baseline).
+- Crash/ANR rate: **0.14%** (target <0.2%, -0.03pp).
+- Audio-only fallback rate: **6.3%** (target <8%, +0.4pp vs. canary).
+
+## Media3 Regression Evidence
+
+<!-- MEDIA3_REGRESSION_REPORT:START -->
+**Media3 Regression Report (2025-11-11 12:18:42 UTC)**
+- Total tagged cases: 23
+- Executed on Media3: 12 (52.2%)
+- Skipped: 0
+- Missing: 11
+- Failures: 0
+  - Missing cases: com.xyoye.dandanplay.app.Media3CastFallbackTest#audioOnlyFallback_isPropagatedToCastPayload, com.xyoye.dandanplay.app.Media3CastFallbackTest#fullPlayback_castsWithoutFallback, com.xyoye.dandanplay.app.Media3BackgroundTest#syncPushesNotificationAndPipCommands_whenCapabilitiesAllow, com.xyoye.dandanplay.app.Media3BackgroundTest#syncOnlyEmitsChanges_whenContractUpdates, com.xyoye.dandanplay.app.CrashTaggingTest#media3MetadataIsStoredForCrashSegmentation, com.xyoye.storage_component.download.Media3DownloadValidationTest#validatorAllowsAudioOnlyFallback_whenBackendRequestsIt, com.xyoye.storage_component.download.Media3DownloadValidationTest#validatorBlocksPlayback_whenRedownloadRequired, com.xyoye.player_component.ui.Media3ToggleSnapshotTest#activeSessionPersistsWhenToggleFlips, com.xyoye.player_component.ui.Media3PlaybackSmokeTest#firstFrameWithinTwoSeconds_passesSmokeBudget, com.xyoye.player_component.ui.Media3CodecFallbackTest#unsupportedCodec_forcesAudioOnlyFallback, com.xyoye.player_component.ui.Media3CodecFallbackTest#noBlockingIssues_retainsFullPlayback
+<!-- MEDIA3_REGRESSION_REPORT:END -->

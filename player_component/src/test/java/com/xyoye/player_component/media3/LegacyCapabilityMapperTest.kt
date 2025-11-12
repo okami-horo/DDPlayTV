@@ -1,5 +1,6 @@
 package com.xyoye.player_component.media3
 
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.player_component.media3.mapper.LegacyCapabilityInput
 import com.xyoye.player_component.media3.mapper.LegacyCapabilityMapper
 import com.xyoye.player_component.media3.mapper.LegacyRendererConfig
@@ -9,6 +10,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+@Media3Dependent("Mapper enforces codec/subtitle compatibility for Media3 capabilities")
 class LegacyCapabilityMapperTest {
 
     private val mapper = LegacyCapabilityMapper()

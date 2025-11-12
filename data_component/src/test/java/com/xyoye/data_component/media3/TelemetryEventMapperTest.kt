@@ -1,5 +1,6 @@
 package com.xyoye.data_component.media3
 
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.data_component.entity.media3.Media3PlayerEngine
 import com.xyoye.data_component.entity.media3.Media3SourceType
 import com.xyoye.data_component.entity.media3.Media3TelemetryEventType
@@ -11,6 +12,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
 
+@Media3Dependent("Telemetry mapper encodes Media3 session identifiers")
 class TelemetryEventMapperTest {
 
     private val mapper = TelemetryEventMapper(

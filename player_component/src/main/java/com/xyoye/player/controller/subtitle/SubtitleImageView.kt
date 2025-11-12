@@ -5,8 +5,8 @@ import android.graphics.Point
 import android.util.AttributeSet
 import android.view.Gravity
 import android.widget.FrameLayout
-import com.google.android.exoplayer2.text.Cue
-import com.google.android.exoplayer2.ui.SubtitleView
+import androidx.media3.common.text.Cue
+import androidx.media3.ui.SubtitleView
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.player.controller.video.InterControllerView
 import com.xyoye.player.wrapper.ControlWrapper
