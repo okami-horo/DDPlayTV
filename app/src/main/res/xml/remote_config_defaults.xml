@@ -2,6 +2,6 @@
 <defaultsMap>
     <entry>
         <key>media3_enabled</key>
-        <value>false</value>
+        <value>true</value>
     </entry>
 </defaultsMap>
