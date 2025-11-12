@@ -8,6 +8,16 @@ plugins {
 
 moduleSetup()
 
+val media3Version = project.findProperty("media3Version")?.toString() ?: "1.8.0"
+
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "androidx.media3") {
+            useVersion(media3Version)
+        }
+    }
+}
+
 android {
     sourceSets {
         getByName("main") {
@@ -24,7 +34,6 @@ kapt {
 }
 
 dependencies {
-
     implementation(project(":common_component"))
     implementation(project(":repository:panel_switch"))
     implementation(project(":repository:danmaku"))
@@ -35,14 +44,22 @@ dependencies {
     // TODO 暂时移除，编译出64位后再考虑重新添加
     //implementation "com.github.ctiao:ndkbitmap-armv7a:0.9.21"
 
-    implementation(Dependencies.Google.exoplayer)
-    implementation(Dependencies.Google.exoplayer_core)
-    implementation(Dependencies.Google.exoplayer_dash)
-    implementation(Dependencies.Google.exoplayer_hls)
-    implementation(Dependencies.Google.exoplayer_smoothstraming)
-    implementation(Dependencies.Google.exoplayer_rtmp)
+    implementation("androidx.media3:media3-exoplayer:$media3Version")
+    implementation("androidx.media3:media3-exoplayer-dash:$media3Version")
+    implementation("androidx.media3:media3-exoplayer-hls:$media3Version")
+    implementation("androidx.media3:media3-exoplayer-smoothstreaming:$media3Version")
+    implementation("androidx.media3:media3-exoplayer-workmanager:$media3Version")
+    implementation("androidx.media3:media3-session:$media3Version")
+    implementation("androidx.media3:media3-ui:$media3Version")
+    implementation("androidx.media3:media3-cast:$media3Version")
+    implementation("androidx.media3:media3-datasource-okhttp:$media3Version")
+    testImplementation("androidx.media3:media3-test-utils:$media3Version")
+    androidTestImplementation("androidx.media3:media3-test-utils:$media3Version")
 
     implementation(Dependencies.VLC.vlc)
 
     kapt(Dependencies.Alibaba.arouter_compiler)
+
+    testImplementation(Dependencies.Kotlin.coroutines_test)
+    androidTestImplementation(Dependencies.Kotlin.coroutines_test)
 }

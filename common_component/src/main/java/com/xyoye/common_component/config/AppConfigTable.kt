@@ -93,4 +93,8 @@ object AppConfigTable {
     @MMKVFiled
     // Jsoup的User-Agent
     var jsoupUserAgent: String = DefaultConfig.DEFAULT_JSOUP_USER_AGENT
+
+    @MMKVFiled
+    // Media3 远程开关
+    var media3EnabledRemote: Boolean = false
 }

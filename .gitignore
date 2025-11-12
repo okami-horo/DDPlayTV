@@ -1,10 +1,16 @@
 /local.properties
 /keystore.properties
 /build
+**/build/
 /.idea
 /.gradle
 /.settings
 .externalNativeBuild
+out/
+*.class
+*.jar
+*.log
+.env*
 *.iws
 *.iml
 *.jks
@@ -14,4 +20,8 @@ scripts/
 .tmp/
 .windsurf/
 .specify/
-specs/
+.codex/
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/

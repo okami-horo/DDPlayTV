@@ -46,6 +46,7 @@ fun Project.moduleSetup() {
 
         buildFeatures {
             dataBinding = true
+            buildConfig = true
         }
 
         setupKotlinOptions()

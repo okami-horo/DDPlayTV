@@ -1,10 +1,19 @@
 package com.xyoye.player_component.ui.activities.player
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseViewModel
+import com.xyoye.common_component.config.Media3ToggleProvider
 import com.xyoye.common_component.database.DatabaseManager
+import com.xyoye.common_component.extension.toMedia3SourceType
 import com.xyoye.common_component.network.repository.ResourceRepository
+import com.xyoye.common_component.media3.Media3SessionStore
+import com.xyoye.common_component.service.Media3CapabilityProvider
 import com.xyoye.common_component.source.base.BaseVideoSource
+import com.xyoye.common_component.source.media3.Media3LaunchParams
+import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.DanmuUtils
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
@@ -12,7 +21,12 @@ import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.entity.DanmuBlockEntity
+import com.xyoye.data_component.entity.media3.Media3Capability
+import com.xyoye.data_component.entity.media3.PlaybackSession
+import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
+import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
 import com.xyoye.data_component.enums.TrackType
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import master.flame.danmaku.danmaku.model.BaseDanmaku
 import java.math.BigDecimal
@@ -21,6 +35,79 @@ class PlayerViewModel : BaseViewModel() {
 
     val localDanmuBlockLiveData = DatabaseManager.instance.getDanmuBlockDao().getAll(false)
     val cloudDanmuBlockLiveData = DatabaseManager.instance.getDanmuBlockDao().getAll(true)
+
+    private val media3Provider: Media3CapabilityProvider? by lazy {
+        ARouter.getInstance().navigation(Media3CapabilityProvider::class.java)
+    }
+
+    private val _media3SessionLiveData = MutableLiveData<PlaybackSession?>()
+    val media3SessionLiveData: LiveData<PlaybackSession?> = _media3SessionLiveData
+
+    private val _media3CapabilityLiveData = MutableLiveData<PlayerCapabilityContract?>()
+    val media3CapabilityLiveData: LiveData<PlayerCapabilityContract?> = _media3CapabilityLiveData
+
+    private val _media3ToggleLiveData = MutableLiveData<RolloutToggleSnapshot?>()
+    val media3ToggleLiveData: LiveData<RolloutToggleSnapshot?> = _media3ToggleLiveData
+
+    private val _media3ErrorLiveData = MutableLiveData<String?>()
+    val media3ErrorLiveData: LiveData<String?> = _media3ErrorLiveData
+
+    private var activeSessionId: String? = null
+
+    fun buildMedia3LaunchParams(
+        source: BaseVideoSource,
+        override: Media3LaunchParams? = null
+    ): Media3LaunchParams {
+        override?.let { return it }
+        val mediaId = source.getUniqueKey().ifEmpty { source.getVideoUrl() }
+        val sourceType = source.getMediaType().toMedia3SourceType()
+        return Media3LaunchParams(mediaId = mediaId, sourceType = sourceType)
+    }
+
+    fun prepareMedia3Session(params: Media3LaunchParams) {
+        if (!Media3ToggleProvider.isEnabled()) {
+            _media3SessionLiveData.postValue(null)
+            _media3CapabilityLiveData.postValue(null)
+            _media3ToggleLiveData.postValue(null)
+            Media3SessionStore.clear()
+            activeSessionId = null
+            return
+        }
+        val provider = media3Provider ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            provider.prepareSession(
+                params.mediaId,
+                params.sourceType,
+                params.requestedCapabilities,
+                params.autoplay
+            ).onSuccess { bundle ->
+                activeSessionId = bundle.session.sessionId
+                Media3SessionStore.update(bundle)
+                _media3SessionLiveData.postValue(bundle.session)
+                _media3CapabilityLiveData.postValue(bundle.capabilityContract)
+                _media3ToggleLiveData.postValue(bundle.toggleSnapshot)
+            }.onFailure {
+                DDLog.e("Media3-PlayerVM", "prepareSession failed: ${it.message}")
+                _media3ErrorLiveData.postValue(it.message)
+                Media3SessionStore.clear()
+            }
+        }
+    }
+
+    fun dispatchMedia3Capability(
+        capability: Media3Capability,
+        payload: Map<String, Any?>? = null
+    ) {
+        val provider = media3Provider ?: return
+        val sessionId = activeSessionId ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            provider.dispatchCapability(sessionId, capability, payload)
+                .onFailure {
+                    DDLog.w("Media3-PlayerVM", "dispatchCapability failed: ${it.message}")
+                    _media3ErrorLiveData.postValue(it.message)
+                }
+        }
+    }
 
     fun storeTrackAdded(videoSource: BaseVideoSource, track: VideoTrackBean) {
         val uniqueKey = videoSource.getUniqueKey()

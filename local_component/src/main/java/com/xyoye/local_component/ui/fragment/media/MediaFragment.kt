@@ -12,6 +12,7 @@ import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.deletable
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
+import com.xyoye.common_component.media3.Media3SessionStore
 import com.xyoye.common_component.services.ScreencastProvideService
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
@@ -19,6 +20,7 @@ import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
+import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.local_component.BR
 import com.xyoye.local_component.R
 import com.xyoye.local_component.databinding.FragmentMediaBinding
@@ -100,7 +102,23 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
 
     private fun launchMediaStorage(data: MediaLibraryEntity) {
         when (data.mediaType) {
-            MediaType.STREAM_LINK, MediaType.MAGNET_LINK, MediaType.OTHER_STORAGE -> {
+            MediaType.STREAM_LINK -> {
+                ARouter.getInstance()
+                    .build(RouteTable.Local.PlayHistory)
+                    .withSerializable("typeValue", data.mediaType.value)
+                    .navigation()
+            }
+            MediaType.MAGNET_LINK -> {
+                if (!ensureMedia3DownloadSupport()) {
+                    ToastCenter.showWarning("当前 Media3 配置未启用离线播放，无法打开磁链播放")
+                    return
+                }
+                ARouter.getInstance()
+                    .build(RouteTable.Local.PlayHistory)
+                    .withSerializable("typeValue", data.mediaType.value)
+                    .navigation()
+            }
+            MediaType.OTHER_STORAGE -> {
                 ARouter.getInstance()
                     .build(RouteTable.Local.PlayHistory)
                     .withSerializable("typeValue", data.mediaType.value)
@@ -188,6 +206,14 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
                 }
                 addNegative()
             }.build().show()
+    }
+
+    private fun ensureMedia3DownloadSupport(): Boolean {
+        val capability = Media3SessionStore.currentCapability() ?: return true
+        val supportsDownloadResume =
+            capability.capabilities.contains(Media3Capability.DOWNLOAD_VALIDATE) ||
+                capability.offlineSupport?.downloadResume == true
+        return supportsDownloadResume
     }
 
     private enum class ManageStorage(val title: String, val icon: Int) {

@@ -23,4 +23,8 @@ dependencies {
 }
 android {
     namespace = "com.xyoye.storage_component"
+    defaultConfig {
+        val media3Version = project.findProperty("media3Version")?.toString() ?: "1.8.0"
+        buildConfigField("String", "MEDIA3_VERSION", "\"$media3Version\"")
+    }
 }

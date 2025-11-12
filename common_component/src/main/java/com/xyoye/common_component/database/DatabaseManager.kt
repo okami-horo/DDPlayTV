@@ -169,6 +169,31 @@ class DatabaseManager private constructor() {
             }
         }
 
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS media3_rollout_snapshot(" +
+                        "snapshotId TEXT NOT NULL PRIMARY KEY," +
+                        "flagName TEXT NOT NULL," +
+                        "value INTEGER NOT NULL," +
+                        "source TEXT NOT NULL," +
+                        "evaluatedAt INTEGER NOT NULL," +
+                        "appliesToSession TEXT" +
+                        ")"
+                )
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS media3_download_asset_check(" +
+                        "downloadId TEXT NOT NULL PRIMARY KEY," +
+                        "mediaId TEXT NOT NULL," +
+                        "lastVerifiedAt INTEGER," +
+                        "isCompatible INTEGER NOT NULL," +
+                        "requiredAction TEXT NOT NULL," +
+                        "verificationLogs TEXT NOT NULL DEFAULT ''" +
+                        ")"
+                )
+            }
+        }
+
         val instance = DatabaseManager.holder.database
     }
 
@@ -192,7 +217,8 @@ class DatabaseManager private constructor() {
         MIGRATION_9_10,
         MIGRATION_10_11,
         MIGRATION_11_12,
-        MIGRATION_12_13
+        MIGRATION_12_13,
+        MIGRATION_13_14
     ).build()
 
 }

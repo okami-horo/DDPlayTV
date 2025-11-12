@@ -1,10 +1,13 @@
 package com.xyoye.player_component.ui.activities.player
 
 import android.app.ActivityManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.media.AudioManager
+import android.os.IBinder
 import android.view.KeyEvent
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModelProvider
@@ -38,6 +41,10 @@ import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.data_component.enums.VLCHWDecode
 import com.xyoye.data_component.enums.VLCPixelFormat
+import com.xyoye.common_component.media3.Media3SessionClient
+import com.xyoye.data_component.entity.media3.Media3BackgroundMode
+import com.xyoye.data_component.entity.media3.PlaybackSession
+import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 import com.xyoye.player.DanDanVideoPlayer
 import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
@@ -47,6 +54,8 @@ import com.xyoye.player_component.databinding.ActivityPlayerBinding
 import com.xyoye.player_component.utils.BatteryHelper
 import com.xyoye.player_component.widgets.popup.PlayerPopupManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -54,6 +63,11 @@ import java.io.File
 @Route(path = RouteTable.Player.PlayerCenter)
 class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     PlayerReceiverListener, ScreencastHandler {
+
+    companion object {
+        private const val MEDIA3_SESSION_SERVICE =
+            "com.xyoye.dandanplay.app.service.Media3SessionService"
+    }
 
     private val danmuViewModel: PlayerDanmuViewModel by lazy {
         ViewModelProvider(
@@ -85,6 +99,34 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
     //电量管理
     private var batteryHelper = BatteryHelper()
+    private var media3SessionClient: Media3SessionClient? = null
+    private var media3ServiceBound = false
+    private var media3BackgroundModes: Set<Media3BackgroundMode> = emptySet()
+    private var media3BackgroundJob: Job? = null
+    private var latestMedia3Session: PlaybackSession? = null
+    private var latestMedia3Capability: PlayerCapabilityContract? = null
+
+    private val media3ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val client = service as? Media3SessionClient ?: return
+            media3SessionClient = client
+            media3ServiceBound = true
+            pushMedia3SessionToService()
+            media3BackgroundJob = lifecycleScope.launch {
+                client.backgroundModes().collectLatest { modes ->
+                    updateBackgroundModes(modes)
+                }
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            media3ServiceBound = false
+            media3SessionClient = null
+            media3BackgroundJob?.cancel()
+            media3BackgroundJob = null
+            media3BackgroundModes = emptySet()
+        }
+    }
 
     override fun initViewModel() =
         ViewModelInit(
@@ -115,6 +157,16 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
         initPlayer()
 
+        viewModel.media3SessionLiveData.observe(this) { session ->
+            latestMedia3Session = session
+            pushMedia3SessionToService()
+        }
+
+        viewModel.media3CapabilityLiveData.observe(this) { capability ->
+            latestMedia3Capability = capability
+            pushMedia3SessionToService()
+        }
+
         initListener()
 
         danDanPlayer.setController(videoController)
@@ -132,12 +184,34 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         exitPopupMode()
     }
 
+    override fun onStart() {
+        super.onStart()
+        val intent = Intent().setClassName(this, MEDIA3_SESSION_SERVICE)
+        try {
+            bindService(intent, media3ServiceConnection, Context.BIND_AUTO_CREATE)
+        } catch (e: Exception) {
+            DDLog.w("PLAYER-Activity", "bind Media3SessionService failed: ${e.message}")
+        }
+    }
+
+    override fun onStop() {
+        if (media3ServiceBound) {
+            unbindService(media3ServiceConnection)
+            media3ServiceBound = false
+        }
+        media3BackgroundJob?.cancel()
+        media3BackgroundJob = null
+        media3BackgroundModes = emptySet()
+        super.onStop()
+    }
+
     override fun onPause() {
         val popupNotShowing = popupManager.isShowing().not()
-        val backgroundPlayDisable = PlayerConfig.isBackgroundPlay().not()
+        val backgroundAllowed = PlayerConfig.isBackgroundPlay() && media3SupportsBackgroundPlayback()
+        val backgroundPlayDisable = backgroundAllowed.not()
         DDLog.i(
             "PLAYER-Activity",
-            "onPause popupNotShowing=$popupNotShowing backgroundPlayDisable=$backgroundPlayDisable"
+            "onPause popupNotShowing=$popupNotShowing backgroundAllowed=$backgroundAllowed"
         )
         if (popupNotShowing && backgroundPlayDisable) {
             danDanPlayer.pause()
@@ -302,6 +376,10 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             return
         }
         VideoSourceManager.getInstance().setSource(videoSource!!)
+
+        val overrideParams = VideoSourceManager.getInstance().consumeMedia3LaunchParams()
+        val launchParams = viewModel.buildMedia3LaunchParams(videoSource!!, overrideParams)
+        viewModel.prepareMedia3Session(launchParams)
 
         updatePlayer(videoSource!!)
 
@@ -517,7 +595,27 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         }
     }
 
+    private fun pushMedia3SessionToService() {
+        media3SessionClient?.updateSession(latestMedia3Session, latestMedia3Capability)
+    }
+
+    private fun updateBackgroundModes(modes: Set<Media3BackgroundMode>) {
+        media3BackgroundModes = modes
+    }
+
+    private fun media3SupportsBackgroundPlayback(): Boolean {
+        return media3BackgroundModes.contains(Media3BackgroundMode.NOTIFICATION)
+    }
+
+    private fun media3SupportsPip(): Boolean {
+        return media3BackgroundModes.contains(Media3BackgroundMode.PIP)
+    }
+
     private fun enterPopupMode() {
+        if (!media3SupportsPip()) {
+            ToastCenter.showWarning("当前播放不支持画中画模式")
+            return
+        }
         if (popupManager.isShowing()) {
             return
         }

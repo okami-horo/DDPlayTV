@@ -1,6 +1,6 @@
 package com.xyoye.subtitle
 
-import com.google.android.exoplayer2.text.Cue
+import androidx.media3.common.text.Cue
 
 /**
  * Created by xyoye on 2020/12/21.

@@ -3,6 +3,7 @@ package com.xyoye.common_component.utils.thunder
 import com.xunlei.downloadlib.XLDownloadManager
 import com.xunlei.downloadlib.XLTaskHelper
 import com.xunlei.downloadlib.parameter.*
+import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.storage.file.helper.TorrentBean
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.MagnetUtils
@@ -39,6 +40,16 @@ class ThunderManager private constructor() {
         private const val TIME_OUT_DOWNLOAD_TORRENT = 5 * 1000L
 
         fun getInstance() = Holder.instance
+
+        fun media3DownloadId(source: String, fileIndex: Int = -1): String {
+            val normalized = if (source.startsWith("magnet")) {
+                MagnetUtils.getMagnetHash(source).ifEmpty { source }
+            } else {
+                source
+            }
+            val combined = if (fileIndex >= 0) "$normalized#$fileIndex" else normalized
+            return combined.toMd5String()
+        }
     }
 
     object Holder {
