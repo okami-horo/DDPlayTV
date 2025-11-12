@@ -533,6 +533,8 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         PlayerInitializer.Subtitle.strokeWidth = SubtitleConfig.getStrokeWidth()
         PlayerInitializer.Subtitle.textColor = SubtitleConfig.getTextColor()
         PlayerInitializer.Subtitle.strokeColor = SubtitleConfig.getStrokeColor()
+        PlayerInitializer.Subtitle.alpha = SubtitleConfig.getAlpha()
+        PlayerInitializer.Subtitle.verticalOffset = SubtitleConfig.getVerticalOffset()
         DDLog.i(
             "PLAYER-Config",
             "subtitle size=${PlayerInitializer.Subtitle.textSize} stroke=${PlayerInitializer.Subtitle.strokeWidth}"

@@ -334,6 +334,10 @@ class ControlWrapper(
         mSubtitleController.updateAlpha()
     }
 
+    override fun updateVerticalOffset() {
+        mSubtitleController.updateVerticalOffset()
+    }
+
     override fun updateShadow() {
         mSubtitleController.updateShadow()
     }

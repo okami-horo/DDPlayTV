@@ -52,6 +52,7 @@
     <string name="text_subtitle_stroke_size_tips">描边宽度</string>
     <string name="text_subtitle_stroke_color_tips">描边颜色</string>
     <string name="text_subtitle_alpha_tips">文字透明度</string>
+    <string name="text_subtitle_vertical_offset_tips">字幕垂直偏移</string>
     <string name="text_subtitle_offset_tips">时间调节</string>
     <string name="text_subtitle_offset_reduce">—</string>
     <string name="hint_subtitle_offset">请输入偏移时间</string>

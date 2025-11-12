@@ -79,6 +79,7 @@ object PlayerInitializer {
         const val DEFAULT_TEXT_COLOR = Color.WHITE
         const val DEFAULT_STROKE_COLOR = Color.BLACK
         const val DEFAULT_ALPHA = 100
+        const val DEFAULT_VERTICAL_OFFSET = 0
 
         var offsetPosition = DEFAULT_POSITION
 
@@ -87,5 +88,6 @@ object PlayerInitializer {
         var textColor = DEFAULT_TEXT_COLOR
         var strokeColor = DEFAULT_STROKE_COLOR
         var alpha = DEFAULT_ALPHA
+        var verticalOffset = DEFAULT_VERTICAL_OFFSET
     }
 }

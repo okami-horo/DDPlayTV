@@ -244,6 +244,44 @@
                 app:theme="@style/Theme.DanDanPlay.SeekBar"
                 tools:progress="100" />
 
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/text_subtitle_vertical_offset_tips"
+                    android:textColor="@color/text_white_immutable"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/subtitle_vertical_offset_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:textColor="@color/text_white_immutable"
+                    android:textSize="14sp"
+                    tools:ignore="RelativeOverlap"
+                    tools:text="+0%" />
+            </RelativeLayout>
+
+            <SeekBar
+                android:id="@+id/subtitle_vertical_offset_sb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="10dp"
+                android:focusable="true"
+                android:max="60"
+                app:theme="@style/Theme.DanDanPlay.SeekBar"
+                tools:progress="30" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </layout>

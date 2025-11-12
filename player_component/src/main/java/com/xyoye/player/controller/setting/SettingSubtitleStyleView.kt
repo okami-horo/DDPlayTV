@@ -22,6 +22,10 @@ class SettingSubtitleStyleView(
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingSubtitleStyleBinding>(context, attrs, defStyleAttr) {
 
+    companion object {
+        private const val VERTICAL_OFFSET_MAX = 30
+    }
+
     init {
         initSettingListener()
     }
@@ -89,6 +93,10 @@ class SettingSubtitleStyleView(
         viewBinding.subtitleAlphaTv.text = alphaText
         viewBinding.subtitleAlphaSb.progress = alphaPercent
 
+        val verticalOffset = PlayerInitializer.Subtitle.verticalOffset
+        viewBinding.subtitleVerticalOffsetTv.text = formatOffsetText(verticalOffset)
+        viewBinding.subtitleVerticalOffsetSb.progress = offsetValueToProgress(verticalOffset)
+
         viewBinding.tvResetSubtitleConfig.isVisible = isConfigChanged()
     }
 
@@ -115,6 +123,10 @@ class SettingSubtitleStyleView(
 
         viewBinding.subtitleAlphaSb.observeProgressChange {
             updateAlpha(it)
+        }
+
+        viewBinding.subtitleVerticalOffsetSb.observeProgressChange {
+            updateVerticalOffset(offsetProgressToValue(it))
         }
     }
 
@@ -192,10 +204,25 @@ class SettingSubtitleStyleView(
         onConfigChanged()
     }
 
+    private fun updateVerticalOffset(offsetPercent: Int) {
+        val clampedOffset = offsetPercent.coerceIn(-VERTICAL_OFFSET_MAX, VERTICAL_OFFSET_MAX)
+        if (PlayerInitializer.Subtitle.verticalOffset == clampedOffset)
+            return
+
+        viewBinding.subtitleVerticalOffsetTv.text = formatOffsetText(clampedOffset)
+        viewBinding.subtitleVerticalOffsetSb.progress = offsetValueToProgress(clampedOffset)
+
+        SubtitleConfig.putVerticalOffset(clampedOffset)
+        PlayerInitializer.Subtitle.verticalOffset = clampedOffset
+        mControlWrapper.updateVerticalOffset()
+        onConfigChanged()
+    }
+
     private fun resetConfig() {
         updateSize(PlayerInitializer.Subtitle.DEFAULT_SIZE)
         updateStrokeWidth(PlayerInitializer.Subtitle.DEFAULT_STROKE)
         updateAlpha(PlayerInitializer.Subtitle.DEFAULT_ALPHA)
+        updateVerticalOffset(PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET)
 
         val defaultTextColor = PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR
         val textColorPosition = viewBinding.subtitleColorSb.getPositionFromColor(defaultTextColor)
@@ -217,12 +244,29 @@ class SettingSubtitleStyleView(
                 || PlayerInitializer.Subtitle.textColor != PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR
                 || PlayerInitializer.Subtitle.strokeColor != PlayerInitializer.Subtitle.DEFAULT_STROKE_COLOR
                 || PlayerInitializer.Subtitle.alpha != PlayerInitializer.Subtitle.DEFAULT_ALPHA
+                || PlayerInitializer.Subtitle.verticalOffset != PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET
+    }
+
+    private fun offsetValueToProgress(value: Int): Int {
+        return value + VERTICAL_OFFSET_MAX
+    }
+
+    private fun offsetProgressToValue(progress: Int): Int {
+        return progress - VERTICAL_OFFSET_MAX
+    }
+
+    private fun formatOffsetText(offsetPercent: Int): String {
+        return if (offsetPercent > 0) {
+            "+${offsetPercent}%"
+        } else {
+            "${offsetPercent}%"
+        }
     }
 
     private fun handleKeyCode(keyCode: Int) {
         if (viewBinding.tvResetSubtitleConfig.hasFocus()) {
             when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleAlphaSb.requestFocus()
+                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleVerticalOffsetSb.requestFocus()
                 KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleSizeSb.requestFocus()
             }
         } else if (viewBinding.subtitleSizeSb.hasFocus()) {
@@ -231,7 +275,7 @@ class SettingSubtitleStyleView(
                     if (isConfigChanged()) {
                         viewBinding.tvResetSubtitleConfig.requestFocus()
                     } else {
-                        viewBinding.subtitleAlphaSb.requestFocus()
+                        viewBinding.subtitleVerticalOffsetSb.requestFocus()
                     }
                 }
                 KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleStrokeWidthSb.requestFocus()
@@ -258,6 +302,11 @@ class SettingSubtitleStyleView(
         } else if (viewBinding.subtitleAlphaSb.hasFocus()) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleStrokeColorSb.requestFocus()
+                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleVerticalOffsetSb.requestFocus()
+            }
+        } else if (viewBinding.subtitleVerticalOffsetSb.hasFocus()) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleAlphaSb.requestFocus()
                 KeyEvent.KEYCODE_DPAD_DOWN -> {
                     if (isConfigChanged()) {
                         viewBinding.tvResetSubtitleConfig.requestFocus()

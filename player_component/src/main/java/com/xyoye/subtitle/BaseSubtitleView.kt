@@ -60,6 +60,7 @@ open class BaseSubtitleView @JvmOverloads constructor(
         setShadowLayer(3f, 1f, 1f, Color.GRAY)
     }
     private val mTextBounds = Rect()
+    private var verticalOffsetPercent = 0
 
     init {
         // 在所有Paint对象初始化完成后，调用updateShadowLayer来应用阴影设置
@@ -89,7 +90,9 @@ open class BaseSubtitleView @JvmOverloads constructor(
         drawPositionedSubtitles(canvas)
 
         //底部字幕倒序绘制，从下往上绘制
-        var mSubtitleY = measuredHeight - dp2px(10f)
+        val verticalOffsetPx = calculateVerticalOffsetPx(measuredHeight)
+        val lineSpacing = dp2px(5f).toFloat()
+        var mSubtitleY = measuredHeight.toFloat() - dp2px(10f).toFloat() - verticalOffsetPx
         for (i in mBottomSubtitles.indices.reversed()) {
             val subtitle = mBottomSubtitles[i]
             if (TextUtils.isEmpty(subtitle.text)) {
@@ -97,25 +100,27 @@ open class BaseSubtitleView @JvmOverloads constructor(
             }
 
             mTextPaint.getTextBounds(subtitle.text, 0, subtitle.text.length, mTextBounds)
+            val textHeight = mTextBounds.height().toFloat()
             val x = measuredWidth / 2f
-            val y = mSubtitleY - mTextBounds.height() / 2f
+            val y = mSubtitleY - textHeight / 2f
             canvas.drawText(subtitle.text, x, y, mStrokePaint)
             canvas.drawText(subtitle.text, x, y, mTextPaint)
-            mSubtitleY -= mTextBounds.height() + dp2px(5f)
+            mSubtitleY -= textHeight + lineSpacing
         }
 
         //顶部字幕绘制，从上往下绘制
-        mSubtitleY = dp2px(10f)
+        mSubtitleY = dp2px(10f).toFloat() - verticalOffsetPx
         for (topSubtitle in mTopSubtitles) {
             if (TextUtils.isEmpty(topSubtitle.text)) {
                 continue
             }
             mTextPaint.getTextBounds(topSubtitle.text, 0, topSubtitle.text.length, mTextBounds)
+            val textHeight = mTextBounds.height().toFloat()
             val x = measuredWidth / 2f
-            val y = mSubtitleY + mTextBounds.height() / 2f
+            val y = mSubtitleY + textHeight / 2f
             canvas.drawText(topSubtitle.text, x, y, mStrokePaint)
             canvas.drawText(topSubtitle.text, x, y, mTextPaint)
-            mSubtitleY += mTextBounds.height() + dp2px(5f)
+            mSubtitleY += textHeight + lineSpacing
         }
         super.onDraw(canvas)
     }
@@ -177,6 +182,11 @@ open class BaseSubtitleView @JvmOverloads constructor(
         val newStrokeColor = Color.argb(alphaValue, Color.red(strokeColor), Color.green(strokeColor), Color.blue(strokeColor))
         mStrokePaint.color = newStrokeColor
         
+        invalidate()
+    }
+
+    protected fun setVerticalOffset(percent: Int) {
+        verticalOffsetPercent = percent
         invalidate()
     }
 
@@ -354,7 +364,8 @@ open class BaseSubtitleView @JvmOverloads constructor(
             viewHeight - dp2px(10f) - (subtitle.lineCount - 1 - subtitle.lineIndex + 0.5f) * lineHeight
         }
 
-        val baseline = baseY - (fontMetrics.ascent + fontMetrics.descent) / 2f
+        val adjustedBaseY = baseY - calculateVerticalOffsetPx(viewHeight)
+        val baseline = adjustedBaseY - (fontMetrics.ascent + fontMetrics.descent) / 2f
         val alignedX = when {
             subtitle.align == null -> baseX
             subtitle.align in listOf(1, 4, 7) -> baseX - textWidth / 2f
@@ -393,6 +404,13 @@ open class BaseSubtitleView @JvmOverloads constructor(
             return null
         }
         return coordinate * (viewSize.toFloat() / scriptSize)
+    }
+
+    private fun calculateVerticalOffsetPx(viewHeight: Int): Float {
+        if (viewHeight <= 0 || verticalOffsetPercent == 0) {
+            return 0f
+        }
+        return viewHeight * (verticalOffsetPercent / 100f)
     }
 
     private fun isLeftAligned(align: Int?): Boolean {
