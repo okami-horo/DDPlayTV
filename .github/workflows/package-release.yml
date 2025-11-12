@@ -22,6 +22,19 @@ jobs:
         with:
           java-version: 11
           distribution: adopt
+      - name: install Android 35 SDK
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$(command -v sdkmanager || true)"
+          if [[ -z "$SDKMANAGER" ]]; then
+            SDKMANAGER="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}/cmdline-tools/latest/bin/sdkmanager"
+          fi
+          if [[ ! -x "$SDKMANAGER" ]]; then
+            echo "sdkmanager not found" >&2
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses > /dev/null
+          yes | "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
 
       # 3.获取签名密钥
       - name: decrypt key
@@ -93,4 +106,3 @@ jobs:
             dandanplay_v${{ env.BUILD_VERSION }}_universal-${{ env.BUILD_TYPE }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
