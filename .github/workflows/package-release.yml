@@ -33,8 +33,18 @@ jobs:
             echo "sdkmanager not found" >&2
             exit 1
           fi
-          yes | "$SDKMANAGER" --licenses > /dev/null
-          yes | "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
+          if ! yes | "$SDKMANAGER" --licenses > /dev/null; then
+            status=${PIPESTATUS[1]}
+            if [[ ${status:-1} -ne 0 ]]; then
+              exit "$status"
+            fi
+          fi
+          if ! yes | "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"; then
+            status=${PIPESTATUS[1]}
+            if [[ ${status:-1} -ne 0 ]]; then
+              exit "$status"
+            fi
+          fi
 
       - name: ensure JDK 17 for Gradle
         uses: actions/setup-java@v4
