@@ -205,8 +205,8 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
 
     override fun supportAddTrack(type: TrackType): Boolean {
         return when (type) {
-            TrackType.AUDIO,
-            TrackType.SUBTITLE -> true
+            TrackType.AUDIO -> true
+            TrackType.SUBTITLE -> false
             else -> false
         }
     }
