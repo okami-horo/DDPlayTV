@@ -19,6 +19,7 @@ fun Project.applicationSetup() {
 
         buildFeatures.apply {
             dataBinding.isEnabled = true
+            buildConfig = true
         }
 
         setupKotlinOptions()
