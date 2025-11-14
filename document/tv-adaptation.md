@@ -38,6 +38,18 @@
   - 处理：`sync` 逻辑直接清空所有 `MediaSession` 命令与 `BackgroundMode`，原能力实现整体块注释，防止 TV 端暴露 PIP/后台播放命令。
   - 测试：`app/src/androidTest/java/com/xyoye/dandanplay/app/Media3BackgroundTest.kt` 添加 `@Ignore`，记录 TV 端暂不验证该能力。
 
+- 播放器设置中的“后台播放”开关
+  - 源码：`player_component/src/main/java/com/xyoye/player/controller/setting/PlayerSettingView.kt`
+  - 处理：`SettingAction.BACKGROUND_PLAY` 在 `generateItems()` 中加入 `disabledActions`，TV 端不再展示该入口（即使 `PlayerConfig.isBackgroundPlay()` 切换也不会生效），避免误导用户。
+
+- 下拉刷新（`SwipeRefreshLayout`）入口
+  - 源码：`local_component/src/main/res/layout/activity_shooter_subtitle.xml`、`storage_component/src/main/res/layout/fragment_storage_file.xml`
+  - 处理：TV 端移除 `SwipeRefreshLayout`，改为纯 `RecyclerView`；刷新通过“返回上级后重新进入”实现，不再保留不可达的下拉动作，`StorageFileFragment` 也同步删去 `refreshLayout` 逻辑。
+
+- 账户（登录/注册/找回）入口
+  - 源码：`user_component/src/main/java/com/xyoye/user_component/ui/activities/login/LoginActivity.kt`
+  - 处理：仅保留登录功能；注册/找回相关 Activity、ViewModel、布局及路由 (`/user/register`、`/user/forgot`) 全部移除，Manifest 及 `RouteTable` 也删去对应声明，登陆页 UI 不再展示“注册/找回”按钮。
+
 - 意见反馈与分享/邮件
   - 源码：`user_component/src/main/java/com/xyoye/user_component/ui/activities/feedback/FeedbackActivity.kt`
   - 处理：保留 FAQ 展示，仅对 Email/QQ/Issues 的入口 `View` 调用 `isVisible = false` 隐藏；原 QQ/邮件/Issues 逻辑仍使用块注释保留，TV 端不会再出现分享按钮。
@@ -57,17 +69,19 @@
 - `player_component/src/main/AndroidManifest.xml` 中 `SYSTEM_ALERT_WINDOW`、`REORDER_TASKS`（已隐藏入口，但建议 TV flavor 下移除权限）
 
 2) UI/交互与入口
-- 下拉刷新（`SwipeRefreshLayout`）在 TV 上不可达：
-  - `local_component/src/main/res/layout/activity_shooter_subtitle.xml`
-  - `storage_component/src/main/res/layout/fragment_storage_file.xml`
-  - 建议：TV 专用布局移除 SwipeRefresh，改为“刷新”按钮。
-- 账户（登录/注册/找回）入口
-  - `login` 已在 `LoginActivity` 弹窗拦截；其他页面（`register/forgot`）仍存在，建议 TV 下移除入口或统一拦截弹窗。
 - 投屏发送链路的后台类仍在（虽然入口已隐藏）
   - `storage_component/src/main/java/com/xyoye/storage_component/services/ScreencastProvideService.kt`
   - `storage_component/src/main/java/com/xyoye/storage_component/services/ScreencastProvideNotifier.kt`
   - `common_component/.../notification/Notifications.kt` 中 Sender 相关 Channel/Id
   - 建议：TV flavor 下不编译或在运行期隐藏所有 Sender 相关触发点。
+- 番剧/磁链列表中的长按操作在 TV 上可用性较差
+  - 源码：
+    - 番剧分集：`anime_component/src/main/java/com/xyoye/anime_component/ui/fragment/anime_episode/AnimeEpisodeFragment.kt`
+      - 长按分集条目进入“批量标记已观看”模式；
+    - 磁链搜索：`anime_component/src/main/java/com/xyoye/anime_component/ui/fragment/search_magnet/SearchMagnetFragment.kt`
+      - 长按结果条目弹出操作对话框。
+  - 现状：遥控器理论上可以通过长按确认键触发 `setOnLongClickListener`，但入口不直观，也缺少 TV 端专门的焦点/引导设计；
+  - 建议：后续在 TV 端增加显式的“更多操作/批量标记”按钮或菜单键支持（例如在条目右侧增加按钮，或在标题栏添加“操作”入口），将长按交互降级为辅助手段。
 
 3) 功能点评估（按需）
 
@@ -84,9 +98,15 @@
 - 快验清单：
   - 播放页无手势调节，DPAD 左右快进可用；
   - 顶部“悬浮窗”按钮不可见；
-  - 文件列表“更多”菜单无“投屏”；
+  - 文件列表“更多”菜单无“投屏”，返回主界面时不会弹出“投屏投送服务正在运行”的退出提示（Sender 已关闭）；
   - 扫码功能点击时提示不支持并返回；
   - 反馈页不触发“发送邮件”的外跳（若未隐藏，需跟进）。
+  - 播放器设置页已隐藏“后台播放”开关；需确认其余设置项仍可保存，并验证播放退出后不会残留后台播放提示。
+  - 射手字幕页与网络存储页不再出现无法触发的下拉刷新动画，重新进入页面可刷新数据。
+  - 个人中心/登录页仅提供“登录”入口，不再出现“注册/找回”按钮，尝试访问 `/user/register`、`/user/forgot` 不会被路由到 Activity。
+  - 番剧详情 / 磁链搜索：
+    - 使用遥控器长按剧集条目可否进入“标记模式”，长按磁链条目可否弹出操作对话框；
+    - 如长按体验较差，优先评估是否需要按上述待改造建议添加显式入口。
 
 ## 附：本次改动明细（供追踪）
 - 手势控制注释：`player_component/.../GestureVideoController.kt`

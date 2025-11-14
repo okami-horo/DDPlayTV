@@ -190,7 +190,10 @@ class PlayerSettingView(
      */
     private fun generateItems(): List<Any> {
         val items = mutableListOf<Any>()
-        val disabledActions = setOf(SettingAction.SCREEN_SHOT)
+        val disabledActions = setOf(
+            SettingAction.SCREEN_SHOT,
+            SettingAction.BACKGROUND_PLAY
+        )
         SettingAction.values()
             .asSequence()
             .filterNot { disabledActions.contains(it) }

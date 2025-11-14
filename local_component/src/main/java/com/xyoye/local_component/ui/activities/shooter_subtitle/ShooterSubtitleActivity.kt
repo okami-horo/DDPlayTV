@@ -2,8 +2,6 @@ package com.xyoye.local_component.ui.activities.shooter_subtitle
 
 import android.view.Menu
 import android.view.MenuItem
-import androidx.lifecycle.lifecycleScope
-import androidx.paging.LoadState
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.xyoye.common_component.adapter.paging.BasePagingAdapter
 import com.xyoye.common_component.adapter.paging.PagingFooterAdapter
@@ -24,8 +22,6 @@ import com.xyoye.local_component.databinding.ItemSubtitleSearchSourceBinding
 import com.xyoye.local_component.ui.dialog.ShooterSecretDialog
 import com.xyoye.local_component.ui.dialog.SubtitleDetailDialog
 import com.xyoye.local_component.ui.dialog.SubtitleFileListDialog
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 @Route(path = RouteTable.Local.ShooterSubtitle)
 class ShooterSubtitleActivity :
@@ -63,22 +59,12 @@ class ShooterSubtitleActivity :
             }
         }
 
-        dataBinding.refreshLayout.setOnRefreshListener {
-            subtitleSearchAdapter.refresh()
-        }
-
         dataBinding.subtitleRv.apply {
             layoutManager = vertical()
 
             adapter = subtitleSearchAdapter.withLoadStateFooter(
                 PagingFooterAdapter { subtitleSearchAdapter.retry() }
             )
-        }
-
-        lifecycleScope.launch {
-            subtitleSearchAdapter.loadStateFlow.collectLatest {
-                dataBinding.refreshLayout.isRefreshing = it.refresh is LoadState.Loading
-            }
         }
 
         initObserver()

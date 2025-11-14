@@ -29,8 +29,6 @@ object RouteTable {
     object User {
         const val PersonalFragment = "/user/personal_fragment"
         const val UserLogin = "/user/login"
-        const val UserRegister = "/user/register"
-        const val UserForgot = "/user/forgot"
         const val UserInfo = "/user/info"
         const val SettingPlayer = "/user/setting_player"
         const val SettingApp = "/user/setting_app"

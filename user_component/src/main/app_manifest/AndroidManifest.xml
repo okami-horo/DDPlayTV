@@ -18,8 +18,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.activities.login.LoginActivity"/>
-        <activity android:name=".ui.activities.register.RegisterActivity"/>
-        <activity android:name=".ui.activities.forgot.ForgotActivity"/>
         <activity android:name=".ui.activities.user_info.UserInfoActivity"/>
         <activity android:name=".ui.activities.setting_player.SettingPlayerActivity"/>
     </application>

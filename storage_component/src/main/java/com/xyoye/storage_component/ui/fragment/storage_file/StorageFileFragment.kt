@@ -47,17 +47,11 @@ class StorageFileFragment :
 
         viewModel.fileLiveData.observe(this) {
             dataBinding.loading.isVisible = false
-            dataBinding.refreshLayout.isVisible = true
-            dataBinding.refreshLayout.isRefreshing = false
+            dataBinding.storageFileRv.isVisible = true
             ownerActivity.onDirectoryOpened(it)
             dataBinding.storageFileRv.setData(it)
             //延迟500毫秒，等待列表加载完成后，再请求焦点
             dataBinding.storageFileRv.postDelayed({ requestFocus() }, 500)
-        }
-
-        dataBinding.refreshLayout.setColorSchemeResources(R.color.theme)
-        dataBinding.refreshLayout.setOnRefreshListener {
-            viewModel.listFile(directory, refresh = true)
         }
 
         viewModel.listFile(directory)
@@ -183,8 +177,6 @@ class StorageFileFragment :
      * 搜索
      */
     fun search(text: String) {
-        //存在搜索条件时，不允许下拉刷新
-        dataBinding.refreshLayout.isEnabled = text.isEmpty()
         viewModel.searchByText(text)
     }
 

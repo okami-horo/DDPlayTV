@@ -6,12 +6,6 @@
             android:name=".ui.activities.login.LoginActivity"
             android:configChanges="orientation|screenSize" />
         <activity
-            android:name=".ui.activities.register.RegisterActivity"
-            android:configChanges="orientation|screenSize" />
-        <activity
-            android:name=".ui.activities.forgot.ForgotActivity"
-            android:configChanges="orientation|screenSize" />
-        <activity
             android:name=".ui.activities.user_info.UserInfoActivity"
             android:configChanges="orientation|screenSize" />
         <activity
