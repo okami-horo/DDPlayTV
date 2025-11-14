@@ -1,14 +1,15 @@
 package com.xyoye.user_component.ui.activities.feedback
 
-import android.content.Intent
-import android.os.Build
+// import android.content.Intent
+// import android.os.Build
+import androidx.core.view.isVisible
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.*
-import com.xyoye.common_component.utils.AppUtils
+// import com.xyoye.common_component.utils.AppUtils
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.user_component.BR
 import com.xyoye.user_component.R
@@ -32,6 +33,20 @@ class FeedbackActivity : BaseActivity<FeedbackViewModel, ActivityFeedbackBinding
 
         initRv()
 
+        // TV 端隐藏分享/渠道按钮，仅展示常见问题
+        dataBinding.apply {
+            emailTips.isVisible = false
+            emailTv.isVisible = false
+            sendMainTv.isVisible = false
+            qqTips.isVisible = false
+            qqTv.isVisible = false
+            copyQqTv.isVisible = false
+            issuesTips.isVisible = false
+            issuesTv.isVisible = false
+            editIssuesTv.isVisible = false
+        }
+
+        /*
         dataBinding.copyQqTv.setOnClickListener {
             R.string.text_qq.toResString().addToClipboard()
             ToastCenter.showSuccess("QQ已复制！")
@@ -55,6 +70,7 @@ class FeedbackActivity : BaseActivity<FeedbackViewModel, ActivityFeedbackBinding
         dataBinding.editIssuesTv.setOnClickListener {
             startUrlActivity("https://github.com/xyoye/DanDanPlayForAndroid/issues")
         }
+        */
     }
 
     private fun initRv() {

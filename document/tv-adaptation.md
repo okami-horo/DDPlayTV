@@ -38,6 +38,10 @@
   - 处理：`sync` 逻辑直接清空所有 `MediaSession` 命令与 `BackgroundMode`，原能力实现整体块注释，防止 TV 端暴露 PIP/后台播放命令。
   - 测试：`app/src/androidTest/java/com/xyoye/dandanplay/app/Media3BackgroundTest.kt` 添加 `@Ignore`，记录 TV 端暂不验证该能力。
 
+- 意见反馈与分享/邮件
+  - 源码：`user_component/src/main/java/com/xyoye/user_component/ui/activities/feedback/FeedbackActivity.kt`
+  - 处理：保留 FAQ 展示，仅对 Email/QQ/Issues 的入口 `View` 调用 `isVisible = false` 隐藏；原 QQ/邮件/Issues 逻辑仍使用块注释保留，TV 端不会再出现分享按钮。
+
 ## 保留且适合 TV 的能力（未裁剪）
 
 - 播放器 DPAD 控制：`player_component/src/main/java/com/xyoye/player/controller/base/TvVideoController.kt`
@@ -53,8 +57,6 @@
   - `local_component/src/main/res/layout/activity_shooter_subtitle.xml`
   - `storage_component/src/main/res/layout/fragment_storage_file.xml`
   - 建议：TV 专用布局移除 SwipeRefresh，改为“刷新”按钮。
-- 反馈页分享/邮件：`user_component/src/main/java/com/xyoye/user_component/ui/activities/feedback/FeedbackActivity.kt`
-  - `Intent.ACTION_SEND` 在 TV 上价值低，建议隐藏按钮或改为仅展示说明/链接。
 - 账户（登录/注册/找回）入口
   - `login` 已在 `LoginActivity` 弹窗拦截；其他页面（`register/forgot`）仍存在，建议 TV 下移除入口或统一拦截弹窗。
 - 投屏发送链路的后台类仍在（虽然入口已隐藏）
