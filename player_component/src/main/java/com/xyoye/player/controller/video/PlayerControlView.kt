@@ -20,6 +20,8 @@ import com.xyoye.player_component.databinding.LayoutPlayerControllerBinding
 
 class PlayerControlView(context: Context): InterControllerView {
 
+    private val isScreenShotEnabled = false
+
     private val viewBinding = DataBindingUtil.inflate<LayoutPlayerControllerBinding>(
         LayoutInflater.from(context),
         R.layout.layout_player_controller,
@@ -33,8 +35,13 @@ class PlayerControlView(context: Context): InterControllerView {
         viewBinding.playerLockIv.setOnClickListener {
             mControlWrapper.toggleLockState()
         }
-        viewBinding.playerShotIv.setOnClickListener {
-            mControlWrapper.showSettingView(SettingViewType.SCREEN_SHOT)
+        if (isScreenShotEnabled) {
+            viewBinding.playerShotIv.setOnClickListener {
+                mControlWrapper.showSettingView(SettingViewType.SCREEN_SHOT)
+            }
+        } else {
+            // TV adaptation: 截图按钮在 TV 端隐藏，保留旧逻辑便于恢复
+            viewBinding.playerShotIv.isVisible = false
         }
     }
 
@@ -102,6 +109,10 @@ class PlayerControlView(context: Context): InterControllerView {
     }
 
     private fun updateShotVisible(isVisible: Boolean) {
+        if (isScreenShotEnabled.not()) {
+            viewBinding.playerShotIv.isVisible = false
+            return
+        }
         if (isVisible) {
             viewBinding.playerShotIv.isVisible = true
             ViewCompat.animate(viewBinding.playerShotIv)

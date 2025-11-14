@@ -141,11 +141,14 @@ class SettingController(
             }
 
             SettingViewType.SCREEN_SHOT -> {
+                throw UnsupportedOperationException("TV 端未开启截图功能")
+                /*
                 if (this::screenShotView.isInitialized.not()) {
                     screenShotView = ScreenShotView(context)
                     addView.invoke(screenShotView)
                 }
                 return screenShotView
+                */
             }
 
             SettingViewType.SEARCH_DANMU -> {

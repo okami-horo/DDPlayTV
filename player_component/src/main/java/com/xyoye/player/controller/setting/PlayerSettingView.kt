@@ -190,8 +190,10 @@ class PlayerSettingView(
      */
     private fun generateItems(): List<Any> {
         val items = mutableListOf<Any>()
+        val disabledActions = setOf(SettingAction.SCREEN_SHOT)
         SettingAction.values()
             .asSequence()
+            .filterNot { disabledActions.contains(it) }
             .sortedBy {
                 it.type.widget
             }.groupBy {
@@ -345,8 +347,7 @@ class PlayerSettingView(
             }
 
             SettingAction.SCREEN_SHOT -> {
-                mControlWrapper.showSettingView(SettingViewType.SCREEN_SHOT)
-                onSettingVisibilityChanged(false)
+                // TV adaptation: 截图入口已隐藏，占位保持分支完整
             }
         }
     }

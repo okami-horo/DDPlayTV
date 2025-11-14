@@ -42,6 +42,10 @@
   - 源码：`user_component/src/main/java/com/xyoye/user_component/ui/activities/feedback/FeedbackActivity.kt`
   - 处理：保留 FAQ 展示，仅对 Email/QQ/Issues 的入口 `View` 调用 `isVisible = false` 隐藏；原 QQ/邮件/Issues 逻辑仍使用块注释保留，TV 端不会再出现分享按钮。
 
+- 截图功能
+  - 源码：`player_component/src/main/java/com/xyoye/player/controller/video/PlayerControlView.kt`、`player_component/src/main/java/com/xyoye/player/controller/setting/PlayerSettingView.kt`、`player_component/src/main/java/com/xyoye/player/controller/setting/SettingController.kt`
+  - 处理：控制器上的截图按钮默认隐藏并禁用点击，播放器设置页 `SettingAction` 过滤掉“截屏”项，`SettingController` 中的 `SCREEN_SHOT` 分支改为直接抛出 `UnsupportedOperationException`，并通过块注释保留原实现。
+
 ## 保留且适合 TV 的能力（未裁剪）
 
 - 播放器 DPAD 控制：`player_component/src/main/java/com/xyoye/player/controller/base/TvVideoController.kt`
@@ -66,8 +70,6 @@
   - 建议：TV flavor 下不编译或在运行期隐藏所有 Sender 相关触发点。
 
 3) 功能点评估（按需）
-- 截图功能：`player_component/src/main/java/com/xyoye/player/controller/setting/ScreenShotView.kt`
-  - TV 上导出/查看不便，建议 TV 默认隐藏入口；必要时保留设置开关。
 
 4) 构建策略
 - 建议新增 `tv` productFlavor：
