@@ -1,18 +1,11 @@
 package com.xyoye.storage_component.services
 
 import android.content.Context
-import android.graphics.BitmapFactory
-import com.xyoye.common_component.extension.notificationBuilder
-import com.xyoye.common_component.extension.notificationManager
-import com.xyoye.common_component.notification.Notifications
-import com.xyoye.common_component.receiver.NotificationReceiver
-import com.xyoye.storage_component.R
 
-/**
- * Created by xyoye on 2022/9/14
- */
+// Created by xyoye on 2022/9/14
 
-class ScreencastProvideNotifier(private val context: Context) {
+/*
+class ScreencastProvideNotifier(private val _context: Context) {
 
     private val cancelIntent by lazy {
         NotificationReceiver.cancelScreencastProvidePendingBroadcast(context)
@@ -44,5 +37,13 @@ class ScreencastProvideNotifier(private val context: Context) {
             Notifications.Id.SCREENCAST_PROVIDE,
             notificationBuilder.build(),
         )
+    }
+}
+*/
+
+class ScreencastProvideNotifier(private val context: Context) {
+
+    fun showProvideVideo(name: String) {
+        // 投屏发送链路在 TV 端被禁用，保留空实现避免误用
     }
 }

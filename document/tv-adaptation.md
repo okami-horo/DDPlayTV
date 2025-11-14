@@ -18,6 +18,8 @@
   - 处理：原 `prepareCastSession` 逻辑注释，改为抛出 `UnsupportedOperationException`；
   - UI：`storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileAdapter.kt` 注释“投屏”菜单项与点击分支；
   - 测试：`app/src/androidTest/java/com/xyoye/dandanplay/app/Media3CastFallbackTest.kt` 使用 `@Ignore` 屏蔽对应用例。
+  - 服务链路：`storage_component/src/main/java/com/xyoye/storage_component/services/ScreencastProvideService.kt`、`storage_component/src/main/java/com/xyoye/storage_component/services/ScreencastProvideNotifier.kt`、`common_component/src/main/java/com/xyoye/common_component/notification/Notifications.kt`（Sender Channel/Id）
+  - 处理：TV 端仅作为接收端，不再发起投屏；上述服务、前台通知和投屏 HTTP Server 逻辑整体包裹为块注释，并给出空实现或直接抛出 `UnsupportedOperationException`，防止任何入口重新唤起 Sender。
 
 - 扫码（相机）入口
   - 源码：`storage_component/src/main/java/com/xyoye/storage_component/ui/activities/remote_scan/RemoteScanActivity.kt`
@@ -84,4 +86,3 @@
   - `storage_component/.../ui/fragment/storage_file/StorageFileAdapter.kt`
   - 测试忽略：`app/src/androidTest/.../Media3CastFallbackTest.kt`
 - 扫码页面禁用：`storage_component/.../ui/activities/remote_scan/RemoteScanActivity.kt`
-

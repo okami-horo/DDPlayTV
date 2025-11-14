@@ -4,38 +4,16 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
-import androidx.core.content.ContextCompat
-import com.xyoye.common_component.bridge.ServiceLifecycleBridge
-import com.xyoye.common_component.extension.aesEncode
-import com.xyoye.common_component.extension.authorizationValue
-import com.xyoye.common_component.extension.isServiceRunning
-import com.xyoye.common_component.extension.mapByLength
-import com.xyoye.common_component.extension.toastError
-import com.xyoye.common_component.network.repository.ScreencastRepository
-import com.xyoye.common_component.notification.Notifications
-import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.base.BaseVideoSource
-import com.xyoye.common_component.source.media.StorageVideoSource
-import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.data_component.data.screeencast.ScreencastData
-import com.xyoye.data_component.data.screeencast.ScreencastVideoData
 import com.xyoye.data_component.entity.MediaLibraryEntity
-import com.xyoye.storage_component.utils.screencast.provider.HttpServer
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 
-/**
- * Created by xyoye on 2022/9/14
- */
+// Created by xyoye on 2022/9/14
 
 interface ScreencastProvideHandler {
     fun onProvideVideo(videoSource: BaseVideoSource)
 }
 
+/*
 class ScreencastProvideService : Service(), ScreencastProvideHandler {
     private var httpPort = 20000
     private var httpServer: HttpServer? = null
@@ -47,17 +25,17 @@ class ScreencastProvideService : Service(), ScreencastProvideHandler {
     companion object {
         private const val KEY_SCREENCAST_RECEIVER = "key_screencast_receiver"
 
-        fun isRunning(context: Context): Boolean {
+        fun isRunning(_context: Context): Boolean {
             return context.isServiceRunning(ScreencastProvideService::class.java)
         }
 
-        fun start(context: Context, receiver: MediaLibraryEntity) {
+        fun start(context: Context, _receiver: MediaLibraryEntity) {
             val intent = Intent(context, ScreencastProvideService::class.java)
             intent.putExtra(KEY_SCREENCAST_RECEIVER, receiver)
             ContextCompat.startForegroundService(context, intent)
         }
 
-        fun stop(context: Context) {
+        fun stop(_context: Context) {
             context.stopService(Intent(context, ScreencastProvideService::class.java))
         }
     }
@@ -102,9 +80,7 @@ class ScreencastProvideService : Service(), ScreencastProvideHandler {
         super.onDestroy()
     }
 
-    /**
-     * 连接投屏接收端，并投送视频
-     */
+    // 连接投屏接收端，并投送视频
     private fun connectReceiver(videoSource: StorageVideoSource) {
         serviceScope.launch(Dispatchers.IO) {
             if (isDeviceRunning().not()) {
@@ -158,9 +134,7 @@ class ScreencastProvideService : Service(), ScreencastProvideHandler {
         httpServer?.stop()
     }
 
-    /**
-     * 确认接收服务已启动
-     */
+    // 确认接收服务已启动
     private suspend fun isDeviceRunning(): Boolean {
         val result = ScreencastRepository.init(
             "http://${receiver.screencastAddress}:${receiver.port}",
@@ -169,9 +143,7 @@ class ScreencastProvideService : Service(), ScreencastProvideHandler {
         return result.isSuccess
     }
 
-    /**
-     * 通知投屏接收端播放视频
-     */
+    // 通知投屏接收端播放视频
     private fun postScreencastDevicePlay(port: Int, videoSource: StorageVideoSource) {
         serviceScope.launch {
             val screencastData = createScreencastData(port, videoSource)
@@ -190,9 +162,7 @@ class ScreencastProvideService : Service(), ScreencastProvideHandler {
         }
     }
 
-    /**
-     * 创建发送到投屏接收端的数据
-     */
+    // 创建发送到投屏接收端的数据
     private fun createScreencastData(port: Int, videoSource: StorageVideoSource): ScreencastData {
         val videoData = mapByLength(videoSource.getGroupSize()) {
             val storageFile = videoSource.indexStorageFile(it)
@@ -218,5 +188,48 @@ class ScreencastProvideService : Service(), ScreencastProvideHandler {
 
     override fun onProvideVideo(videoSource: BaseVideoSource) {
         notifier.showProvideVideo(videoSource.getVideoTitle())
+    }
+}
+*/
+
+class ScreencastProvideService : Service(), ScreencastProvideHandler {
+
+    companion object {
+        fun isRunning(@Suppress("UNUSED_PARAMETER") context: Context): Boolean {
+            return false
+        }
+
+        fun start(
+            @Suppress("UNUSED_PARAMETER") context: Context,
+            @Suppress("UNUSED_PARAMETER") receiver: MediaLibraryEntity
+        ) {
+            // Sender 功能对 TV 端关闭，保持静默
+        }
+
+        fun stop(@Suppress("UNUSED_PARAMETER") context: Context) {
+            // Sender 被 TV 端禁用，无需停止服务
+        }
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        stopSelf()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        stopSelf()
+        return START_NOT_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+    override fun onProvideVideo(videoSource: BaseVideoSource) {
+        throw UnsupportedOperationException("Cast sender is disabled for TV builds")
     }
 }
