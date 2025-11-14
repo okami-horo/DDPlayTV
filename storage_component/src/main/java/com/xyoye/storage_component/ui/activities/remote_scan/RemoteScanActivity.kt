@@ -25,6 +25,11 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
 
+/**
+ * TV端说明：
+ * - 该页面依赖设备摄像头及华为ScanKit，TV环境普遍无法提供。
+ * - TV构建建议移除扫码入口，仅保留展示二维码让手机扫码的流程。
+ */
 @Route(path = RouteTable.Stream.RemoteScan)
 class RemoteScanActivity : BaseActivity<RemoteScanViewModel, ActivityRemoteScanBinding>() {
 
@@ -50,8 +55,12 @@ class RemoteScanActivity : BaseActivity<RemoteScanViewModel, ActivityRemoteScanB
             .init()
 
         title = ""
+
+        ToastCenter.showWarning("电视端不支持扫码功能")
+        finish()
     }
 
+    /*
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -166,4 +175,5 @@ class RemoteScanActivity : BaseActivity<RemoteScanViewModel, ActivityRemoteScanB
 
         return Rect(right.toInt(), bottom.toInt(), left.toInt(), top.toInt())
     }
+    */
 }

@@ -18,6 +18,10 @@ import kotlin.math.min
 
 /**
  * Created by xyoye on 2020/11/2.
+ *
+ * TV端说明：
+ * - 该控制器依赖手势滑动/长按等触摸事件，遥控器设备无法触发。
+ * - TV版本应禁用或直接替换为纯DPAD控制逻辑，避免误导性入口。
  */
 
 abstract class GestureVideoController(
@@ -66,11 +70,15 @@ abstract class GestureVideoController(
         mCurrentPlayState = playState
     }
 
+    /*
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
         mPopupGestureHandler?.onTouch(v, event)
         return mGestureDetector.onTouchEvent(event)
     }
+    */
+    override fun onTouch(v: View?, event: MotionEvent) = false
 
+    /*
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (mGestureDetector.onTouchEvent(event).not() && isPopupMode().not()) {
             when (event.action) {
@@ -90,6 +98,8 @@ abstract class GestureVideoController(
         }
         return super.onTouchEvent(event)
     }
+    */
+    override fun onTouchEvent(event: MotionEvent) = super.onTouchEvent(event)
 
     override fun onFling(
         e1: MotionEvent?,
@@ -100,9 +110,12 @@ abstract class GestureVideoController(
         return false
     }
 
+    /*
     override fun onLongPress(e: MotionEvent) {
         longPressAccelerator.enable()
     }
+    */
+    override fun onLongPress(e: MotionEvent) = Unit
 
     override fun onShowPress(e: MotionEvent) {}
 
@@ -110,6 +123,7 @@ abstract class GestureVideoController(
 
     override fun onSingleTapUp(e: MotionEvent) = false
 
+    /*
     override fun onDown(e: MotionEvent): Boolean {
         if (!isNormalPlayState() or context.isScreenEdge(e)) {
             return true
@@ -123,21 +137,30 @@ abstract class GestureVideoController(
         mChangeVolume = false
         return true
     }
+    */
+    override fun onDown(e: MotionEvent) = false
 
+    /*
     override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
         if (isNormalPlayState()) {
             mControlWrapper.toggleVisible()
         }
         return true
     }
+    */
+    override fun onSingleTapConfirmed(e: MotionEvent) = false
 
+    /*
     override fun onDoubleTap(e: MotionEvent): Boolean {
         if (!isLocked() and isNormalPlayState()) {
             togglePlay()
         }
         return true
     }
+    */
+    override fun onDoubleTap(e: MotionEvent) = false
 
+    /*
     override fun onScroll(
         e1: MotionEvent?,
         e2: MotionEvent,
@@ -193,7 +216,15 @@ abstract class GestureVideoController(
         }
         return true
     }
+    */
+    override fun onScroll(
+        e1: MotionEvent?,
+        e2: MotionEvent,
+        distanceX: Float,
+        distanceY: Float
+    ) = false
 
+    /*
     protected fun slideToChangePosition(deltaX: Float) {
         //滑动距离与实际进度缩放比例
         val zoomPercent = 120 * 1000
@@ -214,7 +245,10 @@ abstract class GestureVideoController(
         }
         mSeekPosition = newPosition
     }
+    */
+    protected fun slideToChangePosition(deltaX: Float) = Unit
 
+    /*
     protected fun slideToChangeBrightness(deltaY: Float) {
         mBrightness = if (mBrightness == -1f) 0.5f else mBrightness
 
@@ -235,7 +269,10 @@ abstract class GestureVideoController(
             }
         }
     }
+    */
+    protected fun slideToChangeBrightness(deltaY: Float) = Unit
 
+    /*
     protected fun slideToChangeVolume(deltaY: Float) {
         val maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
@@ -254,7 +291,10 @@ abstract class GestureVideoController(
             }
         }
     }
+    */
+    protected fun slideToChangeVolume(deltaY: Float) = Unit
 
+    /*
     fun onVolumeKeyDown(isVolumeUp: Boolean) {
         val maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         val curVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
@@ -280,6 +320,8 @@ abstract class GestureVideoController(
             }
         }
     }
+    */
+    fun onVolumeKeyDown(isVolumeUp: Boolean) = Unit
 
     fun setPopupGestureHandler(handler: OnTouchListener?) {
         mPopupGestureHandler = handler

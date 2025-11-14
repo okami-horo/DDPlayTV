@@ -16,11 +16,16 @@ data class CastSessionPayload(
 
 /**
  * Prepares metadata for Cast handoffs so PiP/background/capability state stays in sync with Media3.
+ *
+ * TV端说明：
+ * - TV设备通常作为投屏接收端，极少需要“从TV投向其他设备”的逻辑。
+ * - 若目标平台仅面向TV，可整体裁剪该管理器及其入口，避免无效依赖。
  */
 class Media3CastManager(
     private val codecFallbackHandler: CodecFallbackHandler
 ) {
 
+    /*
     fun prepareCastSession(
         targetId: String,
         session: PlaybackSession,
@@ -42,5 +47,14 @@ class Media3CastManager(
             audioOnly = audioOnly,
             fallbackMessage = message
         )
+    }
+    */
+    fun prepareCastSession(
+        targetId: String,
+        session: PlaybackSession,
+        capability: PlayerCapabilityContract,
+        capabilityResult: LegacyCapabilityResult?
+    ): CastSessionPayload {
+        throw UnsupportedOperationException("Cast sender is disabled for TV builds")
     }
 }

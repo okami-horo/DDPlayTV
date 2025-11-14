@@ -16,11 +16,13 @@ import com.xyoye.player_component.media3.mapper.LegacyCapabilityResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @Media3Dependent("Cast manager must honor Media3 codec fallback decisions")
 @RunWith(AndroidJUnit4::class)
+@Ignore("Cast sender feature disabled for TV build")
 class Media3CastFallbackTest {
 
     @Test

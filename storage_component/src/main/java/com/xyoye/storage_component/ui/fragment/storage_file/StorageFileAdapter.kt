@@ -56,7 +56,8 @@ class StorageFileAdapter(
 ) {
 
     private enum class ManageAction(val title: String, val icon: Int) {
-        SCREENCAST("投屏", com.xyoye.common_component.R.drawable.ic_video_cast),
+        // TV端暂时关闭投屏
+//        SCREENCAST("投屏", com.xyoye.common_component.R.drawable.ic_video_cast),
         BIND_DANMU("手动查找弹幕", com.xyoye.common_component.R.drawable.ic_bind_danmu_manual),
         BIND_SUBTITLE("手动查找字幕", com.xyoye.common_component.R.drawable.ic_bind_subtitle),
         BIND_AUDIO("添加音频文件", com.xyoye.common_component.R.drawable.ic_bind_audio),
@@ -266,7 +267,8 @@ class StorageFileAdapter(
                 ManageAction.UNBIND_DANMU -> viewModel.unbindExtraSource(file, TrackType.DANMU)
                 ManageAction.UNBIND_SUBTITLE -> viewModel.unbindExtraSource(file, TrackType.SUBTITLE)
                 ManageAction.UNBIND_AUDIO -> viewModel.unbindExtraSource(file, TrackType.AUDIO)
-                ManageAction.SCREENCAST -> activity.castFile(file)
+                // TV端不再提供投屏
+//                ManageAction.SCREENCAST -> activity.castFile(file)
             }
             return@BottomActionDialog true
         }.show()
@@ -275,7 +277,8 @@ class StorageFileAdapter(
 
     private fun getMoreActions(file: StorageFile) =
         mutableListOf<SheetActionBean>().apply {
-            add(ManageAction.SCREENCAST.toAction())
+            // TV端不再提供投屏
+//            add(ManageAction.SCREENCAST.toAction())
             add(ManageAction.BIND_DANMU.toAction())
             add(ManageAction.BIND_SUBTITLE.toAction())
             add(ManageAction.BIND_AUDIO.toAction())

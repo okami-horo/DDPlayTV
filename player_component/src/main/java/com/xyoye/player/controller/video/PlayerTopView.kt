@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
+import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.xyoye.common_component.extension.toText
 import com.xyoye.data_component.enums.PlayState
@@ -50,12 +51,17 @@ class PlayerTopView(
             mControlWrapper.showSettingView(SettingViewType.PLAYER_SETTING)
         }
 
-        viewBinding.ivSwitchPopup.setOnClickListener {
-            if (OverlayPermissionActivity.hasOverlayPermission().not()) {
-                OverlayPermissionActivity.requestOverlayPermission(context)
-                return@setOnClickListener
+        viewBinding.ivSwitchPopup.apply {
+            isVisible = false
+            /*
+            setOnClickListener {
+                if (OverlayPermissionActivity.hasOverlayPermission().not()) {
+                    OverlayPermissionActivity.requestOverlayPermission(context)
+                    return@setOnClickListener
+                }
+                enterPopupModeBlock?.invoke()
             }
-            enterPopupModeBlock?.invoke()
+            */
         }
 
         // 将初始焦点置于标题，而不是返回按钮

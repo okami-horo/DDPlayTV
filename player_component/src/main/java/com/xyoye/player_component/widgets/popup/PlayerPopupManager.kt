@@ -18,6 +18,10 @@ import com.xyoye.player.utils.OrientationHelper
 
 /**
  * Created by xyoye on 2022/11/3
+ *
+ * TV端说明：
+ * - 此类依赖 SYSTEM_ALERT_WINDOW 悬浮窗权限，在电视环境授权困难且体验欠佳。
+ * - TV构建应直接移除入口或替换为其他方案，保留该类仅用于手机/平板。
  */
 
 class PlayerPopupManager(
@@ -79,6 +83,7 @@ class PlayerPopupManager(
 
     override fun getPosition() = mPosition
 
+    /*
     fun show(player: DanDanVideoPlayer) {
         if (isShowing) {
             return
@@ -108,7 +113,10 @@ class PlayerPopupManager(
 
         isShowing = true
     }
+    */
+    fun show(player: DanDanVideoPlayer) = Unit
 
+    /*
     fun dismiss() {
         if (isShowing.not()) {
             return
@@ -127,6 +135,8 @@ class PlayerPopupManager(
 
         isShowing = false
     }
+    */
+    fun dismiss() = Unit
 
     fun isShowing() = isShowing
 
