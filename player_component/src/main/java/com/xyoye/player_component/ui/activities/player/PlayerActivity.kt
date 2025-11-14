@@ -402,11 +402,13 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
                 "start title=${source.getVideoTitle()} type=${source.getMediaType()} position=${source.getCurrentPosition()} speed=${PlayerConfig.getNewVideoSpeed()}"
             )
         }
+        /*
         //发送弹幕
         videoController.observerSendDanmu {
             DDLog.i("PLAYER-Danmaku", "send request text=${it.text}")
             viewModel.sendDanmu(source.getDanmu(), it)
         }
+        */
 
         videoController.setSwitchVideoSourceBlock {
             DDLog.i("PLAYER-Source", "switch request index=$it title=${source.getVideoTitle()}")

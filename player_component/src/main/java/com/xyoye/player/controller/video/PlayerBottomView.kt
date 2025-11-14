@@ -12,11 +12,8 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
-import com.xyoye.common_component.config.UserConfig
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
-import com.xyoye.common_component.extension.toResString
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.SettingViewType
@@ -60,6 +57,7 @@ class PlayerBottomView(
             viewBinding.danmuControlIv.isSelected = !viewBinding.danmuControlIv.isSelected
         }
 
+        /*
         viewBinding.sendDanmuTv.setOnClickListener {
             if (!UserConfig.isUserLoggedIn()) {
                 ToastCenter.showWarning(R.string.tips_login_required.toResString())
@@ -80,6 +78,12 @@ class PlayerBottomView(
                 //添加弹幕到文件和服务器
                 sendDanmuBlock?.invoke(it)
             }.show()
+        }
+        */
+        viewBinding.sendDanmuTv.apply {
+            isVisible = false
+            isEnabled = false
+            setOnClickListener(null)
         }
 
         viewBinding.ivNextSource.setOnClickListener {

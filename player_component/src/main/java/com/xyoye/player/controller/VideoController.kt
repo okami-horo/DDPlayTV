@@ -221,8 +221,11 @@ class VideoController(
     /**
      * 发送弹幕回调
      */
+    @Suppress("UNUSED_PARAMETER")
     fun observerSendDanmu(block: (danmuData: SendDanmuBean) -> Unit) {
+        /*
         playerBotView.setSendDanmuBlock(block)
+        */
     }
 
     /**
