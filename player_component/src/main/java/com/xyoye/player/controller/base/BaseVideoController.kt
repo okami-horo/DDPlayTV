@@ -167,9 +167,13 @@ abstract class BaseVideoController(
         mHideControllerJob?.cancel()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     override fun setLocked(locked: Boolean) {
+        /*
         mIsLocked = locked
         handleLockStateChanged(locked)
+        */
+        mIsLocked = false
     }
 
     override fun isLocked() = mIsLocked

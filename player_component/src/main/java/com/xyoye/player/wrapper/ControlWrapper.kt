@@ -389,8 +389,10 @@ class ControlWrapper(
      * 切换视图锁定状态
      */
     fun toggleLockState() {
+        /*
         startFadeOut()
         setLocked(!isLocked())
+        */
     }
 
     /**

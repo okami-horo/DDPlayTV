@@ -32,8 +32,16 @@ class PlayerControlView(context: Context): InterControllerView {
     private lateinit var mControlWrapper: ControlWrapper
 
     init {
+        /*
         viewBinding.playerLockIv.setOnClickListener {
             mControlWrapper.toggleLockState()
+        }
+        */
+        viewBinding.playerLockIv.apply {
+            isVisible = false
+            isEnabled = false
+            isFocusable = false
+            setOnClickListener(null)
         }
         if (isScreenShotEnabled) {
             viewBinding.playerShotIv.setOnClickListener {
@@ -52,10 +60,13 @@ class PlayerControlView(context: Context): InterControllerView {
     override fun getView() = viewBinding.root
 
     override fun onVisibilityChanged(isVisible: Boolean) {
+        /*
         updateLockVisible(isVisible)
         if (mControlWrapper.isLocked().not()) {
             updateShotVisible(isVisible)
         }
+        */
+        updateShotVisible(isVisible)
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
@@ -67,8 +78,10 @@ class PlayerControlView(context: Context): InterControllerView {
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
+        /*
         viewBinding.playerLockIv.isSelected = isLocked
         updateShotVisible(!isLocked)
+        */
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
@@ -87,6 +100,7 @@ class PlayerControlView(context: Context): InterControllerView {
         viewBinding.messageContainer.clearMessage()
     }
 
+    /*
     private fun updateLockVisible(isVisible: Boolean) {
         if (isVisible) {
             if (mControlWrapper.isLocked()) {
@@ -107,6 +121,7 @@ class PlayerControlView(context: Context): InterControllerView {
                 .start()
         }
     }
+    */
 
     private fun updateShotVisible(isVisible: Boolean) {
         if (isScreenShotEnabled.not()) {
