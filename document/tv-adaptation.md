@@ -20,6 +20,7 @@
   - 测试：`app/src/androidTest/java/com/xyoye/dandanplay/app/Media3CastFallbackTest.kt` 使用 `@Ignore` 屏蔽对应用例。
   - 服务链路：`storage_component/src/main/java/com/xyoye/storage_component/services/ScreencastProvideService.kt`、`storage_component/src/main/java/com/xyoye/storage_component/services/ScreencastProvideNotifier.kt`、`common_component/src/main/java/com/xyoye/common_component/notification/Notifications.kt`（Sender Channel/Id）
   - 处理：TV 端仅作为接收端，不再发起投屏；上述服务、前台通知和投屏 HTTP Server 逻辑整体包裹为块注释，并给出空实现或直接抛出 `UnsupportedOperationException`，防止任何入口重新唤起 Sender。
+  - Manifest / 入口：`storage_component/src/main/AndroidManifest.xml` 中的 `<service android:name=".services.ScreencastProvideService">` 以注释方式下线；`app/src/main/java/com/xyoye/dandanplay/ui/main/MainActivity.kt`、`local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaFragment.kt`、`storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_file/StorageFileActivity.kt` 移除 `ScreencastProvideService` 注入及启动逻辑，Media 页面对 `MediaType.SCREEN_CAST` 直接提示“电视端不支持发起投屏”，并过滤掉新增/展示入口，彻底杜绝 Sender 触发点。
 
 - 扫码（相机）入口
   - 源码：`storage_component/src/main/java/com/xyoye/storage_component/ui/activities/remote_scan/RemoteScanActivity.kt`
@@ -32,6 +33,10 @@
 - 摄像头/震动权限
   - 源码：`common_component/src/main/AndroidManifest.xml`、`storage_component/src/main/AndroidManifest.xml`、`common_component/src/main/java/com/xyoye/common_component/application/permission/Permission.kt`
   - 处理：`<uses-permission android:name="android.permission.CAMERA" />`、`android.permission.VIBRATE` 及 `Permission.camera` 的权限数组全部注释，改以 `emptyArray()` 保留占位，TV 包不再请求无用权限。
+
+- 播放器模块权限声明（SYSTEM_ALERT_WINDOW / REORDER_TASKS）
+  - 源码：`player_component/src/main/AndroidManifest.xml`
+  - 处理：TV flavor 下直接删除上述 `<uses-permission>`，与已隐藏的悬浮窗/任务管理入口保持一致，避免 Manifest 再暴露多余权限。
 
 - 画中画（PIP）/后台播放协调
   - 源码：`app/src/main/java/com/xyoye/dandanplay/app/service/Media3BackgroundCoordinator.kt`
@@ -65,15 +70,7 @@
 
 ## 待裁剪 / 待改造清单（未注释但建议跟进）
 
-1) 权限与 Manifest 层
-- `player_component/src/main/AndroidManifest.xml` 中 `SYSTEM_ALERT_WINDOW`、`REORDER_TASKS`（已隐藏入口，但建议 TV flavor 下移除权限）
-
-2) UI/交互与入口
-- 投屏发送链路的后台类仍在（虽然入口已隐藏）
-  - `storage_component/src/main/java/com/xyoye/storage_component/services/ScreencastProvideService.kt`
-  - `storage_component/src/main/java/com/xyoye/storage_component/services/ScreencastProvideNotifier.kt`
-  - `common_component/.../notification/Notifications.kt` 中 Sender 相关 Channel/Id
-  - 建议：TV flavor 下不编译或在运行期隐藏所有 Sender 相关触发点。
+1) UI/交互与入口
 - 番剧/磁链列表中的长按操作在 TV 上可用性较差
   - 源码：
     - 番剧分集：`anime_component/src/main/java/com/xyoye/anime_component/ui/fragment/anime_episode/AnimeEpisodeFragment.kt`
@@ -83,9 +80,9 @@
   - 现状：遥控器理论上可以通过长按确认键触发 `setOnLongClickListener`，但入口不直观，也缺少 TV 端专门的焦点/引导设计；
   - 建议：后续在 TV 端增加显式的“更多操作/批量标记”按钮或菜单键支持（例如在条目右侧增加按钮，或在标题栏添加“操作”入口），将长按交互降级为辅助手段。
 
-3) 功能点评估（按需）
+2) 功能点评估（按需）
 
-4) 构建策略
+3) 构建策略
 - 建议新增 `tv` productFlavor：
   - 在 `tv` 下移除上述不必要权限与依赖（如 ScanKit），不编译 Sender/Overlay 相关源码；
   - 以 `BuildConfig` 或资源限定符切换 TV 布局与入口可见性。
@@ -116,4 +113,5 @@
   - `app/.../cast/Media3CastManager.kt`
   - `storage_component/.../ui/fragment/storage_file/StorageFileAdapter.kt`
   - 测试忽略：`app/src/androidTest/.../Media3CastFallbackTest.kt`
+- Sender 服务摘除：`storage_component/src/main/AndroidManifest.xml`、`app/src/main/java/com/xyoye/dandanplay/ui/main/MainActivity.kt`、`local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaFragment.kt`、`storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_file/StorageFileActivity.kt`
 - 扫码页面禁用：`storage_component/.../ui/activities/remote_scan/RemoteScanActivity.kt`

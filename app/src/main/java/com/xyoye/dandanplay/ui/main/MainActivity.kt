@@ -16,7 +16,6 @@ import com.xyoye.common_component.config.UserConfig
 import com.xyoye.common_component.extension.findAndRemoveFragment
 import com.xyoye.common_component.extension.hideFragment
 import com.xyoye.common_component.extension.showFragment
-import com.xyoye.common_component.services.ScreencastProvideService
 import com.xyoye.common_component.services.ScreencastReceiveService
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.weight.ToastCenter
@@ -41,9 +40,6 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
     private lateinit var mediaFragment: Fragment
     private lateinit var personalFragment: Fragment
     private lateinit var previousFragment: Fragment
-
-    @Autowired
-    lateinit var provideService: ScreencastProvideService
 
     @Autowired
     lateinit var receiveService: ScreencastReceiveService
@@ -253,23 +249,16 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
     }
 
     private fun checkServiceExit(): Boolean {
-        val isProvideServiceRunning = provideService.isRunning(this)
         val isReceiveServiceRunning = receiveService.isRunning(this)
-
-        val serviceName = when {
-            isProvideServiceRunning && isReceiveServiceRunning -> "投屏服务"
-            isProvideServiceRunning -> "投屏投送服务"
-            isReceiveServiceRunning -> "投屏接收服务"
-            else -> return false
+        if (isReceiveServiceRunning.not()) {
+            return false
         }
-
         CommonDialog.Builder(this).run {
             tips = "确认退出？"
-            content = "${serviceName}正在运行中，退出将中断投屏"
+            content = "投屏接收服务正在运行中，退出将中断投屏"
             addNegative()
             addPositive("退出") {
                 it.dismiss()
-                provideService.stopService(this@MainActivity)
                 receiveService.stopService(this@MainActivity)
                 finish()
                 exitProcess(0)

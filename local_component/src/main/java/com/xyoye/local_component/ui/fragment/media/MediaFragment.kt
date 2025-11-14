@@ -13,7 +13,6 @@ import com.xyoye.common_component.extension.deletable
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.media3.Media3SessionStore
-import com.xyoye.common_component.services.ScreencastProvideService
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
@@ -32,9 +31,6 @@ import com.xyoye.local_component.databinding.ItemMediaLibraryBinding
 
 @Route(path = RouteTable.Local.MediaFragment)
 class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
-
-    @Autowired
-    lateinit var provideService: ScreencastProvideService
 
     override fun initViewModel() = ViewModelInit(
         BR.viewModel,
@@ -70,12 +66,6 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
                             libraryNameTv.text = data.displayName
                             libraryUrlTv.text = data.disPlayDescribe
                             libraryCoverIv.setImageResource(data.mediaType.cover)
-
-                            screencastStatusTv.isVisible =
-                                data.mediaType == MediaType.SCREEN_CAST && data.running
-                            screencastStatusTv.setOnClickListener {
-                                showStopServiceDialog()
-                            }
 
                             itemLayout.setOnClickListener {
                                 DanDanPlay.permission.storage.request(this@MediaFragment) {
@@ -126,7 +116,7 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
             }
 
             MediaType.SCREEN_CAST -> {
-                viewModel.checkScreenDeviceRunning(data)
+                ToastCenter.showWarning("电视端不支持发起投屏发送")
             }
 
             MediaType.LOCAL_STORAGE,
@@ -146,7 +136,7 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
 
     private fun showAddStorageDialog() {
         val actionList = MediaType.values()
-            .filter { it.deletable }
+            .filter { it.deletable && it != MediaType.SCREEN_CAST }
             .map { it.toAction() }
 
         BottomActionDialog(
@@ -190,19 +180,6 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
                 addPositive { dialog ->
                     dialog.dismiss()
                     viewModel.deleteStorage(data)
-                }
-                addNegative()
-            }.build().show()
-    }
-
-    private fun showStopServiceDialog() {
-        CommonDialog.Builder(requireActivity())
-            .apply {
-                content = "确认停止投屏投送服务？"
-                positiveText = "确认"
-                addPositive { dialog ->
-                    dialog.dismiss()
-                    provideService.stopService(requireActivity())
                 }
                 addNegative()
             }.build().show()

@@ -19,7 +19,6 @@ import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
-import com.xyoye.common_component.services.ScreencastProvideService
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.file.StorageFile
@@ -27,7 +26,6 @@ import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.common_component.weight.BottomActionDialog
-import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.bean.StorageFilePath
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.storage_component.BR
@@ -164,15 +162,18 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                 .navigation()
         }
 
-        viewModel.castLiveData.observe(this) {
-            ARouter.getInstance()
-                .navigation(ScreencastProvideService::class.java)
-                .startService(this, it)
-        }
-
-        viewModel.selectDeviceLiveData.observe(this) {
-            showSelectDeviceDialog(it.first, it.second)
-        }
+        /*
+         * TV adaptation: 投屏发送链路关闭，保留原逻辑以便后续按 flavor 恢复
+         * viewModel.castLiveData.observe(this) {
+         *     ARouter.getInstance()
+         *         .navigation(ScreencastProvideService::class.java)
+         *         .startService(this, it)
+         * }
+         *
+         * viewModel.selectDeviceLiveData.observe(this) {
+         *     showSelectDeviceDialog(it.first, it.second)
+         * }
+         */
 
         if (storage is FtpStorage) {
             lifecycle.coroutineScope.launchWhenResumed {
@@ -307,6 +308,8 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         }
     }
 
+    /*
+     * TV adaptation: Sender 设备选择入口关闭，保留原实现方便迁移至非 TV flavor
     private fun showSelectDeviceDialog(file: StorageFile, devices: List<MediaLibraryEntity>) {
         val drawable = com.xyoye.common_component.R.drawable.ic_screencast_device
         val actionData = devices.map {
@@ -323,6 +326,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             return@BottomActionDialog true
         }.show()
     }
+     */
 
     /**
      * 更新标题栏副标题
@@ -400,7 +404,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         viewModel.playItem(file)
     }
 
-    fun castFile(file: StorageFile) {
-        viewModel.castItem(file)
-    }
+//    fun castFile(file: StorageFile) {
+//        viewModel.castItem(file)
+//    }
 }

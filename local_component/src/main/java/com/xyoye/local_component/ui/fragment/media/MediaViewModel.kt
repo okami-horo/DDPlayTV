@@ -1,9 +1,8 @@
 package com.xyoye.local_component.ui.fragment.media
 
-import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.bridge.ServiceLifecycleBridge
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.aesEncode
 import com.xyoye.common_component.extension.authorizationValue
@@ -23,25 +22,15 @@ import kotlinx.coroutines.launch
 
 class MediaViewModel : BaseViewModel() {
 
-    val mediaLibWithStatusLiveData = MediatorLiveData<MutableList<MediaLibraryEntity>>().apply {
-        val mediaLibrariesLiveData = DatabaseManager.instance.getMediaLibraryDao().getAll()
-        val serviceStatusLiveData = ServiceLifecycleBridge.getScreencastProvideLiveData()
-        //媒体库数据源
-        addSource(mediaLibrariesLiveData) { libraries ->
+    val mediaLibWithStatusLiveData = DatabaseManager.instance
+        .getMediaLibraryDao()
+        .getAll()
+        .map { libraries ->
             libraries.onEach {
-                it.running =
-                    it.mediaType == MediaType.SCREEN_CAST && it == serviceStatusLiveData.value
-            }
-            this.postValue(libraries)
+                it.running = false
+            }.filter { it.mediaType != MediaType.SCREEN_CAST }
+                .toMutableList()
         }
-        //投屏服务状态数据源
-        addSource(serviceStatusLiveData) { running ->
-            val newData = this.value?.onEach {
-                it.running = it.mediaType == MediaType.SCREEN_CAST && it == running
-            } ?: mutableListOf()
-            this.postValue(newData)
-        }
-    }
 
     fun initLocalStorage() {
         viewModelScope.launch(context = Dispatchers.IO) {

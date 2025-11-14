@@ -23,9 +23,11 @@
             android:name=".ui.activities.screencast.receiver.ScreencastActivity"
             android:configChanges="screenSize" />
 
+        <!-- TV adaptation: 投屏发送服务不再在 Manifest 中注册
         <service
             android:name=".services.ScreencastProvideService"
             android:exported="false" />
+        -->
         <service
             android:name=".services.ScreencastReceiveService"
             android:exported="false" />
