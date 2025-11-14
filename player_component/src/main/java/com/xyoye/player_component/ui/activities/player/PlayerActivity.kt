@@ -51,7 +51,6 @@ import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player_component.BR
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ActivityPlayerBinding
-import com.xyoye.player_component.utils.BatteryHelper
 import com.xyoye.player_component.widgets.popup.PlayerPopupManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -98,7 +97,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     private var videoSource: BaseVideoSource? = null
 
     //电量管理
+    /*
     private var batteryHelper = BatteryHelper()
+    */
     private var media3SessionClient: Media3SessionClient? = null
     private var media3ServiceBound = false
     private var media3BackgroundModes: Set<Media3BackgroundMode> = emptySet()
@@ -225,7 +226,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         beforePlayExit()
         unregisterReceiver()
         danDanPlayer.release()
+        /*
         batteryHelper.release()
+        */
         super.onDestroy()
     }
 
@@ -309,7 +312,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
     private fun initPlayer() {
         videoController.apply {
+            /*
             setBatteryHelper(batteryHelper)
+            */
 
             //播放错误
             observerPlayError {
@@ -462,7 +467,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         headsetReceiver = HeadsetBroadcastReceiver(this)
         registerReceiver(screenLockReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
         registerReceiver(headsetReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+        /*
         batteryHelper.registerReceiver(this)
+        */
     }
 
     private fun unregisterReceiver() {
@@ -474,8 +481,10 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             unregisterReceiver(headsetReceiver)
             DDLog.i("PLAYER-Activity", "unregister headset receiver")
         }
+        /*
         batteryHelper.unregisterReceiver(this)
         DDLog.i("PLAYER-Activity", "unregister battery receiver")
+        */
     }
 
     private fun initPlayerConfig() {

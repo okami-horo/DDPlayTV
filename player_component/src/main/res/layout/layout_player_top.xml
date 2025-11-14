@@ -45,11 +45,12 @@
             android:textColor="@color/text_white_immutable"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@id/back_iv"
-            app:layout_constraintEnd_toStartOf="@id/battery_view"
+            app:layout_constraintEnd_toStartOf="@id/system_time_tv"
             app:layout_constraintStart_toEndOf="@id/back_iv"
             app:layout_constraintTop_toTopOf="@id/back_iv"
             tools:text="标题" />
 
+        <!--
         <com.xyoye.player_component.widgets.BatteryView
             android:id="@+id/battery_view"
             android:layout_width="35dp"
@@ -72,6 +73,7 @@
             app:outer_stroke="1dp"
             tools:ignore="SmallSp"
             tools:progress="100" />
+        -->
 
         <TextView
             android:id="@+id/system_time_tv"
@@ -84,6 +86,7 @@
             android:textColor="@color/text_white_immutable"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@id/back_iv"
+            app:layout_constraintStart_toEndOf="@id/video_title_tv"
             app:layout_constraintEnd_toStartOf="@id/iv_switch_popup"
             app:layout_constraintTop_toTopOf="@id/back_iv" />
 

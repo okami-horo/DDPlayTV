@@ -1,5 +1,6 @@
 package com.xyoye.player_component.utils
 
+/*
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.IntentFilter
@@ -9,9 +10,7 @@ import com.xyoye.common_component.receiver.BatteryBroadcastReceiver
 import com.xyoye.player_component.R
 import com.xyoye.player_component.widgets.BatteryView
 
-/**
- * Created by xyoye on 2021/11/16.
- */
+// Created by xyoye on 2021/11/16.
 
 class BatteryHelper {
 
@@ -99,3 +98,4 @@ class BatteryHelper {
         this.batteryView = null
     }
 }
+*/

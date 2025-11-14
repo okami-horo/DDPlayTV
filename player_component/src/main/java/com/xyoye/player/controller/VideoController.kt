@@ -21,7 +21,6 @@ import com.xyoye.player.controller.video.PlayerPopupControlView
 import com.xyoye.player.controller.video.PlayerTopView
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.utils.MessageTime
-import com.xyoye.player_component.utils.BatteryHelper
 import com.xyoye.subtitle.MixedSubtitle
 
 /**
@@ -174,12 +173,13 @@ class VideoController(
         lastVideoSpeed = speed
     }
 
-    /**
+    /*
      * 设置电量数据
+     *
+     * fun setBatteryHelper(helper: BatteryHelper) {
+     *     playerTopView.setBatteryHelper(helper)
+     * }
      */
-    fun setBatteryHelper(helper: BatteryHelper) {
-        playerTopView.setBatteryHelper(helper)
-    }
 
     /**
      * 播放错误回调

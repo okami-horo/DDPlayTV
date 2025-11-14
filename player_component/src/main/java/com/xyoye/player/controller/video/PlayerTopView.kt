@@ -15,7 +15,6 @@ import com.xyoye.player.wrapper.ControlWrapper
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutPlayerTopBinding
 import com.xyoye.player_component.ui.activities.overlay_permission.OverlayPermissionActivity
-import com.xyoye.player_component.utils.BatteryHelper
 import java.util.*
 
 /**
@@ -111,9 +110,11 @@ class PlayerTopView(
 
     }
 
+    /*
     fun setBatteryHelper(helper: BatteryHelper) {
         helper.bindBatteryView(viewBinding.batteryView)
     }
+    */
 
     fun setVideoTitle(title: String?) {
         viewBinding.videoTitleTv.text = title
