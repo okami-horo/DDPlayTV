@@ -7,19 +7,19 @@ import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.adapter.BaseViewHolderCreator
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
-import com.xyoye.common_component.application.DanDanPlay
+// import com.xyoye.common_component.application.DanDanPlay
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.UDPDeviceBean
-import com.xyoye.data_component.data.RemoteScanData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.DialogScreencastConnectBinding
 import com.xyoye.storage_component.databinding.ItemScreencastReceiveDeviceBinding
 import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivity
-import com.xyoye.storage_component.utils.launcher.ScanActivityLauncher
+// import com.xyoye.data_component.data.RemoteScanData
+// import com.xyoye.storage_component.utils.launcher.ScanActivityLauncher
 import com.xyoye.storage_component.utils.screencast.provider.UdpClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -41,7 +41,9 @@ class ScreencastStorageEditDialog(
     private val scanDevices = mutableListOf<UDPDeviceBean>()
     private var scanDeviceJob: Job? = null
 
+    /*
     private val scanActivityLauncher = ScanActivityLauncher(activity, onScanResult())
+    */
     private var testLibrary: MediaLibraryEntity? = null
 
     override fun getChildLayoutId() = R.layout.dialog_screencast_connect
@@ -95,6 +97,11 @@ class ScreencastStorageEditDialog(
             switchStyle(editMode = true)
         }
 
+        // TV 端隐藏扫码连接入口，避免触发摄像头依赖
+        binding.tvScanConnect.isVisible = false
+        binding.tvScanConnect.setOnClickListener(null)
+
+        /*
         binding.tvScanConnect.setOnClickListener {
             DanDanPlay.permission.camera.request(activity) {
                 onGranted {
@@ -105,6 +112,7 @@ class ScreencastStorageEditDialog(
                 }
             }
         }
+        */
 
         binding.passwordConnectTv.setOnClickListener {
             switchStyle(needPassword = true)
@@ -293,6 +301,7 @@ class ScreencastStorageEditDialog(
         binding.deviceRv.setData(scanDevices)
     }
 
+    /*
     private fun onScanResult() = block@{ data: RemoteScanData? ->
         if (data == null) {
             return@block
@@ -307,4 +316,5 @@ class ScreencastStorageEditDialog(
             ToastCenter.showToast("请输入连接密码")
         }
     }
+    */
 }

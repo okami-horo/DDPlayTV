@@ -22,13 +22,21 @@ class Permission {
 
     /**
      * 相机权限
+     *
+     * TV 端禁用扫码能力，权限数组留空并保留原实现注释，便于后续恢复。
      */
+    val camera = PermissionRequest(
+        emptyArray<String>()
+    )
+
+    /*
     val camera = PermissionRequest(
         arrayOf(
             Manifest.permission.CAMERA,
             Manifest.permission.VIBRATE
         )
     )
+    */
 
     class PermissionRequest(
         private val permissions: Array<String>

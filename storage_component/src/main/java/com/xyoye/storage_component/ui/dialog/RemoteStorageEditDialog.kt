@@ -1,15 +1,16 @@
 package com.xyoye.storage_component.ui.dialog
 
-import com.xyoye.common_component.application.DanDanPlay
+import androidx.core.view.isVisible
+// import com.xyoye.common_component.application.DanDanPlay
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.data_component.data.RemoteScanData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.DialogRemoteLoginBinding
 import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivity
-import com.xyoye.storage_component.utils.launcher.ScanActivityLauncher
+// import com.xyoye.data_component.data.RemoteScanData
+// import com.xyoye.storage_component.utils.launcher.ScanActivityLauncher
 
 /**
  * Created by xyoye on 2021/3/25.
@@ -25,7 +26,9 @@ class RemoteStorageEditDialog(
 
     private lateinit var binding: DialogRemoteLoginBinding
 
+    /*
     private val scanActivityLauncher = ScanActivityLauncher(activity, onResult())
+    */
 
     init {
         remoteData = originalStorage ?: MediaLibraryEntity(
@@ -48,6 +51,11 @@ class RemoteStorageEditDialog(
 
         setGroupMode(remoteData.remoteAnimeGrouping)
 
+        // TV 端移除扫码入口，隐藏按钮并保留原实现注释
+        binding.scanLl.isVisible = false
+        binding.scanLl.setOnClickListener(null)
+
+        /*
         binding.scanLl.setOnClickListener {
             DanDanPlay.permission.camera.request(activity) {
                 onGranted {
@@ -58,6 +66,7 @@ class RemoteStorageEditDialog(
                 }
             }
         }
+        */
 
         binding.serverTestConnectTv.setOnClickListener {
             if (checkParams(remoteData)) {
@@ -135,6 +144,7 @@ class RemoteStorageEditDialog(
         )
     }
 
+    /*
     private fun onResult() = block@{ data: RemoteScanData? ->
         if (data == null) {
             return@block
@@ -144,4 +154,5 @@ class RemoteStorageEditDialog(
         tokenRequired = data.tokenRequired
         binding.remoteData = remoteData
     }
+    */
 }

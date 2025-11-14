@@ -25,6 +25,14 @@
   - 源码：`storage_component/src/main/java/com/xyoye/storage_component/ui/activities/remote_scan/RemoteScanActivity.kt`
   - 处理：`initView` 直接提示“电视端不支持扫码功能”并 `finish()`，原三星/ScanKit 实现整体块注释保留。
 
+- 扫码入口调用（RemoteStorage/Screencast 对话框）
+  - 源码：`storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/RemoteStorageEditDialog.kt`、`storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/ScreencastStorageEditDialog.kt`
+  - 处理：扫码按钮默认 `isVisible = false`，点击监听置空，同时将 `ScanActivityLauncher` 成员与回调整体块注释，避免 TV 端再拉起摄像头能力。
+
+- 摄像头/震动权限
+  - 源码：`common_component/src/main/AndroidManifest.xml`、`storage_component/src/main/AndroidManifest.xml`、`common_component/src/main/java/com/xyoye/common_component/application/permission/Permission.kt`
+  - 处理：`<uses-permission android:name="android.permission.CAMERA" />`、`android.permission.VIBRATE` 及 `Permission.camera` 的权限数组全部注释，改以 `emptyArray()` 保留占位，TV 包不再请求无用权限。
+
 ## 保留且适合 TV 的能力（未裁剪）
 
 - 播放器 DPAD 控制：`player_component/src/main/java/com/xyoye/player/controller/base/TvVideoController.kt`
@@ -33,9 +41,7 @@
 ## 待裁剪 / 待改造清单（未注释但建议跟进）
 
 1) 权限与 Manifest 层
-- `common_component/src/main/AndroidManifest.xml` 中 `android.permission.CAMERA`（TV 无摄像头）
 - `player_component/src/main/AndroidManifest.xml` 中 `SYSTEM_ALERT_WINDOW`、`REORDER_TASKS`（已隐藏入口，但建议 TV flavor 下移除权限）
-- `storage_component/src/main/AndroidManifest.xml` 中 `VIBRATE`（TV 无震动，建议去除）
 
 2) UI/交互与入口
 - 下拉刷新（`SwipeRefreshLayout`）在 TV 上不可达：
@@ -51,8 +57,6 @@
   - `storage_component/src/main/java/com/xyoye/storage_component/services/ScreencastProvideNotifier.kt`
   - `common_component/.../notification/Notifications.kt` 中 Sender 相关 Channel/Id
   - 建议：TV flavor 下不编译或在运行期隐藏所有 Sender 相关触发点。
-- 扫码按钮与权限请求入口仍存在：
-  - `storage_component/ui/dialog/RemoteStorageEditDialog.kt`、`ScreencastStorageEditDialog.kt` 里“扫码连接”点击仍会尝试拉起扫码页；建议 TV 下直接隐藏按钮，或检测后给出说明。
 
 3) 功能点评估（按需）
 - 截图功能：`player_component/src/main/java/com/xyoye/player/controller/setting/ScreenShotView.kt`

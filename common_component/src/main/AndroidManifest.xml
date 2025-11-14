@@ -6,7 +6,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- TV adaptation: 暂停声明相机权限，避免触发无用的摄像头校验
     <uses-permission android:name="android.permission.CAMERA" />
+    -->
 
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
