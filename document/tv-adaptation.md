@@ -33,6 +33,11 @@
   - 源码：`common_component/src/main/AndroidManifest.xml`、`storage_component/src/main/AndroidManifest.xml`、`common_component/src/main/java/com/xyoye/common_component/application/permission/Permission.kt`
   - 处理：`<uses-permission android:name="android.permission.CAMERA" />`、`android.permission.VIBRATE` 及 `Permission.camera` 的权限数组全部注释，改以 `emptyArray()` 保留占位，TV 包不再请求无用权限。
 
+- 画中画（PIP）/后台播放协调
+  - 源码：`app/src/main/java/com/xyoye/dandanplay/app/service/Media3BackgroundCoordinator.kt`
+  - 处理：`sync` 逻辑直接清空所有 `MediaSession` 命令与 `BackgroundMode`，原能力实现整体块注释，防止 TV 端暴露 PIP/后台播放命令。
+  - 测试：`app/src/androidTest/java/com/xyoye/dandanplay/app/Media3BackgroundTest.kt` 添加 `@Ignore`，记录 TV 端暂不验证该能力。
+
 ## 保留且适合 TV 的能力（未裁剪）
 
 - 播放器 DPAD 控制：`player_component/src/main/java/com/xyoye/player/controller/base/TvVideoController.kt`
@@ -61,8 +66,6 @@
 3) 功能点评估（按需）
 - 截图功能：`player_component/src/main/java/com/xyoye/player/controller/setting/ScreenShotView.kt`
   - TV 上导出/查看不便，建议 TV 默认隐藏入口；必要时保留设置开关。
-- 画中画（PIP）/后台播放：`app/src/main/java/com/xyoye/dandanplay/app/service/Media3BackgroundCoordinator.kt`
-  - TV 使用场景有限，建议评估是否保留；如保留需验证遥控器返回/恢复流程。
 
 4) 构建策略
 - 建议新增 `tv` productFlavor：

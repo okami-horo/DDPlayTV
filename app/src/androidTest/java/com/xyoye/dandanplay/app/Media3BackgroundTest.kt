@@ -9,11 +9,13 @@ import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @Media3Dependent("Background coordinator must invoke Media3 session commands")
 @RunWith(AndroidJUnit4::class)
+@Ignore("TV adaptation: 画中画/后台播放已禁用，暂不验证该能力")
 class Media3BackgroundTest {
 
     @Test
