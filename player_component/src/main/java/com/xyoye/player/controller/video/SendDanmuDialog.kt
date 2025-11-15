@@ -104,8 +104,8 @@ class SendDanmuDialog(
     }
 
     private fun initListener() {
-        setOnKeyListener { _, _, event ->
-            if (event.action == KeyEvent.KEYCODE_BACK) {
+        setOnKeyListener { _, keyCode, _ ->
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
                 dismiss()
                 return@setOnKeyListener true
             }
