@@ -7,8 +7,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
-import com.xyoye.common_component.extension.nextItemIndex
-import com.xyoye.common_component.extension.previousItemIndex
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
@@ -128,9 +126,21 @@ class SettingTracksView @JvmOverloads constructor(
     }
 
     private fun initListener() {
-        viewBinding.tvAddTrack.setOnClickListener {
-            mControlWrapper.showSettingView(SettingViewType.SWITCH_SOURCE, mTrackType)
-            onSettingVisibilityChanged(false)
+        viewBinding.tvAddTrack.apply {
+            setOnClickListener {
+                mControlWrapper.showSettingView(SettingViewType.SWITCH_SOURCE, mTrackType)
+                onSettingVisibilityChanged(false)
+            }
+            setOnKeyListener { _, keyCode, event ->
+                if (event.action != KeyEvent.ACTION_DOWN) {
+                    return@setOnKeyListener false
+                }
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP && tracks.isNotEmpty()) {
+                    viewBinding.rvTrack.requestIndexChildFocus(tracks.lastIndex)
+                    return@setOnKeyListener true
+                }
+                false
+            }
         }
     }
 
@@ -150,6 +160,10 @@ class SettingTracksView @JvmOverloads constructor(
      * 处理KeyCode事件
      */
     private fun handleKeyCode(keyCode: Int): Boolean {
+        if (tracks.isEmpty()) {
+            return false
+        }
+
         //已取得焦点的Item
         val focusedChild = viewBinding.rvTrack.focusedChild
             ?: return false
@@ -157,7 +171,19 @@ class SettingTracksView @JvmOverloads constructor(
         if (focusedChildIndex == -1) {
             return false
         }
+
+        // 从列表最后一个条目向下移动时，跳转到“添加”按钮
+        if (focusedChildIndex == tracks.lastIndex &&
+            (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
+        ) {
+            viewBinding.tvAddTrack.requestFocus()
+            return true
+        }
+
         val targetIndex = getTargetIndexByKeyCode(keyCode, focusedChildIndex)
+        if (targetIndex == -1) {
+            return false
+        }
         viewBinding.rvTrack.requestIndexChildFocus(targetIndex)
         return true
     }
@@ -169,11 +195,13 @@ class SettingTracksView @JvmOverloads constructor(
         return when (keyCode) {
             //左、上规则
             KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_UP -> {
-                tracks.previousItemIndex<VideoTrackBean>(focusedIndex)
+                val previousIndex = focusedIndex - 1
+                if (previousIndex >= 0) previousIndex else -1
             }
             //右、下规则
             KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_DOWN -> {
-                tracks.nextItemIndex<VideoTrackBean>(focusedIndex)
+                val nextIndex = focusedIndex + 1
+                if (nextIndex < tracks.size) nextIndex else -1
             }
 
             else -> {
