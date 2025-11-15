@@ -121,7 +121,7 @@ class StorageFileFragment :
                                 TAG,
                                 "key DOWN reach end current=$currentIndex count=${rvAdapter.itemCount}"
                             )
-                            false
+                            true
                         }
                     }
 
