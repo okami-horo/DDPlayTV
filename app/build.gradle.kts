@@ -35,6 +35,12 @@ android {
         }
     }
 
+    packagingOptions {
+        jniLibs {
+            pickFirsts.add("lib/**/libc++_shared.so")
+        }
+    }
+
     splits {
         abi {
             isEnable = true

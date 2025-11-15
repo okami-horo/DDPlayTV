@@ -60,5 +60,5 @@ object SubtitleConfigTable {
 
     //字幕渲染后端
     @MMKVFiled
-    const val subtitleRendererBackend = SubtitleRendererBackend.LEGACY_CANVAS.name
+    const val subtitleRendererBackend = "LEGACY_CANVAS"
 }

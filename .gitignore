@@ -6,6 +6,7 @@
 /.gradle
 /.settings
 .externalNativeBuild
+**/.cxx/
 out/
 *.class
 *.jar
@@ -13,10 +14,10 @@ out/
 .env*
 *.iws
 *.iml
+*.ipr
 *.jks
 dadanplay.jks
 keystore.properties
-scripts/
 .tmp/
 .windsurf/
 .specify/
@@ -26,3 +27,16 @@ Thumbs.db
 *.swp
 .vscode/
 .gradle-cache/
+
+# Android Studio/NDK extras
+captures/
+cmake-build-*/
+
+# Build artifacts that may appear outside standard build dirs
+*.apk
+*.apks
+*.aab
+
+# Secrets/configs (already templated via local.properties.template)
+app/google-services.json
+hs_err_pid*

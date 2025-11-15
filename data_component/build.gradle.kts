@@ -28,6 +28,7 @@ dependencies {
     kapt(Dependencies.Alibaba.arouter_compiler)
 
     testImplementation(Dependencies.Kotlin.coroutines_test)
+    testImplementation(project(":common_component"))
 }
 android {
     namespace = "com.xyoye.data_component"

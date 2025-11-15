@@ -27,12 +27,14 @@ class LibassRendererBackend : SubtitleRenderer {
     private var trackReady = false
     private var renderLoopRunning = false
     private var choreographer: Choreographer? = null
-    private val frameCallback = Choreographer.FrameCallback {
-        if (!renderLoopRunning) {
-            return@FrameCallback
+    private val frameCallback: Choreographer.FrameCallback = object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
+            if (!renderLoopRunning) {
+                return
+            }
+            renderFrame()
+            choreographer?.postFrameCallback(this)
         }
-        renderFrame()
-        choreographer?.postFrameCallback(frameCallback)
     }
 
     override fun bind(environment: SubtitleRenderEnvironment) {
@@ -95,6 +97,7 @@ class LibassRendererBackend : SubtitleRenderer {
         surfaceOverlay?.let { removeOverlay(it) }
         surfaceOverlay = null
         val overlay = SubtitleOverlayView(env.context).apply {
+            bindPlayerView(env.playerView)
             setOnFrameSizeChanged { width, height -> updateFrameSize(width, height) }
         }
         env.playerView.attachSubtitleOverlay(overlay)
@@ -109,6 +112,7 @@ class LibassRendererBackend : SubtitleRenderer {
         overlayView?.let { removeOverlay(it) }
         overlayView = null
         val overlay = SubtitleSurfaceOverlay(env.context).apply {
+            bindPlayerView(env.playerView)
             setOnFrameSizeChanged { width, height -> updateFrameSize(width, height) }
         }
         env.playerView.attachSubtitleOverlay(overlay)

@@ -23,6 +23,7 @@ target_include_directories(libass_bridge
 find_library(log-lib log)
 find_library(android-lib android)
 find_library(cpp_shared c++_shared)
+find_library(jnigraphics-lib jnigraphics)
 
 set(LIBASS_LINK_LIBS ass_prebuilt)
 
@@ -36,6 +37,10 @@ endif()
 
 if (log-lib)
     list(APPEND LIBASS_LINK_LIBS ${log-lib})
+endif()
+
+if (jnigraphics-lib)
+    list(APPEND LIBASS_LINK_LIBS ${jnigraphics-lib})
 endif()
 
 set_target_properties(libass_bridge PROPERTIES

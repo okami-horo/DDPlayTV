@@ -19,6 +19,16 @@ configurations.configureEach {
 }
 
 android {
+    defaultConfig {
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+        }
+    }
+    packagingOptions {
+        jniLibs {
+            pickFirsts.add("lib/**/libc++_shared.so")
+        }
+    }
     sourceSets {
         getByName("main") {
             jniLibs.srcDir("libs")
