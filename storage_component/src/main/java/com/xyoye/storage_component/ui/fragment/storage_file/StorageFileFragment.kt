@@ -53,11 +53,9 @@ class StorageFileFragment :
             dataBinding.storageFileRv.isVisible = true
             ownerActivity.onDirectoryOpened(it)
             dataBinding.storageFileRv.setData(it)
-            ownerActivity.onDirectoryDataLoaded(this, it)
-            if (ownerActivity.isLocatingLastPlay().not()) {
-                //延迟500毫秒，等待列表加载完成后，再请求焦点
-                dataBinding.storageFileRv.postDelayed({ requestFocus() }, 500)
-            }
+            // ownerActivity.onDirectoryDataLoaded(this, it)
+            // 延迟500毫秒，等待列表加载完成后，再请求焦点
+            dataBinding.storageFileRv.postDelayed({ requestFocus() }, 500)
         }
 
         viewModel.listFile(directory)

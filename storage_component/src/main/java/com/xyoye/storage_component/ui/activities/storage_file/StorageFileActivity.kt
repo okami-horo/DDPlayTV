@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
-import com.google.android.material.shape.ShapeAppearanceModel
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
@@ -26,10 +25,8 @@ import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.common_component.weight.BottomActionDialog
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.StorageFilePath
 import com.xyoye.data_component.entity.MediaLibraryEntity
-import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.storage_component.BR
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ActivityStorageFileBinding
@@ -72,8 +69,8 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     var shareStorageFile: StorageFile? = null
 
-    private var locatingLastPlay = false
-    private var lastPlayHistory: PlayHistoryEntity? = null
+    // private var locatingLastPlay = false
+    // private var lastPlayHistory: PlayHistoryEntity? = null
 
     override fun initViewModel() =
         ViewModelInit(
@@ -101,7 +98,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
         initPathRv()
         initListener()
-        updateFloatingButtonStyle()
+        // updateFloatingButtonStyle()
         openDirectory(null)
     }
 
@@ -122,13 +119,14 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             }
         }
 
-        dataBinding.quicklyPlayBt.setOnClickListener {
-            viewModel.locateLastPlay(storage)
-        }
+        // 定位上次播放目录功能暂时关闭
+        // dataBinding.quicklyPlayBt.setOnClickListener {
+        //     viewModel.locateLastPlay(storage)
+        // }
 
-        dataBinding.quicklyPlayBt.setOnFocusChangeListener { _, _ ->
-            updateFloatingButtonStyle()
-        }
+        // dataBinding.quicklyPlayBt.setOnFocusChangeListener { _, _ ->
+        //     updateFloatingButtonStyle()
+        // }
 
         dataBinding.pathRv.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
@@ -143,32 +141,32 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         }
 
         // 系统无法正确分发快速播放按钮的焦点，需要手动分发
-        dataBinding.quicklyPlayBt.setOnKeyListener(object : View.OnKeyListener {
-            override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
-                if (event?.action != KeyEvent.ACTION_DOWN || v?.isFocused != true) {
-                    return false
-                }
-                if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
-                    DDLog.i(TAG, "quickPlay key up/left -> dispatch reversed")
-                    dispatchFocus(reversed = true)
-                    return true
-                } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-                    DDLog.i(TAG, "quickPlay key down/right -> dispatch forward")
-                    dispatchFocus()
-                    return true
-                }
-                return false
-            }
-        })
+        // dataBinding.quicklyPlayBt.setOnKeyListener(object : View.OnKeyListener {
+        //     override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
+        //         if (event?.action != KeyEvent.ACTION_DOWN || v?.isFocused != true) {
+        //             return false
+        //         }
+        //         if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+        //             DDLog.i(TAG, "quickPlay key up/left -> dispatch reversed")
+        //             dispatchFocus(reversed = true)
+        //             return true
+        //         } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+        //             DDLog.i(TAG, "quickPlay key down/right -> dispatch forward")
+        //             dispatchFocus()
+        //             return true
+        //         }
+        //         return false
+        //     }
+        // })
 
         viewModel.playLiveData.observe(this) {
             ARouter.getInstance()
                 .build(RouteTable.Player.Player)
                 .navigation()
         }
-        viewModel.locateLastPlayLiveData.observe(this) {
-            startLocateToHistory(it)
-        }
+        // viewModel.locateLastPlayLiveData.observe(this) {
+        //     startLocateToHistory(it)
+        // }
 
         /*
          * TV adaptation: 投屏发送链路关闭，保留原逻辑以便后续按 flavor 恢复
@@ -373,19 +371,19 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         mRouteFragmentMap.values.onEach { it.sort() }
     }
 
-    /**
-     * 根据焦点状态修改悬浮按钮样式
-     */
-    private fun updateFloatingButtonStyle() {
-        val floatingButton = dataBinding.quicklyPlayBt
-        val shapeAppearanceRes = if (floatingButton.isFocused)
-            R.style.ShapeAppearance_DanDanPlay_FloatingButton_Focused
-        else
-            R.style.ShapeAppearance_DanDanPlay_FloatingButton
-        floatingButton.shapeAppearanceModel = ShapeAppearanceModel.builder(
-            this, 0, shapeAppearanceRes
-        ).build()
-    }
+//    /**
+//     * 根据焦点状态修改悬浮按钮样式
+//     */
+//    private fun updateFloatingButtonStyle() {
+//        val floatingButton = dataBinding.quicklyPlayBt
+//        val shapeAppearanceRes = if (floatingButton.isFocused)
+//            R.style.ShapeAppearance_DanDanPlay_FloatingButton_Focused
+//        else
+//            R.style.ShapeAppearance_DanDanPlay_FloatingButton
+//        floatingButton.shapeAppearanceModel = ShapeAppearanceModel.builder(
+//            this, 0, shapeAppearanceRes
+//        ).build()
+//    }
 
     /**
      * 分发焦点到最后一个Fragment
@@ -394,62 +392,68 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         mRouteFragmentMap.values.lastOrNull()?.requestFocus(reversed)
     }
 
+//    fun onDirectoryDataLoaded(fragment: StorageFileFragment, files: List<StorageFile>) {
+//        if (!locatingLastPlay) {
+//            return
+//        }
+//        val latestFragment = mRouteFragmentMap.values.lastOrNull()
+//        if (fragment != latestFragment) {
+//            return
+//        }
+//        val targetHistory = lastPlayHistory ?: run {
+//            stopLocateLastPlay(false)
+//            return
+//        }
+//        val targetUniqueKey = targetHistory.uniqueKey
+//        val targetFile = files.firstOrNull { file ->
+//            file.isFile() && file.playHistory?.uniqueKey == targetUniqueKey
+//        }
+//        if (targetFile != null) {
+//            fragment.focusFile(targetUniqueKey)
+//            ToastCenter.showOriginalToast("已定位到上次观看的视频")
+//            stopLocateLastPlay(true)
+//            return
+//        }
+//        val targetDirectory = files.firstOrNull { file ->
+//            file.isDirectory() && file.playHistory?.isLastPlay == true
+//        }
+//        if (targetDirectory != null) {
+//            openDirectory(targetDirectory)
+//            return
+//        }
+//        ToastCenter.showError("定位失败：找不到上次观看记录")
+//        stopLocateLastPlay(false)
+//    }
+
+//    fun isLocatingLastPlay() = locatingLastPlay
+
+//    private fun startLocateToHistory(history: PlayHistoryEntity) {
+//        lastPlayHistory = history
+//        locatingLastPlay = true
+//        if (mRouteFragmentMap.isEmpty()) {
+//            openDirectory(null)
+//            return
+//        }
+//        val rootPath = mRouteFragmentMap.keys.firstOrNull()
+//        if (rootPath != null) {
+//            backToRouteFragment(rootPath)
+//        }
+//        mRouteFragmentMap.values.lastOrNull()?.reloadDirectory(refresh = true)
+//    }
+
+//    private fun stopLocateLastPlay(success: Boolean) {
+//        locatingLastPlay = false
+//        lastPlayHistory = null
+//        if (!success) {
+//            dataBinding.quicklyPlayBt.requestFocus()
+//        }
+//    }
+
     fun onDirectoryDataLoaded(fragment: StorageFileFragment, files: List<StorageFile>) {
-        if (!locatingLastPlay) {
-            return
-        }
-        val latestFragment = mRouteFragmentMap.values.lastOrNull()
-        if (fragment != latestFragment) {
-            return
-        }
-        val targetHistory = lastPlayHistory ?: run {
-            stopLocateLastPlay(false)
-            return
-        }
-        val targetUniqueKey = targetHistory.uniqueKey
-        val targetFile = files.firstOrNull { file ->
-            file.isFile() && file.playHistory?.uniqueKey == targetUniqueKey
-        }
-        if (targetFile != null) {
-            fragment.focusFile(targetUniqueKey)
-            ToastCenter.showOriginalToast("已定位到上次观看的视频")
-            stopLocateLastPlay(true)
-            return
-        }
-        val targetDirectory = files.firstOrNull { file ->
-            file.isDirectory() && file.playHistory?.isLastPlay == true
-        }
-        if (targetDirectory != null) {
-            openDirectory(targetDirectory)
-            return
-        }
-        ToastCenter.showError("定位失败：找不到上次观看记录")
-        stopLocateLastPlay(false)
+        // 定位上次播放目录功能已关闭
     }
 
-    fun isLocatingLastPlay() = locatingLastPlay
-
-    private fun startLocateToHistory(history: PlayHistoryEntity) {
-        lastPlayHistory = history
-        locatingLastPlay = true
-        if (mRouteFragmentMap.isEmpty()) {
-            openDirectory(null)
-            return
-        }
-        val rootPath = mRouteFragmentMap.keys.firstOrNull()
-        if (rootPath != null) {
-            backToRouteFragment(rootPath)
-        }
-        mRouteFragmentMap.values.lastOrNull()?.reloadDirectory(refresh = true)
-    }
-
-    private fun stopLocateLastPlay(success: Boolean) {
-        locatingLastPlay = false
-        lastPlayHistory = null
-        if (!success) {
-            dataBinding.quicklyPlayBt.requestFocus()
-        }
-    }
+    fun isLocatingLastPlay() = false
 
     fun openDirectory(file: StorageFile?) {
         directory = file

@@ -8,13 +8,11 @@ import com.xyoye.common_component.extension.toMedia3SourceType
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media3.Media3LaunchParams
-import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
-import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.download.validator.DownloadValidator
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +21,7 @@ import kotlinx.coroutines.launch
 class StorageFileViewModel : BaseViewModel() {
     val playLiveData = MutableLiveData<Any>()
     val castLiveData = MutableLiveData<MediaLibraryEntity>()
-    val locateLastPlayLiveData = MutableLiveData<PlayHistoryEntity>()
+    // val locateLastPlayLiveData = MutableLiveData<PlayHistoryEntity>()
 
     val selectDeviceLiveData = MutableLiveData<Pair<StorageFile, List<MediaLibraryEntity>>>()
     private val downloadValidator = DownloadValidator()
@@ -93,28 +91,28 @@ class StorageFileViewModel : BaseViewModel() {
         }
     }
 
-    fun locateLastPlay(storage: Storage) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val history = DatabaseManager.instance.getPlayHistoryDao()
-                    .gitStorageLastPlay(storage.library.id)
-                if (history == null) {
-                    ToastCenter.showError("当前媒体库暂无播放记录")
-                    return@launch
-                }
-                history.isLastPlay = true
-                locateLastPlayLiveData.postValue(history)
-            } catch (e: Exception) {
-                ErrorReportHelper.postCatchedExceptionWithContext(
-                    e,
-                    "StorageFileViewModel",
-                    "locateLastPlay",
-                    "定位上次观看失败: ${storage.library.displayName}"
-                )
-                ToastCenter.showError("定位失败: ${e.message}")
-            }
-        }
-    }
+//    fun locateLastPlay(storage: Storage) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            try {
+//                val history = DatabaseManager.instance.getPlayHistoryDao()
+//                    .gitStorageLastPlay(storage.library.id)
+//                if (history == null) {
+//                    ToastCenter.showError("当前媒体库暂无播放记录")
+//                    return@launch
+//                }
+//                history.isLastPlay = true
+//                locateLastPlayLiveData.postValue(history)
+//            } catch (e: Exception) {
+//                ErrorReportHelper.postCatchedExceptionWithContext(
+//                    e,
+//                    "StorageFileViewModel",
+//                    "locateLastPlay",
+//                    "定位上次观看失败: ${storage.library.displayName}"
+//                )
+//                ToastCenter.showError("定位失败: ${e.message}")
+//            }
+//        }
+//    }
 
     private suspend fun setupVideoSource(file: StorageFile): Boolean {
         showLoading()

@@ -46,6 +46,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/toolbar_layout" />
 
+        <!--
+          定位上次播放目录按钮暂时下线，如需恢复请还原该 FloatingActionButton
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/quickly_play_bt"
             android:layout_width="wrap_content"
@@ -63,6 +65,7 @@
             app:maxImageSize="26dp"
             app:pressedTranslationZ="2dp"
             app:rippleColor="@color/theme_light" />
+        -->
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>
