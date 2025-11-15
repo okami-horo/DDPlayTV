@@ -5,6 +5,7 @@ import android.view.View
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
@@ -50,8 +51,11 @@ class StorageFileFragment :
             dataBinding.storageFileRv.isVisible = true
             ownerActivity.onDirectoryOpened(it)
             dataBinding.storageFileRv.setData(it)
-            //延迟500毫秒，等待列表加载完成后，再请求焦点
-            dataBinding.storageFileRv.postDelayed({ requestFocus() }, 500)
+            ownerActivity.onDirectoryDataLoaded(this, it)
+            if (ownerActivity.isLocatingLastPlay().not()) {
+                //延迟500毫秒，等待列表加载完成后，再请求焦点
+                dataBinding.storageFileRv.postDelayed({ requestFocus() }, 500)
+            }
         }
 
         viewModel.listFile(directory)
@@ -152,6 +156,10 @@ class StorageFileFragment :
         }
     }
 
+    fun reloadDirectory(refresh: Boolean = false) {
+        viewModel.listFile(directory, refresh)
+    }
+
     fun requestFocus(reversed: Boolean = false) {
         val binding = bindingOrNull ?: return
         val adapter = binding.storageFileRv.adapter ?: return
@@ -170,6 +178,22 @@ class StorageFileFragment :
                 val postResult = it.requestIndexChildFocus(targetIndex)
                 DDLog.i(TAG, "requestFocus post result=$postResult target=$targetIndex")
             }
+        }
+    }
+
+    fun focusFile(uniqueKey: String) {
+        val binding = bindingOrNull ?: return
+        val adapter = binding.storageFileRv.adapter as? BaseAdapter ?: return
+        val targetIndex = adapter.items.indexOfFirst { item ->
+            val storageFile = item as? StorageFile ?: return@indexOfFirst false
+            storageFile.playHistory?.uniqueKey == uniqueKey
+        }
+        if (targetIndex == -1) {
+            DDLog.w(TAG, "focusFile target not found uniqueKey=$uniqueKey")
+            return
+        }
+        binding.storageFileRv.post {
+            bindingOrNull?.storageFileRv?.requestIndexChildFocus(targetIndex)
         }
     }
 

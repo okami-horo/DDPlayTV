@@ -14,6 +14,7 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
+import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.download.validator.DownloadValidator
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 class StorageFileViewModel : BaseViewModel() {
     val playLiveData = MutableLiveData<Any>()
     val castLiveData = MutableLiveData<MediaLibraryEntity>()
+    val locateLastPlayLiveData = MutableLiveData<PlayHistoryEntity>()
 
     val selectDeviceLiveData = MutableLiveData<Pair<StorageFile, List<MediaLibraryEntity>>>()
     private val downloadValidator = DownloadValidator()
@@ -91,32 +93,25 @@ class StorageFileViewModel : BaseViewModel() {
         }
     }
 
-    fun quicklyPlay(storage: Storage) {
+    fun locateLastPlay(storage: Storage) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val history = DatabaseManager.instance.getPlayHistoryDao().gitStorageLastPlay(
-                    storageId = storage.library.id
-                )
+                val history = DatabaseManager.instance.getPlayHistoryDao()
+                    .gitStorageLastPlay(storage.library.id)
                 if (history == null) {
                     ToastCenter.showError("当前媒体库暂无播放记录")
                     return@launch
                 }
-
-                val storageFile = storage.historyFile(history)
-                if (storageFile == null) {
-                    ToastCenter.showError("播放失败，找不到上一次观看记录")
-                    return@launch
-                }
-
-                playItem(storageFile)
+                history.isLastPlay = true
+                locateLastPlayLiveData.postValue(history)
             } catch (e: Exception) {
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "StorageFileViewModel",
-                    "quicklyPlay",
-                    "快速播放失败: ${storage.library.displayName}"
+                    "locateLastPlay",
+                    "定位上次观看失败: ${storage.library.displayName}"
                 )
-                ToastCenter.showError("快速播放失败: ${e.message}")
+                ToastCenter.showError("定位失败: ${e.message}")
             }
         }
     }

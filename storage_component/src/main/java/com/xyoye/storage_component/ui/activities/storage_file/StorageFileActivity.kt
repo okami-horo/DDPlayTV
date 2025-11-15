@@ -26,8 +26,10 @@ import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.common_component.weight.BottomActionDialog
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.StorageFilePath
 import com.xyoye.data_component.entity.MediaLibraryEntity
+import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.storage_component.BR
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ActivityStorageFileBinding
@@ -69,6 +71,9 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     var shareStorageFile: StorageFile? = null
+
+    private var locatingLastPlay = false
+    private var lastPlayHistory: PlayHistoryEntity? = null
 
     override fun initViewModel() =
         ViewModelInit(
@@ -118,7 +123,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         }
 
         dataBinding.quicklyPlayBt.setOnClickListener {
-            viewModel.quicklyPlay(storage)
+            viewModel.locateLastPlay(storage)
         }
 
         dataBinding.quicklyPlayBt.setOnFocusChangeListener { _, _ ->
@@ -160,6 +165,9 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             ARouter.getInstance()
                 .build(RouteTable.Player.Player)
                 .navigation()
+        }
+        viewModel.locateLastPlayLiveData.observe(this) {
+            startLocateToHistory(it)
         }
 
         /*
@@ -384,6 +392,63 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
      */
     fun dispatchFocus(reversed: Boolean = false) {
         mRouteFragmentMap.values.lastOrNull()?.requestFocus(reversed)
+    }
+
+    fun onDirectoryDataLoaded(fragment: StorageFileFragment, files: List<StorageFile>) {
+        if (!locatingLastPlay) {
+            return
+        }
+        val latestFragment = mRouteFragmentMap.values.lastOrNull()
+        if (fragment != latestFragment) {
+            return
+        }
+        val targetHistory = lastPlayHistory ?: run {
+            stopLocateLastPlay(false)
+            return
+        }
+        val targetUniqueKey = targetHistory.uniqueKey
+        val targetFile = files.firstOrNull { file ->
+            file.isFile() && file.playHistory?.uniqueKey == targetUniqueKey
+        }
+        if (targetFile != null) {
+            fragment.focusFile(targetUniqueKey)
+            ToastCenter.showOriginalToast("已定位到上次观看的视频")
+            stopLocateLastPlay(true)
+            return
+        }
+        val targetDirectory = files.firstOrNull { file ->
+            file.isDirectory() && file.playHistory?.isLastPlay == true
+        }
+        if (targetDirectory != null) {
+            openDirectory(targetDirectory)
+            return
+        }
+        ToastCenter.showError("定位失败：找不到上次观看记录")
+        stopLocateLastPlay(false)
+    }
+
+    fun isLocatingLastPlay() = locatingLastPlay
+
+    private fun startLocateToHistory(history: PlayHistoryEntity) {
+        lastPlayHistory = history
+        locatingLastPlay = true
+        if (mRouteFragmentMap.isEmpty()) {
+            openDirectory(null)
+            return
+        }
+        val rootPath = mRouteFragmentMap.keys.firstOrNull()
+        if (rootPath != null) {
+            backToRouteFragment(rootPath)
+        }
+        mRouteFragmentMap.values.lastOrNull()?.reloadDirectory(refresh = true)
+    }
+
+    private fun stopLocateLastPlay(success: Boolean) {
+        locatingLastPlay = false
+        lastPlayHistory = null
+        if (!success) {
+            dataBinding.quicklyPlayBt.requestFocus()
+        }
     }
 
     fun openDirectory(file: StorageFile?) {
