@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep libass JNI bridge so native method signatures stay intact.
+-keepclasseswithmembers class com.xyoye.player.subtitle.libass.LibassBridge {
+    native <methods>;
+}

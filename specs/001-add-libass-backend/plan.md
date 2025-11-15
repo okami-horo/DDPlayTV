@@ -17,7 +17,7 @@ Introduce a pluggable subtitle rendering backend in `player_component` and integ
 **Project Type**: mobile (modular MVVM; feature touches `player_component`, `user_component`)  
 **Performance Goals**: Maintain 60 fps rendering; first-subtitle latency within ±10% of legacy; avoid redundant re-render unless libass `changed` flag true or event boundary reached  
 **Constraints**: Transparent overlay correctness on TextureView/SurfaceView; ASS styles preserved; memory bounded (subtitle bitmaps ≤ 2 frames of RGBA at view resolution)  
-**Scale/Scope**: Single feature; no IJK/VLC integration in this version; no remote toggle; SRT handled by legacy path; ASS/SSA routed by user setting only
+**Scale/Scope**: Single feature; no IJK/VLC integration in this version; no remote toggle; no format-based auto-routing; when selected backend does not support a format (e.g., SRT under libass), prompt user per FR-008 and default to no change
 
 ## Constitution Check
 
@@ -42,23 +42,22 @@ specs/001-add-libass-backend/
 ### Source Code (repository root)
 
 ```text
-android/
-└── player_component/
-    └── src/main/java/.../player/subtitle/
-        ├── backend/
-        │   ├── SubtitleRendererBackend.kt         # interface
-        │   ├── CanvasTextRendererBackend.kt       # existing impl (migrate here)
-        │   └── LibassRendererBackend.kt           # new impl (JNI + bitmap)
-        ├── libass/
-        │   ├── LibassBridge.kt                    # JNI wrapper
-        │   └── native/                            # headers if needed
-        └── ui/
-            ├── SubtitleOverlayView.kt             # TextureView overlay path
-            └── SubtitleSurfaceOverlay.kt          # SurfaceView overlay helper
+player_component/
+├── src/main/java/.../player/subtitle/
+│   ├── backend/
+│   │   ├── SubtitleRenderer.kt                # interface (renamed to avoid enum clash)
+│   │   ├── CanvasTextRendererBackend.kt       # existing impl (migrate here)
+│   │   └── LibassRendererBackend.kt           # new impl (JNI + bitmap)
+│   ├── libass/
+│   │   └── LibassBridge.kt                    # JNI wrapper
+│   └── ui/
+│       ├── SubtitleOverlayView.kt             # TextureView overlay path
+│       └── SubtitleSurfaceOverlay.kt          # SurfaceView overlay helper
+└── src/main/cpp/                              # native bridge (CMake + JNI)
 
 user_component/
-└── src/main/java/.../settings/subtitle/
-    └── SubtitleBackendSettingFragment.kt          # toggle UI
+└── src/main/java/.../ui/fragment/
+    └── SubtitleSettingFragment.kt             # toggle UI (existing)
 ```
 
 **Structure Decision**: Android modular project; add a backend interface and libass implementation under `player_component`. UI toggle resides in `user_component`. No new modules introduced.
@@ -68,4 +67,3 @@ user_component/
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
 | JNI wrapper presence | Required to call libass C API | Pure Kotlin/Canvas cannot provide ASS/SSA parity |
-

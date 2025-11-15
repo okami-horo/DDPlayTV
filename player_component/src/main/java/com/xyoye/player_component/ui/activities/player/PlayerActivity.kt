@@ -22,6 +22,7 @@ import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.SubtitleConfig
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.receiver.HeadsetBroadcastReceiver
 import com.xyoye.common_component.receiver.PlayerReceiverListener
 import com.xyoye.common_component.receiver.ScreenBroadcastReceiver
@@ -546,9 +547,19 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         PlayerInitializer.Subtitle.strokeColor = SubtitleConfig.getStrokeColor()
         PlayerInitializer.Subtitle.alpha = SubtitleConfig.getAlpha()
         PlayerInitializer.Subtitle.verticalOffset = SubtitleConfig.getVerticalOffset()
+        val backend = SubtitleRendererBackend.fromName(SubtitleConfig.getSubtitleRendererBackend())
+        PlayerInitializer.Subtitle.backend = if (PlayerInitializer.playerType == PlayerType.TYPE_EXO_PLAYER) {
+            backend
+        } else {
+            DDLog.w(
+                "PLAYER-Config",
+                "libass backend requires ExoPlayer, fallback to legacy for playerType=${PlayerInitializer.playerType}"
+            )
+            SubtitleRendererBackend.LEGACY_CANVAS
+        }
         DDLog.i(
             "PLAYER-Config",
-            "subtitle size=${PlayerInitializer.Subtitle.textSize} stroke=${PlayerInitializer.Subtitle.strokeWidth}"
+            "subtitle size=${PlayerInitializer.Subtitle.textSize} stroke=${PlayerInitializer.Subtitle.strokeWidth} backend=${PlayerInitializer.Subtitle.backend}"
         )
     }
 

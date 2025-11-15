@@ -1,6 +1,7 @@
 package com.xyoye.common_component.config
 
 import android.graphics.Color
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.mmkv_annotation.MMKVFiled
 import com.xyoye.mmkv_annotation.MMKVKotlinClass
 
@@ -56,4 +57,8 @@ object SubtitleConfigTable {
     //字幕优先级
     @MMKVFiled
     var subtitlePriority: String? = null
+
+    //字幕渲染后端
+    @MMKVFiled
+    const val subtitleRendererBackend = SubtitleRendererBackend.LEGACY_CANVAS.name
 }

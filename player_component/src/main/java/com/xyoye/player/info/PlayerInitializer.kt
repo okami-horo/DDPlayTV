@@ -1,6 +1,7 @@
 package com.xyoye.player.info
 
 import android.graphics.Color
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.PixelFormat
 import com.xyoye.data_component.enums.PlayerType
@@ -80,6 +81,7 @@ object PlayerInitializer {
         const val DEFAULT_STROKE_COLOR = Color.BLACK
         const val DEFAULT_ALPHA = 100
         const val DEFAULT_VERTICAL_OFFSET = 0
+        val DEFAULT_BACKEND = SubtitleRendererBackend.LEGACY_CANVAS
 
         var offsetPosition = DEFAULT_POSITION
 
@@ -89,5 +91,6 @@ object PlayerInitializer {
         var strokeColor = DEFAULT_STROKE_COLOR
         var alpha = DEFAULT_ALPHA
         var verticalOffset = DEFAULT_VERTICAL_OFFSET
+        var backend = DEFAULT_BACKEND
     }
 }

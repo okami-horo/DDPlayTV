@@ -29,6 +29,12 @@ import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.wrapper.InterVideoPlayer
 import com.xyoye.player.wrapper.InterVideoTrack
 import com.xyoye.player_component.utils.PlayRecorder
+import com.xyoye.player.subtitle.backend.CanvasTextRendererBackend
+import com.xyoye.player.subtitle.backend.LibassRendererBackend
+import com.xyoye.player.subtitle.backend.SubtitleRenderEnvironment
+import com.xyoye.player.subtitle.backend.SubtitleRenderer
+import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.subtitle.MixedSubtitle
 
 /**
@@ -72,6 +78,8 @@ class DanDanVideoPlayer(
 
     //当前视图缩放类型
     private var mScreenScale = PlayerInitializer.screenScale
+
+    private var subtitleRenderer: SubtitleRenderer? = null
 
     init {
         val audioManager = context.applicationContext
@@ -229,7 +237,13 @@ class DanDanVideoPlayer(
     }
 
     override fun onSubtitleTextOutput(subtitle: MixedSubtitle) {
-        mVideoController?.onSubtitleTextOutput(subtitle)
+        val handled = subtitleRenderer?.let {
+            it.render(subtitle)
+            true
+        } ?: false
+        if (!handled) {
+            mVideoController?.onSubtitleTextOutput(subtitle)
+        }
     }
 
     private fun initPlayer() {
@@ -259,6 +273,20 @@ class DanDanVideoPlayer(
 
     private fun setExtraOption() {
         mVideoPlayer.setLooping(PlayerInitializer.isLooping)
+    }
+
+    private fun configureSubtitleRenderer() {
+        val controller = mVideoController ?: return
+        val backend = PlayerInitializer.Subtitle.backend
+        val environment = SubtitleRenderEnvironment(context, controller.getSubtitleController(), this)
+        val renderer = when (backend) {
+            SubtitleRendererBackend.LEGACY_CANVAS -> CanvasTextRendererBackend()
+            SubtitleRendererBackend.LIBASS -> LibassRendererBackend()
+        }
+        renderer.bind(environment)
+        renderer.onSurfaceTypeChanged(PlayerInitializer.surfaceType)
+        subtitleRenderer = renderer
+        SubtitleRendererRegistry.register(renderer)
     }
 
     private fun startPrepare(): Boolean {
@@ -311,6 +339,11 @@ class DanDanVideoPlayer(
 
     fun release() {
         if (mCurrentPlayState != PlayState.STATE_IDLE) {
+            subtitleRenderer?.let {
+                it.release()
+                SubtitleRendererRegistry.unregister(it)
+            }
+            subtitleRenderer = null
             //释放缓存
             CacheManager.release()
             //释放播放器控制器
@@ -344,12 +377,18 @@ class DanDanVideoPlayer(
     }
 
     fun setController(controller: VideoController?) {
+        subtitleRenderer?.let {
+            it.release()
+            SubtitleRendererRegistry.unregister(it)
+        }
+        subtitleRenderer = null
         removeView(mVideoController)
         mVideoController = controller
         mVideoController?.let {
             it.setMediaPlayer(this)
             addView(it, mDefaultLayoutParams)
         }
+        configureSubtitleRenderer()
     }
 
     fun enterPopupMode() {
@@ -360,6 +399,16 @@ class DanDanVideoPlayer(
     fun exitPopupMode() {
         mVideoController?.setPopupMode(false)
         mRenderView?.refresh()
+    }
+
+    fun attachSubtitleOverlay(view: View) {
+        val controllerIndex = if (mVideoController != null) indexOfChild(mVideoController) else -1
+        val insertIndex = if (controllerIndex >= 0) controllerIndex else childCount
+        addView(view, insertIndex, mDefaultLayoutParams)
+    }
+
+    fun detachSubtitleOverlay(view: View) {
+        removeView(view)
     }
 
     fun setPopupGestureHandler(handler: OnTouchListener?) {

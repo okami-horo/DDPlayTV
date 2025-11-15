@@ -24,6 +24,11 @@ android {
             jniLibs.srcDir("libs")
         }
     }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+        }
+    }
     namespace = "com.xyoye.player_component"
 }
 

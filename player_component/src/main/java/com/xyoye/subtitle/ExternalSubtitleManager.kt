@@ -1,13 +1,16 @@
 package com.xyoye.subtitle
 
+import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.utils.getFileExtension
 import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.subtitle.exception.FatalParsingException
 import com.xyoye.subtitle.format.FormatFactory
 import com.xyoye.subtitle.info.TimedTextObject
 import java.io.File
+import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
-import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2020/12/14.
@@ -17,13 +20,27 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 
 class ExternalSubtitleManager {
     private var mTimedTextObject: TimedTextObject? = null
+    private var handledByBackend = false
 
     fun loadSubtitle(subtitlePath: String): Boolean {
+        handledByBackend = false
+        val renderer = SubtitleRendererRegistry.current()
+        if (renderer != null) {
+            val extension = getFileExtension(subtitlePath).lowercase(Locale.ROOT)
+            if (renderer.supportsExternalTrack(extension) && renderer.loadExternalSubtitle(subtitlePath)) {
+                handledByBackend = true
+                mTimedTextObject = null
+                return true
+            }
+        }
         mTimedTextObject = parserSource(subtitlePath)
         return mTimedTextObject != null
     }
 
     fun getSubtitle(position: Long): MixedSubtitle? {
+        if (handledByBackend) {
+            return null
+        }
         if (mTimedTextObject == null) {
             return null
         }
@@ -32,6 +49,7 @@ class ExternalSubtitleManager {
 
     fun release() {
         mTimedTextObject = null
+        handledByBackend = false
     }
 
     /**
