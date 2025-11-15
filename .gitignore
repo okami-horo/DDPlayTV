@@ -25,3 +25,4 @@ scripts/
 Thumbs.db
 *.swp
 .vscode/
+.gradle-cache/

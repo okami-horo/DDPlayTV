@@ -22,6 +22,8 @@ class StorageFileFragment :
     BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>() {
 
     private val directory: StorageFile? by lazy { ownerActivity.directory }
+    private var lastFocusedIndex = RecyclerView.NO_POSITION
+    private var pendingFocusIndex = RecyclerView.NO_POSITION
 
     companion object {
         private const val TAG = "StorageFileFocus"
@@ -63,11 +65,15 @@ class StorageFileFragment :
 
     override fun onResume() {
         super.onResume()
+        if (lastFocusedIndex != RecyclerView.NO_POSITION) {
+            pendingFocusIndex = lastFocusedIndex
+        }
         viewModel.updateHistory()
         setRecyclerViewItemFocusAble(true)
     }
 
     override fun onPause() {
+        saveCurrentFocusIndex()
         super.onPause()
         setRecyclerViewItemFocusAble(false)
     }
@@ -119,6 +125,10 @@ class StorageFileFragment :
                                 TAG,
                                 "key DOWN current=$currentIndex target=$nextIndex moved=$moved count=${rvAdapter.itemCount} repeat=${event.repeatCount}"
                             )
+                            if (moved) {
+                                lastFocusedIndex = nextIndex
+                                pendingFocusIndex = RecyclerView.NO_POSITION
+                            }
                             moved
                         } else {
                             DDLog.w(
@@ -137,6 +147,10 @@ class StorageFileFragment :
                                 TAG,
                                 "key UP current=$currentIndex target=$previousIndex moved=$moved count=${rvAdapter.itemCount} repeat=${event.repeatCount}"
                             )
+                            if (moved) {
+                                lastFocusedIndex = previousIndex
+                                pendingFocusIndex = RecyclerView.NO_POSITION
+                            }
                             moved
                         } else {
                             DDLog.w(
@@ -167,15 +181,26 @@ class StorageFileFragment :
             DDLog.w(TAG, "requestFocus skip empty adapter")
             return
         }
-        val targetIndex = if (reversed) adapter.itemCount - 1 else 0
+        val hasPending = pendingFocusIndex != RecyclerView.NO_POSITION && !reversed
+        val desiredIndex = when {
+            hasPending -> pendingFocusIndex
+            reversed -> adapter.itemCount - 1
+            else -> 0
+        }
+        val targetIndex = desiredIndex.coerceIn(0, adapter.itemCount - 1)
+        pendingFocusIndex = RecyclerView.NO_POSITION
         DDLog.i(TAG, "requestFocus start reversed=$reversed count=${adapter.itemCount} target=$targetIndex")
         if (binding.storageFileRv.requestIndexChildFocus(targetIndex)) {
             DDLog.i(TAG, "requestFocus direct success target=$targetIndex")
+            lastFocusedIndex = targetIndex
             return
         }
         binding.storageFileRv.post {
             bindingOrNull?.storageFileRv?.let {
                 val postResult = it.requestIndexChildFocus(targetIndex)
+                if (postResult) {
+                    lastFocusedIndex = targetIndex
+                }
                 DDLog.i(TAG, "requestFocus post result=$postResult target=$targetIndex")
             }
         }
@@ -195,6 +220,8 @@ class StorageFileFragment :
         binding.storageFileRv.post {
             bindingOrNull?.storageFileRv?.requestIndexChildFocus(targetIndex)
         }
+        lastFocusedIndex = targetIndex
+        pendingFocusIndex = RecyclerView.NO_POSITION
     }
 
     /**
@@ -210,4 +237,16 @@ class StorageFileFragment :
     fun sort() {
         viewModel.changeSortOption()
     }
+
+    private fun saveCurrentFocusIndex() {
+        val binding = bindingOrNull ?: return
+        val focusedChild = binding.storageFileRv.focusedChild ?: return
+        val index = binding.storageFileRv.getChildAdapterPosition(focusedChild)
+        if (index != RecyclerView.NO_POSITION) {
+            lastFocusedIndex = index
+            pendingFocusIndex = index
+            DDLog.i(TAG, "saveCurrentFocusIndex index=$index")
+        }
+    }
+
 }
