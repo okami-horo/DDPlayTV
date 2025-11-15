@@ -221,10 +221,7 @@ object ToastCenter {
 
     private fun showOriginalToast(context: Context, message: String, duration: Int) {
         BaseApplication.getMainHandler().post {
-            Toast.makeText(context, message, duration).apply {
-                setText(message)
-                show()
-            }
+            Toast.makeText(context, message, duration).show()
         }
     }
 }
