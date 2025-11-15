@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.KeyEvent
 import com.xyoye.player.controller.video.InterGestureView
+import com.xyoye.data_component.enums.SettingViewType
+import com.xyoye.player.remote.RemoteKeyDispatcher
 
 /**
  * Created by xyoye on 2021/5/30.
@@ -15,81 +17,53 @@ abstract class TvVideoController(
     defStyleAttr: Int = 0
 ) : BaseVideoController(context, attrs, defStyleAttr) {
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (isPopupMode()) {
-            return false
+    private val remoteKeyDispatcher = RemoteKeyDispatcher(object : RemoteKeyDispatcher.RemoteKeyAction {
+        override fun togglePlay() {
+            this@TvVideoController.togglePlay()
         }
-        val intercept = when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_CENTER -> onActionCenter()
-            KeyEvent.KEYCODE_DPAD_UP -> onActionUp()
-            KeyEvent.KEYCODE_DPAD_DOWN -> onActionDown()
-            KeyEvent.KEYCODE_DPAD_LEFT -> onActionLeft()
-            KeyEvent.KEYCODE_DPAD_RIGHT -> onActionRight()
-            else -> null
-        }
-        return if (intercept == null) {
-            false
-        } else if (intercept) {
-            true
-        } else {
-            mControlWrapper.onKeyDown(keyCode, event)
-        }
-    }
 
-    private fun onActionCenter(): Boolean {
-        if (isLocked()) {
-            showController(true)
+        override fun seekBy(offsetMs: Long) {
+            changePosition(offsetMs)
+        }
+
+        override fun showController() {
+            this@TvVideoController.showController(true)
+        }
+
+        override fun openPlayerSettings() {
+            mControlWrapper.showSettingView(SettingViewType.PLAYER_SETTING)
+        }
+
+        override fun openEpisodePanel(): Boolean {
+            val videoSource = mControlWrapper.getVideoSource()
+            if (videoSource.getGroupSize() <= 1) {
+                return false
+            }
+            mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
             return true
         }
-        if (mControlWrapper.isSettingViewShowing()) {
-            return false
+    })
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        val state = currentUiState()
+        val dispatchResult = remoteKeyDispatcher.onKeyDown(keyCode, state)
+        return when (dispatchResult) {
+            RemoteKeyDispatcher.DispatchResult.CONSUMED -> true
+            RemoteKeyDispatcher.DispatchResult.PASS_TO_CONTROL -> mControlWrapper.onKeyDown(keyCode, event)
+            RemoteKeyDispatcher.DispatchResult.IGNORED -> false
         }
-        if (isControllerShowing()) {
-            showController(true)
-            return false
-        }
-        togglePlay()
-        return true
     }
 
-    private fun onActionUp(): Boolean {
-        if (mControlWrapper.isSettingViewShowing()) {
-            return false
-        }
-        showController(true)
-        return false
-    }
-
-    private fun onActionDown(): Boolean {
-        if (mControlWrapper.isSettingViewShowing()) {
-            return false
-        }
-        showController(true)
-        return false
-    }
-
-    private fun onActionLeft(): Boolean {
-        if (mControlWrapper.isSettingViewShowing()) {
-            return false
-        }
-        if (isLocked() || isControllerShowing()) {
-            showController(true)
-            return false
-        }
-        changePosition(-10 * 1000L)
-        return true
-    }
-
-    private fun onActionRight(): Boolean {
-        if (mControlWrapper.isSettingViewShowing()) {
-            return false
-        }
-        if (isLocked() || isControllerShowing()) {
-            showController(true)
-            return false
-        }
-        changePosition(10 * 1000L)
-        return true
+    private fun currentUiState(): RemoteKeyDispatcher.UiState {
+        val focusView = findFocus()
+        val hasFocus = focusView != null && focusView !== this
+        return RemoteKeyDispatcher.UiState(
+            isLocked = isLocked(),
+            isControllerShowing = isControllerShowing(),
+            isSettingShowing = mControlWrapper.isSettingViewShowing(),
+            isPopupMode = isPopupMode(),
+            hasControllerFocus = hasFocus
+        )
     }
 
     private fun changePosition(offset: Long) {

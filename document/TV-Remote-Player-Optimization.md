@@ -25,7 +25,7 @@
 - 其他问题点
   - 进度步长固定（10s），无“长按加速”；
   - 缺少统一的“UP/DOWN/Menu”行为约定（选集/快速设置、控制条、主设置面板）；
-  -（已修复）`SendDanmuDialog` 返回键判断由误用 `event.action` 改为判断 `keyCode`。
+  
 
 注：本方案不考虑媒体键、频道键、字幕键、信息键、数字键等非常见键位。
 
@@ -60,6 +60,7 @@
   - `MENU`：关闭设置并返回播放态（或切换到主设置面板）。
 
 - 返回键优先级（全局）
+  - 说明：沿用当前实现，无需调整；
   1) 若任意设置视图显示 → 关闭设置视图；
   2) 否则若控制器显示 → 隐藏控制器；
   3) 否则 → 退出播放页（或弹出确认）。
@@ -94,33 +95,9 @@
   - `tvMenuOpensPlayerSettings`（默认 true）
 
 6) 兼容与清理
-- 修复 `SendDanmuDialog` 的返回键判断：`event.keyCode == KeyEvent.KEYCODE_BACK`；
 - 移除 `DanDanVideoPlayer` 中对音量键的拦截；清理 `GestureVideoController.onVolumeKeyDown` 等与应用侧音量相关的遗留代码，确保不再消费系统音量键。
- - TV 端不启用“锁定/防误触”功能：不纳入任何行为判断，相关 UI 默认隐藏；如后续恢复，将另行定义状态与优先级。
+- TV 端不启用“锁定/防误触”功能：不纳入任何行为判断，相关 UI 默认隐藏；如后续恢复，将另行定义状态与优先级。
 
-## 五、渐进式落地计划
-
-- Phase 1（功能打通）
-  - 引入 `RemoteKeyDispatcher`，打通 DPAD 与 `Menu/Back` 的路由；
-  - 去除音量键拦截；
-  - 固定 10s 步长与 OSD 反馈；
-
-- Phase 2（体验加强）
-  - 统一 SettingView 焦点策略与“初始/恢复焦点”。
-
-- Phase 3（可配置 & 帮助）
-  - 暴露配置项到设置；
-  - 加入按键帮助浮层；
-  - 补充自动化与人工测试用例矩阵。
-
-## 六、测试建议（仅常见按键）
-
-- 场景用例：
-  - DPAD（短按/连按）在控制器隐藏/显示、设置中、悬浮窗模式；
-  - Menu 键：在播放态/控制器显示/设置中行为一致性；
-  - Back 键：关闭设置 → 隐藏控制器 → 退出播放的优先级；
-  
-  - 焦点移动：初始焦点、边界不环绕、关闭后焦点恢复。
 
 ## 七、风险与兼容性
 
@@ -136,6 +113,5 @@
 - `player_component/src/main/java/com/xyoye/player/controller/base/TvVideoController.kt:18`
 - `player_component/src/main/java/com/xyoye/player/wrapper/ControlWrapper.kt:363`
 - `player_component/src/main/java/com/xyoye/player/controller/setting/SettingController.kt:57`
-- `player_component/src/main/java/com/xyoye/player/controller/video/SendDanmuDialog.kt:108`
 
 > 上述方案在“仅常见键”的限制下，仍提供一致、清晰且可扩展的体验。参数可根据真机反馈进行微调与 A/B 对比。
