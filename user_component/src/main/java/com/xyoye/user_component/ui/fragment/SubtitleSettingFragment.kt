@@ -4,9 +4,12 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
 import androidx.preference.EditTextPreference
+import androidx.preference.ListPreference
+import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.user_component.R
 
@@ -28,6 +31,20 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val loadSameSubtitleSwitch = findPreference<SwitchPreference>("auto_load_same_name_subtitle")
         val sameSubtitlePriority = findPreference<EditTextPreference>("same_name_subtitle_priority")
+        val backendPreference = findPreference<ListPreference>("subtitle_renderer_backend")
+        val backendNote = findPreference<Preference>("subtitle_renderer_backend_note")
+
+        backendPreference?.apply {
+            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+            setOnPreferenceChangeListener { _, newValue ->
+                updateBackendNoteVisibility(backendNote, newValue as String)
+                return@setOnPreferenceChangeListener true
+            }
+        }
+        updateBackendNoteVisibility(
+            backendNote,
+            backendPreference?.value ?: SubtitleConfig.getSubtitleRendererBackend()
+        )
 
         loadSameSubtitleSwitch?.setOnPreferenceChangeListener { _, newValue ->
             sameSubtitlePriority?.isVisible = newValue as Boolean
@@ -46,6 +63,11 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
         super.onViewCreated(view, savedInstanceState)
     }
 
+    private fun updateBackendNoteVisibility(note: Preference?, backendValue: String?) {
+        val backend = SubtitleRendererBackend.fromName(backendValue)
+        note?.isVisible = backend == SubtitleRendererBackend.LIBASS
+    }
+
     inner class SubtitleSettingDataStore : PreferenceDataStore() {
         override fun getBoolean(key: String?, defValue: Boolean): Boolean {
             return when (key) {
@@ -59,6 +81,7 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
         override fun getString(key: String?, defValue: String?): String? {
             return when (key) {
                 "same_name_subtitle_priority" -> SubtitleConfig.getSubtitlePriority()
+                "subtitle_renderer_backend" -> SubtitleConfig.getSubtitleRendererBackend()
                 else -> super.getString(key, defValue)
             }
         }
@@ -75,6 +98,9 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
         override fun putString(key: String?, value: String?) {
             when (key) {
                 "same_name_subtitle_priority" -> SubtitleConfig.putSubtitlePriority(value ?: "")
+                "subtitle_renderer_backend" -> SubtitleConfig.putSubtitleRendererBackend(
+                    value ?: SubtitleRendererBackend.LEGACY_CANVAS.name
+                )
                 else -> super.putString(key, value)
             }
         }

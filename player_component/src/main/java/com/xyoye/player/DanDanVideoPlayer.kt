@@ -237,10 +237,7 @@ class DanDanVideoPlayer(
     }
 
     override fun onSubtitleTextOutput(subtitle: MixedSubtitle) {
-        val handled = subtitleRenderer?.let {
-            it.render(subtitle)
-            true
-        } ?: false
+        val handled = subtitleRenderer?.render(subtitle) ?: false
         if (!handled) {
             mVideoController?.onSubtitleTextOutput(subtitle)
         }

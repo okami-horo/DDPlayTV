@@ -37,15 +37,15 @@ Plan: /workspace/DanDanPlayForAndroid/specs/001-add-libass-backend/plan.md
 Goal: 用户可在设置中切换字幕后端；新会话生效；ASS/SSA 走 libass，其他走旧实现；不支持时提示可切回。
 Independent Test: 仅修改设置并重新开始一次播放，验证渲染、时序、样式与层级正确；不支持格式出现提示。
 
-- [ ] T019 [US1] Add ListPreference("subtitle_renderer_backend") with options LEGACY_CANVAS/LIBASS in /workspace/DanDanPlayForAndroid/user_component/src/main/res/xml/preference_subtitle_setting.xml
-- [ ] T020 [US1] Persist get/put of subtitle_renderer_backend via SubtitleConfig in /workspace/DanDanPlayForAndroid/user_component/src/main/java/com/xyoye/user_component/ui/fragment/SubtitleSettingFragment.kt
+- [X] T019 [US1] Add ListPreference("subtitle_renderer_backend") with options LEGACY_CANVAS/LIBASS in /workspace/DanDanPlayForAndroid/user_component/src/main/res/xml/preference_subtitle_setting.xml
+- [X] T020 [US1] Persist get/put of subtitle_renderer_backend via SubtitleConfig in /workspace/DanDanPlayForAndroid/user_component/src/main/java/com/xyoye/user_component/ui/fragment/SubtitleSettingFragment.kt
 - [ ] T021 [US1] Read setting at player init and set PlayerInitializer.Subtitle.backend in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt
-- [ ] T022 [P] [US1] Detect unsupported format for LIBASS, show prompt to switch in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/subtitle/ExternalSubtitleManager.kt
-- [ ] T023 [P] [US1] Ensure ASS/SSA tracks are loaded into libass backend in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
-- [ ] T024 [US1] Skip legacy MixedSubtitle path when backend=LIBASS in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/DanDanVideoPlayer.kt
+- [X] T022 [P] [US1] Detect unsupported format for LIBASS, show prompt to switch in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/subtitle/ExternalSubtitleManager.kt
+- [X] T023 [P] [US1] Ensure ASS/SSA tracks are loaded into libass backend in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
+- [X] T024 [US1] Skip legacy MixedSubtitle path when backend=LIBASS in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/DanDanVideoPlayer.kt
 - [ ] T025 [US1] Align overlay layout to video visible rect (TextureView) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
 - [ ] T026 [P] [US1] Implement SurfaceView dual-surface overlay alignment in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleSurfaceOverlay.kt
-- [ ] T047 [US1] When LIBASS selected, show note that style settings are not applied (preserve ASS styles) in /workspace/DanDanPlayForAndroid/user_component/src/main/java/com/xyoye/user_component/ui/fragment/SubtitleSettingFragment.kt
+- [X] T047 [US1] When LIBASS selected, show note that style settings are not applied (preserve ASS styles) in /workspace/DanDanPlayForAndroid/user_component/src/main/java/com/xyoye/user_component/ui/fragment/SubtitleSettingFragment.kt
 
 ## Phase 4: User Story 2 (P2)
 Goal: 渲染失败出现阻断式弹窗，提供“一键切回旧后端/继续尝试”，切回立即生效，不中断媒体播放。

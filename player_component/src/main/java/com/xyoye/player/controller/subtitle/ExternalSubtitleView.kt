@@ -4,12 +4,17 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.xyoye.common_component.config.SubtitleConfig
+import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.player.controller.video.InterControllerView
 import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player_component.R
 import com.xyoye.player.wrapper.ControlWrapper
 import com.xyoye.subtitle.ExternalSubtitleManager
 import com.xyoye.subtitle.MixedSubtitle
@@ -29,7 +34,11 @@ class ExternalSubtitleView(
     private val lifecycleScope = (context as AppCompatActivity).lifecycleScope
 
     // 外挂字幕管理器
-    private val mSubtitleManager = ExternalSubtitleManager()
+    private val mSubtitleManager = ExternalSubtitleManager { extension, _ ->
+        lifecycleScope.launch(Dispatchers.Main) {
+            showUnsupportedFormatDialog(extension)
+        }
+    }
 
     // 寻找字幕的Job
     private var mFindSubtitleJob: Job? = null
@@ -42,6 +51,8 @@ class ExternalSubtitleView(
 
     // 字幕是否加载完成
     private var mSubtitleLoaded = false
+
+    private var unsupportedFormatDialog: AlertDialog? = null
 
     // 是否可以执行寻找字幕
     private val canFindSubtitle: Boolean get() = mSubtitleLoaded && mTrackSelected
@@ -144,5 +155,26 @@ class ExternalSubtitleView(
             // 加载字幕
             mSubtitleLoaded = mSubtitleManager.loadSubtitle(subtitlePath)
         }
+    }
+
+    private fun showUnsupportedFormatDialog(extension: String) {
+        if (unsupportedFormatDialog?.isShowing == true) {
+            return
+        }
+        val label = if (extension.startsWith(".")) extension else ".$extension"
+        unsupportedFormatDialog = AlertDialog.Builder(context)
+            .setTitle(R.string.subtitle_backend_unsupported_title)
+            .setMessage(
+                context.getString(R.string.subtitle_backend_unsupported_message, label)
+            )
+            .setPositiveButton(R.string.subtitle_backend_switch_action) { _, _ ->
+                SubtitleConfig.putSubtitleRendererBackend(SubtitleRendererBackend.LEGACY_CANVAS.name)
+                ToastCenter.showOriginalToast(
+                    context.getString(R.string.subtitle_backend_switch_result)
+                )
+            }
+            .setNegativeButton(R.string.subtitle_backend_keep_action, null)
+            .setOnDismissListener { unsupportedFormatDialog = null }
+            .show()
     }
 }

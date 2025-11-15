@@ -3,6 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory android:title="字幕加载策略">
+        <ListPreference
+            android:key="subtitle_renderer_backend"
+            android:title="@string/subtitle_renderer_backend_title"
+            android:summary="@string/subtitle_renderer_backend_summary"
+            android:entries="@array/subtitle_renderer_backend_entries"
+            android:entryValues="@array/subtitle_renderer_backend_values"
+            android:defaultValue="LEGACY_CANVAS"
+            app:icon="@drawable/ic_player_setting_subtitle_setting" />
+
+        <Preference
+            android:key="subtitle_renderer_backend_note"
+            android:title="@string/subtitle_renderer_backend_note_title"
+            android:summary="@string/subtitle_renderer_backend_note_summary"
+            android:selectable="false"
+            app:icon="@drawable/ic_player_setting_subtitle_setting" />
+
         <SwitchPreference
             android:key="auto_load_same_name_subtitle"
             android:summary="播放视频前，自动加载同文件夹内同名字幕"

@@ -136,4 +136,9 @@
 
     <string name="text_long_press_speed">长按速度</string>
     <string name="tips_long_press_rule">长按速度与播放速度一致时，将禁用长按变速</string>
+    <string name="subtitle_backend_unsupported_title">字幕格式不受支持</string>
+    <string name="subtitle_backend_unsupported_message">当前字幕格式 %1$s 不受 libass 渲染后端支持，可切回自定义渲染后端（下次播放生效）。</string>
+    <string name="subtitle_backend_switch_action">切回旧后端</string>
+    <string name="subtitle_backend_keep_action">继续尝试</string>
+    <string name="subtitle_backend_switch_result">已切回旧后端，下次播放生效</string>
 </resources>

@@ -14,7 +14,11 @@ interface SubtitleRenderer {
 
     fun release()
 
-    fun render(subtitle: MixedSubtitle)
+    /**
+     * @return true if the renderer took ownership of the subtitle event,
+     * false to fall back to the legacy pipeline.
+     */
+    fun render(subtitle: MixedSubtitle): Boolean
 
     fun onSurfaceTypeChanged(surfaceType: SurfaceType)
 

@@ -17,8 +17,9 @@ class CanvasTextRendererBackend : SubtitleRenderer {
         environment = null
     }
 
-    override fun render(subtitle: MixedSubtitle) {
+    override fun render(subtitle: MixedSubtitle): Boolean {
         environment?.subtitleController?.onSubtitleTextOutput(subtitle)
+        return true
     }
 
     override fun onSurfaceTypeChanged(surfaceType: SurfaceType) {

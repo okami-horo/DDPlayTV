@@ -1,5 +1,6 @@
 package com.xyoye.subtitle
 
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.getFileExtension
 import com.xyoye.common_component.weight.ToastCenter
@@ -18,7 +19,9 @@ import kotlin.math.min
  * 外挂字幕控制器
  */
 
-class ExternalSubtitleManager {
+class ExternalSubtitleManager(
+    private val unsupportedFormatCallback: ((String, SubtitleRendererBackend) -> Unit)? = null
+) {
     private var mTimedTextObject: TimedTextObject? = null
     private var handledByBackend = false
 
@@ -31,6 +34,8 @@ class ExternalSubtitleManager {
                 handledByBackend = true
                 mTimedTextObject = null
                 return true
+            } else if (!renderer.supportsExternalTrack(extension)) {
+                notifyUnsupportedFormat(subtitlePath, extension, renderer.backend)
             }
         }
         mTimedTextObject = parserSource(subtitlePath)
@@ -50,6 +55,17 @@ class ExternalSubtitleManager {
     fun release() {
         mTimedTextObject = null
         handledByBackend = false
+    }
+
+    private fun notifyUnsupportedFormat(
+        subtitlePath: String,
+        extension: String,
+        backend: SubtitleRendererBackend
+    ) {
+        if (backend != SubtitleRendererBackend.LIBASS) {
+            return
+        }
+        unsupportedFormatCallback?.invoke(extension, backend)
     }
 
     /**

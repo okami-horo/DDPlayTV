@@ -58,6 +58,18 @@
     <string name="text_github_project_name">Github：DanDanPlayForAndroid</string>
     <string name="text_official_address">官网：www.dandanplay.com</string>
     <string name="action_save_theme">完成</string>
+    <string name="subtitle_renderer_backend_title">字幕渲染后端</string>
+    <string name="subtitle_renderer_backend_summary">切换后在新的播放会话中生效</string>
+    <string name="subtitle_renderer_backend_note_title">libass 样式提示</string>
+    <string name="subtitle_renderer_backend_note_summary">启用 libass 渲染后端时，将保留 ASS/SSA 原始样式，播放器中的字号、颜色、描边等设置将不再生效。</string>
+    <string-array name="subtitle_renderer_backend_entries">
+        <item>自定义渲染后端（Canvas/TextPaint）</item>
+        <item>libass 渲染后端</item>
+    </string-array>
+    <string-array name="subtitle_renderer_backend_values">
+        <item>LEGACY_CANVAS</item>
+        <item>LIBASS</item>
+    </string-array>
     <string name="text_theme_follow_system">跟随系统</string>
     <string name="tips_theme_follow_system">开启后，将跟随系统打开或关闭深色模式</string>
     <string name="tips_theme_manual_switch">手动选择</string>

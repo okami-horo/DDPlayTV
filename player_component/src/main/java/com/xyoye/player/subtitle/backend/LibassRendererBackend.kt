@@ -1,6 +1,7 @@
 package com.xyoye.player.subtitle.backend
 
 import android.graphics.Bitmap
+import android.view.Choreographer
 import android.view.View
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.data_component.enums.SurfaceType
@@ -11,6 +12,7 @@ import com.xyoye.subtitle.MixedSubtitle
 import java.io.File
 import java.util.LinkedHashSet
 import java.util.Locale
+import kotlin.jvm.Volatile
 
 class LibassRendererBackend : SubtitleRenderer {
     override val backend: SubtitleRendererBackend = SubtitleRendererBackend.LIBASS
@@ -21,6 +23,17 @@ class LibassRendererBackend : SubtitleRenderer {
     private var surfaceOverlay: SubtitleSurfaceOverlay? = null
     private var bitmap: Bitmap? = null
     private var currentSurfaceType: SurfaceType? = null
+    @Volatile
+    private var trackReady = false
+    private var renderLoopRunning = false
+    private var choreographer: Choreographer? = null
+    private val frameCallback = Choreographer.FrameCallback {
+        if (!renderLoopRunning) {
+            return@FrameCallback
+        }
+        renderFrame()
+        choreographer?.postFrameCallback(frameCallback)
+    }
 
     override fun bind(environment: SubtitleRenderEnvironment) {
         this.environment = environment
@@ -33,13 +46,16 @@ class LibassRendererBackend : SubtitleRenderer {
         overlayView = null
         surfaceOverlay = null
         bitmap = null
+        trackReady = false
+        stopRenderLoop()
         bridge?.release()
         bridge = null
         environment = null
     }
 
-    override fun render(subtitle: MixedSubtitle) {
+    override fun render(subtitle: MixedSubtitle): Boolean {
         // libass handles rendering internally; MixedSubtitle pipeline is skipped.
+        return false
     }
 
     override fun onSurfaceTypeChanged(surfaceType: SurfaceType) {
@@ -59,9 +75,14 @@ class LibassRendererBackend : SubtitleRenderer {
 
     override fun loadExternalSubtitle(path: String): Boolean {
         val loader = bridge ?: return false
+        trackReady = false
         val success = loader.loadTrack(path)
         if (success) {
             loader.setFonts(null, buildFontDirectories(path))
+            trackReady = true
+            environment?.playerView?.post { startRenderLoop() }
+        } else {
+            environment?.playerView?.post { stopRenderLoop() }
         }
         return success
     }
@@ -122,5 +143,45 @@ class LibassRendererBackend : SubtitleRenderer {
         )
         systemCandidates.filter { File(it).exists() }.forEach { directories += it }
         return directories.toList()
+    }
+
+    private fun startRenderLoop() {
+        if (renderLoopRunning) {
+            return
+        }
+        renderLoopRunning = true
+        if (choreographer == null) {
+            choreographer = Choreographer.getInstance()
+        }
+        choreographer?.postFrameCallback(frameCallback)
+    }
+
+    private fun stopRenderLoop() {
+        if (!renderLoopRunning) {
+            return
+        }
+        renderLoopRunning = false
+        choreographer?.removeFrameCallback(frameCallback)
+    }
+
+    private fun renderFrame() {
+        val env = environment ?: return
+        val targetBitmap = bitmap ?: return
+        val renderer = bridge ?: return
+        if (!trackReady || !renderer.isReady()) {
+            return
+        }
+        val position = env.playerView.getCurrentPosition()
+        if (position < 0) {
+            return
+        }
+        val changed = renderer.render(position, targetBitmap)
+        if (!changed) {
+            return
+        }
+        when (currentSurfaceType ?: SurfaceType.VIEW_TEXTURE) {
+            SurfaceType.VIEW_SURFACE -> surfaceOverlay?.render(targetBitmap)
+            SurfaceType.VIEW_TEXTURE -> overlayView?.render(targetBitmap)
+        }
     }
 }
