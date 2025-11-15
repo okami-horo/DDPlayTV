@@ -117,6 +117,10 @@ class PlayerBottomView(
     override fun onVisibilityChanged(isVisible: Boolean) {
         if (isVisible) {
             ViewCompat.animate(viewBinding.playerBottomLl).translationY(0f).setDuration(300).start()
+            // Ensure a safe default focus when controller shows to avoid
+            // accidentally triggering the top back button with DPAD center.
+            // Focusing play button makes center press toggle play/pause consistently.
+            post { viewBinding.playIv.requestFocus() }
         } else {
             val height = viewBinding.playerBottomLl.height.toFloat()
             ViewCompat.animate(viewBinding.playerBottomLl).translationY(height)
