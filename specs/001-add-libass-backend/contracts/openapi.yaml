@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: Subtitle Backend Settings (Internal Contract)
+  version: 1.0.0
+  description: Internal REST-style contracts for settings and debug views used as design references.
+servers:
+  - url: https://local.app/internal
+paths:
+  /settings/subtitle/backend:
+    get:
+      summary: Get current subtitle backend preference
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RendererPreference'
+    put:
+      summary: Set subtitle backend preference
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RendererPreferenceUpdate'
+      responses:
+        '204':
+          description: Updated
+  /debug/subtitle/session:
+    get:
+      summary: Get current playback session subtitle status
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaybackSession'
+  /debug/subtitle/force-fallback:
+    post:
+      summary: Simulate a fallback for testing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  $ref: '#/components/schemas/FallbackReason'
+      responses:
+        '204':
+          description: Fallback applied
+components:
+  schemas:
+    Backend:
+      type: string
+      enum: [LEGACY_CANVAS, LIBASS]
+    Source:
+      type: string
+      enum: [DEFAULT, LOCAL_SETTINGS]
+    FallbackReason:
+      type: string
+      enum: [INIT_FAIL, RENDER_FAIL, UNSUPPORTED_FORMAT, USER_REQUEST]
+    RendererPreference:
+      type: object
+      properties:
+        selectedBackend:
+          $ref: '#/components/schemas/Backend'
+        source:
+          $ref: '#/components/schemas/Source'
+        updatedAtEpochMs:
+          type: integer
+          format: int64
+      required: [selectedBackend, source, updatedAtEpochMs]
+    RendererPreferenceUpdate:
+      type: object
+      properties:
+        selectedBackend:
+          $ref: '#/components/schemas/Backend'
+      required: [selectedBackend]
+    PlaybackSession:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        resolvedBackend:
+          $ref: '#/components/schemas/Backend'
+        videoSizePx:
+          type: object
+          properties:
+            width:
+              type: integer
+            height:
+              type: integer
+          required: [width, height]
+        surfaceType:
+          type: string
+          enum: [TEXTURE_VIEW, SURFACE_VIEW]
+        fallbackTriggered:
+          type: boolean
+        fallbackReasonCode:
+          $ref: '#/components/schemas/FallbackReason'
+        lastErrorMessage:
+          type: string
+          nullable: true
+        startedAtEpochMs:
+          type: integer
+          format: int64
+        endedAtEpochMs:
+          type: integer
+          format: int64
+          nullable: true
+      required:
+        - sessionId
+        - resolvedBackend
+        - videoSizePx
+        - surfaceType
+        - fallbackTriggered
+        - startedAtEpochMs
