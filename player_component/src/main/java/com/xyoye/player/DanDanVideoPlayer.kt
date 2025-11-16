@@ -401,7 +401,15 @@ class DanDanVideoPlayer(
     fun attachSubtitleOverlay(view: View) {
         val controllerIndex = if (mVideoController != null) indexOfChild(mVideoController) else -1
         val insertIndex = if (controllerIndex >= 0) controllerIndex else childCount
-        addView(view, insertIndex, mDefaultLayoutParams)
+        // IMPORTANT: do not reuse the same LayoutParams instance across children.
+        // Reusing mDefaultLayoutParams caused overlay alignment code to mutate
+        // gravity/margins on the render view, leading to asymmetric black bars.
+        val lp = FrameLayout.LayoutParams(
+            mDefaultLayoutParams.width,
+            mDefaultLayoutParams.height,
+            mDefaultLayoutParams.gravity
+        )
+        addView(view, insertIndex, lp)
     }
 
     fun detachSubtitleOverlay(view: View) {

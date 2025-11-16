@@ -52,8 +52,9 @@ class RenderMeasureHelper {
                 }
             }
             VideoScreenScale.SCREEN_SCALE_MATCH_PARENT -> {
-                width = widthSpec
-                height = heightSpec
+                // Fill parent: use actual sizes from measure specs, not the encoded spec ints
+                width = View.MeasureSpec.getSize(widthSpec)
+                height = View.MeasureSpec.getSize(heightSpec)
             }
             VideoScreenScale.SCREEN_SCALE_CENTER_CROP -> {
                 if (mVideoWidth * height > width * mVideoHeight) {

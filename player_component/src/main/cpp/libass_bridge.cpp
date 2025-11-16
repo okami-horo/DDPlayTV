@@ -163,11 +163,13 @@ void BlendPixel(uint8_t *dst, uint8_t coverage, uint32_t color) {
     const uint8_t src_g = MulDiv255(green, src_alpha);
     const uint8_t src_b = MulDiv255(blue, src_alpha);
 
-    uint32_t dst_color = *reinterpret_cast<uint32_t *>(dst);
-    uint8_t dst_a = static_cast<uint8_t>((dst_color >> 24) & 0xFF);
-    uint8_t dst_r = static_cast<uint8_t>((dst_color >> 16) & 0xFF);
-    uint8_t dst_g = static_cast<uint8_t>((dst_color >> 8) & 0xFF);
-    uint8_t dst_b = static_cast<uint8_t>(dst_color & 0xFF);
+    // Android NDK reports RGBA_8888 for Bitmap.Config.ARGB_8888.
+    // The in-memory byte order for each pixel is RGBA (R at [0], A at [3]).
+    // Read existing destination in RGBA byte order to avoid channel swaps.
+    uint8_t dst_r = dst[0];
+    uint8_t dst_g = dst[1];
+    uint8_t dst_b = dst[2];
+    uint8_t dst_a = dst[3];
 
     const uint8_t inv_alpha = static_cast<uint8_t>(255 - src_alpha);
     dst_r = static_cast<uint8_t>(src_r + MulDiv255(dst_r, inv_alpha));
@@ -175,10 +177,11 @@ void BlendPixel(uint8_t *dst, uint8_t coverage, uint32_t color) {
     dst_b = static_cast<uint8_t>(src_b + MulDiv255(dst_b, inv_alpha));
     dst_a = static_cast<uint8_t>(src_alpha + MulDiv255(dst_a, inv_alpha));
 
-    const uint32_t packed =
-        (static_cast<uint32_t>(dst_a) << 24) | (static_cast<uint32_t>(dst_r) << 16) |
-        (static_cast<uint32_t>(dst_g) << 8) | dst_b;
-    *reinterpret_cast<uint32_t *>(dst) = packed;
+    // Write back in RGBA byte order.
+    dst[0] = dst_r;
+    dst[1] = dst_g;
+    dst[2] = dst_b;
+    dst[3] = dst_a;
 }
 
 void CompositeImage(uint8_t *buffer, const AndroidBitmapInfo &info, const ASS_Image *image) {
