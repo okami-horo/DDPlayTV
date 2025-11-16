@@ -22,6 +22,8 @@ import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.SubtitleConfig
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
+import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.receiver.HeadsetBroadcastReceiver
 import com.xyoye.common_component.receiver.PlayerReceiverListener
@@ -55,6 +57,7 @@ import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ActivityPlayerBinding
 import com.xyoye.player_component.widgets.popup.PlayerPopupManager
 import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
+import com.xyoye.player.subtitle.debug.PlaybackSessionStatusProvider
 import com.xyoye.player.subtitle.ui.SubtitleFallbackDialog
 import com.xyoye.player.subtitle.ui.SubtitleFallbackDialog.SubtitleFallbackAction
 import kotlinx.coroutines.Dispatchers
@@ -288,8 +291,13 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         if (PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LEGACY_CANVAS) {
             return
         }
-        SubtitleConfig.putSubtitleRendererBackend(SubtitleRendererBackend.LEGACY_CANVAS.name)
+        SubtitlePreferenceUpdater.persistBackend(
+            SubtitleRendererBackend.LEGACY_CANVAS,
+            RendererPreferenceSource.LOCAL_SETTINGS
+        )
         PlayerInitializer.Subtitle.backend = SubtitleRendererBackend.LEGACY_CANVAS
+        PlaybackSessionStatusProvider.updateBackend(SubtitleRendererBackend.LEGACY_CANVAS)
+        PlaybackSessionStatusProvider.markFallback(reason, null)
         danDanPlayer.switchSubtitleBackend(SubtitleRendererBackend.LEGACY_CANVAS)
         ToastCenter.showOriginalToast(getString(R.string.subtitle_backend_fallback_result))
         DDLog.i("PLAYER-Subtitle", "Fallback applied due to $reason")

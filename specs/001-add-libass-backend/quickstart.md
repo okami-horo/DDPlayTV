@@ -31,3 +31,8 @@
 - SurfaceView: transparent overlay surface (`PixelFormat.TRANSLUCENT`, `setZOrderMediaOverlay(true)`) aligned to video rect
 - Performance: skip rendering when libass `changed==0`; reuse buffers; clear canvas each frame
 
+## Debug & Observability
+
+- 开发者设置 → “字幕后端状态” 可查看当前会话后端、Surface 类型、首帧耗时、回退原因。
+- “模拟回退到旧后端” 可用于测试 USER_REQUEST 回退路径（同时会刷新 RendererPreference.updatedAt）。
+- Fallback 弹窗会记录弹出-确认耗时（LIBASS-Fallback 日志），用于校验≤2s 目标。

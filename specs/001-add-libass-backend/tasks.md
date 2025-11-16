@@ -61,19 +61,19 @@ Independent Test: 构造初始化/渲染失败，弹窗出现；确认后立刻�
 Goal: 在关于/调试信息中展示当前会话字幕后端与最近一次回退原因；可用于反馈定位。
 Independent Test: 切换后端并触发一次回退后，进入调试信息页看到后端与回退记录。
 
-- [ ] T032 [US3] Add data class PlaybackSessionStatus provider in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/debug/PlaybackSessionStatusProvider.kt
-- [ ] T033 [US3] Update session status on init, failures, and fallback in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
-- [ ] T034 [US3] Add Debug preference and view to show session backend/fallback in /workspace/DanDanPlayForAndroid/user_component/src/main/java/com/xyoye/user_component/ui/fragment/DeveloperSettingFragment.kt
-- [ ] T035 [P] [US3] Add optional force-fallback action for testing in /workspace/DanDanPlayForAndroid/user_component/src/main/java/com/xyoye/user_component/ui/fragment/DeveloperSettingFragment.kt
+- [X] T032 [US3] Add data class PlaybackSessionStatus provider in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/debug/PlaybackSessionStatusProvider.kt
+- [X] T033 [US3] Update session status on init, failures, and fallback in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
+- [X] T034 [US3] Add Debug preference and view to show session backend/fallback in /workspace/DanDanPlayForAndroid/user_component/src/main/java/com/xyoye/user_component/ui/fragment/DeveloperSettingFragment.kt
+- [X] T035 [P] [US3] Add optional force-fallback action for testing in /workspace/DanDanPlayForAndroid/user_component/src/main/java/com/xyoye/user_component/ui/fragment/DeveloperSettingFragment.kt
 
 ## Final Phase: Polish & Cross-Cutting
 
-- [ ] T036 Add vertical/time offset passthrough to libass (FR-014) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
-- [ ] T037 Clear canvas between frames; render only when changed==1 (FR-015) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
-- [ ] T038 Guard Surface validity (Texture/Surface) before draw in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleSurfaceOverlay.kt
-- [ ] T039 Document setup & toggle instructions in /workspace/DanDanPlayForAndroid/specs/001-add-libass-backend/quickstart.md
-- [ ] T040 Update README with feature summary and toggle location in /workspace/DanDanPlayForAndroid/README.md
-- [ ] T046 Create supported-format matrix (ASS/SSA targeted by libass; when backend doesn’t support a format, prompt per FR-008; legacy backend covers other formats) in /workspace/DanDanPlayForAndroid/specs/001-add-libass-backend/checklists/support-matrix.md
+- [X] T036 Add vertical/time offset passthrough to libass (FR-014) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
+- [X] T037 Clear canvas between frames; render only when changed==1 (FR-015) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
+- [X] T038 Guard Surface validity (Texture/Surface) before draw in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleSurfaceOverlay.kt
+- [X] T039 Document setup & toggle instructions in /workspace/DanDanPlayForAndroid/specs/001-add-libass-backend/quickstart.md
+- [X] T040 Update README with feature summary and toggle location in /workspace/DanDanPlayForAndroid/README.md
+- [X] T046 Create supported-format matrix (ASS/SSA targeted by libass; when backend doesn’t support a format, prompt per FR-008; legacy backend covers other formats) in /workspace/DanDanPlayForAndroid/specs/001-add-libass-backend/checklists/support-matrix.md
 
 ---
 
@@ -86,20 +86,20 @@ Independent Test: 切换后端并触发一次回退后，进入调试信息页�
 
 ## Non-Functional Validation (additions)
 
-- [ ] T048 Add performance tracing of subtitle render cadence with "changed" gating in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
-- [ ] T049 Measure first-subtitle latency vs legacy and log comparison within ±10% in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
-- [ ] T050 Add libass-specific error logging tags to support crash-rate comparison in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
-- [ ] T051 Timestamp dialog show and recovery to validate ≤2s targets in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleFallbackDialog.kt
-- [ ] T052 Implement single reusable ARGB bitmap buffer and assert memory bound (≤2 frames at view resolution) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
-- [ ] T053 Verify overlay does not block control/gesture interaction (manual checklist doc) in /workspace/DanDanPlayForAndroid/specs/001-add-libass-backend/checklists/overlay-gesture-validation.md
- - [ ] T058 Implement adaptive redraw throttle under load (CPU pressure/missed frames): reduce redraw cadence while preserving timing correctness in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
+- [X] T048 Add performance tracing of subtitle render cadence with "changed" gating in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
+- [X] T049 Measure first-subtitle latency vs legacy and log comparison within ±10% in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
+- [X] T050 Add libass-specific error logging tags to support crash-rate comparison in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
+- [X] T051 Timestamp dialog show and recovery to validate ≤2s targets in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleFallbackDialog.kt
+- [X] T052 Implement single reusable ARGB bitmap buffer and assert memory bound (≤2 frames at view resolution) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
+- [X] T053 Verify overlay does not block control/gesture interaction (manual checklist doc) in /workspace/DanDanPlayForAndroid/specs/001-add-libass-backend/checklists/overlay-gesture-validation.md
+- [X] T058 Implement adaptive redraw throttle under load (CPU pressure/missed frames): reduce redraw cadence while preserving timing correctness in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
 
 ## Data & Session Semantics (additions)
 
-- [ ] T054 Persist RendererPreference.source and updatedAtEpochMs in /workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/config/SubtitleConfigTable.kt
-- [ ] T055 Update fallback flow to write RendererPreference with updatedAtEpochMs in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
-- [ ] T056 Populate PlaybackSession fields (surfaceType, start/end, reason) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/debug/PlaybackSessionStatusProvider.kt
-- [ ] T057 Update session status on orientation/surface changes in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
+- [X] T054 Persist RendererPreference.source and updatedAtEpochMs in /workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/config/SubtitleConfigTable.kt
+- [X] T055 Update fallback flow to write RendererPreference with updatedAtEpochMs in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
+- [X] T056 Populate PlaybackSession fields (surfaceType, start/end, reason) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/debug/PlaybackSessionStatusProvider.kt
+- [X] T057 Update session status on orientation/surface changes in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleOverlayView.kt
 
 ## Parallel Execution Examples
 

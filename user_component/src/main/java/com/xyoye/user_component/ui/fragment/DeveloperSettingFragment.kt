@@ -8,11 +8,15 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
+import com.xyoye.common_component.enums.RendererPreferenceSource
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.log.AppLogger
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.user_component.R
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -32,6 +36,10 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         private const val KEY_LOG_UPLOAD_PASSWORD = "log_upload_password"
         private const val KEY_LOG_UPLOAD_REMOTE_PATH = "log_upload_remote_path"
         private const val KEY_LOG_UPLOAD_TRIGGER = "log_upload_trigger"
+        private const val KEY_SUBTITLE_SESSION_STATUS = "subtitle_session_status"
+        private const val KEY_SUBTITLE_FORCE_FALLBACK = "subtitle_force_fallback"
+        private const val SUBTITLE_STATUS_PROVIDER =
+            "com.xyoye.player.subtitle.debug.PlaybackSessionStatusProvider"
     }
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
@@ -54,11 +62,13 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         super.onViewCreated(view, savedInstanceState)
 
         initLogUploadPreferences()
+        initSubtitleDebugPreferences()
     }
 
     override fun onResume() {
         super.onResume()
         updateLastUploadSummary()
+        updateSubtitleSessionSummary()
     }
 
     private fun initLogUploadPreferences() {
@@ -153,6 +163,23 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         updateLastUploadSummary()
     }
 
+    private fun initSubtitleDebugPreferences() {
+        findPreference<Preference>(KEY_SUBTITLE_SESSION_STATUS)?.apply {
+            summary = buildSubtitleStatusSummary()
+            setOnPreferenceClickListener {
+                summary = buildSubtitleStatusSummary()
+                true
+            }
+        }
+
+        findPreference<Preference>(KEY_SUBTITLE_FORCE_FALLBACK)?.apply {
+            setOnPreferenceClickListener {
+                forceFallback()
+                true
+            }
+        }
+    }
+
     private fun updateLastUploadSummary() {
         val lastUploadPreference = findPreference<Preference>(KEY_LOG_UPLOAD_TRIGGER) ?: return
         val lastTime = DevelopConfig.getLogUploadLastTime()
@@ -177,6 +204,89 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             return getString(R.string.developer_log_upload_credential_empty)
         }
         return getString(R.string.developer_log_upload_credential_masked)
+    }
+
+    private fun buildSubtitleStatusSummary(): String {
+        return runCatching {
+            val providerClass = Class.forName(SUBTITLE_STATUS_PROVIDER)
+            val snapshot = providerClass.getMethod("snapshot").invoke(null)
+            val statusClass = snapshot.javaClass
+            fun <T> read(name: String): T? {
+                return runCatching {
+                    statusClass.getMethod("get$name").invoke(snapshot) as? T
+                }.getOrNull()
+            }
+            val videoSize = read<Any>("VideoSizePx")
+            val width = videoSize?.javaClass?.getMethod("getWidth")?.invoke(videoSize) as? Int ?: 0
+            val height = videoSize?.javaClass?.getMethod("getHeight")?.invoke(videoSize) as? Int ?: 0
+            val backend = (read<Any>("ResolvedBackend") as? Enum<*>)?.name ?: "-"
+            val surface = (read<Any>("SurfaceType") as? Enum<*>)?.name ?: "-"
+            val sessionId = read<String>("SessionId").orEmpty()
+            val startedAt = read<Long>("StartedAtEpochMs") ?: 0L
+            val startedText = if (startedAt > 0L) {
+                dateFormat.format(Date(startedAt))
+            } else {
+                getString(R.string.developer_subtitle_session_status_summary_empty)
+            }
+            val firstRenderedAt = read<Long>("FirstRenderedAtEpochMs")
+            val firstLatency = if (firstRenderedAt != null && startedAt > 0) {
+                "${firstRenderedAt - startedAt}ms"
+            } else {
+                "-"
+            }
+            val fallbackTriggered = read<Boolean>("FallbackTriggered") == true
+            val fallbackReason = (read<Any>("FallbackReasonCode") as? Enum<*>)?.name
+            val fallbackValue = when {
+                fallbackTriggered && !fallbackReason.isNullOrEmpty() -> fallbackReason
+                fallbackTriggered -> "已触发"
+                else -> "未回退"
+            }
+            val lastError = read<String>("LastErrorMessage") ?: "-"
+            getString(
+                R.string.developer_subtitle_status_summary,
+                backend,
+                surface,
+                width,
+                height,
+                sessionId.takeLast(8),
+                startedText,
+                firstLatency,
+                fallbackValue,
+                lastError
+            )
+        }.getOrElse {
+            DDLog.w("DEV-Subtitle", "failed to read subtitle session status: ${it.message}")
+            getString(R.string.developer_subtitle_session_status_summary_empty)
+        }
+    }
+
+    private fun forceFallback() {
+        SubtitlePreferenceUpdater.persistBackend(
+            SubtitleRendererBackend.LEGACY_CANVAS,
+            RendererPreferenceSource.LOCAL_SETTINGS
+        )
+        runCatching {
+            val providerClass = Class.forName(SUBTITLE_STATUS_PROVIDER)
+            val updateBackend = providerClass.getMethod(
+                "updateBackend",
+                SubtitleRendererBackend::class.java
+            )
+            updateBackend.invoke(null, SubtitleRendererBackend.LEGACY_CANVAS)
+            val markFallback = providerClass.getMethod(
+                "markFallback",
+                SubtitleFallbackReason::class.java,
+                Throwable::class.java
+            )
+            markFallback.invoke(null, SubtitleFallbackReason.USER_REQUEST, null)
+        }.onFailure {
+            DDLog.w("DEV-Subtitle", "force fallback reflection failed: ${it.message}")
+        }
+        ToastCenter.showSuccess(getString(R.string.developer_subtitle_force_fallback_toast))
+        updateSubtitleSessionSummary()
+    }
+
+    private fun updateSubtitleSessionSummary() {
+        findPreference<Preference>(KEY_SUBTITLE_SESSION_STATUS)?.summary = buildSubtitleStatusSummary()
     }
 
     private class DeveloperSettingDataStore : PreferenceDataStore() {

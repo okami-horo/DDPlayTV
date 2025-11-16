@@ -5,11 +5,13 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PorterDuff
+import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.TextureView
 import android.view.View
 import android.widget.FrameLayout
+import com.xyoye.common_component.utils.DDLog
 import com.xyoye.player.DanDanVideoPlayer
 
 class SubtitleOverlayView @JvmOverloads constructor(
@@ -27,6 +29,11 @@ class SubtitleOverlayView @JvmOverloads constructor(
     private val anchorLayoutListener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
         alignToRenderView()
     }
+    private var lastRenderAtNs = 0L
+    private var throttleUntilNs = 0L
+    private var maxObservedBufferBytes = 0L
+    private var renderCount = 0
+    private var lastTraceAtNs = 0L
 
     init {
         isOpaque = false
@@ -67,21 +74,41 @@ class SubtitleOverlayView @JvmOverloads constructor(
     }
 
     @Synchronized
-    fun render(bitmap: Bitmap?) {
+    fun render(bitmap: Bitmap?, verticalOffsetPx: Int = 0) {
         if (bitmap == null || bitmap.width == 0 || bitmap.height == 0) {
             clear()
             return
         }
+        if (!isAvailable || surfaceTexture == null) {
+            DDLog.w("LIBASS-Render", "TextureView surface unavailable; drop frame")
+            return
+        }
+        val nowNs = SystemClock.elapsedRealtimeNanos()
+        if (nowNs < throttleUntilNs) {
+            return
+        }
+        assertMemoryBound(bitmap)
         val canvas = lockCanvas() ?: return
+        val drawStart = SystemClock.elapsedRealtimeNanos()
+        val previousRenderNs = lastRenderAtNs
         try {
-            drawFrame(canvas, bitmap)
+            drawFrame(canvas, bitmap, verticalOffsetPx)
         } finally {
             unlockCanvasAndPost(canvas)
         }
+        val drawDurationNs = SystemClock.elapsedRealtimeNanos() - drawStart
+        renderCount++
+        lastRenderAtNs = nowNs
+        traceCadence(nowNs, drawDurationNs, previousRenderNs)
+        throttleIfNeeded(drawDurationNs, nowNs)
     }
 
-    private fun drawFrame(canvas: Canvas, bitmap: Bitmap) {
+    private fun drawFrame(canvas: Canvas, bitmap: Bitmap, verticalOffsetPx: Int) {
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        val offset = verticalOffsetPx.toFloat()
+        if (offset != 0f) {
+            canvas.translate(0f, offset)
+        }
         canvas.drawBitmap(bitmap, 0f, 0f, null)
     }
 
@@ -137,15 +164,55 @@ class SubtitleOverlayView @JvmOverloads constructor(
         }
         if (changed) {
             setLayoutParams(layoutParams)
+            frameSizeListener?.invoke(layoutParams.width, layoutParams.height)
         }
     }
 
     fun clear() {
+        if (!isAvailable || surfaceTexture == null) {
+            return
+        }
         val canvas = lockCanvas() ?: return
         try {
             canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
         } finally {
             unlockCanvasAndPost(canvas)
+        }
+    }
+
+    private fun assertMemoryBound(bitmap: Bitmap) {
+        val current = bitmap.allocationByteCount.toLong()
+        if (current > maxObservedBufferBytes) {
+            maxObservedBufferBytes = current
+        }
+        val allowed = bitmap.width.toLong() * bitmap.height.toLong() * 4L * 2L
+        if (current > allowed) {
+            DDLog.w(
+                "LIBASS-Perf",
+                "subtitle bitmap exceeds buffer budget current=${current / 1024}KB allowed=${allowed / 1024}KB"
+            )
+        }
+    }
+
+    private fun traceCadence(nowNs: Long, drawDurationNs: Long, previousRenderNs: Long) {
+        val sinceLastMs = if (previousRenderNs == 0L) 0.0 else (nowNs - previousRenderNs) / 1_000_000.0
+        if (renderCount % 30 == 0) {
+            val drawMs = drawDurationNs / 1_000_000.0
+            val traceWindowMs = if (lastTraceAtNs == 0L) 0.0 else (nowNs - lastTraceAtNs) / 1_000_000.0
+            lastTraceAtNs = nowNs
+            DDLog.d(
+                "LIBASS-Render",
+                "cadence frame=$renderCount interval=${"%.2f".format(sinceLastMs)}ms draw=${"%.2f".format(drawMs)}ms window=${"%.2f".format(traceWindowMs)}ms"
+            )
+        }
+    }
+
+    private fun throttleIfNeeded(drawDurationNs: Long, nowNs: Long) {
+        val frameBudgetNs = 16_000_000L
+        throttleUntilNs = when {
+            drawDurationNs > frameBudgetNs * 2 -> nowNs + frameBudgetNs
+            drawDurationNs > frameBudgetNs -> nowNs + frameBudgetNs / 2
+            else -> nowNs
         }
     }
 }

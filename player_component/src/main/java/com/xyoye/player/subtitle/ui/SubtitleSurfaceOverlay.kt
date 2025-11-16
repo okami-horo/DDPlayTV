@@ -6,12 +6,14 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.PorterDuff
+import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
 import android.widget.FrameLayout
+import com.xyoye.common_component.utils.DDLog
 import com.xyoye.player.DanDanVideoPlayer
 
 class SubtitleSurfaceOverlay @JvmOverloads constructor(
@@ -75,19 +77,28 @@ class SubtitleSurfaceOverlay @JvmOverloads constructor(
     override fun surfaceDestroyed(holder: SurfaceHolder) {
     }
 
-    fun render(bitmap: Bitmap?) {
+    fun render(bitmap: Bitmap?, verticalOffsetPx: Int = 0) {
         if (bitmap == null || bitmap.width == 0 || bitmap.height == 0) {
             clear()
             return
         }
         if (!holder.surface.isValid) {
+            DDLog.w("LIBASS-Render", "SurfaceView invalid; drop frame")
             return
         }
         val canvas = holder.lockCanvas() ?: return
+        val drawStart = SystemClock.elapsedRealtimeNanos()
         try {
-            drawFrame(canvas, bitmap)
+            drawFrame(canvas, bitmap, verticalOffsetPx)
         } finally {
             holder.unlockCanvasAndPost(canvas)
+        }
+        val drawDurationNs = SystemClock.elapsedRealtimeNanos() - drawStart
+        if (drawDurationNs > 32_000_000L) {
+            DDLog.w(
+                "LIBASS-Perf",
+                "Surface subtitle draw slow=${drawDurationNs / 1_000_000.0}ms"
+            )
         }
     }
 
@@ -103,8 +114,11 @@ class SubtitleSurfaceOverlay @JvmOverloads constructor(
         }
     }
 
-    private fun drawFrame(canvas: Canvas, bitmap: Bitmap) {
+    private fun drawFrame(canvas: Canvas, bitmap: Bitmap, verticalOffsetPx: Int) {
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        if (verticalOffsetPx != 0) {
+            canvas.translate(0f, verticalOffsetPx.toFloat())
+        }
         canvas.drawBitmap(bitmap, 0f, 0f, null)
     }
 
@@ -160,6 +174,7 @@ class SubtitleSurfaceOverlay @JvmOverloads constructor(
         }
         if (changed) {
             setLayoutParams(layoutParams)
+            frameSizeListener?.invoke(layoutParams.width, layoutParams.height)
         }
     }
 }

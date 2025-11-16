@@ -7,7 +7,8 @@ import android.widget.FrameLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.xyoye.common_component.config.SubtitleConfig
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
+import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.VideoTrackBean
@@ -174,7 +175,10 @@ class ExternalSubtitleView(
                 context.getString(R.string.subtitle_backend_unsupported_message, label)
             )
             .setPositiveButton(R.string.subtitle_backend_switch_action) { _, _ ->
-                SubtitleConfig.putSubtitleRendererBackend(SubtitleRendererBackend.LEGACY_CANVAS.name)
+                SubtitlePreferenceUpdater.persistBackend(
+                    SubtitleRendererBackend.LEGACY_CANVAS,
+                    RendererPreferenceSource.LOCAL_SETTINGS
+                )
                 ToastCenter.showOriginalToast(
                     context.getString(R.string.subtitle_backend_switch_result)
                 )

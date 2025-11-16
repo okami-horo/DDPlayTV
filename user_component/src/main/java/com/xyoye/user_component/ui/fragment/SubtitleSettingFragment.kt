@@ -9,7 +9,9 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.user_component.R
 
@@ -98,9 +100,15 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
         override fun putString(key: String?, value: String?) {
             when (key) {
                 "same_name_subtitle_priority" -> SubtitleConfig.putSubtitlePriority(value ?: "")
-                "subtitle_renderer_backend" -> SubtitleConfig.putSubtitleRendererBackend(
-                    value ?: SubtitleRendererBackend.LEGACY_CANVAS.name
-                )
+                "subtitle_renderer_backend" -> {
+                    val backend = SubtitleRendererBackend.fromName(
+                        value ?: SubtitleRendererBackend.LEGACY_CANVAS.name
+                    )
+                    SubtitlePreferenceUpdater.persistBackend(
+                        backend,
+                        RendererPreferenceSource.LOCAL_SETTINGS
+                    )
+                }
                 else -> super.putString(key, value)
             }
         }

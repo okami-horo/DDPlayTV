@@ -61,4 +61,12 @@ object SubtitleConfigTable {
     //字幕渲染后端
     @MMKVFiled
     const val subtitleRendererBackend = "LEGACY_CANVAS"
+
+    //字幕渲染后端来源（DEFAULT / LOCAL_SETTINGS）
+    @MMKVFiled
+    const val subtitleRendererSource = "DEFAULT"
+
+    //字幕渲染后端最后更新时间（毫秒）
+    @MMKVFiled
+    const val subtitleRendererUpdatedAt = 0L
 }

@@ -48,4 +48,21 @@
             app:icon="@drawable/ic_app_setting_app_version" />
     </PreferenceCategory>
 
+    <PreferenceCategory
+        android:key="developer_subtitle_category"
+        android:title="@string/developer_subtitle_debug_category_title">
+
+        <Preference
+            android:key="subtitle_session_status"
+            android:title="@string/developer_subtitle_session_status_title"
+            android:summary="@string/developer_subtitle_session_status_summary_empty"
+            app:icon="@drawable/ic_app_setting_about_us" />
+
+        <Preference
+            android:key="subtitle_force_fallback"
+            android:title="@string/developer_subtitle_force_fallback_title"
+            android:summary="@string/developer_subtitle_force_fallback_summary"
+            app:icon="@drawable/ic_feedback" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

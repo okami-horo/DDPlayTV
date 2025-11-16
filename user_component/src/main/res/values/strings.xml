@@ -114,6 +114,13 @@
     <string name="developer_log_upload_url_invalid">URL 必须以 http:// 或 https:// 开头</string>
     <string name="developer_log_upload_credential_empty">未配置</string>
     <string name="developer_log_upload_credential_masked">已配置</string>
+    <string name="developer_subtitle_debug_category_title">字幕调试</string>
+    <string name="developer_subtitle_session_status_title">字幕后端状态</string>
+    <string name="developer_subtitle_session_status_summary_empty">暂无会话信息</string>
+    <string name="developer_subtitle_force_fallback_title">模拟回退到旧后端</string>
+    <string name="developer_subtitle_force_fallback_summary">立即切换到旧后端并记录 USER_REQUEST</string>
+    <string name="developer_subtitle_force_fallback_toast">已切回旧字幕后端（测试）</string>
+    <string name="developer_subtitle_status_summary">后端：%1$s\nSurface：%2$s %3$dx%4$d\n会话：%5$s\n开始：%6$s\n首帧耗时：%7$s\n回退：%8$s\n错误：%9$s</string>
 
     <integer-array name="cover">
         <item>@drawable/ic_bailitusu</item>

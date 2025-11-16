@@ -1,6 +1,7 @@
 package com.xyoye.player.subtitle.backend
 
 import android.graphics.Bitmap
+import android.os.SystemClock
 import android.view.Choreographer
 import android.view.View
 import com.xyoye.common_component.enums.SubtitleRendererBackend
@@ -8,6 +9,8 @@ import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.data_component.enums.SurfaceType
+import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.subtitle.debug.PlaybackSessionStatusProvider
 import com.xyoye.player.subtitle.libass.LibassBridge
 import com.xyoye.player.subtitle.ui.SubtitleOverlayView
 import com.xyoye.player.subtitle.ui.SubtitleSurfaceOverlay
@@ -32,6 +35,8 @@ class LibassRendererBackend : SubtitleRenderer {
     private var choreographer: Choreographer? = null
     @Volatile
     private var fallbackDispatched = false
+    private var trackLoadedAtMs: Long? = null
+    private var firstRenderLogged = false
     private val frameCallback: Choreographer.FrameCallback = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
             if (!renderLoopRunning) {
@@ -46,6 +51,14 @@ class LibassRendererBackend : SubtitleRenderer {
         this.environment = environment
         bridge = LibassBridge()
         fallbackDispatched = false
+        trackLoadedAtMs = null
+        firstRenderLogged = false
+        PlaybackSessionStatusProvider.startSession(
+            backend,
+            currentSurfaceType ?: SurfaceType.VIEW_TEXTURE,
+            bitmap?.width ?: 0,
+            bitmap?.height ?: 0
+        )
     }
 
     override fun release() {
@@ -55,6 +68,7 @@ class LibassRendererBackend : SubtitleRenderer {
         surfaceOverlay = null
         bitmap = null
         trackReady = false
+        PlaybackSessionStatusProvider.endSession()
         stopRenderLoop()
         bridge?.release()
         bridge = null
@@ -69,6 +83,7 @@ class LibassRendererBackend : SubtitleRenderer {
 
     override fun onSurfaceTypeChanged(surfaceType: SurfaceType) {
         currentSurfaceType = surfaceType
+        PlaybackSessionStatusProvider.updateSurface(surfaceType)
         when (surfaceType) {
             SurfaceType.VIEW_SURFACE -> ensureSurfaceOverlay()
             else -> ensureTextureOverlay()
@@ -86,10 +101,11 @@ class LibassRendererBackend : SubtitleRenderer {
         val loader = bridge ?: return false
         trackReady = false
         fallbackDispatched = false
+        trackLoadedAtMs = SystemClock.elapsedRealtime()
         val result = try {
             loader.loadTrack(path)
         } catch (e: Throwable) {
-            DDLog.e("PLAYER-Subtitle", "libass loadTrack crash: ${e.message}")
+            DDLog.e("LIBASS-Error", "libass loadTrack crash: ${e.message}")
             handleFatalError(
                 SubtitleFallbackReason.INIT_FAIL,
                 e,
@@ -101,6 +117,12 @@ class LibassRendererBackend : SubtitleRenderer {
         if (success) {
             loader.setFonts(null, buildFontDirectories(path))
             trackReady = true
+            PlaybackSessionStatusProvider.startSession(
+                backend,
+                currentSurfaceType ?: SurfaceType.VIEW_TEXTURE,
+                bitmap?.width ?: 0,
+                bitmap?.height ?: 0
+            )
             environment?.playerView?.post { startRenderLoop() }
         } else {
             handleFatalError(
@@ -155,6 +177,7 @@ class LibassRendererBackend : SubtitleRenderer {
             bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         }
         bridge?.setFrameSize(width, height)
+        PlaybackSessionStatusProvider.updateFrameSize(width, height)
     }
 
     private fun buildFontDirectories(path: String): List<String> {
@@ -205,23 +228,53 @@ class LibassRendererBackend : SubtitleRenderer {
         if (position < 0) {
             return
         }
+        val offsetPosition = PlayerInitializer.Subtitle.offsetPosition
+        val renderPosition = (position + offsetPosition).coerceAtLeast(0L)
         val changed = try {
-            renderer.render(position, targetBitmap)
+            renderer.render(renderPosition, targetBitmap)
         } catch (e: Throwable) {
-            DDLog.e("PLAYER-Subtitle", "libass render failed: ${e.message}")
+            DDLog.e("LIBASS-Error", "libass render failed: ${e.message}")
             handleFatalError(
                 SubtitleFallbackReason.RENDER_FAIL,
                 e,
-                "render failed at position=$position"
+                "render failed at position=$renderPosition"
             )
             false
         }
         if (!changed) {
             return
         }
+        onFirstFrameRendered()
+        val verticalOffsetPx = calculateVerticalOffset(targetBitmap.height)
         when (currentSurfaceType ?: SurfaceType.VIEW_TEXTURE) {
-            SurfaceType.VIEW_SURFACE -> surfaceOverlay?.render(targetBitmap)
-            SurfaceType.VIEW_TEXTURE -> overlayView?.render(targetBitmap)
+            SurfaceType.VIEW_SURFACE -> surfaceOverlay?.render(targetBitmap, verticalOffsetPx)
+            SurfaceType.VIEW_TEXTURE -> overlayView?.render(targetBitmap, verticalOffsetPx)
+        }
+    }
+
+    private fun calculateVerticalOffset(targetHeight: Int): Int {
+        val offsetPercent = PlayerInitializer.Subtitle.verticalOffset
+        if (offsetPercent == 0 || targetHeight <= 0) {
+            return 0
+        }
+        val offsetPx = (targetHeight * (offsetPercent / 100f)).toInt()
+        return offsetPx.coerceIn(-targetHeight, targetHeight)
+    }
+
+    private fun onFirstFrameRendered() {
+        if (firstRenderLogged.not()) {
+            val start = trackLoadedAtMs
+            if (start != null) {
+                val latency = SystemClock.elapsedRealtime() - start
+                val baseline = LEGACY_LATENCY_BASE_MS
+                val ratio = latency.toDouble() / baseline.toDouble()
+                DDLog.i(
+                    "LIBASS-Perf",
+                    "first subtitle latency=${latency}ms (baseline=${baseline}ms, ratio=${"%.2f".format(ratio)})"
+                )
+            }
+            PlaybackSessionStatusProvider.markFirstRender()
+            firstRenderLogged = true
         }
     }
 
@@ -241,13 +294,18 @@ class LibassRendererBackend : SubtitleRenderer {
             error
         )
         DDLog.e(
-            "PLAYER-Subtitle",
+            "LIBASS-Error",
             "Dispatching subtitle fallback. reason=$reason, message=$message"
         )
+        PlaybackSessionStatusProvider.markFallback(reason, error)
         val env = environment ?: return
         env.playerView.post {
             stopRenderLoop()
             env.fallbackDispatcher.onSubtitleBackendFallback(reason, error)
         }
+    }
+
+    companion object {
+        private const val LEGACY_LATENCY_BASE_MS = 120L
     }
 }
