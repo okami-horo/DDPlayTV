@@ -107,4 +107,8 @@ class SubtitleController(context: Context) : InterSubtitleController {
     fun getViews(): Array<InterControllerView> {
         return subtitleViews
     }
+
+    fun reloadExternalTrack() {
+        externalSubtitleView.reloadCurrentTrack()
+    }
 }

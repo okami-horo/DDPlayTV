@@ -39,6 +39,7 @@ import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PixelFormat
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SurfaceType
+import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.data_component.enums.VLCHWDecode
 import com.xyoye.data_component.enums.VLCPixelFormat
@@ -53,6 +54,9 @@ import com.xyoye.player_component.BR
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ActivityPlayerBinding
 import com.xyoye.player_component.widgets.popup.PlayerPopupManager
+import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
+import com.xyoye.player.subtitle.ui.SubtitleFallbackDialog
+import com.xyoye.player.subtitle.ui.SubtitleFallbackDialog.SubtitleFallbackAction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -62,7 +66,7 @@ import java.io.File
 
 @Route(path = RouteTable.Player.PlayerCenter)
 class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
-    PlayerReceiverListener, ScreencastHandler {
+    PlayerReceiverListener, ScreencastHandler, SubtitleFallbackDispatcher {
 
     companion object {
         private const val MEDIA3_SESSION_SERVICE =
@@ -81,7 +85,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     }
 
     private val danDanPlayer: DanDanVideoPlayer by lazy {
-        DanDanVideoPlayer(this)
+        DanDanVideoPlayer(this).apply {
+            setSubtitleFallbackDispatcher(this@PlayerActivity)
+        }
     }
 
     //悬浮窗
@@ -107,6 +113,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     private var media3BackgroundJob: Job? = null
     private var latestMedia3Session: PlaybackSession? = null
     private var latestMedia3Capability: PlayerCapabilityContract? = null
+    private var subtitleFallbackDialog: SubtitleFallbackDialog? = null
 
     private val media3ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -226,6 +233,8 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         DDLog.i("PLAYER-Activity", "onDestroy")
         beforePlayExit()
         unregisterReceiver()
+        subtitleFallbackDialog?.dismiss()
+        subtitleFallbackDialog = null
         danDanPlayer.release()
         /*
         batteryHelper.release()
@@ -252,6 +261,38 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
     override fun onHeadsetRemoved() {
         danDanPlayer.pause()
+    }
+
+    override fun onSubtitleBackendFallback(reason: SubtitleFallbackReason, error: Throwable?) {
+        runOnUiThread {
+            if (subtitleFallbackDialog == null) {
+                subtitleFallbackDialog = SubtitleFallbackDialog(this) { action ->
+                    when (action) {
+                        SubtitleFallbackAction.SWITCH_TO_LEGACY -> handleSubtitleFallbackSwitch(reason)
+                        SubtitleFallbackAction.CONTINUE_CURRENT -> {
+                            DDLog.w(
+                                "PLAYER-Subtitle",
+                                "User chose to continue with libass despite $reason"
+                            )
+                        }
+                    }
+                }.also { dialog ->
+                    dialog.setOnDismissListener { subtitleFallbackDialog = null }
+                }
+            }
+            subtitleFallbackDialog?.show()
+        }
+    }
+
+    private fun handleSubtitleFallbackSwitch(reason: SubtitleFallbackReason) {
+        if (PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LEGACY_CANVAS) {
+            return
+        }
+        SubtitleConfig.putSubtitleRendererBackend(SubtitleRendererBackend.LEGACY_CANVAS.name)
+        PlayerInitializer.Subtitle.backend = SubtitleRendererBackend.LEGACY_CANVAS
+        danDanPlayer.switchSubtitleBackend(SubtitleRendererBackend.LEGACY_CANVAS)
+        ToastCenter.showOriginalToast(getString(R.string.subtitle_backend_fallback_result))
+        DDLog.i("PLAYER-Subtitle", "Fallback applied due to $reason")
     }
 
     override fun playScreencast(videoSource: BaseVideoSource) {

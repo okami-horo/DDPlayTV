@@ -4,6 +4,9 @@ import android.graphics.Bitmap
 import android.view.Choreographer
 import android.view.View
 import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.player.subtitle.libass.LibassBridge
 import com.xyoye.player.subtitle.ui.SubtitleOverlayView
@@ -27,6 +30,8 @@ class LibassRendererBackend : SubtitleRenderer {
     private var trackReady = false
     private var renderLoopRunning = false
     private var choreographer: Choreographer? = null
+    @Volatile
+    private var fallbackDispatched = false
     private val frameCallback: Choreographer.FrameCallback = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
             if (!renderLoopRunning) {
@@ -40,6 +45,7 @@ class LibassRendererBackend : SubtitleRenderer {
     override fun bind(environment: SubtitleRenderEnvironment) {
         this.environment = environment
         bridge = LibassBridge()
+        fallbackDispatched = false
     }
 
     override fun release() {
@@ -53,6 +59,7 @@ class LibassRendererBackend : SubtitleRenderer {
         bridge?.release()
         bridge = null
         environment = null
+        fallbackDispatched = false
     }
 
     override fun render(subtitle: MixedSubtitle): Boolean {
@@ -78,13 +85,29 @@ class LibassRendererBackend : SubtitleRenderer {
     override fun loadExternalSubtitle(path: String): Boolean {
         val loader = bridge ?: return false
         trackReady = false
-        val success = loader.loadTrack(path)
+        fallbackDispatched = false
+        val result = try {
+            loader.loadTrack(path)
+        } catch (e: Throwable) {
+            DDLog.e("PLAYER-Subtitle", "libass loadTrack crash: ${e.message}")
+            handleFatalError(
+                SubtitleFallbackReason.INIT_FAIL,
+                e,
+                "loadTrack failed for $path"
+            )
+            false
+        }
+        val success = result
         if (success) {
             loader.setFonts(null, buildFontDirectories(path))
             trackReady = true
             environment?.playerView?.post { startRenderLoop() }
         } else {
-            environment?.playerView?.post { stopRenderLoop() }
+            handleFatalError(
+                SubtitleFallbackReason.INIT_FAIL,
+                null,
+                "loadTrack returned false for $path"
+            )
         }
         return success
     }
@@ -172,6 +195,9 @@ class LibassRendererBackend : SubtitleRenderer {
         val env = environment ?: return
         val targetBitmap = bitmap ?: return
         val renderer = bridge ?: return
+        if (fallbackDispatched) {
+            return
+        }
         if (!trackReady || !renderer.isReady()) {
             return
         }
@@ -179,13 +205,49 @@ class LibassRendererBackend : SubtitleRenderer {
         if (position < 0) {
             return
         }
-        val changed = renderer.render(position, targetBitmap)
+        val changed = try {
+            renderer.render(position, targetBitmap)
+        } catch (e: Throwable) {
+            DDLog.e("PLAYER-Subtitle", "libass render failed: ${e.message}")
+            handleFatalError(
+                SubtitleFallbackReason.RENDER_FAIL,
+                e,
+                "render failed at position=$position"
+            )
+            false
+        }
         if (!changed) {
             return
         }
         when (currentSurfaceType ?: SurfaceType.VIEW_TEXTURE) {
             SurfaceType.VIEW_SURFACE -> surfaceOverlay?.render(targetBitmap)
             SurfaceType.VIEW_TEXTURE -> overlayView?.render(targetBitmap)
+        }
+    }
+
+    private fun handleFatalError(
+        reason: SubtitleFallbackReason,
+        error: Throwable?,
+        message: String
+    ) {
+        if (fallbackDispatched) {
+            return
+        }
+        fallbackDispatched = true
+        trackReady = false
+        ErrorReportHelper.postException(
+            "libass backend failure: $message",
+            "SubtitleFallback-$reason",
+            error
+        )
+        DDLog.e(
+            "PLAYER-Subtitle",
+            "Dispatching subtitle fallback. reason=$reason, message=$message"
+        )
+        val env = environment ?: return
+        env.playerView.post {
+            stopRenderLoop()
+            env.fallbackDispatcher.onSubtitleBackendFallback(reason, error)
         }
     }
 }

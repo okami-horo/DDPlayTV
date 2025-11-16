@@ -18,6 +18,7 @@ import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.player.controller.VideoController
+import com.xyoye.player.controller.subtitle.SubtitleController
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.facoty.PlayerFactory
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
@@ -31,6 +32,7 @@ import com.xyoye.player.wrapper.InterVideoTrack
 import com.xyoye.player_component.utils.PlayRecorder
 import com.xyoye.player.subtitle.backend.CanvasTextRendererBackend
 import com.xyoye.player.subtitle.backend.LibassRendererBackend
+import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
 import com.xyoye.player.subtitle.backend.SubtitleRenderEnvironment
 import com.xyoye.player.subtitle.backend.SubtitleRenderer
 import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
@@ -80,6 +82,8 @@ class DanDanVideoPlayer(
     private var mScreenScale = PlayerInitializer.screenScale
 
     private var subtitleRenderer: SubtitleRenderer? = null
+    private var subtitleFallbackDispatcher: SubtitleFallbackDispatcher =
+        SubtitleFallbackDispatcher.NO_OP
 
     init {
         val audioManager = context.applicationContext
@@ -275,7 +279,12 @@ class DanDanVideoPlayer(
     private fun configureSubtitleRenderer() {
         val controller = mVideoController ?: return
         val backend = PlayerInitializer.Subtitle.backend
-        val environment = SubtitleRenderEnvironment(context, controller.getSubtitleController(), this)
+        val environment = SubtitleRenderEnvironment(
+            context,
+            controller.getSubtitleController(),
+            this,
+            subtitleFallbackDispatcher
+        )
         val renderer = when (backend) {
             SubtitleRendererBackend.LEGACY_CANVAS -> CanvasTextRendererBackend()
             SubtitleRendererBackend.LIBASS -> LibassRendererBackend()
@@ -336,11 +345,7 @@ class DanDanVideoPlayer(
 
     fun release() {
         if (mCurrentPlayState != PlayState.STATE_IDLE) {
-            subtitleRenderer?.let {
-                it.release()
-                SubtitleRendererRegistry.unregister(it)
-            }
-            subtitleRenderer = null
+            destroySubtitleRenderer()
             //释放缓存
             CacheManager.release()
             //释放播放器控制器
@@ -374,11 +379,7 @@ class DanDanVideoPlayer(
     }
 
     fun setController(controller: VideoController?) {
-        subtitleRenderer?.let {
-            it.release()
-            SubtitleRendererRegistry.unregister(it)
-        }
-        subtitleRenderer = null
+        destroySubtitleRenderer()
         removeView(mVideoController)
         mVideoController = controller
         mVideoController?.let {
@@ -416,6 +417,10 @@ class DanDanVideoPlayer(
         removeView(view)
     }
 
+    fun setSubtitleFallbackDispatcher(dispatcher: SubtitleFallbackDispatcher) {
+        subtitleFallbackDispatcher = dispatcher
+    }
+
     fun setPopupGestureHandler(handler: OnTouchListener?) {
         mVideoController?.setPopupGestureHandler(handler)
     }
@@ -442,5 +447,27 @@ class DanDanVideoPlayer(
 
     override fun deselectTrack(type: TrackType) {
         return mVideoPlayer.deselectTrack(type)
+    }
+
+    fun switchSubtitleBackend(target: SubtitleRendererBackend) {
+        if (PlayerInitializer.Subtitle.backend == target &&
+            subtitleRenderer?.backend == target
+        ) {
+            return
+        }
+        PlayerInitializer.Subtitle.backend = target
+        destroySubtitleRenderer()
+        configureSubtitleRenderer()
+        if (target == SubtitleRendererBackend.LEGACY_CANVAS) {
+            (mVideoController?.getSubtitleController() as? SubtitleController)?.reloadExternalTrack()
+        }
+    }
+
+    private fun destroySubtitleRenderer() {
+        subtitleRenderer?.let {
+            it.release()
+            SubtitleRendererRegistry.unregister(it)
+        }
+        subtitleRenderer = null
     }
 }

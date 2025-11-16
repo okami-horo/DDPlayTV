@@ -157,6 +157,12 @@ class ExternalSubtitleView(
         }
     }
 
+    fun reloadCurrentTrack() {
+        val track = mAddedTrack ?: return
+        val subtitlePath = track.type.getSubtitle(track.trackResource) ?: return
+        loadSubtitleAsync(subtitlePath)
+    }
+
     private fun showUnsupportedFormatDialog(extension: String) {
         if (unsupportedFormatDialog?.isShowing == true) {
             return

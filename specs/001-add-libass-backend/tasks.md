@@ -51,11 +51,11 @@ Independent Test: 仅修改设置并重新开始一次播放，验证渲染、�
 Goal: 渲染失败出现阻断式弹窗，提供“一键切回旧后端/继续尝试”，切回立即生效，不中断媒体播放。
 Independent Test: 构造初始化/渲染失败，弹窗出现；确认后立刻切回旧后端并恢复字幕；取消则不中断播放。
 
-- [ ] T027 [US2] Create blocking dialog SubtitleFallbackDialog with two actions in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleFallbackDialog.kt
-- [ ] T028 [US2] Trigger dialog on libass init/render first failure in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
-- [ ] T029 [US2] Apply fallback change: update SubtitleConfig and re-bind legacy backend in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt
-- [ ] T030 [P] [US2] Keep playback running while switching backend (no media interruption) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt
-- [ ] T031 [P] [US2] Log fallback reason via ErrorReportHelper in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
+- [X] T027 [US2] Create blocking dialog SubtitleFallbackDialog with two actions in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleFallbackDialog.kt
+- [X] T028 [US2] Trigger dialog on libass init/render first failure in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
+- [X] T029 [US2] Apply fallback change: update SubtitleConfig and re-bind legacy backend in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt
+- [X] T030 [P] [US2] Keep playback running while switching backend (no media interruption) in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt
+- [X] T031 [P] [US2] Log fallback reason via ErrorReportHelper in /workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt
 
 ## Phase 5: User Story 3 (P3)
 Goal: 在关于/调试信息中展示当前会话字幕后端与最近一次回退原因；可用于反馈定位。

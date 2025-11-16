@@ -10,5 +10,6 @@ import com.xyoye.player.controller.subtitle.SubtitleController
 data class SubtitleRenderEnvironment(
     val context: Context,
     val subtitleController: SubtitleController,
-    val playerView: DanDanVideoPlayer
+    val playerView: DanDanVideoPlayer,
+    val fallbackDispatcher: SubtitleFallbackDispatcher
 )

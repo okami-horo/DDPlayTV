@@ -141,4 +141,9 @@
     <string name="subtitle_backend_switch_action">切回旧后端</string>
     <string name="subtitle_backend_keep_action">继续尝试</string>
     <string name="subtitle_backend_switch_result">已切回旧后端，下次播放生效</string>
+    <string name="subtitle_backend_fallback_result">已切回旧后端，字幕已恢复显示</string>
+    <string name="subtitle_fallback_title">字幕渲染异常</string>
+    <string name="subtitle_fallback_message">libass 渲染后端初始化或渲染失败，可切回旧实现继续观看，或继续尝试当前后端（播放不中断）。</string>
+    <string name="subtitle_fallback_switch_action">切回旧后端</string>
+    <string name="subtitle_fallback_retry_action">继续尝试</string>
 </resources>
