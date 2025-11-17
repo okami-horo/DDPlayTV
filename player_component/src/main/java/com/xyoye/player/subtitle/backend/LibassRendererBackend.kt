@@ -185,6 +185,11 @@ class LibassRendererBackend : SubtitleRenderer {
         val fileParent = File(path).parentFile
         if (fileParent != null && fileParent.exists()) {
             directories += fileParent.absolutePath
+            val subDirNames = listOf("Fonts", "fonts", "font")
+            subDirNames
+                .map { File(fileParent, it) }
+                .filter { it.exists() && it.isDirectory }
+                .forEach { directories += it.absolutePath }
         }
         val systemCandidates = listOf(
             "/system/fonts",
