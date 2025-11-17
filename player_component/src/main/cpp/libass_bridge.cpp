@@ -122,12 +122,20 @@ void ConfigureFonts(LibassContext *context, const std::string &default_font,
         __android_log_print(ANDROID_LOG_INFO, kLogTag, "libass font default override: %s",
                             default_font.c_str());
     }
+    const std::string *selected_dir = nullptr;
     for (const auto &dir : font_dirs) {
         if (!dir.empty()) {
-            __android_log_print(ANDROID_LOG_INFO, kLogTag, "libass font dir added: %s",
-                                dir.c_str());
-            ass_set_fonts_dir(context->library, dir.c_str());
+            selected_dir = &dir;
+            break;
         }
+    }
+    if (selected_dir != nullptr) {
+        __android_log_print(ANDROID_LOG_INFO, kLogTag, "libass font dir set: %s",
+                            selected_dir->c_str());
+        ass_set_fonts_dir(context->library, selected_dir->c_str());
+    } else {
+        __android_log_print(ANDROID_LOG_WARN, kLogTag,
+                            "libass font dir not provided; relying on embedded fonts only");
     }
 
     const char *font_ptr = default_font.empty() ? nullptr : default_font.c_str();

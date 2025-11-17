@@ -182,6 +182,27 @@ class LibassRendererBackend : SubtitleRenderer {
 
     private fun buildFontDirectories(path: String): List<String> {
         val directories = LinkedHashSet<String>()
+        val context = environment?.context
+        context?.let { ctx ->
+            val externalFonts = ctx.getExternalFilesDir(null)?.let { base ->
+                File(base, "fonts").apply {
+                    if (!exists()) {
+                        runCatching { mkdirs() }
+                    }
+                }
+            }
+            if (externalFonts?.exists() == true && externalFonts.isDirectory) {
+                directories += externalFonts.absolutePath
+            }
+            val internalFonts = File(ctx.filesDir, "fonts").apply {
+                if (!exists()) {
+                    runCatching { mkdirs() }
+                }
+            }
+            if (internalFonts.exists() && internalFonts.isDirectory) {
+                directories += internalFonts.absolutePath
+            }
+        }
         PlayerInitializer.selectSourceDirectory?.let { sourceDirPath ->
             val sourceDir = File(sourceDirPath)
             if (sourceDir.exists() && sourceDir.isDirectory) {
@@ -191,19 +212,6 @@ class LibassRendererBackend : SubtitleRenderer {
                     .map { File(sourceDir, it) }
                     .filter { it.exists() && it.isDirectory }
                     .forEach { directories += it.absolutePath }
-            }
-        }
-        environment?.context?.let { context ->
-            val internalFonts = File(context.filesDir, "fonts")
-            if (internalFonts.exists() && internalFonts.isDirectory) {
-                directories += internalFonts.absolutePath
-            }
-            val externalFiles = context.getExternalFilesDir(null)
-            if (externalFiles != null) {
-                val externalFonts = File(externalFiles, "fonts")
-                if (externalFonts.exists() && externalFonts.isDirectory) {
-                    directories += externalFonts.absolutePath
-                }
             }
         }
         val systemCandidates = listOf(
