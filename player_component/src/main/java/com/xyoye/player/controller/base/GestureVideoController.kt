@@ -1,7 +1,9 @@
 package com.xyoye.player.controller.base
 
 import android.app.Activity
+import android.app.UiModeManager
 import android.content.Context
+import android.content.res.Configuration
 import android.media.AudioManager
 import android.util.AttributeSet
 import android.view.GestureDetector
@@ -59,6 +61,9 @@ abstract class GestureVideoController(
             onStop = { stopAccelerate() }
         )
     }
+    private val disableTouchGestures: Boolean by lazy {
+        context.isTelevisionUiMode()
+    }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -70,16 +75,18 @@ abstract class GestureVideoController(
         mCurrentPlayState = playState
     }
 
-    /*
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
         mPopupGestureHandler?.onTouch(v, event)
+        if (disableTouchGestures) {
+            return false
+        }
         return mGestureDetector.onTouchEvent(event)
     }
-    */
-    override fun onTouch(v: View?, event: MotionEvent) = false
 
-    /*
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (disableTouchGestures) {
+            return super.onTouchEvent(event)
+        }
         if (mGestureDetector.onTouchEvent(event).not() && isPopupMode().not()) {
             when (event.action) {
                 MotionEvent.ACTION_UP -> {
@@ -98,8 +105,6 @@ abstract class GestureVideoController(
         }
         return super.onTouchEvent(event)
     }
-    */
-    override fun onTouchEvent(event: MotionEvent) = super.onTouchEvent(event)
 
     override fun onFling(
         e1: MotionEvent?,
@@ -110,12 +115,12 @@ abstract class GestureVideoController(
         return false
     }
 
-    /*
     override fun onLongPress(e: MotionEvent) {
+        if (disableTouchGestures) {
+            return
+        }
         longPressAccelerator.enable()
     }
-    */
-    override fun onLongPress(e: MotionEvent) = Unit
 
     override fun onShowPress(e: MotionEvent) {}
 
@@ -123,8 +128,10 @@ abstract class GestureVideoController(
 
     override fun onSingleTapUp(e: MotionEvent) = false
 
-    /*
     override fun onDown(e: MotionEvent): Boolean {
+        if (disableTouchGestures) {
+            return false
+        }
         if (!isNormalPlayState() or context.isScreenEdge(e)) {
             return true
         }
@@ -137,36 +144,36 @@ abstract class GestureVideoController(
         mChangeVolume = false
         return true
     }
-    */
-    override fun onDown(e: MotionEvent) = false
 
-    /*
     override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+        if (disableTouchGestures) {
+            return false
+        }
         if (isNormalPlayState()) {
             mControlWrapper.toggleVisible()
         }
         return true
     }
-    */
-    override fun onSingleTapConfirmed(e: MotionEvent) = false
 
-    /*
     override fun onDoubleTap(e: MotionEvent): Boolean {
+        if (disableTouchGestures) {
+            return false
+        }
         if (!isLocked() and isNormalPlayState()) {
             togglePlay()
         }
         return true
     }
-    */
-    override fun onDoubleTap(e: MotionEvent) = false
 
-    /*
     override fun onScroll(
         e1: MotionEvent?,
         e2: MotionEvent,
         distanceX: Float,
         distanceY: Float
     ): Boolean {
+        if (disableTouchGestures) {
+            return false
+        }
         if (e1 == null) {
             return false
         }
@@ -216,16 +223,11 @@ abstract class GestureVideoController(
         }
         return true
     }
-    */
-    override fun onScroll(
-        e1: MotionEvent?,
-        e2: MotionEvent,
-        distanceX: Float,
-        distanceY: Float
-    ) = false
 
-    /*
     protected fun slideToChangePosition(deltaX: Float) {
+        if (disableTouchGestures) {
+            return
+        }
         //滑动距离与实际进度缩放比例
         val zoomPercent = 120 * 1000
         val duration = mControlWrapper.getDuration()
@@ -245,11 +247,11 @@ abstract class GestureVideoController(
         }
         mSeekPosition = newPosition
     }
-    */
-    protected fun slideToChangePosition(deltaX: Float) = Unit
 
-    /*
     protected fun slideToChangeBrightness(deltaY: Float) {
+        if (disableTouchGestures) {
+            return
+        }
         mBrightness = if (mBrightness == -1f) 0.5f else mBrightness
 
         var newBrightness = deltaY * 2f / measuredHeight * 1.0f + mBrightness
@@ -269,11 +271,11 @@ abstract class GestureVideoController(
             }
         }
     }
-    */
-    protected fun slideToChangeBrightness(deltaY: Float) = Unit
 
-    /*
     protected fun slideToChangeVolume(deltaY: Float) {
+        if (disableTouchGestures) {
+            return
+        }
         val maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
         var newVolume = (deltaY * 2 / measuredHeight * maxVolume + mStreamVolume).toInt()
@@ -291,11 +293,11 @@ abstract class GestureVideoController(
             }
         }
     }
-    */
-    protected fun slideToChangeVolume(deltaY: Float) = Unit
 
-    /*
     fun onVolumeKeyDown(isVolumeUp: Boolean) {
+        if (disableTouchGestures) {
+            return
+        }
         val maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         val curVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
 
@@ -320,8 +322,6 @@ abstract class GestureVideoController(
             }
         }
     }
-    */
-    fun onVolumeKeyDown(isVolumeUp: Boolean) = Unit
 
     fun setPopupGestureHandler(handler: OnTouchListener?) {
         mPopupGestureHandler = handler
@@ -354,8 +354,15 @@ abstract class GestureVideoController(
         }
     }
 
-    private fun isNormalPlayState() = isWrapperInitialized() and
-            (mCurrentPlayState != PlayState.STATE_ERROR) and
-            (mCurrentPlayState != PlayState.STATE_IDLE) and
-            (mCurrentPlayState != PlayState.STATE_START_ABORT)
+private fun isNormalPlayState() = isWrapperInitialized() and
+        (mCurrentPlayState != PlayState.STATE_ERROR) and
+        (mCurrentPlayState != PlayState.STATE_IDLE) and
+        (mCurrentPlayState != PlayState.STATE_START_ABORT)
+}
+
+private fun Context.isTelevisionUiMode(): Boolean {
+    val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
+    val currentModeType = uiModeManager?.currentModeType
+        ?: (resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)
+    return currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
 }
