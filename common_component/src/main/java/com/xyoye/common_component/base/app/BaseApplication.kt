@@ -13,6 +13,7 @@ import com.tencent.mmkv.MMKV
 import com.xyoye.common_component.BuildConfig
 import com.xyoye.common_component.log.AppLogger
 import com.xyoye.common_component.notification.Notifications
+import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.common_component.utils.ActivityHelper
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.SecurityHelperConfig
@@ -75,6 +76,7 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         ActivityHelper.instance.init(this)
         EMASHelper.init(this)
         OpenCCFile.init(this)
+        SubtitleFontManager.initialize(this)
 
         DDLog.i("APP-Init", "application onCreate finished")
     }

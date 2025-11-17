@@ -5,6 +5,7 @@ import android.os.SystemClock
 import android.view.Choreographer
 import android.view.View
 import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.enums.SubtitleFallbackReason
@@ -15,8 +16,6 @@ import com.xyoye.player.subtitle.libass.LibassBridge
 import com.xyoye.player.subtitle.ui.SubtitleOverlayView
 import com.xyoye.player.subtitle.ui.SubtitleSurfaceOverlay
 import com.xyoye.subtitle.MixedSubtitle
-import java.io.File
-import java.util.LinkedHashSet
 import java.util.Locale
 import kotlin.jvm.Volatile
 
@@ -115,7 +114,10 @@ class LibassRendererBackend : SubtitleRenderer {
         }
         val success = result
         if (success) {
-            loader.setFonts(null, buildFontDirectories(path))
+            loader.setFonts(
+                SubtitleFontManager.DEFAULT_FONT_FAMILY,
+                buildFontDirectories()
+            )
             trackReady = true
             PlaybackSessionStatusProvider.startSession(
                 backend,
@@ -180,53 +182,16 @@ class LibassRendererBackend : SubtitleRenderer {
         PlaybackSessionStatusProvider.updateFrameSize(width, height)
     }
 
-    private fun buildFontDirectories(path: String): List<String> {
-        val directories = LinkedHashSet<String>()
-        val context = environment?.context
-        context?.let { ctx ->
-            val externalFonts = ctx.getExternalFilesDir(null)?.let { base ->
-                File(base, "fonts").apply {
-                    if (!exists()) {
-                        runCatching { mkdirs() }
-                    }
-                }
-            }
-            if (externalFonts?.exists() == true && externalFonts.isDirectory) {
-                directories += externalFonts.absolutePath
-            }
-            val internalFonts = File(ctx.filesDir, "fonts").apply {
-                if (!exists()) {
-                    runCatching { mkdirs() }
-                }
-            }
-            if (internalFonts.exists() && internalFonts.isDirectory) {
-                directories += internalFonts.absolutePath
-            }
+    private fun buildFontDirectories(): List<String> {
+        val context = environment?.context ?: return emptyList()
+        SubtitleFontManager.ensureDefaultFont(context)
+        val directoryPath = SubtitleFontManager.getFontsDirectoryPath(context)
+        if (directoryPath == null) {
+            DDLog.e("LIBASS-Error", "subtitle font directory unavailable")
+            return emptyList()
         }
-        PlayerInitializer.selectSourceDirectory?.let { sourceDirPath ->
-            val sourceDir = File(sourceDirPath)
-            if (sourceDir.exists() && sourceDir.isDirectory) {
-                directories += sourceDir.absolutePath
-                val subDirNames = listOf("Fonts", "fonts", "font")
-                subDirNames
-                    .map { File(sourceDir, it) }
-                    .filter { it.exists() && it.isDirectory }
-                    .forEach { directories += it.absolutePath }
-            }
-        }
-        val systemCandidates = listOf(
-            "/system/fonts",
-            "/system/font",
-            "/data/fonts"
-        )
-        systemCandidates.filter { File(it).exists() }.forEach { directories += it }
-        if (directories.isNotEmpty()) {
-            DDLog.i(
-                "LIBASS-Debug",
-                "subtitle font search dirs=${directories.joinToString(prefix = "[", postfix = "]")}"
-            )
-        }
-        return directories.toList()
+        DDLog.i("LIBASS-Debug", "subtitle font search dir=[$directoryPath]")
+        return listOf(directoryPath)
     }
 
     private fun startRenderLoop() {

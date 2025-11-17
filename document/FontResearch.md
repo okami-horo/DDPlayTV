@@ -1,26 +1,79 @@
-Kodi
+字幕字体方案（简化版：内置默认字体）
 
-  - xbmc/cores/VideoPlayer/DVDSubtitles/DVDSubtitlesLibass.cpp:95-156 中初始化 libass 时会调用 ass_set_fonts_dir 将用户字体目录 special://home/
-    media/Fonts/（KODI::UTILS::FONT::FONTPATH::USER）注册到引擎，同时遍历系统字体 special://xbmc/media/Fonts/ 以及临时字体 special://temp/fonts/，
-    逐个将 .ttf/.otf 内容读入内存后 ass_add_font 给 libass，并最终 ass_set_fonts(..., ASS_FONTPROVIDER_AUTODETECT, ...) 让这些字体参与渲染。这意味
-    着只要把远端/附件字体复制到临时目录，Kodi 就能当成本地字体使用。
-  - 官方文档也定义了 SYSTEM = "special://xbmc/media/Fonts/", USER = "special://home/media/Fonts/", TEMP = "special://temp/fonts/"（https://
-    xbmc.github.io/docs.kodi.tv/master/kodi-base/da/d61/...），说明 temp/fonts 专门用来接收运行期字体。
-  - GitHub issue #23294 描述了 Android 版 Kodi 在扫描库或播放 .mkv 时会自动把附件字体解包到 Android/data/org.xbmc.kodi/files/.kodi/temp/fonts，即
-    使视频来自网络，也通过这种“抽取→缓存→注册”的方式给 libass 提供可用字体。从该问题也能看出 Kodi 会维护一个字体数据库，删除缓存后需要重新抽取。
+目标
 
-  Jellyfin
+- 稳定可控：全部由应用自身控制。
+- 开箱即用：APK 内置一套覆盖面较广的默认字体，首次运行即可正确渲染。
+- 可扩展：用户可向私有目录添加更多字体。
+- 默认字体“可配置”暂不实现（优先级不高）；本文仅描述当前实现与后续预期逻辑。
+- 改动最小：尽量不引入复杂的动态切换与多目录合并逻辑。
 
-  - issue #13914 说明 Jellyfin 服务器在执行“内嵌 ASS 字幕烧录”时依赖 AttachmentExtractor 把 .mkv 附件字体写入 /cache/attachments/<id>，然后在调用
-    ffmpeg 时通过 fontsdir 参数把该临时目录传给 libass；如果先在浏览器端播放一次、触发缓存，下次 Android 客户端即使远程播放也能直接复用这些字体。
-    Jellyfin 的策略与 Kodi 类似：远端源→提前下载字体→提供本地路径给渲染引擎。
+核心方案
 
-  mpv
+- 在 APK 中打包默认字体：`app/src/main/assets/fonts/<Default>.ttf|otf`（建议选择覆盖 CJK 的开源字体，如 Noto Sans CJK SC）。
+- 启动时检查 `<filesDir>/fonts` 是否包含“默认字体”文件；若缺失，则从 `assets/fonts` 复制对应文件到 `<filesDir>/fonts`（目录不存在则创建）。
+- libass 配置固定为“扫描单一目录”：
+  - provider = NONE（ASS_FONTPROVIDER_NONE）
+  - directory = `<filesDir>/fonts`（只传这一个目录给 `ass_set_fonts_dir`）
+  - defaultFont = 内置字体的 family 名（需与字体内部 family 完全一致）
+- 用户额外字体也放在 `<filesDir>/fonts`。后续可提供设置页导入与选择默认字体。
+- 兜底：默认字体必须内置并成功复制到 `<filesDir>/fonts`；若复制失败，视为严重错误，需提示用户并记录日志（可按产品决策选择：允许继续播放但字幕可能缺字，或切换到 legacy 字幕后端/隐藏字幕）。
 
-  - man.archlinux.org/man/extra/mpv/mpv.1.en:5285-5288 清楚写到 --sub-fonts-dir=<path>：mpv 会把指定目录下的字体文件加载进 libass 供字幕渲染（默认
-    是 ~/.config/mpv/fonts/subfont.ttf）。因此只要能把远端字体提前同步到一个本地目录，就能让 mpv 播放任意来源的流时使用这些字体。
-  - 《Load Local Subtitles While MPV Plays Remote Videos》（https://www.nite07.com/en/posts/mpv-remote-video-local-sub/）给出一套实践：用 rclone
-    在 LibassBridge.setFonts() 中把缓存路径加入搜索目录。对于不便下载整包的场景，可以参照 mpv 的方案，通过挂载或流式方式在本地制造一个“伪目录”供
-    libass 扫描。
-  - 额外注意缓存清理策略（Kodi 的 issue 就暴露了缓存过大会占满空间），以及在首次播放/切换云端源时确保字体已经下载完毕再初始化字幕，以免出现
-    Jellyfin 那种“AttachmentExtractor 未生效导致首次播放没有字体”的问题。
+实施步骤
+
+- 资源与复制
+- 将默认字体置于 `app/src/main/assets/fonts`。
+- 启动时执行“默认字体检查与复制”：
+  - 创建 `<filesDir>/fonts`（若不存在）。
+  - 判断“默认字体”文件是否存在于 `<filesDir>/fonts`。
+  - 缺失则从 `assets/fonts` 复制；存在则跳过。
+- 打印复制结果日志（成功/跳过/失败）。
+
+启动检查流程（明确）
+
+- Application.onCreate：
+  - 计算默认字体文件名（例如 `NotoSansCJKsc-Regular.otf`）。
+  - 确保 `<filesDir>/fonts` 目录存在。
+  - 若 `<filesDir>/fonts/<默认字体文件>` 不存在，则从 `assets/fonts/<默认字体文件>` 复制到该目录；
+  - 复制失败则记录严重错误日志，并按产品策略提示用户（字幕可能缺字或切回旧后端）。
+
+- 渲染配置
+  - 仅设置一次目录：`ass_set_fonts_dir(library, <filesDir>/fonts)`。
+  - 固定 provider=NONE：`ass_set_fonts(renderer, defaultFont, ..., ASS_FONTPROVIDER_NONE, ...)`。
+  - 当前实现：始终使用“打包内置字体”的 family 作为 `defaultFont`。
+  - 后续预期：若设置项未配置默认字体，则使用打包内置字体；若配置了且该字体存在于 `<filesDir>/fonts`，则使用配置的字体；若配置的字体不存在，则回退为打包内置字体。
+
+- 设置项（后续迭代，当前不实现）
+  - 新增“默认字幕字体” ListPreference（key：`subtitle_default_font_family`）。
+  - 列表来源：枚举 `<filesDir>/fonts` 下的字体并读取 family 名作为 entries。
+  - 应用逻辑：
+    - 未配置 ⇒ 使用打包内置字体。
+    - 已配置且存在 ⇒ 使用配置字体。
+    - 已配置但不存在 ⇒ 回退为打包内置字体。
+
+日志与验证
+
+- 期望 ADB 日志（目录存在）
+  - `libass font provider: NONE`
+  - `libass font dir set: <filesDir>/fonts`
+  - `libass font default: <family>`
+  - `fontselect: (...) -> <filesDir>/fonts/xxx.ttf`
+
+
+回退与缺字处理
+
+- 缺字时 libass 会在目录内回退到其它字体；若设置了 `defaultFont`，将优先回退到该字体。
+- 若仍缺字：提示用户添加更多字体到 `<filesDir>/fonts`，或在设置中调整默认字体。
+- 不建议复制系统字体到私有目录（体积大、首启耗时长、低收益）。
+
+权衡与注意
+
+- APK 体积：内置 CJK 字体会增加体积（15–25MB 量级），建议只带一套“默认回退”字体，其它由用户按需添加。
+- 许可合规：确保内置字体许可允许分发；family 名必须与 `setFonts` 传入值一致。
+- 稳定性：始终使用 `<filesDir>/fonts`；若复制失败应当明确提示并记录，避免“无感失败”。
+
+非目标（明确不做）
+
+- 不做多目录扫描与合并（避免 `ass_set_fonts_dir` 最后覆盖的问题）。
+ 
+- 不全量复制系统字体到私有目录。
