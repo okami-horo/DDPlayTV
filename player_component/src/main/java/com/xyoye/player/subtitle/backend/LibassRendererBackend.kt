@@ -193,6 +193,19 @@ class LibassRendererBackend : SubtitleRenderer {
                     .forEach { directories += it.absolutePath }
             }
         }
+        environment?.context?.let { context ->
+            val internalFonts = File(context.filesDir, "fonts")
+            if (internalFonts.exists() && internalFonts.isDirectory) {
+                directories += internalFonts.absolutePath
+            }
+            val externalFiles = context.getExternalFilesDir(null)
+            if (externalFiles != null) {
+                val externalFonts = File(externalFiles, "fonts")
+                if (externalFonts.exists() && externalFonts.isDirectory) {
+                    directories += externalFonts.absolutePath
+                }
+            }
+        }
         val systemCandidates = listOf(
             "/system/fonts",
             "/system/font",
