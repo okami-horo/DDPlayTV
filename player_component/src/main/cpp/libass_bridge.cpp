@@ -6,6 +6,8 @@
 #include <ass/ass.h>
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdarg>
 #include <cstring>
 #include <memory>
 #include <mutex>
@@ -29,6 +31,27 @@ void LogError(const char *message) {
 
 void LogInfo(const char *message) {
     __android_log_print(ANDROID_LOG_INFO, kLogTag, "%s", message);
+}
+
+void LibassMessageCallback(int level, const char *fmt, va_list args, void *data) {
+    (void)data;
+    char buffer[1024];
+    if (fmt != nullptr) {
+        vsnprintf(buffer, sizeof(buffer), fmt, args);
+        buffer[sizeof(buffer) - 1] = '\0';
+    } else {
+        std::strncpy(buffer, "(null)", sizeof(buffer));
+        buffer[sizeof(buffer) - 1] = '\0';
+    }
+    int android_level = ANDROID_LOG_DEBUG;
+    if (level <= 1) {
+        android_level = ANDROID_LOG_ERROR;
+    } else if (level <= 3) {
+        android_level = ANDROID_LOG_WARN;
+    } else if (level <= 5) {
+        android_level = ANDROID_LOG_INFO;
+    }
+    __android_log_print(android_level, kLogTag, "libass[%d]: %s", level, buffer);
 }
 
 std::string JStringToUtf8(JNIEnv *env, jstring value) {
@@ -93,8 +116,16 @@ void ConfigureFonts(LibassContext *context, const std::string &default_font,
     if (context == nullptr || context->library == nullptr || context->renderer == nullptr) {
         return;
     }
+    if (default_font.empty()) {
+        __android_log_print(ANDROID_LOG_INFO, kLogTag, "libass font default: auto");
+    } else {
+        __android_log_print(ANDROID_LOG_INFO, kLogTag, "libass font default override: %s",
+                            default_font.c_str());
+    }
     for (const auto &dir : font_dirs) {
         if (!dir.empty()) {
+            __android_log_print(ANDROID_LOG_INFO, kLogTag, "libass font dir added: %s",
+                                dir.c_str());
             ass_set_fonts_dir(context->library, dir.c_str());
         }
     }
@@ -232,6 +263,7 @@ Java_com_xyoye_player_subtitle_libass_LibassBridge_nativeCreate(JNIEnv *env, job
     }
 
     ass_set_extract_fonts(context->library, 1);
+    ass_set_message_cb(context->library, LibassMessageCallback, nullptr);
     context->renderer = ass_renderer_init(context->library);
     if (context->renderer == nullptr) {
         ass_library_done(context->library);

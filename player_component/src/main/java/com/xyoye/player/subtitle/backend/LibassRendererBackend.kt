@@ -197,6 +197,12 @@ class LibassRendererBackend : SubtitleRenderer {
             "/data/fonts"
         )
         systemCandidates.filter { File(it).exists() }.forEach { directories += it }
+        if (directories.isNotEmpty()) {
+            DDLog.i(
+                "LIBASS-Debug",
+                "subtitle font search dirs=${directories.joinToString(prefix = \"[\", postfix = \"]\")}"
+            )
+        }
         return directories.toList()
     }
 
