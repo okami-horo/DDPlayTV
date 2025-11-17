@@ -141,8 +141,9 @@ inline uint8_t MulDiv255(uint32_t value, uint32_t scale) {
 }
 
 inline uint8_t AssAlphaToAndroid(uint32_t color) {
-    const uint8_t ass_alpha = static_cast<uint8_t>((color >> 24) & 0xFF);
-    return 255 - ass_alpha;
+    // ASS_Image stores colors as 0xRRGGBBAA with alpha inverted (0=opaque).
+    const uint8_t ass_alpha = static_cast<uint8_t>(color & 0xFF);
+    return static_cast<uint8_t>(255 - ass_alpha);
 }
 
 void BlendPixel(uint8_t *dst, uint8_t coverage, uint32_t color) {
@@ -155,9 +156,9 @@ void BlendPixel(uint8_t *dst, uint8_t coverage, uint32_t color) {
         return;
     }
 
-    const uint8_t red = static_cast<uint8_t>(color & 0xFF);
-    const uint8_t green = static_cast<uint8_t>((color >> 8) & 0xFF);
-    const uint8_t blue = static_cast<uint8_t>((color >> 16) & 0xFF);
+    const uint8_t red = static_cast<uint8_t>((color >> 24) & 0xFF);
+    const uint8_t green = static_cast<uint8_t>((color >> 16) & 0xFF);
+    const uint8_t blue = static_cast<uint8_t>((color >> 8) & 0xFF);
 
     const uint8_t src_r = MulDiv255(red, src_alpha);
     const uint8_t src_g = MulDiv255(green, src_alpha);
