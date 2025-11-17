@@ -182,14 +182,16 @@ class LibassRendererBackend : SubtitleRenderer {
 
     private fun buildFontDirectories(path: String): List<String> {
         val directories = LinkedHashSet<String>()
-        val fileParent = File(path).parentFile
-        if (fileParent != null && fileParent.exists()) {
-            directories += fileParent.absolutePath
-            val subDirNames = listOf("Fonts", "fonts", "font")
-            subDirNames
-                .map { File(fileParent, it) }
-                .filter { it.exists() && it.isDirectory }
-                .forEach { directories += it.absolutePath }
+        PlayerInitializer.selectSourceDirectory?.let { sourceDirPath ->
+            val sourceDir = File(sourceDirPath)
+            if (sourceDir.exists() && sourceDir.isDirectory) {
+                directories += sourceDir.absolutePath
+                val subDirNames = listOf("Fonts", "fonts", "font")
+                subDirNames
+                    .map { File(sourceDir, it) }
+                    .filter { it.exists() && it.isDirectory }
+                    .forEach { directories += it.absolutePath }
+            }
         }
         val systemCandidates = listOf(
             "/system/fonts",
@@ -200,7 +202,7 @@ class LibassRendererBackend : SubtitleRenderer {
         if (directories.isNotEmpty()) {
             DDLog.i(
                 "LIBASS-Debug",
-                "subtitle font search dirs=${directories.joinToString(prefix = "[", postfix = "]")}" 
+                "subtitle font search dirs=${directories.joinToString(prefix = "[", postfix = "]")}"
             )
         }
         return directories.toList()

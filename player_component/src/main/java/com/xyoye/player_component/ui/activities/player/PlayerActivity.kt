@@ -474,11 +474,14 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     private fun afterInitPlayer() {
         val source = videoSource ?: return
 
-        //设置本地视频文件的父文件夹，用于选取弹、字幕
-        if (source.getMediaType() == MediaType.LOCAL_STORAGE) {
-            File(source.getVideoUrl()).parentFile?.absolutePath?.let {
-                PlayerInitializer.selectSourceDirectory = it
-                DDLog.i("PLAYER-Source", "select directory set path=$it")
+        // 设置当前视频的父目录（若为本地可访问路径），用于字幕/字体同目录检索
+        File(source.getVideoUrl()).parentFile?.let { parent ->
+            if (parent.exists()) {
+                PlayerInitializer.selectSourceDirectory = parent.absolutePath
+                DDLog.i(
+                    "PLAYER-Source",
+                    "select directory set path=${parent.absolutePath} type=${source.getMediaType()}"
+                )
             }
         }
 
