@@ -200,7 +200,7 @@ class SubtitleOverlayView @JvmOverloads constructor(
             val drawMs = drawDurationNs / 1_000_000.0
             val traceWindowMs = if (lastTraceAtNs == 0L) 0.0 else (nowNs - lastTraceAtNs) / 1_000_000.0
             lastTraceAtNs = nowNs
-            DDLog.d(
+            DDLog.i(
                 "LIBASS-Render",
                 "cadence frame=$renderCount interval=${"%.2f".format(sinceLastMs)}ms draw=${"%.2f".format(drawMs)}ms window=${"%.2f".format(traceWindowMs)}ms"
             )
