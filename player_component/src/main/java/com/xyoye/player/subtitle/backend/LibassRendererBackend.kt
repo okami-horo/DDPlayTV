@@ -200,7 +200,7 @@ class LibassRendererBackend : SubtitleRenderer {
         if (directories.isNotEmpty()) {
             DDLog.i(
                 "LIBASS-Debug",
-                "subtitle font search dirs=${directories.joinToString(prefix = \"[\", postfix = \"]\")}"
+                "subtitle font search dirs=${directories.joinToString(prefix = "[", postfix = "]")}" 
             )
         }
         return directories.toList()
