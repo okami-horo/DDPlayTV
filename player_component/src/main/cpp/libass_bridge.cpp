@@ -131,7 +131,7 @@ void ConfigureFonts(LibassContext *context, const std::string &default_font,
     }
 
     const char *font_ptr = default_font.empty() ? nullptr : default_font.c_str();
-    ass_set_fonts(context->renderer, font_ptr, nullptr, ASS_FONTPROVIDER_AUTODETECT, nullptr, 0);
+    ass_set_fonts(context->renderer, font_ptr, nullptr, ASS_FONTPROVIDER_NONE, nullptr, 0);
 }
 
 struct BitmapGuard {
