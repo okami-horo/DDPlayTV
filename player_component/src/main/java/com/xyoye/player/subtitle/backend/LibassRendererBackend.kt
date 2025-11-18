@@ -1,5 +1,6 @@
 package com.xyoye.player.subtitle.backend
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.os.SystemClock
 import android.view.Choreographer
@@ -114,9 +115,18 @@ class LibassRendererBackend : SubtitleRenderer {
         }
         val success = result
         if (success) {
+            val context = environment?.context
+            if (context == null) {
+                DDLog.e("LIBASS-Error", "libass setFonts skipped: context unavailable")
+            }
+            val fontDirectories = context?.let { buildFontDirectories(it) } ?: emptyList()
+            val defaultFontPath = context?.let { SubtitleFontManager.getDefaultFontPath(it) }
+            if (defaultFontPath == null) {
+                DDLog.e("LIBASS-Error", "default subtitle font unavailable; libass may render empty frames")
+            }
             loader.setFonts(
-                SubtitleFontManager.DEFAULT_FONT_FAMILY,
-                buildFontDirectories()
+                defaultFontPath,
+                fontDirectories
             )
             trackReady = true
             PlaybackSessionStatusProvider.startSession(
@@ -182,8 +192,7 @@ class LibassRendererBackend : SubtitleRenderer {
         PlaybackSessionStatusProvider.updateFrameSize(width, height)
     }
 
-    private fun buildFontDirectories(): List<String> {
-        val context = environment?.context ?: return emptyList()
+    private fun buildFontDirectories(context: Context): List<String> {
         SubtitleFontManager.ensureDefaultFont(context)
         val directoryPath = SubtitleFontManager.getFontsDirectoryPath(context)
         if (directoryPath == null) {

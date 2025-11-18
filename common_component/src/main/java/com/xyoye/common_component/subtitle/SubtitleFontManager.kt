@@ -54,6 +54,17 @@ object SubtitleFontManager {
         }
     }
 
+    fun getDefaultFontPath(context: Context): String? {
+        val directory = ensureFontsDirectory(context)
+        val targetFile = File(directory, DEFAULT_FONT_FILE)
+        val fontAvailable = targetFile.exists() && targetFile.length() > 0L
+        if (!fontAvailable && !ensureDefaultFont(context)) {
+            DDLog.e(TAG, "default font unavailable: ${targetFile.absolutePath}")
+            return null
+        }
+        return targetFile.absolutePath
+    }
+
     private fun ensureFontsDirectory(context: Context): File {
         val directory = File(context.filesDir, FONT_DIR_NAME)
         if (!directory.exists()) {
