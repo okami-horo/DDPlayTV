@@ -1,0 +1,5 @@
+弹弹play 概念版v4.1.3
+
+1. 新增 libass 字幕渲染后端（ASS/SSA；Exo/Media3 内核下的外挂字幕生效）
+2. 播放器内核升级：由 Exo 升级至 AndroidX Media3（稳定性与遥测适配）
+3. 构建与发布流程修复：GitHub Release Tag 处理与自动生成优化
