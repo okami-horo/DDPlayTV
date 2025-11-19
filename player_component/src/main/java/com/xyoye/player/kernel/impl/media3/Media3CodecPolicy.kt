@@ -45,6 +45,8 @@ object Media3CodecPolicy {
 
     private val runtimeBlacklist = CopyOnWriteArraySet<String>()
     private val activeDecoders = ConcurrentHashMap<String, String>()
+    @Volatile
+    private var lastDecoderUsed: String? = null
 
     private var descriptor: PlaybackDescriptor? = null
 
@@ -82,6 +84,7 @@ object Media3CodecPolicy {
         )
         runtimeBlacklist.clear()
         activeDecoders.clear()
+        lastDecoderUsed = null
     }
 
     fun isDecoderAllowed(name: String, mimeType: String): Boolean {
@@ -137,7 +140,11 @@ object Media3CodecPolicy {
         }
         val guessedMime = fallbackMimeType ?: descriptor?.declaredMimeType
         val guessedDecoder = guessDecoderForMime(guessedMime)
-        return guessedDecoder?.let {
+        if (guessedDecoder != null) {
+            return DecoderFailure(guessedDecoder, guessedMime, cause?.message ?: error.message)
+        }
+        val fallbackDecoder = lastDecoderUsed
+        return fallbackDecoder?.let {
             DecoderFailure(it, guessedMime, cause?.message ?: error.message)
         }
     }
@@ -153,7 +160,9 @@ object Media3CodecPolicy {
 
     fun markPreferredDecoder(mimeType: String, decoderName: String) {
         val mimeKey = mimeType.lowercase(Locale.ROOT)
-        activeDecoders[mimeKey] = decoderName.lowercase(Locale.ROOT)
+        val normalized = decoderName.lowercase(Locale.ROOT)
+        activeDecoders[mimeKey] = normalized
+        lastDecoderUsed = normalized
     }
 
     private fun guessDecoderForMime(mimeType: String?): String? {
