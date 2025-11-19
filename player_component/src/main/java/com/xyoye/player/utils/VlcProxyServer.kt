@@ -14,7 +14,10 @@ import kotlin.random.Random
 
 class VlcProxyServer private constructor() : NanoHTTPD(randomPort()) {
     private lateinit var url: String
-    private lateinit var headers: Map<String, String>
+    private var headers: Map<String, String> = emptyMap()
+
+    private val removeHeaderKeys = setOf("host", "remote-addr", "http-client-ip")
+    private val persistentHeaderKeys = setOf("referer", "cookie", "authorization", "user-agent")
 
     private object Holder {
         val instance = VlcProxyServer()
@@ -51,29 +54,63 @@ class VlcProxyServer private constructor() : NanoHTTPD(randomPort()) {
 
     fun getInputStreamUrl(url: String, headers: Map<String, String>): String {
         this.url = url
-        this.headers = headers
+        this.headers = headers.toMap()
         val encodeFileName = URLEncoder.encode(getFileName(url), "utf-8")
         return "http://127.0.0.1:$listeningPort/$encodeFileName"
     }
 
     private fun getProxyResponse(session: IHTTPSession): okhttp3.Response {
         val requestBuilder = Request.Builder()
-        headers.forEach {
-            requestBuilder.header(it.key, it.value)
+        var ifMatchValue: String? = null
+        var hasIfRangeHeader = false
+
+        session.headers.forEach { (key, value) ->
+            when {
+                key.equals("if-match", true) -> ifMatchValue = value
+                key.equals("if-range", true) -> {
+                    hasIfRangeHeader = true
+                    requestBuilder.header(key, value)
+                }
+                shouldRemoveHeader(key) -> return@forEach
+                shouldPersistHeader(key) -> return@forEach
+                else -> requestBuilder.header(key, value)
+            }
         }
-        session.headers.forEach {
-            requestBuilder.header(it.key, it.value)
+
+        headers.forEach { (key, value) ->
+            when {
+                key.equals("if-match", true) -> ifMatchValue = value
+                key.equals("if-range", true) -> {
+                    hasIfRangeHeader = true
+                    requestBuilder.header(key, value)
+                }
+                shouldRemoveHeader(key) -> return@forEach
+                else -> requestBuilder.header(key, value)
+            }
         }
-        //移除VLC到本地服务器的部分请求头，这部分会影响后续请求
-        requestBuilder.apply {
-            removeHeader("host")
-            removeHeader("remote-addr")
-            removeHeader("http-client-ip")
+
+        if (!hasIfRangeHeader && !ifMatchValue.isNullOrBlank()) {
+            requestBuilder.header("If-Range", ifMatchValue!!)
         }
+
+        headers.forEach { (key, value) ->
+            if (shouldPersistHeader(key)) {
+                requestBuilder.header(key, value)
+            }
+        }
+
         val request = requestBuilder.url(url).build()
 
         val call = UnsafeOkHttpClient.client.newCall(request)
         return call.execute()
+    }
+
+    private fun shouldRemoveHeader(headerKey: String): Boolean {
+        return removeHeaderKeys.any { headerKey.equals(it, true) }
+    }
+
+    private fun shouldPersistHeader(headerKey: String): Boolean {
+        return persistentHeaderKeys.any { headerKey.equals(it, true) }
     }
 
 }
