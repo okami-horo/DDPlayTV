@@ -4,6 +4,7 @@ import android.content.Context
 import android.hardware.display.DisplayManager
 import android.net.Uri
 import android.view.Display
+import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.mediacodec.MediaCodecUtil
@@ -89,4 +90,55 @@ object Media3FormatUtil {
             intArrayOf()
         }
     }
+
+    data class DolbyVisionDescriptor(
+        val codecPrefix: String,
+        val profile: Int,
+        val level: Int,
+        val compatibilityId: Int?
+    )
+
+    fun describeDolbyVision(format: Format): DolbyVisionDescriptor? {
+        if (format.sampleMimeType != MimeTypes.VIDEO_DOLBY_VISION && format.codecs.isNullOrEmpty()) {
+            return null
+        }
+        return parseDolbyVisionCodecs(format.codecs)
+    }
+
+    fun hasHdr10Fallback(descriptor: DolbyVisionDescriptor?): Boolean {
+        descriptor ?: return false
+        return when (descriptor.profile) {
+            5, 7 -> true
+            8 -> descriptor.compatibilityId == COMPATIBILITY_HDR10
+            else -> false
+        }
+    }
+
+    fun hasHlgFallback(descriptor: DolbyVisionDescriptor?): Boolean {
+        descriptor ?: return false
+        return descriptor.profile == 8 && descriptor.compatibilityId == COMPATIBILITY_HLG
+    }
+
+    fun hasSdrFallback(descriptor: DolbyVisionDescriptor?): Boolean {
+        descriptor ?: return false
+        return descriptor.profile == 8 && descriptor.compatibilityId == COMPATIBILITY_SDR
+    }
+
+    private fun parseDolbyVisionCodecs(codecs: String?): DolbyVisionDescriptor? {
+        if (codecs.isNullOrEmpty()) return null
+        val normalized = codecs.lowercase(Locale.US)
+        val prefix = dvCodecsPrefixes.firstOrNull { normalized.startsWith(it) } ?: return null
+        val tokens = normalized.split('.')
+        if (tokens.size < 3) return null
+        val profile = tokens.getOrNull(1)?.toIntOrNull() ?: return null
+        val level = tokens.getOrNull(2)?.toIntOrNull() ?: Format.NO_VALUE
+        val compatibility = tokens.getOrNull(3)?.toIntOrNull()
+        return DolbyVisionDescriptor(prefix, profile, level, compatibility)
+    }
+
+    private val dvCodecsPrefixes = listOf("dvhe", "dvh1", "dav1")
+    // Dolby Vision profile 8 compatibility ids follow dovi_tool/ISO BMFF conventions.
+    private const val COMPATIBILITY_SDR = 1
+    private const val COMPATIBILITY_HDR10 = 2
+    private const val COMPATIBILITY_HLG = 4
 }

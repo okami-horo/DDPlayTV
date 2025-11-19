@@ -49,6 +49,7 @@
             </RelativeLayout>
 
             <RelativeLayout
+                android:id="@+id/subtitle_size_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
@@ -87,6 +88,7 @@
                 tools:progress="50" />
 
             <RelativeLayout
+                android:id="@+id/subtitle_stroke_width_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
@@ -125,6 +127,7 @@
                 tools:progress="50" />
 
             <RelativeLayout
+                android:id="@+id/subtitle_color_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
@@ -166,6 +169,7 @@
                 tools:progress="50" />
 
             <RelativeLayout
+                android:id="@+id/subtitle_stroke_color_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
@@ -207,6 +211,7 @@
                 tools:progress="50" />
 
             <RelativeLayout
+                android:id="@+id/subtitle_alpha_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"

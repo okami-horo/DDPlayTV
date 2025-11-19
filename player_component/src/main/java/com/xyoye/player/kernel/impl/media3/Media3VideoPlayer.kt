@@ -2,11 +2,13 @@ package com.xyoye.player.kernel.impl.media3
 
 import android.content.Context
 import android.graphics.Point
+import android.view.Display
 import android.view.Surface
 import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
 import androidx.media3.common.text.Cue
@@ -383,8 +385,8 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
         val videoGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
         if (videoGroups.isEmpty()) return
 
-        val hdrTypes = Media3FormatUtil.getDisplayHdrTypes(context).toSet()
-        val supportsHdr = hdrTypes.isNotEmpty()
+        val displaySupport = DisplayHdrSupport.fromTypes(Media3FormatUtil.getDisplayHdrTypes(context))
+        val supportsHdr = displaySupport.supportsAnyHdr
 
         var bestGroupIdx = -1
         var bestTrackIdx = -1
@@ -394,7 +396,7 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
             for (trackIndex in 0 until group.length) {
                 if (!group.isTrackSupported(trackIndex)) continue
                 val format = group.getTrackFormat(trackIndex)
-                val tier = hdrTier(format) // 4:DV, 3:HDR10(+), 2:HLG, 1:SDR
+                val tier = hdrTier(format, displaySupport) // 4:DV, 3:HDR10(+), 2:HLG, 1:SDR
 
                 val hdrScore = if (supportsHdr) tier else if (tier > 1) 0 else 1
                 val height = format.height
@@ -420,19 +422,54 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
                 .addOverride(override)
                 .build()
             videoOverrideApplied = true
-            Media3Diagnostics.logHdrSelection(group.getTrackFormat(bestTrackIdx), supportsHdr, hdrTier(group.getTrackFormat(bestTrackIdx)))
+            val selectedFormat = group.getTrackFormat(bestTrackIdx)
+            Media3Diagnostics.logHdrSelection(selectedFormat, supportsHdr, hdrTier(selectedFormat, displaySupport))
         }
     }
 
-    private fun hdrTier(format: androidx.media3.common.Format): Int {
-        // Dolby Vision: 直接根据 MIME 判断
-        if (format.sampleMimeType == androidx.media3.common.MimeTypes.VIDEO_DOLBY_VISION) return 4
-        // HDR10/HDR10+：存在静态 HDR 信息
+    private fun hdrTier(format: androidx.media3.common.Format, displaySupport: DisplayHdrSupport): Int {
+        if (format.sampleMimeType == MimeTypes.VIDEO_DOLBY_VISION) {
+            val descriptor = Media3FormatUtil.describeDolbyVision(format)
+            return when {
+                displaySupport.supportsDv -> 4
+                Media3FormatUtil.hasHdr10Fallback(descriptor) && displaySupport.supportsHdr10Family -> 3
+                Media3FormatUtil.hasHlgFallback(descriptor) && displaySupport.supportsHlg -> 2
+                Media3FormatUtil.hasSdrFallback(descriptor) -> 1
+                else -> 0
+            }
+        }
         val hasHdrStatic = format.colorInfo?.hdrStaticInfo != null
-        if (hasHdrStatic) return 3
-        // HLG：依据 ColorInfo 的传输特性
         val transfer = format.colorInfo?.colorTransfer
-        return if (transfer == C.COLOR_TRANSFER_HLG) 2 else 1
+        return when {
+            hasHdrStatic -> if (displaySupport.supportsHdr10Family) 3 else 2
+            transfer == C.COLOR_TRANSFER_HLG -> if (displaySupport.supportsHlg) 2 else 1
+            else -> 1
+        }
+    }
+
+    private data class DisplayHdrSupport(
+        val supportsDv: Boolean,
+        val supportsHdr10Plus: Boolean,
+        val supportsHdr10: Boolean,
+        val supportsHlg: Boolean
+    ) {
+        val supportsAnyHdr: Boolean
+            get() = supportsDv || supportsHdr10Plus || supportsHdr10 || supportsHlg
+
+        val supportsHdr10Family: Boolean
+            get() = supportsDv || supportsHdr10Plus || supportsHdr10
+
+        companion object {
+            fun fromTypes(types: IntArray): DisplayHdrSupport {
+                val hdrSet = types.toSet()
+                return DisplayHdrSupport(
+                    supportsDv = hdrSet.contains(Display.HdrCapabilities.HDR_TYPE_DOLBY_VISION),
+                    supportsHdr10Plus = hdrSet.contains(Display.HdrCapabilities.HDR_TYPE_HDR10_PLUS),
+                    supportsHdr10 = hdrSet.contains(Display.HdrCapabilities.HDR_TYPE_HDR10),
+                    supportsHlg = hdrSet.contains(Display.HdrCapabilities.HDR_TYPE_HLG)
+                )
+            }
+        }
     }
 
     private fun tryRecoverFromDecoderError(error: PlaybackException): Boolean {

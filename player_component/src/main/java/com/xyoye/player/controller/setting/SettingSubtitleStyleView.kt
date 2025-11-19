@@ -8,6 +8,7 @@ import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.extension.observeProgressChange
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutSettingSubtitleStyleBinding
 
@@ -35,6 +36,7 @@ class SettingSubtitleStyleView(
     override fun getSettingViewType() = SettingViewType.SUBTITLE_STYLE
 
     override fun onViewShow() {
+        applyBackendVisibility()
         applySubtitleStyleStatus()
     }
 
@@ -43,7 +45,11 @@ class SettingSubtitleStyleView(
     }
 
     override fun onViewShowed() {
-        viewBinding.subtitleSizeSb.requestFocus()
+        if (PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS) {
+            viewBinding.subtitleVerticalOffsetSb.requestFocus()
+        } else {
+            viewBinding.subtitleSizeSb.requestFocus()
+        }
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -98,6 +104,21 @@ class SettingSubtitleStyleView(
         viewBinding.subtitleVerticalOffsetSb.progress = offsetValueToProgress(verticalOffset)
 
         viewBinding.tvResetSubtitleConfig.isVisible = isConfigChanged()
+    }
+
+    private fun applyBackendVisibility() {
+        val isLibass = PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS
+        // 当使用 libass 后端时，隐藏字号/颜色/描边/透明度设置，仅保留垂直偏移
+        viewBinding.subtitleSizeRow.isVisible = !isLibass
+        viewBinding.subtitleSizeSb.isVisible = !isLibass
+        viewBinding.subtitleStrokeWidthRow.isVisible = !isLibass
+        viewBinding.subtitleStrokeWidthSb.isVisible = !isLibass
+        viewBinding.subtitleColorRow.isVisible = !isLibass
+        viewBinding.subtitleColorSb.isVisible = !isLibass
+        viewBinding.subtitleStrokeColorRow.isVisible = !isLibass
+        viewBinding.subtitleStrokeColorSb.isVisible = !isLibass
+        viewBinding.subtitleAlphaRow.isVisible = !isLibass
+        viewBinding.subtitleAlphaSb.isVisible = !isLibass
     }
 
     private fun initSettingListener() {
@@ -264,6 +285,27 @@ class SettingSubtitleStyleView(
     }
 
     private fun handleKeyCode(keyCode: Int) {
+        // libass 模式下仅保留“垂直偏移”与“重置”两处的上下导航
+        if (PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS) {
+            if (viewBinding.tvResetSubtitleConfig.hasFocus()) {
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN ->
+                        viewBinding.subtitleVerticalOffsetSb.requestFocus()
+                }
+            } else if (viewBinding.subtitleVerticalOffsetSb.hasFocus()) {
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_UP -> if (isConfigChanged()) {
+                        viewBinding.tvResetSubtitleConfig.requestFocus()
+                    }
+                    KeyEvent.KEYCODE_DPAD_DOWN -> if (isConfigChanged()) {
+                        viewBinding.tvResetSubtitleConfig.requestFocus()
+                    }
+                }
+            } else {
+                viewBinding.subtitleVerticalOffsetSb.requestFocus()
+            }
+            return
+        }
         if (viewBinding.tvResetSubtitleConfig.hasFocus()) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleVerticalOffsetSb.requestFocus()
