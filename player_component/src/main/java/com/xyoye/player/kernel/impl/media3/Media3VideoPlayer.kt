@@ -31,6 +31,8 @@ import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper.getMediaSource
+import com.xyoye.player.kernel.impl.media3.AggressiveMediaCodecSelector
+import com.xyoye.player.kernel.impl.media3.AggressiveRenderersFactory
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.subtitle.MixedSubtitle
@@ -47,6 +49,7 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
     private val trackSelector: TrackSelector by lazy { DefaultTrackSelector(context) }
     private val loadControl: LoadControl by lazy { DefaultLoadControl() }
     private lateinit var speedParameters: PlaybackParameters
+    private var videoOverrideApplied = false
 
     private var subtitleType = SubtitleType.UN_KNOW
     private var isPreparing = false
@@ -58,13 +61,18 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
 
     override fun initPlayer() {
         if (trackSelector is DefaultTrackSelector) {
+            val preferredMimeTypes = Media3FormatUtil.preferredVideoMimeTypes(context).toTypedArray()
             trackSelector.parameters = DefaultTrackSelector.Parameters.Builder(context)
                 .setPreferredTextLanguage("zh")
                 .setPreferredAudioLanguage("jap")
+                .setPreferredVideoMimeTypes(*preferredMimeTypes)
                 .build()
         }
 
-        val renderersFactory = DefaultRenderersFactory(context).apply {
+        val renderersFactory = AggressiveRenderersFactory(
+            context,
+            AggressiveMediaCodecSelector()
+        ).apply {
             setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
         }
 
@@ -96,6 +104,7 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
             return
         }
         mediaSource = getMediaSource(path, headers)
+        videoOverrideApplied = false
     }
 
     override fun setSurface(surface: Surface) {
@@ -111,6 +120,7 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
         }
 
         isPreparing = true
+        // 为单一 MediaSource 注入比特流修补（仅 H.264 avcC -> Annex-B，目前媒体管线已覆盖大部分情况）
         player.setMediaSource(mediaSource)
         player.prepare()
     }
@@ -134,6 +144,7 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
         isBuffering = false
         lastReportedPlaybackState = Player.STATE_IDLE
         lastReportedPlayWhenReady = false
+        videoOverrideApplied = false
     }
 
     override fun release() {
@@ -318,6 +329,7 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
 
     override fun onTracksChanged(tracks: Tracks) {
         subtitleType = SubtitleType.UN_KNOW
+        applyHdrSdrPreference(tracks)
     }
 
     override fun onPlayerError(error: PlaybackException) {
@@ -355,5 +367,62 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
 
     private fun initListener() {
         player.addListener(this)
+    }
+
+    private fun applyHdrSdrPreference(tracks: Tracks) {
+        if (videoOverrideApplied) return
+        val selector = trackSelector as? DefaultTrackSelector ?: return
+
+        val videoGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
+        if (videoGroups.isEmpty()) return
+
+        val hdrTypes = Media3FormatUtil.getDisplayHdrTypes(context).toSet()
+        val supportsHdr = hdrTypes.isNotEmpty()
+
+        var bestGroupIdx = -1
+        var bestTrackIdx = -1
+        var bestScore = Int.MIN_VALUE
+
+        videoGroups.forEachIndexed { groupIndex, group ->
+            for (trackIndex in 0 until group.length) {
+                if (!group.isTrackSupported(trackIndex)) continue
+                val format = group.getTrackFormat(trackIndex)
+                val tier = hdrTier(format) // 4:DV, 3:HDR10(+), 2:HLG, 1:SDR
+
+                val hdrScore = if (supportsHdr) tier else if (tier > 1) 0 else 1
+                val height = format.height
+                val bitrate = format.bitrate
+                val score = hdrScore * 1_000_000_000 + height * 10_000 + bitrate / 1000
+                if (score > bestScore) {
+                    bestScore = score
+                    bestGroupIdx = groupIndex
+                    bestTrackIdx = trackIndex
+                }
+            }
+        }
+
+        if (bestGroupIdx >= 0 && bestTrackIdx >= 0) {
+            val group = videoGroups[bestGroupIdx]
+            val override = androidx.media3.common.TrackSelectionOverride(group.mediaTrackGroup, bestTrackIdx)
+            selector.parameters = selector.parameters
+                .buildUpon()
+                .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, false)
+                .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+                .addOverride(override)
+                .build()
+            videoOverrideApplied = true
+            Media3Diagnostics.logHdrSelection(group.getTrackFormat(bestTrackIdx), supportsHdr, hdrTier(group.getTrackFormat(bestTrackIdx)))
+        }
+    }
+
+    private fun hdrTier(format: androidx.media3.common.Format): Int {
+        // Dolby Vision: 直接根据 MIME 判断
+        if (format.sampleMimeType == androidx.media3.common.MimeTypes.VIDEO_DOLBY_VISION) return 4
+        // HDR10/HDR10+：存在静态 HDR 信息
+        val hasHdrStatic = format.colorInfo?.hdrStaticInfo != null
+        if (hasHdrStatic) return 3
+        // HLG：依据 ColorInfo 的传输特性
+        val transfer = format.colorInfo?.colorTransfer
+        return if (transfer == C.COLOR_TRANSFER_HLG) 2 else 1
     }
 }

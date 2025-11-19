@@ -40,7 +40,10 @@ object Media3MediaSourceHelper {
         isCacheEnabled: Boolean = false
     ): MediaSource {
         val contentUri = Uri.parse(uri)
-        val mediaItem = MediaItem.fromUri(contentUri)
+        val mediaItem = MediaItem.Builder()
+            .setUri(contentUri)
+            .setMimeType(Media3FormatUtil.normalizeMime(appContext, contentUri))
+            .build()
 
         headers?.let { applyHeaders(it) }
 
@@ -54,7 +57,10 @@ object Media3MediaSourceHelper {
             C.CONTENT_TYPE_DASH -> DashMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
             C.CONTENT_TYPE_SS -> SsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
             C.CONTENT_TYPE_HLS -> HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
-            else -> ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+            else -> ProgressiveMediaSource.Factory(
+                dataSourceFactory,
+                RewritingExtractorsFactory()
+            ).createMediaSource(mediaItem)
         }
     }
 
