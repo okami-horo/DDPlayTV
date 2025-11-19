@@ -35,16 +35,18 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
         val sameSubtitlePriority = findPreference<EditTextPreference>("same_name_subtitle_priority")
         val backendPreference = findPreference<ListPreference>("subtitle_renderer_backend")
         val backendNote = findPreference<Preference>("subtitle_renderer_backend_note")
+        val shadowPreference = findPreference<SwitchPreference>("subtitle_shadow_enabled")
 
         backendPreference?.apply {
             summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
             setOnPreferenceChangeListener { _, newValue ->
-                updateBackendNoteVisibility(backendNote, newValue as String)
+                updateBackendDependentVisibility(backendNote, shadowPreference, newValue as String)
                 return@setOnPreferenceChangeListener true
             }
         }
-        updateBackendNoteVisibility(
+        updateBackendDependentVisibility(
             backendNote,
+            shadowPreference,
             backendPreference?.value ?: SubtitleConfig.getSubtitleRendererBackend()
         )
 
@@ -65,9 +67,15 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
         super.onViewCreated(view, savedInstanceState)
     }
 
-    private fun updateBackendNoteVisibility(note: Preference?, backendValue: String?) {
+    private fun updateBackendDependentVisibility(
+        note: Preference?,
+        shadow: Preference?,
+        backendValue: String?
+    ) {
         val backend = SubtitleRendererBackend.fromName(backendValue)
-        note?.isVisible = backend == SubtitleRendererBackend.LIBASS
+        val isLibass = backend == SubtitleRendererBackend.LIBASS
+        note?.isVisible = isLibass
+        shadow?.isVisible = !isLibass
     }
 
     inner class SubtitleSettingDataStore : PreferenceDataStore() {
