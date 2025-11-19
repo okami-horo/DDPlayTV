@@ -18,6 +18,18 @@ object Media3Diagnostics {
         Log.d(TAG, "Decoder candidates for mime=$mime secure=$secure -> [$names]")
     }
 
+    fun logDecoderBlacklisted(decoder: String, reason: String?) {
+        Log.w(TAG, "Blacklisting decoder=$decoder due to ${reason ?: "runtime failure"}")
+    }
+
+    fun logDecoderRetry(decoder: String, attempt: Int) {
+        Log.i(TAG, "Retry playback with decoder fallback, decoder=$decoder attempt=$attempt")
+    }
+
+    fun logDecoderGiveUp(decoder: String?, reason: String?) {
+        Log.e(TAG, "Exhausted decoder fallbacks. lastDecoder=${decoder ?: "unknown"} reason=${reason ?: "unknown"}")
+    }
+
     fun logFormatRewritten(original: Format, rewritten: Format) {
         if (original === rewritten) return
         Log.i(TAG, "Format rewritten: mime=${original.sampleMimeType} -> ${rewritten.sampleMimeType}")

@@ -8,7 +8,9 @@ import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.mediacodec.MediaCodecUtil
 
 @UnstableApi
-class AggressiveMediaCodecSelector : MediaCodecSelector {
+class AggressiveMediaCodecSelector(
+    private val policy: Media3CodecPolicy = Media3CodecPolicy
+) : MediaCodecSelector {
 
     override fun getDecoderInfos(
         mimeType: String,
@@ -57,18 +59,24 @@ class AggressiveMediaCodecSelector : MediaCodecSelector {
         val ordered = candidates
             .distinctBy { it.name }
             .sortedWith(
-                compareByDescending<MediaCodecInfo> { it.hardwareAccelerated }
+                compareByDescending<MediaCodecInfo> {
+                    policy.decoderPreferenceScore(it.name, it.hardwareAccelerated, it.softwareOnly)
+                }
+                    .thenByDescending { it.hardwareAccelerated }
                     .thenBy { if (it.softwareOnly) 1 else 0 }
-                    .thenBy { if (it.name.startsWith("c2.")) 0 else 1 }
                     .thenBy { it.name }
             )
 
-        Media3Diagnostics.logDecoderCandidates(mimeType, requiresSecureDecoder, ordered)
-        if (ordered.isNotEmpty()) {
-            Media3Diagnostics.logDecoderSelected(mimeType, requiresSecureDecoder, ordered.first())
+        val allowed = ordered.filter { policy.isDecoderAllowed(it.name, mimeType) }
+        val prioritized = if (allowed.isNotEmpty()) allowed else ordered
+
+        Media3Diagnostics.logDecoderCandidates(mimeType, requiresSecureDecoder, prioritized)
+        prioritized.firstOrNull()?.let { selected ->
+            Media3Diagnostics.logDecoderSelected(mimeType, requiresSecureDecoder, selected)
+            policy.markPreferredDecoder(mimeType, selected.name)
         }
 
-        return ordered
+        return prioritized
     }
 
     companion object {

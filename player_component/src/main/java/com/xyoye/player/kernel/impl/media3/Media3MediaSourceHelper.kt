@@ -18,6 +18,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.utils.PathHelper
+import com.xyoye.player.kernel.impl.media3.Media3CodecPolicy
 import java.util.Locale
 
 object Media3MediaSourceHelper {
@@ -40,10 +41,13 @@ object Media3MediaSourceHelper {
         isCacheEnabled: Boolean = false
     ): MediaSource {
         val contentUri = Uri.parse(uri)
+        val normalizedMime = Media3FormatUtil.normalizeMime(appContext, contentUri)
         val mediaItem = MediaItem.Builder()
             .setUri(contentUri)
-            .setMimeType(Media3FormatUtil.normalizeMime(appContext, contentUri))
+            .setMimeType(normalizedMime)
             .build()
+
+        Media3CodecPolicy.updateDescriptor(contentUri, inferContentType(uri), normalizedMime)
 
         headers?.let { applyHeaders(it) }
 

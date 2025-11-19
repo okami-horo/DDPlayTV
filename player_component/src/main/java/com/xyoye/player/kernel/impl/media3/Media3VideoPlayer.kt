@@ -56,6 +56,8 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
     private var isBuffering = false
     private var lastReportedPlayWhenReady = false
     private var lastReportedPlaybackState = Player.STATE_IDLE
+    private val maxDecoderRecoveries = 2
+    private var decoderErrorRecoveryCount = 0
 
     private val trackNameProvider by lazy { DefaultTrackNameProvider(context.resources) }
 
@@ -105,6 +107,7 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
         }
         mediaSource = getMediaSource(path, headers)
         videoOverrideApplied = false
+        decoderErrorRecoveryCount = 0
     }
 
     override fun setSurface(surface: Surface) {
@@ -334,6 +337,9 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
 
     override fun onPlayerError(error: PlaybackException) {
         super.onPlayerError(error)
+        if (tryRecoverFromDecoderError(error)) {
+            return
+        }
         mPlayerEventListener.onError(error)
     }
 
@@ -424,5 +430,45 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
         // HLG：依据 ColorInfo 的传输特性
         val transfer = format.colorInfo?.colorTransfer
         return if (transfer == C.COLOR_TRANSFER_HLG) 2 else 1
+    }
+
+    private fun tryRecoverFromDecoderError(error: PlaybackException): Boolean {
+        if (!this::mediaSource.isInitialized) {
+            return false
+        }
+        val currentMime = player.videoFormat?.sampleMimeType
+        val failure = Media3CodecPolicy.decoderFailureFromException(error, currentMime)
+            ?: return false
+        val blacklisted = Media3CodecPolicy.recordDecoderFailure(failure)
+        if (!blacklisted) {
+            Media3Diagnostics.logDecoderGiveUp(failure.decoderName, failure.diagnosticInfo)
+            return false
+        }
+        if (decoderErrorRecoveryCount >= maxDecoderRecoveries) {
+            Media3Diagnostics.logDecoderGiveUp(failure.decoderName, failure.diagnosticInfo)
+            return false
+        }
+        decoderErrorRecoveryCount++
+        Media3Diagnostics.logDecoderRetry(failure.decoderName, decoderErrorRecoveryCount)
+        restartAfterDecoderFailure()
+        return true
+    }
+
+    private fun restartAfterDecoderFailure() {
+        val resumePosition = player.contentPosition
+        val playWhenReady = player.playWhenReady
+        isPreparing = true
+        isBuffering = false
+        player.stop()
+        videoOverrideApplied = false
+        player.setMediaSource(mediaSource)
+        if (this::speedParameters.isInitialized) {
+            player.playbackParameters = speedParameters
+        }
+        player.prepare()
+        if (resumePosition > 0) {
+            player.seekTo(resumePosition)
+        }
+        player.playWhenReady = playWhenReady
     }
 }
