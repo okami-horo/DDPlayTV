@@ -39,6 +39,11 @@ object Media3FormatUtil {
         val displaySupportsDv = displayHdr.contains(Display.HdrCapabilities.HDR_TYPE_DOLBY_VISION)
         if ((!dvSupported || !displaySupportsDv) && hasDecoder(MimeTypes.VIDEO_H265)) {
             // 设备/显示不支持 DV，降级 HEVC（若显示也不支持 HDR，将由显示侧做 SDR 输出）
+            Media3Diagnostics.logFormatDowngrade(
+                MimeTypes.VIDEO_DOLBY_VISION,
+                MimeTypes.VIDEO_H265,
+                if (!dvSupported) "decoder_absent" else "display_not_hdr_dv"
+            )
             return MimeTypes.VIDEO_H265
         }
         return mime

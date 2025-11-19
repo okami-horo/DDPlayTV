@@ -85,6 +85,7 @@ object Media3CodecPolicy {
         runtimeBlacklist.clear()
         activeDecoders.clear()
         lastDecoderUsed = null
+        Media3Diagnostics.logPlaybackDescriptor(descriptor)
     }
 
     fun isDecoderAllowed(name: String, mimeType: String): Boolean {

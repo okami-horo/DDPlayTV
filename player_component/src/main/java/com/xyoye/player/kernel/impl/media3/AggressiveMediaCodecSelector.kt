@@ -31,6 +31,8 @@ class AggressiveMediaCodecSelector(
             }
         }
 
+        Media3Diagnostics.logSecureRequirement(mimeType, requiresSecureDecoder, DrmPolicy.allowInsecureFallback)
+
         // 主 MIME
         appendFor(mimeType, requiresSecureDecoder)
         // 别名 MIME

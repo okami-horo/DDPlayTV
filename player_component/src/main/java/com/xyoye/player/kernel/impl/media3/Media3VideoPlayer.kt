@@ -430,12 +430,25 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
     private fun hdrTier(format: androidx.media3.common.Format, displaySupport: DisplayHdrSupport): Int {
         if (format.sampleMimeType == MimeTypes.VIDEO_DOLBY_VISION) {
             val descriptor = Media3FormatUtil.describeDolbyVision(format)
+            val displayInfo = displaySupport.describe()
             return when {
                 displaySupport.supportsDv -> 4
-                Media3FormatUtil.hasHdr10Fallback(descriptor) && displaySupport.supportsHdr10Family -> 3
-                Media3FormatUtil.hasHlgFallback(descriptor) && displaySupport.supportsHlg -> 2
-                Media3FormatUtil.hasSdrFallback(descriptor) -> 1
-                else -> 0
+                Media3FormatUtil.hasHdr10Fallback(descriptor) && displaySupport.supportsHdr10Family -> {
+                    Media3Diagnostics.logDolbyVisionFallback(format.codecs, "HDR10", displayInfo)
+                    3
+                }
+                Media3FormatUtil.hasHlgFallback(descriptor) && displaySupport.supportsHlg -> {
+                    Media3Diagnostics.logDolbyVisionFallback(format.codecs, "HLG", displayInfo)
+                    2
+                }
+                Media3FormatUtil.hasSdrFallback(descriptor) -> {
+                    Media3Diagnostics.logDolbyVisionFallback(format.codecs, "SDR", displayInfo)
+                    1
+                }
+                else -> {
+                    Media3Diagnostics.logDolbyVisionFallback(format.codecs, "UNSUPPORTED", displayInfo)
+                    0
+                }
             }
         }
         val hasHdrStatic = format.colorInfo?.hdrStaticInfo != null
@@ -469,6 +482,10 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
                     supportsHlg = hdrSet.contains(Display.HdrCapabilities.HDR_TYPE_HLG)
                 )
             }
+        }
+
+        fun describe(): String {
+            return "dv=$supportsDv,hdr10Plus=$supportsHdr10Plus,hdr10=$supportsHdr10,hlg=$supportsHlg"
         }
     }
 
