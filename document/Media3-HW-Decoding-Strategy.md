@@ -45,7 +45,7 @@
 
 - DRM 策略开关
   - 文件：`DrmPolicy.kt`
-  - 要点：可配置是否允许 secure 解码器缺失时降级到 non-secure（默认允许，内容要求严格时可关闭）。
+  - 要点：默认强制 DRM 会话仅使用 secure 解码器，除非业务显式调用 `setRequireSecure(false)` 放宽；当发生降级或被拦截时会记录诊断日志。
 
 - 播放器接入点
   - 文件：`player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3VideoPlayer.kt`
@@ -68,7 +68,7 @@
 1) HDR 回退进一步细化
    - 现状：已完成自适应流层级的 HDR/SDR 自动选择并区分 DV/HDR10(+)/HLG/SDR 四档；可进一步结合分辨率/比特率/帧率做多维排序或提供用户偏好开关。
 2) DRM secure 策略判定
-   - 现状：提供 `DrmPolicy` 开关，允许/禁止在 secure 解码器缺失时降级 non-secure；尚未在业务层根据内容安全策略自动配置或提示。后续可在播放入口传入策略，并在 UI/日志明确原因。
+   - 现状：内核层已默认禁止 DRM 场景的非 secure 回退，并输出诊断日志；后续可在业务层接入开关入口，结合内容策略提示用户或按账号/来源动态配置。
 
 ## 不建议在本项目实现的复杂策略（性价比低）
 

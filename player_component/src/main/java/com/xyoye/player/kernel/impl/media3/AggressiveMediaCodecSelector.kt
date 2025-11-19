@@ -36,11 +36,24 @@ class AggressiveMediaCodecSelector(
         // 别名 MIME
         aliasMap[mimeType]?.forEach { appendFor(it, requiresSecureDecoder) }
 
-        // 若 secure 没有结果，尝试非 secure 降级，以尽量播放（DRM 流需调用侧确保安全策略）
-        if (requiresSecureDecoder && candidates.isEmpty() && DrmPolicy.allowInsecureFallback) {
-            Log.i(TAG, "No secure decoder for $mimeType, trying non-secure fallback")
-            appendFor(mimeType, false)
-            aliasMap[mimeType]?.forEach { appendFor(it, false) }
+        // 若 secure 没有结果，尝试非 secure 降级（仅在策略允许时）。
+        if (requiresSecureDecoder && candidates.isEmpty()) {
+            if (DrmPolicy.allowInsecureFallback) {
+                Log.i(TAG, "No secure decoder for $mimeType, trying non-secure fallback (override)")
+                Media3Diagnostics.logDrmFallbackDecision(
+                    mimeType,
+                    /* allowed = */ true,
+                    "explicit override: allowInsecureFallback=true"
+                )
+                appendFor(mimeType, false)
+                aliasMap[mimeType]?.forEach { appendFor(it, false) }
+            } else {
+                Media3Diagnostics.logDrmFallbackDecision(
+                    mimeType,
+                    /* allowed = */ false,
+                    "secure decoder required for DRM session"
+                )
+            }
         }
 
         // DV -> HEVC 回退：当 DV 全部缺失时再试 HEVC
@@ -49,9 +62,22 @@ class AggressiveMediaCodecSelector(
             appendFor(MimeTypes.VIDEO_H265, requiresSecureDecoder)
             aliasMap[MimeTypes.VIDEO_H265]?.forEach { appendFor(it, requiresSecureDecoder) }
             if (requiresSecureDecoder && candidates.isEmpty()) {
-                Log.i(TAG, "No secure HEVC decoder for DV fallback, trying non-secure HEVC")
-                appendFor(MimeTypes.VIDEO_H265, false)
-                aliasMap[MimeTypes.VIDEO_H265]?.forEach { appendFor(it, false) }
+                if (DrmPolicy.allowInsecureFallback) {
+                    Log.i(TAG, "No secure HEVC decoder for DV fallback, trying non-secure HEVC (override)")
+                    Media3Diagnostics.logDrmFallbackDecision(
+                        MimeTypes.VIDEO_H265,
+                        /* allowed = */ true,
+                        "explicit override: allowInsecureFallback=true"
+                    )
+                    appendFor(MimeTypes.VIDEO_H265, false)
+                    aliasMap[MimeTypes.VIDEO_H265]?.forEach { appendFor(it, false) }
+                } else {
+                    Media3Diagnostics.logDrmFallbackDecision(
+                        MimeTypes.VIDEO_H265,
+                        /* allowed = */ false,
+                        "secure decoder required for DRM session"
+                    )
+                }
             }
         }
 

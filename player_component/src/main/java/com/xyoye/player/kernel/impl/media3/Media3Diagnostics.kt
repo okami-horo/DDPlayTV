@@ -40,4 +40,9 @@ object Media3Diagnostics {
         val isDv = format.sampleMimeType == androidx.media3.common.MimeTypes.VIDEO_DOLBY_VISION
         Log.i(TAG, "HDR preference applied: selected codec=${format.codecs} hdrDisplay=$hdrDisplay hdrTier=$hdrTier transfer=$transfer isDv=$isDv")
     }
+
+    fun logDrmFallbackDecision(mime: String, allowed: Boolean, reason: String) {
+        val action = if (allowed) "allow" else "block"
+        Log.w(TAG, "DRM fallback decision: action=$action mime=$mime reason=$reason")
+    }
 }
