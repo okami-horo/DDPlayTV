@@ -50,6 +50,7 @@ class LibassRendererBackend : SubtitleRenderer {
     override fun bind(environment: SubtitleRenderEnvironment) {
         this.environment = environment
         bridge = LibassBridge()
+        applyUserOpacity(PlayerInitializer.Subtitle.alpha)
         fallbackDispatched = false
         trackLoadedAtMs = null
         firstRenderLogged = false
@@ -146,6 +147,10 @@ class LibassRendererBackend : SubtitleRenderer {
         return success
     }
 
+    override fun updateOpacity(alphaPercent: Int) {
+        applyUserOpacity(alphaPercent)
+    }
+
     private fun ensureTextureOverlay() {
         if (overlayView != null) {
             return
@@ -190,6 +195,10 @@ class LibassRendererBackend : SubtitleRenderer {
         }
         bridge?.setFrameSize(width, height)
         PlaybackSessionStatusProvider.updateFrameSize(width, height)
+    }
+
+    private fun applyUserOpacity(alphaPercent: Int) {
+        bridge?.setGlobalOpacity(alphaPercent.coerceIn(0, 100))
     }
 
     private fun buildFontDirectories(context: Context): List<String> {

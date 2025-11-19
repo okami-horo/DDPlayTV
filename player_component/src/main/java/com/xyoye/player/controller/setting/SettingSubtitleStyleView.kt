@@ -5,10 +5,11 @@ import android.util.AttributeSet
 import android.view.KeyEvent
 import androidx.core.view.isVisible
 import com.xyoye.common_component.config.SubtitleConfig
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.extension.observeProgressChange
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player.info.PlayerInitializer
-import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutSettingSubtitleStyleBinding
 
@@ -107,18 +108,19 @@ class SettingSubtitleStyleView(
     }
 
     private fun applyBackendVisibility() {
-        val isLibass = PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS
-        // 当使用 libass 后端时，隐藏字号/颜色/描边/透明度设置，仅保留垂直偏移
-        viewBinding.subtitleSizeRow.isVisible = !isLibass
-        viewBinding.subtitleSizeSb.isVisible = !isLibass
-        viewBinding.subtitleStrokeWidthRow.isVisible = !isLibass
-        viewBinding.subtitleStrokeWidthSb.isVisible = !isLibass
-        viewBinding.subtitleColorRow.isVisible = !isLibass
-        viewBinding.subtitleColorSb.isVisible = !isLibass
-        viewBinding.subtitleStrokeColorRow.isVisible = !isLibass
-        viewBinding.subtitleStrokeColorSb.isVisible = !isLibass
-        viewBinding.subtitleAlphaRow.isVisible = !isLibass
-        viewBinding.subtitleAlphaSb.isVisible = !isLibass
+        val enableLegacyStyling = PlayerInitializer.Subtitle.backend != SubtitleRendererBackend.LIBASS
+        // libass 使用字幕文件自身样式，仅保留字号/颜色/描边等在传统后端
+        viewBinding.subtitleSizeRow.isVisible = enableLegacyStyling
+        viewBinding.subtitleSizeSb.isVisible = enableLegacyStyling
+        viewBinding.subtitleStrokeWidthRow.isVisible = enableLegacyStyling
+        viewBinding.subtitleStrokeWidthSb.isVisible = enableLegacyStyling
+        viewBinding.subtitleColorRow.isVisible = enableLegacyStyling
+        viewBinding.subtitleColorSb.isVisible = enableLegacyStyling
+        viewBinding.subtitleStrokeColorRow.isVisible = enableLegacyStyling
+        viewBinding.subtitleStrokeColorSb.isVisible = enableLegacyStyling
+        // 透明度在 libass 下同样生效（作为全局系数），因此始终可见
+        viewBinding.subtitleAlphaRow.isVisible = true
+        viewBinding.subtitleAlphaSb.isVisible = true
     }
 
     private fun initSettingListener() {
@@ -222,6 +224,7 @@ class SettingSubtitleStyleView(
         SubtitleConfig.putAlpha(progress)
         PlayerInitializer.Subtitle.alpha = progress
         mControlWrapper.updateAlpha()
+        SubtitleRendererRegistry.current()?.updateOpacity(progress)
         onConfigChanged()
     }
 

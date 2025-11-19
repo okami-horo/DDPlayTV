@@ -28,6 +28,10 @@ JNIEXPORT jboolean JNICALL
 Java_com_xyoye_player_subtitle_libass_LibassBridge_nativeRenderFrame(JNIEnv *env, jobject thiz, jlong handle,
                                                                     jlong time_ms, jobject bitmap);
 
+JNIEXPORT void JNICALL
+Java_com_xyoye_player_subtitle_libass_LibassBridge_nativeSetGlobalOpacity(JNIEnv *env, jobject thiz,
+                                                                          jlong handle, jint percent);
+
 #ifdef __cplusplus
 }
 #endif

@@ -25,4 +25,8 @@ interface SubtitleRenderer {
     fun supportsExternalTrack(extension: String): Boolean
 
     fun loadExternalSubtitle(path: String): Boolean
+
+    fun updateOpacity(alphaPercent: Int) {
+        // default no-op
+    }
 }

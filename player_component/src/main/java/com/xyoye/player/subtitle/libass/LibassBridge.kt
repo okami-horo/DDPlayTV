@@ -43,6 +43,12 @@ class LibassBridge {
         return nativeRenderFrame(handle, timeMs, bitmap)
     }
 
+    fun setGlobalOpacity(percent: Int) {
+        if (handle != 0L) {
+            nativeSetGlobalOpacity(handle, percent)
+        }
+    }
+
     private external fun nativeCreate(): Long
 
     private external fun nativeDestroy(handle: Long)
@@ -54,4 +60,6 @@ class LibassBridge {
     private external fun nativeLoadTrack(handle: Long, path: String): Boolean
 
     private external fun nativeRenderFrame(handle: Long, timeMs: Long, bitmap: Bitmap): Boolean
+
+    private external fun nativeSetGlobalOpacity(handle: Long, percent: Int)
 }

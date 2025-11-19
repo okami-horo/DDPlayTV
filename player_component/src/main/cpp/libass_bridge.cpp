@@ -23,6 +23,8 @@ struct LibassContext {
     ASS_Track *track = nullptr;
     int frame_width = 0;
     int frame_height = 0;
+    uint8_t user_alpha = 255;
+    bool pending_invalidate = false;
 };
 
 void LogError(const char *message) {
@@ -186,12 +188,11 @@ inline uint8_t AssAlphaToAndroid(uint32_t color) {
     return static_cast<uint8_t>(255 - ass_alpha);
 }
 
-void BlendPixel(uint8_t *dst, uint8_t coverage, uint32_t color) {
-    const uint8_t base_alpha = AssAlphaToAndroid(color);
-    if (base_alpha == 0 || coverage == 0) {
+void BlendPixel(uint8_t *dst, uint8_t coverage, uint32_t color, uint8_t effective_alpha) {
+    if (effective_alpha == 0 || coverage == 0) {
         return;
     }
-    const uint8_t src_alpha = MulDiv255(coverage, base_alpha);
+    const uint8_t src_alpha = MulDiv255(coverage, effective_alpha);
     if (src_alpha == 0) {
         return;
     }
@@ -225,8 +226,15 @@ void BlendPixel(uint8_t *dst, uint8_t coverage, uint32_t color) {
     dst[3] = dst_a;
 }
 
-void CompositeImage(uint8_t *buffer, const AndroidBitmapInfo &info, const ASS_Image *image) {
+void CompositeImage(uint8_t *buffer, const AndroidBitmapInfo &info, const ASS_Image *image,
+                    uint8_t global_alpha) {
     if (info.width <= 0 || info.height <= 0 || image == nullptr || image->w <= 0 || image->h <= 0) {
+        return;
+    }
+    const uint8_t effective_alpha =
+        global_alpha >= 255 ? AssAlphaToAndroid(image->color)
+                            : MulDiv255(AssAlphaToAndroid(image->color), global_alpha);
+    if (effective_alpha == 0) {
         return;
     }
     const int start_x = std::max(image->dst_x, 0);
@@ -246,16 +254,16 @@ void CompositeImage(uint8_t *buffer, const AndroidBitmapInfo &info, const ASS_Im
         for (int x = start_x; x < end_x; ++x) {
             const uint8_t coverage = *src++;
             if (coverage != 0) {
-                BlendPixel(dst, coverage, image->color);
+                BlendPixel(dst, coverage, image->color, effective_alpha);
             }
             dst += 4;
         }
     }
 }
 
-void CompositeAssImages(BitmapGuard &guard, const ASS_Image *image) {
+void CompositeAssImages(BitmapGuard &guard, const ASS_Image *image, uint8_t global_alpha) {
     for (const ASS_Image *node = image; node != nullptr; node = node->next) {
-        CompositeImage(guard.pixels, guard.info, node);
+        CompositeImage(guard.pixels, guard.info, node, global_alpha);
     }
 }
 
@@ -357,11 +365,16 @@ Java_com_xyoye_player_subtitle_libass_LibassBridge_nativeRenderFrame(JNIEnv *env
         return JNI_FALSE;
     }
 
+    const bool force_invalidate = context->pending_invalidate;
     int changed = 0;
     ASS_Image *image = ass_render_frame(context->renderer, context->track, time_ms, &changed);
-    if (image == nullptr || changed == 0) {
+    if (image == nullptr) {
         return JNI_FALSE;
     }
+    if (changed == 0 && !force_invalidate) {
+        return JNI_FALSE;
+    }
+    context->pending_invalidate = false;
 
     BitmapGuard guard;
     if (!guard.Lock(env, bitmap)) {
@@ -369,7 +382,27 @@ Java_com_xyoye_player_subtitle_libass_LibassBridge_nativeRenderFrame(JNIEnv *env
     }
     const size_t total_size = static_cast<size_t>(guard.info.stride) * guard.info.height;
     std::memset(guard.pixels, 0, total_size);
-    CompositeAssImages(guard, image);
+    CompositeAssImages(guard, image, context->user_alpha);
 
     return JNI_TRUE;
+}
+
+JNIEXPORT void JNICALL
+Java_com_xyoye_player_subtitle_libass_LibassBridge_nativeSetGlobalOpacity(JNIEnv *env,
+                                                                          jobject thiz,
+                                                                          jlong handle,
+                                                                          jint percent) {
+    (void)env;
+    (void)thiz;
+    auto *context = FromHandle(handle);
+    if (context == nullptr) {
+        return;
+    }
+    const int clamped = std::max(0, std::min(100, percent));
+    const uint8_t scaled =
+        static_cast<uint8_t>((clamped * 255 + 50) / 100);  // round to nearest
+    if (context->user_alpha != scaled) {
+        context->user_alpha = scaled;
+        context->pending_invalidate = true;
+    }
 }
