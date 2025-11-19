@@ -59,8 +59,11 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
     private var isBuffering = false
     private var lastReportedPlayWhenReady = false
     private var lastReportedPlaybackState = Player.STATE_IDLE
-    private val maxDecoderRecoveries = 2
-    private var decoderErrorRecoveryCount = 0
+    // 将解码器回退的重试配额按轨道类型分别计数，避免音频失败占用视频回退配额
+    private val maxVideoDecoderRecoveries = 3 // 三个候选解码器：常规/低时延/软件，各自最多尝试一次
+    private val maxAudioDecoderRecoveries = 2
+    private var videoDecoderRecoveryCount = 0
+    private var audioDecoderRecoveryCount = 0
 
     private val trackNameProvider by lazy { DefaultTrackNameProvider(context.resources) }
 
@@ -110,7 +113,8 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
         }
         mediaSource = getMediaSource(path, headers)
         videoOverrideApplied = false
-        decoderErrorRecoveryCount = 0
+        videoDecoderRecoveryCount = 0
+        audioDecoderRecoveryCount = 0
     }
 
     override fun setSurface(surface: Surface) {
@@ -493,20 +497,41 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
         if (!this::mediaSource.isInitialized) {
             return false
         }
-        val currentMime = player.videoFormat?.sampleMimeType
-        val failure = Media3CodecPolicy.decoderFailureFromException(error, currentMime)
+        // 不使用回退 MIME，交由异常自带信息判断，以便正确区分音频/视频失败
+        val failure = Media3CodecPolicy.decoderFailureFromException(error, /* fallbackMimeType = */ null)
             ?: return false
         val blacklisted = Media3CodecPolicy.recordDecoderFailure(failure)
         if (!blacklisted) {
             Media3Diagnostics.logDecoderGiveUp(failure.decoderName, failure.diagnosticInfo)
             return false
         }
-        if (decoderErrorRecoveryCount >= maxDecoderRecoveries) {
-            Media3Diagnostics.logDecoderGiveUp(failure.decoderName, failure.diagnosticInfo)
-            return false
+        // 依据失败的 MIME/解码器名称推断轨道类型
+        val mime = failure.mimeType
+        val nameLower = failure.decoderName.lowercase()
+        val isVideoFailure = when {
+            mime?.startsWith("video/") == true -> true
+            mime?.startsWith("audio/") == true -> false
+            // 无法从 MIME 判断时，用常见编解码器名猜测
+            nameLower.contains("hevc") || nameLower.contains("avc") || nameLower.contains("vp9") || nameLower.contains("av1") -> true
+            nameLower.contains("flac") || nameLower.contains("aac") || nameLower.contains("opus") || nameLower.contains("vorbis") || nameLower.contains("mp3") -> false
+            else -> true // 保守认定为视频失败
         }
-        decoderErrorRecoveryCount++
-        Media3Diagnostics.logDecoderRetry(failure.decoderName, decoderErrorRecoveryCount)
+
+        if (isVideoFailure) {
+            if (videoDecoderRecoveryCount >= maxVideoDecoderRecoveries) {
+                Media3Diagnostics.logDecoderGiveUp(failure.decoderName, failure.diagnosticInfo)
+                return false
+            }
+            videoDecoderRecoveryCount++
+            Media3Diagnostics.logDecoderRetry(failure.decoderName, videoDecoderRecoveryCount)
+        } else {
+            if (audioDecoderRecoveryCount >= maxAudioDecoderRecoveries) {
+                Media3Diagnostics.logDecoderGiveUp(failure.decoderName, failure.diagnosticInfo)
+                return false
+            }
+            audioDecoderRecoveryCount++
+            Media3Diagnostics.logDecoderRetry(failure.decoderName, audioDecoderRecoveryCount)
+        }
         restartAfterDecoderFailure()
         return true
     }
