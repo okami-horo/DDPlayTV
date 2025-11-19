@@ -39,6 +39,7 @@ import com.xyoye.subtitle.MixedSubtitle
 import com.xyoye.subtitle.SubtitleType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @UnstableApi
 class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), Player.Listener {
@@ -398,7 +399,9 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
                 val hdrScore = if (supportsHdr) tier else if (tier > 1) 0 else 1
                 val height = format.height
                 val bitrate = format.bitrate
-                val score = hdrScore * 1_000_000_000 + height * 10_000 + bitrate / 1000
+                val frameRate = format.frameRate.takeUnless { it.isNaN() || it <= 0f } ?: 0f
+                val frameRateScore = (frameRate * 500).roundToInt() // 60fps≈30k，远小于 HDR/分辨率
+                val score = hdrScore * 1_000_000_000 + height * 10_000 + bitrate / 1000 + frameRateScore
                 if (score > bestScore) {
                     bestScore = score
                     bestGroupIdx = groupIndex
