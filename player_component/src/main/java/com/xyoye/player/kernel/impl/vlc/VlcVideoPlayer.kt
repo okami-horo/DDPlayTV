@@ -25,6 +25,7 @@ import org.videolan.libvlc.interfaces.IMedia
 import org.videolan.libvlc.interfaces.IMedia.VideoTrack
 import org.videolan.libvlc.util.VLCVideoLayout
 import java.io.File
+import java.util.Locale
 import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
@@ -66,19 +67,25 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
         }
 
         mMedia = vlcMedia
+        val hwMode = PlayerInitializer.Player.vlcHWDecode
+        val shouldForceNoDirectRendering =
+            hwMode == VLCHWDecode.HW_ACCELERATION_AUTO && isLikelyHevc10BitSource(path)
 
-        //是否开启硬件加速
-        if (PlayerInitializer.Player.vlcHWDecode == VLCHWDecode.HW_ACCELERATION_DISABLE) {
-            mMedia.setHWDecoderEnabled(false, false)
-        } else if (PlayerInitializer.Player.vlcHWDecode == VLCHWDecode.HW_ACCELERATION_DECODING ||
-            PlayerInitializer.Player.vlcHWDecode == VLCHWDecode.HW_ACCELERATION_FULL
-        ) {
-            mMedia.setHWDecoderEnabled(true, true)
-            if (PlayerInitializer.Player.vlcHWDecode == VLCHWDecode.HW_ACCELERATION_DECODING) {
-                mMedia.addOption(":no-mediacodec-dr")
-                mMedia.addOption(":no-omxil-dr")
+        when (hwMode) {
+            VLCHWDecode.HW_ACCELERATION_DISABLE -> mMedia.setHWDecoderEnabled(false, false)
+            VLCHWDecode.HW_ACCELERATION_DECODING -> {
+                mMedia.setHWDecoderEnabled(true, true)
+                mMedia.disableDirectRendering()
             }
-        } /* else automatic: use default options */
+            VLCHWDecode.HW_ACCELERATION_FULL -> mMedia.setHWDecoderEnabled(true, true)
+            VLCHWDecode.HW_ACCELERATION_AUTO -> {
+                mMedia.setHWDecoderEnabled(true, true)
+                if (shouldForceNoDirectRendering) {
+                    mMedia.disableDirectRendering()
+                    VideoLog.d("$TAG--setDataSource--> Force non-direct MediaCodec for suspected HEVC 10bit source")
+                }
+            }
+        }
 
         mCurrentDuration = mMedia.duration
         mMediaPlayer.media = mMedia
@@ -151,8 +158,6 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
     override fun setOptions() {
         val options = arrayListOf<String>()
         options.add("-vvv")
-        options.add("--android-display-chroma")
-        options.add(PlayerInitializer.Player.vlcPixelFormat.value)
         libVlc = LibVLC(mContext, options)
     }
 
@@ -243,7 +248,7 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
         if (mMediaPlayer.vlcVout.areViewsAttached()) {
             mMediaPlayer.detachViews()
         }
-        val isTextureView = PlayerInitializer.surfaceType == SurfaceType.VIEW_TEXTURE
+        val isTextureView = false
         mMediaPlayer.attachViews(vlcVideoLayout, null, true, isTextureView)
     }
 
@@ -360,6 +365,20 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
                 key.equals("authorization", true) -> addOption(":http-authorization=$value")
             }
         }
+    }
+
+    private fun Media.disableDirectRendering() {
+        addOption(":no-mediacodec-dr")
+        addOption(":no-omxil-dr")
+    }
+
+    private fun isLikelyHevc10BitSource(path: String): Boolean {
+        val decodedPath = Uri.decode(path).lowercase(Locale.getDefault())
+        val hevcKeywords = listOf("hevc", "h265", "x265")
+        val tenBitKeywords = listOf("10bit", "p10", "yuv420p10", "main10")
+        val containsHevc = hevcKeywords.any { decodedPath.contains(it) }
+        val containsTenBit = tenBitKeywords.any { decodedPath.contains(it) }
+        return containsHevc && containsTenBit
     }
 
     private fun isPlayerAvailable() = mMediaPlayer.hasMedia() && !mMediaPlayer.isReleased
