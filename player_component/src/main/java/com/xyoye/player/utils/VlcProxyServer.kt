@@ -63,23 +63,32 @@ class VlcProxyServer private constructor() : NanoHTTPD(randomPort()) {
         val requestBuilder = Request.Builder()
         var ifMatchValue: String? = null
         var hasIfRangeHeader = false
+        val sessionPersistentHeaders = mutableMapOf<String, String>()
 
         session.headers.forEach { (key, value) ->
             when {
-                key.equals("if-match", true) -> ifMatchValue = value
+                key.equals("if-match", true) -> {
+                    ifMatchValue = value
+                    requestBuilder.header(key, value)
+                }
                 key.equals("if-range", true) -> {
                     hasIfRangeHeader = true
                     requestBuilder.header(key, value)
                 }
                 shouldRemoveHeader(key) -> return@forEach
-                shouldPersistHeader(key) -> return@forEach
+                shouldPersistHeader(key) -> {
+                    sessionPersistentHeaders[key] = value
+                }
                 else -> requestBuilder.header(key, value)
             }
         }
 
         headers.forEach { (key, value) ->
             when {
-                key.equals("if-match", true) -> ifMatchValue = value
+                key.equals("if-match", true) -> {
+                    ifMatchValue = value
+                    requestBuilder.header(key, value)
+                }
                 key.equals("if-range", true) -> {
                     hasIfRangeHeader = true
                     requestBuilder.header(key, value)
@@ -93,10 +102,10 @@ class VlcProxyServer private constructor() : NanoHTTPD(randomPort()) {
             requestBuilder.header("If-Range", ifMatchValue!!)
         }
 
-        headers.forEach { (key, value) ->
-            if (shouldPersistHeader(key)) {
-                requestBuilder.header(key, value)
-            }
+        // 优先使用外部传入的持久化请求头，再用会话内的补全缺失
+        persistentHeaderKeys.forEach { key ->
+            headers[key]?.let { requestBuilder.header(key, it) }
+            sessionPersistentHeaders[key]?.let { requestBuilder.header(key, it) }
         }
 
         val request = requestBuilder.url(url).build()
