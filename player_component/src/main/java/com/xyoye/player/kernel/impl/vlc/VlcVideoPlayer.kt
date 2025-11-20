@@ -321,13 +321,15 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
             return null
         }
 
-        //VLC播放器通过代理服务实现请求头设置
-        if (headers?.isNotEmpty() == true) {
+        val isNetworkUrl = path.startsWith("http://", true) || path.startsWith("https://", true)
+
+        // VLC播放器通过代理服务实现请求头设置，并在网络播放时补充 If-Range 等头部
+        if (isNetworkUrl) {
             val proxyServer = VlcProxyServer.getInstance()
             if (!proxyServer.isAlive) {
                 proxyServer.start()
             }
-            val proxyUrl = proxyServer.getInputStreamUrl(path, headers)
+            val proxyUrl = proxyServer.getInputStreamUrl(path, headers.orEmpty())
             return Media(libVlc, Uri.parse(proxyUrl))
         }
 
