@@ -17,7 +17,6 @@ import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.utils.VideoLog
-import com.xyoye.player.utils.VlcProxyServer
 import kotlinx.coroutines.launch
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
@@ -321,18 +320,6 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
             return null
         }
 
-        val isNetworkUrl = path.startsWith("http://", true) || path.startsWith("https://", true)
-
-        // VLC播放器通过代理服务实现请求头设置，并在网络播放时补充 If-Range 等头部
-        if (isNetworkUrl) {
-            val proxyServer = VlcProxyServer.getInstance()
-            if (!proxyServer.isAlive) {
-                proxyServer.start()
-            }
-            val proxyUrl = proxyServer.getInputStreamUrl(path, headers.orEmpty())
-            return Media(libVlc, Uri.parse(proxyUrl))
-        }
-
         val videoUri = if (path.startsWith("/")) {
             Uri.fromFile(File(path))
         } else {
@@ -357,7 +344,21 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
 
             videoSourceFd?.run { Media(libVlc, this) }
         } else {
-            Media(libVlc, videoUri)
+            Media(libVlc, videoUri).apply {
+                applyHttpHeaders(headers)
+            }
+        }
+    }
+
+    private fun Media.applyHttpHeaders(headers: Map<String, String>?) {
+        if (headers.isNullOrEmpty()) return
+        headers.forEach { (key, value) ->
+            when {
+                key.equals("user-agent", true) -> addOption(":http-user-agent=$value")
+                key.equals("referer", true) -> addOption(":http-referrer=$value")
+                key.equals("cookie", true) -> addOption(":http-cookie=$value")
+                key.equals("authorization", true) -> addOption(":http-authorization=$value")
+            }
         }
     }
 
