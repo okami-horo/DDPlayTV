@@ -3,6 +3,9 @@ package com.xyoye.common_component.network.helper
 import android.annotation.SuppressLint
 import com.xyoye.common_component.BuildConfig
 import okhttp3.OkHttpClient
+import okhttp3.JavaNetCookieJar
+import java.net.CookieManager
+import java.net.CookiePolicy
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import javax.net.ssl.SSLContext
@@ -37,9 +40,13 @@ object UnsafeOkHttpClient {
     }
 
     val client: OkHttpClient by lazy {
+        val cookieManager = CookieManager().apply {
+            setCookiePolicy(CookiePolicy.ACCEPT_ALL)
+        }
         val builder = OkHttpClient.Builder()
             .sslSocketFactory(sslContext.socketFactory, unSafeTrustManager)
             .hostnameVerifier { _, _ -> true }
+            .cookieJar(JavaNetCookieJar(cookieManager))
             .addNetworkInterceptor(RedirectAuthorizationInterceptor())
         if (BuildConfig.DEBUG) {
             builder.addNetworkInterceptor(LoggerInterceptor().webDav())
