@@ -288,24 +288,36 @@ class SettingSubtitleStyleView(
     }
 
     private fun handleKeyCode(keyCode: Int) {
-        // libass 模式下仅保留“垂直偏移”与“重置”两处的上下导航
+        // libass 模式下仅保留透明度、垂直偏移与重置的上下导航
         if (PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS) {
-            if (viewBinding.tvResetSubtitleConfig.hasFocus()) {
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN ->
-                        viewBinding.subtitleVerticalOffsetSb.requestFocus()
-                }
-            } else if (viewBinding.subtitleVerticalOffsetSb.hasFocus()) {
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_UP -> if (isConfigChanged()) {
-                        viewBinding.tvResetSubtitleConfig.requestFocus()
-                    }
-                    KeyEvent.KEYCODE_DPAD_DOWN -> if (isConfigChanged()) {
-                        viewBinding.tvResetSubtitleConfig.requestFocus()
+            when {
+                viewBinding.tvResetSubtitleConfig.hasFocus() -> {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN ->
+                            viewBinding.subtitleAlphaSb.requestFocus()
                     }
                 }
-            } else {
-                viewBinding.subtitleVerticalOffsetSb.requestFocus()
+                viewBinding.subtitleAlphaSb.hasFocus() -> {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_UP -> if (isConfigChanged()) {
+                            viewBinding.tvResetSubtitleConfig.requestFocus()
+                        } else {
+                            viewBinding.subtitleVerticalOffsetSb.requestFocus()
+                        }
+                        KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleVerticalOffsetSb.requestFocus()
+                    }
+                }
+                viewBinding.subtitleVerticalOffsetSb.hasFocus() -> {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleAlphaSb.requestFocus()
+                        KeyEvent.KEYCODE_DPAD_DOWN -> if (isConfigChanged()) {
+                            viewBinding.tvResetSubtitleConfig.requestFocus()
+                        } else {
+                            viewBinding.subtitleAlphaSb.requestFocus()
+                        }
+                    }
+                }
+                else -> viewBinding.subtitleAlphaSb.requestFocus()
             }
             return
         }
