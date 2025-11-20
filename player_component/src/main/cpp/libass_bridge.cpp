@@ -25,6 +25,7 @@ struct LibassContext {
     int frame_height = 0;
     uint8_t user_alpha = 255;
     bool pending_invalidate = false;
+    bool had_active_image = false;
 };
 
 void LogError(const char *message) {
@@ -368,13 +369,28 @@ Java_com_xyoye_player_subtitle_libass_LibassBridge_nativeRenderFrame(JNIEnv *env
     const bool force_invalidate = context->pending_invalidate;
     int changed = 0;
     ASS_Image *image = ass_render_frame(context->renderer, context->track, time_ms, &changed);
-    if (image == nullptr) {
+    const bool has_image = image != nullptr;
+    if (!has_image) {
+        // Track went idle; clear previous frame once to remove stale subtitles.
+        if (context->had_active_image) {
+            BitmapGuard guard;
+            if (!guard.Lock(env, bitmap)) {
+                return JNI_FALSE;
+            }
+            const size_t total_size = static_cast<size_t>(guard.info.stride) * guard.info.height;
+            std::memset(guard.pixels, 0, total_size);
+            context->had_active_image = false;
+            context->pending_invalidate = false;
+            return JNI_TRUE;
+        }
         return JNI_FALSE;
     }
     if (changed == 0 && !force_invalidate) {
+        context->had_active_image = true;
         return JNI_FALSE;
     }
     context->pending_invalidate = false;
+    context->had_active_image = true;
 
     BitmapGuard guard;
     if (!guard.Lock(env, bitmap)) {
