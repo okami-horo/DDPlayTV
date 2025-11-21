@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Point
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
@@ -105,6 +106,7 @@ class PlayerBottomView(
         }
 
         viewBinding.playSeekBar.setOnSeekBarChangeListener(this)
+        updateFocusNavigation()
 
     }
 
@@ -260,5 +262,30 @@ class PlayerBottomView(
             )
         }
         viewBinding.ivPreviousSource.setImageDrawable(previousIcon)
+        updateFocusNavigation()
+    }
+
+    private fun updateFocusNavigation() {
+        val focusables = mutableListOf<View>()
+        focusables.add(viewBinding.playIv)
+        if (viewBinding.ivPreviousSource.isVisible) {
+            focusables.add(viewBinding.ivPreviousSource)
+        }
+        if (viewBinding.ivNextSource.isVisible) {
+            focusables.add(viewBinding.ivNextSource)
+        }
+        if (viewBinding.videoListIv.isVisible) {
+            focusables.add(viewBinding.videoListIv)
+        }
+        focusables.add(viewBinding.danmuControlIv)
+
+        val size = focusables.size
+        focusables.forEachIndexed { index, view ->
+            val left = focusables[(index - 1 + size) % size]
+            val right = focusables[(index + 1) % size]
+            view.nextFocusLeftId = left.id
+            view.nextFocusRightId = right.id
+            view.nextFocusUpId = R.id.video_title_tv
+        }
     }
 }

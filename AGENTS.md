@@ -35,3 +35,6 @@ Sensitive tokens belong in `local.properties` or Gradle properties; never hard-c
 
 ## Recent Changes
 - 001-migrate-media3: Added Kotlin 1.7.x with Java interoperability for existing Exo helper classes
+
+## TV/Remote UX
+- When adjusting UI element logic (focus/order/visibility), always consider Android TV remote navigation: ensure DPAD can reach/give feedback for all controls and verify focus loops are reachable on TV.
