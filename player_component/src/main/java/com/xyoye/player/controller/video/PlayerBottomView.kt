@@ -40,6 +40,8 @@ class PlayerBottomView(
 
     private var switchVideoSourceBlock: ((Int) -> Unit)? = null
 
+    private var isControllerVisible = false
+
     private val viewBinding = DataBindingUtil.inflate<LayoutPlayerBottomBinding>(
         LayoutInflater.from(context),
         R.layout.layout_player_bottom,
@@ -118,12 +120,22 @@ class PlayerBottomView(
 
     override fun onVisibilityChanged(isVisible: Boolean) {
         if (isVisible) {
+            if (isControllerVisible) {
+                // Avoid re-focusing play on every DPAD event when controller is already visible.
+                return
+            }
+            isControllerVisible = true
             ViewCompat.animate(viewBinding.playerBottomLl).translationY(0f).setDuration(300).start()
-            // Ensure a safe default focus when controller shows to avoid
-            // accidentally triggering the top back button with DPAD center.
-            // Focusing play button makes center press toggle play/pause consistently.
-            post { viewBinding.playIv.requestFocus() }
+            post {
+                if (!viewBinding.playIv.hasFocus()) {
+                    viewBinding.playIv.requestFocus()
+                }
+            }
         } else {
+            if (!isControllerVisible) {
+                return
+            }
+            isControllerVisible = false
             val height = viewBinding.playerBottomLl.height.toFloat()
             ViewCompat.animate(viewBinding.playerBottomLl).translationY(height)
                 .setDuration(300)
