@@ -60,6 +60,11 @@ class AssGpuNativeBridge {
         nativeSetTelemetryEnabled(handle, enabled)
     }
 
+    fun loadTrack(path: String, fontDirs: List<String>, defaultFont: String?) {
+        if (!isReady) return
+        nativeLoadTrack(handle, path, fontDirs.toTypedArray(), defaultFont)
+    }
+
     fun flush() {
         if (!isReady) return
         nativeFlush(handle)
@@ -112,4 +117,11 @@ class AssGpuNativeBridge {
     private external fun nativeFlush(handle: Long)
 
     private external fun nativeSetTelemetryEnabled(handle: Long, enabled: Boolean)
+
+    private external fun nativeLoadTrack(
+        handle: Long,
+        path: String,
+        fontDirs: Array<String>,
+        defaultFont: String?
+    )
 }

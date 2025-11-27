@@ -5,6 +5,7 @@ import android.view.Choreographer
 import android.view.Surface
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.data_component.enums.SubtitleViewType
@@ -87,12 +88,20 @@ class LibassRendererBackend : SubtitleRenderer {
 
     override fun loadExternalSubtitle(path: String): Boolean {
         DDLog.i(TAG, "GPU libass backend loaded: $path")
-        // Native pipeline handles track binding internally.
+        val env = environment ?: return false
+        val fonts = buildFontDirectories(env.context)
+        val defaultFont = SubtitleFontManager.getDefaultFontPath(env.context)
+        renderer?.loadTrack(path, fonts, defaultFont)
         return true
     }
 
     override fun updateOpacity(alphaPercent: Int) {
         // GPU path manages opacity in native pipeline; ignore UI opacity tweaks.
+    }
+
+    private fun buildFontDirectories(context: android.content.Context): List<String> {
+        SubtitleFontManager.ensureDefaultFont(context)
+        return SubtitleFontManager.getFontsDirectoryPath(context)?.let { listOf(it) } ?: emptyList()
     }
 
     private fun attachOverlay(env: SubtitleRenderEnvironment) {

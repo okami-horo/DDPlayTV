@@ -68,6 +68,10 @@ class AssGpuRenderer(
         frameCleaner.onSurfaceLost()
     }
 
+    fun loadTrack(path: String, fontDirs: List<String>, defaultFont: String?) {
+        nativeBridge.loadTrack(path, fontDirs, defaultFont)
+    }
+
     fun flush() {
         nativeBridge.flush()
     }
