@@ -9,6 +9,7 @@ import android.graphics.PorterDuff
 import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
@@ -23,6 +24,7 @@ class SubtitleSurfaceOverlay @JvmOverloads constructor(
 ) : SurfaceView(context, attrs, defStyleAttr), SurfaceHolder.Callback {
 
     private var frameSizeListener: ((Int, Int) -> Unit)? = null
+    private var surfaceStateListener: SurfaceStateListener? = null
     private var playerView: DanDanVideoPlayer? = null
     private var anchorView: View? = null
     private val playerLayoutListener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
@@ -52,6 +54,10 @@ class SubtitleSurfaceOverlay @JvmOverloads constructor(
         frameSizeListener = listener
     }
 
+    fun setSurfaceStateListener(listener: SurfaceStateListener?) {
+        surfaceStateListener = listener
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         playerView?.removeOnLayoutChangeListener(playerLayoutListener)
@@ -68,13 +74,16 @@ class SubtitleSurfaceOverlay @JvmOverloads constructor(
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
+        surfaceStateListener?.onSurfaceCreated(holder.surface, holder.surfaceFrame.width(), holder.surfaceFrame.height())
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
         frameSizeListener?.invoke(width, height)
+        surfaceStateListener?.onSurfaceChanged(holder.surface, width, height)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
+        surfaceStateListener?.onSurfaceDestroyed()
     }
 
     fun render(bitmap: Bitmap?, verticalOffsetPx: Int = 0) {
@@ -176,5 +185,13 @@ class SubtitleSurfaceOverlay @JvmOverloads constructor(
             setLayoutParams(layoutParams)
             frameSizeListener?.invoke(layoutParams.width, layoutParams.height)
         }
+    }
+
+    fun interface SurfaceStateListener {
+        fun onSurfaceDestroyed()
+
+        fun onSurfaceCreated(surface: Surface?, width: Int, height: Int) {}
+
+        fun onSurfaceChanged(surface: Surface?, width: Int, height: Int) {}
     }
 }
