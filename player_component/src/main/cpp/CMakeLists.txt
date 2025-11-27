@@ -11,8 +11,13 @@ set(LIBASS_PREBUILT "${PREBUILT_LIBS_DIR}/${ANDROID_ABI}/libass.so")
 add_library(ass_prebuilt SHARED IMPORTED)
 set_target_properties(ass_prebuilt PROPERTIES IMPORTED_LOCATION "${LIBASS_PREBUILT}")
 
+set(GPU_SOURCES
+    ass_gpu_bridge.cpp
+)
+
 add_library(libass_bridge SHARED
     libass_bridge.cpp
+    ${GPU_SOURCES}
 )
 
 target_include_directories(libass_bridge
@@ -24,6 +29,8 @@ find_library(log-lib log)
 find_library(android-lib android)
 find_library(cpp_shared c++_shared)
 find_library(jnigraphics-lib jnigraphics)
+find_library(glesv3-lib GLESv3)
+find_library(egl-lib EGL)
 
 set(LIBASS_LINK_LIBS ass_prebuilt)
 
@@ -43,6 +50,14 @@ if (jnigraphics-lib)
     list(APPEND LIBASS_LINK_LIBS ${jnigraphics-lib})
 endif()
 
+if (glesv3-lib)
+    list(APPEND LIBASS_LINK_LIBS ${glesv3-lib})
+endif()
+
+if (egl-lib)
+    list(APPEND LIBASS_LINK_LIBS ${egl-lib})
+endif()
+
 set_target_properties(libass_bridge PROPERTIES
     OUTPUT_NAME "libass_bridge"
 )
@@ -50,4 +65,9 @@ set_target_properties(libass_bridge PROPERTIES
 target_link_libraries(libass_bridge
     PRIVATE
         ${LIBASS_LINK_LIBS}
+)
+
+target_compile_definitions(libass_bridge
+    PRIVATE
+        ASS_GPU_RENDER=1
 )

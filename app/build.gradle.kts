@@ -11,6 +11,12 @@ applicationSetup()
 val media3FallbackFlag =
     project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
 
+val subtitleGpuFallbackFlag =
+    project.findProperty("subtitle_gpu_enabled")?.toString()?.equals("true", true) ?: true
+
+val subtitleTelemetryFallbackFlag =
+    project.findProperty("subtitle_telemetry_enabled")?.toString()?.equals("true", true) ?: true
+
 android {
     namespace = "com.xyoye.dandanplay"
     compileSdk = Versions.compileSdkVersion
@@ -27,6 +33,16 @@ android {
             "boolean",
             "MEDIA3_ENABLED_FALLBACK",
             media3FallbackFlag.toString()
+        )
+        buildConfigField(
+            "boolean",
+            "SUBTITLE_GPU_ENABLED_FALLBACK",
+            subtitleGpuFallbackFlag.toString()
+        )
+        buildConfigField(
+            "boolean",
+            "SUBTITLE_TELEMETRY_ENABLED_FALLBACK",
+            subtitleTelemetryFallbackFlag.toString()
         )
 
         ndk {

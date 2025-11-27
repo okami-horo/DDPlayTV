@@ -16,6 +16,8 @@ object AppConfig {
 
     private const val TAG = "Media3-AppConfig"
     private const val KEY_MEDIA3_ENABLED = "media3_enabled"
+    private const val KEY_SUBTITLE_GPU_ENABLED = "subtitle_gpu_enabled"
+    private const val KEY_SUBTITLE_TELEMETRY_ENABLED = "subtitle_telemetry_enabled"
     private val initialized = AtomicBoolean(false)
 
     fun init(context: Context) {
@@ -27,6 +29,15 @@ object AppConfig {
         val resolvedValue = defaults[KEY_MEDIA3_ENABLED] ?: BuildConfig.MEDIA3_ENABLED_FALLBACK
         CommonAppConfig.putMedia3EnabledRemote(resolvedValue)
         DDLog.i(TAG, "media3_enabled default loaded: $resolvedValue")
+
+        val gpuEnabled = defaults[KEY_SUBTITLE_GPU_ENABLED] ?: BuildConfig.SUBTITLE_GPU_ENABLED_FALLBACK
+        CommonAppConfig.putSubtitleGpuEnabledRemote(gpuEnabled)
+        DDLog.i(TAG, "subtitle_gpu_enabled default loaded: $gpuEnabled")
+
+        val telemetryEnabled =
+            defaults[KEY_SUBTITLE_TELEMETRY_ENABLED] ?: BuildConfig.SUBTITLE_TELEMETRY_ENABLED_FALLBACK
+        CommonAppConfig.putSubtitleTelemetryEnabledRemote(telemetryEnabled)
+        DDLog.i(TAG, "subtitle_telemetry_enabled default loaded: $telemetryEnabled")
     }
 
     fun media3RemoteValue(): Boolean = CommonAppConfig.isMedia3EnabledRemote()
@@ -34,6 +45,20 @@ object AppConfig {
     fun overrideMedia3Remote(value: Boolean) {
         CommonAppConfig.putMedia3EnabledRemote(value)
         DDLog.i(TAG, "media3_enabled override applied: $value")
+    }
+
+    fun subtitleGpuRemoteValue(): Boolean = CommonAppConfig.isSubtitleGpuEnabledRemote()
+
+    fun overrideSubtitleGpuRemote(value: Boolean) {
+        CommonAppConfig.putSubtitleGpuEnabledRemote(value)
+        DDLog.i(TAG, "subtitle_gpu_enabled override applied: $value")
+    }
+
+    fun subtitleTelemetryRemoteValue(): Boolean = CommonAppConfig.isSubtitleTelemetryEnabledRemote()
+
+    fun overrideSubtitleTelemetryRemote(value: Boolean) {
+        CommonAppConfig.putSubtitleTelemetryEnabledRemote(value)
+        DDLog.i(TAG, "subtitle_telemetry_enabled override applied: $value")
     }
 
     private fun parseDefaults(context: Context, @XmlRes xmlRes: Int): Map<String, Boolean> {

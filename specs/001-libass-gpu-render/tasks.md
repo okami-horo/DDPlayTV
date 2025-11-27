@@ -16,9 +16,9 @@
 
 **Purpose**: Prepare build and native toolchain for GPU subtitle pipeline.
 
-- [ ] T001 Align GLES3/libass GPU dependencies and CMake options in `/workspace/DanDanPlayForAndroid/player_component/build.gradle.kts`
-- [ ] T002 [P] Add GPU subtitle feature flags and default telemetry toggle in `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/AppConfig.kt`
-- [ ] T003 [P] Prepare native targets and include libass GPU render thread entry points in `/workspace/DanDanPlayForAndroid/player_component/src/main/cpp/CMakeLists.txt`
+- [X] T001 Align GLES3/libass GPU dependencies and CMake options in `/workspace/DanDanPlayForAndroid/player_component/build.gradle.kts`
+- [X] T002 [P] Add GPU subtitle feature flags and default telemetry toggle in `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/AppConfig.kt`
+- [X] T003 [P] Prepare native targets and include libass GPU render thread entry points in `/workspace/DanDanPlayForAndroid/player_component/src/main/cpp/CMakeLists.txt`
 
 ---
 
@@ -29,10 +29,10 @@
 
 **⚠️ CRITICAL**: Complete before any user story work.
 
-- [ ] T004 Create data entities `SubtitlePipelineState`, `SubtitleOutputTarget`, `TelemetrySample`, `FallbackEvent` per data-model.md in `/workspace/DanDanPlayForAndroid/data_component/src/main/java/com/xyoye/data_component/bean/subtitle/`
-- [ ] T005 [P] Define in-process subtitle pipeline façade (init/status/fallback/telemetry) from contracts/openapi.yaml in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/network/subtitle/SubtitlePipelineApi.kt` (no HTTP transport)
-- [ ] T006 Establish structured subtitle telemetry logger/tags for GPU pipeline in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/SubtitleTelemetryLogger.kt`
-- [ ] T007 [P] Provide JNI/bridge interface for native libass GPU render thread lifecycle in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/AssGpuNativeBridge.kt`
+- [X] T004 Create data entities `SubtitlePipelineState`, `SubtitleOutputTarget`, `TelemetrySample`, `FallbackEvent` per data-model.md in `/workspace/DanDanPlayForAndroid/data_component/src/main/java/com/xyoye/data_component/bean/subtitle/`
+- [X] T005 [P] Define in-process subtitle pipeline façade (init/status/fallback/telemetry) from contracts/openapi.yaml in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/network/subtitle/SubtitlePipelineApi.kt` (no HTTP transport)
+- [X] T006 Establish structured subtitle telemetry logger/tags for GPU pipeline in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/SubtitleTelemetryLogger.kt`
+- [X] T007 [P] Provide JNI/bridge interface for native libass GPU render thread lifecycle in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/AssGpuNativeBridge.kt`
 
 **Checkpoint**: Foundation ready — user story phases can start.
 

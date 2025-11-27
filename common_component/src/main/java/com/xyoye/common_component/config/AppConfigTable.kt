@@ -97,4 +97,12 @@ object AppConfigTable {
     @MMKVFiled
     // Media3 远程开关
     var media3EnabledRemote: Boolean = false
+
+    @MMKVFiled
+    // GPU 字幕管线远程开关
+    var subtitleGpuEnabledRemote: Boolean = false
+
+    @MMKVFiled
+    // 字幕遥测采集开关（远程）
+    var subtitleTelemetryEnabledRemote: Boolean = true
 }
