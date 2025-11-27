@@ -69,4 +69,8 @@ object SubtitleConfigTable {
     //字幕渲染后端最后更新时间（毫秒）
     @MMKVFiled
     const val subtitleRendererUpdatedAt = 0L
+
+    //字幕时间偏移（毫秒）
+    @MMKVFiled
+    const val subtitleOffsetMs = 0L
 }

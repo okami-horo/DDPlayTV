@@ -43,13 +43,13 @@
 **Goal**: GPU-backed libass rendering stays smooth and synced for complex ASS/SSA effects.  
 **Independent Test**: Play 1080p/4K complex ASS sample; subtitles stay in sync at 60 fps with no UI jank.
 
-- [ ] T008 [US1] Implement GPU render thread orchestrator with libass FBO/EGLImage pipeline in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/AssGpuRenderer.kt`
-- [ ] T009 [P] [US1] Track SurfaceView/TextureView changes and build `SubtitleOutputTarget` updates feeding pipeline init/status in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleOutputTargetTracker.kt`
-- [ ] T010 [P] [US1] Implement pipeline controller issuing `/subtitle/pipeline/init` via local façade and maintaining `SubtitlePipelineState` in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitlePipelineController.kt`
-- [ ] T011 [US1] Support subtitle time offset settings and keep alignment across play/pause/seek in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/media3/render/SubtitleRenderScheduler.kt`, persisting offset in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/config/SubtitlePreferenceUpdater.kt`
-- [ ] T012 [US1] Wire render scheduler to ExoPlayer `AnalyticsListener`/`VideoFrameMetadataListener` for timeline sync in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/media3/render/SubtitleRenderScheduler.kt`
-- [ ] T013 [US1] Clear/flush subtitle textures on seek/track change to prevent ghost frames in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleFrameCleaner.kt`
-- [ ] T014 [P] [US1] Expose GPU renderer backend toggle using subtitle preferences in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/config/SubtitlePreferenceUpdater.kt`
+- [X] T008 [US1] Implement GPU render thread orchestrator with libass FBO/EGLImage pipeline in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/AssGpuRenderer.kt`
+- [X] T009 [P] [US1] Track SurfaceView/TextureView changes and build `SubtitleOutputTarget` updates feeding pipeline init/status in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleOutputTargetTracker.kt`
+- [X] T010 [P] [US1] Implement pipeline controller issuing `/subtitle/pipeline/init` via local façade and maintaining `SubtitlePipelineState` in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitlePipelineController.kt`
+- [X] T011 [US1] Support subtitle time offset settings and keep alignment across play/pause/seek in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/media3/render/SubtitleRenderScheduler.kt`, persisting offset in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/config/SubtitlePreferenceUpdater.kt`
+- [X] T012 [US1] Wire render scheduler to ExoPlayer `AnalyticsListener`/`VideoFrameMetadataListener` for timeline sync in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/media3/render/SubtitleRenderScheduler.kt`
+- [X] T013 [US1] Clear/flush subtitle textures on seek/track change to prevent ghost frames in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleFrameCleaner.kt`
+- [X] T014 [P] [US1] Expose GPU renderer backend toggle using subtitle preferences in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/config/SubtitlePreferenceUpdater.kt`
 
 **Checkpoint**: User Story 1 independently testable via complex ASS playback.
 
