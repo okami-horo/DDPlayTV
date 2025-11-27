@@ -1,37 +1,39 @@
 # Implementation Plan: Libass GPU Subtitle Pipeline
 
-**Branch**: `001-libass-gpu-render` | **Date**: 2025-11-27 | **Spec**: `specs/001-libass-gpu-render/spec.md`
+**Branch**: `001-libass-gpu-render` | **Date**: 2025-11-27 | **Spec**: `/workspace/DanDanPlayForAndroid/specs/001-libass-gpu-render/spec.md`
 **Input**: Feature specification from `/specs/001-libass-gpu-render/spec.md`
+
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-Implement a GPU-backed libass subtitle rendering pipeline that runs on a native render thread using OpenGL ES 3.x FBO/EGLImage composition, with automatic fallback when GPU is unavailable, while preserving smooth playback and emitting structured telemetry for validation.
+Deliver a GPU-backed libass subtitle pipeline running on the native render thread, synchronizing with video playback, handling Surface changes gracefully, and providing automatic fallback plus observability for performance and errors.
 
 ## Technical Context
-**Language/Version**: Kotlin 1.7.21 + JNI/C for libass 0.17.3  
-**Primary Dependencies**: ExoPlayer 2.18.x pipeline, Media3 interop helpers, libass 0.17.3 prebuilt, MMKV (settings), ARouter (navigation); GPU composition via OpenGL ES 3.x FBO/EGLImage with dedicated native render thread  
-**Storage**: N/A (uses existing subtitle/font asset loaders)  
-**Testing**: Gradle `./gradlew testDebugUnitTest` and `./gradlew connectedDebugAndroidTest`; playback validation via ASS samples on device/emulator  
-**Target Platform**: Android 21–33 mobile/TV devices  
-**Project Type**: Multi-module Android app (launcher + feature components)  
-**Performance Goals**: 60 fps subtitle compositing with ≥95% frames within vsync window on 1080p/4K ASS; CPU peak at least 30% lower than legacy path under complex effects  
-**Constraints**: Must degrade gracefully within 1s on surface loss or GPU unavailability; handle SurfaceView/TextureView swaps without flicker; avoid subtitle ghosts on seek/track change; telemetry via native render/upload timers + ExoPlayer AnalyticsListener/VideoFrameMetadataListener and optional Choreographer sampling  
-**Scale/Scope**: Player subtitle pipeline across `player_component` with shared utilities in `common_component`/`data_component`; supports controller overlays and TV remote focus flows
+
+**Language/Version**: Kotlin 1.7.x + Java interop; JNI/C++ for libass 0.17.3 render path  
+**Primary Dependencies**: ExoPlayer 2.18.x (Media3 interop), libass 0.17.3, OpenGL ES 3.x FBO/EGLImage pipeline, MMKV for settings, ARouter for navigation glue  
+**Storage**: N/A (reuses existing subtitle/font asset loaders)  
+**Testing**: Gradle `testDebugUnitTest`, `connectedDebugAndroidTest` (instrumented)  
+**Target Platform**: Android 21–33; mobile + TV/remote UX considerations  
+**Project Type**: Android multi-module app (app shell + feature components)  
+**Performance Goals**: Maintain 60 fps subtitle composition; 95% frames inside vsync window; CPU peak at least 30% lower than legacy path  
+**Constraints**: Automatic downgrade when GPU path fails (<1s recovery), no subtitle ghosting on track changes, stable under SurfaceView/TextureView switches  
+**Scale/Scope**: Player-facing subtitle pipeline spanning `player_component` + shared `common_component`/`data_component`; no new storage backends  
+**API/Interface Notes**: `/subtitle/pipeline/*` is an in-process façade contract (repository/service) for player ↔ subtitle pipeline coordination, not a remote HTTP API
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- Constitution status: `.specify/memory/constitution.md` is a placeholder with unnamed principles and no enforceable rules.  
-- Gate assessment: No explicit constraints to violate; proceed with NOTICE. Future constitution updates must be re-evaluated.
-- Post-design check: unchanged; no additional gates detected after Phase 1 outputs.
+Constitution template has no ratified principles or governance details; no enforceable gates are defined. Proceeding under provisional PASS while noting governance content must be filled when available.
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
+specs/001-libass-gpu-render/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
 ├── data-model.md        # Phase 1 output (/speckit.plan command)
@@ -41,38 +43,21 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 
 ```text
-specs/001-libass-gpu-render/
-├── plan.md
-├── research.md
-├── data-model.md
-├── quickstart.md
-└── contracts/
-
-app/                     # launcher shell, manifest, shared UI glue
-common_component/        # base classes, utilities, extension helpers
-data_component/          # entities, repositories
-player_component/        # playback UI, render pipeline, subtitle handling
-storage_component/       # storage helpers and media assets
-anime_component/, user_component/, stream_component/, download_component/ ...
-buildSrc/                # Gradle conventions and lint/ktlint rules
-document/, scripts/, repository/  # supplemental assets/tools
+app/                      # launcher shell, manifest, shared UI glue
+common_component/         # base classes, utilities, shared render helpers
+data_component/           # entities, repositories, data sources
+player_component/         # playback engine, subtitle/render pipeline target
+anime_component/, local_component/, storage_component/, stream_component/, user_component/, download_component/  # other feature slices
+buildSrc/                 # build logic, lint/ktlint config
+document/, scripts/, repository/, Img/, prompts/  # docs, assets, tooling
 ```
 
-**Structure Decision**: Multi-module Android app; this feature primarily extends `player_component` native/JNI subtitle pipeline with support utilities in `common_component` and configuration/logging in `data_component`/`app`.
+**Structure Decision**: Android multi-module architecture; libass GPU subtitle pipeline changes concentrate in `player_component` with shared/native helpers in `common_component` and data definitions in `data_component`; no new modules introduced.
 
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+No constitution violations identified; table not required.

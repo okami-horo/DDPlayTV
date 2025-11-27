@@ -34,6 +34,8 @@ Sensitive tokens belong in `local.properties` or Gradle properties; never hard-c
 - N/A (settings via MMKV; no schema changes) (001-add-libass-backend)
 - Kotlin 1.7.21 + JNI/C for libass 0.17.3 + ExoPlayer 2.18.x pipeline, Media3 interop helpers, libass 0.17.3 prebuilt, MMKV (settings), ARouter (navigation); GPU composition via OpenGL ES 3.x FBO/EGLImage with dedicated native render thread (001-libass-gpu-render)
 - N/A (uses existing subtitle/font asset loaders) (001-libass-gpu-render)
+- Kotlin 1.7.x + Java interop; JNI/C++ for libass 0.17.3 render path + ExoPlayer 2.18.x (Media3 interop), libass 0.17.3, OpenGL ES 3.x FBO/EGLImage pipeline, MMKV for settings, ARouter for navigation glue (001-libass-gpu-render)
+- N/A (reuses existing subtitle/font asset loaders) (001-libass-gpu-render)
 
 ## Recent Changes
 - 001-migrate-media3: Added Kotlin 1.7.x with Java interoperability for existing Exo helper classes

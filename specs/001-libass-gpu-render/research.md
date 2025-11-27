@@ -19,3 +19,8 @@
 - Decision: Instrument subtitle render latency and frame drops via: (1) native timestamps around libass render + GL upload/composite, (2) ExoPlayer `AnalyticsListener`/`VideoFrameMetadataListener` for playback timeline correlation, and (3) optional Choreographer/`dumpsys SurfaceFlinger --latency` sampling in debug builds. Emit structured logs (tagged) rather than verbose logs by default.
 - Rationale: Combines precise native timing with player timeline and UI smoothness, enabling validation of SC-001/SC-002. Structured logs avoid noisy adb output while supporting filtering.
 - Alternatives considered: Relying only on adb logcat scanning (too noisy, per project guidance); GPU driver-specific counters (device-fragmented and overkill for this phase).
+
+## Subtitle pipeline interface scope (`/subtitle/pipeline/*`)
+- Decision: Treat `/subtitle/pipeline/*` as an in-process façade exposed via repository/service interfaces (e.g., `SubtitlePipelineApi`), not a remote HTTP backend; contracts remain in OpenAPI form solely to standardize request/response models across modules.
+- Rationale: The app is a standalone Android client with no subtitle pipeline server; the contracts live under `common_component/network` and `player_component` tasks, indicating local invocation. Keeping a façade API clarifies call direction (player → pipeline controllers/repositories) while preventing assumptions about network transport.
+- Alternatives considered: Exposing endpoints over network (adds latency, requires server and auth) or direct class calls without contract (harder to mock/validate and less explicit for module boundaries).

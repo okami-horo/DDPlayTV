@@ -1,5 +1,7 @@
 # Quickstart — Libass GPU Subtitle Pipeline
 
+> `/subtitle/pipeline/*` contracts are local façade calls inside the app (no external server); wire them via the pipeline controller/repository interfaces.
+
 1) Checkout branch: `git checkout 001-libass-gpu-render`.
 2) Build/debug: `./gradlew assembleDebug` (watch tail for BUILD SUCCESSFUL).
 3) Run unit tests: `./gradlew testDebugUnitTest`; optional device playback: `./gradlew connectedDebugAndroidTest`.

@@ -2,6 +2,10 @@ openapi: 3.0.3
 info:
   title: Libass GPU Subtitle Pipeline Contracts
   version: 0.1.0
+  description: >
+    In-process façade for player ↔ subtitle pipeline coordination. These routes
+    standardize request/response shapes for local service/repository calls and
+    are not served over HTTP.
 paths:
   /subtitle/pipeline/init:
     post:
