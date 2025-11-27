@@ -1,11 +1,8 @@
 package com.xyoye.player_component.subtitle.gpu
 
 import android.view.Surface
-import com.xyoye.common_component.log.SubtitleTelemetryLogger
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.data_component.bean.subtitle.SubtitleOutputTarget
-import com.xyoye.data_component.bean.subtitle.TelemetrySample
-import com.xyoye.data_component.enums.SubtitleFrameStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,9 +15,15 @@ import kotlinx.coroutines.launch
 class AssGpuRenderer(
     private val pipelineController: SubtitlePipelineController,
     private val nativeBridge: AssGpuNativeBridge = AssGpuNativeBridge(),
+    private val loadSheddingPolicy: SubtitleLoadSheddingPolicy = SubtitleLoadSheddingPolicy(),
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
 
+    private val telemetryCollector = SubtitleTelemetryCollector(
+        pipelineController = pipelineController,
+        loadSheddingPolicy = loadSheddingPolicy,
+        scope = scope
+    )
     val frameCleaner = SubtitleFrameCleaner { nativeBridge.flush() }
 
     @Volatile
@@ -47,25 +50,12 @@ class AssGpuRenderer(
     }
 
     fun renderFrame(subtitlePtsMs: Long, vsyncId: Long) {
+        if (!telemetryCollector.allowRender()) {
+            telemetryCollector.recordSkippedFrame(subtitlePtsMs, vsyncId)
+            return
+        }
         val result = nativeBridge.renderFrame(subtitlePtsMs, vsyncId, telemetryEnabled)
-        val frameStatus = if (result.rendered) {
-            SubtitleFrameStatus.Rendered
-        } else {
-            SubtitleFrameStatus.Dropped
-        }
-        val sample = TelemetrySample(
-            timestampMs = System.currentTimeMillis(),
-            subtitlePtsMs = subtitlePtsMs,
-            renderLatencyMs = result.renderLatencyMs.toDouble(),
-            uploadLatencyMs = result.uploadLatencyMs.toDouble(),
-            compositeLatencyMs = result.compositeLatencyMs.toDouble(),
-            frameStatus = frameStatus,
-            dropReason = if (result.rendered) null else DROP_REASON_NO_FRAME
-        )
-        pipelineController.currentState()?.let { SubtitleTelemetryLogger.logSample(sample, it) }
-        if (pipelineController.telemetryEnabled()) {
-            scope.launch { pipelineController.submitTelemetry(sample) }
-        }
+        telemetryCollector.recordRenderResult(result, subtitlePtsMs, vsyncId, telemetryEnabled)
     }
 
     fun updateTelemetry(enabled: Boolean) {
@@ -87,11 +77,11 @@ class AssGpuRenderer(
         flush()
         nativeBridge.release()
         pipelineController.reset()
+        telemetryCollector.dispose()
         scope.coroutineContext[Job]?.cancel()
     }
 
     companion object {
         private const val TAG = "AssGpuRenderer"
-        private const val DROP_REASON_NO_FRAME = "NO_FRAME"
     }
 }

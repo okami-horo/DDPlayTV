@@ -9,3 +9,6 @@
 5) Enable GPU pipeline: configure player to initialize via `/subtitle/pipeline/init` contract with current SurfaceView/TextureView dimensions; keep telemetryEnabled=true.
 6) Validate playback: play sample video, toggle controls/seek/rotation; verify GPU mode stays Active and telemetry shows ≥95% vsync hit with reduced CPU.
 7) Fallback test: force surface recreate or set `/subtitle/pipeline/fallback` to Fallback_CPU; confirm playback continues and stale subtitles are cleared.
+8) Observe telemetry overlay: turn on `SubtitleTelemetryOverlay` in debug builds to view vsync hit rate, dropped frames, and CPU peak without spamming adb logcat.
+9) Long-run soak: play ≥20 min with complex subtitles; check `SubtitleTelemetryRepository.latestSnapshot()` or log tag `SUB-GPU` for load-shedding and drop bursts.
+10) Recovery path: after forcing fallback, trigger surface recreation and verify `SubtitleRecoveryCoordinator` rebinds GPU mode within ~1s.

@@ -60,10 +60,10 @@
 **Goal**: Keep CPU/GPU usage stable during long playback; maintain interaction responsiveness.  
 **Independent Test**: 20-minute complex subtitle playback on mid-tier device; no heat or lag, telemetry shows controlled resource use.
 
-- [ ] T015 [US2] Collect native render/upload/composite timings into `TelemetrySample` stream in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleTelemetryCollector.kt`
-- [ ] T016 [P] [US2] Aggregate telemetry snapshots and serve `/subtitle/pipeline/telemetry` and `/subtitle/pipeline/telemetry/latest` in `/workspace/DanDanPlayForAndroid/data_component/src/main/java/com/xyoye/data_component/repository/subtitle/SubtitleTelemetryRepository.kt`
-- [ ] T017 [P] [US2] Add on-device performance overlay/structured log filters for CPU/GPU/VSYNC metrics in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/widgets/SubtitleTelemetryOverlay.kt`
-- [ ] T018 [US2] Implement load-shedding/backpressure policy to throttle subtitle uploads when system is overutilized in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleLoadSheddingPolicy.kt`
+- [X] T015 [US2] Collect native render/upload/composite timings into `TelemetrySample` stream in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleTelemetryCollector.kt`
+- [X] T016 [P] [US2] Aggregate telemetry snapshots and serve `/subtitle/pipeline/telemetry` and `/subtitle/pipeline/telemetry/latest` in `/workspace/DanDanPlayForAndroid/data_component/src/main/java/com/xyoye/data_component/repository/subtitle/SubtitleTelemetryRepository.kt`
+- [X] T017 [P] [US2] Add on-device performance overlay/structured log filters for CPU/GPU/VSYNC metrics in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/widgets/SubtitleTelemetryOverlay.kt`
+- [X] T018 [US2] Implement load-shedding/backpressure policy to throttle subtitle uploads when system is overutilized in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleLoadSheddingPolicy.kt`
 
 **Checkpoint**: User Story 2 independently testable via long-run playback with telemetry.
 
@@ -74,10 +74,10 @@
 **Goal**: Detect GPU unavailability and degrade/recover without interrupting playback.  
 **Independent Test**: Force surface loss or disable hardware accel; app falls back within ~1s, keeps subtitles visible, and can auto-recover.
 
-- [ ] T019 [US3] Implement fallback controller mapping `/subtitle/pipeline/fallback` and mode transitions in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleFallbackController.kt`
-- [ ] T020 [P] [US3] Handle surface recreate/resize events and rebuild GL resources safely in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleSurfaceLifecycleHandler.kt`
-- [ ] T021 [US3] Report fallback reasons and recovery attempts via structured logs/prompts in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/SubtitleFallbackReporter.kt`
-- [ ] T022 [P] [US3] Add recovery path to re-init GPU pipeline after fallback when conditions improve in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleRecoveryCoordinator.kt`
+- [X] T019 [US3] Implement fallback controller mapping `/subtitle/pipeline/fallback` and mode transitions in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleFallbackController.kt`
+- [X] T020 [P] [US3] Handle surface recreate/resize events and rebuild GL resources safely in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleSurfaceLifecycleHandler.kt`
+- [X] T021 [US3] Report fallback reasons and recovery attempts via structured logs/prompts in `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/SubtitleFallbackReporter.kt`
+- [X] T022 [P] [US3] Add recovery path to re-init GPU pipeline after fallback when conditions improve in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/SubtitleRecoveryCoordinator.kt`
 
 **Checkpoint**: User Story 3 independently testable via forced fallback/recovery scenarios.
 
@@ -87,10 +87,10 @@
 
 **Purpose**: Hardening and documentation across all stories.
 
-- [ ] T023 [P] Update quickstart with GPU pipeline usage, fallback steps, and telemetry tips in `/workspace/DanDanPlayForAndroid/specs/001-libass-gpu-render/quickstart.md`
-- [ ] T024 Document release notes and edge-case coverage for the feature in `/workspace/DanDanPlayForAndroid/document/release-notes/001-libass-gpu-render.md`
-- [ ] T025 Optimize render/upload hotspots identified in telemetry in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/AssGpuRenderer.kt`
-- [ ] T026 [P] Capture validation artifacts (screenshots/log extracts) for review in `/workspace/DanDanPlayForAndroid/specs/001-libass-gpu-render/checklists/validation.md`
+- [X] T023 [P] Update quickstart with GPU pipeline usage, fallback steps, and telemetry tips in `/workspace/DanDanPlayForAndroid/specs/001-libass-gpu-render/quickstart.md`
+- [X] T024 Document release notes and edge-case coverage for the feature in `/workspace/DanDanPlayForAndroid/document/release-notes/001-libass-gpu-render.md`
+- [X] T025 Optimize render/upload hotspots identified in telemetry in `/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/subtitle/gpu/AssGpuRenderer.kt`
+- [X] T026 [P] Capture validation artifacts (screenshots/log extracts) for review in `/workspace/DanDanPlayForAndroid/specs/001-libass-gpu-render/checklists/validation.md`
 
 ---
 
