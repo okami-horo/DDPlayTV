@@ -32,6 +32,8 @@ Sensitive tokens belong in `local.properties` or Gradle properties; never hard-c
 - Existing download cache plus `storage_component` test assets; no new external storage vendors planned (001-migrate-media3)
 - Kotlin 1.7.21, AGP 7.3.1; JNI bindings to libass 0.17.3 (prebuilt) + ExoPlayer 2.18.x; libass 0.17.3; Android SDK 21–33; MMKV (settings); ARouter (navigation) (001-add-libass-backend)
 - N/A (settings via MMKV; no schema changes) (001-add-libass-backend)
+- Kotlin 1.7.21 + JNI/C for libass 0.17.3 + ExoPlayer 2.18.x pipeline, Media3 interop helpers, libass 0.17.3 prebuilt, MMKV (settings), ARouter (navigation); GPU composition via OpenGL ES 3.x FBO/EGLImage with dedicated native render thread (001-libass-gpu-render)
+- N/A (uses existing subtitle/font asset loaders) (001-libass-gpu-render)
 
 ## Recent Changes
 - 001-migrate-media3: Added Kotlin 1.7.x with Java interoperability for existing Exo helper classes
