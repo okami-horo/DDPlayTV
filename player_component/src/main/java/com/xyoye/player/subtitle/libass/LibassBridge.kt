@@ -1,7 +1,13 @@
 package com.xyoye.player.subtitle.libass
 
-import android.graphics.Bitmap
-
+/**
+ * CPU libass 渲染路径已废弃。保留类仅为避免历史引用编译错误，
+ * 任意调用都会抛出异常，请改用 GPU 渲染管线（AssGpuRenderer）。
+ */
+@Deprecated(
+    message = "CPU libass renderer removed; use AssGpuRenderer GPU pipeline.",
+    level = DeprecationLevel.ERROR
+)
 class LibassBridge {
 
     companion object {
@@ -10,56 +16,20 @@ class LibassBridge {
         }
     }
 
-    private var handle: Long = nativeCreate()
+    private fun unsupported(): Nothing =
+        error("CPU libass renderer has been removed; use AssGpuRenderer GPU pipeline.")
 
-    fun isReady() = handle != 0L
+    fun isReady(): Boolean = false
 
-    fun release() {
-        if (handle != 0L) {
-            nativeDestroy(handle)
-            handle = 0
-        }
-    }
+    fun release(): Unit = unsupported()
 
-    fun setFrameSize(width: Int, height: Int) {
-        if (handle != 0L) {
-            nativeSetFrameSize(handle, width, height)
-        }
-    }
+    fun setFrameSize(width: Int, height: Int): Unit = unsupported()
 
-    fun setFonts(defaultFont: String?, fontDirectories: List<String>) {
-        if (handle != 0L) {
-            nativeSetFonts(handle, defaultFont, fontDirectories.toTypedArray())
-        }
-    }
+    fun setFonts(defaultFont: String?, fontDirectories: List<String>): Unit = unsupported()
 
-    fun loadTrack(path: String): Boolean {
-        if (handle == 0L) return false
-        return nativeLoadTrack(handle, path)
-    }
+    fun loadTrack(path: String): Boolean = unsupported()
 
-    fun render(timeMs: Long, bitmap: Bitmap): Boolean {
-        if (handle == 0L) return false
-        return nativeRenderFrame(handle, timeMs, bitmap)
-    }
+    fun render(timeMs: Long, bitmap: android.graphics.Bitmap): Boolean = unsupported()
 
-    fun setGlobalOpacity(percent: Int) {
-        if (handle != 0L) {
-            nativeSetGlobalOpacity(handle, percent)
-        }
-    }
-
-    private external fun nativeCreate(): Long
-
-    private external fun nativeDestroy(handle: Long)
-
-    private external fun nativeSetFrameSize(handle: Long, width: Int, height: Int)
-
-    private external fun nativeSetFonts(handle: Long, defaultFont: String?, directories: Array<String>)
-
-    private external fun nativeLoadTrack(handle: Long, path: String): Boolean
-
-    private external fun nativeRenderFrame(handle: Long, timeMs: Long, bitmap: Bitmap): Boolean
-
-    private external fun nativeSetGlobalOpacity(handle: Long, percent: Int)
+    fun setGlobalOpacity(percent: Int): Unit = unsupported()
 }

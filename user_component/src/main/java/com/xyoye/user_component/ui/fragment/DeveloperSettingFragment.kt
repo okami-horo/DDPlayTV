@@ -13,6 +13,7 @@ import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.log.AppLogger
+import com.xyoye.common_component.log.SubtitleTelemetryLogger
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
@@ -37,6 +38,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         private const val KEY_LOG_UPLOAD_REMOTE_PATH = "log_upload_remote_path"
         private const val KEY_LOG_UPLOAD_TRIGGER = "log_upload_trigger"
         private const val KEY_APP_LOG_ENABLE = "app_log_enable"
+        private const val KEY_SUBTITLE_TELEMETRY_LOG_ENABLE = "subtitle_telemetry_log_enable"
         private const val KEY_SUBTITLE_SESSION_STATUS = "subtitle_session_status"
         private const val KEY_SUBTITLE_FORCE_FALLBACK = "subtitle_force_fallback"
         private const val SUBTITLE_STATUS_PROVIDER =
@@ -179,6 +181,19 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
     }
 
     private fun initSubtitleDebugPreferences() {
+        findPreference<SwitchPreference>(KEY_SUBTITLE_TELEMETRY_LOG_ENABLE)?.apply {
+            val summaryOn = getString(R.string.developer_subtitle_telemetry_log_enable_summary_on)
+            val summaryOff = getString(R.string.developer_subtitle_telemetry_log_enable_summary_off)
+            summary = if (isChecked) summaryOn else summaryOff
+            setOnPreferenceChangeListener { _, newValue ->
+                val enable = newValue as? Boolean ?: return@setOnPreferenceChangeListener false
+                summary = if (enable) summaryOn else summaryOff
+                SubtitleTelemetryLogger.setEnable(enable)
+                DDLog.i("DEV-Subtitle", "toggle telemetry log enable=$enable")
+                true
+            }
+        }
+
         findPreference<Preference>(KEY_SUBTITLE_SESSION_STATUS)?.apply {
             summary = buildSubtitleStatusSummary()
             setOnPreferenceClickListener {
@@ -308,6 +323,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         override fun getBoolean(key: String?, defValue: Boolean): Boolean {
             return when (key) {
                 KEY_APP_LOG_ENABLE -> DevelopConfig.isDdLogEnable()
+                KEY_SUBTITLE_TELEMETRY_LOG_ENABLE -> DevelopConfig.isSubtitleTelemetryLogEnable()
                 KEY_LOG_UPLOAD_ENABLE -> DevelopConfig.isLogUploadEnable()
                 else -> defValue
             }
@@ -318,6 +334,10 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                 KEY_APP_LOG_ENABLE -> {
                     DevelopConfig.putDdLogEnable(value)
                     DDLog.setEnable(value)
+                }
+                KEY_SUBTITLE_TELEMETRY_LOG_ENABLE -> {
+                    DevelopConfig.putSubtitleTelemetryLogEnable(value)
+                    SubtitleTelemetryLogger.setEnable(value)
                 }
                 KEY_LOG_UPLOAD_ENABLE -> DevelopConfig.putLogUploadEnable(value)
             }

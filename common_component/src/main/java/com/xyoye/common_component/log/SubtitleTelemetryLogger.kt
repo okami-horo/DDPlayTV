@@ -6,11 +6,29 @@ import com.xyoye.data_component.bean.subtitle.SubtitlePipelineState
 import com.xyoye.data_component.bean.subtitle.TelemetrySample
 import com.xyoye.data_component.enums.SubtitleFrameStatus
 import com.xyoye.data_component.enums.SubtitlePipelineStatus
+import com.xyoye.common_component.config.DevelopConfig
 
 object SubtitleTelemetryLogger {
     private const val TAG = "SUB-GPU"
+    @Volatile
+    private var enabled: Boolean = loadDefaultState()
+
+    private fun loadDefaultState(): Boolean {
+        return runCatching { DevelopConfig.isSubtitleTelemetryLogEnable() }.getOrDefault(false)
+    }
+
+    fun setEnable(enable: Boolean) {
+        enabled = enable
+    }
+
+    fun refreshEnableFromConfig() {
+        enabled = loadDefaultState()
+    }
+
+    private fun shouldLog(): Boolean = enabled && com.xyoye.common_component.utils.DDLog.enable
 
     fun logSample(sample: TelemetrySample, state: SubtitlePipelineState?) {
+        if (!shouldLog()) return
         val builder = StringBuilder()
             .append("frame=").append(sample.frameStatus.name)
             .append(" pts=").append(sample.subtitlePtsMs)
@@ -36,6 +54,7 @@ object SubtitleTelemetryLogger {
     }
 
     fun logFallback(event: FallbackEvent) {
+        if (!shouldLog()) return
         DDLog.w(
             TAG,
             "fallback from=${event.fromMode.name} to=${event.toMode.name} reason=${event.reason.name} recoverable=${event.recoverable} surface=${event.surfaceId}"
@@ -43,6 +62,7 @@ object SubtitleTelemetryLogger {
     }
 
     fun logState(state: SubtitlePipelineState) {
+        if (!shouldLog()) return
         val message =
             "state mode=${state.mode.name} status=${state.status.name} surface=${state.surfaceId} fallback=${state.fallbackReason} telemetry=${state.telemetryEnabled}"
         if (state.status == SubtitlePipelineStatus.Error) {

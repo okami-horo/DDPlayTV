@@ -15,8 +15,6 @@
 #include <string>
 #include <vector>
 
-#include "libass_bridge.h"
-
 namespace {
 constexpr const char *kGpuLogTag = "AssGpuBridge";
 constexpr const char *kVertexShaderSrc = R"(#version 300 es

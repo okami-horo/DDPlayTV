@@ -58,6 +58,12 @@
         android:key="developer_subtitle_category"
         android:title="@string/developer_subtitle_debug_category_title">
 
+        <SwitchPreference
+            android:key="subtitle_telemetry_log_enable"
+            android:title="@string/developer_subtitle_telemetry_log_enable_title"
+            android:summary="@string/developer_subtitle_telemetry_log_enable_summary_off"
+            app:icon="@drawable/ic_app_setting" />
+
         <Preference
             android:key="subtitle_session_status"
             android:title="@string/developer_subtitle_session_status_title"

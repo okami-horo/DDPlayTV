@@ -51,4 +51,8 @@ object DevelopConfigTable {
     // 是否启用 DDLog（本地/控制台日志输出）
     @MMKVFiled
     const val ddLogEnable = false
+
+    // 是否输出字幕遥测 Debug 日志
+    @MMKVFiled
+    const val subtitleTelemetryLogEnable = false
 }

@@ -16,7 +16,6 @@ set(GPU_SOURCES
 )
 
 add_library(libass_bridge SHARED
-    libass_bridge.cpp
     ${GPU_SOURCES}
 )
 
