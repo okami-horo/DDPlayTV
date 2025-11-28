@@ -44,6 +44,10 @@ abstract class TvVideoController(
         }
     })
 
+    private var pendingSeekStartPosition: Long? = null
+    private var pendingSeekOffset: Long = 0L
+    private val pendingSeekRunnable = Runnable { commitPendingSeek() }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         val state = currentUiState()
         val dispatchResult = remoteKeyDispatcher.onKeyDown(keyCode, state)
@@ -68,17 +72,82 @@ abstract class TvVideoController(
 
     private fun changePosition(offset: Long) {
         val duration = mControlWrapper.getDuration()
-        val currentPosition = mControlWrapper.getCurrentPosition()
-        val newPosition = currentPosition + offset
+        if (duration <= 0) {
+            return
+        }
 
+        if (pendingSeekStartPosition == null) {
+            pendingSeekStartPosition = mControlWrapper.getCurrentPosition()
+            pendingSeekOffset = 0L
+            startSeekSlide()
+        }
+
+        pendingSeekOffset += offset
+
+        val targetPosition = calculateTargetPosition(duration)
+        updateSeekSlide(targetPosition, duration)
+
+        removeCallbacks(pendingSeekRunnable)
+        postDelayed(pendingSeekRunnable, SEEK_DEBOUNCE_MS)
+    }
+
+    private fun commitPendingSeek() {
+        if (pendingSeekStartPosition == null) {
+            return
+        }
+        val duration = mControlWrapper.getDuration()
+        if (duration <= 0) {
+            resetPendingSeek()
+            return
+        }
+        val targetPosition = calculateTargetPosition(duration)
+
+        finishSeekSlide()
+        mControlWrapper.seekTo(targetPosition)
+
+        resetPendingSeek()
+    }
+
+    private fun startSeekSlide() {
         for (entry in mControlComponents.entries) {
             val view = entry.key
             if (view is InterGestureView) {
                 view.onStartSlide()
-                view.onPositionChange(newPosition, currentPosition, duration)
+            }
+        }
+    }
+
+    private fun updateSeekSlide(targetPosition: Long, duration: Long) {
+        val currentPosition = pendingSeekStartPosition ?: return
+        for (entry in mControlComponents.entries) {
+            val view = entry.key
+            if (view is InterGestureView) {
+                view.onPositionChange(targetPosition, currentPosition, duration)
+            }
+        }
+    }
+
+    private fun finishSeekSlide() {
+        for (entry in mControlComponents.entries) {
+            val view = entry.key
+            if (view is InterGestureView) {
                 view.onStopSlide()
             }
         }
-        mControlWrapper.seekTo(newPosition)
+    }
+
+    private fun resetPendingSeek() {
+        pendingSeekStartPosition = null
+        pendingSeekOffset = 0L
+        removeCallbacks(pendingSeekRunnable)
+    }
+
+    private fun calculateTargetPosition(duration: Long): Long {
+        val startPosition = pendingSeekStartPosition ?: mControlWrapper.getCurrentPosition()
+        return (startPosition + pendingSeekOffset).coerceIn(0L, duration)
+    }
+
+    companion object {
+        private const val SEEK_DEBOUNCE_MS = 300L
     }
 }
