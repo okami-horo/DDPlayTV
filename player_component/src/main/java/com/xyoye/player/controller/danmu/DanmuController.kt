@@ -6,9 +6,7 @@ import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.DanmakuLanguage
-import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.TrackType
-import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.wrapper.InterDanmuController
 
 /**
@@ -80,11 +78,8 @@ class DanmuController(context: Context) : InterDanmuController {
     }
 
     override fun setSpeed(speed: Float) {
-        //IJK内核倍速无法按预期加速，导致弹幕倍速会出现偏移，因此禁用
         //倍速小于1的情况下，弹幕没有按预期减速，因此禁用
-        if (PlayerInitializer.playerType != PlayerType.TYPE_IJK_PLAYER
-            && speed >= 1f
-        ) {
+        if (speed >= 1f) {
             danmuView.setSpeed(speed)
         }
     }

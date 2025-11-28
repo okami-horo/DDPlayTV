@@ -20,7 +20,6 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         fun newInstance() = PlayerSettingFragment()
 
         val playerData = mapOf(
-            Pair("IJK Player", PlayerType.TYPE_IJK_PLAYER.value.toString()),
             Pair("Media3 Player", PlayerType.TYPE_EXO_PLAYER.value.toString()),
             Pair("VLC Player", PlayerType.TYPE_VLC_PLAYER.value.toString())
         )
@@ -69,6 +68,12 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         findPreference<ListPreference>("player_type")?.apply {
             entries = playerData.keys.toTypedArray()
             entryValues = playerData.values.toTypedArray()
+            val safeValue = value?.takeIf { playerData.containsValue(it) }
+                ?: PlayerType.TYPE_EXO_PLAYER.value.toString()
+            if (value != safeValue) {
+                value = safeValue
+                PlayerConfig.putUsePlayerType(safeValue.toInt())
+            }
             summary = entry
             setOnPreferenceChangeListener { _, newValue ->
                 playerData.forEach {
@@ -80,7 +85,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                 return@setOnPreferenceChangeListener true
             }
 
-            updateVisible(value)
+            updateVisible(safeValue)
         }
 
         //像素格式
@@ -115,10 +120,6 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
 
     private fun updateVisible(playerType: String) {
         when (playerType) {
-            PlayerType.TYPE_IJK_PLAYER.value.toString() -> {
-                vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
-                ijkPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
-            }
             PlayerType.TYPE_VLC_PLAYER.value.toString() -> {
                 ijkPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
                 vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
@@ -135,10 +136,20 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         override fun getString(key: String?, defValue: String?): String? {
             return try {
                 when (key) {
-                "player_type" -> PlayerConfig.getUsePlayerType().toString()
-                "pixel_format_type" -> PlayerConfig.getUsePixelFormat()
-                "vlc_hardware_acceleration" -> PlayerConfig.getUseVLCHWDecoder().toString()
-                "vlc_audio_output" -> PlayerConfig.getUseVLCAudioOutput()
+                    "player_type" -> {
+                        val currentType = PlayerConfig.getUsePlayerType()
+                        val safeType = when (PlayerType.valueOf(currentType)) {
+                            PlayerType.TYPE_VLC_PLAYER -> PlayerType.TYPE_VLC_PLAYER
+                            else -> PlayerType.TYPE_EXO_PLAYER
+                        }
+                        if (safeType.value != currentType) {
+                            PlayerConfig.putUsePlayerType(safeType.value)
+                        }
+                        safeType.value.toString()
+                    }
+                    "pixel_format_type" -> PlayerConfig.getUsePixelFormat()
+                    "vlc_hardware_acceleration" -> PlayerConfig.getUseVLCHWDecoder().toString()
+                    "vlc_audio_output" -> PlayerConfig.getUseVLCAudioOutput()
                     else -> super.getString(key, defValue)
                 }
             } catch (e: Exception) {
@@ -156,7 +167,13 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             try {
                 if (value != null) {
                 when (key) {
-                    "player_type" -> PlayerConfig.putUsePlayerType(value.toInt())
+                    "player_type" -> {
+                        val safeType = when (PlayerType.valueOf(value.toInt())) {
+                            PlayerType.TYPE_VLC_PLAYER -> PlayerType.TYPE_VLC_PLAYER
+                            else -> PlayerType.TYPE_EXO_PLAYER
+                        }
+                        PlayerConfig.putUsePlayerType(safeType.value)
+                    }
                     "pixel_format_type" -> PlayerConfig.putUsePixelFormat(value)
                     "vlc_hardware_acceleration" -> PlayerConfig.putUseVLCHWDecoder(value.toInt())
                     "vlc_audio_output" -> PlayerConfig.putUseVLCAudioOutput(value)
@@ -178,10 +195,10 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         override fun getBoolean(key: String?, defValue: Boolean): Boolean {
             return try {
                 when (key) {
-                "media_code_c" -> PlayerConfig.isUseMediaCodeC()
-                "media_code_c_h265" -> PlayerConfig.isUseMediaCodeCH265()
-                "open_sl_es" -> PlayerConfig.isUseOpenSlEs()
-                "surface_renders" -> PlayerConfig.isUseSurfaceView()
+                    "media_code_c" -> PlayerConfig.isUseMediaCodeC()
+                    "media_code_c_h265" -> PlayerConfig.isUseMediaCodeCH265()
+                    "open_sl_es" -> PlayerConfig.isUseOpenSlEs()
+                    "surface_renders" -> PlayerConfig.isUseSurfaceView()
                     else -> super.getBoolean(key, defValue)
                 }
             } catch (e: Exception) {
