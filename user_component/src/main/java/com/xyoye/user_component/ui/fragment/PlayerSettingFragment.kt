@@ -34,12 +34,6 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             Pair("OpenGL ES2", PixelFormat.PIXEL_OPEN_GL_ES2.value)
         )
 
-        val vlcPixelData = mapOf(
-            Pair("RGB 16-bit", VLCPixelFormat.PIXEL_RGB_16.value),
-            Pair("RGB 32-bit", VLCPixelFormat.PIXEL_RGB_32.value),
-            Pair("YUV", VLCPixelFormat.PIXEL_YUV.value)
-        )
-
         val vlcHWDecode = mapOf(
             Pair("自动", VLCHWDecode.HW_ACCELERATION_AUTO.value.toString()),
             Pair("禁用", VLCHWDecode.HW_ACCELERATION_DISABLE.value.toString()),
@@ -60,7 +54,6 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         )
 
         val vlcPreference = arrayOf(
-            "vlc_pixel_format_type",
             "vlc_hardware_acceleration",
             "vlc_audio_output"
         )
@@ -105,12 +98,6 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             }
         }
 
-        //VLC像素格式
-        findPreference<ListPreference>("vlc_pixel_format_type")?.apply {
-            entries = vlcPixelData.keys.toTypedArray()
-            entryValues = vlcPixelData.values.toTypedArray()
-        }
-
         //VLC硬件加速
         findPreference<ListPreference>("vlc_hardware_acceleration")?.apply {
             entries = vlcHWDecode.keys.toTypedArray()
@@ -150,7 +137,6 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                 when (key) {
                 "player_type" -> PlayerConfig.getUsePlayerType().toString()
                 "pixel_format_type" -> PlayerConfig.getUsePixelFormat()
-                "vlc_pixel_format_type" -> PlayerConfig.getUseVLCPixelFormat()
                 "vlc_hardware_acceleration" -> PlayerConfig.getUseVLCHWDecoder().toString()
                 "vlc_audio_output" -> PlayerConfig.getUseVLCAudioOutput()
                     else -> super.getString(key, defValue)
@@ -172,7 +158,6 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                 when (key) {
                     "player_type" -> PlayerConfig.putUsePlayerType(value.toInt())
                     "pixel_format_type" -> PlayerConfig.putUsePixelFormat(value)
-                    "vlc_pixel_format_type" -> PlayerConfig.putUseVLCPixelFormat(value)
                     "vlc_hardware_acceleration" -> PlayerConfig.putUseVLCHWDecoder(value.toInt())
                     "vlc_audio_output" -> PlayerConfig.putUseVLCAudioOutput(value)
                     else -> super.putString(key, value)

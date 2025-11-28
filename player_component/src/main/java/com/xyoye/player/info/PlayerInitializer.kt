@@ -8,7 +8,6 @@ import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.data_component.enums.VLCHWDecode
-import com.xyoye.data_component.enums.VLCPixelFormat
 import com.xyoye.data_component.enums.VideoScreenScale
 
 /**
@@ -35,7 +34,6 @@ object PlayerInitializer {
         var isMediaCodeCH265Enabled = false
         var isOpenSLESEnabled = false
         var pixelFormat = PixelFormat.PIXEL_AUTO
-        var vlcPixelFormat = VLCPixelFormat.PIXEL_RGB_32
         var vlcHWDecode = VLCHWDecode.HW_ACCELERATION_AUTO
         var videoSpeed = DEFAULT_SPEED
         var pressVideoSpeed = DEFAULT_PRESS_SPEED

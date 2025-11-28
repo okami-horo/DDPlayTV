@@ -44,7 +44,6 @@ import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.data_component.enums.VLCHWDecode
-import com.xyoye.data_component.enums.VLCPixelFormat
 import com.xyoye.common_component.media3.Media3SessionClient
 import com.xyoye.data_component.entity.media3.Media3BackgroundMode
 import com.xyoye.data_component.entity.media3.PlaybackSession
@@ -563,9 +562,6 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         //自动播放下一集
         PlayerInitializer.Player.isAutoPlayNext = PlayerConfig.isAutoPlayNext()
 
-        //VLCPlayer像素格式
-        PlayerInitializer.Player.vlcPixelFormat =
-            VLCPixelFormat.valueOf(PlayerConfig.getUseVLCPixelFormat())
         PlayerInitializer.Player.vlcHWDecode =
             VLCHWDecode.valueOf(PlayerConfig.getUseVLCHWDecoder())
         PlayerInitializer.Player.vlcAudioOutput =
