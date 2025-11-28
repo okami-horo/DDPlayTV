@@ -47,4 +47,8 @@ object DevelopConfigTable {
     // WebDAV 日志最近上传时间（毫秒）
     @MMKVFiled
     const val logUploadLastTime = 0L
+
+    // 是否启用 DDLog（本地/控制台日志输出）
+    @MMKVFiled
+    const val ddLogEnable = false
 }

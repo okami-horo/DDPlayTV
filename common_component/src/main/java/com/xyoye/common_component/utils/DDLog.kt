@@ -1,6 +1,7 @@
 package com.xyoye.common_component.utils
 
 import android.util.Log
+import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.log.AppLogger
 import java.util.logging.Level
 
@@ -9,7 +10,21 @@ import java.util.logging.Level
  */
 
 object DDLog {
-    var enable = true
+    @Volatile
+    var enable: Boolean = loadDefaultState()
+        private set
+
+    private fun loadDefaultState(): Boolean {
+        return runCatching { DevelopConfig.isDdLogEnable() }.getOrDefault(false)
+    }
+
+    fun refreshEnableFromConfig() {
+        enable = loadDefaultState()
+    }
+
+    fun setEnable(enable: Boolean) {
+        this.enable = enable
+    }
 
     fun i(message: String, throwable: Throwable? = null) {
         i(null, message, throwable)

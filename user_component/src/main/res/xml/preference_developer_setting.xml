@@ -7,6 +7,12 @@
         android:title="@string/developer_log_upload_category_title">
 
         <SwitchPreference
+            android:key="app_log_enable"
+            android:title="@string/developer_app_log_enable_title"
+            android:summary="@string/developer_app_log_enable_summary_off"
+            app:icon="@drawable/ic_app_setting" />
+
+        <SwitchPreference
             android:key="log_upload_enable"
             android:title="@string/developer_log_upload_enable_title"
             android:summary="@string/developer_log_upload_enable_summary_off"

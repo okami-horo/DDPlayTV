@@ -36,6 +36,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         private const val KEY_LOG_UPLOAD_PASSWORD = "log_upload_password"
         private const val KEY_LOG_UPLOAD_REMOTE_PATH = "log_upload_remote_path"
         private const val KEY_LOG_UPLOAD_TRIGGER = "log_upload_trigger"
+        private const val KEY_APP_LOG_ENABLE = "app_log_enable"
         private const val KEY_SUBTITLE_SESSION_STATUS = "subtitle_session_status"
         private const val KEY_SUBTITLE_FORCE_FALLBACK = "subtitle_force_fallback"
         private const val SUBTITLE_STATUS_PROVIDER =
@@ -72,6 +73,20 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
     }
 
     private fun initLogUploadPreferences() {
+        findPreference<SwitchPreference>(KEY_APP_LOG_ENABLE)?.apply {
+            val summaryOn = getString(R.string.developer_app_log_enable_summary_on)
+            val summaryOff = getString(R.string.developer_app_log_enable_summary_off)
+            summary = if (isChecked) summaryOn else summaryOff
+            DDLog.setEnable(isChecked)
+            setOnPreferenceChangeListener { _, newValue ->
+                val enable = newValue as? Boolean ?: return@setOnPreferenceChangeListener false
+                summary = if (enable) summaryOn else summaryOff
+                DDLog.setEnable(enable)
+                DDLog.i("DEV-LogUpload", "toggle ddlog enable=$enable")
+                true
+            }
+        }
+
         findPreference<SwitchPreference>(KEY_LOG_UPLOAD_ENABLE)?.apply {
             summary = if (isChecked) {
                 getString(R.string.developer_log_upload_enable_summary_on)
@@ -292,6 +307,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
     private class DeveloperSettingDataStore : PreferenceDataStore() {
         override fun getBoolean(key: String?, defValue: Boolean): Boolean {
             return when (key) {
+                KEY_APP_LOG_ENABLE -> DevelopConfig.isDdLogEnable()
                 KEY_LOG_UPLOAD_ENABLE -> DevelopConfig.isLogUploadEnable()
                 else -> defValue
             }
@@ -299,6 +315,10 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
 
         override fun putBoolean(key: String?, value: Boolean) {
             when (key) {
+                KEY_APP_LOG_ENABLE -> {
+                    DevelopConfig.putDdLogEnable(value)
+                    DDLog.setEnable(value)
+                }
                 KEY_LOG_UPLOAD_ENABLE -> DevelopConfig.putLogUploadEnable(value)
             }
         }
