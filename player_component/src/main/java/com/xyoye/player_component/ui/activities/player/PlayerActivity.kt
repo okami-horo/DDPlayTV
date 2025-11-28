@@ -38,7 +38,6 @@ import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.MediaType
-import com.xyoye.data_component.enums.PixelFormat
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.data_component.enums.SubtitleFallbackReason
@@ -543,15 +542,6 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         //播放器类型
         PlayerInitializer.playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
         DDLog.i("PLAYER-Config", "playerType=${PlayerInitializer.playerType}")
-        //IJKPlayer像素格式
-        PlayerInitializer.Player.pixelFormat =
-            PixelFormat.valueOf(PlayerConfig.getUsePixelFormat())
-        //IJKPlayer硬解码
-        PlayerInitializer.Player.isMediaCodeCEnabled = PlayerConfig.isUseMediaCodeC()
-        //IJKPlayer H265硬解码
-        PlayerInitializer.Player.isMediaCodeCH265Enabled = PlayerConfig.isUseMediaCodeCH265()
-        //IJKPlayer OpenSlEs
-        PlayerInitializer.Player.isOpenSLESEnabled = PlayerConfig.isUseOpenSlEs()
         //是否使用SurfaceView
         PlayerInitializer.surfaceType =
             if (PlayerConfig.isUseSurfaceView()) SurfaceType.VIEW_SURFACE else SurfaceType.VIEW_TEXTURE
@@ -566,7 +556,10 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             VLCHWDecode.valueOf(PlayerConfig.getUseVLCHWDecoder())
         PlayerInitializer.Player.vlcAudioOutput =
             VLCAudioOutput.valueOf(PlayerConfig.getUseVLCAudioOutput())
-        DDLog.i("PLAYER-Config", "vlc h265=${PlayerInitializer.Player.isMediaCodeCH265Enabled} hw=${PlayerInitializer.Player.vlcHWDecode}")
+        DDLog.i(
+            "PLAYER-Config",
+            "vlc hw=${PlayerInitializer.Player.vlcHWDecode} audio=${PlayerInitializer.Player.vlcAudioOutput}"
+        )
 
         //弹幕配置
         PlayerInitializer.Danmu.size = DanmuConfig.getDanmuSize()

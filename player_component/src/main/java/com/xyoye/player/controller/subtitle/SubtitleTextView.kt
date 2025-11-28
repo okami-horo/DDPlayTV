@@ -14,7 +14,7 @@ import com.xyoye.subtitle.SubtitleText
 /**
  * Created by xyoye on 2020/12/14.
  *
- * 用于显示所有文字字幕（外挂字幕、IJK内置字幕、EXO内置字幕）
+ * 用于显示所有文字字幕（外挂字幕、播放器内置字幕）
  */
 
 class SubtitleTextView(

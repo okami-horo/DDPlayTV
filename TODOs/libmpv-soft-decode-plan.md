@@ -1,8 +1,8 @@
 # libmpv 纯软解接入计划
 
 ## 背景
-- `player_component/src/main/java/com/xyoye/player/kernel/facoty/PlayerFactory.kt` 目前只注入 Media3、IJK、VLC 三种内核。Media3 解码失败时只会触发 `player_component/src/main/java/com/xyoye/player_component/media3/fallback/CodecFallbackHandler.kt` 的音频兜底或回落到老旧的 IJK(自带过时 FFmpeg)。
-- `player_component/src/main/java/com/xyoye/player/kernel/impl/ijk/IjkVideoPlayer.kt` 侧重硬解/兼容测试，未针对高码率或 AV1 做强化，也和 UI 共享大量缓冲区，导致对 Media3 的排障干扰大。
+- `player_component/src/main/java/com/xyoye/player/kernel/facoty/PlayerFactory.kt` 目前只注入 Media3、VLC 两种内核。Media3 解码失败时只会触发 `player_component/src/main/java/com/xyoye/player_component/media3/fallback/CodecFallbackHandler.kt` 的音频兜底，已无旧版 IJK 回落路径。
+- 旧 IJK 内核代码已移除（包含自带 FFmpeg 的实现），后续软解/兼容性方案需依赖 mpv 或 VLC。
 - 项目已经有 libass JNI（`player_component/src/main/cpp`）和 Media3 远程开关/运营文档（`document/support/media3-playback-support.md`），可沿用相同模板接入“只复用 libmpv 解码+渲染、禁用 mpv UI 的纯软解后端”。
 
 ## 目标
@@ -67,5 +67,5 @@
 
 ## 待决问题
 1. mpv 是否直接加载 libass（内置字幕）还是继续沿用现有 GPU 渲染？决定 W2.5 接入复杂度。
-2. mpv 是否需要立即支持离线/下载播放，或初期仍由 Media3/IJK 负责？
+2. mpv 是否需要立即支持离线/下载播放，或初期仍由 Media3/VLC 负责？
 3. 回退触发条件是否仅限 `UNSUPPORTED_CODEC`，还是需要参考温控/CPU Telemetry 阈值？

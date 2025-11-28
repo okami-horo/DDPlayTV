@@ -3,7 +3,6 @@ package com.xyoye.player.info
 import android.graphics.Color
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.data_component.enums.DanmakuLanguage
-import com.xyoye.data_component.enums.PixelFormat
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.data_component.enums.VLCAudioOutput
@@ -30,10 +29,6 @@ object PlayerInitializer {
         const val DEFAULT_SPEED = 1f
         const val DEFAULT_PRESS_SPEED = 2f
 
-        var isMediaCodeCEnabled = false
-        var isMediaCodeCH265Enabled = false
-        var isOpenSLESEnabled = false
-        var pixelFormat = PixelFormat.PIXEL_AUTO
         var vlcHWDecode = VLCHWDecode.HW_ACCELERATION_AUTO
         var videoSpeed = DEFAULT_SPEED
         var pressVideoSpeed = DEFAULT_PRESS_SPEED
