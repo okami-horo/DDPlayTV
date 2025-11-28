@@ -44,6 +44,12 @@ object PlaybackSessionStatusProvider {
             )
         )
 
+    private fun updateStatus(transform: (PlaybackSessionStatus) -> PlaybackSessionStatus) {
+        synchronized(statusRef) {
+            statusRef.set(transform(statusRef.get()))
+        }
+    }
+
     fun startSession(
         backend: SubtitleRendererBackend,
         surfaceType: SurfaceType,
@@ -68,20 +74,20 @@ object PlaybackSessionStatusProvider {
     }
 
     fun updateSurface(surfaceType: SurfaceType) {
-        statusRef.updateAndGet { current ->
+        updateStatus { current ->
             current.copy(surfaceType = surfaceType)
         }
     }
 
     fun updateFrameSize(width: Int, height: Int) {
-        statusRef.updateAndGet { current ->
+        updateStatus { current ->
             current.copy(videoSizePx = VideoSizePx(width, height))
         }
     }
 
     fun markFirstRender() {
         val now = System.currentTimeMillis()
-        statusRef.updateAndGet { current ->
+        updateStatus { current ->
             if (current.firstRenderedAtEpochMs != null) {
                 current
             } else {
@@ -94,7 +100,7 @@ object PlaybackSessionStatusProvider {
         val message = error?.message
             ?: error?.javaClass?.simpleName
             ?: reason.name
-        statusRef.updateAndGet { current ->
+        updateStatus { current ->
             current.copy(
                 fallbackTriggered = true,
                 fallbackReasonCode = reason,
@@ -104,14 +110,14 @@ object PlaybackSessionStatusProvider {
     }
 
     fun updateBackend(backend: SubtitleRendererBackend) {
-        statusRef.updateAndGet { current ->
+        updateStatus { current ->
             current.copy(resolvedBackend = backend)
         }
     }
 
     fun endSession() {
         val now = System.currentTimeMillis()
-        statusRef.updateAndGet { current ->
+        updateStatus { current ->
             current.copy(endedAtEpochMs = now)
         }
     }

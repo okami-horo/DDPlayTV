@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.enums.SubtitleRendererBackend
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
  * Created by xyoye on 2023/3/23
  */
 
+@UnstableApi
 class ExternalSubtitleView(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), InterControllerView {

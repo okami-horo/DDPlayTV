@@ -3,6 +3,7 @@ package com.xyoye.player.kernel.impl.media3
 import android.content.Context
 import android.hardware.display.DisplayManager
 import android.net.Uri
+import android.os.Build
 import android.view.Display
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
@@ -87,8 +88,11 @@ object Media3FormatUtil {
     }
 
     fun getDisplayHdrTypes(context: Context): IntArray {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            return intArrayOf()
+        }
         return try {
-            val displayManager = context.getSystemService(DisplayManager::class.java)
+            val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager
             val display = displayManager?.displays?.firstOrNull()
             display?.hdrCapabilities?.supportedHdrTypes ?: intArrayOf()
         } catch (_: Exception) {

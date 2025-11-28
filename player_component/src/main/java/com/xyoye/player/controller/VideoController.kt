@@ -22,11 +22,13 @@ import com.xyoye.player.controller.video.PlayerTopView
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.utils.MessageTime
 import com.xyoye.subtitle.MixedSubtitle
+import androidx.media3.common.util.UnstableApi
 
 /**
  * Created by xyoye on 2020/11/3.
  */
 
+@UnstableApi
 class VideoController(
     context: Context,
     attrs: AttributeSet? = null,

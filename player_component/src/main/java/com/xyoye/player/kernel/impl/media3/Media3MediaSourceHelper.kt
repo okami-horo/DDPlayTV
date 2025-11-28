@@ -3,6 +3,7 @@ package com.xyoye.player.kernel.impl.media3
 import android.net.Uri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -21,6 +22,7 @@ import com.xyoye.common_component.utils.PathHelper
 import com.xyoye.player.kernel.impl.media3.Media3CodecPolicy
 import java.util.Locale
 
+@UnstableApi
 object Media3MediaSourceHelper {
 
     private val appContext get() = BaseApplication.getAppContext()

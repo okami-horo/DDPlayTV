@@ -24,9 +24,13 @@ class TelemetryEventMapper(
         isForeground: Boolean = true
     ): TelemetryEvent {
         val enrichedMetrics = LinkedHashMap<String, Any?>(metrics)
-        enrichedMetrics.putIfAbsent("toggleCohort", cohortValue(session.toggleCohort))
+        if (!enrichedMetrics.containsKey("toggleCohort")) {
+            enrichedMetrics["toggleCohort"] = cohortValue(session.toggleCohort)
+        }
         session.metrics?.firstFrameTargetMs?.let {
-            enrichedMetrics.putIfAbsent("firstFrameBudgetMs", it)
+            if (!enrichedMetrics.containsKey("firstFrameBudgetMs")) {
+                enrichedMetrics["firstFrameBudgetMs"] = it
+            }
         }
 
         return TelemetryEvent(

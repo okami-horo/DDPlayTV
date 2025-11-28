@@ -1,6 +1,7 @@
 package com.xyoye.player.controller.subtitle
 
 import android.content.Context
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.controller.video.InterControllerView
@@ -12,6 +13,7 @@ import com.xyoye.subtitle.SubtitleType
  * Created by xyoye on 2021/4/15.
  */
 
+@UnstableApi
 class SubtitleController(context: Context) : InterSubtitleController {
     private val subtitleTextView = SubtitleTextView(context)
     private val subtitleImageView = SubtitleImageView(context)

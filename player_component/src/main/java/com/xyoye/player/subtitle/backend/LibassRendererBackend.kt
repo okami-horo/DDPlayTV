@@ -3,6 +3,7 @@ package com.xyoye.player.subtitle.backend
 import android.os.SystemClock
 import android.view.Choreographer
 import android.view.Surface
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.subtitle.SubtitleFontManager
@@ -23,6 +24,7 @@ import com.xyoye.subtitle.MixedSubtitle
  * GPU libass backend: routes rendering to the native GPU pipeline and discards
  * the old CPU bitmap overlay path.
  */
+@UnstableApi
 class LibassRendererBackend : SubtitleRenderer {
     override val backend: SubtitleRendererBackend = SubtitleRendererBackend.LIBASS
 

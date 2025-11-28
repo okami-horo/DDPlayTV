@@ -10,6 +10,7 @@ import android.view.OrientationEventListener
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.getScreenHeight
 import com.xyoye.common_component.utils.getScreenWidth
@@ -24,6 +25,7 @@ import com.xyoye.player.utils.OrientationHelper
  * - TV构建应直接移除入口或替换为其他方案，保留该类仅用于手机/平板。
  */
 
+@UnstableApi
 class PlayerPopupManager(
     context: Context,
     attrs: AttributeSet? = null,

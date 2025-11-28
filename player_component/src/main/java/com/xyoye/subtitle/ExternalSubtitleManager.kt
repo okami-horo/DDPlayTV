@@ -8,6 +8,7 @@ import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.subtitle.exception.FatalParsingException
 import com.xyoye.subtitle.format.FormatFactory
 import com.xyoye.subtitle.info.TimedTextObject
+import androidx.media3.common.util.UnstableApi
 import java.io.File
 import java.util.Locale
 import kotlin.math.max
@@ -19,6 +20,7 @@ import kotlin.math.min
  * 外挂字幕控制器
  */
 
+@UnstableApi
 class ExternalSubtitleManager(
     private val unsupportedFormatCallback: ((String, SubtitleRendererBackend) -> Unit)? = null
 ) {

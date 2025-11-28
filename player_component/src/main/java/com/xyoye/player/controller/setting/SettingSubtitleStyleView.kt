@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.KeyEvent
 import androidx.core.view.isVisible
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.extension.observeProgressChange
@@ -18,6 +19,7 @@ import com.xyoye.player_component.databinding.LayoutSettingSubtitleStyleBinding
  * Created by xyoye on 2022/1/10
  */
 
+@UnstableApi
 class SettingSubtitleStyleView(
     context: Context,
     attrs: AttributeSet? = null,

@@ -3,7 +3,9 @@ package com.xyoye.player.subtitle.backend
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.subtitle.MixedSubtitle
+import androidx.media3.common.util.UnstableApi
 
+@UnstableApi
 class CanvasTextRendererBackend : SubtitleRenderer {
     override val backend: SubtitleRendererBackend = SubtitleRendererBackend.LEGACY_CANVAS
 

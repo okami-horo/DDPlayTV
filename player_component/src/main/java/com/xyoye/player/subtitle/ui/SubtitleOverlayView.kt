@@ -11,9 +11,11 @@ import android.view.Gravity
 import android.view.TextureView
 import android.view.View
 import android.widget.FrameLayout
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.player.DanDanVideoPlayer
 
+@UnstableApi
 class SubtitleOverlayView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

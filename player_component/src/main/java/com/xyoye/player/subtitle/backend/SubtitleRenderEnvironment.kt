@@ -1,12 +1,14 @@
 package com.xyoye.player.subtitle.backend
 
 import android.content.Context
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.player.DanDanVideoPlayer
 import com.xyoye.player.controller.subtitle.SubtitleController
 
 /**
  * Carries dependencies that subtitle backends require to hook into the player UI tree.
  */
+@UnstableApi
 data class SubtitleRenderEnvironment(
     val context: Context,
     val subtitleController: SubtitleController,

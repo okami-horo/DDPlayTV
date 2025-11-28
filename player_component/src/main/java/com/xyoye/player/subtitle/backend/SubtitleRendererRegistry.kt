@@ -1,7 +1,9 @@
 package com.xyoye.player.subtitle.backend
 
+import androidx.media3.common.util.UnstableApi
 import java.util.concurrent.atomic.AtomicReference
 
+@UnstableApi
 object SubtitleRendererRegistry {
     private val rendererRef = AtomicReference<SubtitleRenderer?>(null)
 

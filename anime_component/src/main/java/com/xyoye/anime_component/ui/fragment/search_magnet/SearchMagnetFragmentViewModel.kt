@@ -93,9 +93,8 @@ class SearchMagnetFragmentViewModel : BaseViewModel() {
     }
 
     fun getMagnetSubgroup() {
-        val subgroupData = magnetSubgroupData.value
-        if (subgroupData != null) {
-            magnetSubgroupData.postValue(subgroupData)
+        magnetSubgroupData.value?.let {
+            magnetSubgroupData.postValue(it)
             return
         }
 
@@ -131,9 +130,8 @@ class SearchMagnetFragmentViewModel : BaseViewModel() {
     }
 
     fun getMagnetType() {
-        val typeData = magnetTypeData.value
-        if (typeData != null) {
-            magnetTypeData.postValue(typeData)
+        magnetTypeData.value?.let {
+            magnetTypeData.postValue(it)
             return
         }
 

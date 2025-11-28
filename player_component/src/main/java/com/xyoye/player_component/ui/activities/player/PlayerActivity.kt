@@ -1,6 +1,5 @@
 package com.xyoye.player_component.ui.activities.player
 
-import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -12,6 +11,7 @@ import android.view.KeyEvent
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.util.UnstableApi
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.gyf.immersionbar.BarHide
@@ -65,6 +65,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+@UnstableApi
 @Route(path = RouteTable.Player.PlayerCenter)
 class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     PlayerReceiverListener, ScreencastHandler, SubtitleFallbackDispatcher {
@@ -709,7 +710,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     }
 
     private fun exitTaskBackground() {
-        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        activityManager.moveTaskToFront(taskId, ActivityManager.MOVE_TASK_WITH_HOME)
+        val intent = Intent(this, javaClass).apply {
+            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        }
+        startActivity(intent)
     }
 }

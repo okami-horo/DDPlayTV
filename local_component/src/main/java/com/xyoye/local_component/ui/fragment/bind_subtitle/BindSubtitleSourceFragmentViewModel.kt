@@ -89,10 +89,10 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                 }
 
                 val subtitle = result.getOrNull()?.sub?.subs?.firstOrNull()
-                if (subtitle == null) {
-                    ToastCenter.showError("获取字幕详情失败")
-                    return@launch
-                }
+                    ?: run {
+                        ToastCenter.showError("获取字幕详情失败")
+                        return@launch
+                    }
 
                 searchSubtitleDetailLiveData.postValue(subtitle)
             } catch (e: Exception) {

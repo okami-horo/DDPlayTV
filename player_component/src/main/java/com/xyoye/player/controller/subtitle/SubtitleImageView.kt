@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.widget.FrameLayout
 import androidx.media3.common.text.Cue
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.SubtitleView
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.player.controller.video.InterControllerView
@@ -17,6 +18,7 @@ import com.xyoye.player.wrapper.ControlWrapper
  * 仅用于显示ExoPlayer内置字幕中的图片字幕
  */
 
+@UnstableApi
 class SubtitleImageView(
     context: Context,
     attrs: AttributeSet? = null,

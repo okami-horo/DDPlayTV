@@ -3,6 +3,7 @@ package com.xyoye.player.controller.setting
 import android.content.Context
 import android.view.KeyEvent
 import androidx.lifecycle.LiveData
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.SettingViewType
@@ -13,6 +14,7 @@ import com.xyoye.player.wrapper.InterSettingController
  * Created by xyoye on 2021/4/14.
  */
 
+@UnstableApi
 class SettingController(
     private val context: Context,
     private val addView: (InterSettingView) -> Unit

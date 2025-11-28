@@ -62,8 +62,17 @@ class LoginViewModel : BaseViewModel() {
                         return@launch
                     }
 
-                    val data = result.getOrNull()
-                    if (data != null && UserInfoHelper.login(data)) {
+                    val data = result.getOrNull() ?: run {
+                        ErrorReportHelper.postException(
+                            "Login response is null",
+                            "LoginViewModel",
+                            null
+                        )
+                        ToastCenter.showError("登录错误，请稍后再试")
+                        return@launch
+                    }
+
+                    if (UserInfoHelper.login(data)) {
                         ToastCenter.showSuccess("登录成功")
                         loginLiveData.postValue(data)
                     } else {

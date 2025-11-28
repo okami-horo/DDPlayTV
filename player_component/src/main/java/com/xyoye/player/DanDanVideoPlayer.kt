@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.cache.CacheManager
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.bean.VideoTrackBean
@@ -43,6 +44,7 @@ import com.xyoye.subtitle.MixedSubtitle
  * Created by xyoye on 2020/11/3.
  */
 
+@UnstableApi
 class DanDanVideoPlayer(
     context: Context,
     attrs: AttributeSet? = null

@@ -45,13 +45,11 @@ class PlayerDanmuViewModel : BaseViewModel() {
     fun downloadDanmu(episode: DanmuEpisodeData) {
         viewModelScope.launch {
             showLoading()
-            val result = DanmuFinder.instance.downloadEpisode(episode)
-            hideLoading()
-
-            if (result == null) {
+            val result = DanmuFinder.instance.downloadEpisode(episode) ?: run {
                 ToastCenter.showError("弹幕保存失败")
                 return@launch
             }
+            hideLoading()
 
             downloadDanmuLiveData.postValue(result)
         }
