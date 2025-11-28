@@ -3,7 +3,10 @@
 #include <android/log.h>
 #include <android/native_window_jni.h>
 #include <ass/ass.h>
+#include <EGL/egl.h>
+#include <GLES3/gl3.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstring>
 #include <cstdarg>
@@ -16,6 +19,28 @@
 
 namespace {
 constexpr const char *kGpuLogTag = "AssGpuBridge";
+constexpr const char *kVertexShaderSrc = R"(#version 300 es
+layout (location = 0) in vec2 aPosition;
+layout (location = 1) in vec2 aTexCoord;
+out vec2 vTexCoord;
+void main() {
+    vTexCoord = aTexCoord;
+    gl_Position = vec4(aPosition, 0.0, 1.0);
+}
+)";
+constexpr const char *kFragmentShaderSrc = R"(#version 300 es
+precision mediump float;
+in vec2 vTexCoord;
+uniform sampler2D uBitmap;
+uniform vec4 uColor;
+out vec4 outColor;
+void main() {
+    float coverage = texture(uBitmap, vTexCoord).r;
+    float alpha = uColor.a * coverage;
+    vec3 rgb = uColor.rgb * alpha;
+    outColor = vec4(rgb, alpha);
+}
+)";
 
 struct GpuContext {
     std::mutex mutex;
@@ -28,6 +53,14 @@ struct GpuContext {
     bool supports_hardware_buffer = false;
     bool telemetry_enabled = true;
     int64_t last_vsync_id = 0;
+    EGLDisplay egl_display = EGL_NO_DISPLAY;
+    EGLContext egl_context = EGL_NO_CONTEXT;
+    EGLSurface egl_surface = EGL_NO_SURFACE;
+    EGLConfig egl_config = nullptr;
+    GLuint program = 0;
+    GLuint vertex_buffer = 0;
+    GLint uniform_color = -1;
+    GLint uniform_sampler = -1;
     ASS_Library *library = nullptr;
     ASS_Renderer *renderer = nullptr;
     ASS_Track *track = nullptr;
@@ -39,37 +72,6 @@ void LogInfo(const char *message) {
 
 void LogError(const char *message) {
     __android_log_print(ANDROID_LOG_ERROR, kGpuLogTag, "%s", message);
-}
-
-void LibassMessageCallback(int level, const char *fmt, va_list args, void *data) {
-    (void)data;
-    char buffer[1024];
-    if (fmt != nullptr) {
-        vsnprintf(buffer, sizeof(buffer), fmt, args);
-        buffer[sizeof(buffer) - 1] = '\0';
-    } else {
-        std::strncpy(buffer, "(null)", sizeof(buffer));
-        buffer[sizeof(buffer) - 1] = '\0';
-    }
-    int android_level = ANDROID_LOG_DEBUG;
-    if (level <= 1) {
-        android_level = ANDROID_LOG_ERROR;
-    } else if (level <= 3) {
-        android_level = ANDROID_LOG_WARN;
-    } else if (level <= 5) {
-        android_level = ANDROID_LOG_INFO;
-    }
-    __android_log_print(android_level, kGpuLogTag, "libass[%d]: %s", level, buffer);
-}
-
-void ReleaseWindow(GpuContext *context) {
-    if (context == nullptr) {
-        return;
-    }
-    if (context->window != nullptr) {
-        ANativeWindow_release(context->window);
-        context->window = nullptr;
-    }
 }
 
 std::string JStringToUtf8(JNIEnv *env, jstring value) {
@@ -102,15 +104,10 @@ std::vector<std::string> JObjectArrayToStrings(JNIEnv *env, jobjectArray array) 
     return paths;
 }
 
-jlongArray BuildRenderMetrics(JNIEnv *env, bool rendered, jlong render_ms = 0,
-                              jlong upload_ms = 0, jlong composite_ms = 0) {
-    jlongArray array = env->NewLongArray(4);
-    if (array == nullptr) {
-        return nullptr;
-    }
-    jlong values[4] = {rendered ? 1 : 0, render_ms, upload_ms, composite_ms};
-    env->SetLongArrayRegion(array, 0, 4, values);
-    return array;
+void ReleaseWindow(GpuContext *context) {
+    if (context == nullptr || context->window == nullptr) return;
+    ANativeWindow_release(context->window);
+    context->window = nullptr;
 }
 
 void DestroyAss(GpuContext *context) {
@@ -132,7 +129,25 @@ void DestroyAss(GpuContext *context) {
 void EnsureAss(GpuContext *context) {
     if (context->library == nullptr) {
         context->library = ass_library_init();
-        ass_set_message_cb(context->library, LibassMessageCallback, nullptr);
+        ass_set_message_cb(context->library, [](int level, const char *fmt, va_list args, void *) {
+            char buffer[1024];
+            if (fmt != nullptr) {
+                vsnprintf(buffer, sizeof(buffer), fmt, args);
+                buffer[sizeof(buffer) - 1] = '\0';
+            } else {
+                std::strncpy(buffer, "(null)", sizeof(buffer));
+                buffer[sizeof(buffer) - 1] = '\0';
+            }
+            int android_level = ANDROID_LOG_DEBUG;
+            if (level <= 1) {
+                android_level = ANDROID_LOG_ERROR;
+            } else if (level <= 3) {
+                android_level = ANDROID_LOG_WARN;
+            } else if (level <= 5) {
+                android_level = ANDROID_LOG_INFO;
+            }
+            __android_log_print(android_level, kGpuLogTag, "libass[%d]: %s", level, buffer);
+        }, nullptr);
     }
     if (context->renderer == nullptr) {
         context->renderer = ass_renderer_init(context->library);
@@ -158,56 +173,195 @@ void ConfigureFonts(GpuContext *context, const std::string &default_font,
     ass_set_fonts(context->renderer, font_ptr, nullptr, ASS_FONTPROVIDER_NONE, nullptr, 0);
 }
 
-inline uint8_t MulDiv255(uint32_t value, uint32_t scale) {
-    return static_cast<uint8_t>((value * scale + 128) / 255);
-}
-
 inline uint8_t AssAlphaToAndroid(uint32_t color) {
     const uint8_t ass_alpha = static_cast<uint8_t>(color & 0xFF);
     return static_cast<uint8_t>(255 - ass_alpha);
 }
 
-void BlendPixel(uint8_t *dst, uint8_t coverage, uint32_t color, uint8_t effective_alpha) {
-    if (effective_alpha == 0 || coverage == 0) {
-        return;
+GLuint CompileShader(GLenum type, const char *source) {
+    GLuint shader = glCreateShader(type);
+    if (shader == 0) {
+        LogError("Failed to create shader");
+        return 0;
     }
-    const uint8_t src_alpha = MulDiv255(coverage, effective_alpha);
-    if (src_alpha == 0) {
-        return;
+    glShaderSource(shader, 1, &source, nullptr);
+    glCompileShader(shader);
+    GLint compiled = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    if (compiled != GL_TRUE) {
+        GLint length = 0;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+        std::string log(std::max(length, 1), '\0');
+        glGetShaderInfoLog(shader, length, nullptr, log.data());
+        LogError(("Shader compile failed: " + log).c_str());
+        glDeleteShader(shader);
+        return 0;
     }
-
-    const uint8_t red = static_cast<uint8_t>((color >> 24) & 0xFF);
-    const uint8_t green = static_cast<uint8_t>((color >> 16) & 0xFF);
-    const uint8_t blue = static_cast<uint8_t>((color >> 8) & 0xFF);
-
-    const uint8_t src_r = MulDiv255(red, src_alpha);
-    const uint8_t src_g = MulDiv255(green, src_alpha);
-    const uint8_t src_b = MulDiv255(blue, src_alpha);
-
-    uint8_t dst_r = dst[0];
-    uint8_t dst_g = dst[1];
-    uint8_t dst_b = dst[2];
-    uint8_t dst_a = dst[3];
-
-    const uint8_t inv_alpha = static_cast<uint8_t>(255 - src_alpha);
-    dst_r = static_cast<uint8_t>(src_r + MulDiv255(dst_r, inv_alpha));
-    dst_g = static_cast<uint8_t>(src_g + MulDiv255(dst_g, inv_alpha));
-    dst_b = static_cast<uint8_t>(src_b + MulDiv255(dst_b, inv_alpha));
-    dst_a = static_cast<uint8_t>(src_alpha + MulDiv255(dst_a, inv_alpha));
-
-    dst[0] = dst_r;
-    dst[1] = dst_g;
-    dst[2] = dst_b;
-    dst[3] = dst_a;
+    return shader;
 }
 
-void ClearWindow(ANativeWindow_Buffer &buffer) {
-    uint8_t *dst = static_cast<uint8_t *>(buffer.bits);
-    if (dst == nullptr) return;
-    const int stride_bytes = buffer.stride * 4;
-    for (int y = 0; y < buffer.height; ++y) {
-        std::memset(dst + y * stride_bytes, 0, stride_bytes);
+bool EnsureProgram(GpuContext *context) {
+    if (context->program != 0) return true;
+    GLuint vertex = CompileShader(GL_VERTEX_SHADER, kVertexShaderSrc);
+    GLuint fragment = CompileShader(GL_FRAGMENT_SHADER, kFragmentShaderSrc);
+    if (vertex == 0 || fragment == 0) {
+        if (vertex != 0) glDeleteShader(vertex);
+        if (fragment != 0) glDeleteShader(fragment);
+        return false;
     }
+    GLuint program = glCreateProgram();
+    glAttachShader(program, vertex);
+    glAttachShader(program, fragment);
+    glLinkProgram(program);
+    glDeleteShader(vertex);
+    glDeleteShader(fragment);
+    GLint linked = 0;
+    glGetProgramiv(program, GL_LINK_STATUS, &linked);
+    if (linked != GL_TRUE) {
+        GLint length = 0;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+        std::string log(std::max(length, 1), '\0');
+        glGetProgramInfoLog(program, length, nullptr, log.data());
+        LogError(("Program link failed: " + log).c_str());
+        glDeleteProgram(program);
+        return false;
+    }
+    context->program = program;
+    context->uniform_color = glGetUniformLocation(program, "uColor");
+    context->uniform_sampler = glGetUniformLocation(program, "uBitmap");
+    glUseProgram(context->program);
+    glUniform1i(context->uniform_sampler, 0);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+    if (context->vertex_buffer == 0) {
+        glGenBuffers(1, &context->vertex_buffer);
+    }
+    return true;
+}
+
+void DestroyEgl(GpuContext *context, bool destroy_context = true) {
+    if (context == nullptr) return;
+    if (context->egl_display != EGL_NO_DISPLAY && context->egl_surface != EGL_NO_SURFACE) {
+        eglDestroySurface(context->egl_display, context->egl_surface);
+        context->egl_surface = EGL_NO_SURFACE;
+    }
+    if (destroy_context && context->egl_display != EGL_NO_DISPLAY &&
+        context->egl_context != EGL_NO_CONTEXT) {
+        if (context->program != 0 || context->vertex_buffer != 0) {
+            eglMakeCurrent(context->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                           context->egl_context);
+            if (context->program != 0) {
+                glDeleteProgram(context->program);
+            }
+            if (context->vertex_buffer != 0) {
+                glDeleteBuffers(1, &context->vertex_buffer);
+            }
+        }
+        eglDestroyContext(context->egl_display, context->egl_context);
+        context->egl_context = EGL_NO_CONTEXT;
+        context->program = 0;
+        context->vertex_buffer = 0;
+    }
+    if (destroy_context && context->egl_display != EGL_NO_DISPLAY) {
+        eglTerminate(context->egl_display);
+        context->egl_display = EGL_NO_DISPLAY;
+    }
+    context->uniform_color = -1;
+    context->uniform_sampler = -1;
+    context->egl_config = nullptr;
+}
+
+bool EnsureEgl(GpuContext *context) {
+    if (context->egl_display != EGL_NO_DISPLAY && context->egl_context != EGL_NO_CONTEXT) {
+        return true;
+    }
+    context->egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (context->egl_display == EGL_NO_DISPLAY) {
+        LogError("Failed to get EGL display");
+        return false;
+    }
+    if (!eglInitialize(context->egl_display, nullptr, nullptr)) {
+        LogError("Failed to initialize EGL");
+        return false;
+    }
+    const EGLint config_attribs[] = {
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        EGL_NONE
+    };
+    EGLint num_configs = 0;
+    EGLConfig configs[1];
+    if (!eglChooseConfig(context->egl_display, config_attribs, configs, 1, &num_configs) ||
+        num_configs == 0) {
+        LogError("Failed to choose EGL config");
+        return false;
+    }
+    context->egl_config = configs[0];
+    const EGLint ctx_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
+    context->egl_context = eglCreateContext(context->egl_display, context->egl_config,
+                                            EGL_NO_CONTEXT, ctx_attribs);
+    if (context->egl_context == EGL_NO_CONTEXT) {
+        LogError("Failed to create EGL context");
+        return false;
+    }
+    return true;
+}
+
+bool MakeCurrent(GpuContext *context) {
+    if (context->egl_display == EGL_NO_DISPLAY || context->egl_surface == EGL_NO_SURFACE ||
+        context->egl_context == EGL_NO_CONTEXT) {
+        return false;
+    }
+    if (eglGetCurrentContext() != context->egl_context ||
+        eglGetCurrentSurface(EGL_DRAW) != context->egl_surface) {
+        if (!eglMakeCurrent(context->egl_display, context->egl_surface, context->egl_surface,
+                            context->egl_context)) {
+            LogError("eglMakeCurrent failed");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool EnsureSurface(GpuContext *context) {
+    if (context->window == nullptr) {
+        return false;
+    }
+    if (!EnsureEgl(context)) {
+        return false;
+    }
+    if (context->egl_surface != EGL_NO_SURFACE) {
+        eglDestroySurface(context->egl_display, context->egl_surface);
+        context->egl_surface = EGL_NO_SURFACE;
+    }
+    context->egl_surface =
+        eglCreateWindowSurface(context->egl_display, context->egl_config, context->window, nullptr);
+    if (context->egl_surface == EGL_NO_SURFACE) {
+        LogError("Failed to create EGL surface");
+        return false;
+    }
+    if (!MakeCurrent(context)) {
+        return false;
+    }
+    glViewport(0, 0, context->width, context->height);
+    return EnsureProgram(context);
+}
+
+jlongArray BuildRenderMetrics(JNIEnv *env, bool rendered, jlong render_ms = 0,
+                              jlong upload_ms = 0, jlong composite_ms = 0) {
+    jlongArray array = env->NewLongArray(4);
+    if (array == nullptr) {
+        return nullptr;
+    }
+    jlong values[4] = {rendered ? 1 : 0, render_ms, upload_ms, composite_ms};
+    env->SetLongArrayRegion(array, 0, 4, values);
+    return array;
 }
 }  // namespace
 
@@ -235,6 +389,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeDestroy(
     {
         std::lock_guard<std::mutex> guard(context->mutex);
         DestroyAss(context);
+        DestroyEgl(context);
         ReleaseWindow(context);
     }
     delete context;
@@ -270,8 +425,16 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeAttachSur
     context->color_format = JStringToUtf8(env, color_format);
     context->supports_hardware_buffer = supports_hardware_buffer == JNI_TRUE;
     context->last_vsync_id = vsync_id;
+    if (context->window == nullptr) {
+        LogError("Failed to attach GPU surface (window null)");
+        return JNI_FALSE;
+    }
+    if (!EnsureSurface(context)) {
+        LogError("Failed to set up EGL surface for GPU pipeline");
+        return JNI_FALSE;
+    }
     LogInfo("GPU surface attached");
-    return context->window != nullptr ? JNI_TRUE : JNI_FALSE;
+    return JNI_TRUE;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -283,6 +446,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeDetachSur
         return;
     }
     std::lock_guard<std::mutex> guard(context->mutex);
+    DestroyEgl(context, false);
     ReleaseWindow(context);
     context->width = 0;
     context->height = 0;
@@ -337,21 +501,16 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     std::lock_guard<std::mutex> guard(context->mutex);
     context->last_vsync_id = vsync_id;
     context->telemetry_enabled = telemetry_enabled == JNI_TRUE;
-    if (context->window == nullptr || context->renderer == nullptr || context->track == nullptr) {
+    if (context->window == nullptr || context->renderer == nullptr || context->track == nullptr ||
+        context->width <= 0 || context->height <= 0) {
         return BuildRenderMetrics(env, false);
     }
     if (context->width > 0 && context->height > 0) {
         ass_set_frame_size(context->renderer, context->width, context->height);
     }
-
-    ANativeWindow_setBuffersGeometry(context->window, context->width, context->height,
-                                     WINDOW_FORMAT_RGBA_8888);
-    ANativeWindow_Buffer buffer{};
-    if (ANativeWindow_lock(context->window, &buffer, nullptr) != 0) {
-        LogError("GPU subtitle: failed to lock window");
+    if (!EnsureSurface(context) || !MakeCurrent(context)) {
         return BuildRenderMetrics(env, false);
     }
-    ClearWindow(buffer);
 
     int change = 0;
     auto render_start = std::chrono::steady_clock::now();
@@ -359,32 +518,100 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeRender(
                                       static_cast<int>(subtitle_pts_ms), &change);
     auto render_end = std::chrono::steady_clock::now();
 
-    if (img != nullptr) {
-        const int stride_bytes = buffer.stride * 4;
-        for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
-            if (cur->w <= 0 || cur->h <= 0) continue;
-            const uint8_t alpha = AssAlphaToAndroid(cur->color);
-            if (alpha == 0) continue;
-            for (int y = 0; y < cur->h; ++y) {
-                uint8_t *dst = static_cast<uint8_t *>(buffer.bits) +
-                               (cur->dst_y + y) * stride_bytes + cur->dst_x * 4;
-                uint8_t *src = cur->bitmap + y * cur->stride;
-                for (int x = 0; x < cur->w; ++x) {
-                    BlendPixel(dst + x * 4, src[x], cur->color, alpha);
-                }
-            }
+    glViewport(0, 0, context->width, context->height);
+    glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    double upload_ms = 0.0;
+    double composite_ms = 0.0;
+    std::vector<uint8_t> coverage;
+
+    for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
+        if (cur->w <= 0 || cur->h <= 0) continue;
+        const float base_alpha = static_cast<float>(AssAlphaToAndroid(cur->color)) / 255.0F;
+        if (base_alpha <= 0.0F) continue;
+
+        const auto upload_start = std::chrono::steady_clock::now();
+        coverage.assign(static_cast<size_t>(cur->w * cur->h), 0);
+        for (int y = 0; y < cur->h; ++y) {
+            const uint8_t *src_row = cur->bitmap + y * cur->stride;
+            std::memcpy(coverage.data() + static_cast<size_t>(y * cur->w), src_row,
+                        static_cast<size_t>(cur->w));
         }
+        GLuint texture = 0;
+        glGenTextures(1, &texture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, cur->w, cur->h, 0, GL_RED, GL_UNSIGNED_BYTE,
+                     coverage.data());
+        const auto upload_end = std::chrono::steady_clock::now();
+        upload_ms += std::chrono::duration_cast<std::chrono::microseconds>(upload_end - upload_start)
+                         .count() /
+                     1000.0;
+
+        const float left = (static_cast<float>(cur->dst_x) / static_cast<float>(context->width)) *
+                               2.0F -
+                           1.0F;
+        const float right = (static_cast<float>(cur->dst_x + cur->w) /
+                             static_cast<float>(context->width)) *
+                                2.0F -
+                            1.0F;
+        const float top = 1.0F -
+                          (static_cast<float>(cur->dst_y) / static_cast<float>(context->height)) *
+                              2.0F;
+        const float bottom =
+            1.0F - (static_cast<float>(cur->dst_y + cur->h) / static_cast<float>(context->height)) *
+                       2.0F;
+
+        const auto draw_start = std::chrono::steady_clock::now();
+        glUseProgram(context->program);
+        const float red = static_cast<float>((cur->color >> 24) & 0xFF) / 255.0F;
+        const float green = static_cast<float>((cur->color >> 16) & 0xFF) / 255.0F;
+        const float blue = static_cast<float>((cur->color >> 8) & 0xFF) / 255.0F;
+        glUniform4f(context->uniform_color, red, green, blue, base_alpha);
+
+        const float vertices[] = {
+            left,  top,    0.0F, 0.0F,  // left-top
+            right, top,    1.0F, 0.0F,  // right-top
+            left,  bottom, 0.0F, 1.0F,  // left-bottom
+            right, bottom, 1.0F, 1.0F   // right-bottom
+        };
+
+        glBindBuffer(GL_ARRAY_BUFFER, context->vertex_buffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
+                              reinterpret_cast<void *>(0));
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
+                              reinterpret_cast<void *>(sizeof(float) * 2));
+        glEnableVertexAttribArray(1);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        const auto draw_end = std::chrono::steady_clock::now();
+        composite_ms += std::chrono::duration_cast<std::chrono::microseconds>(draw_end - draw_start)
+                            .count() /
+                        1000.0;
+        glDeleteTextures(1, &texture);
     }
-    auto upload_end = std::chrono::steady_clock::now();
-    ANativeWindow_unlockAndPost(context->window);
+
+    auto swap_start = std::chrono::steady_clock::now();
+    eglSwapBuffers(context->egl_display, context->egl_surface);
+    glFinish();
+    auto swap_end = std::chrono::steady_clock::now();
+    composite_ms +=
+        std::chrono::duration_cast<std::chrono::microseconds>(swap_end - swap_start).count() /
+        1000.0;
 
     const auto render_latency =
         std::chrono::duration_cast<std::chrono::microseconds>(render_end - render_start).count() /
         1000;
-    const auto upload_latency =
-        std::chrono::duration_cast<std::chrono::microseconds>(upload_end - render_end).count() /
-        1000;
-    return BuildRenderMetrics(env, true, render_latency, upload_latency, 0);
+    return BuildRenderMetrics(env, true, render_latency,
+                              static_cast<jlong>(upload_ms),
+                              static_cast<jlong>(composite_ms));
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -396,6 +623,13 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeFlush(
         return;
     }
     std::lock_guard<std::mutex> guard(context->mutex);
+    if (context->egl_display != EGL_NO_DISPLAY && context->egl_surface != EGL_NO_SURFACE &&
+        context->egl_context != EGL_NO_CONTEXT) {
+        MakeCurrent(context);
+        glFinish();
+        LogInfo("GPU pipeline flush requested");
+        return;
+    }
     LogInfo("GPU pipeline flush requested");
 }
 
