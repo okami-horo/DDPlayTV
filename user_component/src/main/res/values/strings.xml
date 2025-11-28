@@ -127,6 +127,21 @@
     <string name="developer_subtitle_force_fallback_summary">立即切换到旧后端并记录 USER_REQUEST</string>
     <string name="developer_subtitle_force_fallback_toast">已切回旧字幕后端（测试）</string>
     <string name="developer_subtitle_status_summary">后端：%1$s\nSurface：%2$s %3$dx%4$d\n会话：%5$s\n开始：%6$s\n首帧耗时：%7$s\n回退：%8$s\n错误：%9$s</string>
+    <string name="developer_bugly_category_title">错误上报</string>
+    <string name="developer_bugly_status_title">错误上报状态</string>
+    <string name="developer_bugly_status_summary">检查 Bugly 初始化状态</string>
+    <string name="developer_bugly_status_on_debug">✅ 已启用 | ID: 测试模式 | 来源: Debug Mode</string>
+    <string name="developer_bugly_status_on">✅ 已启用 | ID: %1$s | 来源: %2$s</string>
+    <string name="developer_bugly_status_off">❌ 未配置 Bugly</string>
+    <string name="developer_bugly_status_detail_header">Bugly 错误上报状态详情:</string>
+    <string name="developer_bugly_status_detail_state">状态: %1$s</string>
+    <string name="developer_bugly_status_detail_app_id">App ID: %1$s</string>
+    <string name="developer_bugly_status_detail_source">配置来源: %1$s</string>
+    <string name="developer_bugly_status_detail_debug">调试模式: %1$s</string>
+    <string name="developer_bugly_status_detail_working">✓ 错误上报功能正常工作</string>
+    <string name="developer_bugly_status_detail_notice">注意: 测试模式下不会实际上报错误</string>
+    <string name="developer_bugly_status_detail_missing">⚠ 请配置 Bugly App ID 以启用错误上报</string>
+    <string name="developer_bugly_status_failed">获取错误上报状态失败</string>
 
     <integer-array name="cover">
         <item>@drawable/ic_bailitusu</item>

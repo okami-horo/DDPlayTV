@@ -77,4 +77,15 @@
             app:icon="@drawable/ic_feedback" />
     </PreferenceCategory>
 
+    <PreferenceCategory
+        android:key="developer_bugly_category"
+        android:title="@string/developer_bugly_category_title">
+
+        <Preference
+            android:key="bugly_status"
+            android:title="@string/developer_bugly_status_title"
+            android:summary="@string/developer_bugly_status_summary"
+            app:icon="@drawable/ic_app_setting_about_us" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

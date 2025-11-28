@@ -16,6 +16,7 @@ import com.xyoye.common_component.log.AppLogger
 import com.xyoye.common_component.log.SubtitleTelemetryLogger
 import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.utils.SecurityHelperConfig
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.user_component.R
@@ -39,6 +40,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         private const val KEY_LOG_UPLOAD_TRIGGER = "log_upload_trigger"
         private const val KEY_APP_LOG_ENABLE = "app_log_enable"
         private const val KEY_SUBTITLE_TELEMETRY_LOG_ENABLE = "subtitle_telemetry_log_enable"
+        private const val KEY_BUGLY_STATUS = "bugly_status"
         private const val KEY_SUBTITLE_SESSION_STATUS = "subtitle_session_status"
         private const val KEY_SUBTITLE_FORCE_FALLBACK = "subtitle_force_fallback"
         private const val SUBTITLE_STATUS_PROVIDER =
@@ -66,6 +68,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
 
         initLogUploadPreferences()
         initSubtitleDebugPreferences()
+        initBuglyStatusPreference()
     }
 
     override fun onResume() {
@@ -206,6 +209,68 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             setOnPreferenceClickListener {
                 forceFallback()
                 true
+            }
+        }
+    }
+
+    private fun initBuglyStatusPreference() {
+        findPreference<Preference>(KEY_BUGLY_STATUS)?.apply {
+            try {
+                title = getString(R.string.developer_bugly_status_title)
+                val statusInfo = SecurityHelperConfig.getBuglyStatusInfo()
+                summary = if (statusInfo.isInitialized) {
+                    if (statusInfo.isDebugMode) {
+                        getString(R.string.developer_bugly_status_on_debug)
+                    } else {
+                        val shortId = if (statusInfo.appId.length > 8) {
+                            statusInfo.appId.substring(0, 8) + "..."
+                        } else {
+                            statusInfo.appId
+                        }
+                        getString(R.string.developer_bugly_status_on, shortId, statusInfo.source)
+                    }
+                } else {
+                    getString(R.string.developer_bugly_status_off)
+                }
+
+                setOnPreferenceClickListener {
+                    try {
+                        val statusInfo = SecurityHelperConfig.getBuglyStatusInfo()
+                        val message = buildString {
+                            append(getString(R.string.developer_bugly_status_detail_header)).append("\n\n")
+                            append(getString(R.string.developer_bugly_status_detail_state, if (statusInfo.isInitialized) "✅ 已初始化" else "❌ 未初始化")).append("\n")
+                            append(getString(R.string.developer_bugly_status_detail_app_id,
+                                if (statusInfo.isDebugMode) "test_debug_id (测试模式)" else statusInfo.appId)).append("\n")
+                            append(getString(R.string.developer_bugly_status_detail_source, statusInfo.source)).append("\n")
+                            append(getString(R.string.developer_bugly_status_detail_debug, if (statusInfo.isDebugMode) "是" else "否")).append("\n\n")
+                            if (statusInfo.isInitialized) {
+                                append(getString(R.string.developer_bugly_status_detail_working)).append("\n")
+                                if (statusInfo.isDebugMode) {
+                                    append(getString(R.string.developer_bugly_status_detail_notice))
+                                }
+                            } else {
+                                append(getString(R.string.developer_bugly_status_detail_missing))
+                            }
+                        }
+                        ToastCenter.showSuccess(message)
+                    } catch (e: Exception) {
+                        ErrorReportHelper.postCatchedExceptionWithContext(
+                            e,
+                            "DeveloperSettingFragment",
+                            "bugly_status_click",
+                            "Failed to show Bugly status information"
+                        )
+                        ToastCenter.showError(getString(R.string.developer_bugly_status_failed))
+                    }
+                    true
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "DeveloperSettingFragment",
+                    "bugly_status_setup",
+                    "Failed to setup Bugly status preference"
+                )
             }
         }
     }

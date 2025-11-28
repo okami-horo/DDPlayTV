@@ -15,7 +15,6 @@ import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.network.config.Api
 import com.xyoye.common_component.utils.AppUtils
 import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.common_component.utils.SecurityHelperConfig
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.user_component.R
 
@@ -79,66 +78,6 @@ class AppSettingFragment : PreferenceFragmentCompat() {
                     "AppSettingFragment",
                     "app_version_setup",
                     "Failed to setup app version preference"
-                )
-            }
-        }
-
-        findPreference<Preference>("bugly_status")?.apply {
-            try {
-                // 设置标题和摘要
-                title = "错误上报状态"
-                val statusInfo = SecurityHelperConfig.getBuglyStatusInfo()
-                summary = if (statusInfo.isInitialized) {
-                    if (statusInfo.isDebugMode) {
-                        "✅ 已启用 | ID: 测试模式 | 来源: Debug Mode"
-                    } else {
-                        val shortId = if (statusInfo.appId.length > 8) {
-                            statusInfo.appId.substring(0, 8) + "..."
-                        } else {
-                            statusInfo.appId
-                        }
-                        "✅ 已启用 | ID: $shortId | 来源: ${statusInfo.source}"
-                    }
-                } else {
-                    "❌ 未配置 Bugly"
-                }
-                
-                setOnPreferenceClickListener {
-                    try {
-                        val statusInfo = SecurityHelperConfig.getBuglyStatusInfo()
-                        val message = buildString {
-                            append("Bugly 错误上报状态详情:\n\n")
-                            append("状态: ${if (statusInfo.isInitialized) "✅ 已初始化" else "❌ 未初始化"}\n")
-                            append("App ID: ${if (statusInfo.isDebugMode) "test_debug_id (测试模式)" else statusInfo.appId}\n")
-                            append("配置来源: ${statusInfo.source}\n")
-                            append("调试模式: ${if (statusInfo.isDebugMode) "是" else "否"}\n\n")
-                            if (statusInfo.isInitialized) {
-                                append("✓ 错误上报功能正常工作\n")
-                                if (statusInfo.isDebugMode) {
-                                    append("注意: 测试模式下不会实际上报错误")
-                                }
-                            } else {
-                                append("⚠ 请配置 Bugly App ID 以启用错误上报")
-                            }
-                        }
-                        ToastCenter.showSuccess(message)
-                    } catch (e: Exception) {
-                        ErrorReportHelper.postCatchedExceptionWithContext(
-                            e,
-                            "AppSettingFragment",
-                            "bugly_status_click",
-                            "Failed to show Bugly status information"
-                        )
-                        ToastCenter.showError("获取错误上报状态失败")
-                    }
-                    return@setOnPreferenceClickListener true
-                }
-            } catch (e: Exception) {
-                ErrorReportHelper.postCatchedExceptionWithContext(
-                    e,
-                    "AppSettingFragment",
-                    "bugly_status_setup",
-                    "Failed to setup Bugly status preference"
                 )
             }
         }
