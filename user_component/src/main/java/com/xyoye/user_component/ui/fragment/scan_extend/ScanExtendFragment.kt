@@ -3,12 +3,14 @@ package com.xyoye.user_component.ui.fragment.scan_extend
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.base.BaseFragment
+import com.xyoye.common_component.application.DanDanPlay
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.utils.FastClickFilter
 import com.xyoye.common_component.utils.getFolderName
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.common_component.weight.dialog.FileManagerDialog
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.ExtendFolderEntity
 import com.xyoye.data_component.enums.FileManagerAction
 import com.xyoye.user_component.BR
@@ -81,15 +83,22 @@ class ScanExtendFragment : BaseFragment<ScanExtendFragmentViewModel, FragmentSca
     }
 
     private fun showExtendFolderDialog() {
-        fileManagerDialog?.dismiss()
-        fileManagerDialog = FileManagerDialog(
-            mAttachActivity,
-            FileManagerAction.ACTION_SELECT_DIRECTORY,
-            dismissWhenClickPositive = false
-        ) {
-            viewModel.addExtendFolder(it)
-        }.also {
-            it.show()
+        DanDanPlay.permission.storage.request(this) {
+            onGranted {
+                fileManagerDialog?.dismiss()
+                fileManagerDialog = FileManagerDialog(
+                    mAttachActivity,
+                    FileManagerAction.ACTION_SELECT_DIRECTORY,
+                    dismissWhenClickPositive = false
+                ) {
+                    viewModel.addExtendFolder(it)
+                }.also {
+                    it.show()
+                }
+            }
+            onDenied {
+                ToastCenter.showError("获取文件读取权限失败，无法添加扫描路径")
+            }
         }
     }
 
