@@ -128,10 +128,91 @@ void DumpEglConfigs(EGLDisplay display) {
     }
 }
 
-struct EglCandidateConfig {
-    int gles_version;
-    bool want_alpha;
-    bool want_recordable;
+EGLint GetConfigAttr(EGLDisplay display, EGLConfig config, EGLint attribute) {
+    EGLint value = 0;
+    eglGetConfigAttrib(display, config, attribute, &value);
+    return value;
+}
+
+std::vector<ScoredConfig> EnumerateAndScoreConfigs(EGLDisplay display, int window_format) {
+    EGLint config_count = 0;
+    if (display == EGL_NO_DISPLAY ||
+        eglGetConfigs(display, nullptr, 0, &config_count) != EGL_TRUE || config_count <= 0) {
+        return {};
+    }
+    std::vector<EGLConfig> configs(static_cast<size_t>(config_count));
+    if (eglGetConfigs(display, configs.data(), config_count, &config_count) != EGL_TRUE) {
+        return {};
+    }
+
+    std::vector<ScoredConfig> scored;
+    scored.reserve(static_cast<size_t>(config_count));
+    for (int i = 0; i < config_count; ++i) {
+        const EGLConfig cfg = configs[static_cast<size_t>(i)];
+        const EGLint surface_type = GetConfigAttr(display, cfg, EGL_SURFACE_TYPE);
+        if ((surface_type & EGL_WINDOW_BIT) == 0) {
+            continue;
+        }
+
+        const EGLint renderable = GetConfigAttr(display, cfg, EGL_RENDERABLE_TYPE);
+        const bool es3 = (renderable & EGL_OPENGL_ES3_BIT) != 0;
+        const bool es2 = (renderable & EGL_OPENGL_ES2_BIT) != 0;
+        if (!es3 && !es2) {
+            continue;
+        }
+
+        ScoredConfig candidate;
+        candidate.config = cfg;
+        candidate.gles_version = es3 ? 3 : 2;
+        candidate.alpha = GetConfigAttr(display, cfg, EGL_ALPHA_SIZE);
+        candidate.native_visual = GetConfigAttr(display, cfg, EGL_NATIVE_VISUAL_ID);
+        candidate.recordable = GetConfigAttr(display, cfg, EGL_RECORDABLE_ANDROID);
+        candidate.red = GetConfigAttr(display, cfg, EGL_RED_SIZE);
+        candidate.green = GetConfigAttr(display, cfg, EGL_GREEN_SIZE);
+        candidate.blue = GetConfigAttr(display, cfg, EGL_BLUE_SIZE);
+
+        int score = 0;
+        score += es3 ? 8 : 4;
+        if (candidate.recordable == EGL_TRUE) score += 4;
+        if (candidate.alpha >= 8) {
+            score += 2;
+        } else if (candidate.alpha > 0) {
+            score += 1;
+        }
+        if (candidate.red == 8 && candidate.green == 8 && candidate.blue == 8) {
+            score += 2;
+        } else if (candidate.red == 5 && candidate.green == 6 && candidate.blue == 5) {
+            score += 1;
+        }
+        if (window_format > 0 && candidate.native_visual == window_format) {
+            score += 2;
+        }
+        candidate.score = score;
+        scored.push_back(candidate);
+    }
+
+    std::sort(scored.begin(), scored.end(), [](const ScoredConfig &a, const ScoredConfig &b) {
+        if (a.score != b.score) return a.score > b.score;
+        if (a.gles_version != b.gles_version) return a.gles_version > b.gles_version;
+        if (a.alpha != b.alpha) return a.alpha > b.alpha;
+        if (a.recordable != b.recordable) return a.recordable > b.recordable;
+        const int bits_a = a.red + a.green + a.blue;
+        const int bits_b = b.red + b.green + b.blue;
+        return bits_a > bits_b;
+    });
+    return scored;
+}
+
+struct ScoredConfig {
+    EGLConfig config = nullptr;
+    int gles_version = 2;
+    int score = 0;
+    EGLint alpha = 0;
+    EGLint native_visual = 0;
+    EGLint recordable = 0;
+    EGLint red = 0;
+    EGLint green = 0;
+    EGLint blue = 0;
 };
 
 std::string JStringToUtf8(JNIEnv *env, jstring value) {
@@ -354,74 +435,35 @@ bool InitEglAndSurface(GpuContext *context) {
         return false;
     }
 
-    const EglCandidateConfig candidates[] = {
-        {3, true, true},
-        {3, true, false},
-        {3, false, true},
-        {3, false, false},
-        {2, true, true},
-        {2, true, false},
-        {2, false, true},
-        {2, false, false},
-    };
+    const int window_format = ANativeWindow_getFormat(context->window);
+    const auto scored_configs = EnumerateAndScoreConfigs(context->egl_display, window_format);
+    if (scored_configs.empty()) {
+        DumpEglConfigs(context->egl_display);
+        DestroyEgl(context);
+        LogError("No compatible EGL configs found");
+        return false;
+    }
 
-    for (const auto &candidate : candidates) {
-        EGLint config_attribs[32];
-        int idx = 0;
-        config_attribs[idx++] = EGL_RENDERABLE_TYPE;
-        config_attribs[idx++] = candidate.gles_version == 3 ? EGL_OPENGL_ES3_BIT : EGL_OPENGL_ES2_BIT;
-        config_attribs[idx++] = EGL_SURFACE_TYPE;
-        config_attribs[idx++] = EGL_WINDOW_BIT;
-        config_attribs[idx++] = EGL_RED_SIZE;
-        config_attribs[idx++] = 8;
-        config_attribs[idx++] = EGL_GREEN_SIZE;
-        config_attribs[idx++] = 8;
-        config_attribs[idx++] = EGL_BLUE_SIZE;
-        config_attribs[idx++] = 8;
-        if (candidate.want_alpha) {
-            config_attribs[idx++] = EGL_ALPHA_SIZE;
-            config_attribs[idx++] = 8;
-        }
-        if (candidate.want_recordable) {
-            config_attribs[idx++] = EGL_RECORDABLE_ANDROID;
-            config_attribs[idx++] = EGL_TRUE;
-        }
-        config_attribs[idx++] = EGL_NONE;
-
-        EGLint num_configs = 0;
-        EGLConfig configs[4] = {0};
-        if (!eglChooseConfig(context->egl_display, config_attribs, configs,
-                             static_cast<EGLint>(std::size(configs)), &num_configs) ||
-            num_configs == 0) {
-            continue;
-        }
-
-        const EGLConfig config = configs[0];
+    for (const auto &candidate : scored_configs) {
         const EGLint ctx_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, candidate.gles_version, EGL_NONE};
-        EGLContext egl_context = eglCreateContext(context->egl_display, config,
+        EGLContext egl_context = eglCreateContext(context->egl_display, candidate.config,
                                                   EGL_NO_CONTEXT, ctx_attribs);
         if (egl_context == EGL_NO_CONTEXT) {
             LogError(FormatEglError("Failed to create EGL context").c_str());
             continue;
         }
 
-        EGLint native_format = 0;
-        if (eglGetConfigAttrib(context->egl_display, config, EGL_NATIVE_VISUAL_ID,
-                               &native_format) == EGL_TRUE) {
+        if (candidate.native_visual != 0) {
             const int result =
-                ANativeWindow_setBuffersGeometry(context->window, 0, 0, native_format);
+                ANativeWindow_setBuffersGeometry(context->window, 0, 0, candidate.native_visual);
             if (result != 0) {
                 __android_log_print(ANDROID_LOG_WARN, kGpuLogTag,
                                     "setBuffersGeometry failed: %d (format=0x%x)",
-                                    result, native_format);
+                                    result, candidate.native_visual);
             }
-        } else {
-            __android_log_print(ANDROID_LOG_WARN, kGpuLogTag,
-                                "EGL_NATIVE_VISUAL_ID unavailable for config (eglError=0x%04x)",
-                                eglGetError());
         }
 
-        EGLSurface egl_surface = eglCreateWindowSurface(context->egl_display, config,
+        EGLSurface egl_surface = eglCreateWindowSurface(context->egl_display, candidate.config,
                                                         context->window, nullptr);
         if (egl_surface == EGL_NO_SURFACE) {
             LogError(FormatEglError("Failed to create EGL surface").c_str());
@@ -429,7 +471,7 @@ bool InitEglAndSurface(GpuContext *context) {
             continue;
         }
 
-        context->egl_config = config;
+        context->egl_config = candidate.config;
         context->gles_version = candidate.gles_version;
         context->egl_context = egl_context;
         context->egl_surface = egl_surface;
