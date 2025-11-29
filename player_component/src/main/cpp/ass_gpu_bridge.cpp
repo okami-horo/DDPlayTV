@@ -1,19 +1,26 @@
 #include <jni.h>
 
 #include <android/log.h>
+#include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <ass/ass.h>
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include <GLES3/gl3.h>
 
 #include <algorithm>
 #include <chrono>
+#include <cstdio>
 #include <cstring>
 #include <cstdarg>
 #include <mutex>
 #include <new>
 #include <string>
 #include <vector>
+
+#ifndef EGL_RECORDABLE_ANDROID
+#define EGL_RECORDABLE_ANDROID 0x3142
+#endif
 
 namespace {
 constexpr const char *kGpuLogTag = "AssGpuBridge";
@@ -70,6 +77,14 @@ void LogInfo(const char *message) {
 
 void LogError(const char *message) {
     __android_log_print(ANDROID_LOG_ERROR, kGpuLogTag, "%s", message);
+}
+
+std::string FormatEglError(const char *label) {
+    const EGLint error = eglGetError();
+    char buffer[80];
+    std::snprintf(buffer, sizeof(buffer), "%s (eglError=0x%04x)", label, error);
+    buffer[sizeof(buffer) - 1] = '\0';
+    return std::string(buffer);
 }
 
 std::string JStringToUtf8(JNIEnv *env, jstring value) {
@@ -280,32 +295,47 @@ bool EnsureEgl(GpuContext *context) {
         LogError("Failed to get EGL display");
         return false;
     }
+    if (!eglBindAPI(EGL_OPENGL_ES_API)) {
+        LogError(FormatEglError("Failed to bind GLES API").c_str());
+        return false;
+    }
     if (!eglInitialize(context->egl_display, nullptr, nullptr)) {
-        LogError("Failed to initialize EGL");
+        LogError(FormatEglError("Failed to initialize EGL").c_str());
         return false;
     }
-    const EGLint config_attribs[] = {
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
-        EGL_NONE
+    auto choose_config = [&](bool want_alpha) -> bool {
+        const EGLint config_attribs[] = {
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_RED_SIZE, 8,
+            EGL_GREEN_SIZE, 8,
+            EGL_BLUE_SIZE, 8,
+            EGL_ALPHA_SIZE, want_alpha ? 8 : 0,
+            EGL_RECORDABLE_ANDROID, EGL_TRUE,
+            EGL_NONE
+        };
+        EGLint num_configs = 0;
+        EGLConfig configs[1];
+        if (!eglChooseConfig(context->egl_display, config_attribs, configs, 1, &num_configs) ||
+            num_configs == 0) {
+            return false;
+        }
+        context->egl_config = configs[0];
+        return true;
     };
-    EGLint num_configs = 0;
-    EGLConfig configs[1];
-    if (!eglChooseConfig(context->egl_display, config_attribs, configs, 1, &num_configs) ||
-        num_configs == 0) {
-        LogError("Failed to choose EGL config");
-        return false;
+
+    if (!choose_config(true)) {
+        LogError("Failed to choose EGL config with alpha; retry without alpha");
+        if (!choose_config(false)) {
+            LogError("Failed to choose EGL config");
+            return false;
+        }
     }
-    context->egl_config = configs[0];
     const EGLint ctx_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
     context->egl_context = eglCreateContext(context->egl_display, context->egl_config,
                                             EGL_NO_CONTEXT, ctx_attribs);
     if (context->egl_context == EGL_NO_CONTEXT) {
-        LogError("Failed to create EGL context");
+        LogError(FormatEglError("Failed to create EGL context").c_str());
         return false;
     }
     return true;
@@ -320,7 +350,7 @@ bool MakeCurrent(GpuContext *context) {
         eglGetCurrentSurface(EGL_DRAW) != context->egl_surface) {
         if (!eglMakeCurrent(context->egl_display, context->egl_surface, context->egl_surface,
                             context->egl_context)) {
-            LogError("eglMakeCurrent failed");
+            LogError(FormatEglError("eglMakeCurrent failed").c_str());
             return false;
         }
     }
@@ -334,17 +364,32 @@ bool EnsureSurface(GpuContext *context) {
     if (!EnsureEgl(context)) {
         return false;
     }
-    if (context->egl_surface != EGL_NO_SURFACE) {
-        eglDestroySurface(context->egl_display, context->egl_surface);
-        context->egl_surface = EGL_NO_SURFACE;
-    }
-    context->egl_surface =
-        eglCreateWindowSurface(context->egl_display, context->egl_config, context->window, nullptr);
     if (context->egl_surface == EGL_NO_SURFACE) {
-        LogError("Failed to create EGL surface");
-        return false;
+        EGLint native_format = 0;
+        if (eglGetConfigAttrib(context->egl_display, context->egl_config, EGL_NATIVE_VISUAL_ID,
+                               &native_format) == EGL_TRUE) {
+            const int result =
+                ANativeWindow_setBuffersGeometry(context->window, 0, 0, native_format);
+            if (result != 0) {
+                __android_log_print(ANDROID_LOG_WARN, kGpuLogTag,
+                                    "setBuffersGeometry failed: %d (format=0x%x)",
+                                    result, native_format);
+            }
+        } else {
+            LogError(FormatEglError("Failed to query EGL_NATIVE_VISUAL_ID").c_str());
+        }
+        context->egl_surface = eglCreateWindowSurface(context->egl_display, context->egl_config,
+                                                      context->window, nullptr);
+        if (context->egl_surface == EGL_NO_SURFACE) {
+            LogError(FormatEglError("Failed to create EGL surface").c_str());
+            return false;
+        }
     }
     if (!MakeCurrent(context)) {
+        if (context->egl_display != EGL_NO_DISPLAY && context->egl_surface != EGL_NO_SURFACE) {
+            eglDestroySurface(context->egl_display, context->egl_surface);
+            context->egl_surface = EGL_NO_SURFACE;
+        }
         return false;
     }
     glViewport(0, 0, context->width, context->height);
@@ -412,6 +457,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeAttachSur
         return JNI_FALSE;
     }
     std::lock_guard<std::mutex> guard(context->mutex);
+    DestroyEgl(context, false);
     ReleaseWindow(context);
     if (surface != nullptr) {
         context->window = ANativeWindow_fromSurface(env, surface);
