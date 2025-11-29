@@ -2,13 +2,12 @@
 
 ## 1、播放器（Player） ##
 
+> 说明：历史版本使用过 IJKPlayer，现已从项目中移除且不再随包分发。
+
 1）[Exoplayer](https://github.com/google/ExoPlayer)
 视频播放（video player）
 
-2）[ijkplayer](https://github.com/bilibili/ijkplayer)
-视频播放（video player）
-
-3）[DanmakuFlameMaster](https://github.com/bilibili/DanmakuFlameMaster)
+2）[DanmakuFlameMaster](https://github.com/bilibili/DanmakuFlameMaster)
 弹幕播放（danmu player）
 
 ## 2、网络（Network） ##
