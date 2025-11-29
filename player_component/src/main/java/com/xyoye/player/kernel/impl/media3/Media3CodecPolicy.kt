@@ -115,9 +115,15 @@ object Media3CodecPolicy {
         val normalized = name.lowercase(Locale.ROOT)
         val vendorIndex = vendorPriority.indexOfFirst { normalized.startsWith(it) }
         val vendorScore = if (vendorIndex == -1) UNKNOWN_VENDOR_PRIORITY else vendorPriority.size - vendorIndex
-        val hardwareScore = if (hardwareAccelerated) 2 else 0
-        val softwarePenalty = if (softwareOnly || normalized.startsWith("omx.google")) 1 else 0
-        return vendorScore * 100 + hardwareScore * 10 - softwarePenalty
+
+        // 强化硬件优先级，显式压低软件（尤其是 omx.google），避免 4K 回落到软解
+        val hardwareScore = if (hardwareAccelerated) 1000 else 0
+        val softwarePenalty = when {
+            softwareOnly || normalized.startsWith("omx.google") -> 800
+            else -> 0
+        }
+
+        return hardwareScore + vendorScore * 10 - softwarePenalty
     }
 
     fun decoderFailureFromException(

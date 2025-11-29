@@ -96,7 +96,12 @@ class AggressiveMediaCodecSelector(
             )
 
         val allowed = ordered.filter { policy.isDecoderAllowed(it.name, mimeType) }
-        val prioritized = if (allowed.isNotEmpty()) allowed else ordered
+        val base = if (allowed.isNotEmpty()) allowed else ordered
+
+        // 先尝试所有硬件/非纯软解码器，再兜底纯软解，避免一开始就落到软解
+        val hardwareFirst = base.filter { it.hardwareAccelerated || !it.softwareOnly }
+        val softwareOnly = base.filter { it.softwareOnly }
+        val prioritized = if (hardwareFirst.isNotEmpty()) hardwareFirst + softwareOnly else base
 
         Media3Diagnostics.logDecoderCandidates(mimeType, requiresSecureDecoder, prioritized)
         prioritized.firstOrNull()?.let { selected ->
