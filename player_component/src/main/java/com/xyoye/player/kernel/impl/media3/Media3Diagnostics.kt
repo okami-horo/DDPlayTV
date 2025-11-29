@@ -124,4 +124,14 @@ object Media3Diagnostics {
             )
         )
     }
+
+    fun logContentTypeOverride(url: String, contentType: String, reason: String) {
+        log {
+            Log.i(TAG, "Content type override: url=$url contentType=$contentType reason=$reason")
+        }
+        emit(
+            "content_type_override",
+            mapOf("url" to url, "contentType" to contentType, "reason" to reason)
+        )
+    }
 }

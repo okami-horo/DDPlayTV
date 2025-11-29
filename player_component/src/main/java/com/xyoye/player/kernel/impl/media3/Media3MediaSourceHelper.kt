@@ -5,6 +5,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
+import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
@@ -43,14 +44,15 @@ object Media3MediaSourceHelper {
     ): MediaSource {
         val contentUri = Uri.parse(uri)
         val normalizedMime = Media3FormatUtil.normalizeMime(appContext, contentUri)
-        val mediaItem = MediaItem.Builder()
+        val mediaItemBuilder = MediaItem.Builder()
             .setUri(contentUri)
             .setMimeType(normalizedMime)
-            .build()
+
+        val headersWithDefaults = headers?.toMap()
 
         Media3CodecPolicy.updateDescriptor(contentUri, inferContentType(uri), normalizedMime)
 
-        headers?.let { applyHeaders(it) }
+        headersWithDefaults?.let { applyHeaders(it) }
 
         val dataSourceFactory = if (isCacheEnabled) {
             cacheDataSource()
@@ -58,7 +60,11 @@ object Media3MediaSourceHelper {
             DefaultDataSource.Factory(appContext, httpFactory)
         }
 
-        return when (inferContentType(uri)) {
+        val resolvedContentType = resolveContentType(uri, contentUri, headersWithDefaults)
+
+        val mediaItem = mediaItemBuilder.build()
+
+        return when (resolvedContentType) {
             C.CONTENT_TYPE_DASH -> DashMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
             C.CONTENT_TYPE_SS -> SsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
             C.CONTENT_TYPE_HLS -> HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
@@ -83,6 +89,41 @@ object Media3MediaSourceHelper {
             .setUpstreamDataSourceFactory(DefaultDataSource.Factory(appContext, httpFactory))
     }
 
+    private fun resolveContentType(rawUri: String, contentUri: Uri, headers: Map<String, String>?): Int {
+        val byExtension = inferContentType(rawUri)
+        if (byExtension != C.CONTENT_TYPE_OTHER) {
+            return byExtension
+        }
+
+        val contentType = sniffHttpContentType(contentUri, headers)
+        if (contentType != null && isHlsMime(contentType)) {
+            Media3Diagnostics.logContentTypeOverride(rawUri, contentType, "hls_by_content_type")
+            return C.CONTENT_TYPE_HLS
+        }
+        return byExtension
+    }
+
+    private fun sniffHttpContentType(contentUri: Uri, headers: Map<String, String>?): String? {
+        if (contentUri.scheme != "http" && contentUri.scheme != "https") {
+            return null
+        }
+        val dataSource = httpFactory.createDataSource()
+        headers?.forEach { dataSource.setRequestProperty(it.key, it.value) }
+        val dataSpec = DataSpec.Builder()
+            .setUri(contentUri)
+            .setHttpMethod(DataSpec.HTTP_METHOD_HEAD)
+            .build()
+        return runCatching {
+            dataSource.open(dataSpec)
+            val contentType = dataSource.responseHeaders.entries
+                .firstOrNull { it.key.equals("Content-Type", ignoreCase = true) }
+                ?.value
+                ?.firstOrNull()
+            dataSource.close()
+            contentType
+        }.getOrNull()
+    }
+
     private fun inferContentType(fileName: String): Int {
         val lower = fileName.lowercase(Locale.getDefault())
         return when {
@@ -91,6 +132,11 @@ object Media3MediaSourceHelper {
             lower.matches(".*\\.ism(l)?(/manifest(\\(.+\\))?)?".toRegex()) -> C.CONTENT_TYPE_SS
             else -> C.CONTENT_TYPE_OTHER
         }
+    }
+
+    private fun isHlsMime(contentType: String): Boolean {
+        val lower = contentType.lowercase(Locale.getDefault())
+        return lower.contains("application/vnd.apple.mpegurl") || lower.contains("application/x-mpegurl")
     }
 
     private fun applyHeaders(headers: Map<String, String>) {
