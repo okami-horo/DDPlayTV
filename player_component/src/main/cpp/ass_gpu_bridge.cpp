@@ -72,6 +72,18 @@ struct GpuContext {
     ASS_Track *track = nullptr;
 };
 
+struct ScoredConfig {
+    EGLConfig config = nullptr;
+    int gles_version = 2;
+    int score = 0;
+    EGLint alpha = 0;
+    EGLint native_visual = 0;
+    EGLint recordable = 0;
+    EGLint red = 0;
+    EGLint green = 0;
+    EGLint blue = 0;
+};
+
 void LogInfo(const char *message) {
     __android_log_print(ANDROID_LOG_INFO, kGpuLogTag, "%s", message);
 }
@@ -191,7 +203,7 @@ std::vector<ScoredConfig> EnumerateAndScoreConfigs(EGLDisplay display, int windo
         scored.push_back(candidate);
     }
 
-    std::sort(scored.begin(), scored.end(), [](const ScoredConfig &a, const ScoredConfig &b) {
+std::sort(scored.begin(), scored.end(), [](const ScoredConfig &a, const ScoredConfig &b) {
         if (a.score != b.score) return a.score > b.score;
         if (a.gles_version != b.gles_version) return a.gles_version > b.gles_version;
         if (a.alpha != b.alpha) return a.alpha > b.alpha;
@@ -202,18 +214,6 @@ std::vector<ScoredConfig> EnumerateAndScoreConfigs(EGLDisplay display, int windo
     });
     return scored;
 }
-
-struct ScoredConfig {
-    EGLConfig config = nullptr;
-    int gles_version = 2;
-    int score = 0;
-    EGLint alpha = 0;
-    EGLint native_visual = 0;
-    EGLint recordable = 0;
-    EGLint red = 0;
-    EGLint green = 0;
-    EGLint blue = 0;
-};
 
 std::string JStringToUtf8(JNIEnv *env, jstring value) {
     if (value == nullptr) {

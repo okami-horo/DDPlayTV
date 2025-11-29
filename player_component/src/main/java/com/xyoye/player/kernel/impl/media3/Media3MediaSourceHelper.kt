@@ -6,7 +6,6 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
@@ -33,7 +32,7 @@ object Media3MediaSourceHelper {
         appContext.applicationInfo.name
     )
 
-    private val httpFactory = DefaultHttpDataSource.Factory()
+    private val httpFactory = LoggingHttpDataSourceFactory()
         .setUserAgent(userAgent)
         .setAllowCrossProtocolRedirects(true)
 

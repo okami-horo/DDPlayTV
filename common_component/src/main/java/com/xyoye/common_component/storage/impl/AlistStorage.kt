@@ -103,14 +103,35 @@ class AlistStorage(
     }
 
     private suspend fun getStorageFileUrl(file: StorageFile): String? {
-        val rawUrl = file.getFile<AlistFileData>()?.rawUrl
-        if (rawUrl?.isNotEmpty() == true) {
-            return rawUrl
-        }
+        val cachedRawUrl = file.getFile<AlistFileData>()?.rawUrl?.takeIf { it.isNotEmpty() }
 
+        // 优先尝试获取最新直链；若失败再强制刷新 token 重试，最后回退到旧直链
+        fetchRawUrl(file, forceRefreshToken = false)?.let { return it }
+        fetchRawUrl(file, forceRefreshToken = true)?.let { return it }
+
+        return cachedRawUrl
+    }
+
+    private suspend fun fetchRawUrl(file: StorageFile, forceRefreshToken: Boolean): String? {
+        if (!ensureToken(forceRefreshToken)) {
+            return null
+        }
         return AlistRepository.openFile(rootUrl, token, file.filePath())
             .getOrNull()
             ?.successData
             ?.rawUrl
+            ?.takeIf { it.isNotEmpty() }
+    }
+
+    private suspend fun ensureToken(forceRefresh: Boolean): Boolean {
+        if (token.isNotEmpty() && !forceRefresh) {
+            return true
+        }
+        val refreshed = refreshToken()
+        if (refreshed.isNullOrEmpty()) {
+            return token.isNotEmpty()
+        }
+        token = refreshed
+        return true
     }
 }

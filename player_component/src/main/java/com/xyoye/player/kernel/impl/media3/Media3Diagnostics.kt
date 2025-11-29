@@ -110,4 +110,18 @@ object Media3Diagnostics {
             Log.i(TAG, "Dolby Vision fallback: codecs=$codecs target=$target display=$displayInfo")
         }
     }
+
+    fun logHttpOpen(url: String?, code: Int?, contentType: String?) {
+        log {
+            Log.i(TAG, "HTTP open: url=${url ?: "<null>"} code=${code ?: -1} contentType=${contentType ?: ""}")
+        }
+        emit(
+            "http_open",
+            mapOf(
+                "url" to (url ?: ""),
+                "code" to (code?.toString() ?: ""),
+                "contentType" to (contentType ?: "")
+            )
+        )
+    }
 }
