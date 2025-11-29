@@ -148,6 +148,6 @@ abstract class TvVideoController(
     }
 
     companion object {
-        private const val SEEK_DEBOUNCE_MS = 300L
+        private const val SEEK_DEBOUNCE_MS = 800L
     }
 }
