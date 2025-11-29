@@ -48,6 +48,7 @@ import com.xyoye.data_component.entity.media3.Media3BackgroundMode
 import com.xyoye.data_component.entity.media3.PlaybackSession
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 import com.xyoye.player.DanDanVideoPlayer
+import com.xyoye.player.kernel.impl.vlc.VlcAudioPolicy
 import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player_component.BR
@@ -555,11 +556,11 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
         PlayerInitializer.Player.vlcHWDecode =
             VLCHWDecode.valueOf(PlayerConfig.getUseVLCHWDecoder())
-        PlayerInitializer.Player.vlcAudioOutput =
-            VLCAudioOutput.valueOf(PlayerConfig.getUseVLCAudioOutput())
+        val preferredAudioOutput = VLCAudioOutput.valueOf(PlayerConfig.getUseVLCAudioOutput())
+        PlayerInitializer.Player.vlcAudioOutput = VlcAudioPolicy.resolveOutput(preferredAudioOutput)
         DDLog.i(
             "PLAYER-Config",
-            "vlc hw=${PlayerInitializer.Player.vlcHWDecode} audio=${PlayerInitializer.Player.vlcAudioOutput}"
+            "vlc hw=${PlayerInitializer.Player.vlcHWDecode} audio=${PlayerInitializer.Player.vlcAudioOutput} compat=${PlayerConfig.isVlcAudioCompatMode()}"
         )
 
         //弹幕配置

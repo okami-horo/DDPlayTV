@@ -28,6 +28,14 @@ object PlayerConfigTable {
     @MMKVFiled
     val useVLCAudioOutput = VLCAudioOutput.AUTO.value
 
+    //VLC音频兼容模式（自动降级）
+    @MMKVFiled
+    val vlcAudioCompatMode = false
+
+    //VLC音频能力是否已探测
+    @MMKVFiled
+    val vlcAudioCompatChecked = false
+
     //视频倍速
     @MMKVFiled
     val newVideoSpeed = 1f

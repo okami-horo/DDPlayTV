@@ -13,6 +13,7 @@ import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VLCHWDecode
+import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.PlayerConstant
@@ -46,6 +47,7 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
     private lateinit var mMediaPlayer: MediaPlayer
     private lateinit var mMedia: Media
     private var videoSourceFd: AssetFileDescriptor? = null
+    private lateinit var audioOutput: VLCAudioOutput
 
     private var mCurrentDuration = 0L
     private var seekable = true
@@ -53,9 +55,10 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
     private val mVideoSize = Point(0, 0)
 
     override fun initPlayer() {
+        audioOutput = PlayerInitializer.Player.vlcAudioOutput
         setOptions()
         mMediaPlayer = MediaPlayer(libVlc)
-        mMediaPlayer.setAudioOutput(PlayerInitializer.Player.vlcAudioOutput.value)
+        mMediaPlayer.setAudioOutput(audioOutput.value)
         initVLCEventListener()
     }
 
@@ -158,6 +161,7 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
     override fun setOptions() {
         val options = arrayListOf<String>()
         options.add("-vvv")
+        options.add("--aout=${audioOutput.value}")
         libVlc = LibVLC(mContext, options)
     }
 
@@ -282,6 +286,7 @@ class VlcVideoPlayer(private val mContext: Context) : AbstractVideoPlayer() {
                 MediaPlayer.Event.SeekableChanged -> seekable = it.seekable
                 //播放错误
                 MediaPlayer.Event.EncounteredError -> {
+                    VlcAudioPolicy.markCompatAfterError()
                     mPlayerEventListener.onError()
                     VideoLog.d("$TAG--listener--onInfo--> onError")
                 }
