@@ -47,8 +47,44 @@ abstract class TvVideoController(
     private var pendingSeekStartPosition: Long? = null
     private var pendingSeekOffset: Long = 0L
     private val pendingSeekRunnable = Runnable { commitPendingSeek() }
+    private var handlingFromDispatch = false
+
+    init {
+        isFocusable = true
+        isFocusableInTouchMode = true
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val isDpadKey = when (event.keyCode) {
+            KeyEvent.KEYCODE_DPAD_CENTER,
+            KeyEvent.KEYCODE_DPAD_LEFT,
+            KeyEvent.KEYCODE_DPAD_RIGHT,
+            KeyEvent.KEYCODE_DPAD_UP,
+            KeyEvent.KEYCODE_DPAD_DOWN,
+            KeyEvent.KEYCODE_MENU -> true
+            else -> false
+        }
+        if (event.action == KeyEvent.ACTION_DOWN && isDpadKey) {
+            handlingFromDispatch = true
+            val state = currentUiState()
+            val dispatchResult = remoteKeyDispatcher.onKeyDown(event.keyCode, state)
+            return try {
+                when (dispatchResult) {
+                    RemoteKeyDispatcher.DispatchResult.CONSUMED -> true
+                    RemoteKeyDispatcher.DispatchResult.PASS_TO_CONTROL -> super.dispatchKeyEvent(event)
+                    RemoteKeyDispatcher.DispatchResult.IGNORED -> super.dispatchKeyEvent(event)
+                }
+            } finally {
+                handlingFromDispatch = false
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (handlingFromDispatch) {
+            return super.onKeyDown(keyCode, event)
+        }
         val state = currentUiState()
         val dispatchResult = remoteKeyDispatcher.onKeyDown(keyCode, state)
         return when (dispatchResult) {
@@ -58,12 +94,19 @@ abstract class TvVideoController(
         }
     }
 
+    override fun hideController() {
+        super.hideController()
+        clearFocus()
+        requestFocus()
+    }
+
     private fun currentUiState(): RemoteKeyDispatcher.UiState {
         val focusView = findFocus()
-        val hasFocus = focusView != null && focusView !== this
+        val controllerVisible = isControllerShowing()
+        val hasFocus = controllerVisible && focusView != null && focusView !== this && focusView.isShown
         return RemoteKeyDispatcher.UiState(
             isLocked = isLocked(),
-            isControllerShowing = isControllerShowing(),
+            isControllerShowing = controllerVisible,
             isSettingShowing = mControlWrapper.isSettingViewShowing(),
             isPopupMode = isPopupMode(),
             hasControllerFocus = hasFocus

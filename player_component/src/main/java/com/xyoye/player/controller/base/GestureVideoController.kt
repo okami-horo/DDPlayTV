@@ -67,7 +67,11 @@ abstract class GestureVideoController(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        setOnTouchListener(this)
+        if (disableTouchGestures) {
+            setOnTouchListener(null)
+        } else {
+            setOnTouchListener(this)
+        }
     }
 
     override fun setPlayState(playState: PlayState) {

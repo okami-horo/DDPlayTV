@@ -1,6 +1,8 @@
 package com.xyoye.player.controller
 
+import android.app.UiModeManager
 import android.content.Context
+import android.content.res.Configuration
 import android.util.AttributeSet
 import androidx.lifecycle.LiveData
 import com.xyoye.common_component.utils.formatDuration
@@ -34,6 +36,7 @@ class VideoController(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : GestureVideoController(context, attrs, defStyleAttr) {
+    private val isTvUiMode: Boolean = context.isTelevisionUiMode()
     //弹幕视图控制器
     private val mDanmuController = DanmuController(context)
 
@@ -64,7 +67,9 @@ class VideoController(
     init {
         addControlComponent(mDanmuController.getView())
         addControlComponent(*mSubtitleController.getViews())
-        addControlComponent(gestureView)
+        if (!isTvUiMode) {
+            addControlComponent(gestureView)
+        }
         addControlComponent(playerTopView)
         addControlComponent(playerBotView)
         addControlComponent(loadingView)
@@ -92,14 +97,18 @@ class VideoController(
         if (isPopup) {
             addControlComponent(playerPopupControlView)
 
-            removeControlComponent(gestureView)
+            if (!isTvUiMode) {
+                removeControlComponent(gestureView)
+            }
             removeControlComponent(playerTopView)
             removeControlComponent(playerBotView)
             removeControlComponent(playerControlView)
         } else {
             removeControlComponent(playerPopupControlView)
 
-            addControlComponent(gestureView)
+            if (!isTvUiMode) {
+                addControlComponent(gestureView)
+            }
             addControlComponent(playerTopView)
             addControlComponent(playerBotView)
             addControlComponent(playerControlView)
@@ -303,5 +312,12 @@ class VideoController(
             mControlWrapper.setSpeed(it)
         }
         lastVideoSpeed = null
+    }
+
+    private fun Context.isTelevisionUiMode(): Boolean {
+        val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
+        val currentModeType = uiModeManager?.currentModeType
+            ?: (resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)
+        return currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
     }
 }

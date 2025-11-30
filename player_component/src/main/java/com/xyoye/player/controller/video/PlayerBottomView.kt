@@ -35,6 +35,7 @@ class PlayerBottomView(
 
     private var mIsDragging = false
     private lateinit var mControlWrapper: ControlWrapper
+    private var controlsInputEnabled = false
 
     private var sendDanmuBlock: ((SendDanmuBean) -> Unit)? = null
 
@@ -52,10 +53,12 @@ class PlayerBottomView(
     init {
 
         viewBinding.playIv.setOnClickListener {
+            if (!controlsInputEnabled) return@setOnClickListener
             mControlWrapper.togglePlay()
         }
 
         viewBinding.danmuControlIv.setOnClickListener {
+            if (!controlsInputEnabled) return@setOnClickListener
             mControlWrapper.toggleDanmuVisible()
             viewBinding.danmuControlIv.isSelected = !viewBinding.danmuControlIv.isSelected
         }
@@ -90,6 +93,7 @@ class PlayerBottomView(
         }
 
         viewBinding.ivNextSource.setOnClickListener {
+            if (!controlsInputEnabled) return@setOnClickListener
             val videoSource = mControlWrapper.getVideoSource()
             if (videoSource.hasNextSource()) {
                 switchVideoSourceBlock?.invoke(videoSource.getGroupIndex() + 1)
@@ -97,6 +101,7 @@ class PlayerBottomView(
         }
 
         viewBinding.ivPreviousSource.setOnClickListener {
+            if (!controlsInputEnabled) return@setOnClickListener
             val videoSource = mControlWrapper.getVideoSource()
             if (videoSource.hasPreviousSource()) {
                 switchVideoSourceBlock?.invoke(videoSource.getGroupIndex() - 1)
@@ -104,11 +109,13 @@ class PlayerBottomView(
         }
 
         viewBinding.videoListIv.setOnClickListener {
+            if (!controlsInputEnabled) return@setOnClickListener
             mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
         }
 
         viewBinding.playSeekBar.setOnSeekBarChangeListener(this)
         updateFocusNavigation()
+        updateControlsInteractiveState(false)
 
     }
 
@@ -118,6 +125,13 @@ class PlayerBottomView(
 
     override fun getView() = this
 
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        if (!controlsInputEnabled) {
+            return false
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onVisibilityChanged(isVisible: Boolean) {
         if (isVisible) {
             if (isControllerVisible) {
@@ -125,6 +139,7 @@ class PlayerBottomView(
                 return
             }
             isControllerVisible = true
+            updateControlsInteractiveState(true)
             ViewCompat.animate(viewBinding.playerBottomLl).translationY(0f).setDuration(300).start()
             post {
                 if (!viewBinding.playIv.hasFocus()) {
@@ -140,6 +155,8 @@ class PlayerBottomView(
             ViewCompat.animate(viewBinding.playerBottomLl).translationY(height)
                 .setDuration(300)
                 .start()
+            clearFocus()
+            updateControlsInteractiveState(false)
         }
     }
 
@@ -275,6 +292,22 @@ class PlayerBottomView(
         }
         viewBinding.ivPreviousSource.setImageDrawable(previousIcon)
         updateFocusNavigation()
+    }
+
+    private fun updateControlsInteractiveState(enabled: Boolean) {
+        controlsInputEnabled = enabled
+        val focusables = listOf(
+            viewBinding.playIv,
+            viewBinding.ivPreviousSource,
+            viewBinding.ivNextSource,
+            viewBinding.videoListIv,
+            viewBinding.danmuControlIv
+        )
+        focusables.forEach { view ->
+            view.isFocusable = enabled
+            view.isFocusableInTouchMode = enabled
+            view.isClickable = enabled
+        }
     }
 
     private fun updateFocusNavigation() {
