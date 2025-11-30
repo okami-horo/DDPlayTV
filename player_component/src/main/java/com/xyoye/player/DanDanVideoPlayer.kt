@@ -102,6 +102,7 @@ class DanDanVideoPlayer(
         var isStartedPlay = false
         if (mCurrentPlayState == PlayState.STATE_IDLE || mCurrentPlayState == PlayState.STATE_START_ABORT) {
             initPlayer()
+            ensureSubtitleRenderer()
             isStartedPlay = startPrepare()
         } else if (isInPlayState()) {
             mVideoPlayer.start()
@@ -295,6 +296,12 @@ class DanDanVideoPlayer(
         renderer.onSurfaceTypeChanged(PlayerInitializer.surfaceType)
         subtitleRenderer = renderer
         SubtitleRendererRegistry.register(renderer)
+    }
+
+    private fun ensureSubtitleRenderer() {
+        if (subtitleRenderer == null) {
+            configureSubtitleRenderer()
+        }
     }
 
     private fun startPrepare(): Boolean {
