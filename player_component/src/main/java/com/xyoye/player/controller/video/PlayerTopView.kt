@@ -82,7 +82,9 @@ class PlayerTopView(
 
             ViewCompat.animate(viewBinding.playerTopLl).translationY(0f).setDuration(300).start()
         } else {
-            viewBinding.videoTitleTv.requestFocus()
+            //隐藏时清理内部焦点，避免隐藏视图抢占DPAD事件
+            viewBinding.playerTopLl.clearFocus()
+            clearFocus()
             val height = viewBinding.playerTopLl.height.toFloat()
             ViewCompat.animate(viewBinding.playerTopLl).translationY(-height)
                 .setDuration(300).start()
