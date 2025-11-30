@@ -26,6 +26,7 @@ import androidx.media3.exoplayer.trackselection.MappingTrackSelector
 import androidx.media3.exoplayer.trackselection.TrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.exoplayer.util.EventLogger
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import androidx.media3.ui.DefaultTrackNameProvider
 import com.xyoye.common_component.extension.mapByLength
 import com.xyoye.common_component.utils.SupervisorScope
@@ -188,7 +189,8 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
     }
 
     override fun setSubtitleOffset(offsetMs: Long) {
-        // Not supported for Media3 yet.
+        // Media3 暂不支持直接设置字幕偏移，但 GPU 路径通过 SubtitlePreferenceUpdater 读取偏移。
+        SubtitlePreferenceUpdater.persistOffset(offsetMs)
     }
 
     override fun isPlaying(): Boolean {

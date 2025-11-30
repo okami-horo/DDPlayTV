@@ -39,6 +39,7 @@ import com.xyoye.player.subtitle.backend.SubtitleRenderer
 import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.subtitle.MixedSubtitle
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 
 /**
  * Created by xyoye on 2020/11/3.
@@ -435,6 +436,7 @@ class DanDanVideoPlayer(
     }
 
     override fun updateSubtitleOffsetTime() {
+        SubtitlePreferenceUpdater.persistOffset(PlayerInitializer.Subtitle.offsetPosition)
         mVideoPlayer.setSubtitleOffset(PlayerInitializer.Subtitle.offsetPosition)
     }
 
