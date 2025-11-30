@@ -10,8 +10,8 @@ import kotlin.math.max
  * and telemetry submissions for a short cool-down window.
  */
 class SubtitleLoadSheddingPolicy(
-    private val frameBudgetMs: Double = 16.6,
-    private val dropBurstThreshold: Int = 3,
+    private val frameBudgetMs: Double = 25.0,
+    private val dropBurstThreshold: Int = 5,
     private val throttleWindowMs: Long = 500L
 ){
     private var throttleUntilMs: Long = 0L
