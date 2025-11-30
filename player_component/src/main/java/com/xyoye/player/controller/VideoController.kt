@@ -11,6 +11,8 @@ import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.PlayState
+import com.xyoye.data_component.enums.SettingViewType
+import com.xyoye.player.controller.action.PlayerAction
 import com.xyoye.player.controller.base.GestureVideoController
 import com.xyoye.player.controller.danmu.DanmuController
 import com.xyoye.player.controller.setting.SettingController
@@ -74,6 +76,9 @@ class VideoController(
         addControlComponent(playerBotView)
         addControlComponent(loadingView)
         addControlComponent(playerControlView)
+
+        actionHandler = { action -> handleAction(action) }
+        playerBotView.setActionHandler { action -> dispatchAction(action) }
     }
 
     override fun getDanmuController() = mDanmuController
@@ -312,6 +317,36 @@ class VideoController(
             mControlWrapper.setSpeed(it)
         }
         lastVideoSpeed = null
+    }
+
+    private fun handleAction(action: PlayerAction) {
+        when (action) {
+            PlayerAction.TogglePlay -> mControlWrapper.togglePlay()
+            is PlayerAction.SeekBy -> changePosition(action.offsetMs)
+            PlayerAction.ShowController -> showController(true)
+            PlayerAction.OpenPlayerSettings -> mControlWrapper.showSettingView(SettingViewType.PLAYER_SETTING)
+            PlayerAction.OpenEpisodePanel,
+            PlayerAction.OpenSourceList -> {
+                mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
+            }
+            PlayerAction.NextSource -> {
+                val videoSource = mControlWrapper.getVideoSource()
+                if (videoSource.hasNextSource()) {
+                    switchVideoSourceBlock?.invoke(videoSource.getGroupIndex() + 1)
+                } else {
+                    showController(true)
+                }
+            }
+            PlayerAction.PreviousSource -> {
+                val videoSource = mControlWrapper.getVideoSource()
+                if (videoSource.hasPreviousSource()) {
+                    switchVideoSourceBlock?.invoke(videoSource.getGroupIndex() - 1)
+                } else {
+                    showController(true)
+                }
+            }
+            PlayerAction.ToggleDanmu -> mControlWrapper.toggleDanmuVisible()
+        }
     }
 
     private fun Context.isTelevisionUiMode(): Boolean {

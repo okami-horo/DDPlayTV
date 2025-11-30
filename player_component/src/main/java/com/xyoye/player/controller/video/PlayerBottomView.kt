@@ -13,6 +13,7 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
+import com.xyoye.player.controller.action.PlayerAction
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.data_component.bean.SendDanmuBean
@@ -36,6 +37,7 @@ class PlayerBottomView(
     private var mIsDragging = false
     private lateinit var mControlWrapper: ControlWrapper
     private var controlsInputEnabled = false
+    private var actionHandler: ((PlayerAction) -> Unit)? = null
 
     private var sendDanmuBlock: ((SendDanmuBean) -> Unit)? = null
 
@@ -54,12 +56,12 @@ class PlayerBottomView(
 
         viewBinding.playIv.setOnClickListener {
             if (!controlsInputEnabled) return@setOnClickListener
-            mControlWrapper.togglePlay()
+            actionHandler?.invoke(PlayerAction.TogglePlay) ?: mControlWrapper.togglePlay()
         }
 
         viewBinding.danmuControlIv.setOnClickListener {
             if (!controlsInputEnabled) return@setOnClickListener
-            mControlWrapper.toggleDanmuVisible()
+            actionHandler?.invoke(PlayerAction.ToggleDanmu) ?: mControlWrapper.toggleDanmuVisible()
             viewBinding.danmuControlIv.isSelected = !viewBinding.danmuControlIv.isSelected
         }
 
@@ -94,23 +96,28 @@ class PlayerBottomView(
 
         viewBinding.ivNextSource.setOnClickListener {
             if (!controlsInputEnabled) return@setOnClickListener
+            if (!it.isEnabled) return@setOnClickListener
             val videoSource = mControlWrapper.getVideoSource()
             if (videoSource.hasNextSource()) {
-                switchVideoSourceBlock?.invoke(videoSource.getGroupIndex() + 1)
+                actionHandler?.invoke(PlayerAction.NextSource)
+                    ?: switchVideoSourceBlock?.invoke(videoSource.getGroupIndex() + 1)
             }
         }
 
         viewBinding.ivPreviousSource.setOnClickListener {
             if (!controlsInputEnabled) return@setOnClickListener
+            if (!it.isEnabled) return@setOnClickListener
             val videoSource = mControlWrapper.getVideoSource()
             if (videoSource.hasPreviousSource()) {
-                switchVideoSourceBlock?.invoke(videoSource.getGroupIndex() - 1)
+                actionHandler?.invoke(PlayerAction.PreviousSource)
+                    ?: switchVideoSourceBlock?.invoke(videoSource.getGroupIndex() - 1)
             }
         }
 
         viewBinding.videoListIv.setOnClickListener {
             if (!controlsInputEnabled) return@setOnClickListener
-            mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
+            actionHandler?.invoke(PlayerAction.OpenSourceList)
+                ?: mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
         }
 
         viewBinding.playSeekBar.setOnSeekBarChangeListener(this)
@@ -130,6 +137,10 @@ class PlayerBottomView(
             return false
         }
         return super.dispatchKeyEvent(event)
+    }
+
+    fun setActionHandler(handler: (PlayerAction) -> Unit) {
+        actionHandler = handler
     }
 
     override fun onVisibilityChanged(isVisible: Boolean) {

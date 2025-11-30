@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.KeyEvent
 import com.xyoye.player.controller.video.InterGestureView
 import com.xyoye.data_component.enums.SettingViewType
+import com.xyoye.player.controller.action.PlayerAction
 import com.xyoye.player.remote.RemoteKeyDispatcher
 
 /**
@@ -19,19 +20,19 @@ abstract class TvVideoController(
 
     private val remoteKeyDispatcher = RemoteKeyDispatcher(object : RemoteKeyDispatcher.RemoteKeyAction {
         override fun togglePlay() {
-            this@TvVideoController.togglePlay()
+            dispatchAction(PlayerAction.TogglePlay)
         }
 
         override fun seekBy(offsetMs: Long) {
-            changePosition(offsetMs)
+            dispatchAction(PlayerAction.SeekBy(offsetMs))
         }
 
         override fun showController() {
-            this@TvVideoController.showController(true)
+            dispatchAction(PlayerAction.ShowController)
         }
 
         override fun openPlayerSettings() {
-            mControlWrapper.showSettingView(SettingViewType.PLAYER_SETTING)
+            dispatchAction(PlayerAction.OpenPlayerSettings)
         }
 
         override fun openEpisodePanel(): Boolean {
@@ -39,7 +40,7 @@ abstract class TvVideoController(
             if (videoSource.getGroupSize() <= 1) {
                 return false
             }
-            mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
+            dispatchAction(PlayerAction.OpenEpisodePanel)
             return true
         }
     })
@@ -48,6 +49,7 @@ abstract class TvVideoController(
     private var pendingSeekOffset: Long = 0L
     private val pendingSeekRunnable = Runnable { commitPendingSeek() }
     private var handlingFromDispatch = false
+    protected var actionHandler: ((PlayerAction) -> Unit)? = null
 
     init {
         isFocusable = true
@@ -100,6 +102,36 @@ abstract class TvVideoController(
         requestFocus()
     }
 
+    protected fun dispatchAction(action: PlayerAction) {
+        actionHandler?.invoke(action) ?: run {
+            when (action) {
+                is PlayerAction.SeekBy -> changePosition(action.offsetMs)
+                PlayerAction.TogglePlay -> togglePlay()
+                PlayerAction.ShowController -> showController(true)
+                PlayerAction.OpenPlayerSettings -> mControlWrapper.showSettingView(SettingViewType.PLAYER_SETTING)
+                PlayerAction.OpenEpisodePanel -> mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
+                PlayerAction.NextSource -> {
+                    val videoSource = mControlWrapper.getVideoSource()
+                    if (videoSource.hasNextSource()) {
+                        mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
+                    } else {
+                        showController(true)
+                    }
+                }
+                PlayerAction.PreviousSource -> {
+                    val videoSource = mControlWrapper.getVideoSource()
+                    if (videoSource.hasPreviousSource()) {
+                        mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
+                    } else {
+                        showController(true)
+                    }
+                }
+                PlayerAction.OpenSourceList -> mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
+                PlayerAction.ToggleDanmu -> mControlWrapper.toggleDanmuVisible()
+            }
+        }
+    }
+
     private fun currentUiState(): RemoteKeyDispatcher.UiState {
         val focusView = findFocus()
         val controllerVisible = isControllerShowing()
@@ -113,7 +145,7 @@ abstract class TvVideoController(
         )
     }
 
-    private fun changePosition(offset: Long) {
+    protected fun changePosition(offset: Long) {
         val duration = mControlWrapper.getDuration()
         if (duration <= 0) {
             return
