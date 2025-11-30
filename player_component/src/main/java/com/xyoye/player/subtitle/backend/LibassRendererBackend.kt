@@ -18,6 +18,7 @@ import com.xyoye.player_component.subtitle.gpu.SubtitleOutputTargetTracker
 import com.xyoye.player_component.subtitle.gpu.SubtitlePipelineController
 import com.xyoye.player_component.subtitle.gpu.SubtitleRecoveryCoordinator
 import com.xyoye.player_component.subtitle.gpu.SubtitleSurfaceLifecycleHandler
+import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.subtitle.MixedSubtitle
 
 /**
@@ -53,6 +54,7 @@ class LibassRendererBackend : SubtitleRenderer {
         lifecycleHandler = SubtitleSurfaceLifecycleHandler(gpuRenderer, targetTracker, fallback)
         recoveryCoordinator = SubtitleRecoveryCoordinator(gpuRenderer, targetTracker, fallback, controller)
         attachOverlay(environment)
+        renderer?.updateOpacity(PlayerInitializer.Subtitle.alpha)
         startRenderLoop()
     }
 
@@ -98,7 +100,7 @@ class LibassRendererBackend : SubtitleRenderer {
     }
 
     override fun updateOpacity(alphaPercent: Int) {
-        // GPU path manages opacity in native pipeline; ignore UI opacity tweaks.
+        renderer?.updateOpacity(alphaPercent)
     }
 
     private fun buildFontDirectories(context: android.content.Context): List<String> {

@@ -72,6 +72,8 @@ struct GpuContext {
     ASS_Library *library = nullptr;
     ASS_Renderer *renderer = nullptr;
     ASS_Track *track = nullptr;
+    float user_alpha = 1.0F;
+    bool pending_invalidate = false;
     struct TextureEntry {
         GLuint id = 0;
         int width = 0;
@@ -740,10 +742,11 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     ASS_Image *img = ass_render_frame(context->renderer, context->track,
                                       static_cast<int>(subtitle_pts_ms), &change);
     auto render_end = std::chrono::steady_clock::now();
-    if (change == 0) {
+    if (change == 0 && !context->pending_invalidate) {
         // libass 表示当前时间戳无需重绘，直接复用上一帧，避免重复上传/绘制开销。
         return BuildRenderMetrics(env, true, 0, 0, 0);
     }
+    context->pending_invalidate = false;
 
     context->texture_pool_pos = 0;
     glViewport(0, 0, context->width, context->height);
@@ -756,7 +759,8 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
         if (cur->w <= 0 || cur->h <= 0) continue;
         const float base_alpha = static_cast<float>(AssAlphaToAndroid(cur->color)) / 255.0F;
-        if (base_alpha <= 0.0F) continue;
+        const float final_alpha = base_alpha * context->user_alpha;
+        if (final_alpha <= 0.0F) continue;
 
         const auto upload_start = std::chrono::steady_clock::now();
         const size_t required = static_cast<size_t>(cur->w * cur->h);
@@ -796,7 +800,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeRender(
         const float red = static_cast<float>((cur->color >> 24) & 0xFF) / 255.0F;
         const float green = static_cast<float>((cur->color >> 16) & 0xFF) / 255.0F;
         const float blue = static_cast<float>((cur->color >> 8) & 0xFF) / 255.0F;
-        glUniform4f(context->uniform_color, red, green, blue, base_alpha);
+        glUniform4f(context->uniform_color, red, green, blue, final_alpha);
 
         const float vertices[] = {
             left,  top,    0.0F, 0.0F,  // left-top
@@ -866,4 +870,21 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeSetTeleme
     std::lock_guard<std::mutex> guard(context->mutex);
     context->telemetry_enabled = enabled == JNI_TRUE;
     LogInfo("GPU telemetry toggle updated");
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeSetGlobalOpacity(
+    JNIEnv *env, jobject /*thiz*/, jlong handle, jint percent) {
+    (void)env;
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr) {
+        return;
+    }
+    const int clamped = std::max(0, std::min(100, static_cast<int>(percent)));
+    const float scaled = static_cast<float>(clamped) / 100.0F;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    if (context->user_alpha != scaled) {
+        context->user_alpha = scaled;
+        context->pending_invalidate = true;
+    }
 }

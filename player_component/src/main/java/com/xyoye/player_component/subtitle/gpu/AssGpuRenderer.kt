@@ -63,6 +63,10 @@ class AssGpuRenderer(
         nativeBridge.setTelemetryEnabled(enabled)
     }
 
+    fun updateOpacity(alphaPercent: Int) {
+        nativeBridge.setGlobalOpacity(alphaPercent)
+    }
+
     fun detachSurface() {
         nativeBridge.detachSurface()
         frameCleaner.onSurfaceLost()

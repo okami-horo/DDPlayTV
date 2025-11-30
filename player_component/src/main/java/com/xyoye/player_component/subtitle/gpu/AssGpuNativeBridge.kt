@@ -60,6 +60,11 @@ class AssGpuNativeBridge {
         nativeSetTelemetryEnabled(handle, enabled)
     }
 
+    fun setGlobalOpacity(percent: Int) {
+        if (!isReady) return
+        nativeSetGlobalOpacity(handle, percent)
+    }
+
     fun loadTrack(path: String, fontDirs: List<String>, defaultFont: String?) {
         if (!isReady) return
         nativeLoadTrack(handle, path, fontDirs.toTypedArray(), defaultFont)
@@ -117,6 +122,8 @@ class AssGpuNativeBridge {
     private external fun nativeFlush(handle: Long)
 
     private external fun nativeSetTelemetryEnabled(handle: Long, enabled: Boolean)
+
+    private external fun nativeSetGlobalOpacity(handle: Long, percent: Int)
 
     private external fun nativeLoadTrack(
         handle: Long,
