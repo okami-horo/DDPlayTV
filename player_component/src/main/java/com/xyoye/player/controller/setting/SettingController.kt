@@ -17,7 +17,8 @@ import com.xyoye.player.wrapper.InterSettingController
 @UnstableApi
 class SettingController(
     private val context: Context,
-    private val addView: (InterSettingView) -> Unit
+    private val addView: (InterSettingView) -> Unit,
+    private val onSettingHidden: (() -> Unit)? = null
 ) : InterSettingController {
 
     private lateinit var playerSettingView: PlayerSettingView
@@ -60,13 +61,19 @@ class SettingController(
     }
 
     override fun hideSettingView() {
+        var hidden = false
         val iterator = showingSettingViews.iterator()
         while (iterator.hasNext()) {
             val view = iterator.next()
             if (view.isSettingShowing()) {
                 view.onSettingVisibilityChanged(false)
+                view.getView().clearFocus()
                 iterator.remove()
+                hidden = true
             }
+        }
+        if (hidden) {
+            onSettingHidden?.invoke()
         }
     }
 
