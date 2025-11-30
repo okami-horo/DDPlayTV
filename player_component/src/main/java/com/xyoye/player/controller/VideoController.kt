@@ -128,12 +128,12 @@ class VideoController(
             showController()
             return true
         }
-        if (isControllerShowing()) {
-            mControlWrapper.hideController()
-            return true
-        }
         if (mControlWrapper.isSettingViewShowing()) {
             mControlWrapper.hideSettingView()
+            return true
+        }
+        if (isControllerShowing()) {
+            mControlWrapper.hideController()
             return true
         }
         return super.onBackPressed()
