@@ -69,9 +69,8 @@ class VideoController(
     init {
         addControlComponent(mDanmuController.getView())
         addControlComponent(*mSubtitleController.getViews())
-        if (!isTvUiMode) {
-            addControlComponent(gestureView)
-        }
+        // TV 模式也需要手势视图用于展示快进/快退提示（触摸事件会在 TV 上被禁用）
+        addControlComponent(gestureView)
         addControlComponent(playerTopView)
         addControlComponent(playerBotView)
         addControlComponent(loadingView)
