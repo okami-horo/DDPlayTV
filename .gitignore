@@ -40,3 +40,4 @@ cmake-build-*/
 # Secrets/configs (already templated via local.properties.template)
 app/google-services.json
 hs_err_pid*
+.build/

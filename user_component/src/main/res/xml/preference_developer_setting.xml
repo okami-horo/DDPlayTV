@@ -4,54 +4,13 @@
 
     <PreferenceCategory
         android:key="developer_log_category"
-        android:title="@string/developer_log_upload_category_title">
+        android:title="@string/developer_log_category_title">
 
         <SwitchPreference
             android:key="app_log_enable"
             android:title="@string/developer_app_log_enable_title"
             android:summary="@string/developer_app_log_enable_summary_off"
             app:icon="@drawable/ic_app_setting" />
-
-        <SwitchPreference
-            android:key="log_upload_enable"
-            android:title="@string/developer_log_upload_enable_title"
-            android:summary="@string/developer_log_upload_enable_summary_off"
-            app:icon="@drawable/ic_app_setting" />
-
-        <EditTextPreference
-            android:key="log_upload_url"
-            android:title="@string/developer_log_upload_url_title"
-            android:summary=""
-            android:dependency="log_upload_enable"
-            app:icon="@drawable/ic_domain_url" />
-
-        <EditTextPreference
-            android:key="log_upload_username"
-            android:title="@string/developer_log_upload_username_title"
-            android:summary=""
-            android:dependency="log_upload_enable"
-            app:icon="@drawable/ic_app_setting_about_us" />
-
-        <EditTextPreference
-            android:key="log_upload_password"
-            android:title="@string/developer_log_upload_password_title"
-            android:summary=""
-            android:dependency="log_upload_enable"
-            app:icon="@drawable/ic_feedback" />
-
-        <EditTextPreference
-            android:key="log_upload_remote_path"
-            android:title="@string/developer_log_upload_remote_path_title"
-            android:summary=""
-            android:dependency="log_upload_enable"
-            app:icon="@drawable/ic_app_setting_hide_file" />
-
-        <Preference
-            android:key="log_upload_trigger"
-            android:title="@string/developer_log_upload_trigger_title"
-            android:summary="@string/developer_log_upload_trigger_summary_empty"
-            android:dependency="log_upload_enable"
-            app:icon="@drawable/ic_app_setting_app_version" />
     </PreferenceCategory>
 
     <PreferenceCategory
