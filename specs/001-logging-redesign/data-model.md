@@ -77,6 +77,15 @@
 - `context` 的 key/value 应为短文本（例如 key <= 32、value <= 256），避免单条日志过于庞大。  
 - `timestamp` 不可早于进程启动时间太多（可允许一定误差），否则视为异常时间源。
 
+推荐上下文字段（用于提升诊断一致性，建议采用 lowerCamelCase）：
+
+- `scene`：业务场景或操作入口，如 `launch`, `playback`, `download_detail`。  
+- `errorCode`：可枚举的错误码或状态码，便于快速过滤。  
+- `sessionId` / `requestId`：会话或请求链路标识，用于串联多条日志。  
+- `action` / `source`：用户触发动作及来源（如 `action=click`, `source=history`).  
+- `userId` / `profile`：匿名化的用户/账户标识（如需），避免直接记录敏感信息。  
+- 其他字段保持简短、可聚合：优先使用 ID/摘要而非长文本；对于 DEBUG 高频日志，非核心字段超过约 6 个时应按重要性取舍。
+
 ### 2.2 `LogPolicy`
 
 对应 spec 中的「日志策略」，用于驱动运行时行为。

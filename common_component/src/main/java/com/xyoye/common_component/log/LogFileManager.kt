@@ -56,6 +56,28 @@ open class LogFileManager(
         }
     }
 
+    /**
+     * 扫描日志目录中的现有日志文件，不触发 prepare，也不创建缺失文件。
+     */
+    fun scanLogFiles(): List<LogFileMeta> {
+        val dir = logDirectory()
+        if (!dir.exists() || !dir.isDirectory) {
+            return emptyList()
+        }
+        val files = dir.listFiles { file ->
+            LogFileMeta.ALLOWED_FILE_NAMES.contains(file.name)
+        } ?: return emptyList()
+        return files.sortedBy { it.name }.map { file ->
+            LogFileMeta(
+                fileName = file.name,
+                path = file.absolutePath,
+                sizeBytes = file.length(),
+                lastModified = file.lastModified(),
+                readable = file.canRead()
+            )
+        }
+    }
+
     fun logDirectory(): File = LogPaths.logDirectory(context)
 
     fun currentLogFile(): File = LogPaths.currentLogFile(context)

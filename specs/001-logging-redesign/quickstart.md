@@ -138,6 +138,21 @@ fun PlayerViewModel.logDebug(message: String, context: Map<String, String> = emp
    - 如有需要，可在开发机上将 `debug.log` / `debug_old.log` 压缩为 zip 后通过 IM / 邮件等方式在团队内部流转。  
    - 日志行格式由 `LogFormatter` 保证包含时间、模块、级别和关键上下文字段，便于脚本或工具进一步筛选。
 
+### 4.3 阅读 debug.log / debug_old.log 的要点
+
+- 日志行格式示例：  
+  `time=2025-01-02T03:04:05.678Z level=ERROR module=player tag=player:Renderer thread=RenderThread seq=42 ctx_scene=playback ctx_errorCode=E001 ctx_sessionId=sess-9 ctx_requestId=req-88 context={detail=line1 line2,extraA=valueA} throwable=java.lang.IllegalStateException: boom msg="render failed"`
+- 字段含义速查：  
+  - `time` / `level` / `module`：时间戳（UTC）、级别、模块标签，用于排序与过滤。  
+  - `tag` / `thread` / `seq`：细分来源与线程信息，`seq` 可跨文件串联顺序。  
+  - `ctx_*`：高信噪上下文字段，固定包含 `scene` / `errorCode` / `sessionId` / `requestId`（如存在）；在 DEBUG 级别下仍会保留这些字段。  
+  - `context={...}`：其余上下文字段按键名排序输出；DEBUG 级别默认最多保留 6 个非核心字段，若有裁剪会出现 `ctx_dropped=<N>`。  
+  - `throwable=` / `msg=`：异常摘要与主消息，均经过换行清洗与长度裁剪，便于单行解析。
+- 过滤建议：  
+  - 定位特定场景：`grep "ctx_scene=playback" debug.log`。  
+  - 聚焦错误链路：结合 `errorCode` + `seq`，例如 `grep "ctx_errorCode=E001" debug.log | sort -t '=' -k7`.  
+  - 判断是否有噪声裁剪：搜索 `ctx_dropped` 判断是否需要在复现时提高日志级别或缩小操作范围。
+
 ## 5. 实现与测试建议
 
 - 在 `common_component` 中为日志系统编写单元测试，覆盖：  

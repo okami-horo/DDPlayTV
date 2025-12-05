@@ -89,7 +89,7 @@ description: "001-logging-redesign 日志系统重构与治理的实现任务清
 ### Tests for User Story 1（按需补充）
 
 - [X] T028 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogConfigTableTest.kt` 中编写单元测试，验证 MMKV 中的日志策略存取逻辑与 `LogPolicy`/`LogRuntimeState` 的映射正确（包括全局级别与调试日志开关）。  
-- [ ] T029 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/app/src/androidTest/java/com/xyoye/dandanplay/ui/debug/LoggingConfigActivityTest.kt` 中编写 UI 测试，模拟调整全局日志级别与开启/关闭调试日志开关，并断言 `LogRuntimeState` 中的 `activePolicy` 与调试会话状态同步更新。
+- [X] T029 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/app/src/androidTest/java/com/xyoye/dandanplay/ui/debug/LoggingConfigActivityTest.kt` 中编写 UI 测试，模拟调整全局日志级别与开启/关闭调试日志开关，并断言 `LogRuntimeState` 中的 `activePolicy` 与调试会话状态同步更新。
 
 ### Implementation for User Story 1
 
@@ -113,18 +113,18 @@ description: "001-logging-redesign 日志系统重构与治理的实现任务清
 
 ### Tests for User Story 2（按需补充）
 
-- [ ] T038 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogFormatterHighSignalTest.kt` 中编写单元测试，验证 `LogFormatter` 生成的日志行按时间顺序、模块和级别正确输出，并包含关键上下文字段（如 scene、errorCode、sessionId 等）。
+- [X] T038 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogFormatterHighSignalTest.kt` 中编写单元测试，验证 `LogFormatter` 生成的日志行按时间顺序、模块和级别正确输出，并包含关键上下文字段（如 scene、errorCode、sessionId 等）。
 - [ ] T039 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/androidTest/java/com/xyoye/common_component/log/LogFileQualityInstrumentedTest.kt` 中编写 Instrumentation 测试，模拟典型问题场景，运行后直接从日志目录读取 `debug.log` / `debug_old.log`，检查是否能够用少量日志行还原问题链路且无明显重复噪声。
 
 ### Implementation for User Story 2
 
-- [ ] T040 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFormatter.kt` 中根据 User Story 2 的要求优化日志行格式（包含时间戳、模块标签、级别和关键上下文字段），并确保单条日志长度可控且便于脚本解析。
-- [ ] T041 [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogWriter.kt` 中补充对 `threadName`、`sequenceId` 与结构化 `context` 字段的写入，将这些信息通过 `LogFormatter` 序列化到日志行中，方便离线重建问题链路。
-- [ ] T042 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFileManager.kt` 中实现扫描日志目录并构造当前可用 `LogFileMeta` 列表的方法，供测试代码与离线分析工具使用（不依赖应用内导出入口）。
-- [ ] T043 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFormatter.kt` 中预留或实现对明显重复/低价值 DEBUG 日志的简单过滤或聚合策略，以减少文件中的无效噪声。
-- [ ] T044 [US2] 在 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/quickstart.md` 中补充「如何阅读 debug.log / debug_old.log」小节，给出典型日志行示例及推荐的关键字段（scene、errorCode、sessionId 等）。
-- [ ] T045 [US2] 在 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/data-model.md` 中对 `LogEvent.context` 和相关实体补充推荐字段列表与使用规范，确保不同模块在记录结构化上下文时风格一致。
-- [ ] T046 [US2] 在 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/research.md` 或 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/plan.md` 中补充一份「日志质量对比实验」方案，用于指导支持/测试在同一问题样本上对比旧日志与新日志的分析耗时和噪声占比。
+- [X] T040 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFormatter.kt` 中根据 User Story 2 的要求优化日志行格式（包含时间戳、模块标签、级别和关键上下文字段），并确保单条日志长度可控且便于脚本解析。
+- [X] T041 [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogWriter.kt` 中补充对 `threadName`、`sequenceId` 与结构化 `context` 字段的写入，将这些信息通过 `LogFormatter` 序列化到日志行中，方便离线重建问题链路。
+- [X] T042 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFileManager.kt` 中实现扫描日志目录并构造当前可用 `LogFileMeta` 列表的方法，供测试代码与离线分析工具使用（不依赖应用内导出入口）。
+- [X] T043 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFormatter.kt` 中预留或实现对明显重复/低价值 DEBUG 日志的简单过滤或聚合策略，以减少文件中的无效噪声。
+- [X] T044 [US2] 在 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/quickstart.md` 中补充「如何阅读 debug.log / debug_old.log」小节，给出典型日志行示例及推荐的关键字段（scene、errorCode、sessionId 等）。
+- [X] T045 [US2] 在 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/data-model.md` 中对 `LogEvent.context` 和相关实体补充推荐字段列表与使用规范，确保不同模块在记录结构化上下文时风格一致。
+- [X] T046 [US2] 在 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/research.md` 或 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/plan.md` 中补充一份「日志质量对比实验」方案，用于指导支持/测试在同一问题样本上对比旧日志与新日志的分析耗时和噪声占比。
 
 **Checkpoint**：开发者或支持/测试人员仅需从本地日志目录获取 `debug.log` / `debug_old.log` 等文件，即可在单份日志中还原问题链路，且文件中的无效或重复噪声明显减少。
 
