@@ -30,9 +30,9 @@ description: "001-logging-redesign 日志系统重构与治理的实现任务清
 
 **Purpose**: 为新的日志系统准备必要的配置与测试骨架，不改变现有行为。
 
-- [ ] T001 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/config/DevelopConfig.kt` 中新增日志相关默认配置常量（例如默认日志策略名称、是否允许写入调试日志、单文件大小上限占位字段），仅赋默认值不改动现有逻辑。
-- [ ] T002 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogModelPackageMarker.kt` 中创建空的包占位文件，并注释说明所有日志数据模型类集中存放在 `com.xyoye.common_component.log.model` 包。
-- [ ] T003 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LoggingTestBase.kt` 中创建日志测试基类（包含公共常量与空的示例测试方法），供后续日志相关 JUnit 测试复用。
+- [X] T001 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/config/DevelopConfig.kt` 中新增日志相关默认配置常量（例如默认日志策略名称、是否允许写入调试日志、单文件大小上限占位字段），仅赋默认值不改动现有逻辑。
+- [X] T002 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogModelPackageMarker.kt` 中创建空的包占位文件，并注释说明所有日志数据模型类集中存放在 `com.xyoye.common_component.log.model` 包。
+- [X] T003 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LoggingTestBase.kt` 中创建日志测试基类（包含公共常量与空的示例测试方法），供后续日志相关 JUnit 测试复用。
 
 ---
 
@@ -42,13 +42,13 @@ description: "001-logging-redesign 日志系统重构与治理的实现任务清
 
 ### 2.1 日志数据模型与运行时状态
 
-- [ ] T004 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogLevel.kt` 中根据 `data-model.md` 定义 `LogLevel` 枚举（DEBUG/INFO/WARN/ERROR），并用注释标明与 FR-013 的约束关系。
-- [ ] T005 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogModule.kt` 中实现 `LogModule` 枚举或注册表（包含 core/player/download/user/anime/local/storage/network/subtitle 等模块），并提供根据包名或调用方传入值推导模块的辅助方法。
-- [ ] T006 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogTag.kt` 中实现 `LogTag` 数据类，包含模块引用与标签字符串长度上限校验逻辑。
-- [ ] T007 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogEvent.kt` 中实现 `LogEvent` 数据类（时间戳、级别、模块、tag、message、context、throwable、threadName、sequenceId），并添加基础入参校验（如 message 非空、context 键值长度限制）。
-- [ ] T008 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogPolicy.kt` 中实现 `LogPolicy` 与 `SamplingRule` 数据类，包含默认策略工厂方法（例如 `defaultReleasePolicy`、`debugSessionPolicy`），并体现 enableDebugFile 字段的含义。
-- [ ] T009 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogRuntimeState.kt` 中实现 `LogRuntimeState` 与 `PolicySource` 及调试开关状态枚举，覆盖 `data-model.md` 中的字段与状态迁移注释。
-- [ ] T010 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogFileAndPackage.kt` 中实现 `LogFileMeta`、`LogPackage`、`LogExportRequest`、`LogExportResult` 数据类，字段设计与 `contracts/logging-openapi.yaml` 中的 schema 保持一致，用于支持未来本地工具或脚本打包日志文件，本次实现不要求在应用内提供导出入口。
+- [X] T004 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogLevel.kt` 中根据 `data-model.md` 定义 `LogLevel` 枚举（DEBUG/INFO/WARN/ERROR），并用注释标明与 FR-013 的约束关系。
+- [X] T005 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogModule.kt` 中实现 `LogModule` 枚举或注册表（包含 core/player/download/user/anime/local/storage/network/subtitle 等模块），并提供根据包名或调用方传入值推导模块的辅助方法。
+- [X] T006 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogTag.kt` 中实现 `LogTag` 数据类，包含模块引用与标签字符串长度上限校验逻辑。
+- [X] T007 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogEvent.kt` 中实现 `LogEvent` 数据类（时间戳、级别、模块、tag、message、context、throwable、threadName、sequenceId），并添加基础入参校验（如 message 非空、context 键值长度限制）。
+- [X] T008 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogPolicy.kt` 中实现 `LogPolicy` 与 `SamplingRule` 数据类，包含默认策略工厂方法（例如 `defaultReleasePolicy`、`debugSessionPolicy`），并体现 enableDebugFile 字段的含义。
+- [X] T009 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogRuntimeState.kt` 中实现 `LogRuntimeState` 与 `PolicySource` 及调试开关状态枚举，覆盖 `data-model.md` 中的字段与状态迁移注释。
+- [X] T010 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogFileAndPackage.kt` 中实现 `LogFileMeta`、`LogPackage`、`LogExportRequest`、`LogExportResult` 数据类，字段设计与 `contracts/logging-openapi.yaml` 中的 schema 保持一致，用于支持未来本地工具或脚本打包日志文件，本次实现不要求在应用内提供导出入口。
 
 ### 2.2 日志门面、文件管理与写入管线
 
