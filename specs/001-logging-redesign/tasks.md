@@ -88,19 +88,19 @@ description: "001-logging-redesign 日志系统重构与治理的实现任务清
 
 ### Tests for User Story 1（按需补充）
 
-- [ ] T028 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogConfigTableTest.kt` 中编写单元测试，验证 MMKV 中的日志策略存取逻辑与 `LogPolicy`/`LogRuntimeState` 的映射正确（包括全局级别与调试日志开关）。  
+- [X] T028 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogConfigTableTest.kt` 中编写单元测试，验证 MMKV 中的日志策略存取逻辑与 `LogPolicy`/`LogRuntimeState` 的映射正确（包括全局级别与调试日志开关）。  
 - [ ] T029 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/app/src/androidTest/java/com/xyoye/dandanplay/ui/debug/LoggingConfigActivityTest.kt` 中编写 UI 测试，模拟调整全局日志级别与开启/关闭调试日志开关，并断言 `LogRuntimeState` 中的 `activePolicy` 与调试会话状态同步更新。
 
 ### Implementation for User Story 1
 
-- [ ] T030 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/config/LogConfigTable.kt` 中创建日志配置 MMKV 表定义（使用 `@MMKVKotlinClass`），持久化当前日志策略与调试开关状态。
-- [ ] T031 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogPolicyRepository.kt` 中实现日志策略仓库，封装对 `LogConfigTable` 的读写并提供策略变更监听接口。
-- [ ] T032 [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogSystem.kt` 中接入 `LogPolicyRepository`，在 `init` 与策略变更时更新 `LogRuntimeState`，确保应用启动后生效的是合并后的策略。
-- [ ] T033 [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogSystem.kt` 中实现 `getLoggingPolicy`/`updateLoggingPolicy` 方法，使其与 `contracts/logging-openapi.yaml` 中 `/logging/policy` 的 GET/PUT 契约一致。
-- [ ] T034 [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogSystem.kt` 中实现 `startDebugSession`/`stopDebugSession` 方法（映射 `/logging/debug-session` POST/DELETE），根据请求更新调试日志开关与会话状态机。
-- [ ] T035 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/ui/debug/LoggingConfigViewModel.kt` 中实现日志配置 ViewModel，包装 `LogSystem` 的策略/会话接口并暴露给 UI 层。
-- [ ] T036 [US1] 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/ui/debug/LoggingConfigActivity.kt` 中绑定 `LoggingConfigViewModel` 与 `activity_logging_config.xml`，完成全局级别选择控件与调试日志开关的交互逻辑（模块列表仅用于展示标签信息时可选）。  
-- [ ] T037 [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogWriter.kt` 中补充基于 `LogPolicy.defaultLevel` 的过滤逻辑，确保按照全局级别与调试开关控制日志输出时，实际结果符合 User Story 1 的期望。
+- [X] T030 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/config/LogConfigTable.kt` 中创建日志配置 MMKV 表定义（使用 `@MMKVKotlinClass`），持久化当前日志策略与调试开关状态。
+- [X] T031 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogPolicyRepository.kt` 中实现日志策略仓库，封装对 `LogConfigTable` 的读写并提供策略变更监听接口。
+- [X] T032 [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogSystem.kt` 中接入 `LogPolicyRepository`，在 `init` 与策略变更时更新 `LogRuntimeState`，确保应用启动后生效的是合并后的策略。
+- [X] T033 [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogSystem.kt` 中实现 `getLoggingPolicy`/`updateLoggingPolicy` 方法，使其与 `contracts/logging-openapi.yaml` 中 `/logging/policy` 的 GET/PUT 契约一致。
+- [X] T034 [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogSystem.kt` 中实现 `startDebugSession`/`stopDebugSession` 方法（映射 `/logging/debug-session` POST/DELETE），根据请求更新调试日志开关与会话状态机。
+- [X] T035 [P] [US1] 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/ui/debug/LoggingConfigViewModel.kt` 中实现日志配置 ViewModel，包装 `LogSystem` 的策略/会话接口并暴露给 UI 层。
+- [X] T036 [US1] 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/ui/debug/LoggingConfigActivity.kt` 中绑定 `LoggingConfigViewModel` 与 `activity_logging_config.xml`，完成全局级别选择控件与调试日志开关的交互逻辑（模块列表仅用于展示标签信息时可选）。  
+- [X] T037 [US1] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogWriter.kt` 中补充基于 `LogPolicy.defaultLevel` 的过滤逻辑，确保按照全局级别与调试开关控制日志输出时，实际结果符合 User Story 1 的期望。
 
 **Checkpoint**：仅基于 logcat 与统一配置入口，即可验证全局级别与调试开关是否工作，无需依赖日志导出或采样能力。
 

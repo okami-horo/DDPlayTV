@@ -2,16 +2,15 @@ package com.xyoye.common_component.log
 
 import android.content.Context
 import android.util.Log
+import com.tencent.mmkv.MMKV
 import com.xyoye.common_component.log.model.DebugToggleState
 import com.xyoye.common_component.log.model.LogEvent
+import com.xyoye.common_component.log.model.LogLevel
 import com.xyoye.common_component.log.model.LogPolicy
 import com.xyoye.common_component.log.model.LogRuntimeState
 import com.xyoye.common_component.log.model.PolicySource
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
 
 /**
  * 日志系统单例，负责初始化、策略状态维护与写入调度。
@@ -24,6 +23,8 @@ object LogSystem {
     )
     private val sequenceGenerator = AtomicLong(0)
     private val initLock = Any()
+
+    private var policyRepository: LogPolicyRepository = LogPolicyRepository()
 
     @Volatile
     private var initialized = false
@@ -38,15 +39,11 @@ object LogSystem {
         if (initialized) return
         synchronized(initLock) {
             if (initialized) return
-            val initialState = LogRuntimeState(
-                activePolicy = defaultPolicy,
-                policySource = PolicySource.DEFAULT,
-                debugToggleState = DebugToggleState.OFF
-            )
+            MMKV.initialize(context.applicationContext)
+            policyRepository = LogPolicyRepository(defaultPolicy)
+            val initialState = policyRepository.loadFromStorage()
             stateRef.set(initialState)
-            writer = LogWriter(context.applicationContext).also {
-                it.updateRuntimeState(initialState)
-            }
+            writer = LogWriter(context.applicationContext).also { it.updateRuntimeState(initialState) }
             initialized = true
         }
     }
@@ -56,35 +53,32 @@ object LogSystem {
             Log.w(LOG_TAG, "loadPolicyFromStorage called before init, ignore")
             return stateRef.get()
         }
-        // 预留与存储的对接，当前保持默认策略
-        val refreshed = updateState { state ->
-            state.copy(lastPolicyUpdateTime = System.currentTimeMillis())
-        }
-        writer?.updateRuntimeState(refreshed)
-        return refreshed
+        val refreshed = policyRepository.loadFromStorage()
+        return applyRuntimeState(refreshed)
     }
 
-    fun updatePolicy(policy: LogPolicy, source: PolicySource = PolicySource.USER_OVERRIDE): LogRuntimeState {
+    fun getLoggingPolicy(): LogRuntimeState = getRuntimeState()
+
+    fun updateLoggingPolicy(policy: LogPolicy, source: PolicySource = PolicySource.USER_OVERRIDE): LogRuntimeState {
         if (!initialized) {
             Log.w(LOG_TAG, "updatePolicy called before init, ignore")
             return stateRef.get()
         }
-        val updated = updateState { state ->
-            state.copy(
-                activePolicy = policy,
-                policySource = source,
-                lastPolicyUpdateTime = System.currentTimeMillis()
-            )
-        }
-        writer?.updateRuntimeState(updated)
-        return updated
+        val updated = policyRepository.updatePolicy(policy, source)
+        return applyRuntimeState(updated)
     }
 
-    fun startDebugSession(): LogRuntimeState = updateDebugState(DebugToggleState.ON_CURRENT_SESSION)
+    fun updatePolicy(policy: LogPolicy, source: PolicySource = PolicySource.USER_OVERRIDE): LogRuntimeState =
+        updateLoggingPolicy(policy, source)
 
-    fun stopDebugSession(): LogRuntimeState = updateDebugState(DebugToggleState.OFF)
+    fun startDebugSession(): LogRuntimeState =
+        updateDebugState(DebugToggleState.ON_CURRENT_SESSION, forceEnableFile = true)
 
-    fun markDiskError(): LogRuntimeState = updateDebugState(DebugToggleState.DISABLED_DUE_TO_ERROR)
+    fun stopDebugSession(): LogRuntimeState =
+        updateDebugState(DebugToggleState.OFF, forceEnableFile = false)
+
+    fun markDiskError(): LogRuntimeState =
+        updateDebugState(DebugToggleState.DISABLED_DUE_TO_ERROR, forceEnableFile = false)
 
     fun getRuntimeState(): LogRuntimeState = stateRef.get()
 
@@ -102,43 +96,33 @@ object LogSystem {
         writer?.submit(enriched)
     }
 
-    private fun updateDebugState(state: DebugToggleState): LogRuntimeState {
+    private fun updateDebugState(
+        state: DebugToggleState,
+        forceEnableFile: Boolean? = null
+    ): LogRuntimeState {
         if (!initialized) {
             Log.w(LOG_TAG, "debug state change before init, ignore")
             return stateRef.get()
         }
-        val updated = updateState { runtime ->
-            runtime.copy(
-                debugToggleState = state,
-                debugSessionEnabled = state == DebugToggleState.ON_CURRENT_SESSION,
-                lastPolicyUpdateTime = System.currentTimeMillis()
-            )
-        }
-        writer?.updateRuntimeState(updated)
-        return updated
+        val updated = policyRepository.updateDebugState(state, forceEnableFile)
+        return applyRuntimeState(updated)
     }
 
     private fun fallbackLogcat(event: LogEvent) {
         val formatter = LogFormatter()
         val content = formatter.formatForLogcat(event)
         when (event.level) {
-            com.xyoye.common_component.log.model.LogLevel.DEBUG -> Log.d(LOG_TAG, content, event.throwable)
-            com.xyoye.common_component.log.model.LogLevel.INFO -> Log.i(LOG_TAG, content, event.throwable)
-            com.xyoye.common_component.log.model.LogLevel.WARN -> Log.w(LOG_TAG, content, event.throwable)
-            com.xyoye.common_component.log.model.LogLevel.ERROR -> Log.e(LOG_TAG, content, event.throwable)
+            LogLevel.DEBUG -> Log.d(LOG_TAG, content, event.throwable)
+            LogLevel.INFO -> Log.i(LOG_TAG, content, event.throwable)
+            LogLevel.WARN -> Log.w(LOG_TAG, content, event.throwable)
+            LogLevel.ERROR -> Log.e(LOG_TAG, content, event.throwable)
         }
     }
 
-    @OptIn(ExperimentalContracts::class)
-    private inline fun updateState(block: (LogRuntimeState) -> LogRuntimeState): LogRuntimeState {
-        contract { callsInPlace(block, InvocationKind.EXACTLY_ONCE) }
-        while (true) {
-            val current = stateRef.get()
-            val updated = block(current)
-            if (stateRef.compareAndSet(current, updated)) {
-                return updated
-            }
-        }
+    private fun applyRuntimeState(state: LogRuntimeState): LogRuntimeState {
+        stateRef.set(state)
+        writer?.updateRuntimeState(state)
+        return state
     }
 
     private const val LOG_TAG = "LogSystem"
