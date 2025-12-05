@@ -11,7 +11,6 @@ import com.alibaba.android.arouter.launcher.ARouter
 import com.tencent.bugly.crashreport.CrashReport
 import com.tencent.mmkv.MMKV
 import com.xyoye.common_component.BuildConfig
-import com.xyoye.common_component.log.AppLogger
 import com.xyoye.common_component.notification.Notifications
 import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.common_component.utils.ActivityHelper
@@ -57,12 +56,6 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         MMKV.initialize(this)
 
         DDLog.i("APP-Init", "application onCreate start process=${android.os.Process.myPid()}")
-
-        AppLogger.init(this)
-        DDLog.i(
-            "APP-Init",
-            "app logger ready external=${getExternalFilesDir(null)?.absolutePath ?: "null"}"
-        )
 
         if (BuildConfig.DEBUG) {
             ARouter.openLog()

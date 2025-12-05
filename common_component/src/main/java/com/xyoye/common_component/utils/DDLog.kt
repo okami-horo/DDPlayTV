@@ -1,9 +1,9 @@
 package com.xyoye.common_component.utils
 
-import android.util.Log
 import com.xyoye.common_component.config.DevelopConfig
-import com.xyoye.common_component.log.AppLogger
-import java.util.logging.Level
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogLevel
+import com.xyoye.common_component.log.model.LogModule
 
 /**
  * Created by xyoye on 2020/12/29.
@@ -26,44 +26,48 @@ object DDLog {
         this.enable = enable
     }
 
-    fun i(message: String, throwable: Throwable? = null) {
-        i(null, message, throwable)
-    }
+    fun i(message: String, throwable: Throwable? = null) = i(null, message, throwable)
 
     fun i(tag: String?, message: String, throwable: Throwable? = null) {
-        log(tag, message, Level.INFO, throwable)
+        log(tag, message, LogLevel.INFO, throwable)
     }
 
-    fun w(message: String, throwable: Throwable? = null) {
-        w(null, message, throwable)
-    }
+    fun w(message: String, throwable: Throwable? = null) = w(null, message, throwable)
 
     fun w(tag: String?, message: String, throwable: Throwable? = null) {
-        log(tag, message, Level.WARNING, throwable)
+        log(tag, message, LogLevel.WARN, throwable)
     }
 
-    fun e(message: String, throwable: Throwable? = null) {
-        e(null, message, throwable)
-    }
+    fun e(message: String, throwable: Throwable? = null) = e(null, message, throwable)
 
     fun e(tag: String?, message: String, throwable: Throwable? = null) {
-        log(tag, message, Level.SEVERE, throwable)
+        log(tag, message, LogLevel.ERROR, throwable)
     }
 
-    private fun log(tag: String?, message: String, level: Level, throwable: Throwable? = null) {
-        if (!enable)
-            return
+    fun d(message: String, throwable: Throwable? = null) = d(null, message, throwable)
 
-        val logTag = DDLog::class.java.simpleName
+    fun d(tag: String?, message: String, throwable: Throwable? = null) {
+        log(tag, message, LogLevel.DEBUG, throwable)
+    }
 
-        val logMsg = if (tag.isNullOrEmpty()) message else "$tag $message"
+    private fun log(tag: String?, message: String, level: LogLevel, throwable: Throwable? = null) {
+        if (!enable) return
+        val module = resolveModuleFromCaller()
+        val tagText = tag?.takeIf { it.isNotBlank() }
+        LogFacade.log(
+            level = level,
+            module = module,
+            tag = tagText,
+            message = message,
+            context = emptyMap(),
+            throwable = throwable
+        )
+    }
 
-        when (level) {
-            Level.INFO -> Log.i(logTag, logMsg, throwable)
-            Level.WARNING -> Log.w(logTag, logMsg, throwable)
-            Level.SEVERE -> Log.e(logTag, logMsg, throwable)
-        }
-
-        AppLogger.log(level, tag, message, throwable)
+    private fun resolveModuleFromCaller(): LogModule {
+        val callerPackage = Throwable().stackTrace
+            .firstOrNull { it.className.startsWith("com.xyoye") }
+            ?.className
+        return LogModule.fromPackage(callerPackage)
     }
 }

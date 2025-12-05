@@ -52,21 +52,21 @@ description: "001-logging-redesign 日志系统重构与治理的实现任务清
 
 ### 2.2 日志门面、文件管理与写入管线
 
-- [ ] T011 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFormatter.kt` 中实现日志序列化工具，将 `LogEvent` 转换为结构化文本（例如 JSON 行或 key=value 列表），并预留按级别/模块裁剪字段的扩展点。
-- [ ] T012 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFileManager.kt` 中实现内部存储日志目录解析与 `debug.log`/`debug_old.log` 双文件管理，满足 FR-015 对文件命名与轮转（冷启动合并历史日志）的约束。
-- [ ] T013 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogWriter.kt` 中实现单线程异步写入执行器，根据当前 `LogPolicy` 与 `LogRuntimeState` 决定是否写入 logcat、本地文件或直接丢弃日志事件。
-- [ ] T014 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFacade.kt` 中定义统一日志门面接口（d/i/w/e 等方法，必须显式接收 `LogModule` 与可选 `LogTag`、结构化 `context`），供业务代码与 `DDLog` 调用。
-- [ ] T015 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogSystem.kt` 中实现日志系统单例，负责初始化（init）、从存储加载策略（loadPolicyFromStorage）、维护 `LogRuntimeState` 并委托 `LogWriter` 完成最终输出。
-- [ ] T016 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/utils/DDLog.kt` 中将现有 `DDLog` 实现改为委托给 `LogFacade`/`LogSystem`，为缺失模块信息的调用提供合理默认 `LogModule` 映射，并保持对旧调用点的行为兼容。
-- [ ] T017 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/AppLogger.kt` 中重构历史文件日志实现，使其仅作为 `LogFileManager`/`LogWriter` 的实现细节或迁移层，避免被业务代码直接依赖。
+- [X] T011 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFormatter.kt` 中实现日志序列化工具，将 `LogEvent` 转换为结构化文本（例如 JSON 行或 key=value 列表），并预留按级别/模块裁剪字段的扩展点。
+- [X] T012 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFileManager.kt` 中实现内部存储日志目录解析与 `debug.log`/`debug_old.log` 双文件管理，满足 FR-015 对文件命名与轮转（冷启动合并历史日志）的约束。
+- [X] T013 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogWriter.kt` 中实现单线程异步写入执行器，根据当前 `LogPolicy` 与 `LogRuntimeState` 决定是否写入 logcat、本地文件或直接丢弃日志事件。
+- [X] T014 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFacade.kt` 中定义统一日志门面接口（d/i/w/e 等方法，必须显式接收 `LogModule` 与可选 `LogTag`、结构化 `context`），供业务代码与 `DDLog` 调用。
+- [X] T015 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogSystem.kt` 中实现日志系统单例，负责初始化（init）、从存储加载策略（loadPolicyFromStorage）、维护 `LogRuntimeState` 并委托 `LogWriter` 完成最终输出。
+- [X] T016 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/utils/DDLog.kt` 中将现有 `DDLog` 实现改为委托给 `LogFacade`/`LogSystem`，为缺失模块信息的调用提供合理默认 `LogModule` 映射，并保持对旧调用点的行为兼容。
+- [X] T017 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/AppLogger.kt` 中重构历史文件日志实现，使其仅作为 `LogFileManager`/`LogWriter` 的实现细节或迁移层，避免被业务代码直接依赖。
 
 ### 2.3 应用初始化与日志配置入口骨架
 
-- [ ] T018 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/IApplication.kt` 中调用 `LogSystem.init` 与策略加载方法（如 `loadPolicyFromStorage`），确保在其他组件使用日志前完成日志系统初始化。
+- [X] T018 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/IApplication.kt` 中调用 `LogSystem.init` 与策略加载方法（如 `loadPolicyFromStorage`），确保在其他组件使用日志前完成日志系统初始化。
 - [ ] T019 [P] 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/ui/debug/LoggingConfigActivity.kt` 中创建日志配置 Activity 骨架，仅包含基础的 Activity 壳与标题栏。
 - [ ] T020 [P] 在 `/workspace/DanDanPlayForAndroid/app/src/main/res/layout/activity_logging_config.xml` 中定义日志配置页面的基础布局（模块列表占位、级别选择控件占位、调试日志开关占位），先不实现具体交互。
 - [ ] T021 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/ui/main/MainActivity.kt` 中增加「日志配置」入口（菜单项或按钮），通过 ARouter 路由或显式 Intent 打开 `LoggingConfigActivity`。
-- [ ] T022 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogPaths.kt` 中集中定义日志目录子路径等常量（例如 logs 子目录名），并在 `LogFileManager` 中引用该常量，避免日志路径散落在多处实现中。
+- [X] T022 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogPaths.kt` 中集中定义日志目录子路径等常量（例如 logs 子目录名），并在 `LogFileManager` 中引用该常量，避免日志路径散落在多处实现中。
 - [ ] T023 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogFileManagerPathTest.kt` 中编写单元测试，验证日志目录路径符合约定（如位于应用内部存储下的固定 logs 子目录），方便开发者通过 adb / 文件管理器直接定位日志文件。
 
 ### 2.4 基础测试覆盖
