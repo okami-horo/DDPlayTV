@@ -36,6 +36,8 @@ Sensitive tokens belong in `local.properties` or Gradle properties; never hard-c
 - N/A (uses existing subtitle/font asset loaders) (001-libass-gpu-render)
 - Kotlin 1.7.x + Java interop; JNI/C++ for libass 0.17.3 render path + ExoPlayer 2.18.x (Media3 interop), libass 0.17.3, OpenGL ES 3.x FBO/EGLImage pipeline, MMKV for settings, ARouter for navigation glue (001-libass-gpu-render)
 - N/A (reuses existing subtitle/font asset loaders) (001-libass-gpu-render)
+- Kotlin 1.9.25 + Java 8（Android） + Android `Log` / logcat 管道、`common_component` 中的 `DDLog` 与重构后的日志门面 / 写入实现、MMKV 配置存储；Phase 1 不再引入新的第三方日志库，相关实践仅作为设计参考 (001-logging-redesign)
+- 应用内部存储目录下的日志文件（仅 `debug.log` / `debug_old.log`，双文件轮转，每个文件默认上限约 5MB，总体约 10MB），以及 MMKV 中持久化的日志策略配置 (001-logging-redesign)
 
 ## Recent Changes
 - 001-migrate-media3: Added Kotlin 1.7.x with Java interoperability for existing Exo helper classes
