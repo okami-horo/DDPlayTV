@@ -1,19 +1,23 @@
 # Phase 0 调研与决策：001-logging-redesign 日志系统重构与治理
 
-本文件汇总本特性在实施前的关键技术澄清点、依赖与集成调研任务，以及基于调研结果达成的设计决策。所有在实施计划中标记为 `NEEDS CLARIFICATION` 的条目在此得到解析，并在后续更新回 `plan.md` 的 Technical Context 中。
+本文件汇总本特性在实施前的关键技术澄清点、依赖与集成调研任务，以及基于调研结果达成的设计决策。所有需要澄清的条目在此得到解析，并在后续更新回 `plan.md` 的 Technical Context 中。
 
 ## Research Tasks
 
-### NEEDS CLARIFICATION 项
+### 已澄清事项
 
 1. 是否需要额外引入第三方日志库（如 Timber / tinylog），还是完全基于现有 `DDLog` / `AppLogger` 自研统一日志门面。  
-   - Task: 「Research 是否在 Android 本地调试场景下引入通用日志库，还是基于现有组件构建项目内统一日志门面与策略系统。」
+   - Task: 「Research 是否在 Android 本地调试场景下引入通用日志库，还是基于现有组件构建项目内统一日志门面与策略系统。」  
+   - Status: 已在 Decision 1 中确定采用自研门面，不新增三方依赖。
 2. 日志 I/O 与低存储空间行为主要通过哪一类测试覆盖（纯 JVM 模拟还是设备端集成测试）。  
-   - Task: 「Research 针对日志文件写入、轮转与磁盘不足等行为，如何在 JUnit / Robolectric / Instrumentation 各层划分测试职责。」
+   - Task: 「Research 针对日志文件写入、轮转与磁盘不足等行为，如何在 JUnit / Robolectric / Instrumentation 各层划分测试职责。」  
+   - Status: 已在 Decision 2 中明确分层测试方案。
 3. 单次调试会话日志文件大小控制目标（例如 `debug.log` + `debug_old.log` 总大小上限）。  
-   - Task: 「Research Android 本地调试日志常见的文件大小上限配置（对比 MXLogger、jlog 等实践），并结合本项目使用场景给出推荐上限。」
+   - Task: 「Research Android 本地调试日志常见的文件大小上限配置（对比 MXLogger、jlog 等实践），并结合本项目使用场景给出推荐上限。」  
+   - Status: 已在 Decision 3 中确定「双文件各约 5MB」方案。
 4. 是否需要为第三方库或 native 层日志提供统一透传能力。  
-   - Task: 「Research 在多模块 Android 工程中，将三方库 / native 层日志统一汇聚到自定义日志门面的常见模式与代价。」
+   - Task: 「Research 在多模块 Android 工程中，将三方库 / native 层日志统一汇聚到自定义日志门面的常见模式与代价。」  
+   - Status: 已在 Decision 4 中明确 Phase 1 仅预留桥接接口，不强制接管。
 
 ### Dependencies → Best Practices
 

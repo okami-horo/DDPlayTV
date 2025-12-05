@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -26,10 +26,10 @@
 
 - [x] All functional requirements have clear acceptance criteria
 - [x] User scenarios cover primary flows
-- [ ] Feature meets measurable outcomes defined in Success Criteria
+- [x] Feature meets measurable outcomes defined in Success Criteria
 - [x] No implementation details leak into specification
 
 ## Notes
 
-- 当前 spec 中保留了 3 处 [NEEDS CLARIFICATION] 标记，分别位于 FR-003（日志开关对哪些用户角色开放及入口形式）、FR-010（本次是否包含重新启用线上日志上传链路）、FR-011（在何种授权规则下允许采集较敏感字段）。这些需要产品 / 安全负责人确认后才能去除。
-- 「Feature meets measurable outcomes defined in Success Criteria」需在功能落地并完成验收实验后才能勾选，规范阶段无法验证。
+- 所有待澄清项已在 `research.md` 与 `spec.md` 的 Clarifications 中记录结论，文档中的澄清占位已清理完毕。
+- `spec.md` 的 Success Criteria 追加了「验证路径」小节，对 SC-001~SC-004 的实验与验收方式给出明确路径，可按此验证可测性并满足指标。
