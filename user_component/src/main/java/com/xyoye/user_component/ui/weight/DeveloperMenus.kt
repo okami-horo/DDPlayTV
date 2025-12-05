@@ -32,6 +32,7 @@ class DeveloperMenus private constructor(
     // 菜单项
     private val authItem = menu.findItem(R.id.item_source_authenticate)
     private val settingItem = menu.findItem(R.id.item_developer_setting)
+    private val loggingConfigItem = menu.findItem(R.id.item_logging_config)
 
     // 验证弹窗
     private var authenticateDialog: DeveloperAuthenticateDialog? = null
@@ -56,6 +57,12 @@ class DeveloperMenus private constructor(
             R.id.item_developer_setting -> {
                 ARouter.getInstance()
                     .build(RouteTable.User.SettingDeveloper)
+                    .navigation(activity)
+                return
+            }
+            R.id.item_logging_config -> {
+                ARouter.getInstance()
+                    .build(RouteTable.User.LoggingConfig)
                     .navigation(activity)
                 return
             }
@@ -100,6 +107,7 @@ class DeveloperMenus private constructor(
     private fun updateItem() {
         authItem.isVisible = true
         settingItem.isVisible = true
+        loggingConfigItem.isVisible = true
 
         val (title, iconRes) = if (isDeveloperAuthenticate) {
             "已认证" to R.drawable.ic_developer_authenticated

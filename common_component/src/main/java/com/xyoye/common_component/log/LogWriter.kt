@@ -15,7 +15,10 @@ import java.util.concurrent.atomic.AtomicReference
 class LogWriter(
     context: android.content.Context,
     private val formatter: LogFormatter = LogFormatter(),
-    private val fileManager: LogFileManager = LogFileManager(context)
+    private val fileManager: LogFileManager = LogFileManager(context),
+    private val onFileError: (Throwable) -> Unit = { error ->
+        Log.e(LOG_TAG, "write log file failed", error)
+    }
 ) {
     private val stateRef = AtomicReference(
         LogRuntimeState(
@@ -44,7 +47,7 @@ class LogWriter(
         if (shouldWriteFile(runtime)) {
             fileManager.prepare()
             runCatching { fileManager.appendLine(formatter.format(event)) }
-                .onFailure { error -> Log.e(LOG_TAG, "write log file failed", error) }
+                .onFailure { error -> handleFileError(error) }
         }
     }
 
@@ -85,6 +88,19 @@ class LogWriter(
             LogLevel.ERROR -> 3
         }
     }
+
+    private fun handleFileError(error: Throwable) {
+        val current = stateRef.get()
+        val disabled = current.copy(
+            debugToggleState = DebugToggleState.DISABLED_DUE_TO_ERROR,
+            debugSessionEnabled = false,
+            lastPolicyUpdateTime = System.currentTimeMillis()
+        )
+        stateRef.set(disabled)
+        onFileError(error)
+    }
+
+    internal fun currentStateForTest(): LogRuntimeState = stateRef.get()
 
     companion object {
         private const val LOG_TAG = "LogWriter"

@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * - 冷启动时将上一会话的 debug.log 合并到 debug_old.log（按上限裁剪）
  * - 仅在需要写入时创建目录和文件
  */
-class LogFileManager(
+open class LogFileManager(
     private val context: Context,
     private val fileSizeLimitBytes: Long = DevelopLogConfigDefaults.DEFAULT_LOG_FILE_SIZE_LIMIT_BYTES
 ) {

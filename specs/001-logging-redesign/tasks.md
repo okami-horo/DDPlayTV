@@ -63,18 +63,18 @@ description: "001-logging-redesign 日志系统重构与治理的实现任务清
 ### 2.3 应用初始化与日志配置入口骨架
 
 - [X] T018 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/app/IApplication.kt` 中调用 `LogSystem.init` 与策略加载方法（如 `loadPolicyFromStorage`），确保在其他组件使用日志前完成日志系统初始化。
-- [ ] T019 [P] 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/ui/debug/LoggingConfigActivity.kt` 中创建日志配置 Activity 骨架，仅包含基础的 Activity 壳与标题栏。
-- [ ] T020 [P] 在 `/workspace/DanDanPlayForAndroid/app/src/main/res/layout/activity_logging_config.xml` 中定义日志配置页面的基础布局（模块列表占位、级别选择控件占位、调试日志开关占位），先不实现具体交互。
-- [ ] T021 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/ui/main/MainActivity.kt` 中增加「日志配置」入口（菜单项或按钮），通过 ARouter 路由或显式 Intent 打开 `LoggingConfigActivity`。
+- [X] T019 [P] 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/ui/debug/LoggingConfigActivity.kt` 中创建日志配置 Activity 骨架，仅包含基础的 Activity 壳与标题栏。
+- [X] T020 [P] 在 `/workspace/DanDanPlayForAndroid/app/src/main/res/layout/activity_logging_config.xml` 中定义日志配置页面的基础布局（模块列表占位、级别选择控件占位、调试日志开关占位），先不实现具体交互。
+- [X] T021 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/ui/main/MainActivity.kt` 中增加「日志配置」入口（菜单项或按钮），通过 ARouter 路由或显式 Intent 打开 `LoggingConfigActivity`。
 - [X] T022 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogPaths.kt` 中集中定义日志目录子路径等常量（例如 logs 子目录名），并在 `LogFileManager` 中引用该常量，避免日志路径散落在多处实现中。
-- [ ] T023 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogFileManagerPathTest.kt` 中编写单元测试，验证日志目录路径符合约定（如位于应用内部存储下的固定 logs 子目录），方便开发者通过 adb / 文件管理器直接定位日志文件。
+- [X] T023 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogFileManagerPathTest.kt` 中编写单元测试，验证日志目录路径符合约定（如位于应用内部存储下的固定 logs 子目录），方便开发者通过 adb / 文件管理器直接定位日志文件。
 
 ### 2.4 基础测试覆盖
 
-- [ ] T024 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogPolicyTest.kt` 中编写单元测试，覆盖默认策略（全局级别）、调试日志开关以及 `enableDebugFile = false` 时禁止写入本地文件的决策路径。
-- [ ] T025 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogFormatterTest.kt` 中编写单元测试，验证 `LogEvent` 序列化格式、结构化上下文字段键值长度限制与异常堆栈展开逻辑。
-- [ ] T026 在 `/workspace/DanDanPlayForAndroid/common_component/src/androidTest/java/com/xyoye/common_component/log/LogFileRotationInstrumentedTest.kt` 中编写 Instrumentation 测试，验证应用冷启动时 `debug.log` 内容合并到 `debug_old.log`、并重建当前会话 `debug.log` 的行为符合 FR-015。
-- [ ] T027 在 `/workspace/DanDanPlayForAndroid/common_component/src/androidTest/java/com/xyoye/common_component/log/LogDiskErrorInstrumentedTest.kt` 中编写 Instrumentation 测试，模拟磁盘空间不足或连续写入失败，验证系统进入 `DISABLED_DUE_TO_ERROR` 状态并停止后续文件写入（符合 FR-016），仍保留 logcat 输出。
+- [X] T024 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogPolicyTest.kt` 中编写单元测试，覆盖默认策略（全局级别）、调试日志开关以及 `enableDebugFile = false` 时禁止写入本地文件的决策路径。
+- [X] T025 [P] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogFormatterTest.kt` 中编写单元测试，验证 `LogEvent` 序列化格式、结构化上下文字段键值长度限制与异常堆栈展开逻辑。
+- [X] T026 在 `/workspace/DanDanPlayForAndroid/common_component/src/androidTest/java/com/xyoye/common_component/log/LogFileRotationInstrumentedTest.kt` 中编写 Instrumentation 测试，验证应用冷启动时 `debug.log` 内容合并到 `debug_old.log`、并重建当前会话 `debug.log` 的行为符合 FR-015。
+- [X] T027 在 `/workspace/DanDanPlayForAndroid/common_component/src/androidTest/java/com/xyoye/common_component/log/LogDiskErrorInstrumentedTest.kt` 中编写 Instrumentation 测试，模拟磁盘空间不足或连续写入失败，验证系统进入 `DISABLED_DUE_TO_ERROR` 状态并停止后续文件写入（符合 FR-016），仍保留 logcat 输出。
 
 **Checkpoint（Phase 2 完成条件）**：  
 核心数据模型、日志门面与文件写入骨架稳定，应用能在不改变现有行为的前提下通过上述测试；之后可按用户故事拆分独立增量。
