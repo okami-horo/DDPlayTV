@@ -1,6 +1,7 @@
 package com.xyoye.player.utils
 
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import org.videolan.libvlc.MediaPlayer
 import java.util.*
 
@@ -35,11 +36,12 @@ object VlcEventLog {
 
     fun log(event: MediaPlayer.Event) {
         when (event.type) {
-            MediaPlayer.Event.Buffering -> DDLog.i(
+            MediaPlayer.Event.Buffering -> LogFacade.d(
+                LogModule.PLAYER,
                 TAG,
                 eventType[event.type] + ":" + event.buffering
             )
-            else -> DDLog.i(TAG, eventType[event.type] ?: "Unknown")
+            else -> LogFacade.d(LogModule.PLAYER, TAG, eventType[event.type] ?: "Unknown")
         }
     }
 }

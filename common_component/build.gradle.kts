@@ -17,6 +17,9 @@ android {
     }
 
     defaultConfig {
+        // Use AndroidX JUnit4 runner so @RunWith(AndroidJUnit4::class) tests work on device
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
         buildConfigField("String", "APPLICATION_ID", "\"${Versions.applicationId}\"")
 
         val media3FallbackFlag =

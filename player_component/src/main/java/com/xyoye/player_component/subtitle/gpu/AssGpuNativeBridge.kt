@@ -1,7 +1,8 @@
 package com.xyoye.player_component.subtitle.gpu
 
 import android.view.Surface
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.data_component.bean.subtitle.SubtitleOutputTarget
 
 class AssGpuNativeBridge {
@@ -83,7 +84,7 @@ class AssGpuNativeBridge {
 
     private fun decodeMetrics(raw: LongArray?): NativeRenderResult {
         if (raw == null || raw.size < 4) {
-            DDLog.w(TAG, "native metrics missing, using defaults")
+            LogFacade.w(LogModule.PLAYER, TAG, "native metrics missing, using defaults")
             return NativeRenderResult(rendered = false, renderLatencyMs = 0, uploadLatencyMs = 0, compositeLatencyMs = 0)
         }
         return NativeRenderResult(

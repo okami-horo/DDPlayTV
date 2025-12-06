@@ -2,7 +2,8 @@ package com.xyoye.subtitle
 
 import android.graphics.Color
 import android.os.SystemClock
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.subtitle.ass.AssOverrideParser
 import com.xyoye.subtitle.info.Caption
 import java.util.Locale
@@ -145,7 +146,8 @@ object SubtitleUtils {
                 .replace("\n", " ")
                 .replace("\r", " ")
                 .take(120)
-            DDLog.i(
+            LogFacade.d(
+                LogModule.PLAYER,
                 TAG,
                 "[FR-001] vertical merge #$frzMergeCounter merged=\"$mergedLine\" raw=\"$preview\""
             )
@@ -226,7 +228,8 @@ object SubtitleUtils {
         if (shouldSample(captionPerfCounter, PERFORMANCE_SAMPLE_LIMIT, PERFORMANCE_SAMPLE_INTERVAL)) {
             val durationMs = durationNs / 1_000_000.0
             val tagSummary = if (tagMap.isEmpty()) "-" else tagMap.keys.joinToString("/")
-            DDLog.i(
+            LogFacade.d(
+                LogModule.PLAYER,
                 TAG,
                 String.format(
                     Locale.US,

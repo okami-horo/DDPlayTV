@@ -16,6 +16,7 @@ class LogWriter(
     context: android.content.Context,
     private val formatter: LogFormatter = LogFormatter(),
     private val fileManager: LogFileManager = LogFileManager(context),
+    private val sampler: LogSampler = LogSampler(),
     private val onFileError: (Throwable) -> Unit = { error ->
         Log.e(LOG_TAG, "write log file failed", error)
     }
@@ -25,6 +26,7 @@ class LogWriter(
             activePolicy = LogPolicy.defaultReleasePolicy()
         )
     )
+    private var consecutiveFileErrors = 0
     private val executor = Executors.newSingleThreadExecutor { runnable ->
         Thread(runnable, "LogWriter").apply { isDaemon = true }
     }
@@ -43,11 +45,16 @@ class LogWriter(
         if (!shouldEmit(event.level, policy.defaultLevel)) {
             return
         }
+        if (!sampler.shouldAllow(event, policy)) {
+            return
+        }
         writeToLogcat(event)
         if (shouldWriteFile(runtime)) {
-            fileManager.prepare()
-            runCatching { fileManager.appendLine(formatter.format(event)) }
-                .onFailure { error -> handleFileError(error) }
+            runCatching {
+                fileManager.prepare()
+                fileManager.appendLine(formatter.format(event))
+                consecutiveFileErrors = 0
+            }.onFailure { error -> handleFileError(error) }
         }
     }
 
@@ -90,13 +97,16 @@ class LogWriter(
     }
 
     private fun handleFileError(error: Throwable) {
-        val current = stateRef.get()
-        val disabled = current.copy(
-            debugToggleState = DebugToggleState.DISABLED_DUE_TO_ERROR,
-            debugSessionEnabled = false,
-            lastPolicyUpdateTime = System.currentTimeMillis()
-        )
-        stateRef.set(disabled)
+        consecutiveFileErrors += 1
+        if (consecutiveFileErrors == MAX_CONSECUTIVE_ERRORS_BEFORE_DISABLE) {
+            val current = stateRef.get()
+            val disabled = current.copy(
+                debugToggleState = DebugToggleState.DISABLED_DUE_TO_ERROR,
+                debugSessionEnabled = false,
+                lastPolicyUpdateTime = System.currentTimeMillis()
+            )
+            stateRef.set(disabled)
+        }
         onFileError(error)
     }
 
@@ -104,5 +114,6 @@ class LogWriter(
 
     companion object {
         private const val LOG_TAG = "LogWriter"
+        private const val MAX_CONSECUTIVE_ERRORS_BEFORE_DISABLE = 1
     }
 }

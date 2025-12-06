@@ -15,7 +15,8 @@ import android.view.SurfaceView
 import android.view.View
 import android.widget.FrameLayout
 import androidx.media3.common.util.UnstableApi
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.player.DanDanVideoPlayer
 
 @UnstableApi
@@ -24,6 +25,10 @@ class SubtitleSurfaceOverlay @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : SurfaceView(context, attrs, defStyleAttr), SurfaceHolder.Callback {
+
+    companion object {
+        private const val LOG_TAG = "SubtitleSurface"
+    }
 
     private var frameSizeListener: ((Int, Int) -> Unit)? = null
     private var surfaceStateListener: SurfaceStateListener? = null
@@ -94,7 +99,7 @@ class SubtitleSurfaceOverlay @JvmOverloads constructor(
             return
         }
         if (!holder.surface.isValid) {
-            DDLog.w("LIBASS-Render", "SurfaceView invalid; drop frame")
+            LogFacade.w(LogModule.PLAYER, LOG_TAG, "SurfaceView invalid; drop frame")
             return
         }
         val canvas = holder.lockCanvas() ?: return
@@ -106,8 +111,9 @@ class SubtitleSurfaceOverlay @JvmOverloads constructor(
         }
         val drawDurationNs = SystemClock.elapsedRealtimeNanos() - drawStart
         if (drawDurationNs > 32_000_000L) {
-            DDLog.w(
-                "LIBASS-Perf",
+            LogFacade.w(
+                LogModule.PLAYER,
+                LOG_TAG,
                 "Surface subtitle draw slow=${drawDurationNs / 1_000_000.0}ms"
             )
         }

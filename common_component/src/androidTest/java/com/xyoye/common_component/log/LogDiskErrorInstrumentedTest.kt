@@ -40,10 +40,11 @@ class LogDiskErrorInstrumentedTest {
     @Test
     fun enterDisabledStateAfterFileWriteFailure() {
         val errors = mutableListOf<Throwable>()
-        val latch = CountDownLatch(1)
+        val writeAttempted = CountDownLatch(1)
+        val errorHandled = CountDownLatch(1)
         val faultyManager = object : LogFileManager(context) {
             override fun appendLine(line: String) {
-                latch.countDown()
+                writeAttempted.countDown()
                 throw IOException("simulate disk full")
             }
         }
@@ -52,7 +53,7 @@ class LogDiskErrorInstrumentedTest {
             fileManager = faultyManager
         ) { error ->
             errors.add(error)
-            latch.countDown()
+            errorHandled.countDown()
         }
 
         val runtimeState = LogRuntimeState(
@@ -70,13 +71,20 @@ class LogDiskErrorInstrumentedTest {
             )
         )
 
-        latch.await(2, TimeUnit.SECONDS)
+        // 等待写入被尝试且错误被处理（handleFileError 运行完毕）
+        writeAttempted.await(2, TimeUnit.SECONDS)
+        errorHandled.await(2, TimeUnit.SECONDS)
 
         val updatedState = writer.currentStateForTest()
         assertEquals(DebugToggleState.DISABLED_DUE_TO_ERROR, updatedState.debugToggleState)
         assertFalse(updatedState.debugSessionEnabled)
         assertTrue(errors.isNotEmpty())
-        assertFalse(LogPaths.logDirectory(context).exists())
+
+        // 磁盘错误后不再写文件，但日志目录/文件可能已在 prepare 阶段创建，应保持为空
+        val dir = LogPaths.logDirectory(context)
+        assertTrue(dir.exists())
+        assertEquals(0, LogPaths.currentLogFile(context).length())
+        assertEquals(0, LogPaths.previousLogFile(context).length())
     }
 
     private fun cleanup() {

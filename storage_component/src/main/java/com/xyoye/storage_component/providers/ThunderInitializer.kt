@@ -5,6 +5,8 @@ import android.os.Build
 import androidx.startup.Initializer
 import com.xunlei.downloadlib.XLTaskHelper
 import com.xyoye.common_component.base.app.BaseInitializer
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.utils.thunder.ThunderManager
 
 class ThunderInitializer : Initializer<Unit> {
@@ -17,7 +19,12 @@ class ThunderInitializer : Initializer<Unit> {
                 XLTaskHelper.init(context)
             } catch (t: Throwable) {
                 // Avoid hard crash during provider initialization; log and continue.
-                android.util.Log.e("ThunderInitializer", "XLTaskHelper.init failed", t)
+                LogFacade.e(
+                    LogModule.STORAGE,
+                    "ThunderInitializer",
+                    "XLTaskHelper.init failed",
+                    throwable = t
+                )
             }
         }
     }

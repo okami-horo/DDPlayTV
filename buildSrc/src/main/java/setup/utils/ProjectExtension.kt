@@ -8,6 +8,7 @@ import com.android.build.gradle.api.ApkVariantOutput
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
+import org.gradle.kotlin.dsl.exclude
 import org.gradle.kotlin.dsl.fileTree
 import org.gradle.kotlin.dsl.getByName
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
@@ -29,6 +30,14 @@ fun Project.setupDefaultDependencies() {
         add("testImplementation", Dependencies.Junit.junit)
         add("androidTestImplementation", Dependencies.AndroidX.junit_ext)
         add("androidTestImplementation", Dependencies.AndroidX.espresso)
+    }
+
+    // Avoid duplicate ListenableFuture between Guava (from dcerpc) and AndroidX test stack.
+    // Only touch AndroidTest-related configurations so main/runtime dependencies stay intact.
+    configurations.configureEach {
+        if (name.contains("AndroidTest", ignoreCase = true)) {
+            exclude(group = "com.google.guava", module = "listenablefuture")
+        }
     }
 }
 

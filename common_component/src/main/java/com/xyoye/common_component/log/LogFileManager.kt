@@ -5,6 +5,7 @@ import com.xyoye.common_component.config.DevelopLogConfigDefaults
 import com.xyoye.common_component.log.model.LogFileMeta
 import java.io.File
 import java.io.FileWriter
+import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -14,7 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 open class LogFileManager(
     private val context: Context,
-    private val fileSizeLimitBytes: Long = DevelopLogConfigDefaults.DEFAULT_LOG_FILE_SIZE_LIMIT_BYTES
+    private val fileSizeLimitBytes: Long = DevelopLogConfigDefaults.DEFAULT_LOG_FILE_SIZE_LIMIT_BYTES,
+    private val minFreeSpaceBytes: Long = MIN_FREE_SPACE_BYTES
 ) {
     private val prepared = AtomicBoolean(false)
     private val ioLock = Any()
@@ -24,13 +26,15 @@ open class LogFileManager(
         synchronized(ioLock) {
             if (prepared.get()) return
             ensureDirectory()
+            ensureWritableSpace()
             mergeCurrentIntoOld()
             prepared.set(true)
         }
     }
 
-    fun appendLine(line: String) {
+    open fun appendLine(line: String) {
         prepare()
+        ensureWritableSpace()
         synchronized(ioLock) {
             val current = currentLogFile()
             FileWriter(current, true).use { writer ->
@@ -91,6 +95,19 @@ open class LogFileManager(
         }
     }
 
+    /**
+     * 检查日志目录剩余空间，不足时抛出 IOException 触发上层熔断。
+     */
+    protected open fun ensureWritableSpace() {
+        val dir = logDirectory()
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+        if (dir.usableSpace < minFreeSpaceBytes) {
+            throw IOException("insufficient space for log files, available=${dir.usableSpace}")
+        }
+    }
+
     private fun mergeCurrentIntoOld() {
         val current = currentLogFile()
         val previous = previousLogFile()
@@ -114,6 +131,7 @@ open class LogFileManager(
 
     private fun appendFileWithClamp(source: File, target: File) {
         if (source.length() == 0L) return
+        ensureWritableSpace()
         if (!target.exists()) {
             target.parentFile?.mkdirs()
             target.createNewFile()
@@ -133,5 +151,9 @@ open class LogFileManager(
         }
         val sliceStart = (bytes.size - limit).coerceAtLeast(0)
         file.writeBytes(bytes.copyOfRange(sliceStart, bytes.size))
+    }
+
+    companion object {
+        private const val MIN_FREE_SPACE_BYTES = 512 * 1024L
     }
 }

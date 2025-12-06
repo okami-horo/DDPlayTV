@@ -8,12 +8,13 @@ import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.config.Media3ToggleProvider
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.toMedia3SourceType
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.media3.Media3SessionStore
 import com.xyoye.common_component.service.Media3CapabilityProvider
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.media3.Media3LaunchParams
-import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.DanmuUtils
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
@@ -32,6 +33,10 @@ import master.flame.danmaku.danmaku.model.BaseDanmaku
 import java.math.BigDecimal
 
 class PlayerViewModel : BaseViewModel() {
+
+    companion object {
+        private const val LOG_TAG = "PlayerViewModel"
+    }
 
     val localDanmuBlockLiveData = DatabaseManager.instance.getDanmuBlockDao().getAll(false)
     val cloudDanmuBlockLiveData = DatabaseManager.instance.getDanmuBlockDao().getAll(true)
@@ -87,7 +92,7 @@ class PlayerViewModel : BaseViewModel() {
                 _media3CapabilityLiveData.postValue(bundle.capabilityContract)
                 _media3ToggleLiveData.postValue(bundle.toggleSnapshot)
             }.onFailure {
-                DDLog.e("Media3-PlayerVM", "prepareSession failed: ${it.message}")
+                LogFacade.e(LogModule.PLAYER, LOG_TAG, "prepareSession failed: ${it.message}")
                 _media3ErrorLiveData.postValue(it.message)
                 Media3SessionStore.clear()
             }
@@ -103,7 +108,7 @@ class PlayerViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             provider.dispatchCapability(sessionId, capability, payload)
                 .onFailure {
-                    DDLog.w("Media3-PlayerVM", "dispatchCapability failed: ${it.message}")
+                    LogFacade.w(LogModule.PLAYER, LOG_TAG, "dispatchCapability failed: ${it.message}")
                     _media3ErrorLiveData.postValue(it.message)
                 }
         }

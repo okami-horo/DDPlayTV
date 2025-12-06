@@ -1,12 +1,12 @@
 package com.xyoye.common_component.log
 
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.config.DevelopConfig
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.data_component.bean.subtitle.FallbackEvent
 import com.xyoye.data_component.bean.subtitle.SubtitlePipelineState
 import com.xyoye.data_component.bean.subtitle.TelemetrySample
 import com.xyoye.data_component.enums.SubtitleFrameStatus
 import com.xyoye.data_component.enums.SubtitlePipelineStatus
-import com.xyoye.common_component.config.DevelopConfig
 
 object SubtitleTelemetryLogger {
     private const val TAG = "SUB-GPU"
@@ -25,7 +25,7 @@ object SubtitleTelemetryLogger {
         enabled = loadDefaultState()
     }
 
-    private fun shouldLog(): Boolean = enabled && com.xyoye.common_component.utils.DDLog.enable
+    private fun shouldLog(): Boolean = enabled
 
     fun logSample(sample: TelemetrySample, state: SubtitlePipelineState?) {
         if (!shouldLog()) return
@@ -47,15 +47,16 @@ object SubtitleTelemetryLogger {
 
         val message = builder.toString()
         if (sample.frameStatus == SubtitleFrameStatus.Rendered) {
-            DDLog.i(TAG, message)
+            LogFacade.i(LogModule.SUBTITLE, TAG, message)
         } else {
-            DDLog.w(TAG, message)
+            LogFacade.w(LogModule.SUBTITLE, TAG, message)
         }
     }
 
     fun logFallback(event: FallbackEvent) {
         if (!shouldLog()) return
-        DDLog.w(
+        LogFacade.w(
+            LogModule.SUBTITLE,
             TAG,
             "fallback from=${event.fromMode.name} to=${event.toMode.name} reason=${event.reason.name} recoverable=${event.recoverable} surface=${event.surfaceId}"
         )
@@ -66,9 +67,9 @@ object SubtitleTelemetryLogger {
         val message =
             "state mode=${state.mode.name} status=${state.status.name} surface=${state.surfaceId} fallback=${state.fallbackReason} telemetry=${state.telemetryEnabled}"
         if (state.status == SubtitlePipelineStatus.Error) {
-            DDLog.e(TAG, message)
+            LogFacade.e(LogModule.SUBTITLE, TAG, message)
         } else {
-            DDLog.i(TAG, message)
+            LogFacade.i(LogModule.SUBTITLE, TAG, message)
         }
     }
 }

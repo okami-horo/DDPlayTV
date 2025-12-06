@@ -4,8 +4,9 @@ import android.os.Build
 import android.provider.Settings
 import android.text.TextUtils
 import com.xyoye.common_component.base.app.BaseApplication
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.helper.ScreencastConstants
-import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.EntropyUtils
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
@@ -74,7 +75,7 @@ object UdpServer {
         try {
             multicastAddress = InetAddress.getByName(ScreencastConstants.Multicast.host)
             if (!multicastAddress!!.isMulticastAddress) {
-                DDLog.e(TAG, "${ScreencastConstants.Multicast.host}不是组播地址")
+                LogFacade.e(LogModule.STORAGE, TAG, "${ScreencastConstants.Multicast.host}不是组播地址")
                 return false
             }
             multicastSocket = MulticastSocket()
@@ -110,7 +111,7 @@ object UdpServer {
             if (TextUtils.isEmpty(entropyMsg)) {
                 return
             }
-            DDLog.i(UdpServer::class.java.simpleName, entropyMsg!!)
+            LogFacade.i(LogModule.STORAGE, UdpServer::class.java.simpleName, entropyMsg!!)
 
             val data = entropyMsg.toByteArray()
 

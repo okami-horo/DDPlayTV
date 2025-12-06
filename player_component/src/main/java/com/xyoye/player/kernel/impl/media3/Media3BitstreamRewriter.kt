@@ -1,9 +1,10 @@
 package com.xyoye.player.kernel.impl.media3
 
-import android.util.Log
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import java.nio.ByteBuffer
 
 /**
@@ -45,7 +46,7 @@ object Media3BitstreamRewriter {
             }
             if (out.isEmpty()) src else out.toByteArray()
         } catch (e: Exception) {
-            Log.w(TAG, "AnnexB rewrite failed, fallback to original: ${e.message}")
+            LogFacade.w(LogModule.PLAYER, TAG, "AnnexB rewrite failed, fallback to original: ${e.message}")
             src
         }
     }

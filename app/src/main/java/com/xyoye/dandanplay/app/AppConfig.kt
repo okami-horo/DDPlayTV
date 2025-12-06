@@ -2,7 +2,8 @@ package com.xyoye.dandanplay.app
 
 import android.content.Context
 import androidx.annotation.XmlRes
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.dandanplay.BuildConfig
 import com.xyoye.dandanplay.R
 import java.util.concurrent.atomic.AtomicBoolean
@@ -14,7 +15,7 @@ import com.xyoye.common_component.config.AppConfig as CommonAppConfig
  */
 object AppConfig {
 
-    private const val TAG = "Media3-AppConfig"
+    private const val TAG = "AppConfig"
     private const val KEY_MEDIA3_ENABLED = "media3_enabled"
     private const val KEY_SUBTITLE_GPU_ENABLED = "subtitle_gpu_enabled"
     private const val KEY_SUBTITLE_TELEMETRY_ENABLED = "subtitle_telemetry_enabled"
@@ -28,37 +29,37 @@ object AppConfig {
         val defaults = parseDefaults(context, R.xml.remote_config_defaults)
         val resolvedValue = defaults[KEY_MEDIA3_ENABLED] ?: BuildConfig.MEDIA3_ENABLED_FALLBACK
         CommonAppConfig.putMedia3EnabledRemote(resolvedValue)
-        DDLog.i(TAG, "media3_enabled default loaded: $resolvedValue")
+        LogFacade.d(LogModule.CORE, TAG, "media3_enabled default loaded: $resolvedValue")
 
         val gpuEnabled = defaults[KEY_SUBTITLE_GPU_ENABLED] ?: BuildConfig.SUBTITLE_GPU_ENABLED_FALLBACK
         CommonAppConfig.putSubtitleGpuEnabledRemote(gpuEnabled)
-        DDLog.i(TAG, "subtitle_gpu_enabled default loaded: $gpuEnabled")
+        LogFacade.d(LogModule.CORE, TAG, "subtitle_gpu_enabled default loaded: $gpuEnabled")
 
         val telemetryEnabled =
             defaults[KEY_SUBTITLE_TELEMETRY_ENABLED] ?: BuildConfig.SUBTITLE_TELEMETRY_ENABLED_FALLBACK
         CommonAppConfig.putSubtitleTelemetryEnabledRemote(telemetryEnabled)
-        DDLog.i(TAG, "subtitle_telemetry_enabled default loaded: $telemetryEnabled")
+        LogFacade.d(LogModule.CORE, TAG, "subtitle_telemetry_enabled default loaded: $telemetryEnabled")
     }
 
     fun media3RemoteValue(): Boolean = CommonAppConfig.isMedia3EnabledRemote()
 
     fun overrideMedia3Remote(value: Boolean) {
         CommonAppConfig.putMedia3EnabledRemote(value)
-        DDLog.i(TAG, "media3_enabled override applied: $value")
+        LogFacade.i(LogModule.CORE, TAG, "media3_enabled override applied: $value")
     }
 
     fun subtitleGpuRemoteValue(): Boolean = CommonAppConfig.isSubtitleGpuEnabledRemote()
 
     fun overrideSubtitleGpuRemote(value: Boolean) {
         CommonAppConfig.putSubtitleGpuEnabledRemote(value)
-        DDLog.i(TAG, "subtitle_gpu_enabled override applied: $value")
+        LogFacade.i(LogModule.CORE, TAG, "subtitle_gpu_enabled override applied: $value")
     }
 
     fun subtitleTelemetryRemoteValue(): Boolean = CommonAppConfig.isSubtitleTelemetryEnabledRemote()
 
     fun overrideSubtitleTelemetryRemote(value: Boolean) {
         CommonAppConfig.putSubtitleTelemetryEnabledRemote(value)
-        DDLog.i(TAG, "subtitle_telemetry_enabled override applied: $value")
+        LogFacade.i(LogModule.CORE, TAG, "subtitle_telemetry_enabled override applied: $value")
     }
 
     private fun parseDefaults(context: Context, @XmlRes xmlRes: Int): Map<String, Boolean> {

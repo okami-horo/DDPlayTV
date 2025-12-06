@@ -18,11 +18,12 @@ import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.impl.FtpStorage
-import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.data_component.bean.StorageFilePath
@@ -134,7 +135,11 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                     if (count > 0) count - 1 else RecyclerView.NO_POSITION
                 } ?: RecyclerView.NO_POSITION
                 if (lastIndex != RecyclerView.NO_POSITION) {
-                    DDLog.i(TAG, "pathRv focus gained, request focus index=$lastIndex count=${dataBinding.pathRv.adapter?.itemCount ?: 0}")
+                    LogFacade.i(
+                        LogModule.STORAGE,
+                        TAG,
+                        "pathRv focus gained, request focus index=$lastIndex count=${dataBinding.pathRv.adapter?.itemCount ?: 0}"
+                    )
                     dataBinding.pathRv.requestIndexChildFocus(lastIndex)
                 }
             }
@@ -147,11 +152,11 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         //             return false
         //         }
         //         if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
-        //             DDLog.i(TAG, "quickPlay key up/left -> dispatch reversed")
+        //             LogFacade.i(LogModule.STORAGE, TAG, "quickPlay key up/left -> dispatch reversed")
         //             dispatchFocus(reversed = true)
         //             return true
         //         } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-        //             DDLog.i(TAG, "quickPlay key down/right -> dispatch forward")
+        //             LogFacade.i(LogModule.STORAGE, TAG, "quickPlay key down/right -> dispatch forward")
         //             dispatchFocus()
         //             return true
         //         }
@@ -236,7 +241,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     private fun pushFragment(path: StorageFilePath) {
         val fragment = StorageFileFragment.newInstance()
         mRouteFragmentMap[path] = fragment
-        DDLog.i(TAG, "pushFragment route=${path.route} size=${mRouteFragmentMap.size}")
+        LogFacade.i(LogModule.STORAGE, TAG, "pushFragment route=${path.route} size=${mRouteFragmentMap.size}")
 
         supportFragmentManager.beginTransaction().apply {
             // 添加前的最后一个Fragment，设置为STARTED状态
@@ -258,13 +263,13 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     private fun popFragment(): Boolean {
         if (mRouteFragmentMap.entries.size <= 1) {
-            DDLog.w(TAG, "popFragment ignored, only root fragment left size=${mRouteFragmentMap.size}")
+            LogFacade.w(LogModule.STORAGE, TAG, "popFragment ignored, only root fragment left size=${mRouteFragmentMap.size}")
             return false
         }
         val lastRoute = mRouteFragmentMap.keys.last()
         val fragment = mRouteFragmentMap.remove(lastRoute)
             ?: return true
-        DDLog.i(TAG, "popFragment route=${lastRoute.route} remain=${mRouteFragmentMap.size}")
+        LogFacade.i(LogModule.STORAGE, TAG, "popFragment route=${lastRoute.route} remain=${mRouteFragmentMap.size}")
         removeFragment(listOf(fragment))
         onDisplayFragmentChanged()
         return true
@@ -280,7 +285,11 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                 fragments.add(fragment)
             }
         }
-        DDLog.i(TAG, "backToRouteFragment target=${target.route} remove=${fragments.size} remain=${mRouteFragmentMap.size}")
+        LogFacade.i(
+            LogModule.STORAGE,
+            TAG,
+            "backToRouteFragment target=${target.route} remove=${fragments.size} remain=${mRouteFragmentMap.size}"
+        )
         removeFragment(fragments)
         onDisplayFragmentChanged()
     }
@@ -306,11 +315,11 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     private fun onDisplayFragmentChanged() {
         val newPathData = StorageFilePathAdapter.buildPathData(mRouteFragmentMap)
-        DDLog.i(TAG, "onDisplayFragmentChanged pathSize=${newPathData.size}")
+        LogFacade.i(LogModule.STORAGE, TAG, "onDisplayFragmentChanged pathSize=${newPathData.size}")
         dataBinding.pathRv.setData(newPathData)
         dataBinding.pathRv.post {
             dataBinding.pathRv.smoothScrollToPosition(newPathData.size - 1)
-            DDLog.i(TAG, "pathRv smoothScrollToPosition index=${newPathData.size - 1}")
+            LogFacade.i(LogModule.STORAGE, TAG, "pathRv smoothScrollToPosition index=${newPathData.size - 1}")
         }
     }
 

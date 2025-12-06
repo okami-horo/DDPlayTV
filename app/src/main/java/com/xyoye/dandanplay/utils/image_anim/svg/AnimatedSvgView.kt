@@ -20,7 +20,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.animation.DecelerateInterpolator
@@ -29,6 +28,8 @@ import androidx.annotation.ColorInt
 import androidx.annotation.IntDef
 import androidx.core.view.ViewCompat
 import com.xyoye.dandanplay.R
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 
 /**
  * Animated SVG Drawing for Android
@@ -267,7 +268,7 @@ class AnimatedSvgView : View {
                 glyphData.path.transform(scaleMatrix)
             } catch (e: Exception) {
                 glyphData.path = Path()
-                Log.e(TAG, "Couldn't parse path", e)
+                LogFacade.e(LogModule.CORE, TAG, "Couldn't parse path", throwable = e)
             }
             val pm = PathMeasure(glyphData.path, true)
             while (true) {

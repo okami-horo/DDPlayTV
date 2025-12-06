@@ -11,10 +11,11 @@ import com.alibaba.android.arouter.launcher.ARouter
 import com.tencent.bugly.crashreport.CrashReport
 import com.tencent.mmkv.MMKV
 import com.xyoye.common_component.BuildConfig
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.notification.Notifications
 import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.common_component.utils.ActivityHelper
-import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.SecurityHelperConfig
 import com.xyoye.common_component.utils.aliyun.EMASHelper
 import com.xyoye.open_cc.OpenCCFile
@@ -55,12 +56,16 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         super.onCreate()
         MMKV.initialize(this)
 
-        DDLog.i("APP-Init", "application onCreate start process=${android.os.Process.myPid()}")
+        LogFacade.i(
+            LogModule.CORE,
+            "APP-Init",
+            "application onCreate start process=${android.os.Process.myPid()}"
+        )
 
         if (BuildConfig.DEBUG) {
             ARouter.openLog()
             ARouter.openDebug()
-            DDLog.i("APP-Init", "router debug mode enabled")
+            LogFacade.i(LogModule.CORE, "APP-Init", "router debug mode enabled")
         }
         ARouter.init(this)
         Notifications.setupNotificationChannels(this)
@@ -69,7 +74,7 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         OpenCCFile.init(this)
         SubtitleFontManager.initialize(this)
 
-        DDLog.i("APP-Init", "application onCreate finished")
+        LogFacade.i(LogModule.CORE, "APP-Init", "application onCreate finished")
     }
 
     override fun newImageLoader(): ImageLoader {

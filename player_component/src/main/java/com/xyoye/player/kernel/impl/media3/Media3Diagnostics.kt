@@ -1,13 +1,15 @@
 package com.xyoye.player.kernel.impl.media3
 
-import android.util.Log
 import androidx.media3.common.Format
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 
 @UnstableApi
 object Media3Diagnostics {
     private const val TAG = "Media3Diag"
+    private val MODULE = LogModule.PLAYER
 
     /** 外部可控制是否输出详细日志，必要时可关闭减少噪音。 */
     @JvmStatic
@@ -29,7 +31,7 @@ object Media3Diagnostics {
 
     fun logDecoderSelected(mime: String, secure: Boolean, decoder: MediaCodecInfo?) {
         log {
-            Log.i(TAG, "Decoder selected: mime=$mime secure=$secure name=${decoder?.name ?: "<none>"}")
+            LogFacade.i(MODULE, TAG, "Decoder selected: mime=$mime secure=$secure name=${decoder?.name ?: "<none>"}")
         }
         emit("decoder_selected", mapOf("mime" to mime, "secure" to secure.toString(), "decoder" to (decoder?.name ?: "")))
     }
@@ -37,32 +39,32 @@ object Media3Diagnostics {
     fun logDecoderCandidates(mime: String, secure: Boolean, candidates: List<MediaCodecInfo>) {
         log {
             val names = candidates.joinToString { it.name }
-            Log.d(TAG, "Decoder candidates for mime=$mime secure=$secure -> [$names]")
+            LogFacade.d(MODULE, TAG, "Decoder candidates for mime=$mime secure=$secure -> [$names]")
         }
     }
 
     fun logDecoderBlacklisted(decoder: String, reason: String?) {
         log {
-            Log.w(TAG, "Blacklisting decoder=$decoder due to ${reason ?: "runtime failure"}")
+            LogFacade.w(MODULE, TAG, "Blacklisting decoder=$decoder due to ${reason ?: "runtime failure"}")
         }
     }
 
     fun logDecoderRetry(decoder: String, attempt: Int) {
         log {
-            Log.i(TAG, "Retry playback with decoder fallback, decoder=$decoder attempt=$attempt")
+            LogFacade.i(MODULE, TAG, "Retry playback with decoder fallback, decoder=$decoder attempt=$attempt")
         }
     }
 
     fun logDecoderGiveUp(decoder: String?, reason: String?) {
         log {
-            Log.e(TAG, "Exhausted decoder fallbacks. lastDecoder=${decoder ?: "unknown"} reason=${reason ?: "unknown"}")
+            LogFacade.e(MODULE, TAG, "Exhausted decoder fallbacks. lastDecoder=${decoder ?: "unknown"} reason=${reason ?: "unknown"}")
         }
     }
 
     fun logFormatRewritten(original: Format, rewritten: Format) {
         if (original === rewritten) return
         log {
-            Log.i(TAG, "Format rewritten: mime=${original.sampleMimeType} -> ${rewritten.sampleMimeType}")
+            LogFacade.i(MODULE, TAG, "Format rewritten: mime=${original.sampleMimeType} -> ${rewritten.sampleMimeType}")
         }
     }
 
@@ -70,28 +72,29 @@ object Media3Diagnostics {
         val transfer = format.colorInfo?.colorTransfer
         val isDv = format.sampleMimeType == androidx.media3.common.MimeTypes.VIDEO_DOLBY_VISION
         log {
-            Log.i(TAG, "HDR preference applied: selected codec=${format.codecs} hdrDisplay=$hdrDisplay hdrTier=$hdrTier transfer=$transfer isDv=$isDv")
+            LogFacade.i(MODULE, TAG, "HDR preference applied: selected codec=${format.codecs} hdrDisplay=$hdrDisplay hdrTier=$hdrTier transfer=$transfer isDv=$isDv")
         }
     }
 
     fun logDrmFallbackDecision(mime: String, allowed: Boolean, reason: String) {
         val action = if (allowed) "allow" else "block"
         log {
-            Log.w(TAG, "DRM fallback decision: action=$action mime=$mime reason=$reason")
+            LogFacade.w(MODULE, TAG, "DRM fallback decision: action=$action mime=$mime reason=$reason")
         }
         emit("drm_fallback", mapOf("mime" to mime, "action" to action, "reason" to reason))
     }
 
     fun logSecureRequirement(mime: String, requiresSecure: Boolean, allowFallback: Boolean) {
         log {
-            Log.d(TAG, "Secure decoder request: mime=$mime requiresSecure=$requiresSecure allowFallback=$allowFallback")
+            LogFacade.d(MODULE, TAG, "Secure decoder request: mime=$mime requiresSecure=$requiresSecure allowFallback=$allowFallback")
         }
     }
 
     fun logPlaybackDescriptor(descriptor: Media3CodecPolicy.PlaybackDescriptor?) {
         descriptor ?: return
         log {
-            Log.d(
+            LogFacade.d(
+                MODULE,
                 TAG,
                 "Playback descriptor: uri=${descriptor.uri} container=${descriptor.containerHint} ext=${descriptor.extension} declaredMime=${descriptor.declaredMimeType}"
             )
@@ -100,20 +103,20 @@ object Media3Diagnostics {
 
     fun logFormatDowngrade(fromMime: String, toMime: String, reason: String) {
         log {
-            Log.w(TAG, "Format downgrade: $fromMime -> $toMime reason=$reason")
+            LogFacade.w(MODULE, TAG, "Format downgrade: $fromMime -> $toMime reason=$reason")
         }
         emit("format_downgrade", mapOf("from" to fromMime, "to" to toMime, "reason" to reason))
     }
 
     fun logDolbyVisionFallback(codecs: String?, target: String, displayInfo: String) {
         log {
-            Log.i(TAG, "Dolby Vision fallback: codecs=$codecs target=$target display=$displayInfo")
+            LogFacade.i(MODULE, TAG, "Dolby Vision fallback: codecs=$codecs target=$target display=$displayInfo")
         }
     }
 
     fun logHttpOpen(url: String?, code: Int?, contentType: String?) {
         log {
-            Log.i(TAG, "HTTP open: url=${url ?: "<null>"} code=${code ?: -1} contentType=${contentType ?: ""}")
+            LogFacade.i(MODULE, TAG, "HTTP open: url=${url ?: "<null>"} code=${code ?: -1} contentType=${contentType ?: ""}")
         }
         emit(
             "http_open",
@@ -127,7 +130,7 @@ object Media3Diagnostics {
 
     fun logContentTypeOverride(url: String, contentType: String, reason: String) {
         log {
-            Log.i(TAG, "Content type override: url=$url contentType=$contentType reason=$reason")
+            LogFacade.i(MODULE, TAG, "Content type override: url=$url contentType=$contentType reason=$reason")
         }
         emit(
             "content_type_override",

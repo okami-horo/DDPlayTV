@@ -10,8 +10,10 @@ import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.LogSystem
 import com.xyoye.common_component.log.SubtitleTelemetryLogger
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SecurityHelperConfig
 import com.xyoye.common_component.weight.ToastCenter
@@ -29,6 +31,8 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
     companion object {
         fun newInstance() = DeveloperSettingFragment()
 
+        private const val TAG = "DeveloperSetting"
+        private const val SUBTITLE_TAG = "DeveloperSubtitle"
         private const val KEY_APP_LOG_ENABLE = "app_log_enable"
         private const val KEY_SUBTITLE_TELEMETRY_LOG_ENABLE = "subtitle_telemetry_log_enable"
         private const val KEY_BUGLY_STATUS = "bugly_status"
@@ -64,6 +68,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
+        refreshLogPreferenceState()
         updateSubtitleSessionSummary()
     }
 
@@ -71,13 +76,22 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         findPreference<SwitchPreference>(KEY_APP_LOG_ENABLE)?.apply {
             val summaryOn = getString(R.string.developer_app_log_enable_summary_on)
             val summaryOff = getString(R.string.developer_app_log_enable_summary_off)
-            summary = if (isChecked) summaryOn else summaryOff
-            DDLog.setEnable(isChecked)
+            updateLogSummary(this, summaryOn, summaryOff)
             setOnPreferenceChangeListener { _, newValue ->
                 val enable = newValue as? Boolean ?: return@setOnPreferenceChangeListener false
-                summary = if (enable) summaryOn else summaryOff
-                DDLog.setEnable(enable)
-                DDLog.i("DEV-Log", "toggle ddlog enable=$enable")
+                val updatedState = if (enable) {
+                    LogSystem.startDebugSession()
+                } else {
+                    LogSystem.stopDebugSession()
+                }
+                val effective = updatedState.debugSessionEnabled
+                summary = if (effective) summaryOn else summaryOff
+                DevelopConfig.putDdLogEnable(effective)
+                LogFacade.i(
+                    LogModule.USER,
+                    TAG,
+                    "toggle debug session enable=$enable state=${updatedState.debugToggleState}"
+                )
                 true
             }
         }
@@ -92,7 +106,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                 val enable = newValue as? Boolean ?: return@setOnPreferenceChangeListener false
                 summary = if (enable) summaryOn else summaryOff
                 SubtitleTelemetryLogger.setEnable(enable)
-                DDLog.i("DEV-Subtitle", "toggle telemetry log enable=$enable")
+                LogFacade.i(LogModule.SUBTITLE, SUBTITLE_TAG, "toggle telemetry log enable=$enable")
                 true
             }
         }
@@ -224,7 +238,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                 lastError
             )
         }.getOrElse {
-            DDLog.w("DEV-Subtitle", "failed to read subtitle session status: ${it.message}")
+            LogFacade.w(LogModule.SUBTITLE, SUBTITLE_TAG, "failed to read subtitle session status: ${it.message}")
             getString(R.string.developer_subtitle_session_status_summary_empty)
         }
     }
@@ -248,7 +262,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             )
             markFallback.invoke(null, SubtitleFallbackReason.USER_REQUEST, null)
         }.onFailure {
-            DDLog.w("DEV-Subtitle", "force fallback reflection failed: ${it.message}")
+            LogFacade.w(LogModule.SUBTITLE, SUBTITLE_TAG, "force fallback reflection failed: ${it.message}")
         }
         ToastCenter.showSuccess(getString(R.string.developer_subtitle_force_fallback_toast))
         updateSubtitleSessionSummary()
@@ -258,10 +272,28 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         findPreference<Preference>(KEY_SUBTITLE_SESSION_STATUS)?.summary = buildSubtitleStatusSummary()
     }
 
+    private fun updateLogSummary(
+        preference: SwitchPreference,
+        summaryOn: String,
+        summaryOff: String
+    ) {
+        val runtime = LogSystem.getRuntimeState()
+        preference.isChecked = runtime.debugSessionEnabled
+        preference.summary = if (runtime.debugSessionEnabled) summaryOn else summaryOff
+    }
+
+    private fun refreshLogPreferenceState() {
+        val summaryOn = getString(R.string.developer_app_log_enable_summary_on)
+        val summaryOff = getString(R.string.developer_app_log_enable_summary_off)
+        findPreference<SwitchPreference>(KEY_APP_LOG_ENABLE)?.let {
+            updateLogSummary(it, summaryOn, summaryOff)
+        }
+    }
+
     private class DeveloperSettingDataStore : PreferenceDataStore() {
         override fun getBoolean(key: String?, defValue: Boolean): Boolean {
             return when (key) {
-                KEY_APP_LOG_ENABLE -> DevelopConfig.isDdLogEnable()
+                KEY_APP_LOG_ENABLE -> LogSystem.getRuntimeState().debugSessionEnabled
                 KEY_SUBTITLE_TELEMETRY_LOG_ENABLE -> DevelopConfig.isSubtitleTelemetryLogEnable()
                 else -> defValue
             }
@@ -270,8 +302,12 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         override fun putBoolean(key: String?, value: Boolean) {
             when (key) {
                 KEY_APP_LOG_ENABLE -> {
+                    if (value) {
+                        LogSystem.startDebugSession()
+                    } else {
+                        LogSystem.stopDebugSession()
+                    }
                     DevelopConfig.putDdLogEnable(value)
-                    DDLog.setEnable(value)
                 }
                 KEY_SUBTITLE_TELEMETRY_LOG_ENABLE -> {
                     DevelopConfig.putSubtitleTelemetryLogEnable(value)

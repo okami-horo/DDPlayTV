@@ -6,6 +6,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
 import java.io.OutputStreamWriter
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 
 /**
  * Created by xyoye on 2020/11/23.
@@ -63,7 +65,7 @@ object DanmuUtils {
                 "DanmuUtils.appendDanmu",
                 "写入弹幕失败: $danmuPath"
             )
-            DDLog.i("写入弹幕失败", e)
+            LogFacade.e(LogModule.ANIME, "DanmuUtils", "写入弹幕失败: $danmuPath", throwable = e)
         } finally {
             IOUtils.closeIO(fileOutputStream)
             IOUtils.closeIO(bufferedFileWriter)

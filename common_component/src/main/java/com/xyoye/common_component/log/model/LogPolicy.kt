@@ -23,6 +23,7 @@ data class LogPolicy(
     companion object {
         const val DEFAULT_RELEASE_POLICY_NAME = "default-release"
         const val DEBUG_SESSION_POLICY_NAME = "debug-session"
+        const val HIGH_VOLUME_POLICY_NAME = "high-volume-debug"
 
         fun defaultReleasePolicy(): LogPolicy {
             return LogPolicy(
@@ -43,6 +44,22 @@ data class LogPolicy(
                 defaultLevel = minLevel,
                 enableDebugFile = enableFile,
                 samplingRules = emptyList(),
+                exportable = true
+            )
+        }
+
+        /**
+         * 高日志量策略：打开文件写入与 DEBUG 级别，保持总文件大小约 10MB（由 LogFileManager 的 5MB*2 限制保证）。
+         */
+        fun highVolumePolicy(
+            minLevel: LogLevel = LogLevel.DEBUG,
+            samplingRules: List<SamplingRule> = emptyList()
+        ): LogPolicy {
+            return LogPolicy(
+                name = HIGH_VOLUME_POLICY_NAME,
+                defaultLevel = minLevel,
+                enableDebugFile = true,
+                samplingRules = samplingRules,
                 exportable = true
             )
         }

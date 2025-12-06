@@ -7,7 +7,8 @@ import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.subtitle.SubtitleFontManager
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.data_component.enums.SubtitleViewType
 import com.xyoye.player.subtitle.ui.SubtitleSurfaceOverlay
@@ -91,7 +92,7 @@ class LibassRendererBackend : SubtitleRenderer {
     }
 
     override fun loadExternalSubtitle(path: String): Boolean {
-        DDLog.i(TAG, "GPU libass backend loaded: $path")
+        LogFacade.i(LogModule.PLAYER, TAG, "GPU libass backend loaded: $path")
         val env = environment ?: return false
         val fonts = buildFontDirectories(env.context)
         val defaultFont = SubtitleFontManager.getDefaultFontPath(env.context)

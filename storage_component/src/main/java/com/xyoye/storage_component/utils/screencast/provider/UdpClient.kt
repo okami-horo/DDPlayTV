@@ -1,8 +1,9 @@
 package com.xyoye.storage_component.utils.screencast.provider
 
 import android.text.TextUtils
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.helper.ScreencastConstants
-import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.EntropyUtils
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
@@ -67,7 +68,7 @@ object UdpClient {
         try {
             val group = InetAddress.getByName(ScreencastConstants.Multicast.host)
             if (!group.isMulticastAddress) {
-                DDLog.e(TAG, "${ScreencastConstants.Multicast.host}不是组播地址")
+                LogFacade.e(LogModule.STORAGE, TAG, "${ScreencastConstants.Multicast.host}不是组播地址")
                 return false
             }
             multicastSocket = MulticastSocket(ScreencastConstants.Multicast.port)

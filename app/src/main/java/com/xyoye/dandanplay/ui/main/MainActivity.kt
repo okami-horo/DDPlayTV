@@ -16,8 +16,9 @@ import com.xyoye.common_component.config.UserConfig
 import com.xyoye.common_component.extension.findAndRemoveFragment
 import com.xyoye.common_component.extension.hideFragment
 import com.xyoye.common_component.extension.showFragment
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.services.ScreencastReceiveService
-import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.dandanplay.BR
@@ -34,6 +35,7 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         private const val TAG_FRAGMENT_HOME = "tag_fragment_home"
         private const val TAG_FRAGMENT_MEDIA = "tag_fragment_media"
         private const val TAG_FRAGMENT_PERSONAL = "tag_fragment_personal"
+        private const val LOG_TAG = "MainNav"
     }
 
     private lateinit var homeFragment: Fragment
@@ -69,7 +71,7 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         //默认显示媒体库页面
         //标题
         title = "媒体库"
-        DDLog.i("MAIN-Nav", "init default tab=media")
+        LogFacade.d(LogModule.CORE, LOG_TAG, "init default tab=media")
         //移除所有已添加的fragment，防止如旋转屏幕后导致的屏幕错乱
         supportFragmentManager.findAndRemoveFragment(
             TAG_FRAGMENT_HOME,
@@ -88,19 +90,19 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
             when (it.itemId) {
                 R.id.navigation_home -> {
                     title = "弹弹play"
-                    DDLog.i("MAIN-Nav", "switch tab=home")
+                    LogFacade.d(LogModule.CORE, LOG_TAG, "switch tab=home")
                     switchFragment(TAG_FRAGMENT_HOME)
                 }
 
                 R.id.navigation_media -> {
                     title = "媒体库"
-                    DDLog.i("MAIN-Nav", "switch tab=media")
+                    LogFacade.d(LogModule.CORE, LOG_TAG, "switch tab=media")
                     switchFragment(TAG_FRAGMENT_MEDIA)
                 }
 
                 R.id.navigation_personal -> {
                     title = "个人中心"
-                    DDLog.i("MAIN-Nav", "switch tab=personal")
+                    LogFacade.d(LogModule.CORE, LOG_TAG, "switch tab=personal")
                     switchFragment(TAG_FRAGMENT_PERSONAL)
                 }
             }

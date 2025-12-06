@@ -4,7 +4,6 @@ import android.content.Context
 import com.xyoye.common_component.log.model.LogLevel
 import com.xyoye.common_component.log.model.LogModule
 import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
 
 /**
@@ -13,12 +12,10 @@ import java.util.logging.Level
 @Deprecated("请直接使用 LogSystem/LogFacade")
 object AppLogger {
 
-    private val initialized = AtomicBoolean(false)
-    private var fileManager: LogFileManager? = null
-
     fun init(context: Context) {
-        if (!initialized.compareAndSet(false, true)) return
-        fileManager = LogFileManager(context.applicationContext).also { it.prepare() }
+        if (!LogSystem.isInitialized()) {
+            LogSystem.init(context.applicationContext)
+        }
     }
 
     fun log(level: Level, tag: String?, message: String, throwable: Throwable?) {
@@ -29,7 +26,7 @@ object AppLogger {
             Level.INFO -> LogLevel.INFO
             else -> LogLevel.INFO
         }
-        com.xyoye.common_component.log.LogFacade.log(
+        LogFacade.log(
             level = mappedLevel,
             module = module,
             tag = tag,
@@ -39,9 +36,9 @@ object AppLogger {
         )
     }
 
-    fun listLocalLogs(): List<File> {
-        val manager = fileManager ?: return emptyList()
-        return manager.listLogFiles().map { File(it.path) }
+    @Deprecated("请改用 LogFileManager(context).listLogFiles() 或 LogSystem API")
+    fun listLocalLogs(context: Context): List<File> {
+        return LogFileManager(context.applicationContext).listLogFiles().map { File(it.path) }
     }
 
     private fun resolveModule(tag: String?): LogModule {

@@ -1,8 +1,10 @@
 package com.xyoye.danmaku.filter;
 
-import android.util.Log;
+import com.xyoye.common_component.log.LogFacade;
+import com.xyoye.common_component.log.model.LogModule;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -31,7 +33,7 @@ public class RegexFilter extends DanmakuFilters.BaseDanmakuFilter<List<String>> 
                 e.printStackTrace();
             }
             if (filtered) {
-                Log.d("RegexFilter", danmaku.text.toString());
+                logDebug(danmaku.text.toString());
                 break;
             }
         }
@@ -64,5 +66,15 @@ public class RegexFilter extends DanmakuFilters.BaseDanmakuFilter<List<String>> 
 
     public void removeRegex(String regex) {
         mRegexList.remove(regex);
+    }
+
+    private void logDebug(String message) {
+        LogFacade.INSTANCE.d(
+                LogModule.PLAYER,
+                "RegexFilter",
+                message,
+                Collections.emptyMap(),
+                null
+        );
     }
 }

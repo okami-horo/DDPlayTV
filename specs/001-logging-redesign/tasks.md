@@ -114,7 +114,7 @@ description: "001-logging-redesign 日志系统重构与治理的实现任务清
 ### Tests for User Story 2（按需补充）
 
 - [X] T038 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogFormatterHighSignalTest.kt` 中编写单元测试，验证 `LogFormatter` 生成的日志行按时间顺序、模块和级别正确输出，并包含关键上下文字段（如 scene、errorCode、sessionId 等）。
-- [ ] T039 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/androidTest/java/com/xyoye/common_component/log/LogFileQualityInstrumentedTest.kt` 中编写 Instrumentation 测试，模拟典型问题场景，运行后直接从日志目录读取 `debug.log` / `debug_old.log`，检查是否能够用少量日志行还原问题链路且无明显重复噪声。
+- [X] T039 [P] [US2] 在 `/workspace/DanDanPlayForAndroid/common_component/src/androidTest/java/com/xyoye/common_component/log/LogFileQualityInstrumentedTest.kt` 中编写 Instrumentation 测试，模拟典型问题场景，运行后直接从日志目录读取 `debug.log` / `debug_old.log`，检查是否能够用少量日志行还原问题链路且无明显重复噪声。
 
 ### Implementation for User Story 2
 
@@ -137,16 +137,16 @@ description: "001-logging-redesign 日志系统重构与治理的实现任务清
 
 ### Tests for User Story 3（按需补充）
 
-- [ ] T047 [P] [US3] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogSamplingRuleTest.kt` 中编写单元测试，验证 `SamplingRule` 的采样率与每分钟限流逻辑，对不同模块与级别组合进行覆盖。
-- [ ] T048 [P] [US3] 在 `/workspace/DanDanPlayForAndroid/app/src/androidTest/java/com/xyoye/dandanplay/log/LoggingPerformanceInstrumentedTest.kt` 中编写性能向 Instrumentation 测试，对比默认策略与高日志量策略下冷启动耗时与核心交互卡顿率。
+- [X] T047 [P] [US3] 在 `/workspace/DanDanPlayForAndroid/common_component/src/test/java/com/xyoye/common_component/log/LogSamplingRuleTest.kt` 中编写单元测试，验证 `SamplingRule` 的采样率与每分钟限流逻辑，对不同模块与级别组合进行覆盖。
+- [X] T048 [P] [US3] 在 `/workspace/DanDanPlayForAndroid/app/src/androidTest/java/com/xyoye/dandanplay/log/LoggingPerformanceInstrumentedTest.kt` 中编写性能向 Instrumentation 测试，对比默认策略与高日志量策略下冷启动耗时与核心交互卡顿率。
 
 ### Implementation for User Story 3
 
-- [ ] T049 [P] [US3] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogSampler.kt` 中实现基于 `SamplingRule` 的采样与限流决策器，维护每模块事件计数与时间窗口。
-- [ ] T050 [US3] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogWriter.kt` 中集成 `LogSampler`，在真正输出日志前执行采样/限流判断，以减少高频路径上的日志开销。
-- [ ] T051 [US3] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFileManager.kt` 中实现磁盘空间检查与连续写入失败计数逻辑，触发 `LogRuntimeState` 进入 `DISABLED_DUE_TO_ERROR` 并停止写入本地文件。
-- [ ] T052 [US3] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogPolicy.kt` 中调整默认策略（如 `defaultReleasePolicy` 与高日志量策略），确保默认策略仅输出 logcat 且不写本地文件，高日志量策略下 `debug.log` + `debug_old.log` 总大小约为 10MB。
-- [ ] T053 [US3] 在 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/quickstart.md` 中补充性能与空间占用测试指引（包括如何开启高日志量策略、如何收集对比数据与评估 SC-002/SC-003），保证 User Story 3 可独立验证。
+- [X] T049 [P] [US3] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogSampler.kt` 中实现基于 `SamplingRule` 的采样与限流决策器，维护每模块事件计数与时间窗口。
+- [X] T050 [US3] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogWriter.kt` 中集成 `LogSampler`，在真正输出日志前执行采样/限流判断，以减少高频路径上的日志开销。
+- [X] T051 [US3] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/LogFileManager.kt` 中实现磁盘空间检查与连续写入失败计数逻辑，触发 `LogRuntimeState` 进入 `DISABLED_DUE_TO_ERROR` 并停止写入本地文件。
+- [X] T052 [US3] 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/model/LogPolicy.kt` 中调整默认策略（如 `defaultReleasePolicy` 与高日志量策略），确保默认策略仅输出 logcat 且不写本地文件，高日志量策略下 `debug.log` + `debug_old.log` 总大小约为 10MB。
+- [X] T053 [US3] 在 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/quickstart.md` 中补充性能与空间占用测试指引（包括如何开启高日志量策略、如何收集对比数据与评估 SC-002/SC-003），保证 User Story 3 可独立验证。
 
 **Checkpoint**：在默认策略下，应用无本地持久化日志文件且性能与基线等价；在高日志量策略下也无明显卡顿，日志文件大小控制在预期范围内。
 
@@ -156,13 +156,13 @@ description: "001-logging-redesign 日志系统重构与治理的实现任务清
 
 **Purpose**: 清理旧实现、完善跨模块接入与文档，确保日志系统易于长期维护。
 
-- [ ] T054 [P] 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/` 目录下梳理现有 `DDLog` 调用，将其替换为显式传入 `LogModule` 的 `LogFacade`/`LogSystem` 调用，并删除重复或无意义的 Tag 字符串。
-- [ ] T055 [P] 在 `/workspace/DanDanPlayForAndroid/player_component/src/main/java/` 目录下迁移 `DDLog` 调用到新的日志门面，为播放器相关代码统一使用 `LogModule.PLAYER`，并调整日志级别以符合新的分级准则。
-- [ ] T056 [P] 在 `/workspace/DanDanPlayForAndroid/anime_component/src/main/java/` 与 `/workspace/DanDanPlayForAndroid/local_component/src/main/java/` 目录下迁移 `DDLog` 调用到新的日志门面，为各业务模块选择合适的 `LogModule` 枚举值。
-- [ ] T057 [P] 在 `/workspace/DanDanPlayForAndroid/storage_component/src/main/java/` 与 `/workspace/DanDanPlayForAndroid/user_component/src/main/java/` 目录下迁移 `DDLog` 调用到新的日志门面，并校正模块名与日志级别，避免 DEBUG 日志在默认策略下输出。
-- [ ] T058 在 `/workspace/DanDanPlayForAndroid/` 仓库范围内搜索直接使用 `android.util.Log` 的调用，将其封装或替换为统一的 `LogFacade`/`LogSystem` 调用，确保业务代码不直接依赖底层日志实现。
-- [ ] T059 [P] 在 `/workspace/DanDanPlayForAndroid/document/monitoring/logging-system.md` 中撰写日志系统维护文档（中文），介绍配置入口、日志文件位置，以及通过 adb / 文件管理器获取日志文件的典型排查步骤，并链接到 `quickstart.md`。
-- [ ] T060 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/AppLogger.kt` 中清理不再使用的历史日志 API（如基于时间戳命名多文件的实现），对仍保留的兼容方法标记 `@Deprecated` 并在注释中指向新的日志门面。
+- [X] T054 [P] 在 `/workspace/DanDanPlayForAndroid/app/src/main/java/com/xyoye/dandanplay/` 目录下梳理现有 `DDLog` 调用，将其替换为显式传入 `LogModule` 的 `LogFacade`/`LogSystem` 调用，并删除重复或无意义的 Tag 字符串。
+- [X] T055 [P] 在 `/workspace/DanDanPlayForAndroid/player_component/src/main/java/` 目录下迁移 `DDLog` 调用到新的日志门面，为播放器相关代码统一使用 `LogModule.PLAYER`，并调整日志级别以符合新的分级准则。
+- [X] T056 [P] 在 `/workspace/DanDanPlayForAndroid/anime_component/src/main/java/` 与 `/workspace/DanDanPlayForAndroid/local_component/src/main/java/` 目录下迁移 `DDLog` 调用到新的日志门面，为各业务模块选择合适的 `LogModule` 枚举值。
+- [X] T057 [P] 在 `/workspace/DanDanPlayForAndroid/storage_component/src/main/java/` 与 `/workspace/DanDanPlayForAndroid/user_component/src/main/java/` 目录下迁移 `DDLog` 调用到新的日志门面，并校正模块名与日志级别，避免 DEBUG 日志在默认策略下输出。
+- [X] T058 在 `/workspace/DanDanPlayForAndroid/` 仓库范围内搜索直接使用 `android.util.Log` 的调用，将其封装或替换为统一的 `LogFacade`/`LogSystem` 调用，确保业务代码不直接依赖底层日志实现。
+- [X] T059 [P] 在 `/workspace/DanDanPlayForAndroid/document/monitoring/logging-system.md` 中撰写日志系统维护文档（中文），介绍配置入口、日志文件位置，以及通过 adb / 文件管理器获取日志文件的典型排查步骤，并链接到 `quickstart.md`。
+- [X] T060 在 `/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/log/AppLogger.kt` 中清理不再使用的历史日志 API（如基于时间戳命名多文件的实现），对仍保留的兼容方法标记 `@Deprecated` 并在注释中指向新的日志门面。
 - [ ] T061 在 `/workspace/DanDanPlayForAndroid/specs/001-logging-redesign/quickstart.md` 描述的流程基础上手动回归日志配置与性能场景，以及从日志目录获取日志文件的操作流程，将发现的问题和限制记录回该文件，确保文档与实现保持一致。
 
 ---

@@ -5,6 +5,8 @@ import com.danikula.videocache.*
 import com.danikula.videocache.headers.HeaderInjector
 import com.danikula.videocache.source.Source
 import com.danikula.videocache.sourcestorage.SourceInfoStorage
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -34,6 +36,7 @@ class OkHttpUrlSource : Source {
     companion object {
         private const val MAX_REDIRECTS = 5
         private const val DEFAULT_CONTENT_LENGTH = Int.MIN_VALUE.toLong()
+        private const val TAG = "OkHttpUrlSource"
     }
 
     constructor(
@@ -119,7 +122,7 @@ class OkHttpUrlSource : Source {
 
     @Throws(ProxyCacheException::class)
     private fun fetchContentInfo() {
-        Log.d("Read content info from " + sourceInfo.url)
+        LogFacade.d(LogModule.PLAYER, TAG, "Read content info from ${sourceInfo.url}")
         try {
             val response = openConnection(0, 10000, true)
             if (response.isSuccessful.not()) {
@@ -132,7 +135,7 @@ class OkHttpUrlSource : Source {
             ProxyCacheUtils.close(response.body?.byteStream())
             sourceInfo = SourceInfo(sourceInfo.url, length, mineType)
             sourceInfoStorage.put(sourceInfo.url, sourceInfo)
-            Log.d("Source info fetched: $sourceInfo")
+            LogFacade.d(LogModule.PLAYER, TAG, "Source info fetched: $sourceInfo")
         } catch (e: IOException) {
             ErrorReportHelper.postCatchedExceptionWithContext(
                 e,
@@ -140,7 +143,12 @@ class OkHttpUrlSource : Source {
                 "fetchContentInfo",
                 "Error fetching info from ${sourceInfo.url}"
             )
-            Log.e("Error fetching info from ${sourceInfo.url}", e)
+            LogFacade.e(
+                LogModule.PLAYER,
+                TAG,
+                "Error fetching info from ${sourceInfo.url}",
+                throwable = e
+            )
         }
     }
 
@@ -158,7 +166,11 @@ class OkHttpUrlSource : Source {
         var url = sourceInfo.url
 
         while (redirectCount < MAX_REDIRECTS) {
-            Log.d("Open connection " + (if (offset > 0) " with offset $offset" else "") + " to " + url)
+            LogFacade.d(
+                LogModule.PLAYER,
+                TAG,
+                "Open connection " + (if (offset > 0) " with offset $offset" else "") + " to " + url
+            )
             val requestBuilder = Request.Builder()
                 .url(url)
             injectCustomHeaders(requestBuilder, url)

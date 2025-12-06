@@ -1,7 +1,8 @@
 package com.xyoye.player_component.subtitle.gpu
 
 import android.view.Surface
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.data_component.bean.subtitle.SubtitleOutputTarget
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +45,7 @@ class AssGpuRenderer(
         initJob = scope.launch {
             runCatching { pipelineController.init(surfaceId, target, telemetryEnabled) }
                 .onFailure { error ->
-                    DDLog.e(TAG, "init pipeline failed: ${error.message}")
+                    LogFacade.e(LogModule.PLAYER, TAG, "init pipeline failed: ${error.message}")
                 }
         }
     }

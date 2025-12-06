@@ -12,7 +12,8 @@ import android.view.TextureView
 import android.view.View
 import android.widget.FrameLayout
 import androidx.media3.common.util.UnstableApi
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.player.DanDanVideoPlayer
 
 @UnstableApi
@@ -21,6 +22,10 @@ class SubtitleOverlayView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : TextureView(context, attrs, defStyleAttr) {
+
+    companion object {
+        private const val LOG_TAG = "SubtitleOverlay"
+    }
 
     private var frameSizeListener: ((Int, Int) -> Unit)? = null
     private var playerView: DanDanVideoPlayer? = null
@@ -82,7 +87,7 @@ class SubtitleOverlayView @JvmOverloads constructor(
             return
         }
         if (!isAvailable || surfaceTexture == null) {
-            DDLog.w("LIBASS-Render", "TextureView surface unavailable; drop frame")
+            LogFacade.w(LogModule.PLAYER, LOG_TAG, "TextureView surface unavailable; drop frame")
             return
         }
         val nowNs = SystemClock.elapsedRealtimeNanos()
@@ -189,8 +194,9 @@ class SubtitleOverlayView @JvmOverloads constructor(
         }
         val allowed = bitmap.width.toLong() * bitmap.height.toLong() * 4L * 2L
         if (current > allowed) {
-            DDLog.w(
-                "LIBASS-Perf",
+            LogFacade.w(
+                LogModule.PLAYER,
+                LOG_TAG,
                 "subtitle bitmap exceeds buffer budget current=${current / 1024}KB allowed=${allowed / 1024}KB"
             )
         }
@@ -202,8 +208,9 @@ class SubtitleOverlayView @JvmOverloads constructor(
             val drawMs = drawDurationNs / 1_000_000.0
             val traceWindowMs = if (lastTraceAtNs == 0L) 0.0 else (nowNs - lastTraceAtNs) / 1_000_000.0
             lastTraceAtNs = nowNs
-            DDLog.i(
-                "LIBASS-Render",
+            LogFacade.d(
+                LogModule.PLAYER,
+                LOG_TAG,
                 "cadence frame=$renderCount interval=${"%.2f".format(sinceLastMs)}ms draw=${"%.2f".format(drawMs)}ms window=${"%.2f".format(traceWindowMs)}ms"
             )
         }

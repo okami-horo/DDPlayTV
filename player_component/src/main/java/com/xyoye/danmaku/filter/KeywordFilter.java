@@ -1,8 +1,10 @@
 package com.xyoye.danmaku.filter;
 
-import android.util.Log;
+import com.xyoye.common_component.log.LogFacade;
+import com.xyoye.common_component.log.model.LogModule;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import master.flame.danmaku.controller.DanmakuFilters;
@@ -25,7 +27,7 @@ public class KeywordFilter extends DanmakuFilters.BaseDanmakuFilter<List<String>
             String keyword = mKeyWordList.get(i);
             String danmakuText = danmaku.text.toString();
             if (danmakuText.contains(keyword)) {
-                Log.e("KeywordFilter", danmakuText);
+                logError(danmakuText);
                 filtered = true;
                 danmaku.mFilterParam |= FILTER_TYPE_KEYWORD;
                 break;
@@ -56,5 +58,15 @@ public class KeywordFilter extends DanmakuFilters.BaseDanmakuFilter<List<String>
     }
     public void removeKeyword(String keyword) {
         mKeyWordList.remove(keyword);
+    }
+
+    private void logError(String message) {
+        LogFacade.INSTANCE.e(
+                LogModule.PLAYER,
+                "KeywordFilter",
+                message,
+                Collections.emptyMap(),
+                null
+        );
     }
 }

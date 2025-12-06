@@ -1,6 +1,8 @@
 package com.xyoye.player.utils
 
-import android.util.Log
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogLevel
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.player.info.PlayerInitializer
 
 /**
@@ -11,24 +13,24 @@ object VideoLog {
     const val TAG = "DanDanPlay.VideoPlayer"
 
     fun e(message: String?) {
-        log(Log.ERROR, message)
+        log(LogLevel.ERROR, message)
     }
 
     fun d(message: String?) {
-        log(Log.DEBUG, message)
+        log(LogLevel.DEBUG, message)
     }
 
     fun i(message: String?) {
-        log(Log.INFO, message)
+        log(LogLevel.INFO, message)
     }
 
-    private fun log(logLevel: Int, message: String?) {
-        if (PlayerInitializer.isPrintLog) {
-            when (logLevel) {
-                Log.ERROR -> Log.e(TAG, message ?: "")
-                Log.DEBUG -> Log.d(TAG, message ?: "")
-                Log.INFO -> Log.i(TAG, message ?: "")
-            }
-        }
+    private fun log(logLevel: LogLevel, message: String?) {
+        if (!PlayerInitializer.isPrintLog) return
+        LogFacade.log(
+            level = logLevel,
+            module = LogModule.PLAYER,
+            tag = TAG,
+            message = message ?: ""
+        )
     }
 }

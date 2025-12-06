@@ -1,11 +1,12 @@
 package com.xyoye.player.kernel.impl.media3
 
-import android.util.Log
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.mediacodec.MediaCodecUtil
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 
 @UnstableApi
 class AggressiveMediaCodecSelector(
@@ -27,7 +28,11 @@ class AggressiveMediaCodecSelector(
                 val infos = MediaCodecUtil.getDecoderInfos(mime, secure, requiresTunnelingDecoder)
                 candidates.addAll(infos)
             } catch (e: MediaCodecUtil.DecoderQueryException) {
-                Log.w(TAG, "Skip decoder query for mime=$mime, secure=$secure, tunneling=$requiresTunnelingDecoder: ${e.message}")
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    TAG,
+                    "Skip decoder query for mime=$mime, secure=$secure, tunneling=$requiresTunnelingDecoder: ${e.message}"
+                )
             }
         }
 
@@ -41,7 +46,7 @@ class AggressiveMediaCodecSelector(
         // 若 secure 没有结果，尝试非 secure 降级（仅在策略允许时）。
         if (requiresSecureDecoder && candidates.isEmpty()) {
             if (DrmPolicy.allowInsecureFallback) {
-                Log.i(TAG, "No secure decoder for $mimeType, trying non-secure fallback (override)")
+                LogFacade.i(LogModule.PLAYER, TAG, "No secure decoder for $mimeType, trying non-secure fallback (override)")
                 Media3Diagnostics.logDrmFallbackDecision(
                     mimeType,
                     /* allowed = */ true,
@@ -60,12 +65,12 @@ class AggressiveMediaCodecSelector(
 
         // DV -> HEVC 回退：当 DV 全部缺失时再试 HEVC
         if (candidates.isEmpty() && mimeType == MimeTypes.VIDEO_DOLBY_VISION) {
-            Log.i(TAG, "No DV decoder found, trying HEVC fallback (secure=$requiresSecureDecoder)")
+            LogFacade.i(LogModule.PLAYER, TAG, "No DV decoder found, trying HEVC fallback (secure=$requiresSecureDecoder)")
             appendFor(MimeTypes.VIDEO_H265, requiresSecureDecoder)
             aliasMap[MimeTypes.VIDEO_H265]?.forEach { appendFor(it, requiresSecureDecoder) }
             if (requiresSecureDecoder && candidates.isEmpty()) {
                 if (DrmPolicy.allowInsecureFallback) {
-                    Log.i(TAG, "No secure HEVC decoder for DV fallback, trying non-secure HEVC (override)")
+                    LogFacade.i(LogModule.PLAYER, TAG, "No secure HEVC decoder for DV fallback, trying non-secure HEVC (override)")
                     Media3Diagnostics.logDrmFallbackDecision(
                         MimeTypes.VIDEO_H265,
                         /* allowed = */ true,

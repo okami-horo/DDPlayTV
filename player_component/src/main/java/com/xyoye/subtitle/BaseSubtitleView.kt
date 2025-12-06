@@ -9,7 +9,8 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.ColorInt
 import com.xyoye.common_component.config.SubtitleConfig
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.subtitle.ass.AssOverrideParser
 import java.util.Locale
@@ -336,7 +337,8 @@ open class BaseSubtitleView @JvmOverloads constructor(
     ) {
         fallbackRenderCounter++
         if (shouldSample(fallbackRenderCounter, FALLBACK_SAMPLE_LIMIT, FALLBACK_SAMPLE_INTERVAL)) {
-            DDLog.w(
+            LogFacade.w(
+                LogModule.PLAYER,
                 TAG,
                 String.format(
                     Locale.US,
@@ -382,7 +384,8 @@ open class BaseSubtitleView @JvmOverloads constructor(
             return
         }
         val durationMs = (SystemClock.elapsedRealtimeNanos() - startNs) / 1_000_000.0
-        DDLog.i(
+        LogFacade.d(
+            LogModule.PLAYER,
             TAG,
             String.format(
                 Locale.US,

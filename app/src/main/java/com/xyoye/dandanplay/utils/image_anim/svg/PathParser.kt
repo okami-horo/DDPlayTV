@@ -16,7 +16,8 @@
 package com.xyoye.dandanplay.utils.image_anim.svg
 
 import android.graphics.Path
-import android.util.Log
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import kotlin.math.*
 
 /**
@@ -667,12 +668,12 @@ internal object PathParser {
                 /* Solve for intersecting unit circles */
                 val dsq = dx * dx + dy * dy
                 if (dsq == 0.0) {
-                    Log.w(LOGTAG, " Points are coincident")
+                    LogFacade.w(LogModule.CORE, LOGTAG, "Points are coincident")
                     return  /* Points are coincident */
                 }
                 val disc = 1.0 / dsq - 1.0 / 4.0
                 if (disc < 0.0) {
-                    Log.w(LOGTAG, "Points are too far apart $dsq")
+                    LogFacade.w(LogModule.CORE, LOGTAG, "Points are too far apart $dsq")
                     val adjust = (Math.sqrt(dsq) / 1.99999).toFloat()
                     drawArc(
                         p, x0, y0, x1, y1, a * adjust,

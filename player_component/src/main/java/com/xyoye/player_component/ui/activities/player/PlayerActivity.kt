@@ -25,13 +25,14 @@ import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.receiver.HeadsetBroadcastReceiver
 import com.xyoye.common_component.receiver.PlayerReceiverListener
 import com.xyoye.common_component.receiver.ScreenBroadcastReceiver
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.media.StorageVideoSource
-import com.xyoye.common_component.utils.DDLog
 import com.xyoye.common_component.utils.screencast.ScreencastHandler
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
@@ -74,6 +75,14 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     companion object {
         private const val MEDIA3_SESSION_SERVICE =
             "com.xyoye.dandanplay.app.service.Media3SessionService"
+        private const val TAG_ACTIVITY = "PlayerActivity"
+        private const val TAG_SOURCE = "PlayerSource"
+        private const val TAG_PLAYBACK = "PlayerPlayback"
+        private const val TAG_DANMAKU = "PlayerDanmaku"
+        private const val TAG_SUBTITLE = "PlayerSubtitle"
+        private const val TAG_CONFIG = "PlayerConfig"
+        private const val TAG_CAST = "PlayerCast"
+        private const val TAG_MEDIA3 = "Media3Session"
     }
 
     private val danmuViewModel: PlayerDanmuViewModel by lazy {
@@ -158,8 +167,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     override fun initView() {
         ARouter.getInstance().inject(this)
 
-        DDLog.i(
-            "PLAYER-Activity",
+        LogFacade.d(
+            LogModule.PLAYER,
+            TAG_ACTIVITY,
             "initView start intent=${intent?.action.orEmpty()} source=${VideoSourceManager.getInstance().getSource()?.javaClass?.simpleName ?: "null"}"
         )
 
@@ -187,7 +197,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
         applyPlaySource(VideoSourceManager.getInstance().getSource())
 
-        DDLog.i("PLAYER-Activity", "initView finished")
+        LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "initView finished")
     }
 
     override fun onResume() {
@@ -202,7 +212,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         try {
             bindService(intent, media3ServiceConnection, Context.BIND_AUTO_CREATE)
         } catch (e: Exception) {
-            DDLog.w("PLAYER-Activity", "bind Media3SessionService failed: ${e.message}")
+            LogFacade.w(LogModule.PLAYER, TAG_ACTIVITY, "bind Media3SessionService failed: ${e.message}")
         }
     }
 
@@ -221,8 +231,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         val popupNotShowing = popupManager.isShowing().not()
         val backgroundAllowed = PlayerConfig.isBackgroundPlay() && media3SupportsBackgroundPlayback()
         val backgroundPlayDisable = backgroundAllowed.not()
-        DDLog.i(
-            "PLAYER-Activity",
+        LogFacade.d(
+            LogModule.PLAYER,
+            TAG_ACTIVITY,
             "onPause popupNotShowing=$popupNotShowing backgroundAllowed=$backgroundAllowed"
         )
         if (popupNotShowing && backgroundPlayDisable) {
@@ -233,7 +244,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     }
 
     override fun onDestroy() {
-        DDLog.i("PLAYER-Activity", "onDestroy")
+        LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "onDestroy")
         beforePlayExit()
         unregisterReceiver()
         subtitleFallbackDialog?.dismiss()
@@ -273,8 +284,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
                     when (action) {
                         SubtitleFallbackAction.SWITCH_TO_LEGACY -> handleSubtitleFallbackSwitch(reason)
                         SubtitleFallbackAction.CONTINUE_CURRENT -> {
-                            DDLog.w(
-                                "PLAYER-Subtitle",
+                            LogFacade.w(
+                                LogModule.PLAYER,
+                                TAG_SUBTITLE,
                                 "User chose to continue with libass despite $reason"
                             )
                         }
@@ -300,12 +312,13 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         PlaybackSessionStatusProvider.markFallback(reason, null)
         danDanPlayer.switchSubtitleBackend(SubtitleRendererBackend.LEGACY_CANVAS)
         ToastCenter.showOriginalToast(getString(R.string.subtitle_backend_fallback_result))
-        DDLog.i("PLAYER-Subtitle", "Fallback applied due to $reason")
+        LogFacade.w(LogModule.PLAYER, TAG_SUBTITLE, "fallback applied due to $reason")
     }
 
     override fun playScreencast(videoSource: BaseVideoSource) {
-        DDLog.i(
-            "PLAYER-Cast",
+        LogFacade.i(
+            LogModule.PLAYER,
+            TAG_CAST,
             "receive screencast title=${videoSource.getVideoTitle()} type=${videoSource.getMediaType()}"
         )
         lifecycleScope.launch(Dispatchers.Main) {
@@ -315,7 +328,11 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
     private fun checkPlayParams(source: BaseVideoSource?): Boolean {
         if (source == null || source.getVideoUrl().isEmpty()) {
-            DDLog.w("PLAYER-Source", "invalid source url=${source?.getVideoUrl()} type=${source?.getMediaType()}")
+            LogFacade.w(
+                LogModule.PLAYER,
+                TAG_SOURCE,
+                "invalid source url=${source?.getVideoUrl()} type=${source?.getMediaType()}"
+            )
             CommonDialog.Builder(this).run {
                 content = "解析播放参数失败"
                 addPositive("退出重试") {
@@ -335,12 +352,13 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             val curVideoSource = danDanPlayer.getVideoSource()
             val curVideoUrl = curVideoSource.getVideoUrl()
             if (curVideoUrl != videoUrl) {
-                DDLog.i("PLAYER-Danmaku", "skip load result mismatch url")
+                LogFacade.d(LogModule.PLAYER, TAG_DANMAKU, "skip load result mismatch url")
                 return@observe
             }
 
-            DDLog.i(
-                "PLAYER-Danmaku",
+            LogFacade.i(
+                LogModule.PLAYER,
+                TAG_DANMAKU,
                 "match success cid=${matchDanmu?.episodeId} title=${curVideoSource.getVideoTitle()}"
             )
             videoController.showMessage("匹配弹幕成功")
@@ -349,12 +367,12 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
         danmuViewModel.downloadDanmuLiveData.observe(this) { searchDanmu ->
             if (searchDanmu == null) {
-                DDLog.w("PLAYER-Danmaku", "download failed")
+                LogFacade.w(LogModule.PLAYER, TAG_DANMAKU, "download failed")
                 videoController.showMessage("下载弹幕失败")
                 return@observe
             }
 
-            DDLog.i("PLAYER-Danmaku", "download success id=${searchDanmu.episodeId}")
+            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "download success id=${searchDanmu.episodeId}")
             videoController.showMessage("下载弹幕成功")
             videoController.addExtendTrack(VideoTrackBean.danmu(searchDanmu))
         }
@@ -368,8 +386,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
             //播放错误
             observerPlayError {
-                DDLog.e(
-                    "PLAYER-Playback",
+                LogFacade.e(
+                    LogModule.PLAYER,
+                    TAG_PLAYBACK,
                     "play error title=${danDanPlayer.getVideoSource().getVideoTitle()} position=${danDanPlayer.getCurrentPosition()}"
                 )
                 showPlayErrorDialog()
@@ -377,11 +396,15 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             //退出播放
             observerExitPlayer {
                 if (popupManager.isShowing()) {
-                    DDLog.i("PLAYER-Playback", "exit from popup mode")
+                    LogFacade.d(LogModule.PLAYER, TAG_PLAYBACK, "exit from popup mode")
                     danDanPlayer.recordPlayInfo()
                 }
                 popupManager.dismiss()
-                DDLog.i("PLAYER-Playback", "exit player title=${danDanPlayer.getVideoSource().getVideoTitle()}")
+                LogFacade.i(
+                    LogModule.PLAYER,
+                    TAG_PLAYBACK,
+                    "exit player title=${danDanPlayer.getVideoSource().getVideoTitle()}"
+                )
                 finish()
             }
             //弹幕屏蔽
@@ -416,8 +439,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     }
 
     private fun applyPlaySource(newSource: BaseVideoSource?) {
-        DDLog.i(
-            "PLAYER-Source",
+        LogFacade.i(
+            LogModule.PLAYER,
+            TAG_SOURCE,
             "apply start title=${newSource?.getVideoTitle()} type=${newSource?.getMediaType()} urlHash=${newSource?.getVideoUrl()?.hashCode()}"
         )
         danDanPlayer.recordPlayInfo()
@@ -427,7 +451,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
         videoSource = newSource
         if (checkPlayParams(videoSource).not()) {
-            DDLog.w("PLAYER-Source", "apply abort invalid source")
+            LogFacade.w(LogModule.PLAYER, TAG_SOURCE, "apply abort invalid source")
             return
         }
         VideoSourceManager.getInstance().setSource(videoSource!!)
@@ -439,7 +463,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         updatePlayer(videoSource!!)
 
         afterInitPlayer()
-        DDLog.i("PLAYER-Source", "apply finished title=${videoSource?.getVideoTitle()}")
+        LogFacade.i(LogModule.PLAYER, TAG_SOURCE, "apply finished title=${videoSource?.getVideoTitle()}")
     }
 
     private fun updatePlayer(source: BaseVideoSource) {
@@ -452,21 +476,22 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         danDanPlayer.apply {
             setVideoSource(source)
             start()
-            DDLog.i(
-                "PLAYER-Playback",
+            LogFacade.i(
+                LogModule.PLAYER,
+                TAG_PLAYBACK,
                 "start title=${source.getVideoTitle()} type=${source.getMediaType()} position=${source.getCurrentPosition()} speed=${PlayerConfig.getNewVideoSpeed()}"
             )
         }
         /*
         //发送弹幕
         videoController.observerSendDanmu {
-            DDLog.i("PLAYER-Danmaku", "send request text=${it.text}")
+            LogFacade.d(LogModule.PLAYER, TAG_DANMAKU, "send request text=${it.text}")
             viewModel.sendDanmu(source.getDanmu(), it)
         }
         */
 
         videoController.setSwitchVideoSourceBlock {
-            DDLog.i("PLAYER-Source", "switch request index=$it title=${source.getVideoTitle()}")
+            LogFacade.i(LogModule.PLAYER, TAG_SOURCE, "switch request index=$it title=${source.getVideoTitle()}")
             switchVideoSource(it)
         }
     }
@@ -478,8 +503,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         File(source.getVideoUrl()).parentFile?.let { parent ->
             if (parent.exists()) {
                 PlayerInitializer.selectSourceDirectory = parent.absolutePath
-                DDLog.i(
-                    "PLAYER-Source",
+                LogFacade.d(
+                    LogModule.PLAYER,
+                    TAG_SOURCE,
                     "select directory set path=${parent.absolutePath} type=${source.getMediaType()}"
                 )
             }
@@ -488,34 +514,34 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         // 视频已绑定弹幕，直接加载，否则尝试匹配弹幕
         val historyDanmu = source.getDanmu()
         if (historyDanmu != null) {
-            DDLog.i("PLAYER-Danmaku", "load history cid=${historyDanmu.episodeId}")
+            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "load history cid=${historyDanmu.episodeId}")
             videoController.addExtendTrack(VideoTrackBean.danmu(historyDanmu))
         } else if (
             DanmuConfig.isAutoMatchDanmu()
             && source.getMediaType() != MediaType.FTP_SERVER
             && popupManager.isShowing().not()
         ) {
-            DDLog.i("PLAYER-Danmaku", "auto match start title=${source.getVideoTitle()}")
+            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto match start title=${source.getVideoTitle()}")
             danmuViewModel.matchDanmu(source)
         }
 
         // 视频已绑定字幕，直接加载
         val historySubtitle = source.getSubtitlePath()
         if (historySubtitle != null) {
-            DDLog.i("PLAYER-Subtitle", "load history path=${historySubtitle}")
+            LogFacade.i(LogModule.PLAYER, TAG_SUBTITLE, "load history path=${historySubtitle}")
             videoController.addExtendTrack(VideoTrackBean.subtitle(historySubtitle))
         }
 
         // 视频已绑定音频，直接加载
         val historyAudio = source.getAudioPath()
         if (historyAudio != null) {
-            DDLog.i("PLAYER-Audio", "load history path=${historyAudio}")
+            LogFacade.i(LogModule.PLAYER, TAG_SOURCE, "load history path=${historyAudio}")
             videoController.addExtendTrack(VideoTrackBean.audio(historyAudio))
         }
     }
 
     private fun registerReceiver() {
-        DDLog.i("PLAYER-Activity", "register receivers")
+        LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "register receivers")
         screenLockReceiver = ScreenBroadcastReceiver(this)
         headsetReceiver = HeadsetBroadcastReceiver(this)
         registerReceiver(screenLockReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
@@ -528,22 +554,22 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     private fun unregisterReceiver() {
         if (this::screenLockReceiver.isInitialized) {
             unregisterReceiver(screenLockReceiver)
-            DDLog.i("PLAYER-Activity", "unregister screen receiver")
+            LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister screen receiver")
         }
         if (this::headsetReceiver.isInitialized) {
             unregisterReceiver(headsetReceiver)
-            DDLog.i("PLAYER-Activity", "unregister headset receiver")
+            LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister headset receiver")
         }
         /*
         batteryHelper.unregisterReceiver(this)
-        DDLog.i("PLAYER-Activity", "unregister battery receiver")
+        LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister battery receiver")
         */
     }
 
     private fun initPlayerConfig() {
         //播放器类型
         PlayerInitializer.playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
-        DDLog.i("PLAYER-Config", "playerType=${PlayerInitializer.playerType}")
+        LogFacade.d(LogModule.PLAYER, TAG_CONFIG, "playerType=${PlayerInitializer.playerType}")
         //是否使用SurfaceView
         PlayerInitializer.surfaceType =
             if (PlayerConfig.isUseSurfaceView()) SurfaceType.VIEW_SURFACE else SurfaceType.VIEW_TEXTURE
@@ -558,8 +584,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             VLCHWDecode.valueOf(PlayerConfig.getUseVLCHWDecoder())
         val preferredAudioOutput = VLCAudioOutput.valueOf(PlayerConfig.getUseVLCAudioOutput())
         PlayerInitializer.Player.vlcAudioOutput = VlcAudioPolicy.resolveOutput(preferredAudioOutput)
-        DDLog.i(
-            "PLAYER-Config",
+        LogFacade.d(
+            LogModule.PLAYER,
+            TAG_CONFIG,
             "vlc hw=${PlayerInitializer.Player.vlcHWDecode} audio=${PlayerInitializer.Player.vlcAudioOutput} compat=${PlayerConfig.isVlcAudioCompatMode()}"
         )
 
@@ -578,8 +605,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         PlayerInitializer.Danmu.cloudBlock = DanmuConfig.isCloudDanmuBlock()
         PlayerInitializer.Danmu.updateInChoreographer = DanmuConfig.isDanmuUpdateInChoreographer()
         PlayerInitializer.Danmu.language = DanmakuLanguage.formValue(DanmuConfig.getDanmuLanguage())
-        DDLog.i(
-            "PLAYER-Config",
+        LogFacade.d(
+            LogModule.PLAYER,
+            TAG_CONFIG,
             "danmu size=${PlayerInitializer.Danmu.size} speed=${PlayerInitializer.Danmu.speed} language=${PlayerInitializer.Danmu.language}"
         )
 
@@ -594,14 +622,16 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         PlayerInitializer.Subtitle.backend = if (PlayerInitializer.playerType == PlayerType.TYPE_EXO_PLAYER) {
             backend
         } else {
-            DDLog.w(
-                "PLAYER-Config",
+            LogFacade.w(
+                LogModule.PLAYER,
+                TAG_CONFIG,
                 "libass backend requires ExoPlayer, fallback to legacy for playerType=${PlayerInitializer.playerType}"
             )
             SubtitleRendererBackend.LEGACY_CANVAS
         }
-        DDLog.i(
-            "PLAYER-Config",
+        LogFacade.d(
+            LogModule.PLAYER,
+            TAG_CONFIG,
             "subtitle size=${PlayerInitializer.Subtitle.textSize} stroke=${PlayerInitializer.Subtitle.strokeWidth} backend=${PlayerInitializer.Subtitle.backend}"
         )
     }

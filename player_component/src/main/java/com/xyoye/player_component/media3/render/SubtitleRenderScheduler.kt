@@ -8,7 +8,8 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.video.VideoFrameMetadataListener
 import androidx.media3.common.Tracks
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.player_component.subtitle.gpu.AssGpuRenderer
 import com.xyoye.player_component.subtitle.gpu.SubtitleFrameCleaner
 
@@ -71,7 +72,7 @@ class SubtitleRenderScheduler(
     fun updateOffset(newOffsetMs: Long) {
         offsetMs = newOffsetMs
         SubtitlePreferenceUpdater.persistOffset(newOffsetMs)
-        DDLog.i(TAG, "subtitle offset updated: $newOffsetMs ms")
+        LogFacade.i(LogModule.PLAYER, TAG, "subtitle offset updated: $newOffsetMs ms")
     }
 
     fun currentOffset(): Long = offsetMs

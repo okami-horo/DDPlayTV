@@ -153,7 +153,28 @@ fun PlayerViewModel.logDebug(message: String, context: Map<String, String> = emp
   - 聚焦错误链路：结合 `errorCode` + `seq`，例如 `grep "ctx_errorCode=E001" debug.log | sort -t '=' -k7`.  
   - 判断是否有噪声裁剪：搜索 `ctx_dropped` 判断是否需要在复现时提高日志级别或缩小操作范围。
 
-## 5. 实现与测试建议
+## 5. 性能与空间占用验证（User Story 3）
+
+- **默认策略（SC-003 验证）**  
+  - 确认应用启动后处于 `LogPolicy.defaultReleasePolicy()`，即全局级别 INFO/ERROR 且 `enableDebugFile=false`。  
+  - 使用 adb 检查日志目录应为空：  
+    ```bash
+    adb shell ls /data/data/com.xyoye.dandanplay/files/logs
+    ```  
+    如果目录不存在或仅包含占位文件即可视为通过，默认策略下不应生成持久化日志。
+- **高日志量策略（性能试验用）**  
+  - 在日志配置页选择 DEBUG 级别并开启调试日志，或在测试代码中直接调用 `LogSystem.updateLoggingPolicy(LogPolicy.highVolumePolicy())`。  
+  - 该策略默认写入 `debug.log` / `debug_old.log`，单文件上限约 5MB，总体约 10MB，由 `LogFileManager` 的 5MB*2 限制保证。
+- **验证步骤（SC-002）**  
+  1) 在默认策略与高日志量策略下分别运行典型高频场景（列表滚动、播放、下载）各 30 分钟。  
+  2) 记录冷启动耗时与主要交互的卡顿率，对比默认策略与关闭日志的基线增量是否 <5%。  
+  3) 使用 adb 查看文件大小，确认高日志量策略下两份文件总计约 10MB：  
+     ```bash
+     adb shell du -h /data/data/com.xyoye.dandanplay/files/logs
+     ```  
+  4) 如触发磁盘不足导致写入停止，应看到 `debug.log` 停止增长且日志系统保持 logcat 输出。
+
+## 6. 实现与测试建议
 
 - 在 `common_component` 中为日志系统编写单元测试，覆盖：  
   - `LogPolicy` 对不同模块与级别的决策逻辑；  

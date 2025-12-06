@@ -1,7 +1,8 @@
 package com.xyoye.common_component.subtitle
 
 import android.content.Context
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.weight.ToastCenter
 import java.io.File
 import java.io.FileOutputStream
@@ -34,13 +35,13 @@ object SubtitleFontManager {
         val targetFile = File(directory, DEFAULT_FONT_FILE)
         if (targetFile.exists() && targetFile.length() > 0L) {
             if (!initialized) {
-                DDLog.i(TAG, "default font already present: ${targetFile.absolutePath}")
+                LogFacade.i(LogModule.SUBTITLE, TAG, "default font already present: ${targetFile.absolutePath}")
             }
             return true
         }
         val result = copyDefaultFontFromAssets(context, targetFile)
         if (result) {
-            DDLog.i(TAG, "default font copied to ${targetFile.absolutePath}")
+            LogFacade.i(LogModule.SUBTITLE, TAG, "default font copied to ${targetFile.absolutePath}")
         }
         return result
     }
@@ -59,7 +60,7 @@ object SubtitleFontManager {
         val targetFile = File(directory, DEFAULT_FONT_FILE)
         val fontAvailable = targetFile.exists() && targetFile.length() > 0L
         if (!fontAvailable && !ensureDefaultFont(context)) {
-            DDLog.e(TAG, "default font unavailable: ${targetFile.absolutePath}")
+            LogFacade.e(LogModule.SUBTITLE, TAG, "default font unavailable: ${targetFile.absolutePath}")
             return null
         }
         return targetFile.absolutePath
@@ -70,9 +71,9 @@ object SubtitleFontManager {
         if (!directory.exists()) {
             val created = runCatching { directory.mkdirs() }.getOrDefault(false)
             if (created) {
-                DDLog.i(TAG, "created font directory: ${directory.absolutePath}")
+                LogFacade.i(LogModule.SUBTITLE, TAG, "created font directory: ${directory.absolutePath}")
             } else if (!directory.exists()) {
-                DDLog.e(TAG, "failed to create font directory: ${directory.absolutePath}")
+                LogFacade.e(LogModule.SUBTITLE, TAG, "failed to create font directory: ${directory.absolutePath}")
             }
         }
         return directory
@@ -89,7 +90,7 @@ object SubtitleFontManager {
             true
         }.onFailure {
             target.delete()
-            DDLog.e(TAG, "copy default font failed: ${it.message}")
+            LogFacade.e(LogModule.SUBTITLE, TAG, "copy default font failed: ${it.message}")
             ToastCenter.showError("默认字幕字体初始化失败，字幕可能缺字")
         }.getOrDefault(false)
     }

@@ -10,7 +10,8 @@ import com.xyoye.data_component.bean.subtitle.SubtitlePipelineState
 import com.xyoye.data_component.bean.subtitle.TelemetrySample
 import com.xyoye.data_component.enums.SubtitlePipelineFallbackReason
 import com.xyoye.data_component.enums.SubtitlePipelineMode
-import com.xyoye.common_component.utils.DDLog
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -73,7 +74,7 @@ class SubtitlePipelineController(
                 }
             }
             .onFailure { error ->
-                DDLog.e(TAG, "fallback failed: ${error.message}")
+                LogFacade.e(LogModule.PLAYER, TAG, "fallback failed: ${error.message}")
             }
         cachedState.get()
     }
@@ -81,7 +82,7 @@ class SubtitlePipelineController(
     suspend fun submitTelemetry(sample: TelemetrySample) = withContext(dispatcher) {
         runCatching { api.submitTelemetry(sample) }
             .onFailure { error ->
-                DDLog.w(TAG, "submitTelemetry failed: ${error.message}")
+                LogFacade.w(LogModule.PLAYER, TAG, "submitTelemetry failed: ${error.message}")
             }
         cachedState.get()?.let { SubtitleTelemetryLogger.logSample(sample, it) }
     }

@@ -1,0 +1,29 @@
+# 日志系统维护指南
+
+本文面向维护与排查同学，概述新的日志系统如何开启、日志文件存放位置，以及从设备获取日志的标准步骤。详细使用说明请参考 `specs/001-logging-redesign/quickstart.md`。
+
+## 配置入口
+- 应用内入口：设置/调试工具中的「日志配置」页面（`LoggingConfigActivity`），可调整全局日志级别并开启/关闭调试日志写入。
+- 调试日志开关：开启后会创建/更新本地调试日志文件；关闭后仅保留默认策略（logcat 级别 INFO+/WARN/ERROR），不写入本地文件。
+
+## 日志文件位置
+- 目录：`/data/data/com.xyoye.dandanplay/files/logs/`
+- 文件：`debug.log`（当前会话）、`debug_old.log`（上一会话），单文件上限约 5MB，总体约 10MB，冷启动会自动轮转并合并历史。
+
+## 获取与排查步骤
+1. **确认开关状态**：在「日志配置」中开启调试日志，并选择需要的最小日志级别（默认 INFO）。磁盘错误熔断后需重新开关调试会话。
+2. **检查文件是否生成**：
+   ```bash
+   adb shell ls /data/data/com.xyoye.dandanplay/files/logs
+   adb shell du -h /data/data/com.xyoye.dandanplay/files/logs
+   ```
+3. **拉取日志用于离线分析**：
+   ```bash
+   adb pull /data/data/com.xyoye.dandanplay/files/logs ./logs_backup
+   ```
+4. **常用过滤**：日志按 `time level module tag ctx_*` 等字段输出，可在桌面使用 `grep`/脚本按 `module`、`ctx_scene`、`ctx_errorCode`、`seq` 过滤；logcat 实时查看时建议使用：
+   ```bash
+   adb logcat | grep -E "LogSystem|LogWriter|module="
+   ```
+
+更多场景示例（性能、高日志量实验、字段解释）请查阅 `specs/001-logging-redesign/quickstart.md`。
