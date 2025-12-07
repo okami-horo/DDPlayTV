@@ -44,3 +44,132 @@ Sensitive tokens belong in `local.properties` or Gradle properties; never hard-c
 
 ## TV/Remote UX
 - When adjusting UI element logic (focus/order/visibility), always consider Android TV remote navigation: ensure DPAD can reach/give feedback for all controls and verify focus loops are reachable on TV.
+
+## 测试脚本执行说明（远程模拟器）
+
+本节用于约定在远程模拟器上执行当前项目测试（尤其是 001-logging-redesign 日志相关测试）的统一做法，后续默认都在同一台远程设备上回归。
+
+### 远程设备约定
+
+- 默认远程设备：`192.168.0.188:5555`  
+- 建议在当前 shell 中显式指定：
+
+  ```bash
+  export REMOTE_EMULATOR=192.168.0.188:5555
+  adb devices   # 确认 REMOTE_EMULATOR 处于 device 状态
+  ```
+
+后续命令如未特殊说明，均假定使用：
+
+```bash
+adb -s $REMOTE_EMULATOR ...
+```
+
+### 构建调试 APK 与测试 APK
+
+在仓库根目录执行（WSL 中）：
+
+```bash
+./gradlew \
+  :app:assembleDebug \
+  :app:assembleDebugAndroidTest \
+  :common_component:assembleDebugAndroidTest
+```
+
+要求：
+- 检查 Gradle 输出结尾是否为 `BUILD SUCCESSFUL`，否则不得认为构建通过。
+
+### 安装 APK 到远程模拟器
+
+在构建完成后，将主 APK 和各模块的 androidTest APK 安装到远程设备：
+
+```bash
+# app 主 APK（调试版）
+adb -s $REMOTE_EMULATOR install -r \
+  app/build/outputs/apk/debug/dandanplay_v4.1.4_universal-debug.apk
+
+# app 的 androidTest APK（包含 LoggingConfigActivityTest）
+adb -s $REMOTE_EMULATOR install -r \
+  app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+# common_component 的 androidTest APK（包含日志文件相关测试）
+adb -s $REMOTE_EMULATOR install -r \
+  common_component/build/outputs/apk/androidTest/debug/common_component-debug-androidTest.apk
+```
+
+可选：验证包是否存在：
+
+```bash
+adb -s $REMOTE_EMULATOR shell pm list packages | grep dandanplay
+adb -s $REMOTE_EMULATOR shell pm list packages | grep dandanplay.test
+adb -s $REMOTE_EMULATOR shell pm list packages | grep common_component.test
+```
+
+### 按类运行已实现的 Instrumentation 测试
+
+#### 1. 日志配置 UI 测试（app）
+
+文件：`app/src/androidTest/java/com/xyoye/dandanplay/ui/debug/LoggingConfigActivityTest.kt`  
+测试类：`com.xyoye.dandanplay.ui.debug.LoggingConfigActivityTest`  
+Runner：`com.xyoye.dandanplay.test/androidx.test.runner.AndroidJUnitRunner`
+
+执行命令：
+
+```bash
+adb -s $REMOTE_EMULATOR shell am instrument -w -r \
+  -e class com.xyoye.dandanplay.ui.debug.LoggingConfigActivityTest \
+  com.xyoye.dandanplay.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+期望：
+- `Tests run: 1`
+- `OK (1 test)`
+
+#### 2. 日志文件轮转测试（common_component）
+
+文件：`common_component/src/androidTest/java/com/xyoye/common_component/log/LogFileRotationInstrumentedTest.kt`  
+测试类：`com.xyoye.common_component.log.LogFileRotationInstrumentedTest`  
+Runner：`com.xyoye.common_component.test/androidx.test.runner.AndroidJUnitRunner`
+
+执行命令：
+
+```bash
+adb -s $REMOTE_EMULATOR shell am instrument -w -r \
+  -e class com.xyoye.common_component.log.LogFileRotationInstrumentedTest \
+  com.xyoye.common_component.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+期望：
+- `Tests run: 1`
+- `OK (1 test)`
+
+#### 3. 磁盘错误熔断测试（common_component）
+
+文件：`common_component/src/androidTest/java/com/xyoye/common_component/log/LogDiskErrorInstrumentedTest.kt`  
+测试类：`com.xyoye.common_component.log.LogDiskErrorInstrumentedTest`  
+Runner：`com.xyoye.common_component.test/androidx.test.runner.AndroidJUnitRunner`
+
+执行命令：
+
+```bash
+adb -s $REMOTE_EMULATOR shell am instrument -w -r \
+  -e class com.xyoye.common_component.log.LogDiskErrorInstrumentedTest \
+  com.xyoye.common_component.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+当前行为（记录现状，后续修复实现或用例后需更新本节）：
+- 测试可在远程设备上正常启动，但断言失败：`expected:<DISABLED_DUE_TO_ERROR> but was:<ON_CURRENT_SESSION>`  
+- 表示写入失败后的熔断状态更新逻辑与用例预期不一致，需要在调试实现时重点关注。
+
+### 日志查看与过滤建议
+
+由于 adb logcat 噪声较大，不要直接全量阅读。推荐使用包名或关键字过滤：
+
+```bash
+# 只看当前应用及日志系统关键输出
+adb -s $REMOTE_EMULATOR logcat | grep -E 'com.xyoye.dandanplay|LogSystem|DDLog'
+```
+
+其他注意事项：
+- 仅在需要定位问题时短时间打开无过滤 logcat，避免长时间输出导致信息泛滥。
+- 与日志文件 `debug.log` / `debug_old.log` 联合排查时，优先按照 `quickstart.md` 中的字段说明（time/level/module/ctx_*）进行搜索和过滤。

@@ -116,7 +116,12 @@ object Media3Diagnostics {
 
     fun logHttpOpen(url: String?, code: Int?, contentType: String?) {
         log {
-            LogFacade.i(MODULE, TAG, "HTTP open: url=${url ?: "<null>"} code=${code ?: -1} contentType=${contentType ?: ""}")
+            val message = "HTTP open: url=${url ?: "<null>"} code=${code ?: -1} contentType=${contentType ?: ""}"
+            if (code != null && code >= 400) {
+                LogFacade.w(MODULE, TAG, message)
+            } else {
+                LogFacade.d(MODULE, TAG, message)
+            }
         }
         emit(
             "http_open",

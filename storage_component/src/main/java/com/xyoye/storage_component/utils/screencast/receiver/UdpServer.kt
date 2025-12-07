@@ -111,7 +111,7 @@ object UdpServer {
             if (TextUtils.isEmpty(entropyMsg)) {
                 return
             }
-            LogFacade.i(LogModule.STORAGE, UdpServer::class.java.simpleName, entropyMsg!!)
+            LogFacade.d(LogModule.STORAGE, UdpServer::class.java.simpleName, entropyMsg!!)
 
             val data = entropyMsg.toByteArray()
 

@@ -80,7 +80,7 @@ class StorageFileFragment :
     private fun setRecyclerViewItemFocusAble(focusAble: Boolean) {
         val focusTag = R.string.focusable_item.toResString()
         val binding = bindingOrNull ?: return
-        LogFacade.i(
+        LogFacade.d(
             LogModule.STORAGE,
             TAG,
             "setRecyclerViewItemFocusAble focusAble=$focusAble childCount=${binding.storageFileRv.childCount}"
@@ -100,7 +100,7 @@ class StorageFileFragment :
 
             setOnKeyListener { _, keyCode, event ->
                 if (event?.action != KeyEvent.ACTION_DOWN) {
-                    LogFacade.i(LogModule.STORAGE, TAG, "ignore key action=${event?.action} keyCode=$keyCode")
+                    LogFacade.d(LogModule.STORAGE, TAG, "ignore key action=${event?.action} keyCode=$keyCode")
                     return@setOnKeyListener false
                 }
 
@@ -124,7 +124,7 @@ class StorageFileFragment :
                         if (nextIndex < rvAdapter.itemCount) {
                             // 遥控器按下时手动分发焦点，保证列表可继续向下滚动
                             val moved = requestIndexChildFocus(nextIndex)
-                            LogFacade.i(
+                            LogFacade.d(
                                 LogModule.STORAGE,
                                 TAG,
                                 "key DOWN current=$currentIndex target=$nextIndex moved=$moved count=${rvAdapter.itemCount} repeat=${event.repeatCount}"
@@ -135,7 +135,7 @@ class StorageFileFragment :
                             }
                             moved
                         } else {
-                            LogFacade.w(
+                            LogFacade.d(
                                 LogModule.STORAGE,
                                 TAG,
                                 "key DOWN reach end current=$currentIndex count=${rvAdapter.itemCount}"
@@ -148,7 +148,7 @@ class StorageFileFragment :
                         val previousIndex = currentIndex - 1
                         if (previousIndex >= 0) {
                             val moved = requestIndexChildFocus(previousIndex)
-                            LogFacade.i(
+                            LogFacade.d(
                                 LogModule.STORAGE,
                                 TAG,
                                 "key UP current=$currentIndex target=$previousIndex moved=$moved count=${rvAdapter.itemCount} repeat=${event.repeatCount}"
@@ -159,13 +159,13 @@ class StorageFileFragment :
                             }
                             moved
                         } else {
-                            LogFacade.w(LogModule.STORAGE, TAG, "key UP reach top current=$currentIndex")
+                            LogFacade.d(LogModule.STORAGE, TAG, "key UP reach top current=$currentIndex")
                             false
                         }
                     }
 
                     else -> {
-                        LogFacade.i(LogModule.STORAGE, TAG, "key pass-through keyCode=$keyCode index=$currentIndex")
+                        LogFacade.d(LogModule.STORAGE, TAG, "key pass-through keyCode=$keyCode index=$currentIndex")
                         false
                     }
                 }
@@ -181,7 +181,7 @@ class StorageFileFragment :
         val binding = bindingOrNull ?: return
         val adapter = binding.storageFileRv.adapter ?: return
         if (adapter.itemCount == 0) {
-            LogFacade.w(LogModule.STORAGE, TAG, "requestFocus skip empty adapter")
+            LogFacade.d(LogModule.STORAGE, TAG, "requestFocus skip empty adapter")
             return
         }
         val hasPending = pendingFocusIndex != RecyclerView.NO_POSITION && !reversed
@@ -192,13 +192,13 @@ class StorageFileFragment :
         }
         val targetIndex = desiredIndex.coerceIn(0, adapter.itemCount - 1)
         pendingFocusIndex = RecyclerView.NO_POSITION
-        LogFacade.i(
+        LogFacade.d(
             LogModule.STORAGE,
             TAG,
             "requestFocus start reversed=$reversed count=${adapter.itemCount} target=$targetIndex"
         )
         if (binding.storageFileRv.requestIndexChildFocus(targetIndex)) {
-            LogFacade.i(LogModule.STORAGE, TAG, "requestFocus direct success target=$targetIndex")
+            LogFacade.d(LogModule.STORAGE, TAG, "requestFocus direct success target=$targetIndex")
             lastFocusedIndex = targetIndex
             return
         }
@@ -208,7 +208,7 @@ class StorageFileFragment :
                 if (postResult) {
                     lastFocusedIndex = targetIndex
                 }
-                LogFacade.i(LogModule.STORAGE, TAG, "requestFocus post result=$postResult target=$targetIndex")
+                LogFacade.d(LogModule.STORAGE, TAG, "requestFocus post result=$postResult target=$targetIndex")
             }
         }
     }
@@ -252,7 +252,7 @@ class StorageFileFragment :
         if (index != RecyclerView.NO_POSITION) {
             lastFocusedIndex = index
             pendingFocusIndex = index
-            LogFacade.i(LogModule.STORAGE, TAG, "saveCurrentFocusIndex index=$index")
+            LogFacade.d(LogModule.STORAGE, TAG, "saveCurrentFocusIndex index=$index")
         }
     }
 
