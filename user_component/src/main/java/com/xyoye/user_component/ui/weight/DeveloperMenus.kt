@@ -62,7 +62,7 @@ class DeveloperMenus private constructor(
             }
             R.id.item_logging_config -> {
                 ARouter.getInstance()
-                    .build(RouteTable.User.LoggingConfig)
+                    .build(RouteTable.Debug.LoggingConfig)
                     .navigation(activity)
                 return
             }

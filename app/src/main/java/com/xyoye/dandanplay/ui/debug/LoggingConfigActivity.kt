@@ -13,7 +13,7 @@ import com.xyoye.dandanplay.databinding.ActivityLoggingConfigBinding
 /**
  * 日志配置页：提供全局日志级别与调试日志开关的入口。
  */
-@Route(path = RouteTable.User.LoggingConfig)
+@Route(path = RouteTable.Debug.LoggingConfig)
 class LoggingConfigActivity :
     BaseActivity<LoggingConfigViewModel, ActivityLoggingConfigBinding>() {
 
