@@ -1,7 +1,7 @@
 package com.xyoye.common_component.log
 
-import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.log.model.LogRuntimeState
 import com.xyoye.data_component.bean.subtitle.FallbackEvent
 import com.xyoye.data_component.bean.subtitle.SubtitlePipelineState
 import com.xyoye.data_component.bean.subtitle.TelemetrySample
@@ -11,18 +11,10 @@ import com.xyoye.data_component.enums.SubtitlePipelineStatus
 object SubtitleTelemetryLogger {
     private const val TAG = "SUB-GPU"
     @Volatile
-    private var enabled: Boolean = loadDefaultState()
+    private var enabled: Boolean = false
 
-    private fun loadDefaultState(): Boolean {
-        return runCatching { DevelopConfig.isSubtitleTelemetryLogEnable() }.getOrDefault(false)
-    }
-
-    fun setEnable(enable: Boolean) {
-        enabled = enable
-    }
-
-    fun refreshEnableFromConfig() {
-        enabled = loadDefaultState()
+    fun updateFromRuntime(state: LogRuntimeState) {
+        enabled = state.debugSessionEnabled
     }
 
     private fun shouldLog(): Boolean = enabled

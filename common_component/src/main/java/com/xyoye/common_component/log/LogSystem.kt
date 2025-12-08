@@ -122,6 +122,7 @@ object LogSystem {
     private fun applyRuntimeState(state: LogRuntimeState): LogRuntimeState {
         stateRef.set(state)
         writer?.updateRuntimeState(state)
+        SubtitleTelemetryLogger.updateFromRuntime(state)
         return state
     }
 

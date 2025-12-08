@@ -11,17 +11,17 @@
             android:title="@string/developer_app_log_enable_title"
             android:summary="@string/developer_app_log_enable_summary_off"
             app:icon="@drawable/ic_app_setting" />
+
+        <Preference
+            android:key="developer_logging_config"
+            android:title="@string/developer_log_config_title"
+            android:summary="@string/developer_log_config_summary"
+            app:icon="@drawable/ic_app_setting_about_us" />
     </PreferenceCategory>
 
     <PreferenceCategory
         android:key="developer_subtitle_category"
         android:title="@string/developer_subtitle_debug_category_title">
-
-        <SwitchPreference
-            android:key="subtitle_telemetry_log_enable"
-            android:title="@string/developer_subtitle_telemetry_log_enable_title"
-            android:summary="@string/developer_subtitle_telemetry_log_enable_summary_off"
-            app:icon="@drawable/ic_app_setting" />
 
         <Preference
             android:key="subtitle_session_status"

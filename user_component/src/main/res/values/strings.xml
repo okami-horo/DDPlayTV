@@ -99,9 +99,8 @@
     <string name="developer_app_log_enable_title">启用调试日志写入</string>
     <string name="developer_app_log_enable_summary_on">已开启：输出日志到 logcat，并写入 debug.log / debug_old.log</string>
     <string name="developer_app_log_enable_summary_off">关闭后仅保留默认策略（logcat INFO+），不写入本地调试日志</string>
-    <string name="developer_subtitle_telemetry_log_enable_title">字幕遥测 Debug 日志</string>
-    <string name="developer_subtitle_telemetry_log_enable_summary_on">已开启：输出字幕遥测相关 Debug 日志</string>
-    <string name="developer_subtitle_telemetry_log_enable_summary_off">关闭后不输出字幕遥测日志</string>
+    <string name="developer_log_config_title">日志配置</string>
+    <string name="developer_log_config_summary">打开日志管理页面，统一调整级别与调试写入</string>
     <string name="developer_subtitle_debug_category_title">字幕调试</string>
     <string name="developer_subtitle_session_status_title">字幕后端状态</string>
     <string name="developer_subtitle_session_status_summary_empty">暂无会话信息</string>

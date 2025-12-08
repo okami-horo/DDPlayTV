@@ -6,13 +6,14 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.config.DevelopConfig
+import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.LogSystem
-import com.xyoye.common_component.log.SubtitleTelemetryLogger
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SecurityHelperConfig
@@ -34,7 +35,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         private const val TAG = "DeveloperSetting"
         private const val SUBTITLE_TAG = "DeveloperSubtitle"
         private const val KEY_APP_LOG_ENABLE = "app_log_enable"
-        private const val KEY_SUBTITLE_TELEMETRY_LOG_ENABLE = "subtitle_telemetry_log_enable"
+        private const val KEY_LOGGING_CONFIG = "developer_logging_config"
         private const val KEY_BUGLY_STATUS = "bugly_status"
         private const val KEY_SUBTITLE_SESSION_STATUS = "subtitle_session_status"
         private const val KEY_SUBTITLE_FORCE_FALLBACK = "subtitle_force_fallback"
@@ -95,22 +96,16 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                 true
             }
         }
+
+        findPreference<Preference>(KEY_LOGGING_CONFIG)?.setOnPreferenceClickListener {
+            ARouter.getInstance()
+                .build(RouteTable.Debug.LoggingConfig)
+                .navigation(context)
+            true
+        }
     }
 
     private fun initSubtitleDebugPreferences() {
-        findPreference<SwitchPreference>(KEY_SUBTITLE_TELEMETRY_LOG_ENABLE)?.apply {
-            val summaryOn = getString(R.string.developer_subtitle_telemetry_log_enable_summary_on)
-            val summaryOff = getString(R.string.developer_subtitle_telemetry_log_enable_summary_off)
-            summary = if (isChecked) summaryOn else summaryOff
-            setOnPreferenceChangeListener { _, newValue ->
-                val enable = newValue as? Boolean ?: return@setOnPreferenceChangeListener false
-                summary = if (enable) summaryOn else summaryOff
-                SubtitleTelemetryLogger.setEnable(enable)
-                LogFacade.i(LogModule.SUBTITLE, SUBTITLE_TAG, "toggle telemetry log enable=$enable")
-                true
-            }
-        }
-
         findPreference<Preference>(KEY_SUBTITLE_SESSION_STATUS)?.apply {
             summary = buildSubtitleStatusSummary()
             setOnPreferenceClickListener {
@@ -294,7 +289,6 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         override fun getBoolean(key: String?, defValue: Boolean): Boolean {
             return when (key) {
                 KEY_APP_LOG_ENABLE -> LogSystem.getRuntimeState().debugSessionEnabled
-                KEY_SUBTITLE_TELEMETRY_LOG_ENABLE -> DevelopConfig.isSubtitleTelemetryLogEnable()
                 else -> defValue
             }
         }
@@ -308,10 +302,6 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                         LogSystem.stopDebugSession()
                     }
                     DevelopConfig.putDdLogEnable(value)
-                }
-                KEY_SUBTITLE_TELEMETRY_LOG_ENABLE -> {
-                    DevelopConfig.putSubtitleTelemetryLogEnable(value)
-                    SubtitleTelemetryLogger.setEnable(value)
                 }
             }
         }
