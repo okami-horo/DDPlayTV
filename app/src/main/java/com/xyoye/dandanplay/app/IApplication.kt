@@ -21,7 +21,6 @@ class IApplication : BaseApplication(){
         LogSystem.init(this)
         LogSystem.loadPolicyFromStorage()
         super.onCreate()
-        AppConfig.init(this)
         Media3CrashTagger.init()
     }
 }

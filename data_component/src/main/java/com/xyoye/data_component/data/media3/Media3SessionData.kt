@@ -5,11 +5,9 @@ import com.xyoye.data_component.entity.media3.DownloadRequiredAction
 import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.data_component.entity.media3.Media3PlayerEngine
 import com.xyoye.data_component.entity.media3.Media3PlaybackState
-import com.xyoye.data_component.entity.media3.Media3RolloutSource
 import com.xyoye.data_component.entity.media3.Media3SourceType
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 import com.xyoye.data_component.entity.media3.PlaybackSessionMetrics
-import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
 import kotlin.jvm.JvmSuppressWildcards
 
 @JsonClass(generateAdapter = true)
@@ -28,7 +26,6 @@ data class PlaybackSessionResponseData(
     val playbackState: Media3PlaybackState,
     val playerEngine: Media3PlayerEngine,
     val capabilityContract: PlayerCapabilityContract,
-    val toggleSnapshot: RolloutToggleSnapshot,
     val metrics: PlaybackSessionMetrics? = null
 )
 
@@ -43,13 +40,6 @@ data class CapabilityCommandResponseData(
     val sessionId: String? = null,
     val acceptedAt: Long? = null,
     val resultingState: Media3PlaybackState? = null
-)
-
-@JsonClass(generateAdapter = true)
-data class RolloutTogglePatchData(
-    val value: Boolean,
-    val source: Media3RolloutSource,
-    val reason: String? = null
 )
 
 @JsonClass(generateAdapter = true)

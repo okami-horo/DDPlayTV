@@ -1,5 +1,6 @@
 package com.xyoye.common_component.network.repository
 
+import com.xyoye.common_component.BuildConfig
 import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.common_component.network.service.Media3Service
 import com.xyoye.data_component.data.media3.CapabilityCommandRequestData
@@ -8,18 +9,21 @@ import com.xyoye.data_component.data.media3.DownloadValidationRequestData
 import com.xyoye.data_component.data.media3.DownloadValidationResponseData
 import com.xyoye.data_component.data.media3.PlaybackSessionRequestData
 import com.xyoye.data_component.data.media3.PlaybackSessionResponseData
-import com.xyoye.data_component.data.media3.RolloutTogglePatchData
+import com.xyoye.data_component.entity.media3.Media3Capability
+import com.xyoye.data_component.entity.media3.Media3PlayerEngine
+import com.xyoye.data_component.entity.media3.Media3PlaybackState
 import com.xyoye.data_component.entity.media3.Media3RolloutSource
-import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
+import com.xyoye.data_component.entity.media3.Media3SourceType
+import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
 
-@Media3Dependent("Repository orchestrates Media3 network + cache layers")
+@Media3Dependent("Repository caches toggle snapshots using local build settings only")
 class Media3RepositoryTest {
 
     private val fakeService = FakeMedia3Service()
@@ -37,54 +41,59 @@ class Media3RepositoryTest {
     }
 
     @Test
-    fun updateRollout_cachesSnapshotWhenResponseContainsSession() = runTest {
-        val sessionId = "session-100"
-        val snapshot = snapshot(appliesToSession = sessionId)
-        fakeService.snapshotToReturn = snapshot
+    fun createSession_cachesLocalToggleSnapshot() = runTest {
+        fakeService.response = sessionResponse("session-create")
 
-        val patch = RolloutTogglePatchData(
-            value = true,
-            source = Media3RolloutSource.MANUAL_OVERRIDE,
-            reason = "canary"
+        Media3Repository.createSession(
+            PlaybackSessionRequestData(
+                mediaId = "media-create",
+                sourceType = Media3SourceType.STREAM,
+                autoplay = true,
+                requestedCapabilities = listOf(Media3Capability.PLAY)
+            )
         )
 
-        Media3Repository.updateRollout(patch)
-
-        assertEquals(snapshot, Media3Repository.cachedToggle(sessionId))
+        val snapshot = Media3Repository.cachedToggle("session-create")
+        assertNotNull(snapshot)
+        assertEquals("session-create", snapshot?.appliesToSession)
+        assertEquals(BuildConfig.MEDIA3_ENABLED_FALLBACK, snapshot?.value)
+        assertEquals(Media3RolloutSource.GRADLE_FALLBACK, snapshot?.source)
     }
 
     @Test
-    fun updateRollout_skipsCacheWhenSessionMissing() = runTest {
-        fakeService.snapshotToReturn = snapshot(appliesToSession = null)
+    fun fetchSession_cachesLocalToggleSnapshot() = runTest {
+        fakeService.response = sessionResponse("session-fetch")
 
-        val patch = RolloutTogglePatchData(
-            value = false,
-            source = Media3RolloutSource.REMOTE_CONFIG,
-            reason = "rollback"
-        )
+        Media3Repository.fetchSession("session-fetch")
 
-        Media3Repository.updateRollout(patch)
-
-        assertNull(Media3Repository.cachedToggle("any-session"))
+        val snapshot = Media3Repository.cachedToggle("session-fetch")
+        assertNotNull(snapshot)
+        assertEquals("session-fetch", snapshot?.appliesToSession)
+        assertEquals(BuildConfig.MEDIA3_ENABLED_FALLBACK, snapshot?.value)
+        assertEquals(Media3RolloutSource.GRADLE_FALLBACK, snapshot?.source)
     }
 
-    private fun snapshot(appliesToSession: String?) = RolloutToggleSnapshot(
-        snapshotId = "snapshot-${appliesToSession ?: "none"}",
-        value = appliesToSession != null,
-        source = Media3RolloutSource.REMOTE_CONFIG,
-        evaluatedAt = 1_000L,
-        appliesToSession = appliesToSession
+    private fun sessionResponse(sessionId: String) = PlaybackSessionResponseData(
+        sessionId = sessionId,
+        mediaId = "media-id",
+        sourceType = Media3SourceType.STREAM,
+        playbackState = Media3PlaybackState.READY,
+        playerEngine = Media3PlayerEngine.MEDIA3,
+        capabilityContract = PlayerCapabilityContract(
+            sessionId = sessionId,
+            capabilities = listOf(Media3Capability.PLAY)
+        )
     )
 
     private class FakeMedia3Service : Media3Service {
-        var snapshotToReturn: RolloutToggleSnapshot? = null
+        var response: PlaybackSessionResponseData? = null
 
         override suspend fun createSession(request: PlaybackSessionRequestData): PlaybackSessionResponseData {
-            throw UnsupportedOperationException("Not needed for test")
+            return response ?: throw IllegalStateException("response not set")
         }
 
         override suspend fun fetchSession(sessionId: String): PlaybackSessionResponseData {
-            throw UnsupportedOperationException("Not needed for test")
+            return response ?: throw IllegalStateException("response not set")
         }
 
         override suspend fun dispatchCommand(
@@ -96,16 +105,6 @@ class Media3RepositoryTest {
 
         override suspend fun emitTelemetry(event: com.xyoye.data_component.entity.media3.TelemetryEvent): Response<Unit> {
             throw UnsupportedOperationException("Not needed for test")
-        }
-
-        override suspend fun updateRollout(patch: RolloutTogglePatchData): RolloutToggleSnapshot {
-            return snapshotToReturn ?: RolloutToggleSnapshot(
-                snapshotId = "default",
-                value = patch.value,
-                source = patch.source,
-                evaluatedAt = 0L,
-                appliesToSession = null
-            )
         }
 
         override suspend fun validateDownload(request: DownloadValidationRequestData): DownloadValidationResponseData {

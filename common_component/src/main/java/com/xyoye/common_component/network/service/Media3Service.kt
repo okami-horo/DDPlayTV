@@ -6,13 +6,10 @@ import com.xyoye.data_component.data.media3.DownloadValidationRequestData
 import com.xyoye.data_component.data.media3.DownloadValidationResponseData
 import com.xyoye.data_component.data.media3.PlaybackSessionRequestData
 import com.xyoye.data_component.data.media3.PlaybackSessionResponseData
-import com.xyoye.data_component.data.media3.RolloutTogglePatchData
-import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
 import com.xyoye.data_component.entity.media3.TelemetryEvent
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -38,11 +35,6 @@ interface Media3Service {
     suspend fun emitTelemetry(
         @Body event: TelemetryEvent
     ): Response<Unit>
-
-    @PATCH("v1/media3/rollout")
-    suspend fun updateRollout(
-        @Body patch: RolloutTogglePatchData
-    ): RolloutToggleSnapshot
 
     @POST("v1/media3/downloads/validate")
     suspend fun validateDownload(

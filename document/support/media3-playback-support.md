@@ -20,7 +20,7 @@ This guide helps support engineers triage Media3 playback tickets, capture telem
 | Symptom | checklist |
 | --- | --- |
 | **Audio-only fallback** | Confirm `CodecFallbackHandler` surfaced the message in-app. If not, ask user to capture a screen recording and attach telemetry logs (see below). |
-| **Playback fails immediately** | Toggle `Media3 Enabled` off (Remote Config) for the impacted cohort via `AppConfig` debug menu, then retry. Document the rollout snapshot in the ticket. |
+| **Playback fails immediately** | 在设备上进入“设置 → 播放”将“Media3 启用”本地开关关闭后重试（无远程配置），并在工单中记录当前会话或时间戳。 |
 | **Cast failures** | Collect the `targetId` shown in the toast, confirm the Chromecast firmware version, and rerun with the cast device rebooted. |
 | **Download validation blocked** | Run `scripts/testing/media3-regression-report.sh --reports <path>` locally with the user’s logs, and ensure the download asset was revalidated in the last 7 days. |
 

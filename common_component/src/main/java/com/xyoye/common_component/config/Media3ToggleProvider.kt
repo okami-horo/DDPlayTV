@@ -11,13 +11,10 @@ object Media3ToggleProvider {
         appliesToSession: String? = null,
         overrideValue: Boolean? = null
     ): RolloutToggleSnapshot {
-        val remoteValue = AppConfig.isMedia3EnabledRemote()
         val now = System.currentTimeMillis()
         val (value, source) = when {
             overrideValue != null -> overrideValue to Media3RolloutSource.MANUAL_OVERRIDE
-            remoteValue -> true to Media3RolloutSource.REMOTE_CONFIG
-            BuildConfig.MEDIA3_ENABLED_FALLBACK -> true to Media3RolloutSource.GRADLE_FALLBACK
-            else -> false to Media3RolloutSource.REMOTE_CONFIG
+            else -> BuildConfig.MEDIA3_ENABLED_FALLBACK to Media3RolloutSource.GRADLE_FALLBACK
         }
         return RolloutToggleSnapshot(
             snapshotId = UUID.randomUUID().toString(),
@@ -28,8 +25,5 @@ object Media3ToggleProvider {
         )
     }
 
-    fun isEnabled(): Boolean {
-        val remoteValue = AppConfig.isMedia3EnabledRemote()
-        return remoteValue || BuildConfig.MEDIA3_ENABLED_FALLBACK
-    }
+    fun isEnabled(): Boolean = BuildConfig.MEDIA3_ENABLED_FALLBACK
 }

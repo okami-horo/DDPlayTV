@@ -1,6 +1,7 @@
 package com.xyoye.common_component.network.repository
 
 import androidx.annotation.VisibleForTesting
+import com.xyoye.common_component.config.Media3ToggleProvider
 import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.network.request.NetworkException
 import com.xyoye.common_component.network.service.Media3Service
@@ -11,7 +12,6 @@ import com.xyoye.data_component.data.media3.DownloadValidationRequestData
 import com.xyoye.data_component.data.media3.DownloadValidationResponseData
 import com.xyoye.data_component.data.media3.PlaybackSessionRequestData
 import com.xyoye.data_component.data.media3.PlaybackSessionResponseData
-import com.xyoye.data_component.data.media3.RolloutTogglePatchData
 import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.data_component.entity.media3.Media3SourceType
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
@@ -82,14 +82,6 @@ object Media3Repository : BaseRepository() {
         }.map { }
     }
 
-    suspend fun updateRollout(patch: RolloutTogglePatchData): Result<RolloutToggleSnapshot> {
-        return execute("updateRollout") {
-            media3Service.updateRollout(patch)
-        }.onSuccess { snapshot ->
-            snapshot.appliesToSession?.let { toggleCache[it] = snapshot }
-        }
-    }
-
     suspend fun validateDownload(
         request: DownloadValidationRequestData
     ): Result<DownloadValidationResponseData> {
@@ -141,10 +133,11 @@ object Media3Repository : BaseRepository() {
             metrics = response.metrics,
             isOfflineCapable = response.capabilityContract.offlineSupport?.audioOnlyFallback == true
         )
+        val snapshot = Media3ToggleProvider.snapshot(appliesToSession = session.sessionId)
         sessionCache[session.sessionId] = session
         capabilityCache[session.sessionId] = response.capabilityContract
-        toggleCache[session.sessionId] = response.toggleSnapshot
-        return Media3SessionBundle(session, response.capabilityContract, response.toggleSnapshot)
+        toggleCache[session.sessionId] = snapshot
+        return Media3SessionBundle(session, response.capabilityContract, snapshot)
     }
 
     private fun cachedBundle(sessionId: String): Media3SessionBundle? {

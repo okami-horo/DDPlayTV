@@ -55,9 +55,9 @@ Alert webhooks originate from Grafana and Firebase; keep routing keys aligned wi
    - Inspect Bugly crash tags for session IDs and toggle values.
 
 3. **Mitigation Options**
-   - **Ramp Down**: Flip Firebase Remote Config `media3_enabled` to `false` for affected cohorts (leave `gradle.properties` fallback untouched). Use staged rollout if only certain regions are impacted.
-   - **Force Rollback**: If crash rate >0.4% or first frame p95 >3s for >30 min, set `media3_enabled=false` globally, then redeploy after verifying fix.
-   - **Scoped Disable**: Add `Media3ToggleProvider` overrides via `AppConfig` for QA builds to reproduce issues.
+   - **Ramp Down**: 不再支持 Firebase Remote Config，需通过发布管道/渠道快速下架或关闭打包参数 `media3_enabled=false` 后重新分发；区域灰度改由渠道控制。
+   - **Force Rollback**: 若崩溃率 >0.4% 或首帧 p95 >3s 持续 30 分钟，直接发布关闭 `media3_enabled` 的修订版，并验证修复后再恢复。
+   - **Scoped Disable**: QA 调试可在本地构建时覆盖 `media3_enabled` 或在测试入口注入 `Media3ToggleProvider` override，无远程开关。
    - **Download Fallback**: Instruct storage/local components to enforce audio-only flows by honoring `CodecFallbackHandler` telemetry.
 
 4. **Post-Mitigation**
@@ -67,8 +67,8 @@ Alert webhooks originate from Grafana and Firebase; keep routing keys aligned wi
 
 ## Rollback Procedure
 
-1. Pause any active rollout (Remote Config percentage back to last good cohort).
-2. Set `media3_enabled=false` default and publish update.
+1. 暂停现有发布/渠道投放，改走最新可用的稳定版本。
+2. 以 `media3_enabled=false` 重新打包并发布更新（无远程下发）。
 3. Notify `#media3-rollout` and `Playback-OnCall` email with incident ID.
 4. Trigger `./gradlew clean build` on CI to ensure legacy path still compiles (should run in <15 minutes).
 5. Once telemetry stabilizes (<0.2% crash, first-frame p95 <2s), plan fix + rehearse re-enable with canary cohort.
