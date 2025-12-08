@@ -184,6 +184,12 @@ class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersona
                 .build(RouteTable.User.SettingApp)
                 .navigation()
         }
+
+        dataBinding.developerSettingLl?.setOnClickListener {
+            ARouter.getInstance()
+                .build(RouteTable.User.SettingDeveloper)
+                .navigation()
+        }
     }
 
     /**

@@ -99,7 +99,7 @@ class DeveloperMenus private constructor(
      */
     private fun updateItem() {
         authItem.isVisible = true
-        settingItem.isVisible = true
+        settingItem.isVisible = false // 开发者设置入口已移至个人中心
 
         val (title, iconRes) = if (isDeveloperAuthenticate) {
             "已认证" to R.drawable.ic_developer_authenticated
