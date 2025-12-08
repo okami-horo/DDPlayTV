@@ -2,19 +2,20 @@ package com.xyoye.user_component.ui.fragment
 
 import android.os.Bundle
 import android.view.View
+import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.config.DevelopConfig
-import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.LogSystem
+import com.xyoye.common_component.log.model.LogLevel
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.log.model.PolicySource
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SecurityHelperConfig
 import com.xyoye.common_component.weight.ToastCenter
@@ -35,7 +36,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         private const val TAG = "DeveloperSetting"
         private const val SUBTITLE_TAG = "DeveloperSubtitle"
         private const val KEY_APP_LOG_ENABLE = "app_log_enable"
-        private const val KEY_LOGGING_CONFIG = "developer_logging_config"
+        private const val KEY_LOG_LEVEL = "developer_log_level"
         private const val KEY_BUGLY_STATUS = "bugly_status"
         private const val KEY_SUBTITLE_SESSION_STATUS = "subtitle_session_status"
         private const val KEY_SUBTITLE_FORCE_FALLBACK = "subtitle_force_fallback"
@@ -74,6 +75,23 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
     }
 
     private fun initLogPreferences() {
+        findPreference<ListPreference>(KEY_LOG_LEVEL)?.apply {
+            val runtime = LogSystem.getRuntimeState()
+            updateLogLevelPreference(this, runtime.activePolicy.defaultLevel)
+            setOnPreferenceChangeListener { _, newValue ->
+                val level = (newValue as? String)?.let { raw ->
+                    runCatching { LogLevel.valueOf(raw) }.getOrNull()
+                } ?: return@setOnPreferenceChangeListener false
+                val current = LogSystem.getRuntimeState()
+                LogSystem.updateLoggingPolicy(
+                    current.activePolicy.copy(defaultLevel = level),
+                    PolicySource.USER_OVERRIDE
+                )
+                updateLogLevelPreference(this, level)
+                true
+            }
+        }
+
         findPreference<SwitchPreference>(KEY_APP_LOG_ENABLE)?.apply {
             val summaryOn = getString(R.string.developer_app_log_enable_summary_on)
             val summaryOff = getString(R.string.developer_app_log_enable_summary_off)
@@ -95,13 +113,6 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                 )
                 true
             }
-        }
-
-        findPreference<Preference>(KEY_LOGGING_CONFIG)?.setOnPreferenceClickListener {
-            ARouter.getInstance()
-                .build(RouteTable.Debug.LoggingConfig)
-                .navigation(context)
-            true
         }
     }
 
@@ -277,11 +288,35 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         preference.summary = if (runtime.debugSessionEnabled) summaryOn else summaryOff
     }
 
+    private fun updateLogLevelPreference(
+        preference: ListPreference,
+        level: LogLevel
+    ) {
+        preference.value = level.name
+        preference.summary = getString(
+            R.string.developer_log_level_summary,
+            resolveLogLevelLabel(level)
+        )
+    }
+
+    private fun resolveLogLevelLabel(level: LogLevel): String {
+        return when (level) {
+            LogLevel.DEBUG -> getString(R.string.developer_log_level_entry_debug)
+            LogLevel.INFO -> getString(R.string.developer_log_level_entry_info)
+            LogLevel.WARN -> getString(R.string.developer_log_level_entry_warn)
+            LogLevel.ERROR -> getString(R.string.developer_log_level_entry_error)
+        }
+    }
+
     private fun refreshLogPreferenceState() {
         val summaryOn = getString(R.string.developer_app_log_enable_summary_on)
         val summaryOff = getString(R.string.developer_app_log_enable_summary_off)
         findPreference<SwitchPreference>(KEY_APP_LOG_ENABLE)?.let {
             updateLogSummary(it, summaryOn, summaryOff)
+        }
+        findPreference<ListPreference>(KEY_LOG_LEVEL)?.let {
+            val level = LogSystem.getRuntimeState().activePolicy.defaultLevel
+            updateLogLevelPreference(it, level)
         }
     }
 
@@ -296,24 +331,29 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         override fun putBoolean(key: String?, value: Boolean) {
             when (key) {
                 KEY_APP_LOG_ENABLE -> {
-                    if (value) {
-                        LogSystem.startDebugSession()
-                    } else {
-                        LogSystem.stopDebugSession()
-                    }
-                    DevelopConfig.putDdLogEnable(value)
+                    DevelopConfig.putDdLogEnable(LogSystem.getRuntimeState().debugSessionEnabled)
                 }
             }
         }
 
         override fun getString(key: String?, defValue: String?): String? {
             return when (key) {
+                KEY_LOG_LEVEL -> LogSystem.getRuntimeState().activePolicy.defaultLevel.name
                 else -> defValue
             }
         }
 
         override fun putString(key: String?, value: String?) {
             when (key) {
+                KEY_LOG_LEVEL -> value?.let { raw ->
+                    runCatching { LogLevel.valueOf(raw) }.getOrNull()?.let { level ->
+                        val current = LogSystem.getRuntimeState()
+                        LogSystem.updateLoggingPolicy(
+                            current.activePolicy.copy(defaultLevel = level),
+                            PolicySource.USER_OVERRIDE
+                        )
+                    }
+                }
             }
         }
     }

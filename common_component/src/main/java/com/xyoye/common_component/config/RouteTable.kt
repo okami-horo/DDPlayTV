@@ -43,10 +43,6 @@ object RouteTable {
         const val SettingDeveloper = "/user/setting_developer"
     }
 
-    object Debug {
-        const val LoggingConfig = "/debug/logging_config"
-    }
-
     object Player {
         const val Player = "/player/player_interceptor"
         const val PlayerCenter = "/player/player"

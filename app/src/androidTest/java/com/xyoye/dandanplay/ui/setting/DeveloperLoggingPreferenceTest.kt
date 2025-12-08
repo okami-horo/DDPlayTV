@@ -1,12 +1,12 @@
-package com.xyoye.dandanplay.ui.debug
+package com.xyoye.dandanplay.ui.setting
 
 import android.content.Context
+import androidx.annotation.StringRes
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.xyoye.common_component.log.LogSystem
@@ -15,7 +15,7 @@ import com.xyoye.common_component.log.model.LogLevel
 import com.xyoye.common_component.log.model.LogPolicy
 import com.xyoye.common_component.log.model.PolicySource
 import com.xyoye.dandanplay.R
-import org.hamcrest.Matchers.anything
+import com.xyoye.user_component.ui.activities.setting_developer.SettingDeveloperActivity
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,10 +25,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * LoggingConfigActivity UI 测试：验证级别选择与调试开关会同步更新 LogRuntimeState。
+ * 开发者设置中的日志偏好项测试：验证级别选择与调试开关同步更新 LogRuntimeState。
  */
 @RunWith(AndroidJUnit4::class)
-class LoggingConfigActivityTest {
+class DeveloperLoggingPreferenceTest {
 
     private lateinit var context: Context
 
@@ -49,8 +49,9 @@ class LoggingConfigActivityTest {
 
     @Test
     fun updateLevelAndToggleDebugLogging() {
-        ActivityScenario.launch(LoggingConfigActivity::class.java).use {
-            selectLogLevel(position = 2) // WARN
+        ActivityScenario.launch(SettingDeveloperActivity::class.java).use {
+            openLogLevelDialog()
+            selectLogLevel(R.string.developer_log_level_entry_warn)
 
             val levelUpdated = LogSystem.getRuntimeState()
             assertEquals(LogLevel.WARN, levelUpdated.activePolicy.defaultLevel)
@@ -70,14 +71,19 @@ class LoggingConfigActivityTest {
         }
     }
 
-    private fun selectLogLevel(position: Int) {
-        onView(withId(R.id.logging_level_spinner)).perform(click())
-        onData(anything()).atPosition(position).perform(click())
+    private fun openLogLevelDialog() {
+        onView(withText(R.string.developer_log_level_title)).perform(click())
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+    }
+
+    private fun selectLogLevel(@StringRes entryRes: Int) {
+        val label = context.getString(entryRes)
+        onView(withText(label)).perform(click())
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
     }
 
     private fun toggleDebugLogging() {
-        onView(withId(R.id.debug_log_switch)).perform(click())
+        onView(withText(R.string.developer_app_log_enable_title)).perform(click())
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
     }
 

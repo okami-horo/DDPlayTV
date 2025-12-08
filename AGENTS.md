@@ -88,7 +88,7 @@ adb -s $REMOTE_EMULATOR ...
 adb -s $REMOTE_EMULATOR install -r \
   app/build/outputs/apk/debug/dandanplay_v4.1.4_universal-debug.apk
 
-# app 的 androidTest APK（包含 LoggingConfigActivityTest）
+# app 的 androidTest APK（包含 DeveloperLoggingPreferenceTest）
 adb -s $REMOTE_EMULATOR install -r \
   app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 
@@ -107,17 +107,17 @@ adb -s $REMOTE_EMULATOR shell pm list packages | grep common_component.test
 
 ### 按类运行已实现的 Instrumentation 测试
 
-#### 1. 日志配置 UI 测试（app）
+#### 1. 开发者设置日志 UI 测试（app）
 
-文件：`app/src/androidTest/java/com/xyoye/dandanplay/ui/debug/LoggingConfigActivityTest.kt`  
-测试类：`com.xyoye.dandanplay.ui.debug.LoggingConfigActivityTest`  
+文件：`app/src/androidTest/java/com/xyoye/dandanplay/ui/setting/DeveloperLoggingPreferenceTest.kt`  
+测试类：`com.xyoye.dandanplay.ui.setting.DeveloperLoggingPreferenceTest`  
 Runner：`com.xyoye.dandanplay.test/androidx.test.runner.AndroidJUnitRunner`
 
 执行命令：
 
 ```bash
 adb -s $REMOTE_EMULATOR shell am instrument -w -r \
-  -e class com.xyoye.dandanplay.ui.debug.LoggingConfigActivityTest \
+  -e class com.xyoye.dandanplay.ui.setting.DeveloperLoggingPreferenceTest \
   com.xyoye.dandanplay.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
