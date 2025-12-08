@@ -4,7 +4,6 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.isVisible
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
-import com.alibaba.sdk.android.feedback.impl.FeedbackAPI
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.bridge.LoginObserver
 import com.xyoye.common_component.bridge.ServiceLifecycleBridge
@@ -173,10 +172,6 @@ class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersona
             ARouter.getInstance()
                 .build(RouteTable.Stream.ScreencastReceiver)
                 .navigation()
-        }
-
-        dataBinding.feedbackLl.setOnClickListener {
-            FeedbackAPI.openFeedbackActivity()
         }
 
         dataBinding.appSettingLl.setOnClickListener {

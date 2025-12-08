@@ -1,7 +1,6 @@
 package com.xyoye.common_component.utils
 
 import androidx.core.content.pm.PackageInfoCompat
-import com.taobao.update.datasource.UpdateDataSource
 import com.xyoye.common_component.base.app.BaseApplication
 
 /**
@@ -25,9 +24,5 @@ object AppUtils {
                 BaseApplication.getAppContext().packageManager.getPackageInfo(packageName, 0)
             packageInfo.versionName ?: ""
         }.getOrElse { "" }
-    }
-
-    fun checkUpdate() {
-        UpdateDataSource.getInstance().startManualUpdate(false)
     }
 }

@@ -58,20 +58,7 @@ class AppSettingFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("app_version")?.apply {
             try {
                 summary = AppUtils.getVersionName()
-                setOnPreferenceClickListener {
-                    try {
-                        AppUtils.checkUpdate()
-                    } catch (e: Exception) {
-                        ErrorReportHelper.postCatchedExceptionWithContext(
-                            e,
-                            "AppSettingFragment",
-                            "app_version_click",
-                            "Failed to check for app updates"
-                        )
-                        ToastCenter.showError("检查更新失败，请稍后再试")
-                    }
-                    return@setOnPreferenceClickListener true
-                }
+                isSelectable = false
             } catch (e: Exception) {
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,

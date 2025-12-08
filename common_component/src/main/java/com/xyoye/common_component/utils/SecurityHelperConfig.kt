@@ -40,17 +40,6 @@ object SecurityHelperConfig {
         }
     
     /**
-     * 阿里云密钥
-     * 优先从BuildConfig读取，fallback到默认值
-     */
-    val ALIYUN_SECRET: String
-        get() = when {
-            BuildConfig.ALIYUN_SECRET.isNotEmpty() && 
-            BuildConfig.ALIYUN_SECRET != "DEFAULT_ALIYUN_SECRET" -> BuildConfig.ALIYUN_SECRET
-            else -> ""
-        }
-    
-    /**
      * 检查配置是否完整
      */
     fun isConfigured(): Boolean {

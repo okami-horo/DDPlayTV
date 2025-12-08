@@ -40,11 +40,6 @@ android {
             ?: project.findProperty("DANDAN_APP_ID")?.toString() 
             ?: "DEFAULT_DANDAN_ID"
         buildConfigField("String", "DANDAN_APP_ID", "\"$dandanAppId\"")
-        
-        val aliyunSecret = System.getenv("ALIYUN_SECRET") 
-            ?: project.findProperty("ALIYUN_SECRET")?.toString() 
-            ?: "DEFAULT_ALIYUN_SECRET"
-        buildConfigField("String", "ALIYUN_SECRET", "\"$aliyunSecret\"")
     }
     namespace = "com.xyoye.common_component"
 }
@@ -100,10 +95,6 @@ dependencies {
     api(Dependencies.Github.nano_http)
     api(Dependencies.Github.smbj)
     api(Dependencies.Github.dcerpc)
-
-    api(Dependencies.Alibaba.alicloud_update)
-    api(Dependencies.Alibaba.alicloud_feedback)
-    implementation(Dependencies.Alibaba.alicloud_analysis)
 
     kapt(files("libs/mmkv-compiler.jar"))
     kapt(Dependencies.AndroidX.room_compiler)

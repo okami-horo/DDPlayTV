@@ -13,10 +13,6 @@ BUGLY_APP_ID=YOUR_BUGLY_APP_ID_HERE
 # 如果您需要使用弹弹play的API服务，请配置以下信息
 DANDAN_APP_ID=YOUR_DANDAN_APP_ID_HERE
 
-# 阿里云配置（可选）
-# 如果您使用阿里云服务，请配置以下信息
-ALIYUN_SECRET=YOUR_ALIYUN_SECRET_HERE
-
 # 配置说明：
 # 1. 配置完成后，请重新编译项目
 # 2. 如果您只需要本地调试，Bugly ID是必需的

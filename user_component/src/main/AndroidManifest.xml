@@ -30,9 +30,6 @@
             android:name="com.xyoye.user_component.ui.activities.web_view.WebViewActivity"
             android:configChanges="orientation|screenSize" />
         <activity
-            android:name="com.xyoye.user_component.ui.activities.feedback.FeedbackActivity"
-            android:configChanges="orientation|screenSize" />
-        <activity
             android:name="com.xyoye.user_component.ui.activities.about_us.AboutUsActivity"
             android:configChanges="orientation|screenSize" />
         <activity

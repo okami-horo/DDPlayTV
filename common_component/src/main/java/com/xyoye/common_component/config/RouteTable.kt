@@ -36,7 +36,6 @@ object RouteTable {
         const val ScanManager = "/user/scan_manager"
         const val CacheManager = "/user/cache_manager"
         const val CommonManager = "/user/common_manager"
-        const val Feedback = "/user/feedback"
         const val AboutUs = "/user/about_us"
         const val License = "/user/license"
         const val SwitchTheme = "/user/switch_theme"

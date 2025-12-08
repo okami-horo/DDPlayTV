@@ -33,7 +33,6 @@
     <string name="action_screencast_receiver">投屏接收端</string>
     <string name="action_app_setting">应用设置</string>
     <string name="action_developer_setting">开发者设置</string>
-    <string name="action_feedback">意见反馈</string>
     <string name="action_cache_manager">缓存目录管理</string>
     <string name="text_system_cache">系统缓存</string>
     <string name="text_file_cache">文件缓存</string>
@@ -44,17 +43,6 @@
     <string name="tips_filter_folder">扫描视频数据时，APP将隐藏已屏蔽的文件夹</string>
     <string name="action_add_extend_folder">添加文件夹</string>
     <string name="action_select_url">选择Url</string>
-    <string name="text_qq">155452509</string>
-    <string name="text_email">xyoye1997@outlook.com</string>
-    <string name="tips_common_question">常见问题反馈：</string>
-    <string name="tips_feedback_channels">反馈联系方式：</string>
-    <string name="tips_qq">Q Q:</string>
-    <string name="action_copy_qq">复制</string>
-    <string name="tips_email">邮箱:</string>
-    <string name="action_send_email">发邮件</string>
-    <string name="tips_other_channels">其它:</string>
-    <string name="tips_github_issues">GitHub Issues</string>
-    <string name="action_edit_issues">编辑</string>
     <string name="text_app_name">弹弹play 概念版</string>
     <string name="text_github_project_name">Github：DanDanPlayForAndroid</string>
     <string name="text_official_address">官网：www.dandanplay.com</string>
