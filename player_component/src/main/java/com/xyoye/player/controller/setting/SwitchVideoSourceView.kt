@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.KeyEvent
+import android.os.SystemClock
 import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
@@ -28,10 +29,11 @@ class SwitchVideoSourceView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : BaseSettingView<LayoutSwitchVideoSourceBinding>(context, attrs, defStyleAttr) {
+    ) : BaseSettingView<LayoutSwitchVideoSourceBinding>(context, attrs, defStyleAttr) {
 
     private var switchVideoSourceBlock: ((Int) -> Unit)? = null
     private val mVideoSources = mutableListOf<VideoSourceBean>()
+    private var lastNavigateRealtimeMs = 0L
 
     init {
         initRv()
@@ -125,6 +127,12 @@ class SwitchVideoSourceView @JvmOverloads constructor(
      * 处理KeyCode事件
      */
     private fun handleKeyCode(keyCode: Int): Boolean {
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastNavigateRealtimeMs < MIN_NAV_INTERVAL_MS) {
+            // 最小间隔内丢弃重复导航，防抖
+            return true
+        }
+
         //已取得焦点的Item
         val focusedChild = viewBinding.sourceRv.focusedChild
             ?: return false
@@ -133,6 +141,10 @@ class SwitchVideoSourceView @JvmOverloads constructor(
             return false
         }
         val targetIndex = getTargetIndexByKeyCode(keyCode, focusedChildIndex)
+        if (targetIndex == -1) {
+            return false
+        }
+        lastNavigateRealtimeMs = now
         viewBinding.sourceRv.requestIndexChildFocus(targetIndex)
         return true
     }
@@ -155,5 +167,9 @@ class SwitchVideoSourceView @JvmOverloads constructor(
                 -1
             }
         }
+    }
+
+    companion object {
+        private const val MIN_NAV_INTERVAL_MS = 100L
     }
 }
