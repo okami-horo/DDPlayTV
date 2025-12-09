@@ -506,10 +506,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         val fontDirectory = SubtitleFontCacheHelper.findFontDirectory(storage.directoryFiles)
             ?: return true
 
-        if (!requestFontCacheConfirm()) {
-            return true
-        }
-
         val fontFiles = withContext(Dispatchers.IO) {
             SubtitleFontCacheHelper.listFontFiles(storage, fontDirectory)
                 .let { SubtitleFontCacheHelper.filterFontFiles(it) }
@@ -526,28 +522,37 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             return true
         }
 
+        val cachedCountStart = fontFiles.count {
+            SubtitleFontCacheHelper.isFontCached(fontCacheDir, it.fileName())
+        }
+        val pendingFonts = fontFiles.filterNot {
+            SubtitleFontCacheHelper.isFontCached(fontCacheDir, it.fileName())
+        }
+        if (pendingFonts.isEmpty()) {
+            return true
+        }
+
+        if (!requestFontCacheConfirm()) {
+            return true
+        }
+
         val progressDialog = FontCacheProgressDialog(this)
         withContext(Dispatchers.Main) {
-            progressDialog.update(fontFiles.size, 0)
+            progressDialog.update(fontFiles.size, cachedCountStart)
             progressDialog.show()
         }
 
-        var cachedCount = 0
+        var cachedCount = cachedCountStart
         try {
             withContext(Dispatchers.IO) {
-                fontFiles.forEach { fontFile ->
+                pendingFonts.forEach { fontFile ->
                     val fontName = fontFile.fileName()
-                    val cached = SubtitleFontCacheHelper.isFontCached(fontCacheDir, fontName)
-                    val success = if (cached) {
-                        true
-                    } else {
-                        val stream = storage.openFile(fontFile)
-                        stream != null && SubtitleFontCacheHelper.cacheFontFile(
-                            fontCacheDir,
-                            fontName,
-                            stream
-                        )
-                    }
+                    val stream = storage.openFile(fontFile)
+                    val success = stream != null && SubtitleFontCacheHelper.cacheFontFile(
+                        fontCacheDir,
+                        fontName,
+                        stream
+                    )
                     if (success) {
                         cachedCount++
                         withContext(Dispatchers.Main) {
