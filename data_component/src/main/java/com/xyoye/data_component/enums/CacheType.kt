@@ -34,5 +34,10 @@ enum class CacheType(val dirName: String, val displayName: String, val clearTips
         "torrent",
         "种子文件",
         "清除种子文件缓存后，播放资源文件将重新下载种子文件，确认清除？"
+    ),
+    FONT_CACHE(
+        "font",
+        "字幕字体",
+        "清除字体缓存将删除已下载的字幕字体，确认清除？"
     )
 }

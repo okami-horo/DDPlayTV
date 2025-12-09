@@ -63,6 +63,13 @@ object PathHelper {
     }
 
     /**
+     * 获取字幕字体缓存文件夹
+     */
+    fun getFontDirectory(): File {
+        return getCacheDirectory(CacheType.FONT_CACHE)
+    }
+
+    /**
      * 获取缓存文件文件夹
      */
     fun getCacheDirectory(type: CacheType): File {

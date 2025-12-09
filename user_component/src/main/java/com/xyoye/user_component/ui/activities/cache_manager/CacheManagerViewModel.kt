@@ -7,6 +7,7 @@ import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.utils.*
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.utils.subtitle.SubtitleFontCacheHelper
 import com.xyoye.data_component.bean.CacheBean
 import com.xyoye.data_component.enums.CacheType
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +43,8 @@ class CacheManagerViewModel : BaseViewModel() {
                         fileCount = getDanmuFileCount(PathHelper.getDanmuDirectory())
                     } else if (it == CacheType.SUBTITLE_CACHE) {
                         fileCount = getSubtitleFileCount(PathHelper.getSubtitleDirectory())
+                    } else if (it == CacheType.FONT_CACHE) {
+                        fileCount = getFontFileCount(PathHelper.getFontDirectory())
                     }
                 } catch (e: Exception) {
                     ErrorReportHelper.postCatchedExceptionWithContext(
@@ -217,6 +220,26 @@ class CacheManagerViewModel : BaseViewModel() {
             }
         }
 
+        return totalCount
+    }
+
+    /**
+     * 获取文件夹内字体文件数量
+     */
+    private fun getFontFileCount(fontDirectory: File): Int {
+        if (!fontDirectory.exists())
+            return 0
+        if (fontDirectory.isFile && SubtitleFontCacheHelper.isFontFile(fontDirectory.absolutePath))
+            return 1
+
+        var totalCount = 0
+        fontDirectory.listFiles()?.forEach {
+            if (it.isDirectory) {
+                totalCount += getFontFileCount(it)
+            } else if (SubtitleFontCacheHelper.isFontFile(it.absolutePath)) {
+                totalCount += 1
+            }
+        }
         return totalCount
     }
 }
