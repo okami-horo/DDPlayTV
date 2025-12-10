@@ -122,14 +122,17 @@ fun PlayerViewModel.logDebug(message: String, context: Map<String, String> = emp
 典型做法示例：
 
 1. **确定日志目录**  
-   - 在实现中由 `LogFileManager` 统一定义日志目录（例如 `context.filesDir` 下的 `logs/` 子目录），只在该目录下创建 `debug.log` 与 `debug_old.log`。
+   - 在实现中由 `LogFileManager` / `LogPaths` 统一定义日志目录，**优先写入应用外部缓存根目录**（`PathHelper.getCachePath()`）下的 `logs/` 子目录，例如：  
+     `/sdcard/Android/data/<package-name>/files/logs/`。  
+   - 如外部缓存目录不可用（极少数设备/环境），则自动回退到内部 `context.filesDir/logs/`。  
+   - 仅在该目录下创建 `debug.log` 与 `debug_old.log`。
 
 2. **通过 adb 获取日志文件**  
 
    ```bash
-   # 示例：从设备内部存储拉取日志目录
-   adb shell ls /data/data/<package-name>/files/logs
-   adb pull /data/data/<package-name>/files/logs ./logs_backup
+   # 示例：从设备外部缓存目录拉取日志目录
+   adb shell ls /sdcard/Android/data/<package-name>/files/logs
+   adb pull /sdcard/Android/data/<package-name>/files/logs ./logs_backup
    ```
 
    将 `<package-name>` 替换为实际应用包名（如 `com.xyoye.dandanplay`）。
@@ -159,7 +162,7 @@ fun PlayerViewModel.logDebug(message: String, context: Map<String, String> = emp
   - 确认应用启动后处于 `LogPolicy.defaultReleasePolicy()`，即全局级别 INFO/ERROR 且 `enableDebugFile=false`。  
   - 使用 adb 检查日志目录应为空：  
     ```bash
-    adb shell ls /data/data/com.xyoye.dandanplay/files/logs
+    adb shell ls /sdcard/Android/data/com.xyoye.dandanplay/files/logs
     ```  
     如果目录不存在或仅包含占位文件即可视为通过，默认策略下不应生成持久化日志。
 - **高日志量策略（性能试验用）**  
@@ -170,7 +173,7 @@ fun PlayerViewModel.logDebug(message: String, context: Map<String, String> = emp
   2) 记录冷启动耗时与主要交互的卡顿率，对比默认策略与关闭日志的基线增量是否 <5%。  
   3) 使用 adb 查看文件大小，确认高日志量策略下两份文件总计约 10MB：  
      ```bash
-     adb shell du -h /data/data/com.xyoye.dandanplay/files/logs
+     adb shell du -h /sdcard/Android/data/com.xyoye.dandanplay/files/logs
      ```  
   4) 如触发磁盘不足导致写入停止，应看到 `debug.log` 停止增长且日志系统保持 logcat 输出。
 
