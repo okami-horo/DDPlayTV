@@ -8,12 +8,14 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.coroutineScope
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
+import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.requestIndexChildFocus
@@ -25,19 +27,26 @@ import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.utils.SupervisorScope
+import com.xyoye.common_component.utils.subtitle.SubtitleFontCacheHelper
 import com.xyoye.common_component.weight.BottomActionDialog
+import com.xyoye.common_component.weight.dialog.CommonDialog
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.StorageFilePath
 import com.xyoye.data_component.entity.MediaLibraryEntity
+import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.BR
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ActivityStorageFileBinding
 import com.xyoye.storage_component.ui.fragment.storage_file.StorageFileFragment
+import com.xyoye.storage_component.ui.dialog.FontCacheProgressDialog
 import com.xyoye.storage_component.ui.weight.StorageFileMenus
 import com.xyoye.storage_component.utils.storage.StorageFilePathAdapter
 import com.xyoye.storage_component.utils.storage.StorageFileStyleHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 @Route(path = RouteTable.Stream.StorageFile)
 class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFileBinding>() {
@@ -479,8 +488,118 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     fun openFile(file: StorageFile) {
-        viewModel.playItem(file)
+        lifecycleScope.launch {
+            if (prepareRemoteFontsIfNeeded(file)) {
+                viewModel.playItem(file)
+            }
+        }
     }
+
+    private suspend fun prepareRemoteFontsIfNeeded(file: StorageFile): Boolean {
+        if (file.playHistory != null || file.isFile().not()) {
+            return true
+        }
+        val mediaType = storage.library.mediaType
+        if (mediaType != MediaType.ALSIT_STORAGE && mediaType != MediaType.WEBDAV_SERVER) {
+            return true
+        }
+        val fontDirectory = SubtitleFontCacheHelper.findFontDirectory(storage.directoryFiles)
+            ?: return true
+
+        val fontFiles = withContext(Dispatchers.IO) {
+            SubtitleFontCacheHelper.listFontFiles(storage, fontDirectory)
+                .let { SubtitleFontCacheHelper.filterFontFiles(it) }
+        }
+        if (fontFiles.isEmpty()) {
+            ToastCenter.showWarning(getString(R.string.text_font_cache_empty))
+            return true
+        }
+
+        val fontCacheDir =
+            SubtitleFontCacheHelper.ensureFontDirectory(BaseApplication.getAppContext())
+        if (fontCacheDir == null || fontCacheDir.exists().not()) {
+            ToastCenter.showError(getString(R.string.text_font_cache_dir_error))
+            return true
+        }
+
+        val cachedCountStart = fontFiles.count {
+            SubtitleFontCacheHelper.isFontCached(fontCacheDir, it.fileName())
+        }
+        val pendingFonts = fontFiles.filterNot {
+            SubtitleFontCacheHelper.isFontCached(fontCacheDir, it.fileName())
+        }
+        if (pendingFonts.isEmpty()) {
+            return true
+        }
+
+        if (!requestFontCacheConfirm()) {
+            return true
+        }
+
+        val progressDialog = FontCacheProgressDialog(this)
+        withContext(Dispatchers.Main) {
+            progressDialog.update(fontFiles.size, cachedCountStart)
+            progressDialog.show()
+        }
+
+        var cachedCount = cachedCountStart
+        try {
+            withContext(Dispatchers.IO) {
+                pendingFonts.forEach { fontFile ->
+                    val fontName = fontFile.fileName()
+                    val stream = storage.openFile(fontFile)
+                    val success = stream != null && SubtitleFontCacheHelper.cacheFontFile(
+                        fontCacheDir,
+                        fontName,
+                        stream
+                    )
+                    if (success) {
+                        cachedCount++
+                        withContext(Dispatchers.Main) {
+                            progressDialog.update(fontFiles.size, cachedCount)
+                        }
+                    }
+                }
+            }
+        } finally {
+            withContext(Dispatchers.Main) {
+                if (progressDialog.isShowing) {
+                    progressDialog.dismiss()
+                }
+            }
+        }
+        return true
+    }
+
+    private suspend fun requestFontCacheConfirm(): Boolean =
+        suspendCancellableCoroutine { continuation ->
+            var decided = false
+            val dialog = CommonDialog.Builder(this)
+                .apply {
+                    content = getString(R.string.text_font_cache_prompt)
+                    addNegative("否") {
+                        decided = true
+                        if (continuation.isActive) {
+                            continuation.resume(false)
+                        }
+                        it.dismiss()
+                    }
+                    addPositive("是") {
+                        decided = true
+                        if (continuation.isActive) {
+                            continuation.resume(true)
+                        }
+                        it.dismiss()
+                    }
+                    doOnDismiss {
+                        if (!decided && continuation.isActive) {
+                            continuation.resume(false)
+                        }
+                    }
+                }.build()
+            dialog.show()
+            continuation.invokeOnCancellation { dialog.dismiss() }
+        }
 
 //    fun castFile(file: StorageFile) {
 //        viewModel.castItem(file)
