@@ -11,7 +11,7 @@ import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.video.VideoRendererEventListener
 
 @UnstableApi
-class AggressiveRenderersFactory(
+open class AggressiveRenderersFactory(
     context: Context,
     private val selector: MediaCodecSelector = AggressiveMediaCodecSelector()
 ) : DefaultRenderersFactory(context) {

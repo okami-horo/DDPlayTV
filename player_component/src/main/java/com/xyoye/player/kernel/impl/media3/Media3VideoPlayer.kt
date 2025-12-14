@@ -35,7 +35,7 @@ import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper.getMediaSource
 import com.xyoye.player.kernel.impl.media3.AggressiveMediaCodecSelector
-import com.xyoye.player.kernel.impl.media3.AggressiveRenderersFactory
+import com.xyoye.player.kernel.impl.media3.LibassAwareRenderersFactory
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.subtitle.MixedSubtitle
@@ -78,7 +78,7 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
                 .build()
         }
 
-        val renderersFactory = AggressiveRenderersFactory(
+        val renderersFactory = LibassAwareRenderersFactory(
             context,
             AggressiveMediaCodecSelector()
         ).apply {

@@ -16,6 +16,7 @@ fun Project.moduleSetup() {
             minSdk = Versions.minSdkVersion
             targetSdk = Versions.targetSdkVersion
         }
+        ndkVersion = Versions.ndkVersion
 
         buildTypes {
             getByName("release") {

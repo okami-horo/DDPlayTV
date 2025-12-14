@@ -1,17 +1,19 @@
 package com.xyoye.player.subtitle.backend
 
-import android.os.SystemClock
 import android.view.Choreographer
 import android.view.Surface
 import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
-import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.data_component.enums.SubtitleViewType
 import com.xyoye.player.subtitle.ui.SubtitleSurfaceOverlay
+import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
+import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSinkRegistry
+import com.xyoye.player.subtitle.backend.LibassEmbeddedSubtitleSink
 import com.xyoye.player_component.subtitle.gpu.AssGpuRenderer
 import com.xyoye.player_component.subtitle.gpu.LocalSubtitlePipelineApi
 import com.xyoye.player_component.subtitle.gpu.SubtitleFallbackController
@@ -40,6 +42,7 @@ class LibassRendererBackend : SubtitleRenderer {
     private var overlay: SubtitleSurfaceOverlay? = null
     private var choreographer: Choreographer? = null
     private var renderLoopRunning = false
+    private var embeddedSink: EmbeddedSubtitleSink? = null
 
     override fun bind(environment: SubtitleRenderEnvironment) {
         this.environment = environment
@@ -56,10 +59,16 @@ class LibassRendererBackend : SubtitleRenderer {
         recoveryCoordinator = SubtitleRecoveryCoordinator(gpuRenderer, targetTracker, fallback, controller)
         attachOverlay(environment)
         renderer?.updateOpacity(PlayerInitializer.Subtitle.alpha)
+        registerEmbeddedSink(gpuRenderer, environment)
         startRenderLoop()
     }
 
     override fun release() {
+        embeddedSink?.let { sink ->
+            sink.onRelease()
+            EmbeddedSubtitleSinkRegistry.unregister(sink)
+        }
+        embeddedSink = null
         stopRenderLoop()
         overlay?.let { ov ->
             environment?.playerView?.detachSubtitleOverlay(ov)
@@ -102,6 +111,14 @@ class LibassRendererBackend : SubtitleRenderer {
 
     override fun updateOpacity(alphaPercent: Int) {
         renderer?.updateOpacity(alphaPercent)
+    }
+
+    private fun registerEmbeddedSink(gpuRenderer: AssGpuRenderer, env: SubtitleRenderEnvironment) {
+        val fonts = buildFontDirectories(env.context)
+        val defaultFont = SubtitleFontManager.getDefaultFontPath(env.context)
+        val sink = LibassEmbeddedSubtitleSink(gpuRenderer, fonts, defaultFont)
+        embeddedSink = sink
+        EmbeddedSubtitleSinkRegistry.register(sink)
     }
 
     private fun buildFontDirectories(context: android.content.Context): List<String> {

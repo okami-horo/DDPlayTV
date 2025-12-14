@@ -71,6 +71,26 @@ class AssGpuNativeBridge {
         nativeLoadTrack(handle, path, fontDirs.toTypedArray(), defaultFont)
     }
 
+    fun initEmbeddedTrack(codecPrivate: ByteArray?, fontDirs: List<String>, defaultFont: String?) {
+        if (!isReady) return
+        nativeInitEmbeddedTrack(handle, codecPrivate, fontDirs.toTypedArray(), defaultFont)
+    }
+
+    fun appendEmbeddedChunk(data: ByteArray, timeMs: Long, durationMs: Long?) {
+        if (!isReady) return
+        nativeAppendEmbeddedChunk(handle, data, timeMs, durationMs ?: -1)
+    }
+
+    fun flushEmbeddedEvents() {
+        if (!isReady) return
+        nativeFlushEmbeddedEvents(handle)
+    }
+
+    fun clearEmbeddedTrack() {
+        if (!isReady) return
+        nativeClearEmbeddedTrack(handle)
+    }
+
     fun flush() {
         if (!isReady) return
         nativeFlush(handle)
@@ -132,4 +152,22 @@ class AssGpuNativeBridge {
         fontDirs: Array<String>,
         defaultFont: String?
     )
+
+    private external fun nativeInitEmbeddedTrack(
+        handle: Long,
+        codecPrivate: ByteArray?,
+        fontDirs: Array<String>,
+        defaultFont: String?
+    )
+
+    private external fun nativeAppendEmbeddedChunk(
+        handle: Long,
+        data: ByteArray,
+        timeMs: Long,
+        durationMs: Long
+    )
+
+    private external fun nativeFlushEmbeddedEvents(handle: Long)
+
+    private external fun nativeClearEmbeddedTrack(handle: Long)
 }
