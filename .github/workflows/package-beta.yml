@@ -100,8 +100,8 @@ jobs:
       # 6.配置构建版本
       - name: setup build version
         run: |
-          apk_version=`egrep -o "[0-9].[0-9].[0-9]" buildSrc/src/main/java/Versions.kt`
-          echo "BUILD_VERSION=$apk_version" >> $GITHUB_ENV
+          apk_version=$(grep -oP 'versionName\s*=\s*"\K[^"]+' buildSrc/src/main/java/Versions.kt | head -n1)
+          echo "BUILD_VERSION=$apk_version" >> "$GITHUB_ENV"
 
       # 7.移动文件到根目录
       - name: move file
