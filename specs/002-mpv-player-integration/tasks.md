@@ -23,9 +23,9 @@ description: "Task list for mpv player integration"
 
 **Purpose**: 为 libmpv 接入准备工程与目录结构
 
-- [ ] T001 创建 libmpv 依赖目录与占位：`player_component/libs/armeabi-v7a/`、`player_component/libs/arm64-v8a/`（放置 `libmpv.so` 及其依赖）
-- [ ] T002 [P] 检查并更新 `player_component/build.gradle.kts`，确保 libmpv 的 `jniLibs.srcDir("libs")`、`abiFilters`、`packagingOptions.pickFirsts` 配置满足打包与冲突规避
-- [ ] T003 [P] 更新 `player_component/src/main/cpp/CMakeLists.txt`：导入预编译 `libmpv.so`，新增 JNI 桥接库目标（如 `mpv_bridge.cpp` → `libmpv_bridge.so`）并链接到 libmpv
+- [X] T001 创建 libmpv 依赖目录与占位：`player_component/libs/armeabi-v7a/`、`player_component/libs/arm64-v8a/`（放置 `libmpv.so` 及其依赖）
+- [X] T002 [P] 检查并更新 `player_component/build.gradle.kts`，确保 libmpv 的 `jniLibs.srcDir("libs")`、`abiFilters`、`packagingOptions.pickFirsts` 配置满足打包与冲突规避
+- [X] T003 [P] 更新 `player_component/src/main/cpp/CMakeLists.txt`：导入预编译 `libmpv.so`，新增 JNI 桥接库目标（如 `mpv_bridge.cpp` → `libmpv_bridge.so`）并链接到 libmpv
 
 ---
 
@@ -33,7 +33,7 @@ description: "Task list for mpv player integration"
 
 **Purpose**: 跨模块枚举/配置扩展，阻塞所有用户故事
 
-- [ ] T004 在 `data_component/src/main/java/com/xyoye/data_component/enums/PlayerType.kt` 新增 `TYPE_MPV_PLAYER(4)` 并更新 `valueOf()` 回读规则（未知值回退到 Media3）
+- [X] T004 在 `data_component/src/main/java/com/xyoye/data_component/enums/PlayerType.kt` 新增 `TYPE_MPV_PLAYER(4)` 并更新 `valueOf()` 回读规则（未知值回退到 Media3）
 
 **Checkpoint**: Foundation ready，开始用户故事实现
 
@@ -51,15 +51,15 @@ description: "Task list for mpv player integration"
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] 新建 mpv Kotlin JNI 桥接封装 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvNativeBridge.kt`，负责加载 native 库并声明 mpv 相关 native 方法
-- [ ] T007 [US1] 新建 JNI 实现 `player_component/src/main/cpp/mpv_bridge.cpp`（或等价文件），封装 mpv 句柄创建/销毁、命令发送、事件轮询、OpenGL 渲染回调
-- [ ] T008 [US1] 新建 mpv 内核 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt`，实现 `AbstractVideoPlayer` 基本生命周期与控制接口，并将 mpv 事件映射到 `VideoPlayerEventListener`
-- [ ] T009 [US1] 新建工厂 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvPlayerFactory.kt`，并在 `player_component/src/main/java/com/xyoye/player/kernel/facoty/PlayerFactory.kt` 增加 `TYPE_MPV_PLAYER` 分发
-- [ ] T010 [US1] 新建渲染视图 `player_component/src/main/java/com/xyoye/player/surface/RenderMpvView.kt`（基于 `GLSurfaceView/GLTextureView`），实现 `InterSurfaceView` 并将 Surface/OpenGL 上下文交给 mpv
-- [ ] T011 [US1] 新建 `player_component/src/main/java/com/xyoye/player/surface/MpvViewFactory.kt`，并在 `player_component/src/main/java/com/xyoye/player/surface/SurfaceFactory.kt` 增加 mpv 分发（忽略 surfaceType，始终返回 mpv 视图工厂）
-- [ ] T012 [P] [US1] 修改设置页 `user_component/src/main/java/com/xyoye/user_component/ui/fragment/PlayerSettingFragment.kt`：加入 mpv 选项并调整 `getString/putString` 安全回读允许 `TYPE_MPV_PLAYER`
-- [ ] T013 [P] [US1] 修改 `player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt#initPlayerConfig`：读取/记录 mpv 类型并避免被错误回退
-- [ ] T014 [US1] 在 `MpvVideoPlayer.setDataSource` 中实现 headers → mpv `http-header-fields`（或等价属性）映射，保持网络源鉴权策略一致
+- [X] T006 [US1] 新建 mpv Kotlin JNI 桥接封装 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvNativeBridge.kt`，负责加载 native 库并声明 mpv 相关 native 方法
+- [X] T007 [US1] 新建 JNI 实现 `player_component/src/main/cpp/mpv_bridge.cpp`（或等价文件），封装 mpv 句柄创建/销毁、命令发送、事件轮询、OpenGL 渲染回调
+- [X] T008 [US1] 新建 mpv 内核 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt`，实现 `AbstractVideoPlayer` 基本生命周期与控制接口，并将 mpv 事件映射到 `VideoPlayerEventListener`
+- [X] T009 [US1] 新建工厂 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvPlayerFactory.kt`，并在 `player_component/src/main/java/com/xyoye/player/kernel/facoty/PlayerFactory.kt` 增加 `TYPE_MPV_PLAYER` 分发
+- [X] T010 [US1] 新建渲染视图 `player_component/src/main/java/com/xyoye/player/surface/RenderMpvView.kt`（基于 `GLSurfaceView/GLTextureView`），实现 `InterSurfaceView` 并将 Surface/OpenGL 上下文交给 mpv
+- [X] T011 [US1] 新建 `player_component/src/main/java/com/xyoye/player/surface/MpvViewFactory.kt`，并在 `player_component/src/main/java/com/xyoye/player/surface/SurfaceFactory.kt` 增加 mpv 分发（忽略 surfaceType，始终返回 mpv 视图工厂）
+- [X] T012 [P] [US1] 修改设置页 `user_component/src/main/java/com/xyoye/user_component/ui/fragment/PlayerSettingFragment.kt`：加入 mpv 选项并调整 `getString/putString` 安全回读允许 `TYPE_MPV_PLAYER`
+- [X] T013 [P] [US1] 修改 `player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt#initPlayerConfig`：读取/记录 mpv 类型并避免被错误回退
+- [X] T014 [US1] 在 `MpvVideoPlayer.setDataSource` 中实现 headers → mpv `http-header-fields`（或等价属性）映射，保持网络源鉴权策略一致
 
 **Checkpoint**: mpv 可被选择并完成基础播放
 
@@ -77,11 +77,11 @@ description: "Task list for mpv player integration"
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] 在 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt` 实现轨道能力：`getTracks/selectTrack/deselectTrack/supportAddTrack/addTrack` 映射 mpv `track-list/aid/sid/vid` 与 `audio-add/sub-add`
-- [ ] T017 [US2] 在 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt` 实现字幕开关与偏移：`setSubtitleOffset` → `sub-delay`，关闭字幕时禁用 `sid`
-- [ ] T018 [P] [US2] 修改 `player_component/src/main/java/com/xyoye/player/DanDanVideoPlayer.kt`：当 `PlayerInitializer.playerType == TYPE_MPV_PLAYER` 时跳过 `ensureSubtitleRenderer()/configureSubtitleRenderer()`，避免双字幕
-- [ ] T019 [US2] 在 `player_component/src/main/java/com/xyoye/player/surface/RenderMpvView.kt` 中确认/调整透明与层级，保证弹幕覆盖层在 mpv 视频之上正常显示
-- [ ] T020 [US2] 校准 `MpvVideoPlayer.kt` 事件时序（`onPrepared/onCompletion/onVideoSizeChange/onInfo`）以复用现有播放列表/旋转/后台策略
+- [X] T016 [US2] 在 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt` 实现轨道能力：`getTracks/selectTrack/deselectTrack/supportAddTrack/addTrack` 映射 mpv `track-list/aid/sid/vid` 与 `audio-add/sub-add`
+- [X] T017 [US2] 在 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt` 实现字幕开关与偏移：`setSubtitleOffset` → `sub-delay`，关闭字幕时禁用 `sid`
+- [X] T018 [P] [US2] 修改 `player_component/src/main/java/com/xyoye/player/DanDanVideoPlayer.kt`：当 `PlayerInitializer.playerType == TYPE_MPV_PLAYER` 时跳过 `ensureSubtitleRenderer()/configureSubtitleRenderer()`，避免双字幕
+- [X] T019 [US2] 在 `player_component/src/main/java/com/xyoye/player/surface/RenderMpvView.kt` 中确认/调整透明与层级，保证弹幕覆盖层在 mpv 视频之上正常显示
+- [X] T020 [US2] 校准 `MpvVideoPlayer.kt` 事件时序（`onPrepared/onCompletion/onVideoSizeChange/onInfo`）以复用现有播放列表/旋转/后台策略
 
 **Checkpoint**: mpv 下关键体验与现有内核一致
 
@@ -99,8 +99,8 @@ description: "Task list for mpv player integration"
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] 在 `MpvNativeBridge.kt`/`MpvVideoPlayer.kt` 完善 libmpv 加载/解码/渲染错误捕获与可读异常，并透传到 `VideoPlayerEventListener.onError(e)`
-- [ ] T023 [P] [US3] 修改 `player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt#showPlayErrorDialog`：mpv 失败时展示“切换默认内核重试”按钮，回退到默认引擎并重试当前视频
+- [X] T022 [US3] 在 `MpvNativeBridge.kt`/`MpvVideoPlayer.kt` 完善 libmpv 加载/解码/渲染错误捕获与可读异常，并透传到 `VideoPlayerEventListener.onError(e)`
+- [X] T023 [P] [US3] 修改 `player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt#showPlayErrorDialog`：mpv 失败时展示“切换默认内核重试”按钮，回退到默认引擎并重试当前视频
 
 **Checkpoint**: mpv 失败可恢复，不影响观看
 
@@ -110,8 +110,8 @@ description: "Task list for mpv player integration"
 
 **Purpose**: 跨故事的文档/性能/稳定性收尾
 
-- [ ] T024 [P] 更新开发者说明与文案：`specs/002-mpv-player-integration/quickstart.md`（mpv 选项说明、许可证提醒、排障建议）
-- [ ] T025 [P] 在 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt#setOptions` 中根据性能目标补充默认 mpv 参数与日志（如 `vo=gpu-next`、`hwdec=auto`、日志等级）
+- [X] T024 [P] 更新开发者说明与文案：`specs/002-mpv-player-integration/quickstart.md`（mpv 选项说明、许可证提醒、排障建议）
+- [X] T025 [P] 在 `player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt#setOptions` 中根据性能目标补充默认 mpv 参数与日志（如 `vo=gpu-next`、`hwdec=auto`、日志等级）
 - [ ] T026 参照 `specs/002-mpv-player-integration/quickstart.md` 完成手工回归（本地/远程设备），记录 mpv 首帧、seek、轨道、字幕与回退结果
 
 ---
@@ -161,4 +161,3 @@ Task: "T006-T011 mpv 内核/渲染实现"
 2. US2 对齐体验 → 验证弹幕/字幕/播放列表
 3. US3 提升可恢复性 → 验证失败回退
 4. Polish 收尾 → 文档/性能/回归
-

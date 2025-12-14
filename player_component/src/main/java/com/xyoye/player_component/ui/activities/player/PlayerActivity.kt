@@ -568,7 +568,17 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
 
     private fun initPlayerConfig() {
         //播放器类型
-        PlayerInitializer.playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
+        val storedPlayerType = PlayerConfig.getUsePlayerType()
+        val resolvedPlayerType = PlayerType.valueOf(storedPlayerType)
+        if (resolvedPlayerType.value != storedPlayerType) {
+            LogFacade.w(
+                LogModule.PLAYER,
+                TAG_CONFIG,
+                "sanitize playerType stored=$storedPlayerType -> ${resolvedPlayerType.value}"
+            )
+            PlayerConfig.putUsePlayerType(resolvedPlayerType.value)
+        }
+        PlayerInitializer.playerType = resolvedPlayerType
         LogFacade.d(LogModule.PLAYER, TAG_CONFIG, "playerType=${PlayerInitializer.playerType}")
         //是否使用SurfaceView
         PlayerInitializer.surfaceType =
@@ -656,8 +666,18 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
                 this@PlayerActivity.finish()
             }
 
+        if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
+            builder.setPositiveButton("切换默认内核重试") { dialog, _ ->
+                dialog.dismiss()
+                val fallbackType = PlayerType.TYPE_EXO_PLAYER
+                PlayerConfig.putUsePlayerType(fallbackType.value)
+                initPlayerConfig()
+                videoSource?.let { applyPlaySource(it) } ?: this@PlayerActivity.finish()
+            }
+        }
+
         if (isTorrentSource) {
-            builder.setPositiveButton("播放器设置") { dialog, _ ->
+            builder.setNeutralButton("播放器设置") { dialog, _ ->
                 dialog.dismiss()
                 ARouter.getInstance()
                     .build(RouteTable.User.SettingPlayer)

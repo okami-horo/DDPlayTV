@@ -23,7 +23,8 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
 
         val playerData = mapOf(
             Pair("Media3 Player", PlayerType.TYPE_EXO_PLAYER.value.toString()),
-            Pair("VLC Player", PlayerType.TYPE_VLC_PLAYER.value.toString())
+            Pair("VLC Player", PlayerType.TYPE_VLC_PLAYER.value.toString()),
+            Pair("mpv Player", PlayerType.TYPE_MPV_PLAYER.value.toString())
         )
 
         val vlcHWDecode = mapOf(
@@ -109,6 +110,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                         val currentType = PlayerConfig.getUsePlayerType()
                         val safeType = when (PlayerType.valueOf(currentType)) {
                             PlayerType.TYPE_VLC_PLAYER -> PlayerType.TYPE_VLC_PLAYER
+                            PlayerType.TYPE_MPV_PLAYER -> PlayerType.TYPE_MPV_PLAYER
                             else -> PlayerType.TYPE_EXO_PLAYER
                         }
                         if (safeType.value != currentType) {
@@ -138,6 +140,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                         "player_type" -> {
                             val safeType = when (PlayerType.valueOf(value.toInt())) {
                                 PlayerType.TYPE_VLC_PLAYER -> PlayerType.TYPE_VLC_PLAYER
+                                PlayerType.TYPE_MPV_PLAYER -> PlayerType.TYPE_MPV_PLAYER
                                 else -> PlayerType.TYPE_EXO_PLAYER
                             }
                             PlayerConfig.putUsePlayerType(safeType.value)

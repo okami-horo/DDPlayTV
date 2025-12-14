@@ -13,6 +13,11 @@
 
 > 注意：发布前必须完成 GPL/LGPL 许可证评估。工程侧优先选择 LGPL-only 构建或插件化发布策略。
 
+**内置默认参数（Phase 1，无需手动配置）**
+- 渲染：`vo=gpu-next` + `gpu-context=android`，默认启用 `opengl-early-flush=yes`
+- 解码：`hwdec=auto-safe`，可与设备硬解能力对齐
+- 日志：调试模式会请求 `msg-level=info`，发布态降级为 `warn`，日志关键字 `mpv_bridge`/`MpvVideoPlayer`
+
 ## 2. 构建与安装
 
 在仓库根目录：
@@ -50,3 +55,9 @@ adb logcat | grep -E 'com.xyoye.dandanplay|MpvVideoPlayer|LogSystem|DDLog'
   - 轨道切换（音频/字幕）  
   - 外挂字幕加载/偏移
 
+## 6. 常见故障排查
+
+- **初始化失败 / 找不到 mpv**：提示信息如 “libmpv.so missing or failed to link”/“Failed to initialize mpv native session”，检查 ABI 目录下是否存在对应 `libmpv.so`，以及 `player_component/src/main/cpp/CMakeLists.txt` 是否能找到该路径。
+- **渲染初始化失败**：错误包含 `render context` 或 `egl*` 关键词时，优先确认 `RenderMpvView` 已持有 `TextureView` Surface，必要时重建页面或切换回默认内核重试。
+- **加载数据源被拒绝**：错误包含 `mpv bridge rejected data source` 或 mpv 错误码时，确认 URL/headers 是否完整（referer/token），并用 logcat 关键字 `mpv_bridge|MpvVideoPlayer` 过滤详细原因。
+- **播放中报错**：错误会携带 mpv `code=` 与 `reason=`（如 `reason=redirect`），UI 将提供“切换默认内核重试”按钮，可快速落回 Exo/VLC。

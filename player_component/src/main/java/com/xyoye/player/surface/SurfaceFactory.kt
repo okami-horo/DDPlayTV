@@ -13,6 +13,7 @@ abstract class SurfaceFactory {
     companion object{
         fun getFactory(playerType: PlayerType, surfaceType: SurfaceType): SurfaceFactory{
             return when{
+                playerType == PlayerType.TYPE_MPV_PLAYER -> MpvViewFactory()
                 playerType == PlayerType.TYPE_VLC_PLAYER -> VLCViewFactory()
                 surfaceType == SurfaceType.VIEW_SURFACE -> SurfaceViewFactory()
                 surfaceType == SurfaceType.VIEW_TEXTURE -> TextureViewFactory()

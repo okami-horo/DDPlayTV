@@ -16,6 +16,7 @@ import com.xyoye.cache.CacheManager
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.PlayState
+import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.player.controller.VideoController
@@ -281,6 +282,9 @@ class DanDanVideoPlayer(
     }
 
     private fun configureSubtitleRenderer() {
+        if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
+            return
+        }
         val controller = mVideoController ?: return
         val backend = PlayerInitializer.Subtitle.backend
         val environment = SubtitleRenderEnvironment(
@@ -461,6 +465,9 @@ class DanDanVideoPlayer(
     }
 
     fun switchSubtitleBackend(target: SubtitleRendererBackend) {
+        if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
+            return
+        }
         if (PlayerInitializer.Subtitle.backend == target &&
             subtitleRenderer?.backend == target
         ) {

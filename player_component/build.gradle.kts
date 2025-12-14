@@ -19,6 +19,7 @@ configurations.configureEach {
 }
 
 android {
+    ndkVersion = "25.2.9519653"
     defaultConfig {
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a")
