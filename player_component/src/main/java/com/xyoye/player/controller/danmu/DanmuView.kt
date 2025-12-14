@@ -65,6 +65,9 @@ class DanmuView(
     // 当前弹幕轨道是否被选中
     private var mTrackSelected = false
 
+    // 用户层面的显示状态（与 UI 开关绑定）
+    private var userVisible = true
+
     // 弹幕是否加载完成
     private var mDanmuLoaded = false
 
@@ -187,6 +190,7 @@ class DanmuView(
 
     override fun release() {
         mAddedTrack = null
+        mTrackSelected = false
         hide()
         clear()
         clearDanmakusOnScreen()
@@ -233,7 +237,7 @@ class DanmuView(
 
     fun setTrackSelected(selected: Boolean) {
         mTrackSelected = selected
-        setDanmuVisible(selected)
+        syncVisibility()
     }
 
     fun toggleVisible() {
@@ -241,7 +245,17 @@ class DanmuView(
             return
         }
 
-        setDanmuVisible(isShown.not())
+        userVisible = userVisible.not()
+        syncVisibility()
+    }
+
+    fun setUserVisible(visible: Boolean) {
+        userVisible = visible
+        syncVisibility()
+    }
+
+    fun isUserVisible(): Boolean {
+        return userVisible
     }
 
     private fun setDanmuVisible(visible: Boolean) {
@@ -250,6 +264,10 @@ class DanmuView(
         } else {
             hide()
         }
+    }
+
+    private fun syncVisibility() {
+        setDanmuVisible(mTrackSelected && userVisible)
     }
 
     private fun initDanmuContext() {

@@ -285,6 +285,14 @@ class ControlWrapper(
         mDanmuController.toggleDanmuVisible()
     }
 
+    override fun setUserDanmuVisible(visible: Boolean) {
+        mDanmuController.setUserDanmuVisible(visible)
+    }
+
+    override fun isUserDanmuVisible(): Boolean {
+        return mDanmuController.isUserDanmuVisible()
+    }
+
     override fun allowSendDanmu(): Boolean {
         return mDanmuController.allowSendDanmu()
     }

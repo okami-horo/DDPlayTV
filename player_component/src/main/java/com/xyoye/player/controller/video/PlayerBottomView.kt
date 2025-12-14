@@ -19,6 +19,7 @@ import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.SettingViewType
+import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.utils.formatDuration
 import com.xyoye.player.wrapper.ControlWrapper
 import com.xyoye.player_component.R
@@ -62,7 +63,7 @@ class PlayerBottomView(
         viewBinding.danmuControlIv.setOnClickListener {
             if (!controlsInputEnabled) return@setOnClickListener
             actionHandler?.invoke(PlayerAction.ToggleDanmu) ?: mControlWrapper.toggleDanmuVisible()
-            viewBinding.danmuControlIv.isSelected = !viewBinding.danmuControlIv.isSelected
+            syncDanmuToggleState()
         }
 
         /*
@@ -128,6 +129,7 @@ class PlayerBottomView(
 
     override fun attach(controlWrapper: ControlWrapper) {
         mControlWrapper = controlWrapper
+        syncDanmuToggleState()
     }
 
     override fun getView() = this
@@ -147,9 +149,11 @@ class PlayerBottomView(
         if (isVisible) {
             if (isControllerVisible) {
                 // Avoid re-focusing play on every DPAD event when controller is already visible.
+                syncDanmuToggleState()
                 return
             }
             isControllerVisible = true
+            syncDanmuToggleState()
             updateControlsInteractiveState(true)
             ViewCompat.animate(viewBinding.playerBottomLl).translationY(0f).setDuration(300).start()
             post {
@@ -241,6 +245,12 @@ class PlayerBottomView(
 
     override fun onPopupModeChanged(isPopup: Boolean) {
 
+    }
+
+    override fun onTrackChanged(type: TrackType) {
+        if (type == TrackType.DANMU) {
+            syncDanmuToggleState()
+        }
     }
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -343,5 +353,11 @@ class PlayerBottomView(
             view.nextFocusRightId = right.id
             view.nextFocusUpId = R.id.video_title_tv
         }
+    }
+
+    private fun syncDanmuToggleState() {
+        if (this::mControlWrapper.isInitialized.not()) return
+        val userVisible = mControlWrapper.isUserDanmuVisible()
+        viewBinding.danmuControlIv.isSelected = userVisible.not()
     }
 }

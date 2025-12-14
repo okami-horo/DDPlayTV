@@ -65,6 +65,16 @@ interface InterDanmuController : InterVideoTrack {
     fun toggleDanmuVisible()
 
     /**
+     * 显式设置弹幕显示状态，供 UI 与状态恢复使用
+     */
+    fun setUserDanmuVisible(visible: Boolean)
+
+    /**
+     * 当前用户层面的弹幕显示状态
+     */
+    fun isUserDanmuVisible(): Boolean
+
+    /**
      * 是否允许发送弹幕
      */
     fun allowSendDanmu(): Boolean

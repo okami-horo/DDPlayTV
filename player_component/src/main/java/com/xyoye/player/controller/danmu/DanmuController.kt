@@ -61,6 +61,14 @@ class DanmuController(context: Context) : InterDanmuController {
         danmuView.toggleVisible()
     }
 
+    override fun setUserDanmuVisible(visible: Boolean) {
+        danmuView.setUserVisible(visible)
+    }
+
+    override fun isUserDanmuVisible(): Boolean {
+        return danmuView.isUserVisible()
+    }
+
     override fun allowSendDanmu(): Boolean {
         return danmuView.isDanmuLoaded()
     }

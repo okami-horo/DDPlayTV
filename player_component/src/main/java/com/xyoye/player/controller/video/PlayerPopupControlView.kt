@@ -10,6 +10,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.xyoye.data_component.enums.PlayState
+import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.wrapper.ControlWrapper
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutPlayerPopupControlBinding
@@ -45,7 +46,7 @@ class PlayerPopupControlView(
 
         viewBinding.ivDanmuControl.setOnClickListener {
             mControlWrapper.toggleDanmuVisible()
-            viewBinding.ivDanmuControl.isSelected = !viewBinding.ivDanmuControl.isSelected
+            syncDanmuToggleState()
         }
 
         viewBinding.ivExpand.setOnClickListener {
@@ -78,6 +79,7 @@ class PlayerPopupControlView(
 
     override fun attach(controlWrapper: ControlWrapper) {
         mControlWrapper = controlWrapper
+        syncDanmuToggleState()
     }
 
     override fun getView(): View {
@@ -86,6 +88,7 @@ class PlayerPopupControlView(
 
     override fun onVisibilityChanged(isVisible: Boolean) {
         if (isVisible) {
+            syncDanmuToggleState()
             ViewCompat.animate(viewBinding.settingLayout)
                 .alpha(1f)
                 .setDuration(300)
@@ -155,11 +158,23 @@ class PlayerPopupControlView(
 
     }
 
+    override fun onTrackChanged(type: TrackType) {
+        if (type == TrackType.DANMU) {
+            syncDanmuToggleState()
+        }
+    }
+
     fun setExitPlayerObserver(block: () -> Unit) {
         mExitPlayerBlock = block
     }
 
     fun setExitPopupModeObserver(block: () -> Unit) {
         mExitPopupModeBlock = block
+    }
+
+    private fun syncDanmuToggleState() {
+        if (this::mControlWrapper.isInitialized.not()) return
+        val userVisible = mControlWrapper.isUserDanmuVisible()
+        viewBinding.ivDanmuControl.isSelected = userVisible.not()
     }
 }
