@@ -39,6 +39,8 @@ constexpr jint kTrackAudio = 1;
 constexpr jint kTrackSubtitle = 2;
 
 JavaVM* g_java_vm = nullptr;
+std::mutex g_app_ctx_mutex;
+jobject g_android_app_ctx = nullptr;
 std::mutex g_error_mutex;
 std::string g_last_error;
 
@@ -50,6 +52,33 @@ void set_last_error(const std::string& message) {
 std::string get_last_error() {
     std::lock_guard<std::mutex> lock(g_error_mutex);
     return g_last_error;
+}
+
+using av_jni_set_java_vm_fn = void (*)(JavaVM*, void*);
+using av_jni_set_android_app_ctx_fn = void (*)(void*, void*);
+
+void initFfmpegJni(JavaVM* vm) {
+    if (vm == nullptr) return;
+    void* symbol = dlsym(RTLD_DEFAULT, "av_jni_set_java_vm");
+    if (symbol == nullptr) {
+        __android_log_print(ANDROID_LOG_WARN, kLogTag, "av_jni_set_java_vm not found");
+        return;
+    }
+    auto fn = reinterpret_cast<av_jni_set_java_vm_fn>(symbol);
+    fn(vm, nullptr);
+    __android_log_print(ANDROID_LOG_INFO, kLogTag, "av_jni_set_java_vm registered");
+}
+
+void initFfmpegAppContext(void* app_ctx) {
+    if (app_ctx == nullptr) return;
+    void* symbol = dlsym(RTLD_DEFAULT, "av_jni_set_android_app_ctx");
+    if (symbol == nullptr) {
+        __android_log_print(ANDROID_LOG_WARN, kLogTag, "av_jni_set_android_app_ctx not found");
+        return;
+    }
+    auto fn = reinterpret_cast<av_jni_set_android_app_ctx_fn>(symbol);
+    fn(app_ctx, nullptr);
+    __android_log_print(ANDROID_LOG_INFO, kLogTag, "av_jni_set_android_app_ctx registered");
 }
 
 struct EventCallbackRef {
@@ -105,6 +134,7 @@ struct MpvSession {
     std::thread event_thread;
     EventCallbackRef event_callback;
     std::mutex mutex;
+    jobject surface_ref = nullptr;
     ANativeWindow* native_window = nullptr;
     std::atomic<bool> surface_changed = false;
     std::atomic<bool> render_requested = false;
@@ -140,26 +170,31 @@ bool runtimeLinked() {
     return true;
 }
 
-mpv_handle* createHandle() {
-    if (!runtimeLinked()) {
-        set_last_error("libmpv.so is not packaged or cannot be loaded");
-        return nullptr;
-    }
-    mpv_handle* handle = mpv_create();
+	mpv_handle* createHandle() {
+	    if (!runtimeLinked()) {
+	        set_last_error("libmpv.so is not packaged or cannot be loaded");
+	        return nullptr;
+	    }
+	    mpv_handle* handle = mpv_create();
     if (handle == nullptr) {
         const std::string message = "mpv_create returned null handle";
         __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", message.c_str());
         set_last_error(message);
         return nullptr;
     }
-    mpv_set_option_string(handle, "config", "no");
-    mpv_set_option_string(handle, "terminal", "no");
-    mpv_set_option_string(handle, "pause", "yes");
-    mpv_set_option_string(handle, "vo", "gpu-next");
-    mpv_set_option_string(handle, "gpu-context", "android");
-    mpv_set_option_string(handle, "hwdec", "auto-safe");
-    mpv_set_option_string(handle, "opengl-early-flush", "yes");
-    const int initResult = mpv_initialize(handle);
+	    mpv_set_option_string(handle, "config", "no");
+	    mpv_set_option_string(handle, "terminal", "no");
+	    mpv_set_option_string(handle, "pause", "yes");
+	    mpv_set_option_string(handle, "idle", "once");
+	    mpv_set_option_string(handle, "profile", "fast");
+	    mpv_set_option_string(handle, "gpu-context", "android");
+	    mpv_set_option_string(handle, "opengl-es", "yes");
+	    mpv_set_option_string(handle, "hwdec", "mediacodec,mediacodec-copy");
+	    mpv_set_option_string(handle, "ao", "audiotrack,opensles");
+	    // Disable video output until we have an Android surface (wid) to attach to.
+	    mpv_set_option_string(handle, "vo", "null");
+	    mpv_set_option_string(handle, "force-window", "no");
+	    const int initResult = mpv_initialize(handle);
     if (initResult < 0) {
         char buffer[128] = {0};
         snprintf(buffer, sizeof(buffer), "mpv_initialize failed: %d", initResult);
@@ -625,27 +660,22 @@ void eventLoop(MpvSession* session) {
     }
 
     while (session->running.load()) {
-        if (session->surface_changed.exchange(false)) {
-            destroyRenderContext(session);
-            destroyEgl(session);
-            if (session->native_window != nullptr) {
-                if (!ensureRenderContext(session)) {
-                    const std::string message = get_last_error().empty()
-                                                    ? "Failed to initialize mpv render context"
-                                                    : get_last_error();
-                    dispatchError(env, session, message, -1, 0);
-                }
-            }
-        }
-
-        processRenderUpdates(env, session);
-
         mpv_event* event = mpv_wait_event(session->handle, 0.25);
         if (event == nullptr || event->event_id == MPV_EVENT_NONE) {
             continue;
         }
 
         switch (event->event_id) {
+            case MPV_EVENT_LOG_MESSAGE: {
+                auto* log = static_cast<mpv_event_log_message*>(event->data);
+                if (log != nullptr) {
+                    const char* prefix = log->prefix == nullptr ? "" : log->prefix;
+                    const char* level = log->level == nullptr ? "" : log->level;
+                    const char* text = log->text == nullptr ? "" : log->text;
+                    __android_log_print(ANDROID_LOG_INFO, kLogTag, "mpv[%s][%s] %s", prefix, level, text);
+                }
+                break;
+            }
             case MPV_EVENT_FILE_LOADED: {
                 dispatchEvent(env, session->event_callback, kEventPrepared, 0, 0, nullptr);
                 break;
@@ -695,12 +725,8 @@ void eventLoop(MpvSession* session) {
             default:
                 break;
         }
-
-        processRenderUpdates(env, session);
     }
 
-    destroyRenderContext(session);
-    destroyEgl(session);
     detachIfNeeded(did_attach);
 }
 #endif
@@ -902,7 +928,22 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
     );
 #endif
     g_java_vm = vm;
+    initFfmpegJni(vm);
     return JNI_VERSION_1_6;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetAndroidAppContext(
+    JNIEnv* env, jclass, jobject context) {
+    if (env == nullptr || context == nullptr) return;
+    std::lock_guard<std::mutex> lock(g_app_ctx_mutex);
+    if (g_android_app_ctx != nullptr) {
+        env->DeleteGlobalRef(g_android_app_ctx);
+        g_android_app_ctx = nullptr;
+    }
+    g_android_app_ctx = env->NewGlobalRef(context);
+    initFfmpegJni(g_java_vm);
+    initFfmpegAppContext(g_android_app_ctx);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -944,6 +985,10 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeDestroy(
 #if MPV_PREBUILT_AVAILABLE
     {
         std::lock_guard<std::mutex> guard(session->mutex);
+        if (session->surface_ref != nullptr) {
+            env->DeleteGlobalRef(session->surface_ref);
+            session->surface_ref = nullptr;
+        }
         if (session->native_window != nullptr) {
             ANativeWindow_release(session->native_window);
             session->native_window = nullptr;
@@ -964,22 +1009,60 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetSurface(
     if (session == nullptr) return;
 #if MPV_PREBUILT_AVAILABLE
     std::lock_guard<std::mutex> guard(session->mutex);
-    if (session->native_window != nullptr) {
-        ANativeWindow_release(session->native_window);
-        session->native_window = nullptr;
+    if (session->handle == nullptr) return;
+
+    if (session->surface_ref != nullptr) {
+        int64_t wid = 0;
+        const int result = mpv_set_option(session->handle, "wid", MPV_FORMAT_INT64, &wid);
+        if (result < 0) {
+            __android_log_print(ANDROID_LOG_WARN, kLogTag, "mpv_set_option(wid=0) failed: %d", result);
+        }
+        mpv_set_property_string(session->handle, "vo", "null");
+        mpv_set_property_string(session->handle, "force-window", "no");
+        env->DeleteGlobalRef(session->surface_ref);
+        session->surface_ref = nullptr;
     }
+
     if (surface != nullptr) {
-        session->native_window = ANativeWindow_fromSurface(env, surface);
-        session->surface_width = ANativeWindow_getWidth(session->native_window);
-        session->surface_height = ANativeWindow_getHeight(session->native_window);
+        session->surface_ref = env->NewGlobalRef(surface);
+        if (session->surface_ref == nullptr) {
+            set_last_error("Failed to allocate global surface reference");
+            return;
+        }
+
+        int64_t wid = reinterpret_cast<intptr_t>(session->surface_ref);
+        const int result = mpv_set_option(session->handle, "wid", MPV_FORMAT_INT64, &wid);
+        if (result < 0) {
+            char buffer[128] = {0};
+            snprintf(buffer, sizeof(buffer), "mpv_set_option(wid) failed: %d", result);
+            __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", buffer);
+            set_last_error(buffer);
+        } else {
+            set_last_error("");
+        }
+
+        // Keep mpv rendering enabled while the surface is alive.
+        mpv_set_property_string(session->handle, "vo", "gpu");
+        mpv_set_property_string(session->handle, "force-window", "yes");
+
+        // Help mpv pick the correct output size.
+        ANativeWindow* window = ANativeWindow_fromSurface(env, surface);
+        if (window != nullptr) {
+            const int width = ANativeWindow_getWidth(window);
+            const int height = ANativeWindow_getHeight(window);
+            char size[64] = {0};
+            snprintf(size, sizeof(size), "%dx%d", width, height);
+            mpv_set_property_string(session->handle, "android-surface-size", size);
+            ANativeWindow_release(window);
+        }
     }
     __android_log_print(
         ANDROID_LOG_DEBUG,
         kLogTag,
-        "nativeSetSurface updated ANativeWindow: %p",
-        session->native_window
+        "nativeSetSurface updated Surface(wid ref): %p",
+        session->surface_ref
     );
-    markSurfaceChanged(session);
+    mpv_wakeup(session->handle);
 #else
     (void)env;
     (void)surface;

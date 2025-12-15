@@ -1,5 +1,6 @@
 package com.xyoye.player.kernel.impl.mpv
 
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -131,13 +132,16 @@ class MpvNativeBridge {
 
     fun applyDefaultOptions(debugLogging: Boolean) {
         if (nativeHandle == 0L) return
-        setOption("hwdec", "auto-safe")
-        setOption("vo", "gpu-next")
-        setOption("opengl-early-flush", "yes")
         val level = if (debugLogging) "info" else "warn"
         if (!nativeSetLogLevel(nativeHandle, level)) {
             Log.w(TAG, "mpv setLogLevel($level) failed: ${lastError().orEmpty()}")
         }
+    }
+
+    fun setSurfaceSize(width: Int, height: Int) {
+        if (nativeHandle == 0L) return
+        if (width <= 0 || height <= 0) return
+        setOption("android-surface-size", "${width}x$height")
     }
 
     fun setEventListener(listener: (Event) -> Unit) {
@@ -252,6 +256,8 @@ class MpvNativeBridge {
         private val nativeLoaded: Boolean
         private val nativeLinked: Boolean
         private val availabilityMessage: String?
+        @Volatile
+        private var appContextRegistered: Boolean = false
 
         init {
             var loaded = false
@@ -276,6 +282,16 @@ class MpvNativeBridge {
             nativeLoaded = loaded
             nativeLinked = linked
             availabilityMessage = availability
+        }
+
+        fun registerAndroidAppContext(context: Context) {
+            if (!nativeLoaded || !nativeLinked || appContextRegistered) return
+            try {
+                nativeSetAndroidAppContext(context.applicationContext)
+                appContextRegistered = true
+            } catch (e: Throwable) {
+                Log.w(TAG, "nativeSetAndroidAppContext failed: ${e.message}")
+            }
         }
 
         @JvmStatic
@@ -360,6 +376,9 @@ class MpvNativeBridge {
 
         @JvmStatic
         private external fun nativeGetDuration(handle: Long): Long
+
+        @JvmStatic
+        private external fun nativeSetAndroidAppContext(context: Any)
     }
 
     private fun setOption(name: String, value: String) {

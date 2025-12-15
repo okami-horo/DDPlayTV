@@ -5,6 +5,7 @@ import android.graphics.SurfaceTexture
 import android.view.Surface
 import android.view.TextureView
 import com.xyoye.data_component.enums.VideoScreenScale
+import com.xyoye.player.kernel.impl.mpv.MpvVideoPlayer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.RenderMeasureHelper
 
@@ -17,6 +18,9 @@ class RenderMpvView(context: Context) : TextureView(context), InterSurfaceView {
 
     private val listener = object : SurfaceTextureListener {
         override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+            if (this@RenderMpvView::videoPlayer.isInitialized) {
+                (videoPlayer as? MpvVideoPlayer)?.setSurfaceSize(width, height)
+            }
         }
 
         override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
@@ -34,6 +38,7 @@ class RenderMpvView(context: Context) : TextureView(context), InterSurfaceView {
             this@RenderMpvView.surface = Surface(surface)
             if (this@RenderMpvView::videoPlayer.isInitialized) {
                 this@RenderMpvView.surface?.let { videoPlayer.setSurface(it) }
+                (videoPlayer as? MpvVideoPlayer)?.setSurfaceSize(width, height)
             }
         }
     }
@@ -46,6 +51,7 @@ class RenderMpvView(context: Context) : TextureView(context), InterSurfaceView {
 
     override fun attachPlayer(player: AbstractVideoPlayer) {
         videoPlayer = player
+        surface?.let { player.setSurface(it) }
     }
 
     override fun setVideoSize(videoWidth: Int, videoHeight: Int) {

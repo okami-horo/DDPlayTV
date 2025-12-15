@@ -34,6 +34,7 @@ class MpvVideoPlayer(
 
     override fun initPlayer() {
         initializationError = null
+        MpvNativeBridge.registerAndroidAppContext(context)
         nativeBridge.setEventListener(::onNativeEvent)
         if (!nativeBridge.isAvailable) {
             val reason = nativeBridge.availabilityReason ?: "libmpv.so missing or failed to link"
@@ -62,6 +63,11 @@ class MpvVideoPlayer(
     override fun setSurface(surface: Surface) {
         if (!nativeBridge.isAvailable) return
         nativeBridge.setSurface(surface)
+    }
+
+    fun setSurfaceSize(width: Int, height: Int) {
+        if (!nativeBridge.isAvailable) return
+        nativeBridge.setSurfaceSize(width, height)
     }
 
     override fun prepareAsync() {
