@@ -2,8 +2,12 @@ package com.xyoye.player.kernel.impl.mpv
 
 import android.content.Context
 import android.graphics.Point
+import android.net.Uri
 import android.view.Surface
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.log.LogSystem
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
@@ -50,7 +54,12 @@ class MpvVideoPlayer(
     }
 
     override fun setOptions() {
-        nativeBridge.applyDefaultOptions(PlayerInitializer.isPrintLog)
+        val logLevel = if (PlayerInitializer.isPrintLog) {
+            LogSystem.getRuntimeState().activePolicy.defaultLevel
+        } else {
+            null
+        }
+        nativeBridge.applyDefaultOptions(logLevel)
         nativeBridge.setLooping(looping)
         nativeBridge.setSpeed(playbackSpeed)
     }
@@ -79,6 +88,15 @@ class MpvVideoPlayer(
         if (path.isNullOrEmpty()) {
             mPlayerEventListener.onInfo(PlayerConstant.MEDIA_INFO_URL_EMPTY, 0)
             return
+        }
+        if (PlayerInitializer.isPrintLog) {
+            val uri = runCatching { Uri.parse(path) }.getOrNull()
+            val queryKeys = runCatching { uri?.queryParameterNames?.sorted()?.joinToString(",") }.getOrNull().orEmpty()
+            LogFacade.d(
+                LogModule.PLAYER,
+                "MpvVideoPlayer",
+                "mpv prepareAsync dataSource scheme=${uri?.scheme.orEmpty()} host=${uri?.host.orEmpty()} port=${uri?.port ?: -1} path=${uri?.encodedPath.orEmpty()} queryKeys=$queryKeys hash=${path.hashCode()} headers=${headers.size}"
+            )
         }
         isPreparing = true
         var dataSourceError: Exception? = null
@@ -258,6 +276,19 @@ class MpvVideoPlayer(
 
     private fun onNativeEvent(event: MpvNativeBridge.Event) {
         when (event) {
+            is MpvNativeBridge.Event.LogMessage -> {
+                if (!PlayerInitializer.isPrintLog) return
+                val message = event.message
+                    ?.let(::sanitizeMpvLog)
+                    ?.trimEnd()
+                if (message.isNullOrEmpty()) return
+                when (event.level) {
+                    5, 4 -> LogFacade.e(LogModule.PLAYER, "mpv_bridge", message)
+                    3 -> LogFacade.w(LogModule.PLAYER, "mpv_bridge", message)
+                    2 -> LogFacade.i(LogModule.PLAYER, "mpv_bridge", message)
+                    else -> LogFacade.d(LogModule.PLAYER, "mpv_bridge", message)
+                }
+            }
             is MpvNativeBridge.Event.Buffering -> {
                 mPlayerEventListener.onInfo(
                     if (event.started) PlayerConstant.MEDIA_INFO_BUFFERING_START else PlayerConstant.MEDIA_INFO_BUFFERING_END,
@@ -271,12 +302,27 @@ class MpvVideoPlayer(
                 mPlayerEventListener.onCompletion()
             }
             is MpvNativeBridge.Event.Error -> {
+                val rawMessage = event.message
+                val fallbackMessage = nativeBridge.lastError()
                 val readable = formatNativeError(
-                    event.message ?: nativeBridge.lastError(),
+                    rawMessage ?: fallbackMessage,
                     event.code,
                     event.reason
                 )
                 val error = MpvPlaybackException(readable, code = event.code, reason = event.reason)
+                LogFacade.e(
+                    LogModule.PLAYER,
+                    "MpvVideoPlayer",
+                    "mpv onNativeError: $readable",
+                    context = mapOf(
+                        "dataSourceHash" to (dataSource?.hashCode()?.toString() ?: "null"),
+                        "code" to (event.code?.toString() ?: "null"),
+                        "reason" to (event.reason?.toString() ?: "null"),
+                        "rawMessage" to (rawMessage ?: "null"),
+                        "lastError" to (fallbackMessage ?: "null")
+                    ),
+                    throwable = error
+                )
                 initializationError = error
                 isPrepared = false
                 isPreparing = false
@@ -305,13 +351,23 @@ class MpvVideoPlayer(
         }
     }
 
+    private fun sanitizeMpvLog(message: String): String {
+        var result = message
+        // Redact common credential headers.
+        result = result.replace(Regex("(?i)(authorization\\s*:\\s*)([^\\s]+)"), "$1<redacted>")
+        result = result.replace(Regex("(?i)(cookie\\s*:\\s*)(.+)"), "$1<redacted>")
+        // Redact sensitive query parameters (keep key, hide value).
+        result = result.replace(Regex("(?i)([?&](sign|sig|token|auth|key|secret|passwd|password)=)[^&#\\s]+"), "$1<redacted>")
+        return result
+    }
+
     private fun formatNativeError(message: String?, code: Int?, reason: Int?): String {
         val reasonLabel = when (reason) {
             0 -> "eof"
-            1 -> "stop"
-            2 -> "quit"
-            3 -> "error"
-            4 -> "redirect"
+            2 -> "stop"
+            3 -> "quit"
+            4 -> "error"
+            5 -> "redirect"
             else -> null
         }
         val details = buildList {

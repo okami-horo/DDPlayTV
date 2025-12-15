@@ -34,6 +34,7 @@ constexpr jint kEventCompleted = 4;
 constexpr jint kEventError = 5;
 constexpr jint kEventBufferingStart = 6;
 constexpr jint kEventBufferingEnd = 7;
+constexpr jint kEventLogMessage = 8;
 constexpr jint kTrackVideo = 0;
 constexpr jint kTrackAudio = 1;
 constexpr jint kTrackSubtitle = 2;
@@ -53,6 +54,21 @@ std::string get_last_error() {
     std::lock_guard<std::mutex> lock(g_error_mutex);
     return g_last_error;
 }
+
+#if MPV_PREBUILT_AVAILABLE
+int mpvLogLevelToInt(const char* level) {
+    if (level == nullptr) return 0;
+    // Keep ordering aligned with MpvNativeBridge.Event.LogMessage parsing.
+    if (strcmp(level, "fatal") == 0) return 5;
+    if (strcmp(level, "error") == 0) return 4;
+    if (strcmp(level, "warn") == 0) return 3;
+    if (strcmp(level, "info") == 0) return 2;
+    if (strcmp(level, "v") == 0) return 1;
+    if (strcmp(level, "debug") == 0) return 0;
+    if (strcmp(level, "trace") == 0) return 0;
+    return 0;
+}
+#endif
 
 using av_jni_set_java_vm_fn = void (*)(JavaVM*, void*);
 using av_jni_set_android_app_ctx_fn = void (*)(void*, void*);
@@ -299,7 +315,10 @@ double getDoubleProperty(mpv_handle* handle, const char* property) {
     if (mpv_get_property(handle, property, MPV_FORMAT_DOUBLE, &value) < 0) {
         char buffer[128] = {0};
         snprintf(buffer, sizeof(buffer), "mpv_get_property %s failed", property);
-        set_last_error(buffer);
+        // Avoid overwriting the actual playback/root-cause error with auxiliary query failures.
+        if (get_last_error().empty()) {
+            set_last_error(buffer);
+        }
         return 0.0;
     }
     set_last_error("");
@@ -673,6 +692,17 @@ void eventLoop(MpvSession* session) {
                     const char* level = log->level == nullptr ? "" : log->level;
                     const char* text = log->text == nullptr ? "" : log->text;
                     __android_log_print(ANDROID_LOG_INFO, kLogTag, "mpv[%s][%s] %s", prefix, level, text);
+                    // Forward to Kotlin logger so it can be written into debug.log.
+                    // Note: do not include newlines; mpv log text usually ends with '\n'.
+                    std::string forwarded = std::string(prefix) + "[" + level + "] " + text;
+                    dispatchEvent(
+                        env,
+                        session->event_callback,
+                        kEventLogMessage,
+                        static_cast<jlong>(mpvLogLevelToInt(level)),
+                        0,
+                        forwarded.c_str()
+                    );
                 }
                 break;
             }

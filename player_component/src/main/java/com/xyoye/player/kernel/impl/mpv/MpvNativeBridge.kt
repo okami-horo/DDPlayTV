@@ -6,6 +6,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.Surface
 import androidx.annotation.Keep
+import com.xyoye.common_component.log.model.LogLevel
 import com.xyoye.data_component.enums.TrackType
 
 private const val TAG = "MpvNativeBridge"
@@ -33,6 +34,7 @@ class MpvNativeBridge {
         data class VideoSize(val width: Int, val height: Int) : Event
         data class Buffering(val started: Boolean) : Event
         data class Error(val code: Int?, val reason: Int?, val message: String?) : Event
+        data class LogMessage(val level: Int, val message: String?) : Event
     }
 
     private var nativeHandle: Long = 0
@@ -130,11 +132,24 @@ class MpvNativeBridge {
         if (nativeHandle != 0L) nativeSetSubtitleDelay(nativeHandle, offsetMs)
     }
 
-    fun applyDefaultOptions(debugLogging: Boolean) {
+    fun applyDefaultOptions(logLevel: LogLevel?) {
         if (nativeHandle == 0L) return
-        val level = if (debugLogging) "info" else "warn"
-        if (!nativeSetLogLevel(nativeHandle, level)) {
-            Log.w(TAG, "mpv setLogLevel($level) failed: ${lastError().orEmpty()}")
+        val mpvLevel = when (logLevel) {
+            null -> "no"
+            LogLevel.ERROR -> "error"
+            LogLevel.WARN -> "warn"
+            LogLevel.INFO -> "info"
+            LogLevel.DEBUG -> "v"
+        }
+        if (!nativeSetLogLevel(nativeHandle, mpvLevel)) {
+            Log.w(TAG, "mpv setLogLevel($mpvLevel) failed: ${lastError().orEmpty()}")
+        }
+        if (logLevel == LogLevel.DEBUG) {
+            // Increase verbosity for networking/demuxing issues (HTTP status, redirects, range, etc.).
+            // Unknown modules are ignored by mpv, so this is safe across versions.
+            setOption("msg-level", "all=v,ffmpeg=trace,stream=trace,network=trace")
+            // Ask libavformat/libavcodec to output trace logs (useful for HTTP and demuxer errors).
+            setOption("demuxer-lavf-o", "loglevel=trace")
         }
     }
 
@@ -226,6 +241,7 @@ class MpvNativeBridge {
             EVENT_BUFFERING_START -> Event.Buffering(true)
             EVENT_BUFFERING_END -> Event.Buffering(false)
             EVENT_ERROR -> Event.Error(arg1.toInt(), arg2.toInt(), message)
+            EVENT_LOG_MESSAGE -> Event.LogMessage(arg1.toInt(), message)
             else -> null
         }
         if (event != null) {
@@ -249,6 +265,7 @@ class MpvNativeBridge {
         private const val EVENT_ERROR = 5
         private const val EVENT_BUFFERING_START = 6
         private const val EVENT_BUFFERING_END = 7
+        private const val EVENT_LOG_MESSAGE = 8
 
         const val TRACK_TYPE_AUDIO = 1
         const val TRACK_TYPE_SUBTITLE = 2
