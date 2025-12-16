@@ -26,6 +26,10 @@ data class AlistFileData constructor(
     @NullToEmptyString
     val thumb: String = "",
 
-    val size: Long = 0L
+    val size: Long = 0L,
+
+    @Json(name = "sign")
+    @NullToEmptyString
+    val sign: String = "",
 
 ) : Parcelable

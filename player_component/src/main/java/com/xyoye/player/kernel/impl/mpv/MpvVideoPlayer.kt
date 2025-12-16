@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Point
 import android.net.Uri
 import android.view.Surface
+import androidx.media3.common.util.Util
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.utils.ErrorReportHelper
@@ -18,9 +19,11 @@ class MpvVideoPlayer(
     private val context: Context
 ) : AbstractVideoPlayer() {
 
+    private val appContext: Context = context.applicationContext
     private val nativeBridge = MpvNativeBridge()
     private var dataSource: String? = null
     private var headers: Map<String, String> = emptyMap()
+    private var userAgent: String? = null
     private var videoSize = Point(0, 0)
     private var isPrepared = false
     private var isPreparing = false
@@ -66,7 +69,26 @@ class MpvVideoPlayer(
 
     override fun setDataSource(path: String, headers: Map<String, String>?) {
         dataSource = path
-        this.headers = headers ?: emptyMap()
+        val originalHeaders = headers.orEmpty()
+        val userAgentEntry = originalHeaders.entries.firstOrNull { it.key.equals("User-Agent", ignoreCase = true) }
+        val shouldInjectUserAgent = runCatching {
+            val scheme = Uri.parse(path).scheme
+            scheme == "http" || scheme == "https"
+        }.getOrDefault(false)
+
+        userAgent = when {
+            userAgentEntry != null -> userAgentEntry.value
+            shouldInjectUserAgent -> runCatching {
+                Util.getUserAgent(appContext, appContext.applicationInfo.name ?: appContext.packageName)
+            }.getOrElse { "DanDanPlayForAndroid" }
+            else -> null
+        }
+
+        this.headers = if (userAgentEntry != null) {
+            originalHeaders.filterKeys { !it.equals(userAgentEntry.key, ignoreCase = true) }
+        } else {
+            originalHeaders
+        }
     }
 
     override fun setSurface(surface: Surface) {
@@ -101,6 +123,7 @@ class MpvVideoPlayer(
         isPreparing = true
         var dataSourceError: Exception? = null
         val success = try {
+            userAgent?.let { nativeBridge.setUserAgent(it) }
             nativeBridge.setDataSource(path, headers)
         } catch (e: Exception) {
             dataSourceError = e

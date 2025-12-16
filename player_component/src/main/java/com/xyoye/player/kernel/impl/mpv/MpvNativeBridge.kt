@@ -153,6 +153,12 @@ class MpvNativeBridge {
         }
     }
 
+    fun setUserAgent(userAgent: String) {
+        if (nativeHandle == 0L) return
+        if (userAgent.isBlank()) return
+        setOption("user-agent", userAgent)
+    }
+
     fun setSurfaceSize(width: Int, height: Int) {
         if (nativeHandle == 0L) return
         if (width <= 0 || height <= 0) return
