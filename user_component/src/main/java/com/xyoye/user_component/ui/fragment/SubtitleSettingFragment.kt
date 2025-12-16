@@ -11,7 +11,9 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.enums.RendererPreferenceSource
+import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.user_component.R
 
@@ -36,18 +38,26 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
         val backendPreference = findPreference<ListPreference>("subtitle_renderer_backend")
         val backendNote = findPreference<Preference>("subtitle_renderer_backend_note")
         val shadowPreference = findPreference<SwitchPreference>("subtitle_shadow_enabled")
+        val isMedia3Player = isMedia3Player()
 
         backendPreference?.apply {
             summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+            isVisible = isMedia3Player
             setOnPreferenceChangeListener { _, newValue ->
-                updateBackendDependentVisibility(backendNote, shadowPreference, newValue as String)
+                updateBackendDependentVisibility(
+                    backendNote,
+                    shadowPreference,
+                    newValue as String,
+                    isMedia3Player
+                )
                 return@setOnPreferenceChangeListener true
             }
         }
         updateBackendDependentVisibility(
             backendNote,
             shadowPreference,
-            backendPreference?.value ?: SubtitleConfig.getSubtitleRendererBackend()
+            backendPreference?.value ?: SubtitleConfig.getSubtitleRendererBackend(),
+            isMedia3Player
         )
 
         loadSameSubtitleSwitch?.setOnPreferenceChangeListener { _, newValue ->
@@ -70,12 +80,23 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
     private fun updateBackendDependentVisibility(
         note: Preference?,
         shadow: Preference?,
-        backendValue: String?
+        backendValue: String?,
+        isMedia3Player: Boolean
     ) {
+        if (!isMedia3Player) {
+            note?.isVisible = false
+            shadow?.isVisible = true
+            return
+        }
         val backend = SubtitleRendererBackend.fromName(backendValue)
         val isLibass = backend == SubtitleRendererBackend.LIBASS
         note?.isVisible = isLibass
         shadow?.isVisible = !isLibass
+    }
+
+    private fun isMedia3Player(): Boolean {
+        val currentType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
+        return currentType == PlayerType.TYPE_EXO_PLAYER
     }
 
     inner class SubtitleSettingDataStore : PreferenceDataStore() {
