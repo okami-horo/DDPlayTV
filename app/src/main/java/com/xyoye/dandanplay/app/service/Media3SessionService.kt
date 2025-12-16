@@ -24,18 +24,19 @@ class Media3SessionService : LifecycleService() {
     private val backgroundModesState = MutableStateFlow<Set<Media3BackgroundMode>>(emptySet())
     private val sessionCommandsState = MutableStateFlow<Set<String>>(emptySet())
 
-    private val commandBridge = object : MediaSessionCommandBridge {
-        override fun updateSessionCommands(commands: Set<String>) {
-            sessionCommandsState.value = commands
-        }
-
-        override fun updateBackgroundModes(modes: Set<Media3BackgroundMode>) {
-            backgroundModesState.value = modes
-        }
-    }
+    private val commandBridge = StateFlowCommandBridge(
+        sessionCommandsState = sessionCommandsState,
+        backgroundModesState = backgroundModesState
+    )
 
     private val coordinator = Media3BackgroundCoordinator(commandBridge)
-    private val binder = Media3SessionBinder()
+    private val binder = Media3SessionBinder(
+        sessionState = sessionState,
+        capabilityState = capabilityState,
+        backgroundModesState = backgroundModesState,
+        sessionCommandsState = sessionCommandsState,
+        coordinator = coordinator
+    )
 
     override fun onBind(intent: Intent): IBinder {
         super.onBind(intent)
@@ -51,7 +52,13 @@ class Media3SessionService : LifecycleService() {
         super.onDestroy()
     }
 
-    inner class Media3SessionBinder : Binder(), Media3SessionClient {
+    private class Media3SessionBinder(
+        private val sessionState: MutableStateFlow<PlaybackSession?>,
+        private val capabilityState: MutableStateFlow<PlayerCapabilityContract?>,
+        private val backgroundModesState: MutableStateFlow<Set<Media3BackgroundMode>>,
+        private val sessionCommandsState: MutableStateFlow<Set<String>>,
+        private val coordinator: Media3BackgroundCoordinator
+    ) : Binder(), Media3SessionClient {
 
         override fun updateSession(
             session: PlaybackSession?,
@@ -69,5 +76,19 @@ class Media3SessionService : LifecycleService() {
         override fun backgroundModes(): StateFlow<Set<Media3BackgroundMode>> = backgroundModesState
 
         override fun sessionCommands(): StateFlow<Set<String>> = sessionCommandsState
+    }
+}
+
+private class StateFlowCommandBridge(
+    private val sessionCommandsState: MutableStateFlow<Set<String>>,
+    private val backgroundModesState: MutableStateFlow<Set<Media3BackgroundMode>>
+) : MediaSessionCommandBridge {
+
+    override fun updateSessionCommands(commands: Set<String>) {
+        sessionCommandsState.value = commands
+    }
+
+    override fun updateBackgroundModes(modes: Set<Media3BackgroundMode>) {
+        backgroundModesState.value = modes
     }
 }
