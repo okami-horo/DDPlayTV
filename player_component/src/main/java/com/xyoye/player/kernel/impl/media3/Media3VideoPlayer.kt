@@ -45,12 +45,14 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @UnstableApi
-class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), Player.Listener {
+class Media3VideoPlayer(context: Context) : AbstractVideoPlayer(), Player.Listener {
+
+    private val appContext: Context = context.applicationContext
 
     private lateinit var player: ExoPlayer
     private lateinit var mediaSource: MediaSource
 
-    private val trackSelector: TrackSelector by lazy { DefaultTrackSelector(context) }
+    private val trackSelector: TrackSelector by lazy { DefaultTrackSelector(appContext) }
     private val loadControl: LoadControl by lazy { DefaultLoadControl() }
     private lateinit var speedParameters: PlaybackParameters
     private var videoOverrideApplied = false
@@ -66,12 +68,13 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
     private var videoDecoderRecoveryCount = 0
     private var audioDecoderRecoveryCount = 0
 
-    private val trackNameProvider by lazy { DefaultTrackNameProvider(context.resources) }
+    private val trackNameProvider by lazy { DefaultTrackNameProvider(appContext.resources) }
 
     override fun initPlayer() {
         if (trackSelector is DefaultTrackSelector) {
-            val preferredMimeTypes = Media3FormatUtil.preferredVideoMimeTypes(context).toTypedArray()
-            trackSelector.parameters = DefaultTrackSelector.Parameters.Builder(context)
+            val preferredMimeTypes =
+                Media3FormatUtil.preferredVideoMimeTypes(appContext).toTypedArray()
+            trackSelector.parameters = DefaultTrackSelector.Parameters.Builder(appContext)
                 .setPreferredTextLanguage("zh")
                 .setPreferredAudioLanguage("jap")
                 .setPreferredVideoMimeTypes(*preferredMimeTypes)
@@ -79,18 +82,18 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
         }
 
         val renderersFactory = AggressiveRenderersFactory(
-            context,
+            appContext,
             AggressiveMediaCodecSelector()
         ).apply {
             setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
         }
 
-        player = ExoPlayer.Builder(context)
+        player = ExoPlayer.Builder(appContext)
             .setRenderersFactory(renderersFactory)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(context))
+            .setMediaSourceFactory(DefaultMediaSourceFactory(appContext))
             .setTrackSelector(trackSelector)
             .setLoadControl(loadControl)
-            .setBandwidthMeter(DefaultBandwidthMeter.Builder(context).build())
+            .setBandwidthMeter(DefaultBandwidthMeter.Builder(appContext).build())
             .setAnalyticsCollector(DefaultAnalyticsCollector(Clock.DEFAULT))
             .build()
 
@@ -265,7 +268,7 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
             androidx.media3.common.TrackSelectionOverride(it.mediaTrackGroup, trackIndex)
         } ?: return
 
-        trackSelector.parameters = DefaultTrackSelector.Parameters.Builder(context)
+        trackSelector.parameters = DefaultTrackSelector.Parameters.Builder(appContext)
             .setTrackTypeDisabled(media3Type, false)
             .clearOverridesOfType(media3Type)
             .addOverride(override)
@@ -274,7 +277,7 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
 
     override fun deselectTrack(type: TrackType) {
         val media3Type = getTrackType(type) ?: return
-        trackSelector.parameters = DefaultTrackSelector.Parameters.Builder(context)
+        trackSelector.parameters = DefaultTrackSelector.Parameters.Builder(appContext)
             .setTrackTypeDisabled(media3Type, true)
             .build()
     }
@@ -391,7 +394,8 @@ class Media3VideoPlayer(private val context: Context) : AbstractVideoPlayer(), P
         val videoGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
         if (videoGroups.isEmpty()) return
 
-        val displaySupport = DisplayHdrSupport.fromTypes(Media3FormatUtil.getDisplayHdrTypes(context))
+        val displaySupport =
+            DisplayHdrSupport.fromTypes(Media3FormatUtil.getDisplayHdrTypes(appContext))
         val supportsHdr = displaySupport.supportsAnyHdr
 
         var bestGroupIdx = -1

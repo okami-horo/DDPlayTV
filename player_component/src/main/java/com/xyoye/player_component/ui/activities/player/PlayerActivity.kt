@@ -221,6 +221,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             unbindService(media3ServiceConnection)
             media3ServiceBound = false
         }
+        media3SessionClient = null
         media3BackgroundJob?.cancel()
         media3BackgroundJob = null
         media3BackgroundModes = emptySet()
