@@ -14,7 +14,6 @@ import com.xyoye.data_component.data.LoginData
 import kotlinx.coroutines.launch
 
 class LoginViewModel : BaseViewModel() {
-
     val accountField = ObservableField("")
     val passwordField = ObservableField("")
 
@@ -28,8 +27,9 @@ class LoginViewModel : BaseViewModel() {
             val password = passwordField.get()
 
             val allowLogin = checkAccount(account) && checkPassword(password)
-            if (!allowLogin)
+            if (!allowLogin) {
                 return
+            }
 
             val appId = SecurityHelper.getInstance().appId
             val unixTimestamp = System.currentTimeMillis() / 1000
@@ -39,13 +39,14 @@ class LoginViewModel : BaseViewModel() {
             viewModelScope.launch {
                 try {
                     showLoading()
-                    val result = UserRepository.login(
-                        account!!,
-                        password!!,
-                        appId,
-                        unixTimestamp.toString(),
-                        hash
-                    )
+                    val result =
+                        UserRepository.login(
+                            account!!,
+                            password!!,
+                            appId,
+                            unixTimestamp.toString(),
+                            hash,
+                        )
                     hideLoading()
 
                     if (result.isFailure) {
@@ -55,22 +56,23 @@ class LoginViewModel : BaseViewModel() {
                                 it,
                                 "LoginViewModel",
                                 "login",
-                                "Login network request failed for user: $account"
+                                "Login network request failed for user: $account",
                             )
                         }
                         result.exceptionOrNull()?.message?.toastError()
                         return@launch
                     }
 
-                    val data = result.getOrNull() ?: run {
-                        ErrorReportHelper.postException(
-                            "Login response is null",
-                            "LoginViewModel",
-                            null
-                        )
-                        ToastCenter.showError("登录错误，请稍后再试")
-                        return@launch
-                    }
+                    val data =
+                        result.getOrNull() ?: run {
+                            ErrorReportHelper.postException(
+                                "Login response is null",
+                                "LoginViewModel",
+                                null,
+                            )
+                            ToastCenter.showError("登录错误，请稍后再试")
+                            return@launch
+                        }
 
                     if (UserInfoHelper.login(data)) {
                         ToastCenter.showSuccess("登录成功")
@@ -79,7 +81,7 @@ class LoginViewModel : BaseViewModel() {
                         ErrorReportHelper.postException(
                             "Login successful but UserInfoHelper.login failed",
                             "LoginViewModel",
-                            null
+                            null,
                         )
                         ToastCenter.showError("登录错误，请稍后再试")
                     }
@@ -89,7 +91,7 @@ class LoginViewModel : BaseViewModel() {
                         e,
                         "LoginViewModel",
                         "login",
-                        "Unexpected error during login process for user: $account"
+                        "Unexpected error during login process for user: $account",
                     )
                     ToastCenter.showError("登录过程中发生错误，请稍后再试")
                 }
@@ -99,7 +101,7 @@ class LoginViewModel : BaseViewModel() {
                 e,
                 "LoginViewModel",
                 "login",
-                "Error in login method initialization"
+                "Error in login method initialization",
             )
             ToastCenter.showError("登录初始化失败，请稍后再试")
         }

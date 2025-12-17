@@ -28,17 +28,19 @@ android {
 
         val media3Version = project.findProperty("media3Version")?.toString() ?: "1.8.0"
         buildConfigField("String", "MEDIA3_VERSION", "\"$media3Version\"")
-        
+
         // 从环境变量或属性读取密钥，用于GitHub Actions注入
         // 本地开发时使用默认值，CI/CD时从Secrets注入
-        val buglyAppId = System.getenv("BUGLY_APP_ID") 
-            ?: project.findProperty("BUGLY_APP_ID")?.toString() 
-            ?: "DEFAULT_BUGLY_ID"
+        val buglyAppId =
+            System.getenv("BUGLY_APP_ID")
+                ?: project.findProperty("BUGLY_APP_ID")?.toString()
+                ?: "DEFAULT_BUGLY_ID"
         buildConfigField("String", "BUGLY_APP_ID", "\"$buglyAppId\"")
-        
-        val dandanAppId = System.getenv("DANDAN_APP_ID") 
-            ?: project.findProperty("DANDAN_APP_ID")?.toString() 
-            ?: "DEFAULT_DANDAN_ID"
+
+        val dandanAppId =
+            System.getenv("DANDAN_APP_ID")
+                ?: project.findProperty("DANDAN_APP_ID")?.toString()
+                ?: "DEFAULT_DANDAN_ID"
         buildConfigField("String", "DANDAN_APP_ID", "\"$dandanAppId\"")
     }
     namespace = "com.xyoye.common_component"

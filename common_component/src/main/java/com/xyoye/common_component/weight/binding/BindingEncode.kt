@@ -9,7 +9,6 @@ import java.net.URLEncoder
  */
 
 object BindingEncode {
-
     @InverseMethod("stringDecode")
     @JvmStatic
     fun stringEncode(value: String?): String {

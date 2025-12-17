@@ -14,8 +14,10 @@ class RenderMeasureHelper {
     var mVideoWidth: Int = 0
     var mVideoHeight: Int = 0
 
-    fun doMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int): IntArray {
-
+    fun doMeasure(
+        widthMeasureSpec: Int,
+        heightMeasureSpec: Int
+    ): IntArray {
         var widthSpec = widthMeasureSpec
         var heightSpec = heightMeasureSpec
         // 软解码时处理旋转信息，交换宽高

@@ -15,40 +15,27 @@ class WebDavStorageFile(
     private val davResource: DavResource,
     storage: WebDavStorage
 ) : AbstractStorageFile(storage) {
+    override fun getRealFile(): Any = davResource
 
-    override fun getRealFile(): Any {
-        return davResource
-    }
+    override fun filePath(): String = davResource.href.path
 
-    override fun filePath(): String {
-        return davResource.href.path
-    }
-
-    override fun fileUrl(): String {
-        return storage.rootUri
+    override fun fileUrl(): String =
+        storage.rootUri
             .buildUpon()
             .path(davResource.path)
             .toString()
-    }
 
-    override fun isDirectory(): Boolean {
-        return davResource.isDirectory
-    }
+    override fun isDirectory(): Boolean = davResource.isDirectory
 
-    override fun fileName(): String {
-        return davResource.name
-    }
+    override fun fileName(): String = davResource.name
 
-    override fun fileLength(): Long {
-        return davResource.contentLength
-    }
+    override fun fileLength(): Long = davResource.contentLength
 
-    override fun clone(): StorageFile {
-        return WebDavStorageFile(
+    override fun clone(): StorageFile =
+        WebDavStorageFile(
             davResource,
-            storage as WebDavStorage
+            storage as WebDavStorage,
         ).also { it.playHistory = playHistory }
-    }
 
     override fun uniqueKey(): String {
         val baseUri = URI(storage.rootUri.toString()).resolve("/")

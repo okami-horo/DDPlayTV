@@ -7,6 +7,5 @@ import com.xyoye.common_component.application.permission.Permission
  */
 
 object DanDanPlay {
-
     val permission = Permission()
 }

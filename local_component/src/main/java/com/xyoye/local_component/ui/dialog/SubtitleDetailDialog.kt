@@ -21,7 +21,6 @@ class SubtitleDetailDialog(
     private val downloadOne: () -> Unit,
     private val downloadZip: (fileName: String, url: String) -> Unit
 ) : BaseBottomDialog<DialogSubtitleDetailBinding>(activity) {
-
     private var extension: String? = null
 
     override fun getChildLayoutId() = R.layout.dialog_subtitle_detail

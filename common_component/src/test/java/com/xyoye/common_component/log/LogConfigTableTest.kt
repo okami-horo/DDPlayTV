@@ -14,7 +14,6 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class LogConfigTableTest {
-
     private val defaultPolicy = LogPolicy.defaultReleasePolicy()
 
     @Test
@@ -25,13 +24,14 @@ class LogConfigTableTest {
         assertEquals(LogLevel.INFO, loaded.activePolicy.defaultLevel)
         assertFalse(loaded.debugSessionEnabled)
 
-        val customPolicy = LogPolicy(
-            name = "debug-session-ui",
-            defaultLevel = LogLevel.DEBUG,
-            enableDebugFile = true,
-            samplingRules = emptyList(),
-            exportable = true
-        )
+        val customPolicy =
+            LogPolicy(
+                name = "debug-session-ui",
+                defaultLevel = LogLevel.DEBUG,
+                enableDebugFile = true,
+                samplingRules = emptyList(),
+                exportable = true,
+            )
         repository.updatePolicy(customPolicy, PolicySource.USER_OVERRIDE)
         val runtime = repository.updateDebugState(DebugToggleState.ON_CURRENT_SESSION)
 

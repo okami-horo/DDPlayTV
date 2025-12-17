@@ -7,6 +7,7 @@ import com.danikula.videocache.source.Source
 import com.danikula.videocache.sourcestorage.SourceInfoStorage
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.utils.ErrorReportHelper
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -16,7 +17,6 @@ import java.io.InputStream
 import java.io.InterruptedIOException
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
-import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * <pre>
@@ -48,7 +48,7 @@ class OkHttpUrlSource : Source {
         this.sourceInfo = sourceInfoStorage.get(url) ?: SourceInfo(
             url,
             DEFAULT_CONTENT_LENGTH,
-            ProxyCacheUtils.getSupposablyMime(url)
+            ProxyCacheUtils.getSupposablyMime(url),
         )
     }
 
@@ -73,10 +73,11 @@ class OkHttpUrlSource : Source {
                 e,
                 "OkHttpUrlSource",
                 "open",
-                "Error opening connection for ${sourceInfo.url} with offset $offset"
+                "Error opening connection for ${sourceInfo.url} with offset $offset",
             )
             throw ProxyCacheException(
-                "Error opening connection for " + sourceInfo.url + " with offset " + offset, e
+                "Error opening connection for " + sourceInfo.url + " with offset " + offset,
+                e,
             )
         }
     }
@@ -99,18 +100,18 @@ class OkHttpUrlSource : Source {
                 e,
                 "OkHttpUrlSource",
                 "read",
-                "Reading source ${sourceInfo.url} is interrupted"
+                "Reading source ${sourceInfo.url} is interrupted",
             )
             throw InterruptedProxyCacheException(
                 "Reading source ${sourceInfo.url} is interrupted",
-                e
+                e,
             )
         } catch (e: IOException) {
             ErrorReportHelper.postCatchedExceptionWithContext(
                 e,
                 "OkHttpUrlSource",
                 "read",
-                "Error reading data from ${sourceInfo.url}"
+                "Error reading data from ${sourceInfo.url}",
             )
             throw ProxyCacheException("Error reading data from ${sourceInfo.url}", e)
         }
@@ -141,25 +142,31 @@ class OkHttpUrlSource : Source {
                 e,
                 "OkHttpUrlSource",
                 "fetchContentInfo",
-                "Error fetching info from ${sourceInfo.url}"
+                "Error fetching info from ${sourceInfo.url}",
             )
             LogFacade.e(
                 LogModule.PLAYER,
                 TAG,
                 "Error fetching info from ${sourceInfo.url}",
-                throwable = e
+                throwable = e,
             )
         }
     }
 
     @Throws(IOException::class, ProxyCacheException::class)
-    private fun openConnection(offset: Long, timeout: Long, headerOnly: Boolean = false): Response {
+    private fun openConnection(
+        offset: Long,
+        timeout: Long,
+        headerOnly: Boolean = false
+    ): Response {
         if (timeout > 0 && client.readTimeoutMillis.toLong() != timeout) {
-            client = client.newBuilder()
-                .callTimeout(timeout, TimeUnit.MILLISECONDS)
-                .readTimeout(timeout, TimeUnit.MILLISECONDS)
-                .writeTimeout(timeout, TimeUnit.MILLISECONDS)
-                .build()
+            client =
+                client
+                    .newBuilder()
+                    .callTimeout(timeout, TimeUnit.MILLISECONDS)
+                    .readTimeout(timeout, TimeUnit.MILLISECONDS)
+                    .writeTimeout(timeout, TimeUnit.MILLISECONDS)
+                    .build()
         }
 
         var redirectCount = 0
@@ -169,10 +176,12 @@ class OkHttpUrlSource : Source {
             LogFacade.d(
                 LogModule.PLAYER,
                 TAG,
-                "Open connection " + (if (offset > 0) " with offset $offset" else "") + " to " + url
+                "Open connection " + (if (offset > 0) " with offset $offset" else "") + " to " + url,
             )
-            val requestBuilder = Request.Builder()
-                .url(url)
+            val requestBuilder =
+                Request
+                    .Builder()
+                    .url(url)
             injectCustomHeaders(requestBuilder, url)
             if (offset > 0) {
                 requestBuilder.addHeader("Range", "bytes=$offset-")
@@ -184,7 +193,7 @@ class OkHttpUrlSource : Source {
             }
 
             val response = client.newCall(requestBuilder.build()).execute()
-            if (response.isRedirect.not()){
+            if (response.isRedirect.not()) {
                 return response
             }
 
@@ -194,7 +203,10 @@ class OkHttpUrlSource : Source {
         throw ProxyCacheException("Too many redirects: $redirectCount")
     }
 
-    private fun injectCustomHeaders(requestBuilder: Request.Builder, url: String) {
+    private fun injectCustomHeaders(
+        requestBuilder: Request.Builder,
+        url: String
+    ) {
         val extraHeaders = headerInjector.addHeaders(url)
         for ((key, value) in extraHeaders) {
             requestBuilder.addHeader(key, value)
@@ -230,11 +242,7 @@ class OkHttpUrlSource : Source {
 
     override fun getUrl(): String = sourceInfo.url
 
-    override fun cloneNew(): Source {
-        return OkHttpUrlSource(this)
-    }
+    override fun cloneNew(): Source = OkHttpUrlSource(this)
 
-    override fun toString(): String {
-        return "OkHttpUrlSource{sourceInfo='$sourceInfo}"
-    }
+    override fun toString(): String = "OkHttpUrlSource{sourceInfo='$sourceInfo}"
 }

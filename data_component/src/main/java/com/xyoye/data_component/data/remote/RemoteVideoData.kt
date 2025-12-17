@@ -33,14 +33,10 @@ data class RemoteVideoData(
     val Path: String = "",
     @NullToLongZero
     val Size: Long = 0,
-
     @NullToEmptyString
     var absolutePath: String = "",
     var isFolder: Boolean = false,
     var childData: MutableList<RemoteVideoData> = mutableListOf()
 ) : Parcelable {
-
-    fun getEpisodeName(): String{
-        return EpisodeTitle.ifEmpty { Name }
-    }
+    fun getEpisodeName(): String = EpisodeTitle.ifEmpty { Name }
 }

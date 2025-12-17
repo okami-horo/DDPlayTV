@@ -6,20 +6,20 @@ import com.squareup.moshi.ToJson
 import com.xyoye.data_component.helper.moshi.NullToLongZero
 
 object NullToLongZeroAdapter {
-
     @ToJson
-    fun toJson(@NullToLongZero value: Long): String {
-        return value.toString()
-    }
+    fun toJson(
+        @NullToLongZero value: Long
+    ): String = value.toString()
 
     @FromJson
     @NullToLongZero
     fun fromJson(reader: JsonReader): Long {
-        val result = if (reader.peek() === JsonReader.Token.NULL) {
-            reader.nextNull()
-        } else {
-            reader.nextLong()
-        }
+        val result =
+            if (reader.peek() === JsonReader.Token.NULL) {
+                reader.nextNull()
+            } else {
+                reader.nextLong()
+            }
 
         return result ?: 0L
     }

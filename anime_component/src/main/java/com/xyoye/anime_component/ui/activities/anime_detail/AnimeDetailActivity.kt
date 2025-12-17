@@ -28,7 +28,6 @@ import kotlin.math.absoluteValue
 
 @Route(path = RouteTable.Anime.AnimeDetail)
 class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDetailBinding>() {
-
     @Autowired
     @JvmField
     var animeArgument: AnimeArgument = AnimeArgument()
@@ -37,7 +36,7 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
     private val textColorRange by lazy {
         ColorRange(
             R.color.text_white_immutable.toResColor(this),
-            R.color.text_theme.toResColor(this)
+            R.color.text_theme.toResColor(this),
         )
     }
 
@@ -45,7 +44,7 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
     private val pageColorRange by lazy {
         ColorRange(
             R.color.item_bg_color.toResColor(this),
-            R.color.theme.toResColor(this)
+            R.color.theme.toResColor(this),
         )
     }
 
@@ -58,15 +57,17 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
     // 返回事件拦截器
     private var backPressInterceptor: (() -> Boolean)? = null
 
-    override fun initViewModel() = ViewModelInit(
-        BR.viewModel,
-        AnimeDetailViewModel::class.java
-    )
+    override fun initViewModel() =
+        ViewModelInit(
+            BR.viewModel,
+            AnimeDetailViewModel::class.java,
+        )
 
     override fun getLayoutId() = R.layout.activity_anime_detail
 
     override fun initStatusBar() {
-        ImmersionBar.with(this)
+        ImmersionBar
+            .with(this)
             .transparentBar()
             .statusBarDarkFont(false)
             .init()
@@ -96,12 +97,13 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
         }
 
         dataBinding.viewpager.adapter = AnimeDetailPageAdapter(this, tabs)
-        val mediator = TabLayoutMediator(
-            dataBinding.tabLayout,
-            dataBinding.viewpager
-        ) { tab, position ->
-            tab.text = tabs[position].title
-        }
+        val mediator =
+            TabLayoutMediator(
+                dataBinding.tabLayout,
+                dataBinding.viewpager,
+            ) { tab, position ->
+                tab.text = tabs[position].title
+            }
         mediator.attach()
     }
 
@@ -168,10 +170,11 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
         // 追番按钮背景
         dataBinding.followTv.background?.alpha = 255 - (255 * percent).toInt()
 
-        //状态栏文字颜色
-        //tips: MIUI深色模式下状态栏字体颜色不 受此控制
+        // 状态栏文字颜色
+        // tips: MIUI深色模式下状态栏字体颜色不 受此控制
         val isDarkFont = percent > 0.5f && !isNightMode()
-        ImmersionBar.with(this)
+        ImmersionBar
+            .with(this)
             .statusBarColorInt(pageColorRange.start.opacity(percent))
             .statusBarDarkFont(isDarkFont)
             .init()
@@ -183,22 +186,31 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
     private fun updateTabLayoutRound(percent: Float) {
         val topRadius = 12.dp() * (1 - percent)
         val bottomRadius = 0f
-        val roundCorners = floatArrayOf(
-            topRadius, topRadius,
-            topRadius, topRadius,
-            bottomRadius, bottomRadius,
-            bottomRadius, bottomRadius
-        )
-        dataBinding.tabLayout.background = ShapeDrawable().apply {
-            shape = RoundRectShape(roundCorners, null, null)
-            paint.color = pageColorRange.start
-        }
+        val roundCorners =
+            floatArrayOf(
+                topRadius,
+                topRadius,
+                topRadius,
+                topRadius,
+                bottomRadius,
+                bottomRadius,
+                bottomRadius,
+                bottomRadius,
+            )
+        dataBinding.tabLayout.background =
+            ShapeDrawable().apply {
+                shape = RoundRectShape(roundCorners, null, null)
+                paint.color = pageColorRange.start
+            }
     }
 
     /**
      * 根据番剧信息更新UI
      */
-    private fun updateUIbyAnime(title: String, image: String) {
+    private fun updateUIbyAnime(
+        title: String,
+        image: String
+    ) {
         dataBinding.collapsingToolbarLayout.title = title
         dataBinding.backgroundCoverIv.loadImage(image)
         dataBinding.coverIv.loadAnimeCover(image)

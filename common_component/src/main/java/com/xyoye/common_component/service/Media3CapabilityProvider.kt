@@ -10,7 +10,6 @@ import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
 import kotlin.jvm.JvmSuppressWildcards
 
 interface Media3CapabilityProvider : IProvider {
-
     suspend fun prepareSession(
         mediaId: String,
         sourceType: Media3SourceType,
@@ -18,9 +17,7 @@ interface Media3CapabilityProvider : IProvider {
         autoplay: Boolean = true
     ): Result<Media3SessionBundle>
 
-    suspend fun refreshSession(
-        sessionId: String
-    ): Result<Media3SessionBundle>
+    suspend fun refreshSession(sessionId: String): Result<Media3SessionBundle>
 
     suspend fun dispatchCapability(
         sessionId: String,

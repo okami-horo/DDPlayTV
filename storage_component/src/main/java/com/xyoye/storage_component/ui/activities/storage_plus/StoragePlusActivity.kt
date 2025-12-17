@@ -21,7 +21,6 @@ import com.xyoye.storage_component.ui.dialog.WebDavStorageEditDialog
 
 @Route(path = RouteTable.Stream.StoragePlus)
 class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePlusBinding>() {
-
     @Autowired
     @JvmField
     var mediaType: MediaType? = null
@@ -35,7 +34,7 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            StoragePlusViewModel::class.java
+            StoragePlusViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_storage_plus
@@ -76,19 +75,20 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
     }
 
     private fun showDialog() {
-        val dialog = when (mediaType) {
-            MediaType.EXTERNAL_STORAGE -> ExternalStorageEditDialog(this, editData)
-            MediaType.REMOTE_STORAGE -> RemoteStorageEditDialog(this, editData)
-            MediaType.FTP_SERVER -> FTPStorageEditDialog(this, editData)
-            MediaType.WEBDAV_SERVER -> WebDavStorageEditDialog(this, editData)
-            MediaType.SMB_SERVER -> SmbStorageEditDialog(this, editData)
-            MediaType.SCREEN_CAST -> ScreencastStorageEditDialog(this, editData)
-            MediaType.ALSIT_STORAGE -> AlistStorageEditDialog(this, editData)
-            else -> {
-                finish()
-                null
-            }
-        } ?: return
+        val dialog =
+            when (mediaType) {
+                MediaType.EXTERNAL_STORAGE -> ExternalStorageEditDialog(this, editData)
+                MediaType.REMOTE_STORAGE -> RemoteStorageEditDialog(this, editData)
+                MediaType.FTP_SERVER -> FTPStorageEditDialog(this, editData)
+                MediaType.WEBDAV_SERVER -> WebDavStorageEditDialog(this, editData)
+                MediaType.SMB_SERVER -> SmbStorageEditDialog(this, editData)
+                MediaType.SCREEN_CAST -> ScreencastStorageEditDialog(this, editData)
+                MediaType.ALSIT_STORAGE -> AlistStorageEditDialog(this, editData)
+                else -> {
+                    finish()
+                    null
+                }
+            } ?: return
 
         dialog.show()
         storageEditDialog = dialog

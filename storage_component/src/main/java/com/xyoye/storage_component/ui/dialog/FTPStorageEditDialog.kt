@@ -20,7 +20,6 @@ class FTPStorageEditDialog(
     private val activity: StoragePlusActivity,
     private val originalStorage: MediaLibraryEntity?
 ) : StorageEditDialog<DialogFtpLoginBinding>(activity) {
-
     private lateinit var binding: DialogFtpLoginBinding
 
     override fun getChildLayoutId() = R.layout.dialog_ftp_login
@@ -31,19 +30,20 @@ class FTPStorageEditDialog(
 
         setTitle(if (isEditStorage) "编辑FTP帐号" else "添加FTP帐号")
 
-        val serverData = originalStorage ?: MediaLibraryEntity(
-            0,
-            "",
-            "",
-            MediaType.FTP_SERVER,
-            null,
-            null,
-            false,
-            21
-        )
+        val serverData =
+            originalStorage ?: MediaLibraryEntity(
+                0,
+                "",
+                "",
+                MediaType.FTP_SERVER,
+                null,
+                null,
+                false,
+                21,
+            )
         binding.serverData = serverData
 
-        //编辑模式下，选中匿名
+        // 编辑模式下，选中匿名
         if (isEditStorage && originalStorage!!.isAnonymous) {
             setAnonymous(true)
         } else {
@@ -94,10 +94,12 @@ class FTPStorageEditDialog(
                 if (serverData.displayName.isEmpty()) {
                     serverData.displayName = "FTP媒体库"
                 }
-                serverData.url = if (serverData.ftpAddress.contains("//"))
-                    "${serverData.ftpAddress}:${serverData.port}"
-                else
-                    "ftp://${serverData.ftpAddress}:${serverData.port}"
+                serverData.url =
+                    if (serverData.ftpAddress.contains("//")) {
+                        "${serverData.ftpAddress}:${serverData.port}"
+                    } else {
+                        "ftp://${serverData.ftpAddress}:${serverData.port}"
+                    }
 
                 activity.addStorage(serverData)
             }
@@ -150,12 +152,12 @@ class FTPStorageEditDialog(
     private fun setAnonymous(isAnonymous: Boolean) {
         binding.anonymousTv.isSelected = isAnonymous
         binding.anonymousTv.setTextColorRes(
-            if (isAnonymous) R.color.text_white else R.color.text_black
+            if (isAnonymous) R.color.text_white else R.color.text_black,
         )
 
         binding.accountTv.isSelected = !isAnonymous
         binding.accountTv.setTextColorRes(
-            if (!isAnonymous) R.color.text_white else R.color.text_black
+            if (!isAnonymous) R.color.text_white else R.color.text_black,
         )
 
         binding.accountEt.isGone = isAnonymous
@@ -171,12 +173,12 @@ class FTPStorageEditDialog(
     private fun setActive(isActive: Boolean) {
         binding.activeTv.isSelected = isActive
         binding.activeTv.setTextColorRes(
-            if (isActive) R.color.text_white else R.color.text_black
+            if (isActive) R.color.text_white else R.color.text_black,
         )
 
         binding.passiveTv.isSelected = !isActive
         binding.passiveTv.setTextColorRes(
-            if (!isActive) R.color.text_white else R.color.text_black
+            if (!isActive) R.color.text_white else R.color.text_black,
         )
     }
 }

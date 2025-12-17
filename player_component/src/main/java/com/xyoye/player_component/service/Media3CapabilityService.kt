@@ -17,10 +17,9 @@ import kotlin.jvm.JvmSuppressWildcards
 
 @Route(
     path = RouteTable.Player.Media3CapabilityProvider,
-    name = "Media3 capability provider"
+    name = "Media3 capability provider",
 )
 class Media3CapabilityService : Media3CapabilityProvider {
-
     override fun init(context: Context?) = Unit
 
     override suspend fun prepareSession(
@@ -33,32 +32,25 @@ class Media3CapabilityService : Media3CapabilityProvider {
         if (!snapshot.value) {
             return Result.failure(IllegalStateException("Media3 is disabled by rollout snapshot"))
         }
-        val request = PlaybackSessionRequestData(
-            mediaId = mediaId,
-            sourceType = sourceType,
-            autoplay = autoplay,
-            requestedCapabilities = requestedCapabilities
-        )
+        val request =
+            PlaybackSessionRequestData(
+                mediaId = mediaId,
+                sourceType = sourceType,
+                autoplay = autoplay,
+                requestedCapabilities = requestedCapabilities,
+            )
         return Media3Repository.createSession(request)
     }
 
-    override suspend fun refreshSession(sessionId: String): Result<Media3SessionBundle> {
-        return Media3Repository.fetchSession(sessionId)
-    }
+    override suspend fun refreshSession(sessionId: String): Result<Media3SessionBundle> = Media3Repository.fetchSession(sessionId)
 
     override suspend fun dispatchCapability(
         sessionId: String,
         capability: Media3Capability,
         payload: Map<String, @JvmSuppressWildcards Any?>?
-    ): Result<CapabilityCommandResponseData> {
-        return Media3Repository.dispatchCapability(sessionId, capability, payload)
-    }
+    ): Result<CapabilityCommandResponseData> = Media3Repository.dispatchCapability(sessionId, capability, payload)
 
-    override fun cachedCapability(sessionId: String): PlayerCapabilityContract? {
-        return Media3Repository.cachedCapability(sessionId)
-    }
+    override fun cachedCapability(sessionId: String): PlayerCapabilityContract? = Media3Repository.cachedCapability(sessionId)
 
-    override fun cachedToggle(sessionId: String): RolloutToggleSnapshot? {
-        return Media3Repository.cachedToggle(sessionId)
-    }
+    override fun cachedToggle(sessionId: String): RolloutToggleSnapshot? = Media3Repository.cachedToggle(sessionId)
 }

@@ -19,12 +19,12 @@ class AssGpuRenderer(
     private val loadSheddingPolicy: SubtitleLoadSheddingPolicy = SubtitleLoadSheddingPolicy(),
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
-
-    private val telemetryCollector = SubtitleTelemetryCollector(
-        pipelineController = pipelineController,
-        loadSheddingPolicy = loadSheddingPolicy,
-        scope = scope
-    )
+    private val telemetryCollector =
+        SubtitleTelemetryCollector(
+            pipelineController = pipelineController,
+            loadSheddingPolicy = loadSheddingPolicy,
+            scope = scope,
+        )
     val frameCleaner = SubtitleFrameCleaner { nativeBridge.flush() }
 
     @Volatile
@@ -42,15 +42,19 @@ class AssGpuRenderer(
         this.telemetryEnabled = telemetryEnabled
         nativeBridge.attachSurface(surface, target)
         initJob?.cancel()
-        initJob = scope.launch {
-            runCatching { pipelineController.init(surfaceId, target, telemetryEnabled) }
-                .onFailure { error ->
-                    LogFacade.e(LogModule.PLAYER, TAG, "init pipeline failed: ${error.message}")
-                }
-        }
+        initJob =
+            scope.launch {
+                runCatching { pipelineController.init(surfaceId, target, telemetryEnabled) }
+                    .onFailure { error ->
+                        LogFacade.e(LogModule.PLAYER, TAG, "init pipeline failed: ${error.message}")
+                    }
+            }
     }
 
-    fun renderFrame(subtitlePtsMs: Long, vsyncId: Long) {
+    fun renderFrame(
+        subtitlePtsMs: Long,
+        vsyncId: Long
+    ) {
         if (!telemetryCollector.allowRender()) {
             telemetryCollector.recordSkippedFrame(subtitlePtsMs, vsyncId)
             return
@@ -73,7 +77,11 @@ class AssGpuRenderer(
         frameCleaner.onSurfaceLost()
     }
 
-    fun loadTrack(path: String, fontDirs: List<String>, defaultFont: String?) {
+    fun loadTrack(
+        path: String,
+        fontDirs: List<String>,
+        defaultFont: String?
+    ) {
         nativeBridge.loadTrack(path, fontDirs, defaultFont)
     }
 

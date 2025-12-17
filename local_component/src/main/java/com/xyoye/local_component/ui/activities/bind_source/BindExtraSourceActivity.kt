@@ -24,15 +24,12 @@ import com.xyoye.local_component.ui.dialog.SegmentWordDialog
 import com.xyoye.local_component.ui.fragment.bind_danmu.BindDanmuSourceFragment
 import com.xyoye.local_component.ui.fragment.bind_subtitle.BindSubtitleSourceFragment
 
-
 /**
  * Created by xyoye on 2022/1/24
  */
 
 @Route(path = RouteTable.Local.BindExtraSource)
-class BindExtraSourceActivity :
-    BaseActivity<BindExtraSourceViewModel, ActivityBindExtraSourceBinding>() {
-
+class BindExtraSourceActivity : BaseActivity<BindExtraSourceViewModel, ActivityBindExtraSourceBinding>() {
     @Autowired
     lateinit var storageFileProvider: StorageFileProvider
 
@@ -44,9 +41,11 @@ class BindExtraSourceActivity :
 
     private val pageAdapter by lazy { BindSourcePageAdapter() }
 
-    override fun initViewModel() = ViewModelInit(
-        BR.viewModel, BindExtraSourceViewModel::class.java
-    )
+    override fun initViewModel() =
+        ViewModelInit(
+            BR.viewModel,
+            BindExtraSourceViewModel::class.java,
+        )
 
     override fun getLayoutId() = R.layout.activity_bind_extra_source
 
@@ -83,7 +82,11 @@ class BindExtraSourceActivity :
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 hideKeyboard(dataBinding.searchEt)
                 dataBinding.searchCl.requestFocus()
-                viewModel.setSearchText(dataBinding.searchEt.text.toString().trim())
+                viewModel.setSearchText(
+                    dataBinding.searchEt.text
+                        .toString()
+                        .trim(),
+                )
                 return@setOnEditorActionListener true
             }
             return@setOnEditorActionListener false
@@ -97,7 +100,11 @@ class BindExtraSourceActivity :
         dataBinding.searchTv.setOnClickListener {
             hideKeyboard(dataBinding.searchEt)
             dataBinding.searchCl.requestFocus()
-            viewModel.setSearchText(dataBinding.searchEt.text.toString().trim())
+            viewModel.setSearchText(
+                dataBinding.searchEt.text
+                    .toString()
+                    .trim(),
+            )
         }
 
         dataBinding.clearTextIv.setOnClickListener {
@@ -115,15 +122,18 @@ class BindExtraSourceActivity :
             viewModel.segmentTitle(storageFile)
         }
 
-        dataBinding.viewpager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                dataBinding.searchEt.hint = when (position) {
-                    0 -> getString(R.string.tips_search_danmu)
-                    1 -> getString(R.string.tips_search_subtitle)
-                    else -> ""
+        dataBinding.viewpager.registerOnPageChangeCallback(
+            object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    dataBinding.searchEt.hint =
+                        when (position) {
+                            0 -> getString(R.string.tips_search_danmu)
+                            1 -> getString(R.string.tips_search_subtitle)
+                            else -> ""
+                        }
                 }
-            }
-        })
+            },
+        )
 
         viewModel.storageFileFlow.collectAtStarted(this) {
             VideoItemLayout.initVideoLayout(dataBinding, it)
@@ -157,20 +167,15 @@ class BindExtraSourceActivity :
     inner class BindSourcePageAdapter : FragmentStateAdapter(this) {
         private var titles = arrayOf("搜弹幕", "搜字幕")
 
-        override fun getItemCount(): Int {
-            return titles.size
-        }
+        override fun getItemCount(): Int = titles.size
 
-        override fun createFragment(position: Int): Fragment {
-            return when (position) {
+        override fun createFragment(position: Int): Fragment =
+            when (position) {
                 0 -> BindDanmuSourceFragment.newInstance()
                 1 -> BindSubtitleSourceFragment.newInstance()
                 else -> throw IndexOutOfBoundsException("only 2 fragment, but position : $position")
             }
-        }
 
-        fun getItemTitle(position: Int): String {
-            return titles.getOrNull(position).orEmpty()
-        }
+        fun getItemTitle(position: Int): String = titles.getOrNull(position).orEmpty()
     }
 }

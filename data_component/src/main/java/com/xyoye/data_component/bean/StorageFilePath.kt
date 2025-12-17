@@ -9,9 +9,7 @@ data class StorageFilePath(
     val route: String,
     var isLast: Boolean = false
 ) {
-    override fun hashCode(): Int {
-        return arrayOf(name, route).contentDeepHashCode()
-    }
+    override fun hashCode(): Int = arrayOf(name, route).contentDeepHashCode()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) {
@@ -21,7 +19,7 @@ data class StorageFilePath(
             return false
         }
         other as StorageFilePath
-        return name == other.name
-                && route == other.route
+        return name == other.name &&
+            route == other.route
     }
 }

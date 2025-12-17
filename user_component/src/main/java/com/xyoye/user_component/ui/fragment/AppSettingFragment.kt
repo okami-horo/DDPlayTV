@@ -23,12 +23,14 @@ import com.xyoye.user_component.R
  */
 
 class AppSettingFragment : PreferenceFragmentCompat() {
-
     companion object {
         fun newInstance() = AppSettingFragment()
     }
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?
+    ) {
         try {
             preferenceManager.preferenceDataStore = AppSettingDataStore()
             addPreferencesFromResource(R.xml.preference_app_setting)
@@ -37,18 +39,21 @@ class AppSettingFragment : PreferenceFragmentCompat() {
                 e,
                 "AppSettingFragment",
                 "onCreatePreferences",
-                "Failed to create preferences from resource"
+                "Failed to create preferences from resource",
             )
         }
     }
 
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
         val backupDomainAddress = findPreference<EditTextPreference>("backup_domain_address")
 
         findPreference<Preference>("dark_mode")?.apply {
             setOnPreferenceClickListener {
-                ARouter.getInstance()
+                ARouter
+                    .getInstance()
                     .build(RouteTable.User.SwitchTheme)
                     .navigation()
                 return@setOnPreferenceClickListener true
@@ -64,14 +69,15 @@ class AppSettingFragment : PreferenceFragmentCompat() {
                     e,
                     "AppSettingFragment",
                     "app_version_setup",
-                    "Failed to setup app version preference"
+                    "Failed to setup app version preference",
                 )
             }
         }
 
         findPreference<Preference>("license")?.apply {
             setOnPreferenceClickListener {
-                ARouter.getInstance()
+                ARouter
+                    .getInstance()
                     .build(RouteTable.User.License)
                     .navigation()
                 return@setOnPreferenceClickListener true
@@ -80,7 +86,8 @@ class AppSettingFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>("about_us")?.apply {
             setOnPreferenceClickListener {
-                ARouter.getInstance()
+                ARouter
+                    .getInstance()
                     .build(RouteTable.User.AboutUs)
                     .navigation()
                 return@setOnPreferenceClickListener true
@@ -131,10 +138,12 @@ class AppSettingFragment : PreferenceFragmentCompat() {
         return true
     }
 
-
     inner class AppSettingDataStore : PreferenceDataStore() {
-        override fun getBoolean(key: String?, defValue: Boolean): Boolean {
-            return try {
+        override fun getBoolean(
+            key: String?,
+            defValue: Boolean
+        ): Boolean =
+            try {
                 when (key) {
                     "hide_file" -> AppConfig.isShowHiddenFile()
                     "splash_page" -> AppConfig.isShowSplashAnimation()
@@ -146,13 +155,15 @@ class AppSettingFragment : PreferenceFragmentCompat() {
                     e,
                     "AppSettingDataStore",
                     "getBoolean",
-                    "Failed to get boolean value for key: $key"
+                    "Failed to get boolean value for key: $key",
                 )
                 defValue
             }
-        }
 
-        override fun putBoolean(key: String?, value: Boolean) {
+        override fun putBoolean(
+            key: String?,
+            value: Boolean
+        ) {
             try {
                 when (key) {
                     "hide_file" -> AppConfig.putShowHiddenFile(value)
@@ -164,13 +175,16 @@ class AppSettingFragment : PreferenceFragmentCompat() {
                     e,
                     "AppSettingDataStore",
                     "putBoolean",
-                    "Failed to put boolean value for key: $key, value: $value"
+                    "Failed to put boolean value for key: $key, value: $value",
                 )
             }
         }
 
-        override fun getString(key: String?, defValue: String?): String? {
-            return try {
+        override fun getString(
+            key: String?,
+            defValue: String?
+        ): String? =
+            try {
                 when (key) {
                     "backup_domain_address" -> AppConfig.getBackupDomain()
                     else -> super.getString(key, defValue)
@@ -180,13 +194,15 @@ class AppSettingFragment : PreferenceFragmentCompat() {
                     e,
                     "AppSettingDataStore",
                     "getString",
-                    "Failed to get string value for key: $key"
+                    "Failed to get string value for key: $key",
                 )
                 defValue
             }
-        }
 
-        override fun putString(key: String?, value: String?) {
+        override fun putString(
+            key: String?,
+            value: String?
+        ) {
             try {
                 when (key) {
                     "backup_domain_address" -> AppConfig.putBackupDomain(value ?: Api.DAN_DAN_SPARE)
@@ -197,7 +213,7 @@ class AppSettingFragment : PreferenceFragmentCompat() {
                     e,
                     "AppSettingDataStore",
                     "putString",
-                    "Failed to put string value for key: $key, value: $value"
+                    "Failed to put string value for key: $key, value: $value",
                 )
             }
         }

@@ -26,22 +26,19 @@ import com.xyoye.storage_component.databinding.ActivityScreenCastBinding
 import com.xyoye.storage_component.services.ScreencastReceiveService
 import kotlin.random.Random
 
-
 @Route(path = RouteTable.Stream.ScreencastReceiver)
 class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastBinding>() {
-
     private var httpPort = 0
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            ScreencastViewModel::class.java
+            ScreencastViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_screen_cast
 
     override fun initView() {
-
         title = "投屏接收端"
 
         initVersion()
@@ -104,18 +101,20 @@ class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastB
         }
 
         dataBinding.refreshPortIv.setOnClickListener {
-            CommonDialog.Builder(this).run {
-                title = "提示"
-                content = "确认更换端口号？\n\n更换后已连接设备需要重新连接"
-                addPositive {
-                    httpPort = Random.nextInt(20000, 30000)
-                    ScreencastConfig.putReceiverPort(httpPort)
-                    dataBinding.portTv.text = httpPort.toString()
-                    it.dismiss()
-                }
-                addNegative { it.dismiss() }
-                build()
-            }.show()
+            CommonDialog
+                .Builder(this)
+                .run {
+                    title = "提示"
+                    content = "确认更换端口号？\n\n更换后已连接设备需要重新连接"
+                    addPositive {
+                        httpPort = Random.nextInt(20000, 30000)
+                        ScreencastConfig.putReceiverPort(httpPort)
+                        dataBinding.portTv.text = httpPort.toString()
+                        it.dismiss()
+                    }
+                    addNegative { it.dismiss() }
+                    build()
+                }.show()
         }
 
         dataBinding.needConfirmSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -193,13 +192,14 @@ class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastB
     }
 
     private fun setupEnabledStyle() {
-        val qrCodeContent = RemoteScanData(
-            viewModel.ipList,
-            httpPort,
-            Build.MODEL,
-            dataBinding.passwordSwitch.isChecked,
-            null
-        )
+        val qrCodeContent =
+            RemoteScanData(
+                viewModel.ipList,
+                httpPort,
+                Build.MODEL,
+                dataBinding.passwordSwitch.isChecked,
+                null,
+            )
         val qrCodeJson = JsonHelper.toJson(qrCodeContent) ?: ""
         createQRCode(qrCodeJson, true)?.let {
             dataBinding.qrCodeIv.setImageBitmap(it)
@@ -219,22 +219,27 @@ class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastB
         dataBinding.refreshPortIv.isVisible = false
     }
 
-    private fun createQRCode(content: String, enable: Boolean = true): Bitmap? {
+    private fun createQRCode(
+        content: String,
+        enable: Boolean = true
+    ): Bitmap? {
         val logoRes = if (enable) R.mipmap.ic_logo else R.mipmap.ic_logo_gray
         val bmpColor = if (enable) R.color.text_black else R.color.text_gray
 
         try {
             val logo = BitmapFactory.decodeResource(resources, logoRes)
-            val options = HmsBuildBitmapOption.Creator()
-                .setQRLogoBitmap(logo)
-                .setBitmapColor(bmpColor.toResColor())
-                .create()
+            val options =
+                HmsBuildBitmapOption
+                    .Creator()
+                    .setQRLogoBitmap(logo)
+                    .setBitmapColor(bmpColor.toResColor())
+                    .create()
             return ScanUtil.buildBitmap(
                 content,
                 HmsScan.QRCODE_SCAN_TYPE,
                 dp2px(200),
                 dp2px(200),
-                options
+                options,
             )
         } catch (e: Exception) {
             // 上报二维码生成异常
@@ -242,7 +247,7 @@ class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastB
                 e,
                 "ScreencastActivity",
                 "createQRCode",
-                "生成投屏二维码失败，content长度=${content.length}, enable=$enable"
+                "生成投屏二维码失败，content长度=${content.length}, enable=$enable",
             )
             e.printStackTrace()
         }

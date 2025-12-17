@@ -11,12 +11,8 @@ import com.xyoye.data_component.enums.MagnetScreenType
 
 open class MagnetScreenConverter {
     @TypeConverter
-    fun formValue(value: Int): MagnetScreenType {
-        return MagnetScreenType.valueOf(value)
-    }
+    fun formValue(value: Int): MagnetScreenType = MagnetScreenType.valueOf(value)
 
     @TypeConverter
-    fun enumToValue(type: MagnetScreenType): Int {
-        return type.value
-    }
+    fun enumToValue(type: MagnetScreenType): Int = type.value
 }

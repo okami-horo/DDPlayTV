@@ -22,7 +22,6 @@ import com.xyoye.common_component.databinding.DialogBaseBottomDialogBinding
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.utils.dp2px
 
-
 /**
  * Created by xyoye on 2020/12/22.
  */
@@ -30,26 +29,27 @@ import com.xyoye.common_component.utils.dp2px
 abstract class BaseBottomDialog<T : ViewDataBinding>(
     activity: Activity
 ) : BottomSheetDialog(activity, R.style.Bottom_Sheet_Dialog) {
-
     protected lateinit var rootViewBinding: DialogBaseBottomDialogBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val layoutInflater = LayoutInflater.from(context)
-        rootViewBinding = DataBindingUtil.inflate(
-            layoutInflater,
-            R.layout.dialog_base_bottom_dialog,
-            null,
-            false
-        )
+        rootViewBinding =
+            DataBindingUtil.inflate(
+                layoutInflater,
+                R.layout.dialog_base_bottom_dialog,
+                null,
+                false,
+            )
 
-        val childViewBinding = DataBindingUtil.inflate<T>(
-            layoutInflater,
-            getChildLayoutId(),
-            rootViewBinding.containerFl,
-            true
-        )
+        val childViewBinding =
+            DataBindingUtil.inflate<T>(
+                layoutInflater,
+                getChildLayoutId(),
+                rootViewBinding.containerFl,
+                true,
+            )
 
         window?.apply {
             decorView.setPadding(0, decorView.top, 0, decorView.bottom)
@@ -62,7 +62,7 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
             setGravity(Gravity.BOTTOM)
         }
 
-        //默认展开
+        // 默认展开
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
 
         setContentView(rootViewBinding.root)
@@ -102,7 +102,10 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
         rootViewBinding.containerFl.setPadding(0)
     }
 
-    protected fun addNeutralButton(text: String, block: () -> Unit) {
+    protected fun addNeutralButton(
+        text: String,
+        block: () -> Unit
+    ) {
         rootViewBinding.neutralBt.apply {
             isVisible = true
             setText(text)
@@ -154,7 +157,11 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
         return actionView
     }
 
-    private fun createActionView(drawable: Drawable?, description: String, paddingDp: Int): View {
+    private fun createActionView(
+        drawable: Drawable?,
+        description: String,
+        paddingDp: Int
+    ): View {
         val padding = dp2px(paddingDp)
         val actionView = ImageView(context)
         val rippleColor = ColorStateList.valueOf(R.color.gray_40.toResColor())
@@ -173,7 +180,10 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
         return layoutParams
     }
 
-    protected fun setDialogCancelable(touchCancel: Boolean, backPressedCancel: Boolean) {
+    protected fun setDialogCancelable(
+        touchCancel: Boolean,
+        backPressedCancel: Boolean
+    ) {
         setCancelable(backPressedCancel)
         setCanceledOnTouchOutside(touchCancel)
     }

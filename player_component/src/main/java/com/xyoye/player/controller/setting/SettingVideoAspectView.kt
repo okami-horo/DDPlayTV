@@ -26,15 +26,15 @@ class SettingVideoAspectView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingVideoAspectBinding>(context, attrs, defStyleAttr) {
-
-    private val videoAspectData = mutableListOf(
-        VideoScaleBean(VideoScreenScale.SCREEN_SCALE_DEFAULT, "默认"),
-        VideoScaleBean(VideoScreenScale.SCREEN_SCALE_16_9, "16:9"),
-        VideoScaleBean(VideoScreenScale.SCREEN_SCALE_4_3, "4:3"),
-        VideoScaleBean(VideoScreenScale.SCREEN_SCALE_ORIGINAL, "原始"),
-        VideoScaleBean(VideoScreenScale.SCREEN_SCALE_MATCH_PARENT, "填充"),
-        VideoScaleBean(VideoScreenScale.SCREEN_SCALE_CENTER_CROP, "裁剪")
-    )
+    private val videoAspectData =
+        mutableListOf(
+            VideoScaleBean(VideoScreenScale.SCREEN_SCALE_DEFAULT, "默认"),
+            VideoScaleBean(VideoScreenScale.SCREEN_SCALE_16_9, "16:9"),
+            VideoScaleBean(VideoScreenScale.SCREEN_SCALE_4_3, "4:3"),
+            VideoScaleBean(VideoScreenScale.SCREEN_SCALE_ORIGINAL, "原始"),
+            VideoScaleBean(VideoScreenScale.SCREEN_SCALE_MATCH_PARENT, "填充"),
+            VideoScaleBean(VideoScreenScale.SCREEN_SCALE_CENTER_CROP, "裁剪"),
+        )
 
     init {
         initView()
@@ -53,7 +53,10 @@ class SettingVideoAspectView(
         viewBinding.rvAspect.clearFocus()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (isSettingShowing().not()) {
             return false
         }
@@ -73,24 +76,25 @@ class SettingVideoAspectView(
 
             layoutManager = vertical()
 
-            adapter = buildAdapter {
-                addItem<VideoScaleBean, ItemSeetingVideoAspectBinding>(R.layout.item_seeting_video_aspect) {
-                    initView { data, _, _ ->
-                        itemBinding.tvName.text = data.scaleName
-                        itemBinding.tvName.isSelected = data.isChecked
-                        itemBinding.tvName.setOnClickListener {
-                            onClickAspect(data.screenScale)
+            adapter =
+                buildAdapter {
+                    addItem<VideoScaleBean, ItemSeetingVideoAspectBinding>(R.layout.item_seeting_video_aspect) {
+                        initView { data, _, _ ->
+                            itemBinding.tvName.text = data.scaleName
+                            itemBinding.tvName.isSelected = data.isChecked
+                            itemBinding.tvName.setOnClickListener {
+                                onClickAspect(data.screenScale)
+                            }
                         }
                     }
                 }
-            }
 
             addItemDecoration(
                 ItemDecorationOrientation(
                     dividerPx = dp2px(10),
                     headerFooterPx = 0,
-                    orientation = RecyclerView.VERTICAL
-                )
+                    orientation = RecyclerView.VERTICAL,
+                ),
             )
 
             setData(videoAspectData)
@@ -123,9 +127,10 @@ class SettingVideoAspectView(
      * 处理KeyCode事件
      */
     private fun handleKeyCode(keyCode: Int): Boolean {
-        //已取得焦点的Item
-        val focusedChild = viewBinding.rvAspect.focusedChild
-            ?: return false
+        // 已取得焦点的Item
+        val focusedChild =
+            viewBinding.rvAspect.focusedChild
+                ?: return false
         val focusedChildIndex = viewBinding.rvAspect.getChildAdapterPosition(focusedChild)
         if (focusedChildIndex == -1) {
             return false
@@ -135,17 +140,19 @@ class SettingVideoAspectView(
         return true
     }
 
-
     /**
      * 根据KeyCode与当前焦点位置，取得目标焦点位置
      */
-    private fun getTargetIndexByKeyCode(keyCode: Int, focusedIndex: Int): Int {
-        return when (keyCode) {
-            //左、上规则
+    private fun getTargetIndexByKeyCode(
+        keyCode: Int,
+        focusedIndex: Int
+    ): Int =
+        when (keyCode) {
+            // 左、上规则
             KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_UP -> {
                 videoAspectData.previousItemIndex<VideoScaleBean>(focusedIndex)
             }
-            //右、下规则
+            // 右、下规则
             KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_DOWN -> {
                 videoAspectData.nextItemIndex<VideoScaleBean>(focusedIndex)
             }
@@ -153,5 +160,4 @@ class SettingVideoAspectView(
                 -1
             }
         }
-    }
 }

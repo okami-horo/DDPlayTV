@@ -25,31 +25,31 @@ class LoadingView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), InterControllerView {
+) : FrameLayout(context, attrs, defStyleAttr),
+    InterControllerView {
+    private val viewBinding =
+        DataBindingUtil.inflate<LayoutLoadingBinding>(
+            LayoutInflater.from(context),
+            R.layout.layout_loading,
+            this,
+            true,
+        )
 
-    private val viewBinding = DataBindingUtil.inflate<LayoutLoadingBinding>(
-        LayoutInflater.from(context),
-        R.layout.layout_loading,
-        this,
-        true
-    )
-
-    private val cycleAnimator = ObjectAnimator
-        .ofFloat(viewBinding.loadingIv, "rotation", 360f).apply {
-            duration = 1500
-            interpolator = LinearInterpolator()
-            repeatCount = ValueAnimator.INFINITE
-        }
-
+    private val cycleAnimator =
+        ObjectAnimator
+            .ofFloat(viewBinding.loadingIv, "rotation", 360f)
+            .apply {
+                duration = 1500
+                interpolator = LinearInterpolator()
+                repeatCount = ValueAnimator.INFINITE
+            }
 
     override fun attach(controlWrapper: ControlWrapper) {
-
     }
 
     override fun getView() = this
 
     override fun onVisibilityChanged(isVisible: Boolean) {
-
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
@@ -71,16 +71,16 @@ class LoadingView(
         }
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
-
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
-
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
-
     }
 
     override fun onPopupModeChanged(isPopup: Boolean) {

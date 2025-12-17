@@ -8,9 +8,13 @@ import androidx.paging.LoadStateAdapter
  * Created by xyoye on 2020/12/4.
  */
 
-class PagingFooterAdapter(private val retryCallback: () -> Unit) :
-    LoadStateAdapter<PagingFooterViewHolder>() {
-    override fun onBindViewHolder(holder: PagingFooterViewHolder, loadState: LoadState) {
+class PagingFooterAdapter(
+    private val retryCallback: () -> Unit
+) : LoadStateAdapter<PagingFooterViewHolder>() {
+    override fun onBindViewHolder(
+        holder: PagingFooterViewHolder,
+        loadState: LoadState
+    ) {
         holder.setState(loadState)
     }
 

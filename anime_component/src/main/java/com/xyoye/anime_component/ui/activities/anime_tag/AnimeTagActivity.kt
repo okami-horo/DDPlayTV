@@ -31,7 +31,7 @@ class AnimeTagActivity : BaseActivity<AnimeTagViewModel, ActivityAnimeTagBinding
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            AnimeTagViewModel::class.java
+            AnimeTagViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_anime_tag
@@ -48,7 +48,6 @@ class AnimeTagActivity : BaseActivity<AnimeTagViewModel, ActivityAnimeTagBinding
         title = tagName
 
         dataBinding.tagAnimeRv.apply {
-
             layoutManager = gridEmpty(3)
 
             adapter = animeAdapter
@@ -58,11 +57,10 @@ class AnimeTagActivity : BaseActivity<AnimeTagViewModel, ActivityAnimeTagBinding
                 ItemDecorationDrawable(
                     pxValue,
                     pxValue,
-                    R.color.item_bg_color.toResColor(this@AnimeTagActivity)
-                )
+                    R.color.item_bg_color.toResColor(this@AnimeTagActivity),
+                ),
             )
         }
-
 
         viewModel.getAnimeByTag(tagId)
 

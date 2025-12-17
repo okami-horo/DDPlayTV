@@ -10,14 +10,12 @@ import com.xyoye.common_component.base.BaseActivity
  */
 
 class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>() {
-
-    override fun initViewModel() =
-        ViewModelInit(BR.viewModel, MainViewModel::class.java)
+    override fun initViewModel() = ViewModelInit(BR.viewModel, MainViewModel::class.java)
 
     override fun getLayoutId() = R.layout.activity_main
 
     override fun initView() {
-        //隐藏返回按钮
+        // 隐藏返回按钮
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(false)
             setDisplayShowTitleEnabled(true)

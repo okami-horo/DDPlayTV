@@ -15,23 +15,29 @@ import com.xyoye.user_component.R
  */
 
 class DanmuSettingFragment : PreferenceFragmentCompat() {
-
     companion object {
         fun newInstance() = DanmuSettingFragment()
 
-        private val languageData = mapOf(
-            Pair("原始", DanmakuLanguage.ORIGINAL.value.toString()),
-            Pair("简体中文", DanmakuLanguage.SC.value.toString()),
-            Pair("繁体中文", DanmakuLanguage.TC.value.toString())
-        )
+        private val languageData =
+            mapOf(
+                Pair("原始", DanmakuLanguage.ORIGINAL.value.toString()),
+                Pair("简体中文", DanmakuLanguage.SC.value.toString()),
+                Pair("繁体中文", DanmakuLanguage.TC.value.toString()),
+            )
     }
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?
+    ) {
         preferenceManager.preferenceDataStore = DanmuSettingDataStore()
         addPreferencesFromResource(R.xml.preference_danmu_setting)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
         findPreference<SwitchPreference>("show_dialog_before_play")?.apply {
             setOnPreferenceChangeListener { _, newValue ->
                 findPreference<SwitchPreference>("auto_launch_danmu_before_play")?.isVisible =
@@ -42,7 +48,7 @@ class DanmuSettingFragment : PreferenceFragmentCompat() {
             findPreference<SwitchPreference>("auto_launch_danmu_before_play")?.isVisible =
                 !isChecked
         }
-        //播放器类型
+        // 播放器类型
         findPreference<ListPreference>("danmu_language")?.apply {
             entries = languageData.keys.toTypedArray()
             entryValues = languageData.values.toTypedArray()
@@ -56,10 +62,12 @@ class DanmuSettingFragment : PreferenceFragmentCompat() {
         super.onViewCreated(view, savedInstanceState)
     }
 
-
     inner class DanmuSettingDataStore : PreferenceDataStore() {
-        override fun getBoolean(key: String?, defValue: Boolean): Boolean {
-            return when (key) {
+        override fun getBoolean(
+            key: String?,
+            defValue: Boolean
+        ): Boolean =
+            when (key) {
                 "auto_load_same_name_danmu" -> DanmuConfig.isAutoLoadSameNameDanmu()
                 "auto_match_danmu" -> DanmuConfig.isAutoMatchDanmu()
                 "danmu_update_in_choreographer" -> DanmuConfig.isDanmuUpdateInChoreographer()
@@ -67,9 +75,11 @@ class DanmuSettingFragment : PreferenceFragmentCompat() {
                 "danmu_debug" -> DanmuConfig.isDanmuDebug()
                 else -> super.getBoolean(key, defValue)
             }
-        }
 
-        override fun putBoolean(key: String?, value: Boolean) {
+        override fun putBoolean(
+            key: String?,
+            value: Boolean
+        ) {
             when (key) {
                 "auto_load_same_name_danmu" -> DanmuConfig.putAutoLoadSameNameDanmu(value)
                 "auto_match_danmu" -> DanmuConfig.putAutoMatchDanmu(value)
@@ -80,14 +90,19 @@ class DanmuSettingFragment : PreferenceFragmentCompat() {
             }
         }
 
-        override fun getString(key: String?, defValue: String?): String? {
-            return when (key) {
+        override fun getString(
+            key: String?,
+            defValue: String?
+        ): String? =
+            when (key) {
                 "danmu_language" -> DanmuConfig.getDanmuLanguage().toString()
                 else -> super.getString(key, defValue)
             }
-        }
 
-        override fun putString(key: String?, value: String?) {
+        override fun putString(
+            key: String?,
+            value: String?
+        ) {
             when (key) {
                 "danmu_language" -> DanmuConfig.putDanmuLanguage(value?.toInt() ?: 0)
                 else -> super.putString(key, value)

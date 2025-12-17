@@ -15,7 +15,7 @@ import okhttp3.internal.http.RetryAndFollowUpInterceptor
  * @see RetryAndFollowUpInterceptor.buildRedirectRequest
  */
 class RedirectAuthorizationInterceptor : Interceptor {
-    //重定向Authorization请求头缓存
+    // 重定向Authorization请求头缓存
     private val authorizationCache = mutableMapOf<String, String>()
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -33,8 +33,9 @@ class RedirectAuthorizationInterceptor : Interceptor {
         val requestUrl = request.url.toString().toMd5String()
         val requestAuthorization = request.header(HeaderKey.AUTHORIZATION)
         if (authorizationCache.containsKey(requestUrl) && requestAuthorization == null) {
-            val authorization = authorizationCache.remove(requestUrl)
-                ?: return request
+            val authorization =
+                authorizationCache.remove(requestUrl)
+                    ?: return request
 
             return request.newBuilder().addHeader(HeaderKey.AUTHORIZATION, authorization).build()
         }
@@ -61,7 +62,5 @@ class RedirectAuthorizationInterceptor : Interceptor {
     /**
      * HttpCode为301、302、303时，视为重定向请求
      */
-    private fun isRedirectResponse(response: Response): Boolean {
-        return response.code in 301..308
-    }
+    private fun isRedirectResponse(response: Response): Boolean = response.code in 301..308
 }

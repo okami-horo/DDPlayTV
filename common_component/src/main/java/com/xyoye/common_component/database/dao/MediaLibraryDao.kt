@@ -12,7 +12,6 @@ import com.xyoye.data_component.helper.MediaTypeConverter
 
 @Dao
 interface MediaLibraryDao {
-
     @Query("SELECT * FROM media_library ORDER BY id ASC")
     fun getAll(): LiveData<MutableList<MediaLibraryEntity>>
 
@@ -29,12 +28,18 @@ interface MediaLibraryDao {
 
     @Query("SELECT * FROM media_library WHERE  url = (:url) AND media_type = (:mediaType)")
     @TypeConverters(MediaTypeConverter::class)
-    suspend fun getByUrl(url: String, mediaType: MediaType): MediaLibraryEntity?
+    suspend fun getByUrl(
+        url: String,
+        mediaType: MediaType
+    ): MediaLibraryEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(vararg entity: MediaLibraryEntity)
 
     @Query("DELETE FROM media_library WHERE url = (:url) AND media_type = (:mediaType)")
     @TypeConverters(MediaTypeConverter::class)
-    suspend fun delete(url: String, mediaType: MediaType)
+    suspend fun delete(
+        url: String,
+        mediaType: MediaType
+    )
 }

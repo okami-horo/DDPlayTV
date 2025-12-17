@@ -9,21 +9,19 @@ import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.BaseBottomDialog
 import com.xyoye.common_component.weight.dialog.FileManagerDialog
 import com.xyoye.data_component.entity.MediaLibraryEntity
-import com.xyoye.data_component.enums.FileManagerAction
 import com.xyoye.data_component.entity.media3.Media3Capability
+import com.xyoye.data_component.enums.FileManagerAction
 import com.xyoye.local_component.R
 import com.xyoye.local_component.databinding.DialogMagnetPlayBinding
 
 class MagnetPlayDialog(
     private val activity: AppCompatActivity
 ) : BaseBottomDialog<DialogMagnetPlayBinding>(activity) {
-
     private lateinit var binding: DialogMagnetPlayBinding
 
     override fun getChildLayoutId() = R.layout.dialog_magnet_play
 
     override fun initView(binding: DialogMagnetPlayBinding) {
-
         this.binding = binding
 
         setTitle("新增磁链/种子播放")
@@ -58,7 +56,8 @@ class MagnetPlayDialog(
             return
         }
         val library = MediaLibraryEntity.TORRENT.copy(url = link)
-        ARouter.getInstance()
+        ARouter
+            .getInstance()
             .build(RouteTable.Stream.StorageFile)
             .withParcelable("storageLibrary", library)
             .navigation()

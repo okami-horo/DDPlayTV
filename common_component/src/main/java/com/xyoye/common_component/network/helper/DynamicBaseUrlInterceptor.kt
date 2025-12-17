@@ -10,7 +10,6 @@ import okhttp3.Response
  */
 
 class DynamicBaseUrlInterceptor : Interceptor {
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
 
@@ -19,20 +18,24 @@ class DynamicBaseUrlInterceptor : Interceptor {
             return chain.proceed(request)
         }
 
-        val baseHttpUrl = baseUrl.toHttpUrlOrNull()
-            ?: return chain.proceed(request)
+        val baseHttpUrl =
+            baseUrl.toHttpUrlOrNull()
+                ?: return chain.proceed(request)
 
-        val newUrl = request.url
-            .newBuilder()
-            .scheme(baseHttpUrl.scheme)
-            .host(baseHttpUrl.host)
-            .port(baseHttpUrl.port)
-            .build()
+        val newUrl =
+            request.url
+                .newBuilder()
+                .scheme(baseHttpUrl.scheme)
+                .host(baseHttpUrl.host)
+                .port(baseHttpUrl.port)
+                .build()
 
-        val newRequest = request.newBuilder()
-            .removeHeader(HeaderKey.BASE_URL)
-            .url(newUrl)
-            .build()
+        val newRequest =
+            request
+                .newBuilder()
+                .removeHeader(HeaderKey.BASE_URL)
+                .url(newUrl)
+                .build()
         return chain.proceed(newRequest)
     }
 }

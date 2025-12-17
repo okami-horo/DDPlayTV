@@ -15,44 +15,38 @@ class FtpStorageFile(
     val parentPath: String,
     private val ftpFile: FTPFile
 ) : AbstractStorageFile(storage) {
-    override fun getRealFile(): Any {
-        return ftpFile
-    }
+    override fun getRealFile(): Any = ftpFile
 
-    override fun filePath(): String {
-        return Uri.parse(parentPath)
+    override fun filePath(): String =
+        Uri
+            .parse(parentPath)
             .buildUpon()
             .appendEncodedPath(fileName())
             .build()
             .toString()
-    }
 
     override fun fileUrl(): String {
         val url = "ftp://${storage.library.ftpAddress}:${storage.library.port}/"
-        return Uri.parse(url)
+        return Uri
+            .parse(url)
             .buildUpon()
             .path(filePath())
             .build()
             .toString()
     }
 
-    override fun isDirectory(): Boolean {
-        return ftpFile.isDirectory
-    }
+    override fun isDirectory(): Boolean = ftpFile.isDirectory
 
-    override fun fileName(): String {
-        return ftpFile.name
-    }
+    override fun fileName(): String = ftpFile.name
 
-    override fun fileLength(): Long {
-        return ftpFile.size
-    }
+    override fun fileLength(): Long = ftpFile.size
 
-    override fun clone(): StorageFile {
-        return FtpStorageFile(
-            storage as FtpStorage, parentPath, ftpFile
+    override fun clone(): StorageFile =
+        FtpStorageFile(
+            storage as FtpStorage,
+            parentPath,
+            ftpFile,
         ).also {
             it.playHistory = playHistory
         }
-    }
 }

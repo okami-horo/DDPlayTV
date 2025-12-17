@@ -1,7 +1,6 @@
 package com.xyoye.player.controller.subtitle
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.Point
 import android.util.AttributeSet
 import com.xyoye.data_component.enums.PlayState
@@ -21,11 +20,11 @@ class SubtitleTextView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : BaseSubtitleView(context, attrs, defStyleAttr), InterControllerView {
-
+) : BaseSubtitleView(context, attrs, defStyleAttr),
+    InterControllerView {
     private lateinit var mControlWrapper: ControlWrapper
 
-    //最后一次显示的字幕
+    // 最后一次显示的字幕
     private var lastSubtitle: List<SubtitleText> = emptyList()
 
     init {
@@ -45,27 +44,25 @@ class SubtitleTextView(
     override fun getView() = this
 
     override fun onVisibilityChanged(isVisible: Boolean) {
-
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
-
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
-
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
-
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
-
     }
 
     override fun onPopupModeChanged(isPopup: Boolean) {
-        //悬浮窗状态下，将字幕文字大小与描边缩小为原来的50%
+        // 悬浮窗状态下，将字幕文字大小与描边缩小为原来的50%
         val textSize = PlayerInitializer.Subtitle.textSize
         var realSize = 40f * textSize / 100f
         if (isPopup) {

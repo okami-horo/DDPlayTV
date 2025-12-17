@@ -18,15 +18,11 @@ import java.io.IOException
  */
 
 object ServerController {
-
-    fun handleGetRequest(
-        session: NanoHTTPD.IHTTPSession
-    ): NanoHTTPD.Response? {
-        return when (session.uri) {
+    fun handleGetRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response? =
+        when (session.uri) {
             ScreencastConstants.ReceiverApi.init -> init(session)
             else -> null
         }
-    }
 
     fun handlePostRequest(
         session: NanoHTTPD.IHTTPSession,
@@ -41,12 +37,12 @@ object ServerController {
                 ioe,
                 "ServerController",
                 "handlePostRequest",
-                "解析POST请求体时发生I/O异常，uri=${session.uri}"
+                "解析POST请求体时发生I/O异常，uri=${session.uri}",
             )
             return NanoHTTPD.newFixedLengthResponse(
                 NanoHTTPD.Response.Status.INTERNAL_ERROR,
                 NanoHTTPD.MIME_PLAINTEXT,
-                "SERVER INTERNAL ERROR: IOException: " + ioe.message
+                "SERVER INTERNAL ERROR: IOException: " + ioe.message,
             )
         } catch (re: NanoHTTPD.ResponseException) {
             // 上报响应异常
@@ -54,11 +50,10 @@ object ServerController {
                 re,
                 "ServerController",
                 "handlePostRequest",
-                "解析POST请求体时发生响应异常，uri=${session.uri}, status=${re.status}"
+                "解析POST请求体时发生响应异常，uri=${session.uri}, status=${re.status}",
             )
             return NanoHTTPD.newFixedLengthResponse(re.status, NanoHTTPD.MIME_PLAINTEXT, re.message)
         }
-
 
         return when (session.uri) {
             ScreencastConstants.ReceiverApi.play -> play(session, postData, handler)
@@ -76,7 +71,7 @@ object ServerController {
                 NanoHTTPD.Response.Status.CONFLICT.requestStatus,
                 false,
                 "投屏版本不匹配，请更新双端至相同APP版本。\n" +
-                    "接收端: ${ScreencastConstants.version}，投屏端: $version"
+                    "接收端: ${ScreencastConstants.version}，投屏端: $version",
             )
         }
 
@@ -94,13 +89,14 @@ object ServerController {
         handler: ScreencastReceiveHandler?
     ): NanoHTTPD.Response {
         // about postData see NanoHTTPD#parseBody(Map<String, String>)
-        val screencastData = postData["postData"]?.run {
-            JsonHelper.parseJson<ScreencastData>(this)
-        } ?: return createResponse(
-            code = 502,
-            success = false,
-            message = "无法读取资源"
-        )
+        val screencastData =
+            postData["postData"]?.run {
+                JsonHelper.parseJson<ScreencastData>(this)
+            } ?: return createResponse(
+                code = 502,
+                success = false,
+                message = "无法读取资源",
+            )
         screencastData.apply { ip = session.remoteIpAddress }
         handler?.onReceiveVideo(screencastData)
         return createResponse()
@@ -111,11 +107,12 @@ object ServerController {
         success: Boolean = true,
         message: String? = null
     ): NanoHTTPD.Response {
-        val jsonData = CommonJsonData(
-            errorCode = code,
-            success = success,
-            errorMessage = message
-        )
+        val jsonData =
+            CommonJsonData(
+                errorCode = code,
+                success = success,
+                errorMessage = message,
+            )
         val json = JsonHelper.toJson(jsonData)
         return NanoHTTPD.newFixedLengthResponse(json)
     }

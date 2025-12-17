@@ -16,25 +16,20 @@ class SmbStorageFile(
     private val fileLength: Long = 0L,
     private val isDirectory: Boolean = true
 ) : AbstractStorageFile(storage) {
-    override fun getRealFile(): Any {
-        return Any()
-    }
+    override fun getRealFile(): Any = Any()
 
-    override fun filePath(): String {
-        return filePath
-    }
+    override fun filePath(): String = filePath
 
-    override fun fileUrl(): String {
-        return storage.rootUri.buildUpon().path(filePath).build().toString()
-    }
+    override fun fileUrl(): String =
+        storage.rootUri
+            .buildUpon()
+            .path(filePath)
+            .build()
+            .toString()
 
-    override fun storagePath(): String {
-        return "$shareName/$filePath"
-    }
+    override fun storagePath(): String = "$shareName/$filePath"
 
-    override fun isDirectory(): Boolean {
-        return isDirectory
-    }
+    override fun isDirectory(): Boolean = isDirectory
 
     override fun fileName(): String {
         if (filePath.isEmpty()) {
@@ -43,21 +38,20 @@ class SmbStorageFile(
         return Uri.parse(filePath).lastPathSegment ?: "unknown"
     }
 
-    override fun fileLength(): Long {
-        return fileLength
-    }
+    override fun fileLength(): Long = fileLength
 
-    override fun clone(): StorageFile {
-        return SmbStorageFile(
-            storage as SmbStorage, shareName, filePath, fileLength, isDirectory
+    override fun clone(): StorageFile =
+        SmbStorageFile(
+            storage as SmbStorage,
+            shareName,
+            filePath,
+            fileLength,
+            isDirectory,
         ).also {
             it.playHistory = playHistory
         }
-    }
 
-    override fun isRootFile(): Boolean {
-        return shareName == null
-    }
+    override fun isRootFile(): Boolean = shareName == null
 
     fun isShareDirectory() = shareName != null && filePath.isEmpty()
 

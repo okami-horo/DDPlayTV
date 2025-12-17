@@ -16,11 +16,12 @@ import java.util.concurrent.atomic.AtomicReference
  * 日志系统单例，负责初始化、策略状态维护与写入调度。
  */
 object LogSystem {
-    private val stateRef = AtomicReference(
-        LogRuntimeState(
-            activePolicy = LogPolicy.defaultReleasePolicy()
+    private val stateRef =
+        AtomicReference(
+            LogRuntimeState(
+                activePolicy = LogPolicy.defaultReleasePolicy(),
+            ),
         )
-    )
     private val sequenceGenerator = AtomicLong(0)
     private val initLock = Any()
 
@@ -59,7 +60,10 @@ object LogSystem {
 
     fun getLoggingPolicy(): LogRuntimeState = getRuntimeState()
 
-    fun updateLoggingPolicy(policy: LogPolicy, source: PolicySource = PolicySource.USER_OVERRIDE): LogRuntimeState {
+    fun updateLoggingPolicy(
+        policy: LogPolicy,
+        source: PolicySource = PolicySource.USER_OVERRIDE
+    ): LogRuntimeState {
         if (!initialized) {
             Log.w(LOG_TAG, "updatePolicy called before init, ignore")
             return stateRef.get()
@@ -68,17 +72,16 @@ object LogSystem {
         return applyRuntimeState(updated)
     }
 
-    fun updatePolicy(policy: LogPolicy, source: PolicySource = PolicySource.USER_OVERRIDE): LogRuntimeState =
-        updateLoggingPolicy(policy, source)
+    fun updatePolicy(
+        policy: LogPolicy,
+        source: PolicySource = PolicySource.USER_OVERRIDE
+    ): LogRuntimeState = updateLoggingPolicy(policy, source)
 
-    fun startDebugSession(): LogRuntimeState =
-        updateDebugState(DebugToggleState.ON_CURRENT_SESSION, forceEnableFile = true)
+    fun startDebugSession(): LogRuntimeState = updateDebugState(DebugToggleState.ON_CURRENT_SESSION, forceEnableFile = true)
 
-    fun stopDebugSession(): LogRuntimeState =
-        updateDebugState(DebugToggleState.OFF, forceEnableFile = false)
+    fun stopDebugSession(): LogRuntimeState = updateDebugState(DebugToggleState.OFF, forceEnableFile = false)
 
-    fun markDiskError(): LogRuntimeState =
-        updateDebugState(DebugToggleState.DISABLED_DUE_TO_ERROR, forceEnableFile = false)
+    fun markDiskError(): LogRuntimeState = updateDebugState(DebugToggleState.DISABLED_DUE_TO_ERROR, forceEnableFile = false)
 
     fun getRuntimeState(): LogRuntimeState = stateRef.get()
 
@@ -90,9 +93,10 @@ object LogSystem {
             fallbackLogcat(event)
             return
         }
-        val enriched = event.copy(
-            sequenceId = if (event.sequenceId == 0L) sequenceGenerator.incrementAndGet() else event.sequenceId
-        )
+        val enriched =
+            event.copy(
+                sequenceId = if (event.sequenceId == 0L) sequenceGenerator.incrementAndGet() else event.sequenceId,
+            )
         writer?.submit(enriched)
     }
 

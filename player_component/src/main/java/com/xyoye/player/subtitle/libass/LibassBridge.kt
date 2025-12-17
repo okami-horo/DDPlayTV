@@ -6,30 +6,37 @@ package com.xyoye.player.subtitle.libass
  */
 @Deprecated(
     message = "CPU libass renderer removed; use AssGpuRenderer GPU pipeline.",
-    level = DeprecationLevel.ERROR
+    level = DeprecationLevel.ERROR,
 )
 class LibassBridge {
-
     companion object {
         init {
             System.loadLibrary("libass_bridge")
         }
     }
 
-    private fun unsupported(): Nothing =
-        error("CPU libass renderer has been removed; use AssGpuRenderer GPU pipeline.")
+    private fun unsupported(): Nothing = error("CPU libass renderer has been removed; use AssGpuRenderer GPU pipeline.")
 
     fun isReady(): Boolean = false
 
     fun release(): Unit = unsupported()
 
-    fun setFrameSize(width: Int, height: Int): Unit = unsupported()
+    fun setFrameSize(
+        width: Int,
+        height: Int
+    ): Unit = unsupported()
 
-    fun setFonts(defaultFont: String?, fontDirectories: List<String>): Unit = unsupported()
+    fun setFonts(
+        defaultFont: String?,
+        fontDirectories: List<String>
+    ): Unit = unsupported()
 
     fun loadTrack(path: String): Boolean = unsupported()
 
-    fun render(timeMs: Long, bitmap: android.graphics.Bitmap): Boolean = unsupported()
+    fun render(
+        timeMs: Long,
+        bitmap: android.graphics.Bitmap
+    ): Boolean = unsupported()
 
     fun setGlobalOpacity(percent: Int): Unit = unsupported()
 }

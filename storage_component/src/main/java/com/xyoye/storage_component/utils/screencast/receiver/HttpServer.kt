@@ -24,24 +24,25 @@ class HttpServer(
 
     override fun serve(session: IHTTPSession?): Response {
         if (session != null) {
-            //身份验证
+            // 身份验证
             if (authentication(session).not()) {
                 return unauthorizedResponse()
             }
 
-            val response = when (session.method) {
-                Method.GET -> {
-                    ServerController.handleGetRequest(session)
-                }
+            val response =
+                when (session.method) {
+                    Method.GET -> {
+                        ServerController.handleGetRequest(session)
+                    }
 
-                Method.POST -> {
-                    ServerController.handlePostRequest(session, handler)
-                }
+                    Method.POST -> {
+                        ServerController.handlePostRequest(session, handler)
+                    }
 
-                else -> {
-                    null
+                    else -> {
+                        null
+                    }
                 }
-            }
             if (response != null) {
                 return response
             }
@@ -69,7 +70,7 @@ class HttpServer(
                 e,
                 "HttpServer",
                 "authentication",
-                "投屏接收身份验证时发生异常，authorization长度=${authorization?.length ?: 0}"
+                "投屏接收身份验证时发生异常，authorization长度=${authorization?.length ?: 0}",
             )
             e.printStackTrace()
         }
@@ -77,11 +78,12 @@ class HttpServer(
     }
 
     private fun unauthorizedResponse(): Response {
-        val jsonData = CommonJsonData(
-            errorCode = 401,
-            success = false,
-            errorMessage = "连接验证失败"
-        )
+        val jsonData =
+            CommonJsonData(
+                errorCode = 401,
+                success = false,
+                errorMessage = "连接验证失败",
+            )
         val json = JsonHelper.toJson(jsonData)
         return newFixedLengthResponse(json)
     }

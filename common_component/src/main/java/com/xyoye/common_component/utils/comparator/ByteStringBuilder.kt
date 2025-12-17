@@ -1,7 +1,8 @@
 package com.xyoye.common_component.utils.comparator
 
-
-class ByteStringBuilder(capacity: Int = 16) {
+class ByteStringBuilder(
+    capacity: Int = 16
+) {
     private var bytes = ByteArray(capacity)
 
     var length = 0
@@ -24,7 +25,11 @@ class ByteStringBuilder(capacity: Int = 16) {
         return this
     }
 
-    fun append(bytes: ByteArray, start: Int = 0, end: Int = bytes.size): ByteStringBuilder {
+    fun append(
+        bytes: ByteArray,
+        start: Int = 0,
+        end: Int = bytes.size
+    ): ByteStringBuilder {
         val newLength = length + (end - start)
         ensureCapacity(newLength)
         bytes.copyInto(this.bytes, length, start, end)

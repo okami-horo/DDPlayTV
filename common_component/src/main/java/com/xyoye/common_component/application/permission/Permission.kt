@@ -14,32 +14,37 @@ class Permission {
     /**
      * 存储权限
      */
-    val storage = PermissionRequest(
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(
-                Manifest.permission.READ_MEDIA_VIDEO,
-                Manifest.permission.READ_MEDIA_AUDIO,
-            )
+    val storage =
+        PermissionRequest(
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
+                    arrayOf(
+                        Manifest.permission.READ_MEDIA_VIDEO,
+                        Manifest.permission.READ_MEDIA_AUDIO,
+                    )
 
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> arrayOf(
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-            )
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
+                    arrayOf(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                    )
 
-            else -> arrayOf(
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            )
-        }
-    )
+                else ->
+                    arrayOf(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    )
+            },
+        )
 
     /**
      * 相机权限
      *
      * TV 端禁用扫码能力，权限数组留空并保留原实现注释，便于后续恢复。
      */
-    val camera = PermissionRequest(
-        emptyArray<String>()
-    )
+    val camera =
+        PermissionRequest(
+            emptyArray<String>(),
+        )
 
     /*
     val camera = PermissionRequest(
@@ -48,17 +53,22 @@ class Permission {
             Manifest.permission.VIBRATE
         )
     )
-    */
+     */
 
     class PermissionRequest(
         private val permissions: Array<String>
     ) {
-
-        fun request(fragment: Fragment, result: PermissionResult.() -> Unit) {
+        fun request(
+            fragment: Fragment,
+            result: PermissionResult.() -> Unit
+        ) {
             requestPermission(fragment.childFragmentManager, result)
         }
 
-        fun request(activity: AppCompatActivity, result: PermissionResult.() -> Unit) {
+        fun request(
+            activity: AppCompatActivity,
+            result: PermissionResult.() -> Unit
+        ) {
             requestPermission(activity.supportFragmentManager, result)
         }
 
@@ -69,7 +79,7 @@ class Permission {
             PermissionManager.requestPermissions(
                 fragmentManager,
                 permissions,
-                PermissionResult().apply(result)
+                PermissionResult().apply(result),
             )
         }
     }

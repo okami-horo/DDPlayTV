@@ -8,7 +8,6 @@ import com.xyoye.common_component.source.media3.Media3LaunchParams
  */
 
 class VideoSourceManager private constructor() {
-
     companion object {
         @JvmStatic
         fun getInstance() = Holder.instance

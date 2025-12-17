@@ -13,7 +13,6 @@ data class SubtitleSourceBean(
     val time: String? = null,
     val type: String? = null,
     val language: String? = null,
-
     val isMatch: Boolean = false,
     val matchUrl: String = "",
     val source: String = ""

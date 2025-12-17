@@ -7,11 +7,14 @@ import com.xyoye.common_component.network.Retrofit
  */
 
 object AlistRepository : BaseRepository() {
-
     /**
      * 登录Alist，获取Token
      */
-    suspend fun login(url: String, userName: String, password: String) = request()
+    suspend fun login(
+        url: String,
+        userName: String,
+        password: String
+    ) = request()
         .param("username", userName)
         .param("password", password)
         .doPost {
@@ -21,7 +24,10 @@ object AlistRepository : BaseRepository() {
     /**
      * 获取Alist当前用户信息
      */
-    suspend fun getUserInfo(url: String, token: String) = request()
+    suspend fun getUserInfo(
+        url: String,
+        token: String
+    ) = request()
         .doGet {
             Retrofit.alistService.getUserInfo(url, token)
         }
@@ -29,7 +35,11 @@ object AlistRepository : BaseRepository() {
     /**
      * 打开文件夹
      */
-    suspend fun openDirectory(url: String, token: String, path: String) = request()
+    suspend fun openDirectory(
+        url: String,
+        token: String,
+        path: String
+    ) = request()
         .param("path", path)
         .doPost {
             Retrofit.alistService.openDirectory(url, token, it)
@@ -38,7 +48,11 @@ object AlistRepository : BaseRepository() {
     /**
      * 打开文件夹
      */
-    suspend fun openFile(url: String, token: String, path: String) = request()
+    suspend fun openFile(
+        url: String,
+        token: String,
+        path: String
+    ) = request()
         .param("path", path)
         .doPost {
             Retrofit.alistService.openFile(url, token, it)

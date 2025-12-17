@@ -31,7 +31,6 @@ import com.xyoye.data_component.data.CloudHistoryListData
 
 @Route(path = RouteTable.Anime.AnimeHistory)
 class AnimeHistoryActivity : BaseActivity<AnimeHistoryViewModel, ActivityAnimeHistoryBinding>() {
-
     @Autowired
     @JvmField
     var historyData: CloudHistoryListData? = null
@@ -42,7 +41,7 @@ class AnimeHistoryActivity : BaseActivity<AnimeHistoryViewModel, ActivityAnimeHi
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            AnimeHistoryViewModel::class.java
+            AnimeHistoryViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_anime_history
@@ -66,13 +65,17 @@ class AnimeHistoryActivity : BaseActivity<AnimeHistoryViewModel, ActivityAnimeHi
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        mMenus = AnimeSearchMenus.inflater(this, menu).apply {
-            onSearchTextChanged { viewModel.searchAnime(it) }
-        }
+        mMenus =
+            AnimeSearchMenus.inflater(this, menu).apply {
+                onSearchTextChanged { viewModel.searchAnime(it) }
+            }
         return super.onCreateOptionsMenu(menu)
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK && mMenus?.handleBackPressed() == true) {
             return true
         }
@@ -81,47 +84,50 @@ class AnimeHistoryActivity : BaseActivity<AnimeHistoryViewModel, ActivityAnimeHi
 
     private fun initRv() {
         dataBinding.historyRv.apply {
-
             layoutManager = gridEmpty(3)
 
-            adapter = buildAdapter {
+            adapter =
+                buildAdapter {
+                    addEmptyView(R.layout.layout_empty)
 
-                addEmptyView(R.layout.layout_empty)
+                    addItem<AnimeData, ItemAnimeBinding>(R.layout.item_anime) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                coverIv.loadAnimeCover(data.imageUrl)
+                                animeNameTv.text = data.animeTitle
+                                itemLayout.setOnClickListener {
+                                    // 防止快速点击
+                                    if (FastClickFilter.isNeedFilter()) {
+                                        return@setOnClickListener
+                                    }
 
-                addItem<AnimeData, ItemAnimeBinding>(R.layout.item_anime) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            coverIv.loadAnimeCover(data.imageUrl)
-                            animeNameTv.text = data.animeTitle
-                            itemLayout.setOnClickListener {
-                                //防止快速点击
-                                if (FastClickFilter.isNeedFilter()) {
-                                    return@setOnClickListener
+                                    ViewCompat.setTransitionName(coverIv, "cover_image")
+                                    val options =
+                                        ActivityOptionsCompat.makeSceneTransitionAnimation(
+                                            this@AnimeHistoryActivity,
+                                            coverIv,
+                                            coverIv.transitionName,
+                                        )
+
+                                    ARouter
+                                        .getInstance()
+                                        .build(RouteTable.Anime.AnimeDetail)
+                                        .withParcelable("animeArgument", AnimeArgument.fromData(data))
+                                        .withOptionsCompat(options)
+                                        .navigation(this@AnimeHistoryActivity)
                                 }
-
-                                ViewCompat.setTransitionName(coverIv, "cover_image")
-                                val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                                    this@AnimeHistoryActivity, coverIv, coverIv.transitionName
-                                )
-
-                                ARouter.getInstance()
-                                    .build(RouteTable.Anime.AnimeDetail)
-                                    .withParcelable("animeArgument", AnimeArgument.fromData(data))
-                                    .withOptionsCompat(options)
-                                    .navigation(this@AnimeHistoryActivity)
                             }
                         }
                     }
                 }
-            }
 
             val pxValue = dp2px(10)
             addItemDecoration(
                 ItemDecorationDrawable(
                     pxValue,
                     pxValue,
-                    R.color.item_bg_color.toResColor()
-                )
+                    R.color.item_bg_color.toResColor(),
+                ),
             )
         }
     }

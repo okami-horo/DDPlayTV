@@ -19,7 +19,6 @@ class WebDavStorageEditDialog(
     private val activity: StoragePlusActivity,
     private val originalStorage: MediaLibraryEntity?
 ) : StorageEditDialog<DialogWebDavLoginBinding>(activity) {
-
     private lateinit var binding: DialogWebDavLoginBinding
 
     override fun getChildLayoutId() = R.layout.dialog_web_dav_login
@@ -30,12 +29,13 @@ class WebDavStorageEditDialog(
 
         setTitle(if (isEditStorage) "编辑WebDav帐号" else "添加WebDav帐号")
 
-        val serverData = originalStorage ?: MediaLibraryEntity(
-            0,
-            "",
-            "",
-            MediaType.WEBDAV_SERVER
-        )
+        val serverData =
+            originalStorage ?: MediaLibraryEntity(
+                0,
+                "",
+                "",
+                MediaType.WEBDAV_SERVER,
+            )
         setAnonymous(serverData.isAnonymous)
         setParseMode(serverData.webDavStrict)
         binding.serverData = serverData
@@ -133,12 +133,12 @@ class WebDavStorageEditDialog(
     private fun setAnonymous(isAnonymous: Boolean) {
         binding.anonymousTv.isSelected = isAnonymous
         binding.anonymousTv.setTextColorRes(
-            if (isAnonymous) R.color.text_white else R.color.text_black
+            if (isAnonymous) R.color.text_white else R.color.text_black,
         )
 
         binding.accountTv.isSelected = !isAnonymous
         binding.accountTv.setTextColorRes(
-            if (!isAnonymous) R.color.text_white else R.color.text_black
+            if (!isAnonymous) R.color.text_white else R.color.text_black,
         )
 
         binding.accountEt.isGone = isAnonymous
@@ -154,12 +154,12 @@ class WebDavStorageEditDialog(
     private fun setParseMode(isStrict: Boolean) {
         binding.strictParseTv.isSelected = isStrict
         binding.strictParseTv.setTextColorRes(
-            if (isStrict) R.color.text_white else R.color.text_black
+            if (isStrict) R.color.text_white else R.color.text_black,
         )
 
         binding.normalParseTv.isSelected = isStrict.not()
         binding.normalParseTv.setTextColorRes(
-            if (isStrict.not()) R.color.text_white else R.color.text_black
+            if (isStrict.not()) R.color.text_white else R.color.text_black,
         )
     }
 }

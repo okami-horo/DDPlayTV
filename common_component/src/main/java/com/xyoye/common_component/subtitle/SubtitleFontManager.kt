@@ -3,8 +3,8 @@ package com.xyoye.common_component.subtitle
 import android.content.Context
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.utils.PathHelper
+import com.xyoye.common_component.weight.ToastCenter
 import java.io.File
 import java.io.FileOutputStream
 
@@ -18,6 +18,7 @@ object SubtitleFontManager {
 
     @Volatile
     private var initialized = false
+
     @Volatile
     private var migrated = false
 
@@ -83,7 +84,10 @@ object SubtitleFontManager {
         return directory
     }
 
-    private fun copyDefaultFontFromAssets(context: Context, target: File): Boolean {
+    private fun copyDefaultFontFromAssets(
+        context: Context,
+        target: File
+    ): Boolean {
         val assetPath = "$ASSET_FONT_DIR/$DEFAULT_FONT_FILE"
         return runCatching {
             context.assets.open(assetPath).use { input ->
@@ -99,7 +103,10 @@ object SubtitleFontManager {
         }.getOrDefault(false)
     }
 
-    private fun migrateLegacyFontsIfNeed(context: Context, targetDir: File) {
+    private fun migrateLegacyFontsIfNeed(
+        context: Context,
+        targetDir: File
+    ) {
         if (migrated) {
             return
         }
@@ -123,15 +130,14 @@ object SubtitleFontManager {
                         LogFacade.i(
                             LogModule.SUBTITLE,
                             TAG,
-                            "migrated legacy font ${legacyFile.name} to ${targetFile.absolutePath}"
+                            "migrated legacy font ${legacyFile.name} to ${targetFile.absolutePath}",
                         )
-                    }
-                    .onFailure {
+                    }.onFailure {
                         targetFile.delete()
                         LogFacade.w(
                             LogModule.SUBTITLE,
                             TAG,
-                            "migrate font failed ${legacyFile.name}: ${it.message}"
+                            "migrate font failed ${legacyFile.name}: ${it.message}",
                         )
                     }
             }

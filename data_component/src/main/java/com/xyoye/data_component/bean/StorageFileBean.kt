@@ -2,7 +2,6 @@ package com.xyoye.data_component.bean
 
 import java.util.*
 
-
 /**
  * Created by xyoye on 2022/1/19
  */

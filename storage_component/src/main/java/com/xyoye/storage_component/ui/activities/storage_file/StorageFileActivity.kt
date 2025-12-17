@@ -4,12 +4,11 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
@@ -28,29 +27,27 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.common_component.utils.subtitle.SubtitleFontCacheHelper
-import com.xyoye.common_component.weight.BottomActionDialog
-import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.StorageFilePath
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.BR
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ActivityStorageFileBinding
-import com.xyoye.storage_component.ui.fragment.storage_file.StorageFileFragment
 import com.xyoye.storage_component.ui.dialog.FontCacheProgressDialog
+import com.xyoye.storage_component.ui.fragment.storage_file.StorageFileFragment
 import com.xyoye.storage_component.ui.weight.StorageFileMenus
 import com.xyoye.storage_component.utils.storage.StorageFilePathAdapter
 import com.xyoye.storage_component.utils.storage.StorageFileStyleHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 @Route(path = RouteTable.Stream.StorageFile)
 class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFileBinding>() {
-
     @Autowired
     @JvmField
     var storageLibrary: MediaLibraryEntity? = null
@@ -85,7 +82,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            StorageFileViewModel::class.java
+            StorageFileViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_storage_file
@@ -116,9 +113,10 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         dataBinding.pathRv.apply {
             layoutManager = horizontal()
 
-            adapter = StorageFilePathAdapter.build(this@StorageFileActivity) {
-                backToRouteFragment(it)
-            }
+            adapter =
+                StorageFilePathAdapter.build(this@StorageFileActivity) {
+                    backToRouteFragment(it)
+                }
         }
     }
 
@@ -140,14 +138,15 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
         dataBinding.pathRv.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                val lastIndex = dataBinding.pathRv.adapter?.itemCount?.let { count ->
-                    if (count > 0) count - 1 else RecyclerView.NO_POSITION
-                } ?: RecyclerView.NO_POSITION
+                val lastIndex =
+                    dataBinding.pathRv.adapter?.itemCount?.let { count ->
+                        if (count > 0) count - 1 else RecyclerView.NO_POSITION
+                    } ?: RecyclerView.NO_POSITION
                 if (lastIndex != RecyclerView.NO_POSITION) {
                     LogFacade.d(
                         LogModule.STORAGE,
                         TAG,
-                        "pathRv focus gained, request focus index=$lastIndex count=${dataBinding.pathRv.adapter?.itemCount ?: 0}"
+                        "pathRv focus gained, request focus index=$lastIndex count=${dataBinding.pathRv.adapter?.itemCount ?: 0}",
                     )
                     dataBinding.pathRv.requestIndexChildFocus(lastIndex)
                 }
@@ -174,7 +173,8 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         // })
 
         viewModel.playLiveData.observe(this) {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Player.Player)
                 .navigation()
         }
@@ -205,10 +205,11 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        mMenus = StorageFileMenus.inflater(this, menu).apply {
-            onSearchTextChanged { onSearchTextChanged(it) }
-            onSortTypeChanged { onSortOptionChanged() }
-        }
+        mMenus =
+            StorageFileMenus.inflater(this, menu).apply {
+                onSearchTextChanged { onSearchTextChanged(it) }
+                onSortTypeChanged { onSortOptionChanged() }
+            }
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -217,7 +218,10 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK && mMenus?.handleBackPressed() == true) {
             return true
         }
@@ -240,8 +244,9 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     private fun checkBundle(): Boolean {
         storageLibrary
             ?: return false
-        val storage = StorageFactory.createStorage(storageLibrary!!)
-            ?: return false
+        val storage =
+            StorageFactory.createStorage(storageLibrary!!)
+                ?: return false
 
         this.storage = storage
         return true
@@ -276,8 +281,9 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             return false
         }
         val lastRoute = mRouteFragmentMap.keys.last()
-        val fragment = mRouteFragmentMap.remove(lastRoute)
-            ?: return true
+        val fragment =
+            mRouteFragmentMap.remove(lastRoute)
+                ?: return true
         LogFacade.d(LogModule.STORAGE, TAG, "popFragment route=${lastRoute.route} remain=${mRouteFragmentMap.size}")
         removeFragment(listOf(fragment))
         onDisplayFragmentChanged()
@@ -297,7 +303,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         LogFacade.d(
             LogModule.STORAGE,
             TAG,
-            "backToRouteFragment target=${target.route} remove=${fragments.size} remain=${mRouteFragmentMap.size}"
+            "backToRouteFragment target=${target.route} remove=${fragments.size} remain=${mRouteFragmentMap.size}",
         )
         removeFragment(fragments)
         onDisplayFragmentChanged()
@@ -355,24 +361,28 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     /**
      * 更新标题栏副标题
      */
-    private fun updateToolbarSubtitle(videoCount: Int, directoryCount: Int) {
-        supportActionBar?.subtitle = when {
-            videoCount == 0 && directoryCount == 0 -> {
-                "0视频"
-            }
+    private fun updateToolbarSubtitle(
+        videoCount: Int,
+        directoryCount: Int
+    ) {
+        supportActionBar?.subtitle =
+            when {
+                videoCount == 0 && directoryCount == 0 -> {
+                    "0视频"
+                }
 
-            directoryCount == 0 -> {
-                "${videoCount}视频"
-            }
+                directoryCount == 0 -> {
+                    "${videoCount}视频"
+                }
 
-            videoCount == 0 -> {
-                "${directoryCount}文件夹"
-            }
+                videoCount == 0 -> {
+                    "${directoryCount}文件夹"
+                }
 
-            else -> {
-                "${videoCount}视频  ${directoryCount}文件夹"
+                else -> {
+                    "${videoCount}视频  ${directoryCount}文件夹"
+                }
             }
-        }
     }
 
     /**
@@ -467,7 +477,10 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 //        }
 //    }
 
-    fun onDirectoryDataLoaded(fragment: StorageFileFragment, files: List<StorageFile>) {
+    fun onDirectoryDataLoaded(
+        fragment: StorageFileFragment,
+        files: List<StorageFile>
+    ) {
         // 定位上次播放目录功能已关闭
     }
 
@@ -503,13 +516,16 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         if (mediaType != MediaType.ALSIT_STORAGE && mediaType != MediaType.WEBDAV_SERVER) {
             return true
         }
-        val fontDirectory = SubtitleFontCacheHelper.findFontDirectory(storage.directoryFiles)
-            ?: return true
+        val fontDirectory =
+            SubtitleFontCacheHelper.findFontDirectory(storage.directoryFiles)
+                ?: return true
 
-        val fontFiles = withContext(Dispatchers.IO) {
-            SubtitleFontCacheHelper.listFontFiles(storage, fontDirectory)
-                .let { SubtitleFontCacheHelper.filterFontFiles(it) }
-        }
+        val fontFiles =
+            withContext(Dispatchers.IO) {
+                SubtitleFontCacheHelper
+                    .listFontFiles(storage, fontDirectory)
+                    .let { SubtitleFontCacheHelper.filterFontFiles(it) }
+            }
         if (fontFiles.isEmpty()) {
             ToastCenter.showWarning(getString(R.string.text_font_cache_empty))
             return true
@@ -522,12 +538,14 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             return true
         }
 
-        val cachedCountStart = fontFiles.count {
-            SubtitleFontCacheHelper.isFontCached(fontCacheDir, it.fileName())
-        }
-        val pendingFonts = fontFiles.filterNot {
-            SubtitleFontCacheHelper.isFontCached(fontCacheDir, it.fileName())
-        }
+        val cachedCountStart =
+            fontFiles.count {
+                SubtitleFontCacheHelper.isFontCached(fontCacheDir, it.fileName())
+            }
+        val pendingFonts =
+            fontFiles.filterNot {
+                SubtitleFontCacheHelper.isFontCached(fontCacheDir, it.fileName())
+            }
         if (pendingFonts.isEmpty()) {
             return true
         }
@@ -548,11 +566,13 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                 pendingFonts.forEach { fontFile ->
                     val fontName = fontFile.fileName()
                     val stream = storage.openFile(fontFile)
-                    val success = stream != null && SubtitleFontCacheHelper.cacheFontFile(
-                        fontCacheDir,
-                        fontName,
-                        stream
-                    )
+                    val success =
+                        stream != null &&
+                            SubtitleFontCacheHelper.cacheFontFile(
+                                fontCacheDir,
+                                fontName,
+                                stream,
+                            )
                     if (success) {
                         cachedCount++
                         withContext(Dispatchers.Main) {
@@ -574,29 +594,31 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     private suspend fun requestFontCacheConfirm(): Boolean =
         suspendCancellableCoroutine { continuation ->
             var decided = false
-            val dialog = CommonDialog.Builder(this)
-                .apply {
-                    content = getString(R.string.text_font_cache_prompt)
-                    addNegative("否") {
-                        decided = true
-                        if (continuation.isActive) {
-                            continuation.resume(false)
+            val dialog =
+                CommonDialog
+                    .Builder(this)
+                    .apply {
+                        content = getString(R.string.text_font_cache_prompt)
+                        addNegative("否") {
+                            decided = true
+                            if (continuation.isActive) {
+                                continuation.resume(false)
+                            }
+                            it.dismiss()
                         }
-                        it.dismiss()
-                    }
-                    addPositive("是") {
-                        decided = true
-                        if (continuation.isActive) {
-                            continuation.resume(true)
+                        addPositive("是") {
+                            decided = true
+                            if (continuation.isActive) {
+                                continuation.resume(true)
+                            }
+                            it.dismiss()
                         }
-                        it.dismiss()
-                    }
-                    doOnDismiss {
-                        if (!decided && continuation.isActive) {
-                            continuation.resume(false)
+                        doOnDismiss {
+                            if (!decided && continuation.isActive) {
+                                continuation.resume(false)
+                            }
                         }
-                    }
-                }.build()
+                    }.build()
             dialog.show()
             continuation.invokeOnCancellation { dialog.dismiss() }
         }

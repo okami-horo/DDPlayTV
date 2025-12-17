@@ -12,8 +12,9 @@ import com.xyoye.storage_component.R
  * Created by xyoye on 2022/9/16
  */
 
-class ScreencastReceiverNotifier(private val context: Context) {
-
+class ScreencastReceiverNotifier(
+    private val context: Context
+) {
     private val cancelIntent by lazy {
         NotificationReceiver.cancelScreencastReceivePendingBroadcast(context)
     }
@@ -32,7 +33,7 @@ class ScreencastReceiverNotifier(private val context: Context) {
             addAction(
                 R.drawable.ic_notification_close,
                 context.getString(android.R.string.cancel),
-                cancelIntent
+                cancelIntent,
             )
         }
     }

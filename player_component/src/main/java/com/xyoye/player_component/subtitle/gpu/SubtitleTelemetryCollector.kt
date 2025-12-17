@@ -18,21 +18,25 @@ class SubtitleTelemetryCollector(
     private val loadSheddingPolicy: SubtitleLoadSheddingPolicy = SubtitleLoadSheddingPolicy(),
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
-
     fun allowRender(): Boolean = loadSheddingPolicy.allowRender()
 
-    fun recordSkippedFrame(subtitlePtsMs: Long, _vsyncId: Long, reason: String = DROP_REASON_LOAD_SHED) {
-        val sample = TelemetrySample(
-            timestampMs = System.currentTimeMillis(),
-            subtitlePtsMs = subtitlePtsMs,
-            renderLatencyMs = 0.0,
-            uploadLatencyMs = 0.0,
-            compositeLatencyMs = 0.0,
-            frameStatus = SubtitleFrameStatus.Skipped,
-            dropReason = reason,
-            gpuOverutilized = true,
-            vsyncMiss = true
-        )
+    fun recordSkippedFrame(
+        subtitlePtsMs: Long,
+        _vsyncId: Long,
+        reason: String = DROP_REASON_LOAD_SHED
+    ) {
+        val sample =
+            TelemetrySample(
+                timestampMs = System.currentTimeMillis(),
+                subtitlePtsMs = subtitlePtsMs,
+                renderLatencyMs = 0.0,
+                uploadLatencyMs = 0.0,
+                compositeLatencyMs = 0.0,
+                frameStatus = SubtitleFrameStatus.Skipped,
+                dropReason = reason,
+                gpuOverutilized = true,
+                vsyncMiss = true,
+            )
         dispatch(sample, telemetryEnabled = !loadSheddingPolicy.allowRender())
     }
 
@@ -42,42 +46,50 @@ class SubtitleTelemetryCollector(
         _vsyncId: Long,
         telemetryEnabled: Boolean
     ) {
-        val frameStatus = if (result.rendered) {
-            SubtitleFrameStatus.Rendered
-        } else {
-            SubtitleFrameStatus.Dropped
-        }
-        val baseSample = TelemetrySample(
-            timestampMs = System.currentTimeMillis(),
-            subtitlePtsMs = subtitlePtsMs,
-            renderLatencyMs = result.renderLatencyMs.toDouble(),
-            uploadLatencyMs = result.uploadLatencyMs.toDouble(),
-            compositeLatencyMs = result.compositeLatencyMs.toDouble(),
-            frameStatus = frameStatus,
-            dropReason = if (result.rendered) null else DROP_REASON_NO_FRAME
-        )
+        val frameStatus =
+            if (result.rendered) {
+                SubtitleFrameStatus.Rendered
+            } else {
+                SubtitleFrameStatus.Dropped
+            }
+        val baseSample =
+            TelemetrySample(
+                timestampMs = System.currentTimeMillis(),
+                subtitlePtsMs = subtitlePtsMs,
+                renderLatencyMs = result.renderLatencyMs.toDouble(),
+                uploadLatencyMs = result.uploadLatencyMs.toDouble(),
+                compositeLatencyMs = result.compositeLatencyMs.toDouble(),
+                frameStatus = frameStatus,
+                dropReason = if (result.rendered) null else DROP_REASON_NO_FRAME,
+            )
         val decision = loadSheddingPolicy.evaluateTelemetry(baseSample)
-        val adjustedFrameStatus = when {
-            decision.dropFrame -> SubtitleFrameStatus.Skipped
-            else -> frameStatus
-        }
-        val adjustedSample = baseSample.copy(
-            frameStatus = adjustedFrameStatus,
-            dropReason = when {
-                decision.dropFrame -> DROP_REASON_LOAD_SHED
-                baseSample.dropReason != null -> baseSample.dropReason
-                else -> null
-            },
-            gpuOverutilized = decision.gpuOverutilized,
-            vsyncMiss = decision.vsyncMiss
-        )
+        val adjustedFrameStatus =
+            when {
+                decision.dropFrame -> SubtitleFrameStatus.Skipped
+                else -> frameStatus
+            }
+        val adjustedSample =
+            baseSample.copy(
+                frameStatus = adjustedFrameStatus,
+                dropReason =
+                    when {
+                        decision.dropFrame -> DROP_REASON_LOAD_SHED
+                        baseSample.dropReason != null -> baseSample.dropReason
+                        else -> null
+                    },
+                gpuOverutilized = decision.gpuOverutilized,
+                vsyncMiss = decision.vsyncMiss,
+            )
         dispatch(
             sample = adjustedSample,
-            telemetryEnabled = telemetryEnabled && !decision.skipTelemetry
+            telemetryEnabled = telemetryEnabled && !decision.skipTelemetry,
         )
     }
 
-    private fun dispatch(sample: TelemetrySample, telemetryEnabled: Boolean) {
+    private fun dispatch(
+        sample: TelemetrySample,
+        telemetryEnabled: Boolean
+    ) {
         val state = pipelineController.currentState()
         SubtitleTelemetryLogger.logSample(sample, state)
         if (!telemetryEnabled || !pipelineController.telemetryEnabled()) {

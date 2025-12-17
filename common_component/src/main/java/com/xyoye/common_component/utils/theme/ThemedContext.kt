@@ -14,7 +14,6 @@ val themeContext: Context get() = ThemedContext.get()
 
 @SuppressLint("StaticFieldLeak")
 object ThemedContext {
-
     private var themedContext: Context? = null
 
     fun get(): Context {
@@ -28,11 +27,12 @@ object ThemedContext {
         val resources = application.resources
         val configuration = Configuration(resources.configuration)
         val filter = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()
-        configuration.uiMode = when (AppCompatDelegate.getDefaultNightMode()) {
-            AppCompatDelegate.MODE_NIGHT_NO -> Configuration.UI_MODE_NIGHT_NO or filter
-            AppCompatDelegate.MODE_NIGHT_YES -> Configuration.UI_MODE_NIGHT_YES or filter
-            else -> resources.configuration.uiMode
-        }
+        configuration.uiMode =
+            when (AppCompatDelegate.getDefaultNightMode()) {
+                AppCompatDelegate.MODE_NIGHT_NO -> Configuration.UI_MODE_NIGHT_NO or filter
+                AppCompatDelegate.MODE_NIGHT_YES -> Configuration.UI_MODE_NIGHT_YES or filter
+                else -> resources.configuration.uiMode
+            }
         return application.createConfigurationContext(configuration)
     }
 }

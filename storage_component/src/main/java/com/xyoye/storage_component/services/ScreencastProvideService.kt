@@ -192,12 +192,13 @@ class ScreencastProvideService : Service(), ScreencastProvideHandler {
 }
 */
 
-class ScreencastProvideService : Service(), ScreencastProvideHandler {
-
+class ScreencastProvideService :
+    Service(),
+    ScreencastProvideHandler {
     companion object {
-        fun isRunning(@Suppress("UNUSED_PARAMETER") context: Context): Boolean {
-            return false
-        }
+        fun isRunning(
+            @Suppress("UNUSED_PARAMETER") context: Context
+        ): Boolean = false
 
         fun start(
             @Suppress("UNUSED_PARAMETER") context: Context,
@@ -206,21 +207,25 @@ class ScreencastProvideService : Service(), ScreencastProvideHandler {
             // Sender 功能对 TV 端关闭，保持静默
         }
 
-        fun stop(@Suppress("UNUSED_PARAMETER") context: Context) {
+        fun stop(
+            @Suppress("UNUSED_PARAMETER") context: Context
+        ) {
             // Sender 被 TV 端禁用，无需停止服务
         }
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
+    override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
         stopSelf()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int
+    ): Int {
         stopSelf()
         return START_NOT_STICKY
     }
@@ -229,7 +234,6 @@ class ScreencastProvideService : Service(), ScreencastProvideHandler {
         super.onDestroy()
     }
 
-    override fun onProvideVideo(videoSource: BaseVideoSource) {
+    override fun onProvideVideo(videoSource: BaseVideoSource): Unit =
         throw UnsupportedOperationException("Cast sender is disabled for TV builds")
-    }
 }

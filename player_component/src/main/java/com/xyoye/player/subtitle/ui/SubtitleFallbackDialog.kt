@@ -1,8 +1,8 @@
 package com.xyoye.player.subtitle.ui
 
 import android.content.Context
-import androidx.appcompat.app.AlertDialog
 import android.os.SystemClock
+import androidx.appcompat.app.AlertDialog
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.player_component.R
@@ -19,19 +19,19 @@ class SubtitleFallbackDialog(
     }
 
     private var shownAtMs: Long = 0L
-    private val dialog: AlertDialog = AlertDialog.Builder(context)
-        .setTitle(R.string.subtitle_fallback_title)
-        .setMessage(R.string.subtitle_fallback_message)
-        .setCancelable(false)
-        .setPositiveButton(R.string.subtitle_fallback_switch_action) { _, _ ->
-            logRecovery("switch_legacy")
-            onAction(SubtitleFallbackAction.SWITCH_TO_LEGACY)
-        }
-        .setNegativeButton(R.string.subtitle_fallback_retry_action) { _, _ ->
-            logRecovery("continue_current")
-            onAction(SubtitleFallbackAction.CONTINUE_CURRENT)
-        }
-        .create()
+    private val dialog: AlertDialog =
+        AlertDialog
+            .Builder(context)
+            .setTitle(R.string.subtitle_fallback_title)
+            .setMessage(R.string.subtitle_fallback_message)
+            .setCancelable(false)
+            .setPositiveButton(R.string.subtitle_fallback_switch_action) { _, _ ->
+                logRecovery("switch_legacy")
+                onAction(SubtitleFallbackAction.SWITCH_TO_LEGACY)
+            }.setNegativeButton(R.string.subtitle_fallback_retry_action) { _, _ ->
+                logRecovery("continue_current")
+                onAction(SubtitleFallbackAction.CONTINUE_CURRENT)
+            }.create()
 
     fun show() {
         if (!dialog.isShowing) {
@@ -59,7 +59,7 @@ class SubtitleFallbackDialog(
         LogFacade.i(
             LogModule.PLAYER,
             LOG_TAG,
-            "fallback action=$action elapsed=${if (delta >= 0) "${delta}ms" else "n/a"}"
+            "fallback action=$action elapsed=${if (delta >= 0) "${delta}ms" else "n/a"}",
         )
     }
 }

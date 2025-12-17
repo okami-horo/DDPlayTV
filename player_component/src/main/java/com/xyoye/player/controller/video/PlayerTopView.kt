@@ -14,7 +14,6 @@ import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player.wrapper.ControlWrapper
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutPlayerTopBinding
-import com.xyoye.player_component.ui.activities.overlay_permission.OverlayPermissionActivity
 import java.util.*
 
 /**
@@ -25,14 +24,15 @@ class PlayerTopView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : LinearLayout(context, attrs, defStyleAttr), InterControllerView {
-
-    private val viewBinding = DataBindingUtil.inflate<LayoutPlayerTopBinding>(
-        LayoutInflater.from(context),
-        R.layout.layout_player_top,
-        this,
-        true
-    )
+) : LinearLayout(context, attrs, defStyleAttr),
+    InterControllerView {
+    private val viewBinding =
+        DataBindingUtil.inflate<LayoutPlayerTopBinding>(
+            LayoutInflater.from(context),
+            R.layout.layout_player_top,
+            this,
+            true,
+        )
 
     private var exitPlayerObserver: (() -> Unit)? = null
 
@@ -60,7 +60,7 @@ class PlayerTopView(
                 }
                 enterPopupModeBlock?.invoke()
             }
-            */
+             */
         }
 
         // 将初始焦点置于标题，而不是返回按钮
@@ -75,48 +75,54 @@ class PlayerTopView(
 
     override fun onVisibilityChanged(isVisible: Boolean) {
         if (isVisible) {
-            //不加延迟会导致动画卡顿
+            // 不加延迟会导致动画卡顿
             postDelayed({
                 viewBinding.systemTimeTv.text = Date().toText("HH:mm")
             }, 100)
 
-            ViewCompat.animate(viewBinding.playerTopLl).translationY(0f).setDuration(300).start()
+            ViewCompat
+                .animate(viewBinding.playerTopLl)
+                .translationY(0f)
+                .setDuration(300)
+                .start()
         } else {
-            //隐藏时清理内部焦点，避免隐藏视图抢占DPAD事件
+            // 隐藏时清理内部焦点，避免隐藏视图抢占DPAD事件
             viewBinding.playerTopLl.clearFocus()
             clearFocus()
             val height = viewBinding.playerTopLl.height.toFloat()
-            ViewCompat.animate(viewBinding.playerTopLl).translationY(-height)
-                .setDuration(300).start()
+            ViewCompat
+                .animate(viewBinding.playerTopLl)
+                .translationY(-height)
+                .setDuration(300)
+                .start()
         }
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
-
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
-
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
-        //显示状态与锁定状态相反
+        // 显示状态与锁定状态相反
         onVisibilityChanged(!isLocked)
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
-
     }
 
     override fun onPopupModeChanged(isPopup: Boolean) {
-
     }
 
     /*
     fun setBatteryHelper(helper: BatteryHelper) {
         helper.bindBatteryView(viewBinding.batteryView)
     }
-    */
+     */
 
     fun setVideoTitle(title: String?) {
         viewBinding.videoTitleTv.text = title

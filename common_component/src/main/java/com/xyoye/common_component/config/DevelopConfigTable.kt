@@ -11,7 +11,6 @@ import com.xyoye.mmkv_annotation.MMKVKotlinClass
 
 @MMKVKotlinClass(className = "DevelopConfig")
 object DevelopConfigTable {
-
     // AppId
     @MMKVFiled
     const val appId = ""

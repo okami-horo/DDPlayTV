@@ -7,6 +7,5 @@ import com.xyoye.common_component.network.request.Request
  */
 
 open class BaseRepository {
-
     fun request() = Request()
 }

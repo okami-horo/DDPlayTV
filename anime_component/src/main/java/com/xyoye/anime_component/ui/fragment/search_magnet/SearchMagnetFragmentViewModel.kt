@@ -18,7 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class SearchMagnetFragmentViewModel : BaseViewModel() {
-
     val magnetTypeId = ObservableField<Int>()
     val magnetTypeText = ObservableField("全部分类")
     val magnetSubgroupId = ObservableField<Int>()
@@ -49,7 +48,8 @@ class SearchMagnetFragmentViewModel : BaseViewModel() {
         }
 
         viewModelScope.launch {
-            DatabaseManager.instance.getMagnetSearchHistoryDao()
+            DatabaseManager.instance
+                .getMagnetSearchHistoryDao()
                 .insert(MagnetSearchHistoryEntity(keyword))
 
             val typeId = magnetTypeId.get()?.toString().orEmpty()
@@ -65,7 +65,7 @@ class SearchMagnetFragmentViewModel : BaseViewModel() {
                     exception ?: RuntimeException("Search magnet failed with unknown error"),
                     "SearchMagnetFragmentViewModel",
                     "search",
-                    "搜索关键字: $keyword, 类型ID: $typeId, 字幕组ID: $subgroupId, 域名: $magnetDomain"
+                    "搜索关键字: $keyword, 类型ID: $typeId, 字幕组ID: $subgroupId, 域名: $magnetDomain",
                 )
                 exception?.message?.toastError()
                 return@launch
@@ -115,15 +115,16 @@ class SearchMagnetFragmentViewModel : BaseViewModel() {
                     exception ?: RuntimeException("Get magnet subgroup failed with unknown error"),
                     "SearchMagnetFragmentViewModel",
                     "getMagnetSubgroup",
-                    "域名: $magnetDomain"
+                    "域名: $magnetDomain",
                 )
                 exception?.message?.toastError()
                 return@launch
             }
 
-            val subgroups = result.getOrNull()?.Subgroups?.map {
-                MagnetScreenEntity(it.Id, it.Name, MagnetScreenType.SUBGROUP)
-            } ?: emptyList()
+            val subgroups =
+                result.getOrNull()?.Subgroups?.map {
+                    MagnetScreenEntity(it.Id, it.Name, MagnetScreenType.SUBGROUP)
+                } ?: emptyList()
 
             magnetSubgroupData.postValue(subgroups)
         }
@@ -152,17 +153,17 @@ class SearchMagnetFragmentViewModel : BaseViewModel() {
                     exception ?: RuntimeException("Get magnet type failed with unknown error"),
                     "SearchMagnetFragmentViewModel",
                     "getMagnetType",
-                    "域名: $magnetDomain"
+                    "域名: $magnetDomain",
                 )
                 exception?.message?.toastError()
                 return@launch
             }
 
-            val types = result.getOrNull()?.Types?.map {
-                MagnetScreenEntity(it.Id, it.Name, MagnetScreenType.TYPE)
-            } ?: emptyList()
+            val types =
+                result.getOrNull()?.Types?.map {
+                    MagnetScreenEntity(it.Id, it.Name, MagnetScreenType.TYPE)
+                } ?: emptyList()
             magnetTypeData.postValue(types)
-
         }
     }
 }

@@ -33,13 +33,13 @@ class HistorySortOption {
         return true
     }
 
-    fun createComparator(): Comparator<PlayHistoryEntity> {
-        return if (sort == HistorySort.NAME) {
+    fun createComparator(): Comparator<PlayHistoryEntity> =
+        if (sort == HistorySort.NAME) {
             FileNameComparator(
                 getName = { it.videoName },
                 isDirectory = { false },
                 asc = asc,
-                directoryFirst = false
+                directoryFirst = false,
             )
         } else {
             FileTimeComparator(
@@ -47,8 +47,7 @@ class HistorySortOption {
                 getTime = { it.playTime },
                 isDirectory = { false },
                 asc = asc,
-                directoryFirst = false
+                directoryFirst = false,
             )
         }
-    }
 }

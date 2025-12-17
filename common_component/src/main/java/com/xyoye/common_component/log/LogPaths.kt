@@ -31,9 +31,7 @@ object LogPaths {
         }
     }
 
-    fun currentLogFile(context: Context): File =
-        File(logDirectory(context), CURRENT_LOG_FILE_NAME)
+    fun currentLogFile(context: Context): File = File(logDirectory(context), CURRENT_LOG_FILE_NAME)
 
-    fun previousLogFile(context: Context): File =
-        File(logDirectory(context), PREVIOUS_LOG_FILE_NAME)
+    fun previousLogFile(context: Context): File = File(logDirectory(context), PREVIOUS_LOG_FILE_NAME)
 }

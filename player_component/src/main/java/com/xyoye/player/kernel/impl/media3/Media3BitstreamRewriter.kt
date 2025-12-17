@@ -16,24 +16,24 @@ import java.nio.ByteBuffer
  */
 @UnstableApi
 object Media3BitstreamRewriter {
-
     private val START_CODE = byteArrayOf(0x00, 0x00, 0x00, 0x01)
 
     fun rewrite(format: Format): Format {
         if (format.initializationData.isNullOrEmpty()) return format
 
         return when (format.sampleMimeType) {
-            MimeTypes.VIDEO_H264 -> format.copyWithInitialisationData(
-                format.initializationData.mapIndexed { index, data ->
-                    if (index <= 1 && data.hasLengthPrefix()) lengthPrefixedToAnnexB(data) else data
-                }
-            )
+            MimeTypes.VIDEO_H264 ->
+                format.copyWithInitialisationData(
+                    format.initializationData.mapIndexed { index, data ->
+                        if (index <= 1 && data.hasLengthPrefix()) lengthPrefixedToAnnexB(data) else data
+                    },
+                )
             else -> format
         }
     }
 
-    private fun lengthPrefixedToAnnexB(src: ByteArray): ByteArray {
-        return try {
+    private fun lengthPrefixedToAnnexB(src: ByteArray): ByteArray =
+        try {
             val buffer = ByteBuffer.wrap(src)
             val out = ArrayList<Byte>()
             while (buffer.remaining() > 4) {
@@ -49,7 +49,6 @@ object Media3BitstreamRewriter {
             LogFacade.w(LogModule.PLAYER, TAG, "AnnexB rewrite failed, fallback to original: ${e.message}")
             src
         }
-    }
 
     private fun ByteArray.hasLengthPrefix(): Boolean {
         if (size < 4) return false
@@ -57,16 +56,15 @@ object Media3BitstreamRewriter {
         if (this[0] == 0.toByte() && this[1] == 0.toByte() && this[2] == 0.toByte() && this[3] == 1.toByte()) {
             return false
         }
-        val len = ((this[0].toInt() and 0xFF) shl 24) or
-            ((this[1].toInt() and 0xFF) shl 16) or
-            ((this[2].toInt() and 0xFF) shl 8) or
-            (this[3].toInt() and 0xFF)
+        val len =
+            ((this[0].toInt() and 0xFF) shl 24) or
+                ((this[1].toInt() and 0xFF) shl 16) or
+                ((this[2].toInt() and 0xFF) shl 8) or
+                (this[3].toInt() and 0xFF)
         return len in 1 until size
     }
 
-    private fun Format.copyWithInitialisationData(data: List<ByteArray>): Format {
-        return buildUpon().setInitializationData(data).build()
-    }
+    private fun Format.copyWithInitialisationData(data: List<ByteArray>): Format = buildUpon().setInitializationData(data).build()
 
     private const val TAG = "Media3BitstreamRewriter"
 }

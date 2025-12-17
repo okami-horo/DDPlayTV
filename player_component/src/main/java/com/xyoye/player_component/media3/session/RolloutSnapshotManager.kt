@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap
 class RolloutSnapshotManager(
     private val resolver: () -> RolloutToggleSnapshot = { Media3ToggleProvider.snapshot() }
 ) {
-
     private val sessionSnapshots = ConcurrentHashMap<String, RolloutToggleSnapshot>()
     private var lastSnapshot: RolloutToggleSnapshot? = null
 
@@ -22,12 +21,16 @@ class RolloutSnapshotManager(
         return snapshot
     }
 
-    fun bind(sessionId: String, snapshot: RolloutToggleSnapshot) {
-        val applied = if (snapshot.appliesToSession == sessionId) {
-            snapshot
-        } else {
-            snapshot.copy(appliesToSession = sessionId)
-        }
+    fun bind(
+        sessionId: String,
+        snapshot: RolloutToggleSnapshot
+    ) {
+        val applied =
+            if (snapshot.appliesToSession == sessionId) {
+                snapshot
+            } else {
+                snapshot.copy(appliesToSession = sessionId)
+            }
         sessionSnapshots[sessionId] = applied
         lastSnapshot = applied
     }
@@ -46,8 +49,7 @@ class RolloutSnapshotManager(
         }
     }
 
-    fun fallbackMessage(reason: String?): String {
-        return reason?.takeIf { it.isNotBlank() }
+    fun fallbackMessage(reason: String?): String =
+        reason?.takeIf { it.isNotBlank() }
             ?: "Media3 playback is unavailable for this session due to rollout safeguards."
-    }
 }

@@ -8,14 +8,12 @@ import java.io.InputStream
  */
 
 abstract class AbstractDanmuSource : DanmuSource {
-
     private var hash: String? = null
 
-    override suspend fun hash(): String? {
-        return hash ?: getStream()
+    override suspend fun hash(): String? =
+        hash ?: getStream()
             ?.use { DanmuHashCalculator.calculate(it) }
             .also { hash = it }
-    }
 
     abstract suspend fun getStream(): InputStream?
 }

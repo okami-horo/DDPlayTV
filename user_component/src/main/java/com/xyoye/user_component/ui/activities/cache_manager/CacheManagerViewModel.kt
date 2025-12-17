@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 class CacheManagerViewModel : BaseViewModel() {
-
     private val appCacheDir = BaseApplication.getAppContext().cacheDir
     private val externalCacheDir = File(PathHelper.getCachePath())
 
@@ -51,7 +50,7 @@ class CacheManagerViewModel : BaseViewModel() {
                         e,
                         "CacheManagerViewModel",
                         "refreshCache",
-                        "Failed to count files for cache type: ${it.name}"
+                        "Failed to count files for cache type: ${it.name}",
                     )
                 }
                 val cacheBean = CacheBean(it, fileCount, getCacheSize(it))
@@ -67,7 +66,7 @@ class CacheManagerViewModel : BaseViewModel() {
                 e,
                 "CacheManagerViewModel",
                 "refreshCache",
-                "Failed to refresh cache information"
+                "Failed to refresh cache information",
             )
         }
     }
@@ -81,7 +80,7 @@ class CacheManagerViewModel : BaseViewModel() {
                     e,
                     "CacheManagerViewModel",
                     "clearAppCache",
-                    "Failed to clear app cache directory: ${appCacheDir.absolutePath}"
+                    "Failed to clear app cache directory: ${appCacheDir.absolutePath}",
                 )
             }
         }
@@ -98,18 +97,20 @@ class CacheManagerViewModel : BaseViewModel() {
                         e,
                         "CacheManagerViewModel",
                         "clearCacheByType",
-                        "Failed to clear cache directory for type: ${cacheType.name}"
+                        "Failed to clear cache directory for type: ${cacheType.name}",
                     )
                 }
             }
             return
         }
-        val childCacheDirs = externalCacheDir.listFiles()
-            ?: return
+        val childCacheDirs =
+            externalCacheDir.listFiles()
+                ?: return
 
-        val namedCacheDirPaths = CacheType.values().map {
-            PathHelper.getCacheDirectory(it).absolutePath
-        }
+        val namedCacheDirPaths =
+            CacheType.values().map {
+                PathHelper.getCacheDirectory(it).absolutePath
+            }
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 childCacheDirs.forEach {
@@ -123,14 +124,14 @@ class CacheManagerViewModel : BaseViewModel() {
                     e,
                     "CacheManagerViewModel",
                     "clearCacheByType",
-                    "Failed to clear other cache directories"
+                    "Failed to clear other cache directories",
                 )
             }
         }
     }
 
-    private fun getCacheSize(cacheType: CacheType?): Long {
-        return try {
+    private fun getCacheSize(cacheType: CacheType?): Long =
+        try {
             if (cacheType != null) {
                 val cacheTypeDir = PathHelper.getCacheDirectory(cacheType)
                 IOUtils.getDirectorySize(cacheTypeDir)
@@ -147,22 +148,23 @@ class CacheManagerViewModel : BaseViewModel() {
                 e,
                 "CacheManagerViewModel",
                 "getCacheSize",
-                "Failed to get cache size for type: ${cacheType?.name ?: "other"}"
+                "Failed to get cache size for type: ${cacheType?.name ?: "other"}",
             )
             0L
         }
-    }
 
     /**
      * 删除文件夹内所有文件
      */
     private fun clearCacheDirectory(directory: File) {
         try {
-            if (!directory.exists())
+            if (!directory.exists()) {
                 return
+            }
 
-            if (directory.isFile)
+            if (directory.isFile) {
                 directory.delete()
+            }
 
             directory.listFiles()?.forEach {
                 if (it.isDirectory) {
@@ -176,7 +178,7 @@ class CacheManagerViewModel : BaseViewModel() {
                 e,
                 "CacheManagerViewModel",
                 "clearCacheDirectory",
-                "Failed to clear cache directory: ${directory.absolutePath}"
+                "Failed to clear cache directory: ${directory.absolutePath}",
             )
         }
     }
@@ -185,10 +187,12 @@ class CacheManagerViewModel : BaseViewModel() {
      * 获取文件夹内弹幕文件数量
      */
     private fun getDanmuFileCount(danmuDirectory: File): Int {
-        if (!danmuDirectory.exists())
+        if (!danmuDirectory.exists()) {
             return 0
-        if (danmuDirectory.isFile && isDanmuFile(danmuDirectory.absolutePath))
+        }
+        if (danmuDirectory.isFile && isDanmuFile(danmuDirectory.absolutePath)) {
             return 1
+        }
 
         var totalCount = 0
         danmuDirectory.listFiles()?.forEach {
@@ -206,10 +210,12 @@ class CacheManagerViewModel : BaseViewModel() {
      * 获取文件夹内字幕文件数量
      */
     private fun getSubtitleFileCount(subtitleDirectory: File): Int {
-        if (!subtitleDirectory.exists())
+        if (!subtitleDirectory.exists()) {
             return 0
-        if (subtitleDirectory.isFile && isSubtitleFile(subtitleDirectory.absolutePath))
+        }
+        if (subtitleDirectory.isFile && isSubtitleFile(subtitleDirectory.absolutePath)) {
             return 1
+        }
 
         var totalCount = 0
         subtitleDirectory.listFiles()?.forEach {
@@ -227,10 +233,12 @@ class CacheManagerViewModel : BaseViewModel() {
      * 获取文件夹内字体文件数量
      */
     private fun getFontFileCount(fontDirectory: File): Int {
-        if (!fontDirectory.exists())
+        if (!fontDirectory.exists()) {
             return 0
-        if (fontDirectory.isFile && SubtitleFontCacheHelper.isFontFile(fontDirectory.absolutePath))
+        }
+        if (fontDirectory.isFile && SubtitleFontCacheHelper.isFontFile(fontDirectory.absolutePath)) {
             return 1
+        }
 
         var totalCount = 0
         fontDirectory.listFiles()?.forEach {

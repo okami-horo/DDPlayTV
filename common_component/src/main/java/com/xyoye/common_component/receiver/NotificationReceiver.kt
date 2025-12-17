@@ -18,7 +18,6 @@ import com.xyoye.common_component.services.ScreencastReceiveService
  */
 
 class NotificationReceiver : BroadcastReceiver() {
-
     @Autowired
     lateinit var screencastReceiveService: ScreencastReceiveService
 
@@ -31,15 +30,17 @@ class NotificationReceiver : BroadcastReceiver() {
          * 关闭投屏接收服务
          */
         fun cancelScreencastReceivePendingBroadcast(context: Context): PendingIntent {
-            val intent = Intent(context, NotificationReceiver::class.java).apply {
-                action = Action.CANCEL_SCREENCAST_RECEIVE
-            }
+            val intent =
+                Intent(context, NotificationReceiver::class.java).apply {
+                    action = Action.CANCEL_SCREENCAST_RECEIVE
+                }
 
-            val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            } else {
-                PendingIntent.FLAG_UPDATE_CURRENT
-            }
+            val flag =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                } else {
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                }
             return PendingIntent.getBroadcast(context, 0, intent, flag)
         }
     }
@@ -48,19 +49,26 @@ class NotificationReceiver : BroadcastReceiver() {
         ARouter.getInstance().inject(this)
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent
+    ) {
         when (intent.action) {
-            Action.CANCEL_SCREENCAST_RECEIVE -> cancelScreencastReceive(
-                context,
-                Notifications.Id.SCREENCAST_RECEIVE
-            )
+            Action.CANCEL_SCREENCAST_RECEIVE ->
+                cancelScreencastReceive(
+                    context,
+                    Notifications.Id.SCREENCAST_RECEIVE,
+                )
         }
     }
 
     /**
      * 关闭投屏内容接收服务
      */
-    private fun cancelScreencastReceive(context: Context, notificationId: Int) {
+    private fun cancelScreencastReceive(
+        context: Context,
+        notificationId: Int
+    ) {
         screencastReceiveService.stopService(context)
         ContextCompat.getMainExecutor(context).execute {
             dismissNotification(context, notificationId)
@@ -70,7 +78,10 @@ class NotificationReceiver : BroadcastReceiver() {
     /**
      * 关闭通知
      */
-    private fun dismissNotification(context: Context, notificationId: Int) {
+    private fun dismissNotification(
+        context: Context,
+        notificationId: Int
+    ) {
         context.notificationManager.cancel(notificationId)
     }
 }

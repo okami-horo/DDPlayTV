@@ -14,32 +14,34 @@ import kotlinx.coroutines.launch
  */
 
 object PlayTaskManager {
-
     private var isInitialed = false
 
-    private var TASK_ERROR_MSG = try {
-        JsonHelper.parseJsonMap(ErrCodeToMsg)
-    } catch (e: Exception) {
-        ErrorReportHelper.postCatchedExceptionWithContext(
-            e,
-            "PlayTaskManager",
-            "init",
-            "解析错误代码映射失败"
-        )
-        emptyMap()
-    }
+    private var TASK_ERROR_MSG =
+        try {
+            JsonHelper.parseJsonMap(ErrCodeToMsg)
+        } catch (e: Exception) {
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                e,
+                "PlayTaskManager",
+                "init",
+                "解析错误代码映射失败",
+            )
+            emptyMap()
+        }
 
-    private var TASK_STATUS_MSG = mapOf(
-        Pair(XLConstant.XLTaskStatus.TASK_FAILED, "Failed"),
-        Pair(XLConstant.XLTaskStatus.TASK_IDLE, "Idle"),
-        Pair(XLConstant.XLTaskStatus.TASK_RUNNING, "Running"),
-        Pair(XLConstant.XLTaskStatus.TASK_STOPPED, "Stopped"),
-        Pair(XLConstant.XLTaskStatus.TASK_SUCCESS, "Success")
-    )
+    private var TASK_STATUS_MSG =
+        mapOf(
+            Pair(XLConstant.XLTaskStatus.TASK_FAILED, "Failed"),
+            Pair(XLConstant.XLTaskStatus.TASK_IDLE, "Idle"),
+            Pair(XLConstant.XLTaskStatus.TASK_RUNNING, "Running"),
+            Pair(XLConstant.XLTaskStatus.TASK_STOPPED, "Stopped"),
+            Pair(XLConstant.XLTaskStatus.TASK_SUCCESS, "Success"),
+        )
 
     fun init() {
-        if (isInitialed)
+        if (isInitialed) {
             return
+        }
 
         try {
             isInitialed = true
@@ -54,7 +56,7 @@ object PlayTaskManager {
                         e,
                         "PlayTaskManager",
                         "init",
-                        "设置任务移除监听器失败"
+                        "设置任务移除监听器失败",
                     )
                 }
             }
@@ -71,7 +73,7 @@ object PlayTaskManager {
                         e,
                         "PlayTaskManager",
                         "taskInfoQuery",
-                        "任务ID: $id"
+                        "任务ID: $id",
                     )
                     "\n[Error, 0x0]\n[获取任务信息失败]"
                 }
@@ -81,7 +83,7 @@ object PlayTaskManager {
                 e,
                 "PlayTaskManager",
                 "init",
-                "初始化PlayTaskManager失败"
+                "初始化PlayTaskManager失败",
             )
             isInitialed = false
         }
@@ -97,7 +99,7 @@ object PlayTaskManager {
                         e,
                         "PlayTaskManager",
                         "onPlayTaskRemove",
-                        "停止任务失败，任务ID: $taskId"
+                        "停止任务失败，任务ID: $taskId",
                     )
                 }
             }
@@ -106,7 +108,7 @@ object PlayTaskManager {
                 e,
                 "PlayTaskManager",
                 "onPlayTaskRemove",
-                "创建协程失败，任务ID: $taskId"
+                "创建协程失败，任务ID: $taskId",
             )
         }
     }

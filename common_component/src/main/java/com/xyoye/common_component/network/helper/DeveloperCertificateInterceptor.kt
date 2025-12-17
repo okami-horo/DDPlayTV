@@ -15,7 +15,6 @@ class DeveloperCertificateInterceptor : Interceptor {
         const val HEADER_APP_SECRET = "X-AppSecret"
     }
 
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val oldRequest = chain.request()
 
@@ -35,9 +34,11 @@ class DeveloperCertificateInterceptor : Interceptor {
 
         // 添加凭证
         return chain.proceed(
-            oldRequest.newBuilder()
+            oldRequest
+                .newBuilder()
                 .header(HEADER_APP_ID, appId)
-                .header(HEADER_APP_SECRET, appSecret).build()
+                .header(HEADER_APP_SECRET, appSecret)
+                .build(),
         )
     }
 }

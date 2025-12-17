@@ -17,10 +17,13 @@ class ItemDecorationOrientation : ItemDecoration {
     private val footerPx: Int
     private val orientation: Int
 
-    constructor(dividerPx: Int, @RecyclerView.Orientation orientation: Int) : this(
+    constructor(
+        dividerPx: Int,
+        @RecyclerView.Orientation orientation: Int
+    ) : this(
         dividerPx,
         dividerPx,
-        orientation
+        orientation,
     )
 
     constructor(
@@ -54,7 +57,11 @@ class ItemDecorationOrientation : ItemDecoration {
         }
     }
 
-    private fun getItemOffsetsVertical(outRect: Rect, view: View, parent: RecyclerView) {
+    private fun getItemOffsetsVertical(
+        outRect: Rect,
+        view: View,
+        parent: RecyclerView
+    ) {
         val itemCount = parent.adapter?.itemCount ?: return
         val position = parent.getChildAdapterPosition(view)
 
@@ -71,7 +78,11 @@ class ItemDecorationOrientation : ItemDecoration {
         }
     }
 
-    private fun getItemOffsetsHorizontal(outRect: Rect, view: View, parent: RecyclerView) {
+    private fun getItemOffsetsHorizontal(
+        outRect: Rect,
+        view: View,
+        parent: RecyclerView
+    ) {
         val itemCount = parent.adapter?.itemCount ?: return
         val position = parent.getChildAdapterPosition(view)
 

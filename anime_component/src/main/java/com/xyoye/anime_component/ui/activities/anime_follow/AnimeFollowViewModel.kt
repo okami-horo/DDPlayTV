@@ -10,12 +10,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class AnimeFollowViewModel : BaseViewModel() {
-    private val _followedFlow = MutableStateFlow<List<AnimeData>>(emptyList())
-    private val _searchWordFlow = MutableStateFlow("")
+    private val followedFlow = MutableStateFlow<List<AnimeData>>(emptyList())
+    private val searchWordFlow = MutableStateFlow("")
 
-    val displayFollowedFlow = combine(_followedFlow, _searchWordFlow) { followed, searchWord ->
-        combineAnimeFilter(followed, searchWord)
-    }
+    val displayFollowedFlow =
+        combine(followedFlow, searchWordFlow) { followed, searchWord ->
+            combineAnimeFilter(followed, searchWord)
+        }
 
     fun getUserFollow() {
         viewModelScope.launch {
@@ -28,12 +29,12 @@ class AnimeFollowViewModel : BaseViewModel() {
                 return@launch
             }
 
-            _followedFlow.emit(result.getOrNull()?.favorites ?: emptyList())
+            followedFlow.emit(result.getOrNull()?.favorites ?: emptyList())
         }
     }
 
     fun searchAnime(keyword: String) {
-        _searchWordFlow.value = keyword
+        searchWordFlow.value = keyword
     }
 
     private fun combineAnimeFilter(

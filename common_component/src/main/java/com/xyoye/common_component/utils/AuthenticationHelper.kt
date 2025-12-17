@@ -10,7 +10,6 @@ import com.xyoye.common_component.network.request.NetworkException
  * Created by Claude Code on 2025-09-22.
  */
 object AuthenticationHelper {
-
     /**
      * 检查认证状态是否有效
      * @return 认证状态信息和是否有效
@@ -19,13 +18,14 @@ object AuthenticationHelper {
         val userToken = UserConfig.getUserToken()
         val isLoggedIn = UserConfig.isUserLoggedIn()
 
-        val status = AuthenticationStatus(
-            isLoggedIn = isLoggedIn,
-            hasToken = !userToken.isNullOrEmpty(),
-            token = userToken?.take(8) + "..." ?: "", // 只显示前8位
-            isValid = isLoggedIn && !userToken.isNullOrEmpty(),
-            issues = mutableListOf()
-        )
+        val status =
+            AuthenticationStatus(
+                isLoggedIn = isLoggedIn,
+                hasToken = !userToken.isNullOrEmpty(),
+                token = userToken?.take(8) + "..." ?: "", // 只显示前8位
+                isValid = isLoggedIn && !userToken.isNullOrEmpty(),
+                issues = mutableListOf(),
+            )
 
         // 检查认证问题
         if (!isLoggedIn) {
@@ -91,7 +91,7 @@ object AuthenticationHelper {
         return NetworkException(
             code = 403,
             msg = "认证失败",
-            cause = IllegalStateException(diagnosis)
+            cause = IllegalStateException(diagnosis),
         )
     }
 

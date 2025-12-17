@@ -18,9 +18,8 @@ import com.xyoye.data_component.enums.MediaType
  */
 
 object StorageFactory {
-
-    fun createStorage(library: MediaLibraryEntity): Storage? {
-        return when (library.mediaType) {
+    fun createStorage(library: MediaLibraryEntity): Storage? =
+        when (library.mediaType) {
             MediaType.EXTERNAL_STORAGE -> DocumentFileStorage(library)
             MediaType.WEBDAV_SERVER -> WebDavStorage(library)
             MediaType.SMB_SERVER -> SmbStorage(library)
@@ -34,5 +33,4 @@ object StorageFactory {
             MediaType.ALSIT_STORAGE -> AlistStorage(library)
             else -> null
         }
-    }
 }

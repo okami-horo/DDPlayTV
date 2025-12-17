@@ -12,8 +12,6 @@ import android.view.WindowManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.utils.dp2px
-import com.xyoye.common_component.utils.getScreenHeight
-import com.xyoye.common_component.utils.getScreenWidth
 import com.xyoye.player.DanDanVideoPlayer
 import com.xyoye.player.utils.OrientationHelper
 
@@ -33,33 +31,37 @@ class PlayerPopupManager(
 ) : ConstraintLayout(context, attrs, defStyleAttr),
     PopupPositionListener,
     OrientationHelper.OnOrientationChangeListener {
-
     private val appContext = context.applicationContext
 
     private var mPosition = Point(0, 0)
 
-    private val mPlayerLayoutParams = ViewGroup.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.MATCH_PARENT
-    )
+    private val mPlayerLayoutParams =
+        ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+        )
 
     private val mWindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-    private val mWindowLayoutParams = WindowManager.LayoutParams().apply {
+    private val mWindowLayoutParams =
+        WindowManager.LayoutParams().apply {
 
-        type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            WindowManager.LayoutParams.TYPE_PHONE
+            type =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                } else {
+                    WindowManager.LayoutParams.TYPE_PHONE
+                }
+
+            flags = (
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            )
+
+            windowAnimations = 0
+            gravity = Gravity.TOP or Gravity.START
+            format = PixelFormat.RGBA_8888
         }
-
-        flags = (WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-
-        windowAnimations = 0
-        gravity = Gravity.TOP or Gravity.START
-        format = PixelFormat.RGBA_8888
-    }
 
     private val mGestureHandler = PopupGestureHandler(this)
 
@@ -115,7 +117,7 @@ class PlayerPopupManager(
 
         isShowing = true
     }
-    */
+     */
     fun show(player: DanDanVideoPlayer) = Unit
 
     /*
@@ -137,7 +139,7 @@ class PlayerPopupManager(
 
         isShowing = false
     }
-    */
+     */
     fun dismiss() = Unit
 
     fun isShowing() = isShowing
@@ -148,7 +150,7 @@ class PlayerPopupManager(
         if (videoSize.x == 0 || videoSize.y == 0) {
             return Point(
                 defaultWidth,
-                defaultWidth * 3 / 4
+                defaultWidth * 3 / 4,
             )
         }
 
@@ -158,7 +160,7 @@ class PlayerPopupManager(
     }
 
     override fun onOrientationChanged(orientation: Int) {
-        if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN){
+        if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN) {
             return
         }
 

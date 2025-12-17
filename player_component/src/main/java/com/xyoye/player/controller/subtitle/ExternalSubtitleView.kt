@@ -16,8 +16,8 @@ import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.player.controller.video.InterControllerView
 import com.xyoye.player.info.PlayerInitializer
-import com.xyoye.player_component.R
 import com.xyoye.player.wrapper.ControlWrapper
+import com.xyoye.player_component.R
 import com.xyoye.subtitle.ExternalSubtitleManager
 import com.xyoye.subtitle.MixedSubtitle
 import kotlinx.coroutines.Dispatchers
@@ -30,18 +30,22 @@ import kotlinx.coroutines.launch
 
 @UnstableApi
 class ExternalSubtitleView(
-    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), InterControllerView {
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr),
+    InterControllerView {
     private lateinit var mControlWrapper: ControlWrapper
 
     private val lifecycleScope = (context as AppCompatActivity).lifecycleScope
 
     // 外挂字幕管理器
-    private val mSubtitleManager = ExternalSubtitleManager { extension, _ ->
-        lifecycleScope.launch(Dispatchers.Main) {
-            showUnsupportedFormatDialog(extension)
+    private val mSubtitleManager =
+        ExternalSubtitleManager { extension, _ ->
+            lifecycleScope.launch(Dispatchers.Main) {
+                showUnsupportedFormatDialog(extension)
+            }
         }
-    }
 
     // 寻找字幕的Job
     private var mFindSubtitleJob: Job? = null
@@ -64,9 +68,7 @@ class ExternalSubtitleView(
         mControlWrapper = controlWrapper
     }
 
-    override fun getView(): View {
-        return this
-    }
+    override fun getView(): View = this
 
     override fun onVisibilityChanged(isVisible: Boolean) {
     }
@@ -86,7 +88,10 @@ class ExternalSubtitleView(
         }
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
         findSubtitle(position)
     }
 
@@ -96,14 +101,16 @@ class ExternalSubtitleView(
         }
 
         mFindSubtitleJob?.cancel()
-        mFindSubtitleJob = lifecycleScope.launch(Dispatchers.IO) {
-            val subtitleTime = position + PlayerInitializer.Subtitle.offsetPosition
-            val subtitle = mSubtitleManager.getSubtitle(subtitleTime)
-                ?: return@launch
-            launch(Dispatchers.Main) {
-                mControlWrapper.onSubtitleTextOutput(subtitle)
+        mFindSubtitleJob =
+            lifecycleScope.launch(Dispatchers.IO) {
+                val subtitleTime = position + PlayerInitializer.Subtitle.offsetPosition
+                val subtitle =
+                    mSubtitleManager.getSubtitle(subtitleTime)
+                        ?: return@launch
+                launch(Dispatchers.Main) {
+                    mControlWrapper.onSubtitleTextOutput(subtitle)
+                }
             }
-        }
     }
 
     private fun sendEmptySubtitle() {
@@ -133,9 +140,7 @@ class ExternalSubtitleView(
         return true
     }
 
-    fun getAddedTrack(): VideoTrackBean? {
-        return mAddedTrack?.copy(selected = mTrackSelected)
-    }
+    fun getAddedTrack(): VideoTrackBean? = mAddedTrack?.copy(selected = mTrackSelected)
 
     fun setTrackSelected(selected: Boolean) {
         mTrackSelected = selected
@@ -171,22 +176,22 @@ class ExternalSubtitleView(
             return
         }
         val label = if (extension.startsWith(".")) extension else ".$extension"
-        unsupportedFormatDialog = AlertDialog.Builder(context)
-            .setTitle(R.string.subtitle_backend_unsupported_title)
-            .setMessage(
-                context.getString(R.string.subtitle_backend_unsupported_message, label)
-            )
-            .setPositiveButton(R.string.subtitle_backend_switch_action) { _, _ ->
-                SubtitlePreferenceUpdater.persistBackend(
-                    SubtitleRendererBackend.LEGACY_CANVAS,
-                    RendererPreferenceSource.LOCAL_SETTINGS
-                )
-                ToastCenter.showOriginalToast(
-                    context.getString(R.string.subtitle_backend_switch_result)
-                )
-            }
-            .setNegativeButton(R.string.subtitle_backend_keep_action, null)
-            .setOnDismissListener { unsupportedFormatDialog = null }
-            .show()
+        unsupportedFormatDialog =
+            AlertDialog
+                .Builder(context)
+                .setTitle(R.string.subtitle_backend_unsupported_title)
+                .setMessage(
+                    context.getString(R.string.subtitle_backend_unsupported_message, label),
+                ).setPositiveButton(R.string.subtitle_backend_switch_action) { _, _ ->
+                    SubtitlePreferenceUpdater.persistBackend(
+                        SubtitleRendererBackend.LEGACY_CANVAS,
+                        RendererPreferenceSource.LOCAL_SETTINGS,
+                    )
+                    ToastCenter.showOriginalToast(
+                        context.getString(R.string.subtitle_backend_switch_result),
+                    )
+                }.setNegativeButton(R.string.subtitle_backend_keep_action, null)
+                .setOnDismissListener { unsupportedFormatDialog = null }
+                .show()
     }
 }

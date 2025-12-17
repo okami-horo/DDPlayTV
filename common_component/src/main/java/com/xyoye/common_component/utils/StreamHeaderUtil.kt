@@ -5,12 +5,12 @@ package com.xyoye.common_component.utils
  */
 
 object StreamHeaderUtil {
-
     fun string2Header(text: String?): Map<String, String>? {
-        if (text.isNullOrEmpty())
+        if (text.isNullOrEmpty()) {
             return null
+        }
 
-        //未输入分号，且仅有一个请求头时
+        // 未输入分号，且仅有一个请求头时
         if (!text.contains(";")) {
             if (text.contains(":")) {
                 val keyValue = text.split(":".toRegex())
@@ -38,13 +38,15 @@ object StreamHeaderUtil {
     }
 
     fun getHttpHeader(extra: Map<String, String>?): Map<String, String>? {
-        if (extra == null)
+        if (extra == null) {
             return null
+        }
 
-        return extra.filter {
-            it.key.startsWith("http_")
-        }.map {
-            Pair(it.key.substring(5), it.value)
-        }.toMap()
+        return extra
+            .filter {
+                it.key.startsWith("http_")
+            }.map {
+                Pair(it.key.substring(5), it.value)
+            }.toMap()
     }
 }

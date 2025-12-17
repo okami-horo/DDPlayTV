@@ -9,10 +9,12 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import com.xyoye.common_component.config.SubtitlePreferenceUpdater
-import com.xyoye.common_component.enums.SubtitleRendererBackend
-import com.xyoye.common_component.enums.RendererPreferenceSource
+import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.SubtitleConfig
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
+import com.xyoye.common_component.enums.RendererPreferenceSource
+import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.user_component.R
 
 /**
@@ -20,34 +22,47 @@ import com.xyoye.user_component.R
  */
 
 class SubtitleSettingFragment : PreferenceFragmentCompat() {
-
     companion object {
         fun newInstance() = SubtitleSettingFragment()
     }
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?
+    ) {
         preferenceManager.preferenceDataStore = SubtitleSettingDataStore()
         addPreferencesFromResource(R.xml.preference_subtitle_setting)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
         val loadSameSubtitleSwitch = findPreference<SwitchPreference>("auto_load_same_name_subtitle")
         val sameSubtitlePriority = findPreference<EditTextPreference>("same_name_subtitle_priority")
         val backendPreference = findPreference<ListPreference>("subtitle_renderer_backend")
         val backendNote = findPreference<Preference>("subtitle_renderer_backend_note")
         val shadowPreference = findPreference<SwitchPreference>("subtitle_shadow_enabled")
+        val isMedia3Player = isMedia3Player()
 
         backendPreference?.apply {
             summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+            isVisible = isMedia3Player
             setOnPreferenceChangeListener { _, newValue ->
-                updateBackendDependentVisibility(backendNote, shadowPreference, newValue as String)
+                updateBackendDependentVisibility(
+                    backendNote,
+                    shadowPreference,
+                    newValue as String,
+                    isMedia3Player,
+                )
                 return@setOnPreferenceChangeListener true
             }
         }
         updateBackendDependentVisibility(
             backendNote,
             shadowPreference,
-            backendPreference?.value ?: SubtitleConfig.getSubtitleRendererBackend()
+            backendPreference?.value ?: SubtitleConfig.getSubtitleRendererBackend(),
+            isMedia3Player,
         )
 
         loadSameSubtitleSwitch?.setOnPreferenceChangeListener { _, newValue ->
@@ -70,33 +85,51 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
     private fun updateBackendDependentVisibility(
         note: Preference?,
         shadow: Preference?,
-        backendValue: String?
+        backendValue: String?,
+        isMedia3Player: Boolean
     ) {
+        if (!isMedia3Player) {
+            note?.isVisible = false
+            shadow?.isVisible = true
+            return
+        }
         val backend = SubtitleRendererBackend.fromName(backendValue)
         val isLibass = backend == SubtitleRendererBackend.LIBASS
         note?.isVisible = isLibass
         shadow?.isVisible = !isLibass
     }
 
+    private fun isMedia3Player(): Boolean {
+        val currentType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
+        return currentType == PlayerType.TYPE_EXO_PLAYER
+    }
+
     inner class SubtitleSettingDataStore : PreferenceDataStore() {
-        override fun getBoolean(key: String?, defValue: Boolean): Boolean {
-            return when (key) {
+        override fun getBoolean(
+            key: String?,
+            defValue: Boolean
+        ): Boolean =
+            when (key) {
                 "auto_load_same_name_subtitle" -> SubtitleConfig.isAutoLoadSameNameSubtitle()
                 "auto_match_subtitle" -> SubtitleConfig.isAutoMatchSubtitle()
                 "subtitle_shadow_enabled" -> SubtitleConfig.isShadowEnabled()
                 else -> super.getBoolean(key, defValue)
             }
-        }
 
-        override fun getString(key: String?, defValue: String?): String? {
-            return when (key) {
+        override fun getString(
+            key: String?,
+            defValue: String?
+        ): String? =
+            when (key) {
                 "same_name_subtitle_priority" -> SubtitleConfig.getSubtitlePriority()
                 "subtitle_renderer_backend" -> SubtitleConfig.getSubtitleRendererBackend()
                 else -> super.getString(key, defValue)
             }
-        }
 
-        override fun putBoolean(key: String?, value: Boolean) {
+        override fun putBoolean(
+            key: String?,
+            value: Boolean
+        ) {
             when (key) {
                 "auto_load_same_name_subtitle" -> SubtitleConfig.putAutoLoadSameNameSubtitle(value)
                 "auto_match_subtitle" -> SubtitleConfig.putAutoMatchSubtitle(value)
@@ -105,16 +138,20 @@ class SubtitleSettingFragment : PreferenceFragmentCompat() {
             }
         }
 
-        override fun putString(key: String?, value: String?) {
+        override fun putString(
+            key: String?,
+            value: String?
+        ) {
             when (key) {
                 "same_name_subtitle_priority" -> SubtitleConfig.putSubtitlePriority(value ?: "")
                 "subtitle_renderer_backend" -> {
-                    val backend = SubtitleRendererBackend.fromName(
-                        value ?: SubtitleRendererBackend.LEGACY_CANVAS.name
-                    )
+                    val backend =
+                        SubtitleRendererBackend.fromName(
+                            value ?: SubtitleRendererBackend.LEGACY_CANVAS.name,
+                        )
                     SubtitlePreferenceUpdater.persistBackend(
                         backend,
-                        RendererPreferenceSource.LOCAL_SETTINGS
+                        RendererPreferenceSource.LOCAL_SETTINGS,
                     )
                 }
                 else -> super.putString(key, value)

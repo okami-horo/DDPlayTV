@@ -17,7 +17,10 @@ class Request {
     private val requestParams: RequestParams = hashMapOf()
     private var requestJson: String? = null
 
-    fun param(key: String, value: Any?): Request {
+    fun param(
+        key: String,
+        value: Any?
+    ): Request {
         value ?: return this
 
         requestParams[key] = value
@@ -34,15 +37,9 @@ class Request {
         return this
     }
 
-    suspend fun <T : Any> doDelete(
-        api: suspend (RequestParams) -> T
-    ): Result<T> {
-        return doGet(api)
-    }
+    suspend fun <T : Any> doDelete(api: suspend (RequestParams) -> T): Result<T> = doGet(api)
 
-    suspend fun <T : Any> doGet(
-        api: suspend (RequestParams) -> T
-    ): Result<T> {
+    suspend fun <T : Any> doGet(api: suspend (RequestParams) -> T): Result<T> {
         return withContext(Dispatchers.IO) {
             try {
                 val result = api.invoke(requestParams)
@@ -60,16 +57,14 @@ class Request {
                     e,
                     "Request",
                     "doGet",
-                    "请求参数: $requestParams"
+                    "请求参数: $requestParams",
                 )
                 return@withContext Result.failure(NetworkException.formException(e))
             }
         }
     }
 
-    suspend fun <T : Any> doPost(
-        api: suspend (RequestBody) -> T
-    ): Result<T> {
+    suspend fun <T : Any> doPost(api: suspend (RequestBody) -> T): Result<T> {
         return withContext(Dispatchers.IO) {
             try {
                 val result = api.invoke(requestBody())
@@ -87,7 +82,7 @@ class Request {
                     e,
                     "Request",
                     "doPost",
-                    "请求参数: $requestParams, JSON: $requestJson"
+                    "请求参数: $requestParams, JSON: $requestJson",
                 )
                 return@withContext Result.failure(NetworkException.formException(e))
             }
@@ -97,8 +92,8 @@ class Request {
     /**
      * Post请求体
      */
-    private fun requestBody(): RequestBody {
-        return try {
+    private fun requestBody(): RequestBody =
+        try {
             val mediaType = "application/json;charset=utf-8".toMediaType()
             requestJson?.toRequestBody(mediaType)
                 ?: requestParams.toRequestBody(mediaType)
@@ -107,9 +102,8 @@ class Request {
                 e,
                 "Request",
                 "requestBody",
-                "请求参数: $requestParams, JSON: $requestJson"
+                "请求参数: $requestParams, JSON: $requestJson",
             )
             throw e
         }
-    }
 }

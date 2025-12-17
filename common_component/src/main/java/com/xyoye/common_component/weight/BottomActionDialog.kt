@@ -22,7 +22,6 @@ class BottomActionDialog(
     private val title: String? = null,
     private val callback: (SheetActionBean) -> Boolean
 ) : BaseBottomDialog<DialogBottomActionBinding>(activity) {
-
     var onNegativeCallback: (() -> Unit)? = null
 
     override fun getChildLayoutId() = R.layout.dialog_bottom_action
@@ -39,27 +38,26 @@ class BottomActionDialog(
         removeParentPadding()
 
         binding.contentRv.apply {
-
             layoutManager = vertical()
 
-            adapter = buildAdapter {
-
-                addItem<SheetActionBean, ItemBottomActionVerticalBinding>(R.layout.item_bottom_action_vertical) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            actionNameTv.text = data.actionName
-                            if (data.actionIconRes != -1) {
-                                actionIv.setImageResource(data.actionIconRes)
-                            }
-                            actionDescribeTv.isGone = data.describe.isNullOrEmpty()
-                            actionDescribeTv.text = data.describe
-                            itemLayout.setOnClickListener {
-                                if (callback.invoke(data)) dismiss()
+            adapter =
+                buildAdapter {
+                    addItem<SheetActionBean, ItemBottomActionVerticalBinding>(R.layout.item_bottom_action_vertical) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                actionNameTv.text = data.actionName
+                                if (data.actionIconRes != -1) {
+                                    actionIv.setImageResource(data.actionIconRes)
+                                }
+                                actionDescribeTv.isGone = data.describe.isNullOrEmpty()
+                                actionDescribeTv.text = data.describe
+                                itemLayout.setOnClickListener {
+                                    if (callback.invoke(data)) dismiss()
+                                }
                             }
                         }
                     }
                 }
-            }
 
             setData(actionData)
         }

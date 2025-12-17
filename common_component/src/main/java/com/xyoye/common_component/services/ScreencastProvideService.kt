@@ -9,10 +9,12 @@ import com.xyoye.data_component.entity.MediaLibraryEntity
  */
 
 interface ScreencastProvideService : IProvider {
-
     fun isRunning(context: Context): Boolean
 
-    fun startService(context: Context, receiver: MediaLibraryEntity)
+    fun startService(
+        context: Context,
+        receiver: MediaLibraryEntity
+    )
 
     fun stopService(context: Context)
 }

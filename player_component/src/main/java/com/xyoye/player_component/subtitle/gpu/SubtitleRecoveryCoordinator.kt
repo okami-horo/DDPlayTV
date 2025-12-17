@@ -18,11 +18,10 @@ class SubtitleRecoveryCoordinator(
     private val pipelineController: SubtitlePipelineController,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
-
     fun attemptRecovery(reason: SubtitlePipelineFallbackReason = SubtitlePipelineFallbackReason.UNKNOWN) {
         scope.launch {
             val state = pipelineController.currentState()
-            if (state?.mode != SubtitlePipelineMode.Fallback_CPU) {
+            if (state?.mode != SubtitlePipelineMode.FALLBACK_CPU) {
                 return@launch
             }
             val surface = tracker.currentSurface ?: return@launch

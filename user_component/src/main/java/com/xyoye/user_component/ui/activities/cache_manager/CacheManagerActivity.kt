@@ -18,17 +18,15 @@ import com.xyoye.user_component.databinding.ItemCacheTypeBinding
 
 @Route(path = RouteTable.User.CacheManager)
 class CacheManagerActivity : BaseActivity<CacheManagerViewModel, ActivityCacheManagerBinding>() {
-
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            CacheManagerViewModel::class.java
+            CacheManagerViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_cache_manager
 
     override fun initView() {
-
         title = "缓存目录管理"
 
         dataBinding.appCacheLl.setOnClickListener {
@@ -37,28 +35,29 @@ class CacheManagerActivity : BaseActivity<CacheManagerViewModel, ActivityCacheMa
 
         dataBinding.rvCache.apply {
             layoutManager = vertical()
-            adapter = buildAdapter {
-                addItem<CacheBean, ItemCacheTypeBinding>(R.layout.item_cache_type) {
-                    initView { data, _, _ ->
-                        var cacheTypeName = data.cacheType?.displayName ?: "其它文件"
-                        if (data.fileCount > 0) {
-                            cacheTypeName += "（${data.fileCount}）"
-                        }
-                        var cacheDirName = ""
-                        if (data.cacheType != null) {
-                            cacheDirName = "文件夹名称：${data.cacheType!!.dirName}"
-                        }
+            adapter =
+                buildAdapter {
+                    addItem<CacheBean, ItemCacheTypeBinding>(R.layout.item_cache_type) {
+                        initView { data, _, _ ->
+                            var cacheTypeName = data.cacheType?.displayName ?: "其它文件"
+                            if (data.fileCount > 0) {
+                                cacheTypeName += "（${data.fileCount}）"
+                            }
+                            var cacheDirName = ""
+                            if (data.cacheType != null) {
+                                cacheDirName = "文件夹名称：${data.cacheType!!.dirName}"
+                            }
 
-                        itemBinding.cacheTypeNameTv.text = cacheTypeName
-                        itemBinding.cacheDirNameTv.text = cacheDirName
-                        itemBinding.cacheSizeTv.text = formatFileSize(data.totalSize)
+                            itemBinding.cacheTypeNameTv.text = cacheTypeName
+                            itemBinding.cacheDirNameTv.text = cacheDirName
+                            itemBinding.cacheSizeTv.text = formatFileSize(data.totalSize)
 
-                        itemBinding.root.setOnClickListener {
-                            considerClearCache(data.cacheType)
+                            itemBinding.root.setOnClickListener {
+                                considerClearCache(data.cacheType)
+                            }
                         }
                     }
                 }
-            }
         }
 
         viewModel.cacheDirsLiveData.observe(this) {
@@ -69,37 +68,42 @@ class CacheManagerActivity : BaseActivity<CacheManagerViewModel, ActivityCacheMa
     }
 
     private fun considerClearSystemCache() {
-        CommonDialog.Builder(this).run {
-            tips = "清除系统缓存"
-            content = "系统缓存包括图片缓存、日志缓存，清除后重新加载图片会消耗流量，确认清除？"
-            addPositive { dialog ->
-                dialog.dismiss()
-                viewModel.clearAppCache()
-            }
-            addNegative { dialog -> dialog.dismiss() }
-            build()
-        }.show()
+        CommonDialog
+            .Builder(this)
+            .run {
+                tips = "清除系统缓存"
+                content = "系统缓存包括图片缓存、日志缓存，清除后重新加载图片会消耗流量，确认清除？"
+                addPositive { dialog ->
+                    dialog.dismiss()
+                    viewModel.clearAppCache()
+                }
+                addNegative { dialog -> dialog.dismiss() }
+                build()
+            }.show()
     }
 
     private fun considerClearCache(cacheType: CacheType?) {
-        val title = if (cacheType == CacheType.PLAY_CACHE) {
-            "清除${cacheType.displayName}"
-        } else {
-            "清除${cacheType?.displayName ?: "其它文件"}缓存"
-        }
+        val title =
+            if (cacheType == CacheType.PLAY_CACHE) {
+                "清除${cacheType.displayName}"
+            } else {
+                "清除${cacheType?.displayName ?: "其它文件"}缓存"
+            }
         val message = cacheType?.clearTips ?: "确认清除其它缓存？"
         val delay = cacheType == CacheType.DANMU_CACHE || cacheType == CacheType.SUBTITLE_CACHE
 
-        CommonDialog.Builder(this).run {
-            tips = title
-            content = message
-            delayConfirm = delay
-            addPositive {
-                it.dismiss()
-                viewModel.clearCacheByType(cacheType)
-            }
-            addNegative { it.dismiss() }
-            build()
-        }.show()
+        CommonDialog
+            .Builder(this)
+            .run {
+                tips = title
+                content = message
+                delayConfirm = delay
+                addPositive {
+                    it.dismiss()
+                    viewModel.clearCacheByType(cacheType)
+                }
+                addNegative { it.dismiss() }
+                build()
+            }.show()
     }
 }

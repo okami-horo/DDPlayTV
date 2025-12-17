@@ -21,15 +21,15 @@ class LongPressAccelerator(
         if (canAccelerate().not()) {
             return
         }
-        //已暂停
+        // 已暂停
         if (controlWrapper.isPlaying().not()) {
             return
         }
-        //已锁屏
+        // 已锁屏
         if (controlWrapper.isLocked()) {
             return
         }
-        //正在展示设置相关View
+        // 正在展示设置相关View
         if (controlWrapper.isSettingViewShowing()) {
             return
         }
@@ -57,7 +57,5 @@ class LongPressAccelerator(
     /**
      * 是否可以加速，当前倍速不等于长按倍速
      */
-    private fun canAccelerate(): Boolean {
-        return PlayerInitializer.Player.videoSpeed != PlayerInitializer.Player.pressVideoSpeed
-    }
+    private fun canAccelerate(): Boolean = PlayerInitializer.Player.videoSpeed != PlayerInitializer.Player.pressVideoSpeed
 }

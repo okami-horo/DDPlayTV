@@ -23,7 +23,6 @@ import kotlin.math.round
  */
 
 class ExpandableLayout : FrameLayout {
-
     enum class State {
         COLLAPSED,
         COLLAPSING,
@@ -60,7 +59,7 @@ class ExpandableLayout : FrameLayout {
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
         context,
         attrs,
-        defStyleAttr
+        defStyleAttr,
     ) {
         attrs?.apply {
             val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ExpandableLayout)
@@ -95,7 +94,10 @@ class ExpandableLayout : FrameLayout {
         }
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    override fun onMeasure(
+        widthMeasureSpec: Int,
+        heightMeasureSpec: Int
+    ) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
         val size = if (orientation == LinearLayout.HORIZONTAL) measuredWidth else measuredHeight
@@ -112,7 +114,6 @@ class ExpandableLayout : FrameLayout {
                 } else {
                     childView.translationY = -parallaxDelta
                 }
-
             }
         }
 
@@ -130,22 +131,21 @@ class ExpandableLayout : FrameLayout {
 
     fun getCurrentState() = currentState
 
-    fun isExpanded(): Boolean {
-        return currentState == State.EXPANDING || currentState == State.EXPANDED
-    }
+    fun isExpanded(): Boolean = currentState == State.EXPANDING || currentState == State.EXPANDED
 
     fun toggle(animate: Boolean = true) {
-        cacheLayout = if (isExpanded()) {
-            if (cacheLayout != this) {
-                collapse(animate)
+        cacheLayout =
+            if (isExpanded()) {
+                if (cacheLayout != this) {
+                    collapse(animate)
+                }
+                cacheLayout?.collapse()
+                null
+            } else {
+                cacheLayout?.collapse()
+                expand(animate)
+                this
             }
-            cacheLayout?.collapse()
-            null
-        } else {
-            cacheLayout?.collapse()
-            expand(animate)
-            this
-        }
     }
 
     fun collapse(animate: Boolean = true) {
@@ -168,7 +168,10 @@ class ExpandableLayout : FrameLayout {
 
     fun getParallax() = parallax
 
-    private fun setExpanded(expanded: Boolean, animate: Boolean) {
+    private fun setExpanded(
+        expanded: Boolean,
+        animate: Boolean
+    ) {
         if (expanded == isExpanded()) {
             return
         }
@@ -183,15 +186,16 @@ class ExpandableLayout : FrameLayout {
     private fun animeSize(targetExpansion: Float) {
         mAnimator?.cancel()
 
-        mAnimator = ValueAnimator.ofFloat(mExpansion, targetExpansion).apply {
-            interpolator = mInterpolator
-            duration = mDuration.toLong()
-            addUpdateListener {
-                setExpansion(it.animatedValue as Float)
+        mAnimator =
+            ValueAnimator.ofFloat(mExpansion, targetExpansion).apply {
+                interpolator = mInterpolator
+                duration = mDuration.toLong()
+                addUpdateListener {
+                    setExpansion(it.animatedValue as Float)
+                }
+                addListener(ExpansionListener(targetExpansion))
+                start()
             }
-            addListener(ExpansionListener(targetExpansion))
-            start()
-        }
     }
 
     private fun setExpansion(expansion: Float) {
@@ -200,13 +204,14 @@ class ExpandableLayout : FrameLayout {
         }
 
         val delta = expansion - mExpansion
-        currentState = when {
-            delta == 0f -> State.COLLAPSED
-            delta == 1f -> State.EXPANDED
-            delta < 0 -> State.COLLAPSING
-            delta > 0 -> State.EXPANDING
-            else -> State.COLLAPSED
-        }
+        currentState =
+            when {
+                delta == 0f -> State.COLLAPSED
+                delta == 1f -> State.EXPANDED
+                delta < 0 -> State.COLLAPSING
+                delta > 0 -> State.EXPANDING
+                else -> State.COLLAPSED
+            }
 
         isGone = currentState == State.COLLAPSED
         mExpansion = expansion
@@ -214,7 +219,9 @@ class ExpandableLayout : FrameLayout {
         mExpansionUpdateBlock?.invoke(expansion, currentState)
     }
 
-    private inner class ExpansionListener(val targetExpansion: Float) : Animator.AnimatorListener {
+    private inner class ExpansionListener(
+        val targetExpansion: Float
+    ) : Animator.AnimatorListener {
         private var canceled = false
 
         override fun onAnimationStart(animation: Animator) {
@@ -234,7 +241,5 @@ class ExpandableLayout : FrameLayout {
 
         override fun onAnimationRepeat(animation: Animator) {
         }
-
     }
-
 }

@@ -23,7 +23,6 @@ import javax.xml.parsers.DocumentBuilderFactory
  */
 
 class MainViewModel : BaseViewModel() {
-
     val reLoginLiveData = MutableLiveData<LoginData>()
 
     fun reLogin() {
@@ -47,7 +46,7 @@ class MainViewModel : BaseViewModel() {
         val lastUpdateTime = AppConfig.getCloudBlockUpdateTime()
         val currentTime = System.currentTimeMillis()
 
-        //7天更新一次
+        // 7天更新一次
         if (currentTime - lastUpdateTime < 7 * 24 * 60 * 60 * 1000) {
             return
         }
@@ -60,12 +59,11 @@ class MainViewModel : BaseViewModel() {
                 saveFilterData(filterData)
                 AppConfig.putCloudBlockUpdateTime(currentTime)
             }
-
         }
     }
 
-    private fun parseFilterData(inputStream: InputStream): List<String> {
-        return try {
+    private fun parseFilterData(inputStream: InputStream): List<String> =
+        try {
             val factory = DocumentBuilderFactory.newInstance()
             val builder = factory.newDocumentBuilder()
             val document = builder.parse(inputStream)
@@ -94,21 +92,21 @@ class MainViewModel : BaseViewModel() {
             e.printStackTrace()
             emptyList()
         }
-    }
 
     private suspend fun saveFilterData(filterData: List<String>) {
-        val blockEntities = filterData.map {
-            DanmuBlockEntity(
-                0,
-                it,
-                true,
-                Date(),
-                true
-            )
-        }
+        val blockEntities =
+            filterData.map {
+                DanmuBlockEntity(
+                    0,
+                    it,
+                    true,
+                    Date(),
+                    true,
+                )
+            }
         DatabaseManager.instance.getDanmuBlockDao().deleteByType(true)
         DatabaseManager.instance.getDanmuBlockDao().insert(
-            *blockEntities.toTypedArray()
+            *blockEntities.toTypedArray(),
         )
     }
 }

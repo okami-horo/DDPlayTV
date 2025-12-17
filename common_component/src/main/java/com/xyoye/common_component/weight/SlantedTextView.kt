@@ -50,10 +50,11 @@ class SlantedTextView : View {
         mTextColor = array.getColor(R.styleable.SlantedTextView_slantedTextColor, mTextColor)
         mSlantedLength =
             array.getDimension(R.styleable.SlantedTextView_slantedLength, mSlantedLength)
-        mSlantedBackgroundColor = array.getColor(
-            R.styleable.SlantedTextView_slantedBackgroundColor,
-            mSlantedBackgroundColor
-        )
+        mSlantedBackgroundColor =
+            array.getColor(
+                R.styleable.SlantedTextView_slantedBackgroundColor,
+                mSlantedBackgroundColor,
+            )
         if (array.hasValue(R.styleable.SlantedTextView_slantedText)) {
             text = array.getString(R.styleable.SlantedTextView_slantedText)
         }
@@ -87,14 +88,18 @@ class SlantedTextView : View {
             MODE_RIGHT -> path = getModeRightPath(path, w, h)
             MODE_LEFT_BOTTOM -> path = getModeLeftBottomPath(path, w, h)
             MODE_RIGHT_BOTTOM -> path = getModeRightBottomPath(path, w, h)
-            MODE_LEFT_TRIANGLE -> path =
-                getModeLeftTrianglePath(path, w, h)
-            MODE_RIGHT_TRIANGLE -> path =
-                getModeRightTrianglePath(path, w, h)
-            MODE_LEFT_BOTTOM_TRIANGLE -> path =
-                getModeLeftBottomTrianglePath(path, w, h)
-            MODE_RIGHT_BOTTOM_TRIANGLE -> path =
-                getModeRightBottomTrianglePath(path, w, h)
+            MODE_LEFT_TRIANGLE ->
+                path =
+                    getModeLeftTrianglePath(path, w, h)
+            MODE_RIGHT_TRIANGLE ->
+                path =
+                    getModeRightTrianglePath(path, w, h)
+            MODE_LEFT_BOTTOM_TRIANGLE ->
+                path =
+                    getModeLeftBottomTrianglePath(path, w, h)
+            MODE_RIGHT_BOTTOM_TRIANGLE ->
+                path =
+                    getModeRightBottomTrianglePath(path, w, h)
         }
         path.close()
         canvas.drawPath(path, mPaint!!)
@@ -201,7 +206,11 @@ class SlantedTextView : View {
         canvas.drawText(text!!, toX, toY, mTextPaint!!)
     }
 
-    private fun calculateXY(canvas: Canvas, w: Int, h: Int): FloatArray {
+    private fun calculateXY(
+        canvas: Canvas,
+        w: Int,
+        h: Int
+    ): FloatArray {
         val xy = FloatArray(5)
         val rect: Rect?
         val rectF: RectF?
@@ -298,7 +307,10 @@ class SlantedTextView : View {
      * @return this
      */
     fun setMode(mode: Int): SlantedTextView {
-        require(!(this.mode > MODE_RIGHT_BOTTOM_TRIANGLE || this.mode < 0)) { mode.toString() + "is illegal argument ,please use right value" }
+        require(!(this.mode > MODE_RIGHT_BOTTOM_TRIANGLE || this.mode < 0)) {
+            mode.toString() +
+                "is illegal argument ,please use right value"
+        }
         this.mode = mode
         postInvalidate()
         return this

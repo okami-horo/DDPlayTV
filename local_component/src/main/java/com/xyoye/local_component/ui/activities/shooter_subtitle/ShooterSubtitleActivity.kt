@@ -24,47 +24,45 @@ import com.xyoye.local_component.ui.dialog.SubtitleDetailDialog
 import com.xyoye.local_component.ui.dialog.SubtitleFileListDialog
 
 @Route(path = RouteTable.Local.ShooterSubtitle)
-class ShooterSubtitleActivity :
-    BaseActivity<ShooterSubtitleViewModel, ActivityShooterSubtitleBinding>() {
-
+class ShooterSubtitleActivity : BaseActivity<ShooterSubtitleViewModel, ActivityShooterSubtitleBinding>() {
     private lateinit var subtitleSearchAdapter: BasePagingAdapter<SubtitleSourceBean>
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            ShooterSubtitleViewModel::class.java
+            ShooterSubtitleViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_shooter_subtitle
 
     override fun initView() {
-
         title = "射手(伪)字幕下载"
 
-        subtitleSearchAdapter = buildPagingAdapter {
+        subtitleSearchAdapter =
+            buildPagingAdapter {
+                addItem<SubtitleSourceBean, ItemSubtitleSearchSourceBinding>(R.layout.item_subtitle_search_source) {
+                    initView { data, position, _ ->
+                        itemBinding.apply {
+                            val language = "语言: ${data.language}"
 
-            addItem<SubtitleSourceBean, ItemSubtitleSearchSourceBinding>(R.layout.item_subtitle_search_source) {
-                initView { data, position, _ ->
-                    itemBinding.apply {
-                        val language = "语言: ${data.language}"
-
-                        positionTv.text = (position + 1).toString()
-                        subtitleNameTv.text = data.name
-                        subtitleDescribeTv.text = language
-                        itemLayout.setOnClickListener {
-                            viewModel.getSearchSubDetail(data.id)
+                            positionTv.text = (position + 1).toString()
+                            subtitleNameTv.text = data.name
+                            subtitleDescribeTv.text = language
+                            itemLayout.setOnClickListener {
+                                viewModel.getSearchSubDetail(data.id)
+                            }
                         }
                     }
                 }
             }
-        }
 
         dataBinding.subtitleRv.apply {
             layoutManager = vertical()
 
-            adapter = subtitleSearchAdapter.withLoadStateFooter(
-                PagingFooterAdapter { subtitleSearchAdapter.retry() }
-            )
+            adapter =
+                subtitleSearchAdapter.withLoadStateFooter(
+                    PagingFooterAdapter { subtitleSearchAdapter.retry() },
+                )
         }
 
         initObserver()
@@ -106,7 +104,9 @@ class ShooterSubtitleActivity :
         }
 
         viewModel.searchSubDetailLiveData.observe(this) {
-            SubtitleDetailDialog(this, it,
+            SubtitleDetailDialog(
+                this,
+                it,
                 downloadOne = {
                     SubtitleFileListDialog(this, it.filelist!!) { fileName, url ->
                         viewModel.downloadSubtitle(fileName, url)
@@ -114,7 +114,7 @@ class ShooterSubtitleActivity :
                 },
                 downloadZip = { fileName, url ->
                     viewModel.downloadAndUnzipFile(fileName, url)
-                }
+                },
             ).show()
         }
     }
@@ -129,8 +129,8 @@ class ShooterSubtitleActivity :
             EditBean(
                 "搜索字幕",
                 "视频名称不能为空",
-                "视频名"
-            )
+                "视频名",
+            ),
         ) {
             viewModel.searchSubtitle(it)
         }.show()

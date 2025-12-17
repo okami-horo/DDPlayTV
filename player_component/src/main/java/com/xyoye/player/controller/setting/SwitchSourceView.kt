@@ -56,7 +56,6 @@ class SwitchSourceView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSwitchSourceBinding>(context, attrs, defStyleAttr) {
-
     private val mRootPath = Environment.getExternalStorageDirectory().absolutePath
 
     private val mPathData = mutableListOf<FilePathBean>()
@@ -67,22 +66,24 @@ class SwitchSourceView(
 
     // 标题
     private val title
-        get() = when (mTrackType) {
-            TrackType.AUDIO -> "选择音轨文件"
-            TrackType.DANMU -> "选择弹幕轨文件"
-            TrackType.SUBTITLE -> "选择字幕轨文件"
-        }
+        get() =
+            when (mTrackType) {
+                TrackType.AUDIO -> "选择音轨文件"
+                TrackType.DANMU -> "选择弹幕轨文件"
+                TrackType.SUBTITLE -> "选择字幕轨文件"
+            }
 
     // 是否显示搜索网络弹幕按钮
     private val sourceSearchAble get() = mTrackType == TrackType.DANMU
 
     // 文件图标
     private val sourceFileIcon
-        get() = when (mTrackType) {
-            TrackType.AUDIO -> R.drawable.ic_file_audio
-            TrackType.DANMU -> R.drawable.ic_file_xml
-            TrackType.SUBTITLE -> R.drawable.ic_file_subtitle
-        }
+        get() =
+            when (mTrackType) {
+                TrackType.AUDIO -> R.drawable.ic_file_audio
+                TrackType.DANMU -> R.drawable.ic_file_xml
+                TrackType.SUBTITLE -> R.drawable.ic_file_subtitle
+            }
 
     init {
         initView()
@@ -107,7 +108,10 @@ class SwitchSourceView(
         viewBinding.tvSearchNetworkDanmu.isVisible = sourceSearchAble
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (isSettingShowing().not()) {
             return false
         }
@@ -116,7 +120,7 @@ class SwitchSourceView(
             return true
         }
 
-        //KeyCode对应的View
+        // KeyCode对应的View
         val handled = handleKeyCode(keyCode)
         if (handled) {
             return true
@@ -142,51 +146,53 @@ class SwitchSourceView(
         viewBinding.rvCommonFolder.apply {
             layoutManager = horizontal()
 
-            adapter = buildAdapter {
-                addItem<FilePathBean, ItemFileManagerFolderBinding>(R.layout.item_file_manager_folder) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            tvName.background =
-                                R.drawable.background_player_setting_text.toResDrawable()
-                            tvName.text = data.name
-                            tvName.setOnClickListener {
-                                openDirectory(data.path)
+            adapter =
+                buildAdapter {
+                    addItem<FilePathBean, ItemFileManagerFolderBinding>(R.layout.item_file_manager_folder) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                tvName.background =
+                                    R.drawable.background_player_setting_text.toResDrawable()
+                                tvName.text = data.name
+                                tvName.setOnClickListener {
+                                    openDirectory(data.path)
+                                }
                             }
                         }
                     }
                 }
-            }
 
             addItemDecoration(
                 ItemDecorationOrientation(
                     dp2px(5),
                     0,
-                    RecyclerView.HORIZONTAL
-                )
+                    RecyclerView.HORIZONTAL,
+                ),
             )
         }
 
         viewBinding.rvPath.apply {
             layoutManager = horizontal()
 
-            adapter = buildAdapter {
-                addItem<FilePathBean, ItemFileManagerFolderBinding>(R.layout.item_file_manager_folder) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            tvName.background =
-                                R.drawable.background_player_setting_text_transparent.toResDrawable()
-                            tvName.text = data.name
-                            tvName.setTextSize(Dimension.SP, 14f)
-                            tvName.setTextColorRes(
-                                if (data.isOpened) R.color.text_white_immutable else R.color.text_gray
-                            )
-                            tvName.setOnClickListener {
-                                openDirectory(data.path)
+            adapter =
+                buildAdapter {
+                    addItem<FilePathBean, ItemFileManagerFolderBinding>(R.layout.item_file_manager_folder) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                tvName.background =
+                                    R.drawable.background_player_setting_text_transparent.toResDrawable()
+                                tvName.text = data.name
+                                tvName.setTextSize(Dimension.SP, 14f)
+                                tvName.setTextColorRes(
+                                    if (data.isOpened) R.color.text_white_immutable else R.color.text_gray,
+                                )
+                                tvName.setOnClickListener {
+                                    openDirectory(data.path)
+                                }
                             }
                         }
                     }
                 }
-            }
 
             val dividerSize = dp2px(16)
             val divider = R.drawable.ic_file_manager_arrow.toResDrawable()
@@ -202,29 +208,30 @@ class SwitchSourceView(
         viewBinding.rvFile.apply {
             layoutManager = vertical()
 
-            adapter = buildAdapter {
-                setupVerticalAnimation()
+            adapter =
+                buildAdapter {
+                    setupVerticalAnimation()
 
-                addItem<FileManagerBean, ItemFileManagerPlayerBinding>(R.layout.item_file_manager_player) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            fileNameTv.text = data.fileName
-                            fileIv.setImageResource(if (data.isDirectory) R.drawable.ic_folder else sourceFileIcon)
-                            itemLayout.setOnClickListener {
-                                when {
-                                    data.isDirectory -> {
-                                        openDirectory(data.filePath)
-                                    }
+                    addItem<FileManagerBean, ItemFileManagerPlayerBinding>(R.layout.item_file_manager_player) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                fileNameTv.text = data.fileName
+                                fileIv.setImageResource(if (data.isDirectory) R.drawable.ic_folder else sourceFileIcon)
+                                itemLayout.setOnClickListener {
+                                    when {
+                                        data.isDirectory -> {
+                                            openDirectory(data.filePath)
+                                        }
 
-                                    else -> {
-                                        openFile(data)
+                                        else -> {
+                                            openFile(data)
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
         }
     }
 
@@ -304,8 +311,9 @@ class SwitchSourceView(
      */
     private fun getDirectoryChildData(directory: File): List<FileManagerBean> {
         val fileManagerData = mutableListOf<FileManagerBean>()
-        if (!directory.exists() || !directory.isDirectory)
+        if (!directory.exists() || !directory.isDirectory) {
             return fileManagerData
+        }
         val childFiles = directory.listFiles() ?: return fileManagerData
 
         for (childFile in childFiles) {
@@ -315,8 +323,8 @@ class SwitchSourceView(
                         FileManagerBean(
                             childFile.absolutePath,
                             getFolderName(childFile.absolutePath),
-                            isDirectory = true
-                        )
+                            isDirectory = true,
+                        ),
                     )
                 }
 
@@ -325,8 +333,8 @@ class SwitchSourceView(
                         FileManagerBean(
                             childFile.absolutePath,
                             getFileName(childFile.absolutePath),
-                            isDirectory = false
-                        )
+                            isDirectory = false,
+                        ),
                     )
                 }
             }
@@ -335,22 +343,23 @@ class SwitchSourceView(
         return fileManagerData
             .asSequence()
             .filterHiddenFile { it.fileName }
-            .sortedWith(FileNameComparator(
-                getName = { it.fileName },
-                isDirectory = { it.isDirectory }
-            ))
+            .sortedWith(
+                FileNameComparator(
+                    getName = { it.fileName },
+                    isDirectory = { it.isDirectory },
+                ),
+            )
     }
 
     /**
      * 是否为目标文件类型
      */
-    private fun isTargetFile(filePath: String): Boolean {
-        return when (mTrackType) {
+    private fun isTargetFile(filePath: String): Boolean =
+        when (mTrackType) {
             TrackType.AUDIO -> isAudioFile(filePath)
             TrackType.DANMU -> isDanmuFile(filePath)
             TrackType.SUBTITLE -> isSubtitleFile(filePath)
         }
-    }
 
     /**
      * 获取常用目录列表
@@ -358,28 +367,28 @@ class SwitchSourceView(
     private fun getCommonDirectoryList(): MutableList<FilePathBean> {
         val commonDirectoryList = mutableListOf<FilePathBean>()
 
-        //常用目录1
+        // 常用目录1
         val commonlyFolder1 = AppConfig.getCommonlyFolder1()
         if (commonlyFolder1?.isNotEmpty() == true) {
             commonDirectoryList.add(FilePathBean("常用目录1", commonlyFolder1))
         }
 
-        //常用目录2
+        // 常用目录2
         val commonlyFolder2 = AppConfig.getCommonlyFolder2()
         if (commonlyFolder2?.isNotEmpty() == true) {
             commonDirectoryList.add(FilePathBean("常用目录1", commonlyFolder2))
         }
 
-        //本次打开目录
+        // 本次打开目录
         commonDirectoryList.add(FilePathBean("默认目录", getDefaultOpenDirectory()))
 
-        //上次打开目录
+        // 上次打开目录
         val lastOpenFolderPath = AppConfig.getLastOpenFolder()
         if (AppConfig.isLastOpenFolderEnable() && lastOpenFolderPath?.isNotEmpty() == true) {
             commonDirectoryList.add(FilePathBean("上次使用", lastOpenFolderPath))
         }
 
-        //视频所在目录
+        // 视频所在目录
         val videoFolder = PlayerInitializer.selectSourceDirectory
         if (videoFolder?.isNotEmpty() == true) {
             commonDirectoryList.add(FilePathBean("视频目录", videoFolder))
@@ -394,11 +403,12 @@ class SwitchSourceView(
      * 否则：默认缓存目录
      */
     private fun getDefaultOpenDirectory(): String {
-        val addedSourcePath = when (mTrackType) {
-            TrackType.AUDIO -> mControlWrapper.getVideoSource().getAudioPath()
-            TrackType.DANMU -> mControlWrapper.getVideoSource().getDanmu()?.danmuPath
-            TrackType.SUBTITLE -> mControlWrapper.getVideoSource().getSubtitlePath()
-        }
+        val addedSourcePath =
+            when (mTrackType) {
+                TrackType.AUDIO -> mControlWrapper.getVideoSource().getAudioPath()
+                TrackType.DANMU -> mControlWrapper.getVideoSource().getDanmu()?.danmuPath
+                TrackType.SUBTITLE -> mControlWrapper.getVideoSource().getSubtitlePath()
+            }
         if (addedSourcePath.isNullOrEmpty()) {
             return PathHelper.getCachePath()
         }
@@ -415,12 +425,12 @@ class SwitchSourceView(
      * 根据KeyCode目标焦点ItemBinding
      */
     private fun handleKeyCode(keyCode: Int): Boolean {
-        //垂直方向上的事件处理
+        // 垂直方向上的事件处理
         if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_UP) {
             return handleKeyCodeVertical(keyCode)
         }
 
-        //网络弹幕按钮的焦点处理
+        // 网络弹幕按钮的焦点处理
         if (viewBinding.tvSearchNetworkDanmu.hasFocus()) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_LEFT -> {
@@ -440,11 +450,12 @@ class SwitchSourceView(
     }
 
     private fun handleKeyCodeVertical(keyCode: Int): Boolean {
-        val isKeyUp = when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP -> true
-            KeyEvent.KEYCODE_DPAD_DOWN -> false
-            else -> return false
-        }
+        val isKeyUp =
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_UP -> true
+                KeyEvent.KEYCODE_DPAD_DOWN -> false
+                else -> return false
+            }
 
         if (viewBinding.tvSearchNetworkDanmu.hasFocus()) {
             if (isKeyUp) {
@@ -499,16 +510,17 @@ class SwitchSourceView(
     }
 
     private fun handleKeyCodeInCommonRv(keyCode: Int): Boolean {
-        //已获取的焦点View
-        val focusedChild = viewBinding.rvCommonFolder.focusedChild
-            ?: return false
+        // 已获取的焦点View
+        val focusedChild =
+            viewBinding.rvCommonFolder.focusedChild
+                ?: return false
         val focusedChildIndex = viewBinding.rvCommonFolder.getChildAdapterPosition(focusedChild)
-        //已获取的焦点View的位置
+        // 已获取的焦点View的位置
         if (focusedChildIndex == -1) {
             return false
         }
 
-        //向左的点击事件
+        // 向左的点击事件
         if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
             val targetIndex =
                 mCommonDirectoryData.previousItemIndex<FilePathBean>(focusedChildIndex)
@@ -516,7 +528,7 @@ class SwitchSourceView(
             return true
         }
 
-        //向右的点击事件
+        // 向右的点击事件
         if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
             val targetIndex = mCommonDirectoryData.nextItemIndex<FilePathBean>(focusedChildIndex)
             viewBinding.rvCommonFolder.requestIndexChildFocus(targetIndex)
@@ -526,24 +538,25 @@ class SwitchSourceView(
     }
 
     private fun handleKeyCodeInPathRv(keyCode: Int): Boolean {
-        //已获取的焦点View
-        val focusedChild = viewBinding.rvPath.focusedChild
-            ?: return false
+        // 已获取的焦点View
+        val focusedChild =
+            viewBinding.rvPath.focusedChild
+                ?: return false
 
         val focusedChildIndex = viewBinding.rvPath.getChildAdapterPosition(focusedChild)
-        //已获取的焦点View的位置
+        // 已获取的焦点View的位置
         if (focusedChildIndex == -1) {
             return false
         }
 
-        //向左的点击事件
+        // 向左的点击事件
         if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
             val targetIndex = mPathData.previousItemIndex<FilePathBean>(focusedChildIndex)
             viewBinding.rvPath.requestIndexChildFocus(targetIndex)
             return true
         }
 
-        //向右的点击事件
+        // 向右的点击事件
         if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
             val targetIndex = mPathData.nextItemIndex<FilePathBean>(focusedChildIndex)
             viewBinding.rvPath.requestIndexChildFocus(targetIndex)
@@ -553,22 +566,23 @@ class SwitchSourceView(
     }
 
     private fun handleKeyCodeInFileRv(keyCode: Int): Boolean {
-        //已获取的焦点View
-        val focusedChild = viewBinding.rvFile.focusedChild
-            ?: return false
+        // 已获取的焦点View
+        val focusedChild =
+            viewBinding.rvFile.focusedChild
+                ?: return false
         val focusedChildIndex = viewBinding.rvFile.getChildAdapterPosition(focusedChild)
-        //已获取的焦点View的位置
+        // 已获取的焦点View的位置
         if (focusedChildIndex == -1) {
             return false
         }
 
-        //向左或向右的点击事件
+        // 向左或向右的点击事件
         if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
             focusedChild.requestFocus()
             return true
         }
 
-        //向上的事件
+        // 向上的事件
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
             val index = mFileData.findIndexOnLeft(focusedChildIndex) { true }
             if (index != -1) {
@@ -584,7 +598,7 @@ class SwitchSourceView(
             return true
         }
 
-        //向下的事件
+        // 向下的事件
         if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
             val index = mFileData.findIndexOnRight(focusedChildIndex) { true }
             if (index != -1) {

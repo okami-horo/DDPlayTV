@@ -1,8 +1,8 @@
 package com.xyoye.dandanplay.app
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.common_component.media3.Media3CrashTagger
+import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.data_component.entity.media3.Media3PlayerEngine
 import com.xyoye.data_component.entity.media3.Media3RolloutSource
 import com.xyoye.data_component.entity.media3.Media3SourceType
@@ -18,7 +18,6 @@ import org.junit.runner.RunWith
 @Media3Dependent("Crash reporter tagging must include Media3 cohorts")
 @RunWith(AndroidJUnit4::class)
 class CrashTaggingTest {
-
     private val reporter = RecordingCrashReporter()
 
     @Test
@@ -26,20 +25,22 @@ class CrashTaggingTest {
         Media3CrashTagger.setReporterForTest(reporter)
         Media3CrashTagger.init()
 
-        val snapshot = RolloutToggleSnapshot(
-            snapshotId = "snapshot-crash-test",
-            value = true,
-            source = Media3RolloutSource.REMOTE_CONFIG,
-            evaluatedAt = 15L,
-            appliesToSession = "session-telemetry"
-        )
-        val session = PlaybackSession(
-            sessionId = "session-telemetry",
-            mediaId = "media-telemetry",
-            sourceType = Media3SourceType.CAST,
-            playerEngine = Media3PlayerEngine.MEDIA3,
-            toggleCohort = Media3ToggleCohort.TREATMENT
-        )
+        val snapshot =
+            RolloutToggleSnapshot(
+                snapshotId = "snapshot-crash-test",
+                value = true,
+                source = Media3RolloutSource.REMOTE_CONFIG,
+                evaluatedAt = 15L,
+                appliesToSession = "session-telemetry",
+            )
+        val session =
+            PlaybackSession(
+                sessionId = "session-telemetry",
+                mediaId = "media-telemetry",
+                sourceType = Media3SourceType.CAST,
+                playerEngine = Media3PlayerEngine.MEDIA3,
+                toggleCohort = Media3ToggleCohort.TREATMENT,
+            )
 
         Media3CrashTagger.tagSnapshot(snapshot)
         Media3CrashTagger.tagSession(session)
@@ -62,7 +63,10 @@ class CrashTaggingTest {
         val userData = linkedMapOf<String, String>()
         val sceneTags = mutableListOf<Int>()
 
-        override fun putUserData(key: String, value: String) {
+        override fun putUserData(
+            key: String,
+            value: String
+        ) {
             userData[key] = value
         }
 

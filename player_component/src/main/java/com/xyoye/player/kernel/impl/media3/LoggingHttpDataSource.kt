@@ -47,8 +47,11 @@ private class LoggingHttpDataSource(
     private fun logOpen(uri: Uri?) {
         val responseCode = runCatching { upstream.responseCode }.getOrNull()
         val headers = runCatching { upstream.responseHeaders }.getOrNull().orEmpty()
-        val contentType = headers.entries.firstOrNull { it.key.equals("Content-Type", ignoreCase = true) }
-            ?.value?.firstOrNull()
+        val contentType =
+            headers.entries
+                .firstOrNull { it.key.equals("Content-Type", ignoreCase = true) }
+                ?.value
+                ?.firstOrNull()
 
         Media3Diagnostics.logHttpOpen(uri?.toString(), responseCode, contentType)
     }

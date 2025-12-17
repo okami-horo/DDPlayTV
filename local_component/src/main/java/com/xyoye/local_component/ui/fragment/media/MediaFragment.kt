@@ -1,7 +1,5 @@
 package com.xyoye.local_component.ui.fragment.media
 
-import androidx.core.view.isVisible
-import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.adapter.addItem
@@ -18,8 +16,8 @@ import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.entity.MediaLibraryEntity
-import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.entity.media3.Media3Capability
+import com.xyoye.data_component.enums.MediaType
 import com.xyoye.local_component.BR
 import com.xyoye.local_component.R
 import com.xyoye.local_component.databinding.FragmentMediaBinding
@@ -31,11 +29,11 @@ import com.xyoye.local_component.databinding.ItemMediaLibraryBinding
 
 @Route(path = RouteTable.Local.MediaFragment)
 class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
-
-    override fun initViewModel() = ViewModelInit(
-        BR.viewModel,
-        MediaViewModel::class.java
-    )
+    override fun initViewModel() =
+        ViewModelInit(
+            BR.viewModel,
+            MediaViewModel::class.java,
+        )
 
     override fun getLayoutId() = R.layout.fragment_media
 
@@ -59,41 +57,43 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
         dataBinding.mediaLibRv.apply {
             layoutManager = vertical()
 
-            adapter = buildAdapter {
-                addItem<MediaLibraryEntity, ItemMediaLibraryBinding>(R.layout.item_media_library) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            libraryNameTv.text = data.displayName
-                            libraryUrlTv.text = data.disPlayDescribe
-                            libraryCoverIv.setImageResource(data.mediaType.cover)
+            adapter =
+                buildAdapter {
+                    addItem<MediaLibraryEntity, ItemMediaLibraryBinding>(R.layout.item_media_library) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                libraryNameTv.text = data.displayName
+                                libraryUrlTv.text = data.disPlayDescribe
+                                libraryCoverIv.setImageResource(data.mediaType.cover)
 
-                            itemLayout.setOnClickListener {
-                                DanDanPlay.permission.storage.request(this@MediaFragment) {
-                                    onGranted {
-                                        launchMediaStorage(data)
-                                    }
-                                    onDenied {
-                                        ToastCenter.showError("获取文件读取权限失败，无法打开媒体库")
+                                itemLayout.setOnClickListener {
+                                    DanDanPlay.permission.storage.request(this@MediaFragment) {
+                                        onGranted {
+                                            launchMediaStorage(data)
+                                        }
+                                        onDenied {
+                                            ToastCenter.showError("获取文件读取权限失败，无法打开媒体库")
+                                        }
                                     }
                                 }
-                            }
-                            itemLayout.setOnLongClickListener {
-                                if (data.mediaType.deletable) {
-                                    showManageStorageDialog(data)
+                                itemLayout.setOnLongClickListener {
+                                    if (data.mediaType.deletable) {
+                                        showManageStorageDialog(data)
+                                    }
+                                    true
                                 }
-                                true
                             }
                         }
                     }
                 }
-            }
         }
     }
 
     private fun launchMediaStorage(data: MediaLibraryEntity) {
         when (data.mediaType) {
             MediaType.STREAM_LINK -> {
-                ARouter.getInstance()
+                ARouter
+                    .getInstance()
                     .build(RouteTable.Local.PlayHistory)
                     .withSerializable("typeValue", data.mediaType.value)
                     .navigation()
@@ -103,13 +103,15 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
                     ToastCenter.showWarning("当前 Media3 配置未启用离线播放，无法打开磁链播放")
                     return
                 }
-                ARouter.getInstance()
+                ARouter
+                    .getInstance()
                     .build(RouteTable.Local.PlayHistory)
                     .withSerializable("typeValue", data.mediaType.value)
                     .navigation()
             }
             MediaType.OTHER_STORAGE -> {
-                ARouter.getInstance()
+                ARouter
+                    .getInstance()
                     .build(RouteTable.Local.PlayHistory)
                     .withSerializable("typeValue", data.mediaType.value)
                     .navigation()
@@ -126,7 +128,8 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
             MediaType.REMOTE_STORAGE,
             MediaType.EXTERNAL_STORAGE,
             MediaType.ALSIT_STORAGE -> {
-                ARouter.getInstance()
+                ARouter
+                    .getInstance()
                     .build(RouteTable.Stream.StorageFile)
                     .withParcelable("storageLibrary", data)
                     .navigation()
@@ -135,17 +138,20 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
     }
 
     private fun showAddStorageDialog() {
-        val actionList = MediaType.values()
-            .filter { it.deletable && it != MediaType.SCREEN_CAST }
-            .map { it.toAction() }
+        val actionList =
+            MediaType
+                .values()
+                .filter { it.deletable && it != MediaType.SCREEN_CAST }
+                .map { it.toAction() }
 
         BottomActionDialog(
             requireActivity(),
             actionList,
-            "新增网络媒体库"
+            "新增网络媒体库",
         ) {
             val mediaType = it.actionId as MediaType
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Stream.StoragePlus)
                 .withSerializable("mediaType", mediaType)
                 .navigation()
@@ -160,7 +166,8 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
 
         BottomActionDialog(requireActivity(), actions) {
             if (it.actionId == ManageStorage.Edit) {
-                ARouter.getInstance()
+                ARouter
+                    .getInstance()
                     .build(RouteTable.Stream.StoragePlus)
                     .withSerializable("mediaType", data.mediaType)
                     .withParcelable("editData", data)
@@ -173,7 +180,8 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
     }
 
     private fun showDeleteStorageDialog(data: MediaLibraryEntity) {
-        CommonDialog.Builder(requireActivity())
+        CommonDialog
+            .Builder(requireActivity())
             .apply {
                 content = "确认删除以下媒体库?\n\n${data.displayName}"
                 positiveText = "确认"
@@ -182,7 +190,8 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
                     viewModel.deleteStorage(data)
                 }
                 addNegative()
-            }.build().show()
+            }.build()
+            .show()
     }
 
     private fun ensureMedia3DownloadSupport(): Boolean {
@@ -193,7 +202,10 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
         return supportsDownloadResume
     }
 
-    private enum class ManageStorage(val title: String, val icon: Int) {
+    private enum class ManageStorage(
+        val title: String,
+        val icon: Int
+    ) {
         Edit("编辑媒体库", R.drawable.ic_edit_storage),
         Delete("删除媒体库", R.drawable.ic_delete_storage);
 

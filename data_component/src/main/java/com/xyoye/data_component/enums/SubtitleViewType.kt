@@ -8,11 +8,10 @@ enum class SubtitleViewType {
     TextureView;
 
     companion object {
-        fun fromSurfaceType(surfaceType: SurfaceType): SubtitleViewType {
-            return when (surfaceType) {
+        fun fromSurfaceType(surfaceType: SurfaceType): SubtitleViewType =
+            when (surfaceType) {
                 SurfaceType.VIEW_SURFACE -> SurfaceView
                 else -> TextureView
             }
-        }
     }
 }

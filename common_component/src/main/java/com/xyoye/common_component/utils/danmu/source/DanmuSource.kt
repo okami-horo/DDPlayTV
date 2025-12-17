@@ -5,6 +5,5 @@ package com.xyoye.common_component.utils.danmu.source
  */
 
 interface DanmuSource {
-
     suspend fun hash(): String?
 }

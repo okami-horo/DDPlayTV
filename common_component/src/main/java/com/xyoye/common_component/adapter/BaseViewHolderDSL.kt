@@ -22,9 +22,13 @@ class BaseViewHolderDSL<T : Any, V : ViewDataBinding>(
 
     private var emptyViewHolder: (() -> Unit)? = null
 
-    override fun isForViewType(data: Any?, position: Int): Boolean {
-        if (data == null)
+    override fun isForViewType(
+        data: Any?,
+        position: Int
+    ): Boolean {
+        if (data == null) {
             return false
+        }
 
         return checkViewType?.invoke(data, position)
             ?: checkViewType2?.invoke(data)
@@ -67,7 +71,7 @@ class BaseViewHolderDSL<T : Any, V : ViewDataBinding>(
     ) {
         data ?: return
 
-        //空布局
+        // 空布局
         if (data == BaseAdapter.EMPTY_ITEM) {
             emptyViewHolder?.invoke()
             return
@@ -77,5 +81,4 @@ class BaseViewHolderDSL<T : Any, V : ViewDataBinding>(
             ?: viewHolder2?.invoke(data as T, position)
             ?: viewHolder3?.invoke(data as T)
     }
-
 }

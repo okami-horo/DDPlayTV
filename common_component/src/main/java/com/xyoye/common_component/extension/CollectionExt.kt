@@ -9,42 +9,36 @@ import com.xyoye.common_component.config.AppConfig
 /**
  * 过滤以.开头的文件
  */
-inline fun <T> Iterable<T>.filterHiddenFile(predicate: (T) -> String): List<T> {
-    return filterTo(ArrayList()) {
+inline fun <T> Iterable<T>.filterHiddenFile(predicate: (T) -> String): List<T> =
+    filterTo(ArrayList()) {
         AppConfig.isShowHiddenFile() || predicate.invoke(it).startsWith(".").not()
     }
-}
 
 /**
  * 过滤以.开头的文件
  */
-inline fun <T> Sequence<T>.filterHiddenFile(predicate: (T) -> String): MutableCollection<T> {
-    return filterTo(ArrayList()) {
+inline fun <T> Sequence<T>.filterHiddenFile(predicate: (T) -> String): MutableCollection<T> =
+    filterTo(ArrayList()) {
         AppConfig.isShowHiddenFile() || predicate.invoke(it).startsWith(".").not()
     }
-}
 
 /**
  * 从当前位置寻找上一个T类型的Item
  * @param currentIndex 当前位置
  */
-inline fun <reified T> List<*>.previousItemIndex(currentIndex: Int): Int {
-    return findIndexOnLeft(currentIndex, loop = true) {
+inline fun <reified T> List<*>.previousItemIndex(currentIndex: Int): Int =
+    findIndexOnLeft(currentIndex, loop = true) {
         it is T
     }
-}
-
 
 /**
  * 从当前位置寻找下一个T类型的Item
  * @param currentIndex 当前位置
  */
-inline fun <reified T> List<*>.nextItemIndex(currentIndex: Int): Int {
-    return findIndexOnRight(currentIndex, loop = true) {
+inline fun <reified T> List<*>.nextItemIndex(currentIndex: Int): Int =
+    findIndexOnRight(currentIndex, loop = true) {
         it is T
     }
-}
-
 
 /**
  * 从当前位置往左寻找目标
@@ -98,7 +92,10 @@ fun <T> List<T>.findIndexOnRight(
     return -1
 }
 
-inline fun <T> mapByLength(length: Int, action: (Int) -> T): List<T> {
+inline fun <T> mapByLength(
+    length: Int,
+    action: (Int) -> T
+): List<T> {
     val list = mutableListOf<T>()
     for (index in 0 until length) {
         list.add(action(index))

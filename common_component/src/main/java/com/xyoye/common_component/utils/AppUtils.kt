@@ -8,21 +8,19 @@ import com.xyoye.common_component.base.app.BaseApplication
  */
 
 object AppUtils {
-    fun getVersionCode(): Long {
-        return runCatching {
+    fun getVersionCode(): Long =
+        runCatching {
             val packageName = BaseApplication.getAppContext().applicationInfo.packageName
             val packageInfo =
                 BaseApplication.getAppContext().packageManager.getPackageInfo(packageName, 0)
             PackageInfoCompat.getLongVersionCode(packageInfo)
         }.getOrElse { 0L }
-    }
 
-    fun getVersionName(): String {
-        return runCatching {
+    fun getVersionName(): String =
+        runCatching {
             val packageName = BaseApplication.getAppContext().applicationInfo.packageName
             val packageInfo =
                 BaseApplication.getAppContext().packageManager.getPackageInfo(packageName, 0)
             packageInfo.versionName ?: ""
         }.getOrElse { "" }
-    }
 }

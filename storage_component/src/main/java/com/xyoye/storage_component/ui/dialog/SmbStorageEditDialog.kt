@@ -20,7 +20,6 @@ class SmbStorageEditDialog(
     private val activity: StoragePlusActivity,
     private var originalStorage: MediaLibraryEntity?
 ) : StorageEditDialog<DialogSmbLoginBinding>(activity) {
-
     private lateinit var binding: DialogSmbLoginBinding
 
     override fun getChildLayoutId() = R.layout.dialog_smb_login
@@ -31,12 +30,13 @@ class SmbStorageEditDialog(
 
         setTitle(if (isEditStorage) "编辑SMB帐号" else "添加SMB帐号")
 
-        val serverData = originalStorage ?: MediaLibraryEntity(
-            0,
-            "",
-            "",
-            MediaType.SMB_SERVER
-        )
+        val serverData =
+            originalStorage ?: MediaLibraryEntity(
+                0,
+                "",
+                "",
+                MediaType.SMB_SERVER,
+            )
         // SMB默认端口
         if (serverData.port == 0) {
             serverData.port = SMBClient.DEFAULT_PORT
@@ -130,12 +130,12 @@ class SmbStorageEditDialog(
     private fun setAnonymous(isAnonymous: Boolean) {
         binding.anonymousTv.isSelected = isAnonymous
         binding.anonymousTv.setTextColorRes(
-            if (isAnonymous) R.color.text_white else R.color.text_black
+            if (isAnonymous) R.color.text_white else R.color.text_black,
         )
 
         binding.accountTv.isSelected = !isAnonymous
         binding.accountTv.setTextColorRes(
-            if (!isAnonymous) R.color.text_white else R.color.text_black
+            if (!isAnonymous) R.color.text_white else R.color.text_black,
         )
 
         binding.accountEt.isGone = isAnonymous
@@ -151,14 +151,14 @@ class SmbStorageEditDialog(
     private fun setSmbV2(isSmbV2: Boolean) {
         binding.smbV2Tv.isSelected = isSmbV2
         binding.smbV2Tv.setTextColorRes(
-            if (isSmbV2) R.color.text_white else R.color.text_black
+            if (isSmbV2) R.color.text_white else R.color.text_black,
         )
 
         binding.smbV1Tv.post {
             binding.smbV1Tv.isClickable = false
             binding.smbV1Tv.setTextColorRes(R.color.text_gray)
         }
-        //暂不支持SMB V1
+        // 暂不支持SMB V1
 //        binding.smbV1Tv.isSelected = !isSmbV2
 //        binding.smbV1Tv.setTextColorRes(
 //            if (!isSmbV2) R.color.text_white else R.color.text_black

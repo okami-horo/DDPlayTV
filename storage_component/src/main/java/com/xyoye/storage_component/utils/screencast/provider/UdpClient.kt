@@ -79,7 +79,7 @@ object UdpClient {
                 e,
                 "UdpClient",
                 "initMulticastSocket",
-                "组播Socket初始化失败，host=${ScreencastConstants.Multicast.host}, port=${ScreencastConstants.Multicast.port}"
+                "组播Socket初始化失败，host=${ScreencastConstants.Multicast.host}, port=${ScreencastConstants.Multicast.port}",
             )
             e.printStackTrace()
         }
@@ -99,12 +99,12 @@ object UdpClient {
                 multicastSocket?.receive(datagramPacket)
             }
 
-            //组播消息
+            // 组播消息
             val entropyMsg = String(datagramPacket.data, 0, datagramPacket.length)
             if (entropyMsg.isEmpty()) {
                 return
             }
-            //组播消息解密
+            // 组播消息解密
             val msg = EntropyUtils.aesDecode(ScreencastConstants.Multicast.secret, entropyMsg)
             if (TextUtils.isEmpty(msg)) {
                 return
@@ -120,7 +120,7 @@ object UdpClient {
                 e,
                 "UdpClient",
                 "receiveMulticast",
-                "UDP组播接收异常，数据包长度=${datagramPacket.length}"
+                "UDP组播接收异常，数据包长度=${datagramPacket.length}",
             )
             e.printStackTrace()
         }

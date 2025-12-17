@@ -5,11 +5,9 @@ package com.xyoye.data_component.enums
  */
 enum class SubtitlePipelineMode {
     GPU_GL,
-    Fallback_CPU;
+    FALLBACK_CPU;
 
     companion object {
-        fun fromName(value: String?): SubtitlePipelineMode {
-            return values().firstOrNull { it.name.equals(value, true) } ?: GPU_GL
-        }
+        fun fromName(value: String?): SubtitlePipelineMode = values().firstOrNull { it.name.equals(value, true) } ?: GPU_GL
     }
 }

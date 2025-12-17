@@ -19,32 +19,34 @@ class AudioFocusHelper(
     private val mAudioManager: AudioManager,
     private val coroutineScope: LifecycleCoroutineScope
 ) : AudioManager.OnAudioFocusChangeListener {
-
     var enable = false
     private var mStartRequested = false
     private var mPausedForLoss = false
     private var mCurrentFocus = 0
 
     private val mPlayerWeak = WeakReference(player)
-    private var audioFocusRequest : AudioFocusRequest? = null
+    private var audioFocusRequest: AudioFocusRequest? = null
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val attributes = AudioAttributes
-                .Builder()
-                .setLegacyStreamType(AudioManager.STREAM_MUSIC)
-                .build()
-            audioFocusRequest = AudioFocusRequest
-                .Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
-                .setAudioAttributes(attributes)
-                .setOnAudioFocusChangeListener(this)
-                .build()
+            val attributes =
+                AudioAttributes
+                    .Builder()
+                    .setLegacyStreamType(AudioManager.STREAM_MUSIC)
+                    .build()
+            audioFocusRequest =
+                AudioFocusRequest
+                    .Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+                    .setAudioAttributes(attributes)
+                    .setOnAudioFocusChangeListener(this)
+                    .build()
         }
     }
 
     override fun onAudioFocusChange(focusChange: Int) {
-        if (mCurrentFocus == focusChange || !enable)
+        if (mCurrentFocus == focusChange || !enable) {
             return
+        }
         mCurrentFocus = focusChange
 
         val mPlayer = mPlayerWeak.get() ?: return
@@ -61,7 +63,7 @@ class AudioFocusHelper(
                         mPlayer.setVolume(PointF(1f, 1f))
                     }
                 }
-                //失去焦点暂停播放
+                // 失去焦点暂停播放
                 AudioManager.AUDIOFOCUS_LOSS,
                 AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                     if (mPlayer.isPlaying()) {
@@ -79,26 +81,28 @@ class AudioFocusHelper(
     }
 
     fun requestFocus() {
-        if (!enable)
-            return
-        if (mCurrentFocus == AudioManager.AUDIOFOCUS_GAIN) {
-            //如果已经是获得焦点，则直接返回
+        if (!enable) {
             return
         }
-        //请求重新获取焦点
+        if (mCurrentFocus == AudioManager.AUDIOFOCUS_GAIN) {
+            // 如果已经是获得焦点，则直接返回
+            return
+        }
+        // 请求重新获取焦点
 
         val request = audioFocusRequest
-        val status: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && request != null) {
-            mAudioManager.requestAudioFocus(request)
-        } else {
-            mAudioManager.requestAudioFocus(
-                this,
-                AudioManager.STREAM_MUSIC
-                , AudioManager.AUDIOFOCUS_GAIN
-            )
-        }
+        val status: Int =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && request != null) {
+                mAudioManager.requestAudioFocus(request)
+            } else {
+                mAudioManager.requestAudioFocus(
+                    this,
+                    AudioManager.STREAM_MUSIC,
+                    AudioManager.AUDIOFOCUS_GAIN,
+                )
+            }
 
-        //焦点更改请求成功
+        // 焦点更改请求成功
         if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == status) {
             mCurrentFocus = AudioManager.AUDIOFOCUS_GAIN
             return
@@ -107,8 +111,9 @@ class AudioFocusHelper(
     }
 
     fun abandonFocus() {
-        if (!enable)
+        if (!enable) {
             return
+        }
         mStartRequested = false
 
         val request = audioFocusRequest

@@ -8,8 +8,6 @@ import com.xyoye.data_component.enums.VideoScreenScale
 
 data class VideoScaleBean(
     val screenScale: VideoScreenScale,
-
     val scaleName: String,
-
     var isChecked: Boolean = false
 )

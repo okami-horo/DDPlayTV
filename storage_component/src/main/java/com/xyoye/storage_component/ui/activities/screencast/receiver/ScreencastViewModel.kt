@@ -12,7 +12,6 @@ import java.net.SocketException
 import java.util.*
 
 class ScreencastViewModel : BaseViewModel() {
-
     val displayIp = ObservableField<String>()
 
     val ipList = mutableListOf<String>()
@@ -49,7 +48,7 @@ class ScreencastViewModel : BaseViewModel() {
                     e,
                     "ScreencastViewModel",
                     "initIpPort",
-                    "获取网络接口IP地址时发生Socket异常"
+                    "获取网络接口IP地址时发生Socket异常",
                 )
                 e.printStackTrace()
             }

@@ -13,23 +13,24 @@ import org.junit.runner.RunWith
 @Media3Dependent("Validates codec fallback decisions for Media3 pipelines")
 @RunWith(AndroidJUnit4::class)
 class Media3CodecFallbackTest {
-
     @Test
     fun unsupportedCodec_forcesAudioOnlyFallback() {
         val handler = CodecFallbackHandler()
-        val result = handler.evaluate(
-            LegacyCapabilityResult(
-                mediaTracks = emptyList(),
-                subtitleTracks = emptyList(),
-                issues = listOf(
-                    LegacyCapabilityIssue(
-                        code = "UNSUPPORTED_CODEC",
-                        message = "video/av1 is unavailable",
-                        blocking = true
-                    )
-                )
+        val result =
+            handler.evaluate(
+                LegacyCapabilityResult(
+                    mediaTracks = emptyList(),
+                    subtitleTracks = emptyList(),
+                    issues =
+                        listOf(
+                            LegacyCapabilityIssue(
+                                code = "UNSUPPORTED_CODEC",
+                                message = "video/av1 is unavailable",
+                                blocking = true,
+                            ),
+                        ),
+                ),
             )
-        )
 
         assertTrue(result is CodecFallbackDecision.AudioOnly)
     }
@@ -37,13 +38,14 @@ class Media3CodecFallbackTest {
     @Test
     fun noBlockingIssues_retainsFullPlayback() {
         val handler = CodecFallbackHandler()
-        val result = handler.evaluate(
-            LegacyCapabilityResult(
-                mediaTracks = emptyList(),
-                subtitleTracks = emptyList(),
-                issues = emptyList()
+        val result =
+            handler.evaluate(
+                LegacyCapabilityResult(
+                    mediaTracks = emptyList(),
+                    subtitleTracks = emptyList(),
+                    issues = emptyList(),
+                ),
             )
-        )
 
         assertTrue(result is CodecFallbackDecision.None)
     }

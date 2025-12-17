@@ -10,7 +10,6 @@ import com.xyoye.data_component.data.DanmuRelatedUrlData
  */
 
 interface DanmuQuery {
-
     companion object {
         val instance: DanmuQueryImpl by lazy {
             DanmuQueryImpl()
@@ -35,7 +34,10 @@ interface DanmuQuery {
     /**
      * 获取弹幕内容，根据剧集ID
      */
-    suspend fun getContentByEpisodeId(episodeId: String, withRelated: Boolean = true): List<DanmuContentData>
+    suspend fun getContentByEpisodeId(
+        episodeId: String,
+        withRelated: Boolean = true
+    ): List<DanmuContentData>
 
     /**
      * 获取弹幕内容，根据资源链接

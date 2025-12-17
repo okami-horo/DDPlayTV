@@ -13,38 +13,40 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 @UnstableApi
 object Media3CodecPolicy {
-
     private const val UNKNOWN_VENDOR_PRIORITY = 0
     private val hevcMimes = setOf(MimeTypes.VIDEO_H265, MimeTypes.VIDEO_DOLBY_VISION)
 
-    private val vendorPriority = listOf(
-        "c2.qti",
-        "c2.qcom",
-        "c2.qualcomm",
-        "c2.exynos",
-        "c2.slsi",
-        "c2.mtk",
-        "c2.mediatek",
-        "c2.unisoc",
-        "c2.hisi",
-        "c2.amlogic",
-        "c2.realtek",
-        "c2.android",
-        "omx.qcom",
-        "omx.exynos",
-        "omx.mtk",
-        "omx.amlogic",
-        "omx.realtek",
-        "omx.nvidia",
-        "omx.google"
-    )
+    private val vendorPriority =
+        listOf(
+            "c2.qti",
+            "c2.qcom",
+            "c2.qualcomm",
+            "c2.exynos",
+            "c2.slsi",
+            "c2.mtk",
+            "c2.mediatek",
+            "c2.unisoc",
+            "c2.hisi",
+            "c2.amlogic",
+            "c2.realtek",
+            "c2.android",
+            "omx.qcom",
+            "omx.exynos",
+            "omx.mtk",
+            "omx.amlogic",
+            "omx.realtek",
+            "omx.nvidia",
+            "omx.google",
+        )
 
-    private val staticBlacklist = listOf(
-        "c2.dolby.decoder.hevc"
-    )
+    private val staticBlacklist =
+        listOf(
+            "c2.dolby.decoder.hevc",
+        )
 
     private val runtimeBlacklist = CopyOnWriteArraySet<String>()
     private val activeDecoders = ConcurrentHashMap<String, String>()
+
     @Volatile
     private var lastDecoderUsed: String? = null
 
@@ -73,22 +75,32 @@ object Media3CodecPolicy {
         val diagnosticInfo: String?
     )
 
-    fun updateDescriptor(uri: Uri, contentType: Int, declaredMime: String?) {
-        descriptor = PlaybackDescriptor(
-            uri = uri,
-            containerHint = inferContainer(uri, contentType),
-            extension = uri.lastPathSegment?.substringAfterLast('.', "")
-                ?.lowercase(Locale.ROOT)
-                ?.ifEmpty { null },
-            declaredMimeType = declaredMime
-        )
+    fun updateDescriptor(
+        uri: Uri,
+        contentType: Int,
+        declaredMime: String?
+    ) {
+        descriptor =
+            PlaybackDescriptor(
+                uri = uri,
+                containerHint = inferContainer(uri, contentType),
+                extension =
+                    uri.lastPathSegment
+                        ?.substringAfterLast('.', "")
+                        ?.lowercase(Locale.ROOT)
+                        ?.ifEmpty { null },
+                declaredMimeType = declaredMime,
+            )
         runtimeBlacklist.clear()
         activeDecoders.clear()
         lastDecoderUsed = null
         Media3Diagnostics.logPlaybackDescriptor(descriptor)
     }
 
-    fun isDecoderAllowed(name: String, mimeType: String): Boolean {
+    fun isDecoderAllowed(
+        name: String,
+        mimeType: String
+    ): Boolean {
         val normalized = name.lowercase(Locale.ROOT)
         if (staticBlacklist.any { normalized.startsWith(it) }) {
             return false
@@ -118,10 +130,11 @@ object Media3CodecPolicy {
 
         // 强化硬件优先级，显式压低软件（尤其是 omx.google），避免 4K 回落到软解
         val hardwareScore = if (hardwareAccelerated) 1000 else 0
-        val softwarePenalty = when {
-            softwareOnly || normalized.startsWith("omx.google") -> 800
-            else -> 0
-        }
+        val softwarePenalty =
+            when {
+                softwareOnly || normalized.startsWith("omx.google") -> 800
+                else -> 0
+            }
 
         return hardwareScore + vendorScore * 10 - softwarePenalty
     }
@@ -131,17 +144,18 @@ object Media3CodecPolicy {
         fallbackMimeType: String?
     ): DecoderFailure? {
         val cause = error.cause
-        val direct = when (cause) {
-            is MediaCodecDecoderException -> {
-                val decoderName = cause.codecInfo?.name ?: return null
-                DecoderFailure(decoderName, fallbackMimeType, cause.diagnosticInfo)
+        val direct =
+            when (cause) {
+                is MediaCodecDecoderException -> {
+                    val decoderName = cause.codecInfo?.name ?: return null
+                    DecoderFailure(decoderName, fallbackMimeType, cause.diagnosticInfo)
+                }
+                is MediaCodecRenderer.DecoderInitializationException -> {
+                    val decoderName = cause.codecInfo?.name ?: return null
+                    DecoderFailure(decoderName, cause.mimeType ?: fallbackMimeType, cause.diagnosticInfo)
+                }
+                else -> null
             }
-            is MediaCodecRenderer.DecoderInitializationException -> {
-                val decoderName = cause.codecInfo?.name ?: return null
-                DecoderFailure(decoderName, cause.mimeType ?: fallbackMimeType, cause.diagnosticInfo)
-            }
-            else -> null
-        }
         if (direct != null) {
             return direct
         }
@@ -165,7 +179,10 @@ object Media3CodecPolicy {
         return added
     }
 
-    fun markPreferredDecoder(mimeType: String, decoderName: String) {
+    fun markPreferredDecoder(
+        mimeType: String,
+        decoderName: String
+    ) {
         val mimeKey = mimeType.lowercase(Locale.ROOT)
         val normalized = decoderName.lowercase(Locale.ROOT)
         activeDecoders[mimeKey] = normalized
@@ -177,20 +194,27 @@ object Media3CodecPolicy {
         return activeDecoders[key]
     }
 
-    private fun inferContainer(uri: Uri, contentType: Int): ContainerHint {
-        return when (contentType) {
+    private fun inferContainer(
+        uri: Uri,
+        contentType: Int
+    ): ContainerHint =
+        when (contentType) {
             C.CONTENT_TYPE_DASH -> ContainerHint.DASH
             C.CONTENT_TYPE_HLS -> ContainerHint.HLS
             C.CONTENT_TYPE_SS -> ContainerHint.SMOOTH_STREAMING
             else -> extensionHint(uri)
         }
-    }
 
     private fun extensionHint(uri: Uri): ContainerHint {
         val segment = uri.lastPathSegment?.lowercase(Locale.ROOT) ?: return ContainerHint.OTHER
         return when {
             segment.endsWith(".mkv") || segment.endsWith(".mk3d") || segment.endsWith(".webm") -> ContainerHint.MKV
-            segment.endsWith(".mp4") || segment.endsWith(".m4v") || segment.endsWith(".mov") || segment.endsWith(".ismv") -> ContainerHint.MP4
+            segment.endsWith(
+                ".mp4",
+            ) ||
+                segment.endsWith(".m4v") ||
+                segment.endsWith(".mov") ||
+                segment.endsWith(".ismv") -> ContainerHint.MP4
             segment.endsWith(".ts") || segment.endsWith(".m2ts") || segment.endsWith(".mts") -> ContainerHint.TS
             else -> ContainerHint.OTHER
         }

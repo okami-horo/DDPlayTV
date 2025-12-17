@@ -27,7 +27,6 @@ class SearchDanmuView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSearchDanmuBinding>(context, attrs, defStyleAttr) {
-
     private var search: ((String) -> Unit)? = null
     private var download: ((DanmuEpisodeData) -> Unit)? = null
     private val mSearchDanmuData = mutableListOf<DanmuEpisodeData>()
@@ -44,8 +43,10 @@ class SearchDanmuView(
 
     override fun getGravity() = Gravity.START
 
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (isSettingShowing().not()) {
             return false
         }
@@ -67,19 +68,20 @@ class SearchDanmuView(
         viewBinding.danmuRv.apply {
             layoutManager = vertical()
 
-            adapter = buildAdapter {
-                addItem<DanmuEpisodeData, ItemSearchDanmuBinding>(R.layout.item_search_danmu) {
-                    initView { data, position, _ ->
-                        val positionText = (position + 1).toString()
-                        itemBinding.positionTv.text = positionText
-                        itemBinding.episodeTv.text = data.episodeTitle
-                        itemBinding.animeTv.text = data.animeTitle
-                        itemBinding.itemLayout.setOnClickListener {
-                            download(data)
+            adapter =
+                buildAdapter {
+                    addItem<DanmuEpisodeData, ItemSearchDanmuBinding>(R.layout.item_search_danmu) {
+                        initView { data, position, _ ->
+                            val positionText = (position + 1).toString()
+                            itemBinding.positionTv.text = positionText
+                            itemBinding.episodeTv.text = data.episodeTitle
+                            itemBinding.animeTv.text = data.animeTitle
+                            itemBinding.itemLayout.setOnClickListener {
+                                download(data)
+                            }
                         }
                     }
                 }
-            }
         }
     }
 
@@ -105,7 +107,10 @@ class SearchDanmuView(
     private fun search() {
         hideKeyboard(viewBinding.searchDanmuEt)
         viewBinding.searchDanmuCl.requestFocus()
-        val searchText = viewBinding.searchDanmuEt.text.toString().trim()
+        val searchText =
+            viewBinding.searchDanmuEt.text
+                .toString()
+                .trim()
         search?.invoke(searchText)
     }
 
@@ -173,22 +178,23 @@ class SearchDanmuView(
     }
 
     private fun handleKeyCodeInResultRv(keyCode: Int): Boolean {
-        //已获取的焦点View
-        val focusedChild = viewBinding.danmuRv.focusedChild
-            ?: return false
+        // 已获取的焦点View
+        val focusedChild =
+            viewBinding.danmuRv.focusedChild
+                ?: return false
         val focusedChildIndex = viewBinding.danmuRv.getChildAdapterPosition(focusedChild)
-        //已获取的焦点View的位置
+        // 已获取的焦点View的位置
         if (focusedChildIndex == -1) {
             return false
         }
 
-        //向左或向右的点击事件
+        // 向左或向右的点击事件
         if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
             focusedChild.requestFocus()
             return true
         }
 
-        //向上的事件
+        // 向上的事件
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
             val index = mSearchDanmuData.findIndexOnLeft(focusedChildIndex) { true }
             if (index != -1) {
@@ -200,7 +206,7 @@ class SearchDanmuView(
             return true
         }
 
-        //向下的事件
+        // 向下的事件
         if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
             val index = mSearchDanmuData.findIndexOnRight(focusedChildIndex) { true }
             if (index != -1) {

@@ -12,7 +12,6 @@ import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 class LogFileManagerScanTest {
-
     @Rule
     @JvmField
     val tempFolder = TemporaryFolder()

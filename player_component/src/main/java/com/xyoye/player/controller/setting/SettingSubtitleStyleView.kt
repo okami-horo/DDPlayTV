@@ -14,7 +14,6 @@ import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutSettingSubtitleStyleBinding
 
-
 /**
  * Created by xyoye on 2022/1/10
  */
@@ -25,7 +24,6 @@ class SettingSubtitleStyleView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingSubtitleStyleBinding>(context, attrs, defStyleAttr) {
-
     companion object {
         private const val VERTICAL_OFFSET_MAX = 30
     }
@@ -55,7 +53,10 @@ class SettingSubtitleStyleView(
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (isSettingShowing().not()) {
             return false
         }
@@ -65,19 +66,19 @@ class SettingSubtitleStyleView(
     }
 
     private fun applySubtitleStyleStatus() {
-        //文字大小
+        // 文字大小
         val textSizePercent = PlayerInitializer.Subtitle.textSize
         val textSizeText = "$textSizePercent%"
         viewBinding.subtitleSizeTv.text = textSizeText
         viewBinding.subtitleSizeSb.progress = textSizePercent
 
-        //描边宽度
+        // 描边宽度
         val strokeWidthPercent = PlayerInitializer.Subtitle.strokeWidth
         val strokeWidthText = "$strokeWidthPercent%"
         viewBinding.subtitleStrokeWidthTv.text = strokeWidthText
         viewBinding.subtitleStrokeWidthSb.progress = strokeWidthPercent
 
-        //文字颜色
+        // 文字颜色
         viewBinding.subtitleColorSb.post {
             val textColor = PlayerInitializer.Subtitle.textColor
             viewBinding.subtitleColorSb.seekToColor(textColor)
@@ -86,7 +87,7 @@ class SettingSubtitleStyleView(
             viewBinding.subtitleColorTv.text = textColorText
         }
 
-        //描边颜色
+        // 描边颜色
         viewBinding.subtitleStrokeColorSb.post {
             val strokeColor = PlayerInitializer.Subtitle.strokeColor
             viewBinding.subtitleStrokeColorSb.seekToColor(strokeColor)
@@ -96,7 +97,7 @@ class SettingSubtitleStyleView(
             viewBinding.subtitleStrokeColorTv.text = strokeColorText
         }
 
-        //透明度
+        // 透明度
         val alphaPercent = PlayerInitializer.Subtitle.alpha
         val alphaText = "$alphaPercent%"
         viewBinding.subtitleAlphaTv.text = alphaText
@@ -156,8 +157,9 @@ class SettingSubtitleStyleView(
     }
 
     private fun updateSize(progress: Int) {
-        if (PlayerInitializer.Subtitle.textSize == progress)
+        if (PlayerInitializer.Subtitle.textSize == progress) {
             return
+        }
 
         val progressText = "$progress%"
         viewBinding.subtitleSizeTv.text = progressText
@@ -170,8 +172,9 @@ class SettingSubtitleStyleView(
     }
 
     private fun updateStrokeWidth(progress: Int) {
-        if (PlayerInitializer.Subtitle.strokeWidth == progress)
+        if (PlayerInitializer.Subtitle.strokeWidth == progress) {
             return
+        }
 
         val progressText = "$progress%"
         viewBinding.subtitleStrokeWidthTv.text = progressText
@@ -183,9 +186,14 @@ class SettingSubtitleStyleView(
         onConfigChanged()
     }
 
-    private fun updateTextColor(position: Int, color: Int, isFromUser: Boolean = true) {
-        if (PlayerInitializer.Subtitle.textColor == color)
+    private fun updateTextColor(
+        position: Int,
+        color: Int,
+        isFromUser: Boolean = true
+    ) {
+        if (PlayerInitializer.Subtitle.textColor == color) {
             return
+        }
 
         val progressText = "$position%"
         viewBinding.subtitleColorTv.text = progressText
@@ -199,9 +207,14 @@ class SettingSubtitleStyleView(
         onConfigChanged()
     }
 
-    private fun updateStrokeColor(position: Int, color: Int, isFromUser: Boolean = true) {
-        if (PlayerInitializer.Subtitle.strokeColor == color)
+    private fun updateStrokeColor(
+        position: Int,
+        color: Int,
+        isFromUser: Boolean = true
+    ) {
+        if (PlayerInitializer.Subtitle.strokeColor == color) {
             return
+        }
 
         val progressText = "$position%"
         viewBinding.subtitleStrokeColorTv.text = progressText
@@ -216,8 +229,9 @@ class SettingSubtitleStyleView(
     }
 
     private fun updateAlpha(progress: Int) {
-        if (PlayerInitializer.Subtitle.alpha == progress)
+        if (PlayerInitializer.Subtitle.alpha == progress) {
             return
+        }
 
         val progressText = "$progress%"
         viewBinding.subtitleAlphaTv.text = progressText
@@ -232,8 +246,9 @@ class SettingSubtitleStyleView(
 
     private fun updateVerticalOffset(offsetPercent: Int) {
         val clampedOffset = offsetPercent.coerceIn(-VERTICAL_OFFSET_MAX, VERTICAL_OFFSET_MAX)
-        if (PlayerInitializer.Subtitle.verticalOffset == clampedOffset)
+        if (PlayerInitializer.Subtitle.verticalOffset == clampedOffset) {
             return
+        }
 
         viewBinding.subtitleVerticalOffsetTv.text = formatOffsetText(clampedOffset)
         viewBinding.subtitleVerticalOffsetSb.progress = offsetValueToProgress(clampedOffset)
@@ -264,30 +279,24 @@ class SettingSubtitleStyleView(
         viewBinding.tvResetSubtitleConfig.isVisible = isConfigChanged()
     }
 
-    private fun isConfigChanged(): Boolean {
-        return PlayerInitializer.Subtitle.textSize != PlayerInitializer.Subtitle.DEFAULT_SIZE
-                || PlayerInitializer.Subtitle.strokeWidth != PlayerInitializer.Subtitle.DEFAULT_STROKE
-                || PlayerInitializer.Subtitle.textColor != PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR
-                || PlayerInitializer.Subtitle.strokeColor != PlayerInitializer.Subtitle.DEFAULT_STROKE_COLOR
-                || PlayerInitializer.Subtitle.alpha != PlayerInitializer.Subtitle.DEFAULT_ALPHA
-                || PlayerInitializer.Subtitle.verticalOffset != PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET
-    }
+    private fun isConfigChanged(): Boolean =
+        PlayerInitializer.Subtitle.textSize != PlayerInitializer.Subtitle.DEFAULT_SIZE ||
+            PlayerInitializer.Subtitle.strokeWidth != PlayerInitializer.Subtitle.DEFAULT_STROKE ||
+            PlayerInitializer.Subtitle.textColor != PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR ||
+            PlayerInitializer.Subtitle.strokeColor != PlayerInitializer.Subtitle.DEFAULT_STROKE_COLOR ||
+            PlayerInitializer.Subtitle.alpha != PlayerInitializer.Subtitle.DEFAULT_ALPHA ||
+            PlayerInitializer.Subtitle.verticalOffset != PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET
 
-    private fun offsetValueToProgress(value: Int): Int {
-        return value + VERTICAL_OFFSET_MAX
-    }
+    private fun offsetValueToProgress(value: Int): Int = value + VERTICAL_OFFSET_MAX
 
-    private fun offsetProgressToValue(progress: Int): Int {
-        return progress - VERTICAL_OFFSET_MAX
-    }
+    private fun offsetProgressToValue(progress: Int): Int = progress - VERTICAL_OFFSET_MAX
 
-    private fun formatOffsetText(offsetPercent: Int): String {
-        return if (offsetPercent > 0) {
-            "+${offsetPercent}%"
+    private fun formatOffsetText(offsetPercent: Int): String =
+        if (offsetPercent > 0) {
+            "+$offsetPercent%"
         } else {
-            "${offsetPercent}%"
+            "$offsetPercent%"
         }
-    }
 
     private fun handleKeyCode(keyCode: Int) {
         // libass 模式下仅保留透明度、垂直偏移与重置的上下导航
@@ -301,22 +310,24 @@ class SettingSubtitleStyleView(
                 }
                 viewBinding.subtitleAlphaSb.hasFocus() -> {
                     when (keyCode) {
-                        KeyEvent.KEYCODE_DPAD_UP -> if (isConfigChanged()) {
-                            viewBinding.tvResetSubtitleConfig.requestFocus()
-                        } else {
-                            viewBinding.subtitleVerticalOffsetSb.requestFocus()
-                        }
+                        KeyEvent.KEYCODE_DPAD_UP ->
+                            if (isConfigChanged()) {
+                                viewBinding.tvResetSubtitleConfig.requestFocus()
+                            } else {
+                                viewBinding.subtitleVerticalOffsetSb.requestFocus()
+                            }
                         KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleVerticalOffsetSb.requestFocus()
                     }
                 }
                 viewBinding.subtitleVerticalOffsetSb.hasFocus() -> {
                     when (keyCode) {
                         KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleAlphaSb.requestFocus()
-                        KeyEvent.KEYCODE_DPAD_DOWN -> if (isConfigChanged()) {
-                            viewBinding.tvResetSubtitleConfig.requestFocus()
-                        } else {
-                            viewBinding.subtitleAlphaSb.requestFocus()
-                        }
+                        KeyEvent.KEYCODE_DPAD_DOWN ->
+                            if (isConfigChanged()) {
+                                viewBinding.tvResetSubtitleConfig.requestFocus()
+                            } else {
+                                viewBinding.subtitleAlphaSb.requestFocus()
+                            }
                     }
                 }
                 else -> viewBinding.subtitleAlphaSb.requestFocus()

@@ -8,7 +8,6 @@ import com.xyoye.data_component.data.DanmuContentData
  */
 
 object DanmuContentGenerator {
-
     private const val LINE_SEPARATOR = "\n"
 
     /**
@@ -30,8 +29,9 @@ object DanmuContentGenerator {
      */
     private fun generateXmlLine(content: DanmuContentData): String? {
         // 弹幕内容不能为空
-        if (content.m.isEmpty())
+        if (content.m.isEmpty()) {
             return null
+        }
 
         // 弹幕参数不能为空
         val params = content.p.split(",")
@@ -71,8 +71,9 @@ object DanmuContentGenerator {
         senderId: String = "0",
         rowId: String = "0"
     ): String? {
-        if (content.isEmpty())
+        if (content.isEmpty()) {
             return null
+        }
         // 弹幕颜色异常时，设置为白色
         val correctedTextColor = correctTextColor(textColor)
         // 弹幕内容特殊字符转义
@@ -83,13 +84,12 @@ object DanmuContentGenerator {
     /**
      * 修改弹幕颜色
      */
-    private fun correctTextColor(textColor: String): String {
-        return if (textColor.isEmpty() || "0" == textColor || "-1" == textColor) {
+    private fun correctTextColor(textColor: String): String =
+        if (textColor.isEmpty() || "0" == textColor || "-1" == textColor) {
             "16777215"
         } else {
             textColor
         }
-    }
 
     /**
      * 转义弹幕内容特殊字符

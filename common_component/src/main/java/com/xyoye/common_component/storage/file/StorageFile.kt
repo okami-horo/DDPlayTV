@@ -9,7 +9,6 @@ import com.xyoye.data_component.entity.PlayHistoryEntity
  */
 
 interface StorageFile {
-
     /**
      * 所属媒体库
      */
@@ -112,13 +111,15 @@ interface StorageFile {
 }
 
 val StorageFile.danmu: LocalDanmuBean?
-    get() = playHistory?.let {
-        if (it.danmuPath.isNullOrEmpty()) null else LocalDanmuBean(it.danmuPath!!, it.episodeId)
-    }
+    get() =
+        playHistory?.let {
+            if (it.danmuPath.isNullOrEmpty()) null else LocalDanmuBean(it.danmuPath!!, it.episodeId)
+        }
 
 val StorageFile.subtitle: String?
-    get() = if (playHistory?.subtitlePath.isNullOrEmpty()) {
-        null
-    } else {
-        playHistory!!.subtitlePath!!
-    }
+    get() =
+        if (playHistory?.subtitlePath.isNullOrEmpty()) {
+            null
+        } else {
+            playHistory!!.subtitlePath!!
+        }

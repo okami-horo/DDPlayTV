@@ -11,39 +11,30 @@ import java.io.InputStream
  * Created by xyoye on 2023/4/12
  */
 
-class LinkStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
-
+class LinkStorage(
+    library: MediaLibraryEntity
+) : AbstractStorage(library) {
     private val httpHeaders = mutableMapOf<String, String>()
 
-    override suspend fun listFiles(file: StorageFile): List<StorageFile> {
-        return emptyList()
-    }
+    override suspend fun listFiles(file: StorageFile): List<StorageFile> = emptyList()
 
-    override suspend fun getRootFile(): StorageFile {
-        return LinkStorageFile(this, library.url)
-    }
+    override suspend fun getRootFile(): StorageFile = LinkStorageFile(this, library.url)
 
-    override suspend fun openFile(file: StorageFile): InputStream? {
-        return null
-    }
+    override suspend fun openFile(file: StorageFile): InputStream? = null
 
-    override suspend fun pathFile(path: String, isDirectory: Boolean): StorageFile? {
-        return null
-    }
+    override suspend fun pathFile(
+        path: String,
+        isDirectory: Boolean
+    ): StorageFile? = null
 
-    override suspend fun historyFile(history: PlayHistoryEntity): StorageFile {
-        return LinkStorageFile(this, history.url).also {
+    override suspend fun historyFile(history: PlayHistoryEntity): StorageFile =
+        LinkStorageFile(this, history.url).also {
             it.playHistory = history
         }
-    }
 
-    override suspend fun createPlayUrl(file: StorageFile): String {
-        return file.fileUrl()
-    }
+    override suspend fun createPlayUrl(file: StorageFile): String = file.fileUrl()
 
-    override fun getNetworkHeaders(): Map<String, String> {
-        return httpHeaders
-    }
+    override fun getNetworkHeaders(): Map<String, String> = httpHeaders
 
     fun setupHttpHeader(headers: Map<String, String>?) {
         httpHeaders.clear()

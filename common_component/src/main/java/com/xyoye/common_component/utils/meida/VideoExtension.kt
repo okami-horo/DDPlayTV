@@ -7,18 +7,33 @@ import com.xyoye.common_component.config.AppConfig
  */
 
 object VideoExtension {
-
     // 视频文件扩展名分隔符
     private const val SEPARATOR = ","
 
     // 默认支持的视频文件扩展名
-    private val defaultSupport = arrayOf(
-        "3gp", "asf", "asx", "avi",
-        "dat", "flv", "m2ts", "m3u8",
-        "m4s", "m4v", "mkv", "mov",
-        "mp4", "mpe", "mpeg", "mpg",
-        "rm", "rmvb", "vob", "wmv"
-    )
+    private val defaultSupport =
+        arrayOf(
+            "3gp",
+            "asf",
+            "asx",
+            "avi",
+            "dat",
+            "flv",
+            "m2ts",
+            "m3u8",
+            "m4s",
+            "m4v",
+            "mkv",
+            "mov",
+            "mp4",
+            "mpe",
+            "mpeg",
+            "mpg",
+            "rm",
+            "rmvb",
+            "vob",
+            "wmv",
+        )
 
     // 当前支持的视频文件扩展名
     private val _support = defaultSupport.toMutableList()
@@ -42,9 +57,7 @@ object VideoExtension {
     /**
      * 更新支持的视频文件扩展名
      */
-    fun update(extensionText: String): Boolean {
-        return update(extensionText.split(SEPARATOR))
-    }
+    fun update(extensionText: String): Boolean = update(extensionText.split(SEPARATOR))
 
     /**
      * 更新支持的视频文件扩展名
@@ -62,9 +75,7 @@ object VideoExtension {
     /**
      * 是否是支持的视频文件扩展名
      */
-    fun isSupport(extension: String): Boolean {
-        return _support.contains(extension.lowercase())
-    }
+    fun isSupport(extension: String): Boolean = _support.contains(extension.lowercase())
 
     /**
      * 从磁盘中获取支持的视频文件扩展名

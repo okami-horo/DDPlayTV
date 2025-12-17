@@ -19,16 +19,18 @@ import java.io.InputStream
  * Created by XYJ on 2023/1/16.
  */
 
-class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
+class FtpStorage(
+    library: MediaLibraryEntity
+) : AbstractStorage(library) {
     private val mFtpClient = FTPClient()
     private var playingInputStream: InputStream? = null
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> {
-        //检测FTP通讯是否正常
+        // 检测FTP通讯是否正常
         if (checkConnection().not()) {
             return emptyList()
         }
-        //获取文件列表
+        // 获取文件列表
         try {
             checkWorkDirectory()
             return mFtpClient.listFiles(file.filePath()).map {
@@ -44,10 +46,11 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
     }
 
     override suspend fun getRootFile(): StorageFile {
-        val ftpFile = FTPFile().apply {
-            name = ""
-            type = FTPFile.DIRECTORY_TYPE
-        }
+        val ftpFile =
+            FTPFile().apply {
+                name = ""
+                type = FTPFile.DIRECTORY_TYPE
+            }
         return FtpStorageFile(this, "/", ftpFile)
     }
 
@@ -68,14 +71,20 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         return playingInputStream
     }
 
-    suspend fun openFile(file: StorageFile, offset: Long): InputStream? {
+    suspend fun openFile(
+        file: StorageFile,
+        offset: Long
+    ): InputStream? {
         if (offset > 0) {
             mFtpClient.restartOffset = offset
         }
         return openFile(file)
     }
 
-    override suspend fun pathFile(path: String, isDirectory: Boolean): StorageFile? {
+    override suspend fun pathFile(
+        path: String,
+        isDirectory: Boolean
+    ): StorageFile? {
         if (checkConnection().not()) {
             return null
         }
@@ -93,10 +102,11 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         }
 
         val fileType = if (isDirectory) FTPFile.DIRECTORY_TYPE else FTPFile.FILE_TYPE
-        val ftpFile = FTPFile().apply {
-            name = fileName
-            type = fileType
-        }
+        val ftpFile =
+            FTPFile().apply {
+                name = fileName
+                type = fileType
+            }
         return FtpStorageFile(this, parentPath, ftpFile)
     }
 
@@ -196,9 +206,7 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         return false
     }
 
-    override suspend fun test(): Boolean {
-        return checkConnection()
-    }
+    override suspend fun test(): Boolean = checkConnection()
 
     override fun close() {
         if (playingInputStream != null) {
@@ -233,7 +241,10 @@ class FtpStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         }
     }
 
-    private fun showErrorToast(message: String, e: Exception? = null) {
+    private fun showErrorToast(
+        message: String,
+        e: Exception? = null
+    ) {
         if (e == null) {
             ToastCenter.showError(message)
             return

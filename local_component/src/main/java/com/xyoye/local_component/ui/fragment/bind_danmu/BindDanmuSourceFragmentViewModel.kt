@@ -5,8 +5,8 @@ import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.collectable
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.utils.danmu.DanmuFinder
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.utils.danmu.DanmuFinder
 import com.xyoye.common_component.utils.danmu.source.DanmuSourceFactory
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.DanmuAnimeData
@@ -21,12 +21,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-
 /**
  * Created by xyoye on 2022/1/25
  */
 class BindDanmuSourceFragmentViewModel : BaseViewModel() {
-
     private lateinit var storageFile: StorageFile
 
     private val _boundEpisodeFlow = MutableStateFlow<PlayHistoryEntity?>(null)
@@ -40,21 +38,23 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
     private val _downloadDialogShowFlow = MutableSharedFlow<Pair<DanmuEpisodeData, List<DanmuRelatedUrlData>>>()
     val downloadDialogShowFlow = _downloadDialogShowFlow.collectable
 
-    val danmuAnimeListFlow = combine(
-        _searchedAnimeFlow,
-        _matchedAnimeFlow,
-        _selectedAnimeFlow,
-        _boundEpisodeFlow
-    ) { search, matched, selected, bond ->
-        mapDanmuAnimeList(search, matched, selected, bond)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    val danmuAnimeListFlow =
+        combine(
+            _searchedAnimeFlow,
+            _matchedAnimeFlow,
+            _selectedAnimeFlow,
+            _boundEpisodeFlow,
+        ) { search, matched, selected, bond ->
+            mapDanmuAnimeList(search, matched, selected, bond)
+        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val danmuEpisodeListFlow = combine(
-        _selectedAnimeFlow,
-        _boundEpisodeFlow
-    ) { selected, bound ->
-        mapDanmuEpisodeList(selected, bound)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    val danmuEpisodeListFlow =
+        combine(
+            _selectedAnimeFlow,
+            _boundEpisodeFlow,
+        ) { selected, bound ->
+            mapDanmuEpisodeList(selected, bound)
+        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun setStorageFile(storageFile: StorageFile) {
         this.storageFile = storageFile
@@ -65,8 +65,9 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
     }
 
     fun matchDanmu() {
-        val danmuSource = DanmuSourceFactory.build(storageFile)
-            ?: return
+        val danmuSource =
+            DanmuSourceFactory.build(storageFile)
+                ?: return
 
         viewModelScope.launch {
             try {
@@ -84,15 +85,16 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                     e,
                     "BindDanmuSourceFragmentViewModel",
                     "matchDanmu",
-                    "File: ${storageFile.fileName()}"
+                    "File: ${storageFile.fileName()}",
                 )
             }
         }
     }
 
     fun searchDanmu(searchText: String) {
-        if (searchText.isEmpty())
+        if (searchText.isEmpty()) {
             return
+        }
 
         viewModelScope.launch {
             try {
@@ -111,7 +113,7 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                     e,
                     "BindDanmuSourceFragmentViewModel",
                     "searchDanmu",
-                    "Search text: $searchText"
+                    "Search text: $searchText",
                 )
             }
         }
@@ -131,13 +133,16 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                     e,
                     "BindDanmuSourceFragmentViewModel",
                     "getDanmuThirdSource",
-                    "Episode ID: ${episode.episodeId}, Title: ${episode.episodeTitle}"
+                    "Episode ID: ${episode.episodeId}, Title: ${episode.episodeTitle}",
                 )
             }
         }
     }
 
-    fun downloadDanmu(episode: DanmuEpisodeData, withRelated: Boolean = true) {
+    fun downloadDanmu(
+        episode: DanmuEpisodeData,
+        withRelated: Boolean = true
+    ) {
         viewModelScope.launch {
             try {
                 showLoading()
@@ -145,19 +150,20 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
 
                 if (localDanmu == null) {
                     hideLoading()
-                    val extraInfo = buildString {
-                        append("Anime: ${episode.animeTitle}\n")
-                        append("Episode: ${episode.episodeTitle}\n")
-                        append("Episode ID: ${episode.episodeId}\n")
-                        append("With Related: $withRelated\n")
-                        append("Video File: ${storageFile.fileName()}\n")
-                        append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
-                        append("File Path: ${storageFile.filePath()}")
-                    }
+                    val extraInfo =
+                        buildString {
+                            append("Anime: ${episode.animeTitle}\n")
+                            append("Episode: ${episode.episodeTitle}\n")
+                            append("Episode ID: ${episode.episodeId}\n")
+                            append("With Related: $withRelated\n")
+                            append("Video File: ${storageFile.fileName()}\n")
+                            append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
+                            append("File Path: ${storageFile.filePath()}")
+                        }
                     ErrorReportHelper.postException(
                         "Danmu download failed - ${episode.animeTitle} - ${episode.episodeTitle}",
                         "BindDanmuSourceFragmentViewModel",
-                        RuntimeException("Download returned null, extra info: $extraInfo")
+                        RuntimeException("Download returned null, extra info: $extraInfo"),
                     )
                     ToastCenter.showError("保存弹幕失败")
                     return@launch
@@ -170,28 +176,32 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                 _downloadDialogDismissFlow.emit(Any())
             } catch (e: Exception) {
                 hideLoading()
-                val extraInfo = buildString {
-                    append("Anime: ${episode.animeTitle}\n")
-                    append("Episode: ${episode.episodeTitle}\n")
-                    append("Episode ID: ${episode.episodeId}\n")
-                    append("With Related: $withRelated\n")
-                    append("Video File: ${storageFile.fileName()}\n")
-                    append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
-                    append("File Path: ${storageFile.filePath()}\n")
-                    append("Exception: ${e.javaClass.simpleName}: ${e.message}")
-                }
+                val extraInfo =
+                    buildString {
+                        append("Anime: ${episode.animeTitle}\n")
+                        append("Episode: ${episode.episodeTitle}\n")
+                        append("Episode ID: ${episode.episodeId}\n")
+                        append("With Related: $withRelated\n")
+                        append("Video File: ${storageFile.fileName()}\n")
+                        append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
+                        append("File Path: ${storageFile.filePath()}\n")
+                        append("Exception: ${e.javaClass.simpleName}: ${e.message}")
+                    }
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "BindDanmuSourceFragmentViewModel",
                     "downloadDanmu",
-                    extraInfo
+                    extraInfo,
                 )
                 ToastCenter.showError("保存弹幕失败")
             }
         }
     }
 
-    fun downloadDanmu(episode: DanmuEpisodeData, related: List<DanmuRelatedUrlData>) {
+    fun downloadDanmu(
+        episode: DanmuEpisodeData,
+        related: List<DanmuRelatedUrlData>
+    ) {
         if (related.isEmpty()) {
             ToastCenter.showWarning("请至少选择一个弹幕源")
             return
@@ -204,20 +214,21 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
 
                 if (localDanmu == null) {
                     hideLoading()
-                    val extraInfo = buildString {
-                        append("Anime: ${episode.animeTitle}\n")
-                        append("Episode: ${episode.episodeTitle}\n")
-                        append("Episode ID: ${episode.episodeId}\n")
-                        append("Related Sources: ${related.joinToString(", ") { it.url }}\n")
-                        append("Related Count: ${related.size}\n")
-                        append("Video File: ${storageFile.fileName()}\n")
-                        append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
-                        append("File Path: ${storageFile.filePath()}")
-                    }
+                    val extraInfo =
+                        buildString {
+                            append("Anime: ${episode.animeTitle}\n")
+                            append("Episode: ${episode.episodeTitle}\n")
+                            append("Episode ID: ${episode.episodeId}\n")
+                            append("Related Sources: ${related.joinToString(", ") { it.url }}\n")
+                            append("Related Count: ${related.size}\n")
+                            append("Video File: ${storageFile.fileName()}\n")
+                            append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
+                            append("File Path: ${storageFile.filePath()}")
+                        }
                     ErrorReportHelper.postException(
                         "Related danmu download failed - ${episode.animeTitle} - ${episode.episodeTitle}",
                         "BindDanmuSourceFragmentViewModel",
-                        RuntimeException("Download related returned null, extra info: $extraInfo")
+                        RuntimeException("Download related returned null, extra info: $extraInfo"),
                     )
                     ToastCenter.showError("保存弹幕失败")
                     return@launch
@@ -230,22 +241,23 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                 _downloadDialogDismissFlow.emit(Any())
             } catch (e: Exception) {
                 hideLoading()
-                val extraInfo = buildString {
-                    append("Anime: ${episode.animeTitle}\n")
-                    append("Episode: ${episode.episodeTitle}\n")
-                    append("Episode ID: ${episode.episodeId}\n")
-                    append("Related Sources: ${related.joinToString(", ") { it.url }}\n")
-                    append("Related Count: ${related.size}\n")
-                    append("Video File: ${storageFile.fileName()}\n")
-                    append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
-                    append("File Path: ${storageFile.filePath()}\n")
-                    append("Exception: ${e.javaClass.simpleName}: ${e.message}")
-                }
+                val extraInfo =
+                    buildString {
+                        append("Anime: ${episode.animeTitle}\n")
+                        append("Episode: ${episode.episodeTitle}\n")
+                        append("Episode ID: ${episode.episodeId}\n")
+                        append("Related Sources: ${related.joinToString(", ") { it.url }}\n")
+                        append("Related Count: ${related.size}\n")
+                        append("Video File: ${storageFile.fileName()}\n")
+                        append("Storage Type: ${storageFile.storage.javaClass.simpleName}\n")
+                        append("File Path: ${storageFile.filePath()}\n")
+                        append("Exception: ${e.javaClass.simpleName}: ${e.message}")
+                    }
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "BindDanmuSourceFragmentViewModel",
                     "downloadDanmu",
-                    extraInfo
+                    extraInfo,
                 )
                 ToastCenter.showError("保存弹幕失败")
             }
@@ -267,7 +279,7 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                     e,
                     "BindDanmuSourceFragmentViewModel",
                     "unbindDanmu",
-                    "File: ${storageFile.fileName()}"
+                    "File: ${storageFile.fileName()}",
                 )
             }
         }
@@ -282,18 +294,22 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                     e,
                     "BindDanmuSourceFragmentViewModel",
                     "bindLocalDanmu",
-                    "File path: $filePath"
+                    "File path: $filePath",
                 )
             }
         }
     }
 
-    private suspend fun databaseDanmu(danmuPath: String?, episodeId: String? = null) {
+    private suspend fun databaseDanmu(
+        danmuPath: String?,
+        episodeId: String? = null
+    ) {
         try {
-            val historyEntity = getStorageFileHistory().copy(
-                danmuPath = danmuPath,
-                episodeId = episodeId
-            )
+            val historyEntity =
+                getStorageFileHistory().copy(
+                    danmuPath = danmuPath,
+                    episodeId = episodeId,
+                )
             DatabaseManager.instance.getPlayHistoryDao().insert(historyEntity)
 
             _boundEpisodeFlow.emit(historyEntity)
@@ -302,16 +318,16 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                 e,
                 "BindDanmuSourceFragmentViewModel",
                 "databaseDanmu",
-                "Danmu path: $danmuPath, Episode ID: $episodeId"
+                "Danmu path: $danmuPath, Episode ID: $episodeId",
             )
         }
     }
 
-    private suspend fun getStorageFileHistory(): PlayHistoryEntity {
-        return try {
+    private suspend fun getStorageFileHistory(): PlayHistoryEntity =
+        try {
             DatabaseManager.instance.getPlayHistoryDao().getPlayHistory(
                 storageFile.uniqueKey(),
-                storageFile.storage.library.id
+                storageFile.storage.library.id,
             ) ?: PlayHistoryEntity(
                 0,
                 "",
@@ -325,7 +341,7 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                 e,
                 "BindDanmuSourceFragmentViewModel",
                 "getStorageFileHistory",
-                "File: ${storageFile.fileName()}"
+                "File: ${storageFile.fileName()}",
             )
             PlayHistoryEntity(
                 0,
@@ -336,7 +352,6 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                 storageId = storageFile.storage.library.id,
             )
         }
-    }
 
     private fun mapDanmuAnimeList(
         searched: List<DanmuAnimeData>,
@@ -349,7 +364,7 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
             anime.copy(
                 isSelected = anime.animeId == selected?.animeId,
                 isRecommend = anime.animeId == matched?.animeId,
-                isBound = anime.episodes.any { it.episodeId == bound?.episodeId }
+                isBound = anime.episodes.any { it.episodeId == bound?.episodeId },
             )
         }
     }
@@ -357,11 +372,10 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
     private fun mapDanmuEpisodeList(
         selected: DanmuAnimeData?,
         bound: PlayHistoryEntity?
-    ): List<DanmuEpisodeData> {
-        return selected?.episodes?.map { episode ->
+    ): List<DanmuEpisodeData> =
+        selected?.episodes?.map { episode ->
             episode.copy(
-                isBound = episode.episodeId == bound?.episodeId
+                isBound = episode.episodeId == bound?.episodeId,
             )
         } ?: emptyList()
-    }
 }

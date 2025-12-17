@@ -41,8 +41,9 @@ class ScreencastProvideNotifier(private val _context: Context) {
 }
 */
 
-class ScreencastProvideNotifier(private val context: Context) {
-
+class ScreencastProvideNotifier(
+    private val context: Context
+) {
     fun showProvideVideo(name: String) {
         // 投屏发送链路在 TV 端被禁用，保留空实现避免误用
     }

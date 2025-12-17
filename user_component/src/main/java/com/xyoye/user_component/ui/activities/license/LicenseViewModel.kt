@@ -16,7 +16,6 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 class LicenseViewModel : BaseViewModel() {
-
     val licenseLiveData = MutableLiveData<MutableList<Pair<String, String>>>()
 
     fun getLicense() {
@@ -38,7 +37,10 @@ class LicenseViewModel : BaseViewModel() {
         }
     }
 
-    private fun getLicense(assets: AssetManager, fileName: String): Pair<String, String>? {
+    private fun getLicense(
+        assets: AssetManager,
+        fileName: String
+    ): Pair<String, String>? {
         var pair: Pair<String, String>? = null
 
         var inputStream: InputStream? = null
@@ -53,7 +55,7 @@ class LicenseViewModel : BaseViewModel() {
 
             val textList = bufferedReader.readLines()
             for ((line, text) in textList.withIndex()) {
-                //第一行是网址
+                // 第一行是网址
                 if (line == 0 && text.startsWith("#")) {
                     projectName += "( ${text.substring(1, text.length)} )"
                 } else {
@@ -70,7 +72,7 @@ class LicenseViewModel : BaseViewModel() {
                 t,
                 "LicenseViewModel",
                 "getLicense",
-                "Failed to read license file: $fileName"
+                "Failed to read license file: $fileName",
             )
             t.printStackTrace()
         } finally {

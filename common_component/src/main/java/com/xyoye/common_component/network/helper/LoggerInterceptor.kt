@@ -17,8 +17,9 @@ import java.util.logging.Logger
 /**
  * 网络请求Log拦截器
  */
-class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
-
+class LoggerInterceptor(
+    tag: String = "OkHttp"
+) : Interceptor {
     @Volatile
     private var printLevel: Level?
     private var colorLevel: java.util.logging.Level? = null
@@ -37,22 +38,23 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
         } else {
             logForRequest(request, chain.connection())
             val startNs = System.nanoTime()
-            val response: Response = try {
-                chain.proceed(request)
-            } catch (e: Exception) {
-                ErrorReportHelper.postCatchedException(
-                    e,
-                    "LoggerInterceptor.intercept",
-                    "HTTP请求失败: ${request.url}"
-                )
-                log("<-- HTTP FAILED: $e")
-                throw e
-            }
+            val response: Response =
+                try {
+                    chain.proceed(request)
+                } catch (e: Exception) {
+                    ErrorReportHelper.postCatchedException(
+                        e,
+                        "LoggerInterceptor.intercept",
+                        "HTTP请求失败: ${request.url}",
+                    )
+                    log("<-- HTTP FAILED: $e")
+                    throw e
+                }
             tookMs =
                 TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
             logForResponse(
                 response,
-                tookMs
+                tookMs,
             )
         }
     }
@@ -95,9 +97,10 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
                 val count = headers.size
                 while (i < count) {
                     val name = headers.name(i)
-                    if (!"Content-Type".equals(name, ignoreCase = true) && !"Content-Length".equals(
+                    if (!"Content-Type".equals(name, ignoreCase = true) &&
+                        !"Content-Length".equals(
                             name,
-                            ignoreCase = true
+                            ignoreCase = true,
                         )
                     ) {
                         log("\t" + name + ": " + headers.value(i))
@@ -108,7 +111,7 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
                 if (logBody) {
                     requestBody?.apply {
                         if (isPlaintext(
-                                contentType()
+                                contentType(),
                             )
                         ) {
                             bodyToString(request)
@@ -122,7 +125,7 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
             ErrorReportHelper.postCatchedException(
                 e,
                 "LoggerInterceptor.logForRequest",
-                "记录请求日志失败: ${request.url}"
+                "记录请求日志失败: ${request.url}",
             )
             e.printStackTrace()
         } finally {
@@ -130,7 +133,10 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
         }
     }
 
-    private fun logForResponse(response: Response, tookMs: Long): Response {
+    private fun logForResponse(
+        response: Response,
+        tookMs: Long
+    ): Response {
         val builder = response.newBuilder()
         val clone = builder.build()
         var responseBody = clone.body
@@ -154,20 +160,21 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
                         return response
                     }
                     if (isPlaintext(
-                            responseBody.contentType()
+                            responseBody.contentType(),
                         )
                     ) {
                         val byteArray =
                             toByteArray(
-                                responseBody.byteStream()
+                                responseBody.byteStream(),
                             )
                         val mediaType = responseBody.contentType()
-                        val body = String(
-                            byteArray,
-                            getCharset(
-                                mediaType
+                        val body =
+                            String(
+                                byteArray,
+                                getCharset(
+                                    mediaType,
+                                ),
                             )
-                        )
                         log("\tbody:$body")
                         responseBody = byteArray.toResponseBody(responseBody.contentType())
                         return response.newBuilder().body(responseBody).build()
@@ -179,7 +186,7 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
             ErrorReportHelper.postCatchedException(
                 e,
                 "LoggerInterceptor.logForResponse",
-                "记录响应日志失败: ${clone.request.url}"
+                "记录响应日志失败: ${clone.request.url}",
             )
             e.printStackTrace()
         } finally {
@@ -196,14 +203,14 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
             body.writeTo(buffer)
             val charset =
                 getCharset(
-                    body.contentType()
+                    body.contentType(),
                 )
             log("\tbody:" + buffer.readString(charset))
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "LoggerInterceptor.bodyToString",
-                "记录请求体日志失败"
+                "记录请求体日志失败",
             )
             e.printStackTrace()
         }
@@ -227,25 +234,26 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
         private val UTF8 = Charset.forName("UTF-8")
         var tookMs: Long = 0
 
-        private fun getCharset(contentType: MediaType?): Charset {
-            return if (contentType == null) UTF8
-            else contentType.charset(UTF8) ?: UTF8
-        }
+        private fun getCharset(contentType: MediaType?): Charset =
+            if (contentType == null) {
+                UTF8
+            } else {
+                contentType.charset(UTF8) ?: UTF8
+            }
 
-        private fun isPlaintext(mediaType: MediaType?): Boolean {
-            return when {
+        private fun isPlaintext(mediaType: MediaType?): Boolean =
+            when {
                 mediaType == null -> false
                 mediaType.type == "text" -> true
                 else -> {
                     mediaType.subtype.lowercase(Locale.getDefault()).run {
-                        contains("x-www-form-urlencoded")
-                                || contains("json")
-                                || contains("xml")
-                                || contains("html")
+                        contains("x-www-form-urlencoded") ||
+                            contains("json") ||
+                            contains("xml") ||
+                            contains("html")
                     }
                 }
             }
-        }
 
         @Throws(IOException::class)
         private fun toByteArray(inputStream: InputStream): ByteArray {
@@ -261,6 +269,8 @@ class LoggerInterceptor(tag: String = "OkHttp") : Interceptor {
     }
 
     enum class Level {
-        NONE, HEADERS, BODY
+        NONE,
+        HEADERS,
+        BODY
     }
 }

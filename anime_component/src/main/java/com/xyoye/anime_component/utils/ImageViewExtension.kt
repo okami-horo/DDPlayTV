@@ -21,7 +21,7 @@ fun ImageView.loadAnimeCover(
         error(R.drawable.background_anime_cover_error)
         crossfade(true)
         transformations(RoundedCornersTransformation(radius))
-        
+
         // 添加错误监听器，用于上报图片加载失败
         listener(
             onError = { _, result ->
@@ -29,9 +29,9 @@ fun ImageView.loadAnimeCover(
                     result.throwable,
                     "ImageViewExtension",
                     "loadAnimeCover",
-                    "图片URL: $source"
+                    "图片URL: $source",
                 )
-            }
+            },
         )
     }
 }

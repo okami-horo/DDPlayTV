@@ -4,8 +4,14 @@ import com.xyoye.player_component.media3.mapper.LegacyCapabilityResult
 
 sealed class CodecFallbackDecision {
     object None : CodecFallbackDecision()
-    data class AudioOnly(val reason: String) : CodecFallbackDecision()
-    data class BlockPlayback(val reason: String) : CodecFallbackDecision()
+
+    data class AudioOnly(
+        val reason: String
+    ) : CodecFallbackDecision()
+
+    data class BlockPlayback(
+        val reason: String
+    ) : CodecFallbackDecision()
 }
 
 /**
@@ -15,7 +21,6 @@ sealed class CodecFallbackDecision {
  * - Other blocking issues (e.g., DRM) => block playback entirely.
  */
 class CodecFallbackHandler {
-
     fun evaluate(result: LegacyCapabilityResult): CodecFallbackDecision {
         if (!result.hasBlockingIssue) {
             return CodecFallbackDecision.None

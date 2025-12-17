@@ -8,7 +8,6 @@ import com.xyoye.data_component.enums.DanmakuLanguage
  */
 
 interface InterDanmuController : InterVideoTrack {
-
     /**
      * 更新弹幕文字大小
      */
@@ -87,12 +86,18 @@ interface InterDanmuController : InterVideoTrack {
     /**
      * 添加弹幕屏蔽
      */
-    fun addBlackList(isRegex: Boolean, vararg keyword: String)
+    fun addBlackList(
+        isRegex: Boolean,
+        vararg keyword: String
+    )
 
     /**
      * 移除弹幕屏蔽
      */
-    fun removeBlackList(isRegex: Boolean, keyword: String)
+    fun removeBlackList(
+        isRegex: Boolean,
+        keyword: String
+    )
 
     /**
      * 设置弹幕速度
@@ -102,7 +107,10 @@ interface InterDanmuController : InterVideoTrack {
     /**
      * 弹幕进度跳转
      */
-    fun seekTo(timeMs: Long, isPlaying: Boolean)
+    fun seekTo(
+        timeMs: Long,
+        isPlaying: Boolean
+    )
 
     /**
      * 弹幕简繁

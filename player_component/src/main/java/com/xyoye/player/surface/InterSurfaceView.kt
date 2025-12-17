@@ -9,10 +9,12 @@ import com.xyoye.player.kernel.inter.AbstractVideoPlayer
  */
 
 interface InterSurfaceView {
-
     fun attachPlayer(player: AbstractVideoPlayer)
 
-    fun setVideoSize(videoWidth: Int, videoHeight: Int)
+    fun setVideoSize(
+        videoWidth: Int,
+        videoHeight: Int
+    )
 
     fun setVideoRotation(degree: Int)
 

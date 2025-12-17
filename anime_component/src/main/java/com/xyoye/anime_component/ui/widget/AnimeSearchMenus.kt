@@ -15,9 +15,11 @@ class AnimeSearchMenus private constructor(
     private val activity: AppCompatActivity,
     menu: Menu
 ) {
-
     companion object {
-        fun inflater(activity: AppCompatActivity, menu: Menu): AnimeSearchMenus {
+        fun inflater(
+            activity: AppCompatActivity,
+            menu: Menu
+        ): AnimeSearchMenus {
             activity.menuInflater.inflate(R.menu.menu_anime_search, menu)
             return AnimeSearchMenus(activity, menu)
         }
@@ -40,17 +42,19 @@ class AnimeSearchMenus private constructor(
             findViewById<SearchView.SearchAutoComplete>(R.id.search_src_text)?.textSize = 16f
         }
 
-        mSearchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String): Boolean {
-                mSearchView.clearFocus()
-                return false
-            }
+        mSearchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String): Boolean {
+                    mSearchView.clearFocus()
+                    return false
+                }
 
-            override fun onQueryTextChange(keyword: String): Boolean {
-                onTextChanged?.invoke(keyword)
-                return false
-            }
-        })
+                override fun onQueryTextChange(keyword: String): Boolean {
+                    onTextChanged?.invoke(keyword)
+                    return false
+                }
+            },
+        )
     }
 
     fun handleBackPressed(): Boolean {

@@ -14,7 +14,6 @@ import androidx.fragment.app.Fragment
  */
 
 abstract class BaseAppFragment<V : ViewDataBinding> : Fragment() {
-
     private var _binding: V? = null
 
     protected val dataBinding get() = _binding!!
@@ -36,7 +35,10 @@ abstract class BaseAppFragment<V : ViewDataBinding> : Fragment() {
         return dataBinding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
         super.onViewCreated(view, savedInstanceState)
         initView()
     }
@@ -49,9 +51,7 @@ abstract class BaseAppFragment<V : ViewDataBinding> : Fragment() {
         mAttachActivity.hideLoading()
     }
 
-    protected fun isDestroyed(): Boolean {
-        return _binding == null
-    }
+    protected fun isDestroyed(): Boolean = _binding == null
 
     override fun onDestroyView() {
         super.onDestroyView()

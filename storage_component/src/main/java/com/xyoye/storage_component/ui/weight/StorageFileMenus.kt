@@ -19,9 +19,11 @@ class StorageFileMenus private constructor(
     private val activity: StorageFileActivity,
     menu: Menu
 ) {
-
     companion object {
-        fun inflater(activity: StorageFileActivity, menu: Menu): StorageFileMenus {
+        fun inflater(
+            activity: StorageFileActivity,
+            menu: Menu
+        ): StorageFileMenus {
             activity.menuInflater.inflate(R.menu.menu_storage_file, menu)
             return StorageFileMenus(activity, menu)
         }
@@ -50,17 +52,19 @@ class StorageFileMenus private constructor(
             findViewById<SearchAutoComplete>(R.id.search_src_text)?.textSize = 16f
         }
 
-        mSearchView.setOnQueryTextListener(object : OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String): Boolean {
-                mSearchView.clearFocus()
-                return false
-            }
+        mSearchView.setOnQueryTextListener(
+            object : OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String): Boolean {
+                    mSearchView.clearFocus()
+                    return false
+                }
 
-            override fun onQueryTextChange(keyword: String): Boolean {
-                onTextChanged?.invoke(keyword)
-                return false
-            }
-        })
+                override fun onQueryTextChange(keyword: String): Boolean {
+                    onTextChanged?.invoke(keyword)
+                    return false
+                }
+            },
+        )
     }
 
     private fun updateSortItem() {
@@ -81,13 +85,14 @@ class StorageFileMenus private constructor(
     }
 
     fun onOptionsItemSelected(item: MenuItem) {
-        val changed = when (item.itemId) {
-            R.id.action_sort_by_name -> StorageSortOption.setSort(StorageSort.NAME)
-            R.id.action_sort_by_size -> StorageSortOption.setSort(StorageSort.SIZE)
-            R.id.action_sort_order_asc -> StorageSortOption.changeAsc()
-            R.id.action_sort_directory_first -> StorageSortOption.changeDirectoryFirst()
-            else -> false
-        }
+        val changed =
+            when (item.itemId) {
+                R.id.action_sort_by_name -> StorageSortOption.setSort(StorageSort.NAME)
+                R.id.action_sort_by_size -> StorageSortOption.setSort(StorageSort.SIZE)
+                R.id.action_sort_order_asc -> StorageSortOption.changeAsc()
+                R.id.action_sort_directory_first -> StorageSortOption.changeDirectoryFirst()
+                else -> false
+            }
         if (changed) {
             updateSortItem()
             onSortChanged?.invoke()

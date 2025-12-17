@@ -8,9 +8,9 @@ import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.toastError
-import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.getFileNameNoExtension
 import com.xyoye.common_component.utils.subtitle.SubtitleMatchHelper
 import com.xyoye.common_component.utils.subtitle.SubtitleSearchHelper
@@ -24,12 +24,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 
-
 /**
  * Created by xyoye on 2022/1/25
  */
 class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
-
     private val searchSubtitleRepository = SubtitleSearchHelper(viewModelScope)
 
     lateinit var storageFile: StorageFile
@@ -56,7 +54,7 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                     e,
                     "BindSubtitleSourceFragmentViewModel",
                     "matchSubtitle",
-                    "File: ${storageFile.fileName()}"
+                    "File: ${storageFile.fileName()}",
                 )
             }
         }
@@ -70,10 +68,11 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
         viewModelScope.launch {
             try {
                 showLoading()
-                val result = ResourceRepository.getSubtitleDetail(
-                    SubtitleConfig.getShooterSecret().orEmpty(),
-                    sourceBean.id.toString()
-                )
+                val result =
+                    ResourceRepository.getSubtitleDetail(
+                        SubtitleConfig.getShooterSecret().orEmpty(),
+                        sourceBean.id.toString(),
+                    )
                 hideLoading()
 
                 if (result.isFailure) {
@@ -82,17 +81,22 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                         exception ?: RuntimeException("Unknown subtitle detail error"),
                         "BindSubtitleSourceFragmentViewModel",
                         "detailSearchSubtitle",
-                        "Subtitle ID: ${sourceBean.id}"
+                        "Subtitle ID: ${sourceBean.id}",
                     )
                     exception?.message?.toastError()
                     return@launch
                 }
 
-                val subtitle = result.getOrNull()?.sub?.subs?.firstOrNull()
-                    ?: run {
-                        ToastCenter.showError("获取字幕详情失败")
-                        return@launch
-                    }
+                val subtitle =
+                    result
+                        .getOrNull()
+                        ?.sub
+                        ?.subs
+                        ?.firstOrNull()
+                        ?: run {
+                            ToastCenter.showError("获取字幕详情失败")
+                            return@launch
+                        }
 
                 searchSubtitleDetailLiveData.postValue(subtitle)
             } catch (e: Exception) {
@@ -101,22 +105,27 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                     e,
                     "BindSubtitleSourceFragmentViewModel",
                     "detailSearchSubtitle",
-                    "Unexpected error for subtitle ID: ${sourceBean.id}"
+                    "Unexpected error for subtitle ID: ${sourceBean.id}",
                 )
                 e.message?.toastError()
             }
         }
     }
 
-    fun downloadSearchSubtitle(fileName: String?, sourceUrl: String, unzip: Boolean = false) {
+    fun downloadSearchSubtitle(
+        fileName: String?,
+        sourceUrl: String,
+        unzip: Boolean = false
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 showLoading()
-                val name = if (TextUtils.isEmpty(fileName)) {
-                    "${getFileNameNoExtension(storageFile.filePath())}.ass"
-                } else {
-                    fileName!!
-                }
+                val name =
+                    if (TextUtils.isEmpty(fileName)) {
+                        "${getFileNameNoExtension(storageFile.filePath())}.ass"
+                    } else {
+                        fileName!!
+                    }
 
                 val result = ResourceRepository.getResourceResponseBody(sourceUrl)
                 if (result.isFailure) {
@@ -126,7 +135,7 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                         exception ?: RuntimeException("Unknown download error"),
                         "BindSubtitleSourceFragmentViewModel",
                         "downloadSearchSubtitle",
-                        "File: $name, URL: $sourceUrl"
+                        "File: $name, URL: $sourceUrl",
                     )
                     exception?.message?.toastError()
                     return@launch
@@ -146,14 +155,17 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                     e,
                     "BindSubtitleSourceFragmentViewModel",
                     "downloadSearchSubtitle",
-                    "Unexpected error downloading subtitle: $fileName"
+                    "Unexpected error downloading subtitle: $fileName",
                 )
                 ToastCenter.showError("下载字幕失败")
             }
         }
     }
 
-    private suspend fun unzipSaveSubtitle(fileName: String, responseBody: ResponseBody) {
+    private suspend fun unzipSaveSubtitle(
+        fileName: String,
+        responseBody: ResponseBody
+    ) {
         try {
             val unzipDirPath =
                 SubtitleUtils.saveAndUnzipFile(fileName, responseBody.byteStream()).orEmpty()
@@ -161,7 +173,7 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                 ErrorReportHelper.postException(
                     "Subtitle unzip failed",
                     "BindSubtitleSourceFragmentViewModel",
-                    null
+                    null,
                 )
                 ToastCenter.showError("解压字幕文件失败，请尝试手动解压")
                 return
@@ -172,13 +184,16 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                 e,
                 "BindSubtitleSourceFragmentViewModel",
                 "unzipSaveSubtitle",
-                "File: $fileName"
+                "File: $fileName",
             )
             ToastCenter.showError("解压字幕文件失败，请尝试手动解压")
         }
     }
 
-    private fun saveSubtitle(fileName: String, responseBody: ResponseBody) {
+    private fun saveSubtitle(
+        fileName: String,
+        responseBody: ResponseBody
+    ) {
         try {
             val subtitlePath = SubtitleUtils.saveSubtitle(fileName, responseBody.byteStream())
             if (subtitlePath != null) {
@@ -188,7 +203,7 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                 ErrorReportHelper.postException(
                     "Subtitle save failed",
                     "BindSubtitleSourceFragmentViewModel",
-                    null
+                    null,
                 )
                 ToastCenter.showError("保存字幕失败")
             }
@@ -197,7 +212,7 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                 e,
                 "BindSubtitleSourceFragmentViewModel",
                 "saveSubtitle",
-                "File: $fileName"
+                "File: $fileName",
             )
             ToastCenter.showError("保存字幕失败")
         }
@@ -212,7 +227,7 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                     e,
                     "BindSubtitleSourceFragmentViewModel",
                     "unbindSubtitle",
-                    "File: ${storageFile.fileName()}"
+                    "File: ${storageFile.fileName()}",
                 )
             }
         }
@@ -222,8 +237,10 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val storageId = storageFile.storage.library.id
-                val history = DatabaseManager.instance.getPlayHistoryDao()
-                    .getPlayHistory(storageFile.uniqueKey(), storageId)
+                val history =
+                    DatabaseManager.instance
+                        .getPlayHistoryDao()
+                        .getPlayHistory(storageFile.uniqueKey(), storageId)
 
                 if (history != null) {
                     history.subtitlePath = filePath
@@ -231,22 +248,23 @@ class BindSubtitleSourceFragmentViewModel : BaseViewModel() {
                     return@launch
                 }
 
-                val newHistory = PlayHistoryEntity(
-                    0,
-                    "",
-                    "",
-                    mediaType = storageFile.storage.library.mediaType,
-                    uniqueKey = storageFile.uniqueKey(),
-                    subtitlePath = filePath,
-                    storageId = storageId,
-                )
+                val newHistory =
+                    PlayHistoryEntity(
+                        0,
+                        "",
+                        "",
+                        mediaType = storageFile.storage.library.mediaType,
+                        uniqueKey = storageFile.uniqueKey(),
+                        subtitlePath = filePath,
+                        storageId = storageId,
+                    )
                 DatabaseManager.instance.getPlayHistoryDao().insert(newHistory)
             } catch (e: Exception) {
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "BindSubtitleSourceFragmentViewModel",
                     "databaseSubtitle",
-                    "File path: $filePath, Storage file: ${storageFile.fileName()}"
+                    "File path: $filePath, Storage file: ${storageFile.fileName()}",
                 )
             }
         }

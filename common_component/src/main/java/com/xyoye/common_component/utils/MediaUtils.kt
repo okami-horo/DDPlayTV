@@ -18,20 +18,28 @@ import java.io.IOException
 import java.util.Date
 import java.util.Locale
 
-
 /**
  * Created by xyoye on 2020/11/26.
  */
 
-val supportSubtitleExtension = arrayOf(
-    "ass", "scc", "stl", "srt",
-    "ttml"
-)
+val supportSubtitleExtension =
+    arrayOf(
+        "ass",
+        "scc",
+        "stl",
+        "srt",
+        "ttml",
+    )
 
-val supportAudioExtension = arrayOf(
-    "mp3", "wav", "pcm", "flac",
-    "ogg", "m4s"
-)
+val supportAudioExtension =
+    arrayOf(
+        "mp3",
+        "wav",
+        "pcm",
+        "flac",
+        "ogg",
+        "m4s",
+    )
 
 fun isVideoFile(filePath: String): Boolean {
     val extension = getFileExtension(filePath)
@@ -59,27 +67,31 @@ fun isAudioFile(filePath: String): Boolean {
 }
 
 object MediaUtils {
-
     /**
      * 保存视频截图
      *
      * pair.first : 是否保存成功
      * pair.second: 保存目录类型，私有目录 or 公共目录 or ""
      */
-    fun saveScreenShot(context: Context, bitmap: Bitmap): Pair<Boolean, String> {
-        //尝试保存文件到公共目录：Picture
+    fun saveScreenShot(
+        context: Context,
+        bitmap: Bitmap
+    ): Pair<Boolean, String> {
+        // 尝试保存文件到公共目录：Picture
         val resolver = context.contentResolver
-        val pictureDetails = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, getShotImageName())
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.Images.Media.IS_PENDING, 1)
+        val pictureDetails =
+            ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, getShotImageName())
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
+                }
             }
-        }
 
-        val pictureUri = context.contentResolver.insert(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            pictureDetails
-        ) ?: return Pair(first = false, second = "")
+        val pictureUri =
+            context.contentResolver.insert(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                pictureDetails,
+            ) ?: return Pair(first = false, second = "")
 
         if (saveImage(resolver, pictureUri, bitmap)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -90,7 +102,7 @@ object MediaUtils {
             return Pair(first = true, second = "公共目录")
         }
 
-        //保存到公共录失败，尝试保存到私有目录
+        // 保存到公共录失败，尝试保存到私有目录
         val pictureFile = File(PathHelper.getScreenShotDirectory(), getShotImageName())
         return if (saveImage(pictureFile, bitmap)) {
             Pair(first = true, second = "私有目录")
@@ -106,15 +118,17 @@ object MediaUtils {
         var cursor: Cursor? = null
         try {
             val proj = arrayOf(MediaStore.Images.Media.DATA)
-            cursor = BaseApplication.getAppContext().contentResolver.query(
-                contentUri,
-                proj,
-                null,
-                null,
-                null
-            )
-            if (cursor == null || cursor.count == 0)
+            cursor =
+                BaseApplication.getAppContext().contentResolver.query(
+                    contentUri,
+                    proj,
+                    null,
+                    null,
+                    null,
+                )
+            if (cursor == null || cursor.count == 0) {
                 return ""
+            }
             val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
             cursor.moveToFirst()
             return Uri.fromFile(File(cursor.getString(columnIndex))).toString()
@@ -122,28 +136,28 @@ object MediaUtils {
             ErrorReportHelper.postCatchedException(
                 e,
                 "MediaUtils.getPathFromURI",
-                "从 URI 获取路径时参数异常: $contentUri"
+                "从 URI 获取路径时参数异常: $contentUri",
             )
             return ""
         } catch (e: SecurityException) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "MediaUtils.getPathFromURI",
-                "从 URI 获取路径时权限异常: $contentUri"
+                "从 URI 获取路径时权限异常: $contentUri",
             )
             return ""
         } catch (e: SQLiteException) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "MediaUtils.getPathFromURI",
-                "从 URI 获取路径时数据库异常: $contentUri"
+                "从 URI 获取路径时数据库异常: $contentUri",
             )
             return ""
         } catch (e: NullPointerException) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "MediaUtils.getPathFromURI",
-                "从 URI 获取路径时空指针异常: $contentUri"
+                "从 URI 获取路径时空指针异常: $contentUri",
             )
             return ""
         } finally {
@@ -156,7 +170,11 @@ object MediaUtils {
         return "SHOT_$curTime.jpg"
     }
 
-    private fun saveImage(resolver: ContentResolver, pictureUri: Uri, bitmap: Bitmap): Boolean {
+    private fun saveImage(
+        resolver: ContentResolver,
+        pictureUri: Uri,
+        bitmap: Bitmap
+    ): Boolean {
         val fileDescriptor = resolver.openFileDescriptor(pictureUri, "w", null) ?: return false
         var fileOutputStream: FileOutputStream? = null
         try {
@@ -167,7 +185,7 @@ object MediaUtils {
             ErrorReportHelper.postCatchedException(
                 e,
                 "MediaUtils.saveImage",
-                "保存图片到ContentResolver时IO异常"
+                "保存图片到ContentResolver时IO异常",
             )
             e.printStackTrace()
         } finally {
@@ -177,7 +195,10 @@ object MediaUtils {
         return false
     }
 
-    fun saveImage(file: File, bitmap: Bitmap): Boolean {
+    fun saveImage(
+        file: File,
+        bitmap: Bitmap
+    ): Boolean {
         var fileOutputStream: FileOutputStream? = null
         try {
             fileOutputStream = FileOutputStream(file)
@@ -187,7 +208,7 @@ object MediaUtils {
             ErrorReportHelper.postCatchedException(
                 e,
                 "MediaUtils.saveImage",
-                "保存图片到文件时IO异常: ${file.absolutePath}"
+                "保存图片到文件时IO异常: ${file.absolutePath}",
             )
             e.printStackTrace()
         } finally {

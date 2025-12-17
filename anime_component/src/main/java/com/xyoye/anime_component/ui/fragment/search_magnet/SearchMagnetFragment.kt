@@ -29,10 +29,9 @@ import com.xyoye.data_component.data.MagnetData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MagnetScreenType
 
-
 class SearchMagnetFragment :
-    BaseFragment<SearchMagnetFragmentViewModel, FragmentSearchMagnetBinding>(), SearchListener {
-
+    BaseFragment<SearchMagnetFragmentViewModel, FragmentSearchMagnetBinding>(),
+    SearchListener {
     companion object {
         fun newInstance(searchWord: String?): SearchMagnetFragment {
             val argument = Bundle()
@@ -48,7 +47,7 @@ class SearchMagnetFragment :
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            SearchMagnetFragmentViewModel::class.java
+            SearchMagnetFragmentViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.fragment_search_magnet
@@ -91,50 +90,52 @@ class SearchMagnetFragment :
         dataBinding.magnetRv.apply {
             layoutManager = vertical()
 
-            adapter = buildAdapter {
-                addEmptyView(R.layout.layout_empty)
+            adapter =
+                buildAdapter {
+                    addEmptyView(R.layout.layout_empty)
 
-                addItem<MagnetData, ItemSearchMagnetBinding>(R.layout.item_search_magnet) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
+                    addItem<MagnetData, ItemSearchMagnetBinding>(R.layout.item_search_magnet) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                val time =
+                                    data.PublishDate?.run {
+                                        val spaceIndex = indexOf(" ")
+                                        if (spaceIndex > 0) {
+                                            substring(0, spaceIndex)
+                                        } else {
+                                            this
+                                        }
+                                    }
 
-                            val time = data.PublishDate?.run {
-                                val spaceIndex = indexOf(" ")
-                                if (spaceIndex > 0) {
-                                    substring(0, spaceIndex)
-                                } else {
-                                    this
+                                magnetTitleTv.text = data.Title
+                                magnetSizeTv.text = data.FileSize
+                                magnetSubgroupTv.text = data.SubgroupName
+                                magnetTypeTv.text = data.TypeName
+                                magnetTimeTv.text = time
+
+                                contentView.setOnClickListener {
+                                    val magnetHash = MagnetUtils.getMagnetHash(data.Magnet)
+                                    if (magnetHash.isEmpty()) {
+                                        ToastCenter.showError("错误，磁链为空或无法解析")
+                                        return@setOnClickListener
+                                    }
+                                    val magnetLink = "magnet:?xt=urn:btih:$magnetHash"
+                                    val library = MediaLibraryEntity.TORRENT.copy(url = magnetLink)
+                                    ARouter
+                                        .getInstance()
+                                        .build(RouteTable.Stream.StorageFile)
+                                        .withParcelable("storageLibrary", library)
+                                        .navigation()
                                 }
-                            }
 
-                            magnetTitleTv.text = data.Title
-                            magnetSizeTv.text = data.FileSize
-                            magnetSubgroupTv.text = data.SubgroupName
-                            magnetTypeTv.text = data.TypeName
-                            magnetTimeTv.text = time
-
-                            contentView.setOnClickListener {
-                                val magnetHash = MagnetUtils.getMagnetHash(data.Magnet)
-                                if (magnetHash.isEmpty()){
-                                    ToastCenter.showError("错误，磁链为空或无法解析")
-                                    return@setOnClickListener
+                                contentView.setOnLongClickListener {
+                                    showActionDialog(data)
+                                    return@setOnLongClickListener true
                                 }
-                                val magnetLink = "magnet:?xt=urn:btih:$magnetHash"
-                                val library = MediaLibraryEntity.TORRENT.copy(url = magnetLink)
-                                ARouter.getInstance()
-                                    .build(RouteTable.Stream.StorageFile)
-                                    .withParcelable("storageLibrary", library)
-                                    .navigation()
-                            }
-
-                            contentView.setOnLongClickListener {
-                                showActionDialog(data)
-                                return@setOnLongClickListener true
                             }
                         }
                     }
                 }
-            }
         }
     }
 
@@ -216,7 +217,10 @@ class SearchMagnetFragment :
         }.show()
     }
 
-    private enum class ManageMagnet(val title: String, val icon: Int) {
+    private enum class ManageMagnet(
+        val title: String,
+        val icon: Int
+    ) {
         Copy("复制磁链", R.drawable.ic_magnet_copy),
         CopyContent("复制完整磁链", R.drawable.ic_magnet_copy_content);
 

@@ -15,7 +15,6 @@ class TelemetryEventMapper(
     private val idProvider: () -> String = { UUID.randomUUID().toString() },
     private val timestampProvider: () -> Long = { System.currentTimeMillis() }
 ) {
-
     fun createEvent(
         session: PlaybackSession,
         eventType: Media3TelemetryEventType,
@@ -42,11 +41,9 @@ class TelemetryEventMapper(
             media3Version = media3VersionProvider(),
             metrics = enrichedMetrics.toMap(),
             deviceInfo = deviceInfo.toMap(),
-            isForeground = isForeground
+            isForeground = isForeground,
         )
     }
 
-    private fun cohortValue(cohort: Media3ToggleCohort?): String {
-        return cohort?.name ?: "UNKNOWN"
-    }
+    private fun cohortValue(cohort: Media3ToggleCohort?): String = cohort?.name ?: "UNKNOWN"
 }

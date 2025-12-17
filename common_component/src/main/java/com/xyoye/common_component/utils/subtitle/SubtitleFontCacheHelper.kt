@@ -19,13 +19,15 @@ object SubtitleFontCacheHelper {
     private val fontDirCandidates = listOf("fonts", "font")
     private val supportedExtensions = setOf("ttf", "otf", "ttc", "otc")
 
-    fun findFontDirectory(files: List<StorageFile>): StorageFile? {
-        return files.firstOrNull { file ->
+    fun findFontDirectory(files: List<StorageFile>): StorageFile? =
+        files.firstOrNull { file ->
             file.isDirectory() && fontDirCandidates.any { it.equals(file.fileName(), ignoreCase = true) }
         }
-    }
 
-    suspend fun listFontFiles(storage: Storage, fontDirectory: StorageFile): List<StorageFile> {
+    suspend fun listFontFiles(
+        storage: Storage,
+        fontDirectory: StorageFile
+    ): List<StorageFile> {
         val currentDirectory = storage.directory
         val currentFiles = storage.directoryFiles
         return try {
@@ -41,9 +43,7 @@ object SubtitleFontCacheHelper {
         }
     }
 
-    fun filterFontFiles(files: List<StorageFile>): List<StorageFile> {
-        return files.filter { it.isFile() && isFontFile(it.fileName()) }
-    }
+    fun filterFontFiles(files: List<StorageFile>): List<StorageFile> = files.filter { it.isFile() && isFontFile(it.fileName()) }
 
     fun isFontFile(fileName: String): Boolean {
         val extension = getFileExtension(fileName).lowercase()
@@ -52,7 +52,8 @@ object SubtitleFontCacheHelper {
 
     fun ensureFontDirectory(context: Context): File? {
         SubtitleFontManager.ensureDefaultFont(context)
-        return SubtitleFontManager.getFontsDirectoryPath(context)
+        return SubtitleFontManager
+            .getFontsDirectoryPath(context)
             ?.let { File(it) }
             ?.apply {
                 if (exists().not()) {
@@ -61,12 +62,19 @@ object SubtitleFontCacheHelper {
             }
     }
 
-    fun isFontCached(directory: File, fileName: String): Boolean {
+    fun isFontCached(
+        directory: File,
+        fileName: String
+    ): Boolean {
         val target = File(directory, fileName)
         return target.exists() && target.length() > 0
     }
 
-    fun cacheFontFile(directory: File, fileName: String, inputStream: InputStream): Boolean {
+    fun cacheFontFile(
+        directory: File,
+        fileName: String,
+        inputStream: InputStream
+    ): Boolean {
         val target = File(directory, fileName)
         if (target.exists()) {
             target.delete()

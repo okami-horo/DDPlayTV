@@ -30,10 +30,10 @@ abstract class GestureVideoController(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : TvVideoController(context, attrs, defStyleAttr), View.OnTouchListener,
+) : TvVideoController(context, attrs, defStyleAttr),
+    View.OnTouchListener,
     GestureDetector.OnGestureListener,
     GestureDetector.OnDoubleTapListener {
-
     private val mAudioManager: AudioManager by lazy {
         getContext().getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
@@ -58,7 +58,7 @@ abstract class GestureVideoController(
         LongPressAccelerator(
             mControlWrapper,
             onStart = { speed -> startAccelerate(speed) },
-            onStop = { stopAccelerate() }
+            onStop = { stopAccelerate() },
         )
     }
     private val disableTouchGestures: Boolean by lazy {
@@ -79,7 +79,10 @@ abstract class GestureVideoController(
         mCurrentPlayState = playState
     }
 
-    override fun onTouch(v: View?, event: MotionEvent): Boolean {
+    override fun onTouch(
+        v: View?,
+        event: MotionEvent
+    ): Boolean {
         mPopupGestureHandler?.onTouch(v, event)
         if (disableTouchGestures) {
             return false
@@ -115,9 +118,7 @@ abstract class GestureVideoController(
         e2: MotionEvent,
         velocityX: Float,
         velocityY: Float
-    ): Boolean {
-        return false
-    }
+    ): Boolean = false
 
     override fun onLongPress(e: MotionEvent) {
         if (disableTouchGestures) {
@@ -197,18 +198,18 @@ abstract class GestureVideoController(
         val deltaY = eventY1 - eventY2
 
         if (mFirstTouch) {
-            //垂直滑动
+            // 垂直滑动
             if (abs(distanceX) < abs(distanceY)) {
                 val halfScreen = context.getScreenWidth() / 2
                 if (eventX2 > halfScreen) {
-                    //右半屏，修改音量
+                    // 右半屏，修改音量
                     mChangeVolume = true
                 } else {
-                    //左半屏，修改亮度
+                    // 左半屏，修改亮度
                     mChangeBrightness = true
                 }
             } else {
-                //水平滑动
+                // 水平滑动
                 mChangePosition = true
             }
             for (entry in mControlComponents.entries) {
@@ -232,12 +233,12 @@ abstract class GestureVideoController(
         if (disableTouchGestures) {
             return
         }
-        //滑动距离与实际进度缩放比例
+        // 滑动距离与实际进度缩放比例
         val zoomPercent = 120 * 1000
         val duration = mControlWrapper.getDuration()
         val currentPosition = mControlWrapper.getCurrentPosition()
 
-        //新位置
+        // 新位置
         var newPosition = (-deltaX / measuredWidth * zoomPercent + currentPosition).toLong()
 
         newPosition = max(0, newPosition)
@@ -305,11 +306,12 @@ abstract class GestureVideoController(
         val maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         val curVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
 
-        var newVolume = if (isVolumeUp) {
-            curVolume + (maxVolume / 15)
-        } else {
-            curVolume - (maxVolume / 15)
-        }
+        var newVolume =
+            if (isVolumeUp) {
+                curVolume + (maxVolume / 15)
+            } else {
+                curVolume - (maxVolume / 15)
+            }
 
         newVolume = max(0, newVolume)
         newVolume = min(maxVolume, newVolume)
@@ -358,15 +360,17 @@ abstract class GestureVideoController(
         }
     }
 
-private fun isNormalPlayState() = isWrapperInitialized() and
-        (mCurrentPlayState != PlayState.STATE_ERROR) and
-        (mCurrentPlayState != PlayState.STATE_IDLE) and
-        (mCurrentPlayState != PlayState.STATE_START_ABORT)
+    private fun isNormalPlayState() =
+        isWrapperInitialized() and
+            (mCurrentPlayState != PlayState.STATE_ERROR) and
+            (mCurrentPlayState != PlayState.STATE_IDLE) and
+            (mCurrentPlayState != PlayState.STATE_START_ABORT)
 }
 
 private fun Context.isTelevisionUiMode(): Boolean {
     val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
-    val currentModeType = uiModeManager?.currentModeType
-        ?: (resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)
+    val currentModeType =
+        uiModeManager?.currentModeType
+            ?: (resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)
     return currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
 }

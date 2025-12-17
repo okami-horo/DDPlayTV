@@ -9,12 +9,14 @@ import com.xyoye.player.controller.video.InterControllerView
  */
 
 interface InterSettingView : InterControllerView {
-
     fun getSettingViewType(): SettingViewType
 
     fun onSettingVisibilityChanged(isVisible: Boolean)
 
     fun isSettingShowing(): Boolean
 
-    fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean
+    fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean
 }

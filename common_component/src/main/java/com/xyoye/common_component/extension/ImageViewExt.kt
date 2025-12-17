@@ -18,12 +18,14 @@ import java.io.File
 fun ImageView.loadImage(
     source: String?,
     radiusDp: Float = 0f,
-    errorRes: Int = 0,
+    errorRes: Int = 0
 ) {
-    val transformation = if (radiusDp > 0)
-        RoundedCornersTransformation(radiusDp.dp())
-    else
-        null
+    val transformation =
+        if (radiusDp > 0) {
+            RoundedCornersTransformation(radiusDp.dp())
+        } else {
+            null
+        }
 
     load(source) {
         scale(Scale.FILL)
@@ -50,10 +52,12 @@ fun ImageView.loadStorageFileCover(file: StorageFile) {
     val resourceType = source.resourceType()
 
     // 文件类型的封面，不开启缓存，因为播放进度图会频繁变更
-    val cachePolicy = if (resourceType == ResourceType.File)
-        CachePolicy.DISABLED
-    else
-        CachePolicy.ENABLED
+    val cachePolicy =
+        if (resourceType == ResourceType.File) {
+            CachePolicy.DISABLED
+        } else {
+            CachePolicy.ENABLED
+        }
 
     load(source ?: R.drawable.ic_dandanplay) {
         scale(Scale.FILL)

@@ -21,9 +21,11 @@ class DeveloperMenus private constructor(
     private val activity: AppCompatActivity,
     menu: Menu
 ) {
-
     companion object {
-        fun inflater(activity: AppCompatActivity, menu: Menu): DeveloperMenus {
+        fun inflater(
+            activity: AppCompatActivity,
+            menu: Menu
+        ): DeveloperMenus {
             activity.menuInflater.inflate(R.menu.menu_developer, menu)
             return DeveloperMenus(activity, menu)
         }
@@ -37,8 +39,9 @@ class DeveloperMenus private constructor(
     private var authenticateDialog: DeveloperAuthenticateDialog? = null
 
     private val isDeveloperAuthenticate: Boolean
-        get() = DevelopConfig.getAppId()?.isNotEmpty() == true
-                && DevelopConfig.getAppSecret()?.isNotEmpty() == true
+        get() =
+            DevelopConfig.getAppId()?.isNotEmpty() == true &&
+                DevelopConfig.getAppSecret()?.isNotEmpty() == true
 
     init {
         updateItem()
@@ -54,7 +57,8 @@ class DeveloperMenus private constructor(
                 return
             }
             R.id.item_developer_setting -> {
-                ARouter.getInstance()
+                ARouter
+                    .getInstance()
                     .build(RouteTable.User.SettingDeveloper)
                     .navigation(activity)
                 return
@@ -67,9 +71,10 @@ class DeveloperMenus private constructor(
      */
     private fun showAuthenticateDialog() {
         authenticateDialog?.dismiss()
-        authenticateDialog = DeveloperAuthenticateDialog(activity) {
-            SupervisorScope.Main.launch { updateItem() }
-        }
+        authenticateDialog =
+            DeveloperAuthenticateDialog(activity) {
+                SupervisorScope.Main.launch { updateItem() }
+            }
         authenticateDialog?.show()
     }
 
@@ -101,11 +106,12 @@ class DeveloperMenus private constructor(
         authItem.isVisible = true
         settingItem.isVisible = false // 开发者设置入口已移至个人中心
 
-        val (title, iconRes) = if (isDeveloperAuthenticate) {
-            "已认证" to R.drawable.ic_developer_authenticated
-        } else {
-            "未认证" to R.drawable.ic_developer_unauthenticated
-        }
+        val (title, iconRes) =
+            if (isDeveloperAuthenticate) {
+                "已认证" to R.drawable.ic_developer_authenticated
+            } else {
+                "未认证" to R.drawable.ic_developer_unauthenticated
+            }
 
         authItem.title = title
         authItem.icon = iconRes.toResDrawable(activity)

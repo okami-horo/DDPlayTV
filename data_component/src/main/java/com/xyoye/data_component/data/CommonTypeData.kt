@@ -10,7 +10,6 @@ import com.squareup.moshi.JsonClass
 data class CommonTypeData(
     var typeName: String,
     var typeId: String,
-
     var isChecked: Boolean = false,
     var isEnable: Boolean = true
 )

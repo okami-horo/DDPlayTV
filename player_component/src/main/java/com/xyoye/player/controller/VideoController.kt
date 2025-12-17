@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.util.AttributeSet
 import androidx.lifecycle.LiveData
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
@@ -26,7 +27,6 @@ import com.xyoye.player.controller.video.PlayerTopView
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.utils.MessageTime
 import com.xyoye.subtitle.MixedSubtitle
-import androidx.media3.common.util.UnstableApi
 
 /**
  * Created by xyoye on 2020/11/3.
@@ -39,18 +39,20 @@ class VideoController(
     defStyleAttr: Int = 0
 ) : GestureVideoController(context, attrs, defStyleAttr) {
     private val isTvUiMode: Boolean = context.isTelevisionUiMode()
-    //弹幕视图控制器
+
+    // 弹幕视图控制器
     private val mDanmuController = DanmuController(context)
 
-    //字幕视图控制器
+    // 字幕视图控制器
     private val mSubtitleController = SubtitleController(context)
 
-    //设置视图控制器
-    private val mSettingController = SettingController(
-        context,
-        { addControlComponent(it) },
-        onSettingHidden = { onSettingHidden() }
-    )
+    // 设置视图控制器
+    private val mSettingController =
+        SettingController(
+            context,
+            { addControlComponent(it) },
+            onSettingHidden = { onSettingHidden() },
+        )
 
     private val playerTopView = PlayerTopView(context)
     private val playerBotView = PlayerBottomView(context)
@@ -86,7 +88,10 @@ class VideoController(
 
     override fun getSettingController() = mSettingController
 
-    override fun showMessage(text: String, time: MessageTime) {
+    override fun showMessage(
+        text: String,
+        time: MessageTime
+    ) {
         playerControlView.showMessage(text, time)
     }
 
@@ -159,7 +164,6 @@ class VideoController(
     }
 
     override fun destroy() {
-
     }
 
     private fun onSettingHidden() {
@@ -251,7 +255,7 @@ class VideoController(
     fun observerSendDanmu(block: (danmuData: SendDanmuBean) -> Unit) {
         /*
         playerBotView.setSendDanmuBlock(block)
-        */
+         */
     }
 
     /**
@@ -297,10 +301,11 @@ class VideoController(
     }
 
     private fun considerSeekToLastPlay() {
-        if (lastPlayPosition <= 0)
+        if (lastPlayPosition <= 0) {
             return
+        }
 
-        //上次进度大于90%时，不执行自动定位进度
+        // 上次进度大于90%时，不执行自动定位进度
         val duration = mControlWrapper.getDuration()
         if (1.0 * lastPlayPosition / duration >= 0.9) {
             return
@@ -350,8 +355,9 @@ class VideoController(
 
     private fun Context.isTelevisionUiMode(): Boolean {
         val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
-        val currentModeType = uiModeManager?.currentModeType
-            ?: (resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)
+        val currentModeType =
+            uiModeManager?.currentModeType
+                ?: (resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)
         return currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
     }
 }

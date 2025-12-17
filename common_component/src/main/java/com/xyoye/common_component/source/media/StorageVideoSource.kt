@@ -19,31 +19,24 @@ class StorageVideoSource(
     private val videoSources: List<StorageFile>,
     private var danmu: LocalDanmuBean?,
     private var subtitlePath: String?,
-    private var audioPath: String?,
+    private var audioPath: String?
 ) : BaseVideoSource(
-    videoSources.indexOfFirst { it.uniqueKey() == file.uniqueKey() },
-    videoSources
-) {
-
-    override fun getDanmu(): LocalDanmuBean? {
-        return danmu
-    }
+        videoSources.indexOfFirst { it.uniqueKey() == file.uniqueKey() },
+        videoSources,
+    ) {
+    override fun getDanmu(): LocalDanmuBean? = danmu
 
     override fun setDanmu(danmu: LocalDanmuBean?) {
         this.danmu = danmu
     }
 
-    override fun getSubtitlePath(): String? {
-        return subtitlePath
-    }
+    override fun getSubtitlePath(): String? = subtitlePath
 
     override fun setSubtitlePath(path: String?) {
         subtitlePath = path
     }
 
-    override fun getAudioPath(): String? {
-        return audioPath
-    }
+    override fun getAudioPath(): String? = audioPath
 
     override fun setAudioPath(path: String?) {
         audioPath = path
@@ -54,43 +47,26 @@ class StorageVideoSource(
         return getFileName(fileName)
     }
 
-    override suspend fun indexSource(index: Int): BaseVideoSource? {
-        return StorageVideoSourceFactory.create(
-            videoSources[index]
+    override suspend fun indexSource(index: Int): BaseVideoSource? =
+        StorageVideoSourceFactory.create(
+            videoSources[index],
         )
-    }
 
-    override fun getVideoUrl(): String {
-        return playUrl
-    }
+    override fun getVideoUrl(): String = playUrl
 
-    override fun getVideoTitle(): String {
-        return file.fileName()
-    }
+    override fun getVideoTitle(): String = file.fileName()
 
-    override fun getCurrentPosition(): Long {
-        return file.playHistory?.videoPosition ?: 0
-    }
+    override fun getCurrentPosition(): Long = file.playHistory?.videoPosition ?: 0
 
-    override fun getMediaType(): MediaType {
-        return file.storage.library.mediaType
-    }
+    override fun getMediaType(): MediaType = file.storage.library.mediaType
 
-    override fun getUniqueKey(): String {
-        return file.uniqueKey()
-    }
+    override fun getUniqueKey(): String = file.uniqueKey()
 
-    override fun getHttpHeader(): Map<String, String>? {
-        return file.storage.getNetworkHeaders()
-    }
+    override fun getHttpHeader(): Map<String, String>? = file.storage.getNetworkHeaders()
 
-    override fun getStorageId(): Int {
-        return file.storage.library.id
-    }
+    override fun getStorageId(): Int = file.storage.library.id
 
-    override fun getStoragePath(): String {
-        return file.storagePath()
-    }
+    override fun getStoragePath(): String = file.storagePath()
 
     fun getTorrentPath(): String? {
         if (file is TorrentStorageFile) {
@@ -113,11 +89,7 @@ class StorageVideoSource(
         return -1L
     }
 
-    fun getStorageFile(): StorageFile {
-        return file
-    }
+    fun getStorageFile(): StorageFile = file
 
-    fun indexStorageFile(index: Int): StorageFile {
-        return videoSources[index]
-    }
+    fun indexStorageFile(index: Int): StorageFile = videoSources[index]
 }

@@ -7,7 +7,6 @@ import com.xyoye.subtitle.MixedSubtitle
  */
 
 interface InterSubtitleController : InterVideoTrack {
-
     /**
      * 更新字幕偏移时间
      */

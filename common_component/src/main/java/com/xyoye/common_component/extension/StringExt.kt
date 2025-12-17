@@ -19,34 +19,39 @@ import java.nio.charset.Charset
  */
 
 fun String?.toFile(): File? {
-    if (this.isNullOrEmpty())
+    if (this.isNullOrEmpty()) {
         return null
+    }
     return File(this)
 }
 
 fun String?.toCoverFile(): File? {
-    if (this.isNullOrEmpty())
+    if (this.isNullOrEmpty()) {
         return null
+    }
     return File(PathHelper.getVideoCoverDirectory(), this)
 }
 
 fun String.addToClipboard() {
-    val clipboard = BaseApplication.getAppContext()
-        .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clipboard =
+        BaseApplication
+            .getAppContext()
+            .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val clipData = ClipData.newPlainText("data", this)
     clipboard.setPrimaryClip(clipData)
 }
 
 fun String.decodeUrl(charset: Charset = Charsets.UTF_8): String {
-    if (isNullOrEmpty())
+    if (isNullOrEmpty()) {
         return this
+    }
     return try {
         URLDecoder.decode(this, charset.name())
     } catch (e: Exception) {
         ErrorReportHelper.postCatchedException(
             e,
             "StringExt.decodeUrl",
-            "URL解码失败: $this"
+            "URL解码失败: $this",
         )
         this
     }
@@ -62,18 +67,16 @@ fun String.aesDecode(key: String? = null) = EntropyUtils.aesDecode(key, this, Ba
 
 fun String.authorizationValue() = "Bearer $this"
 
-inline fun String?.ifNullOrBlank(defaultValue: () -> String): String =
-    if (this.isNullOrBlank()) defaultValue() else this
+inline fun String?.ifNullOrBlank(defaultValue: () -> String): String = if (this.isNullOrBlank()) defaultValue() else this
 
-fun String?.resourceType(): ResourceType? {
-    return when {
+fun String?.resourceType(): ResourceType? =
+    when {
         this.isNullOrEmpty() -> null
         this.startsWith("http", true) -> ResourceType.URL
         this.startsWith("/") || this.startsWith("file://") -> ResourceType.File
         this.startsWith("content") -> ResourceType.URI
         else -> null
     }
-}
 
 fun String.toastError() {
     ToastCenter.showError(this)

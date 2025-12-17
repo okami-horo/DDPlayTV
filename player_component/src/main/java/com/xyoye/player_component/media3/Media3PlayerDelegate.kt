@@ -26,7 +26,6 @@ class Media3PlayerDelegate(
     private val telemetrySink: Media3TelemetrySink = Media3TelemetryRepository(),
     private val timeProvider: () -> Long = { System.currentTimeMillis() }
 ) {
-
     private var activeBundle: Media3SessionBundle? = null
     private var sessionStartAt: Long? = null
     private var firstFrameAt: Long? = null
@@ -43,12 +42,13 @@ class Media3PlayerDelegate(
         }
 
         val startAt = timeProvider()
-        val result = sessionController.prepareSession(
-            mediaId = mediaId,
-            sourceType = sourceType,
-            requestedCapabilities = requestedCapabilities,
-            autoplay = autoplay
-        )
+        val result =
+            sessionController.prepareSession(
+                mediaId = mediaId,
+                sourceType = sourceType,
+                requestedCapabilities = requestedCapabilities,
+                autoplay = autoplay,
+            )
         val bundle = result.getOrElse { return Result.failure(it) }
 
         sessionStartAt = startAt
@@ -63,36 +63,40 @@ class Media3PlayerDelegate(
     }
 
     suspend fun refreshSession(): Result<PlayerCapabilityContract> {
-        val sessionId = activeBundle?.session?.sessionId
-            ?: return Result.failure(IllegalStateException("No active Media3 session"))
-        return sessionController.refreshSession(sessionId)
+        val sessionId =
+            activeBundle?.session?.sessionId
+                ?: return Result.failure(IllegalStateException("No active Media3 session"))
+        return sessionController
+            .refreshSession(sessionId)
             .onSuccess { activeBundle = it }
             .onFailure { error ->
                 activeBundle?.session?.let { session ->
                     telemetrySink.recordError(session, error)
                 }
-            }
-            .map { it.capabilityContract }
+            }.map { it.capabilityContract }
     }
 
     suspend fun dispatchCapability(
         capability: Media3Capability,
         payload: Map<String, @JvmSuppressWildcards Any?>? = null
     ): Result<CapabilityCommandResponseData> {
-        val sessionId = activeBundle?.session?.sessionId
-            ?: return Result.failure(IllegalStateException("No active Media3 session"))
-        val session = activeBundle?.session
-            ?: return Result.failure(IllegalStateException("No active Media3 session"))
-        return sessionController.dispatchCapability(sessionId, capability, payload)
+        val sessionId =
+            activeBundle?.session?.sessionId
+                ?: return Result.failure(IllegalStateException("No active Media3 session"))
+        val session =
+            activeBundle?.session
+                ?: return Result.failure(IllegalStateException("No active Media3 session"))
+        return sessionController
+            .dispatchCapability(sessionId, capability, payload)
             .onSuccess {
                 // Update cached snapshot of session state if the backend mutated it.
-                sessionController.refreshSession(sessionId)
+                sessionController
+                    .refreshSession(sessionId)
                     .onSuccess { activeBundle = it }
                 if (capability == Media3Capability.CAST) {
                     telemetrySink.recordCastTransfer(session, payload?.get("targetId")?.toString())
                 }
-            }
-            .onFailure { telemetrySink.recordError(session, it) }
+            }.onFailure { telemetrySink.recordError(session, it) }
     }
 
     suspend fun markFirstFrame() {
