@@ -98,8 +98,8 @@ class AlistStorage(
             }
             playServer.generatePlayUrl(
                 upstreamUrl = upstream,
-                // Avoid exposing a seekable/known-length HTTP stream to libmpv; some upstreams fail on large Range seeks.
-                contentLength = -1L,
+                // Provide file length so the proxy can expose a seekable HTTP stream to mpv (Range support).
+                contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L,
                 fileName = fileName
             )
         } else {

@@ -5,6 +5,13 @@
         android:icon="@drawable/ic_player_setting_video"
         android:key="player_type"
         android:title="播放器类型" />
+    <SeekBarPreference
+        android:key="mpv_proxy_range_interval_ms"
+        android:max="2000"
+        android:title="MPV Range 限速间隔（ms）"
+        android:summary="本地 HTTP 代理转发 Range 请求的最小间隔。数值越大越不易触发风控，但拖动进度可能更慢。"
+        app:min="0"
+        app:showSeekBarValue="true" />
     <ListPreference
         android:key="vlc_hardware_acceleration"
         android:summary="禁用：稳定性更高\n解码：可能提升性能\n完全：可能进一步提升性能"

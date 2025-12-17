@@ -7,6 +7,7 @@ import android.view.Surface
 import androidx.media3.common.util.Util
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.log.LogSystem
 import com.xyoye.data_component.bean.VideoTrackBean
@@ -24,6 +25,8 @@ class MpvVideoPlayer(
     private var dataSource: String? = null
     private var headers: Map<String, String> = emptyMap()
     private var userAgent: String? = null
+    private var proxySeekEnabled: Boolean = false
+    private var pendingSeekMs: Long? = null
     private var videoSize = Point(0, 0)
     private var isPrepared = false
     private var isPreparing = false
@@ -69,6 +72,14 @@ class MpvVideoPlayer(
 
     override fun setDataSource(path: String, headers: Map<String, String>?) {
         dataSource = path
+        runCatching {
+            val playServer = HttpPlayServer.getInstance()
+            if (playServer.isServingUrl(path)) {
+                playServer.setSeekEnabled(false)
+                proxySeekEnabled = false
+                pendingSeekMs = null
+            }
+        }
         val originalHeaders = headers.orEmpty()
         val userAgentEntry = originalHeaders.entries.firstOrNull { it.key.equals("User-Agent", ignoreCase = true) }
         val shouldInjectUserAgent = runCatching {
@@ -124,6 +135,10 @@ class MpvVideoPlayer(
         var dataSourceError: Exception? = null
         val success = try {
             userAgent?.let { nativeBridge.setUserAgent(it) }
+            runCatching {
+                val playServer = HttpPlayServer.getInstance()
+                nativeBridge.setForceSeekable(playServer.isServingUrl(path))
+            }.getOrNull()
             nativeBridge.setDataSource(path, headers)
         } catch (e: Exception) {
             dataSourceError = e
@@ -186,6 +201,16 @@ class MpvVideoPlayer(
 
     override fun seekTo(timeMs: Long) {
         if (!isPrepared) return
+        if (!proxySeekEnabled) {
+            val path = dataSource
+            if (!path.isNullOrEmpty()) {
+                val isLocalProxy = runCatching { HttpPlayServer.getInstance().isServingUrl(path) }.getOrDefault(false)
+                if (isLocalProxy) {
+                    pendingSeekMs = timeMs
+                    return
+                }
+            }
+        }
         nativeBridge.seek(timeMs)
     }
 
@@ -365,6 +390,20 @@ class MpvVideoPlayer(
             }
             is MpvNativeBridge.Event.RenderingStart -> {
                 isPlaying = true
+                val path = dataSource
+                if (!path.isNullOrEmpty()) {
+                    runCatching {
+                        val playServer = HttpPlayServer.getInstance()
+                        if (playServer.isServingUrl(path)) {
+                            playServer.setSeekEnabled(true)
+                            proxySeekEnabled = true
+                            pendingSeekMs?.let { pending ->
+                                pendingSeekMs = null
+                                nativeBridge.seek(pending)
+                            }
+                        }
+                    }
+                }
                 mPlayerEventListener.onInfo(PlayerConstant.MEDIA_INFO_VIDEO_RENDERING_START, 0)
             }
             is MpvNativeBridge.Event.VideoSize -> {

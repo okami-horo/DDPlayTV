@@ -43,6 +43,10 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             "vlc_hardware_acceleration",
             "vlc_audio_output"
         )
+
+        val mpvPreference = arrayOf(
+            "mpv_proxy_range_interval_ms"
+        )
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -94,9 +98,15 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         when (playerType) {
             PlayerType.TYPE_VLC_PLAYER.value.toString() -> {
                 vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
+                mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
+            }
+            PlayerType.TYPE_MPV_PLAYER.value.toString() -> {
+                vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
+                mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
             }
             else -> {
                 vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
+                mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
             }
         }
     }
@@ -158,6 +168,40 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                     "PlayerSettingDataStore",
                     "putString",
                     "Failed to put string value for key: $key, value: $value"
+                )
+            }
+        }
+
+        override fun getInt(key: String?, defValue: Int): Int {
+            return try {
+                when (key) {
+                    "mpv_proxy_range_interval_ms" -> PlayerConfig.getMpvProxyRangeMinIntervalMs()
+                    else -> super.getInt(key, defValue)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayerSettingDataStore",
+                    "getInt",
+                    "Failed to get int value for key: $key"
+                )
+                defValue
+            }
+        }
+
+        override fun putInt(key: String?, value: Int) {
+            try {
+                when (key) {
+                    "mpv_proxy_range_interval_ms" ->
+                        PlayerConfig.putMpvProxyRangeMinIntervalMs(value.coerceIn(0, 2000))
+                    else -> super.putInt(key, value)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayerSettingDataStore",
+                    "putInt",
+                    "Failed to put int value for key: $key, value: $value"
                 )
             }
         }

@@ -159,6 +159,11 @@ class MpvNativeBridge {
         setOption("user-agent", userAgent)
     }
 
+    fun setForceSeekable(enabled: Boolean) {
+        if (nativeHandle == 0L) return
+        setOption("force-seekable", if (enabled) "yes" else "no")
+    }
+
     fun setSurfaceSize(width: Int, height: Int) {
         if (nativeHandle == 0L) return
         if (width <= 0 || height <= 0) return

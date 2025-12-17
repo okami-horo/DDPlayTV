@@ -25,41 +25,43 @@ object RangeUtils {
         }
 
         val maxRange = contentLength - 1
-        val separator = "-"
         val header = "bytes="
-        val range = rangeValue.replace(header, "")
+        val normalized = rangeValue.trim()
+        if (!normalized.startsWith(header, ignoreCase = true)) {
+            return null
+        }
+        val range = normalized.substring(header.length).trim()
+        // Multiple ranges are not supported.
+        if (range.contains(",")) {
+            return null
+        }
 
         // e.g. "" or "-"
         if (range.length < 2) {
             return null
         }
-        // e.g. "abc"
-        val separatorIndex = range.indexOf(separator)
-        if (separatorIndex == -1) {
-            return null
-        }
-        // e.g. "-499"
+        val separatorIndex = range.indexOf('-')
+        if (separatorIndex == -1) return null
+
+        // e.g. "-500" (suffix bytes)
         if (separatorIndex == 0) {
-            val end = range.substring(1).toLongOrDefault(0L)
-            return if (end <= 0 || end > maxRange) {
-                null
-            } else {
-                0L to end
-            }
+            val suffixLength = range.substring(1).toLongOrDefault(0L)
+            if (suffixLength <= 0) return null
+            val start = (contentLength - suffixLength).coerceAtLeast(0L)
+            return start to maxRange
         }
+
+        val start = range.substring(0, separatorIndex).toLongOrDefault(-1L)
+        if (start < 0 || start > maxRange) return null
+
         // e.g. "500-"
         if (separatorIndex == range.length - 1) {
-            val start = range.substring(0, separatorIndex).toLongOrDefault(0L)
-            return if (start < 0) {
-                null
-            } else {
-                start to maxRange
-            }
+            return start to maxRange
         }
+
         // e.g. "500-999"
-        val start = range.substring(0, separatorIndex).toLongOrDefault(0L)
-        val end = range.substring(separatorIndex + 1).toLongOrDefault(0L)
-        return if (start < 0 || end <= 0 || end > maxRange || start >= end) {
+        val end = range.substring(separatorIndex + 1).toLongOrDefault(-1L)
+        return if (end < 0 || end > maxRange || start > end) {
             null
         } else {
             start to end

@@ -51,4 +51,8 @@ object PlayerConfigTable {
     //后台播放
     @MMKVFiled
     val backgroundPlay = false
+
+    //MPV 本地 HTTP 代理：Range 请求最小间隔（毫秒），用于降低上游风控触发概率
+    @MMKVFiled
+    val mpvProxyRangeMinIntervalMs = 200
 }
