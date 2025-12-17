@@ -5,6 +5,7 @@ import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.repository.AlistRepository
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.storage.AbstractStorage
+import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.AlistStorageFile
 import com.xyoye.common_component.weight.ToastCenter
@@ -88,7 +89,19 @@ class AlistStorage(
 
     override suspend fun createPlayUrl(file: StorageFile): String? {
         return if (PlayerConfig.getUsePlayerType() == PlayerType.TYPE_MPV_PLAYER.value) {
-            getStorageFileProxyUrl(file) ?: getStorageFileUrl(file)
+            val upstream = getStorageFileProxyUrl(file) ?: getStorageFileUrl(file) ?: return null
+            val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
+            val playServer = HttpPlayServer.getInstance()
+            val started = playServer.startSync()
+            if (started.not()) {
+                return null
+            }
+            playServer.generatePlayUrl(
+                upstreamUrl = upstream,
+                // Avoid exposing a seekable/known-length HTTP stream to libmpv; some upstreams fail on large Range seeks.
+                contentLength = -1L,
+                fileName = fileName
+            )
         } else {
             getStorageFileUrl(file)
         }
