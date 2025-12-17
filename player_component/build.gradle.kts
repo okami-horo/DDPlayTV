@@ -1,4 +1,5 @@
 import setup.moduleSetup
+import java.io.File
 
 plugins {
     id("com.android.library")
@@ -9,6 +10,23 @@ plugins {
 moduleSetup()
 
 val media3Version = project.findProperty("media3Version")?.toString() ?: "1.8.0"
+val unstrippedJniLibsDir = layout.projectDirectory.dir("libs")
+val strippedJniLibsDir = layout.buildDirectory.dir("strippedJniLibs")
+
+fun computeNdkHostTag(ndkDir: File): String {
+    val osName = System.getProperty("os.name").lowercase()
+    val arch = System.getProperty("os.arch").lowercase()
+    val hostTags = when {
+        osName.contains("mac") && arch.contains("aarch64") ->
+            listOf("darwin-arm64", "darwin-aarch64", "darwin-x86_64")
+        osName.contains("mac") -> listOf("darwin-x86_64")
+        osName.contains("win") -> listOf("windows-x86_64")
+        osName.contains("linux") -> listOf("linux-x86_64")
+        else -> emptyList()
+    }
+    return hostTags.firstOrNull { ndkDir.resolve("toolchains/llvm/prebuilt/$it/bin").isDirectory }
+        ?: error("Unsupported host OS for NDK strip tools")
+}
 
 configurations.configureEach {
     resolutionStrategy.eachDependency {
@@ -38,7 +56,13 @@ android {
     }
     sourceSets {
         getByName("main") {
-            jniLibs.srcDir("libs")
+            jniLibs.setSrcDirs(emptyList<String>())
+        }
+        getByName("debug") {
+            jniLibs.srcDir(unstrippedJniLibsDir)
+        }
+        getByName("release") {
+            jniLibs.srcDir(strippedJniLibsDir)
         }
     }
     externalNativeBuild {
@@ -53,6 +77,54 @@ kapt {
     arguments {
         arg("AROUTER_MODULE_NAME", name)
     }
+}
+
+val stripReleaseJniLibs by tasks.registering {
+    description = "Copy and strip release jniLibs so only stripped binaries ship in release builds."
+    inputs.dir(unstrippedJniLibsDir)
+    outputs.dir(strippedJniLibsDir)
+
+    doLast {
+        val ndkDir = android.ndkDirectory?.takeIf { it.isDirectory }
+            ?: error("NDK not found, cannot strip release .so files.")
+        val hostTag = computeNdkHostTag(ndkDir)
+        val stripExecutableName = if (hostTag.startsWith("windows")) "llvm-strip.exe" else "llvm-strip"
+        val stripExecutable = ndkDir.resolve("toolchains/llvm/prebuilt/$hostTag/bin/$stripExecutableName")
+        check(stripExecutable.exists()) { "llvm-strip not found at $stripExecutable" }
+
+        strippedJniLibsDir.get().asFile.apply {
+            deleteRecursively()
+            mkdirs()
+        }
+
+        project.copy {
+            from(unstrippedJniLibsDir)
+            include("**/*.so")
+            into(strippedJniLibsDir)
+        }
+
+        strippedJniLibsDir.get().asFile.walkTopDown()
+            .filter { it.isFile && it.extension == "so" }
+            .forEach { so ->
+                project.exec {
+                    commandLine(stripExecutable.absolutePath, "--strip-unneeded", so.absolutePath)
+                }
+            }
+
+        val duplicateNames = setOf("libmpv.so", "libass.so")
+        val cxxIntermediates = layout.buildDirectory.dir("intermediates/cxx").get().asFile
+        if (cxxIntermediates.isDirectory) {
+            cxxIntermediates.walkTopDown()
+                .filter { it.isFile && it.name in duplicateNames }
+                .forEach { duplicate ->
+                    duplicate.delete()
+                }
+        }
+    }
+}
+
+tasks.matching { it.name == "mergeReleaseJniLibFolders" }.configureEach {
+    dependsOn(stripReleaseJniLibs)
 }
 
 dependencies {

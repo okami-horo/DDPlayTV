@@ -6,6 +6,7 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SeekBarPreference
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.enums.PlayerType
@@ -18,6 +19,8 @@ import com.xyoye.user_component.R
  */
 
 class PlayerSettingFragment : PreferenceFragmentCompat() {
+    private var isNormalizingMpvRangeInterval = false
+
     companion object {
         fun newInstance() = PlayerSettingFragment()
 
@@ -60,6 +63,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
     ) {
         preferenceManager.preferenceDataStore = PlayerSettingDataStore()
         addPreferencesFromResource(R.xml.preference_player_setting)
+        setupMpvRangeIntervalPreference()
     }
 
     override fun onViewCreated(
@@ -104,6 +108,36 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         }
 
         super.onViewCreated(view, savedInstanceState)
+    }
+
+    private fun setupMpvRangeIntervalPreference() {
+        val preference = findPreference<SeekBarPreference>("mpv_proxy_range_interval_ms") ?: return
+
+        preference.value = normalizeMpvRangeInterval(preference.value)
+
+        preference.onPreferenceChangeListener =
+            Preference.OnPreferenceChangeListener { changedPreference, newValue ->
+                if (isNormalizingMpvRangeInterval) {
+                    return@OnPreferenceChangeListener true
+                }
+
+                val rawValue = newValue as? Int ?: return@OnPreferenceChangeListener true
+                val normalized = normalizeMpvRangeInterval(rawValue)
+                if (normalized == rawValue) {
+                    return@OnPreferenceChangeListener true
+                }
+
+                isNormalizingMpvRangeInterval = true
+                (changedPreference as? SeekBarPreference)?.value = normalized
+                isNormalizingMpvRangeInterval = false
+                false
+            }
+    }
+
+    private fun normalizeMpvRangeInterval(value: Int): Int {
+        val stepMs = 100
+        val rounded = ((value + (stepMs / 2)) / stepMs) * stepMs
+        return rounded.coerceIn(0, 2000)
     }
 
     private fun updateVisible(playerType: String) {
@@ -196,7 +230,8 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         ): Int =
             try {
                 when (key) {
-                    "mpv_proxy_range_interval_ms" -> PlayerConfig.getMpvProxyRangeMinIntervalMs()
+                    "mpv_proxy_range_interval_ms" ->
+                        normalizeMpvRangeInterval(PlayerConfig.getMpvProxyRangeMinIntervalMs())
                     else -> super.getInt(key, defValue)
                 }
             } catch (e: Exception) {
@@ -216,8 +251,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             try {
                 when (key) {
                     "mpv_proxy_range_interval_ms" -> {
-                        val normalized = ((value + 50) / 100) * 100
-                        PlayerConfig.putMpvProxyRangeMinIntervalMs(normalized.coerceIn(0, 2000))
+                        PlayerConfig.putMpvProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
                     }
                     else -> super.putInt(key, value)
                 }

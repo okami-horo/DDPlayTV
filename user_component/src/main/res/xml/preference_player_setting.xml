@@ -12,6 +12,7 @@
         android:summary="本地 HTTP 代理转发 Range 请求的最小间隔。数值越大越不易触发风控，但拖动进度可能更慢。"
         app:min="0"
         app:seekBarIncrement="100"
+        app:updatesContinuously="true"
         app:showSeekBarValue="true" />
     <ListPreference
         android:key="vlc_hardware_acceleration"
