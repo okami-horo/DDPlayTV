@@ -12,7 +12,6 @@ import java.io.InputStream
  */
 
 interface Storage {
-
     /**
      * 媒体库信息
      */
@@ -46,13 +45,19 @@ interface Storage {
     /**
      * 打开文件夹
      */
-    suspend fun openDirectory(file: StorageFile, refresh: Boolean): List<StorageFile>
+    suspend fun openDirectory(
+        file: StorageFile,
+        refresh: Boolean
+    ): List<StorageFile>
 
     /**
      * 通过路径获取文件
      * @param path 文件路径，以'/'开头为绝对路径，否则为相对路径
      */
-    suspend fun pathFile(path: String, isDirectory: Boolean): StorageFile?
+    suspend fun pathFile(
+        path: String,
+        isDirectory: Boolean
+    ): StorageFile?
 
     /**
      * 根据播放记录获取文件

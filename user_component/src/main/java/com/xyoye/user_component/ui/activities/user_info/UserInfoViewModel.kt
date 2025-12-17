@@ -28,7 +28,7 @@ class UserInfoViewModel : BaseViewModel() {
                 e,
                 "UserInfoViewModel",
                 "applyLoginData",
-                "Failed to apply login data for user: ${loginData.userName}"
+                "Failed to apply login data for user: ${loginData.userName}",
             )
         }
     }
@@ -47,7 +47,7 @@ class UserInfoViewModel : BaseViewModel() {
                             it,
                             "UserInfoViewModel",
                             "updateScreenName",
-                            "Update screen name network request failed for user: ${UserInfoHelper.mLoginData?.userName}, new name: $screenName"
+                            "Update screen name network request failed for user: ${UserInfoHelper.mLoginData?.userName}, new name: $screenName",
                         )
                     }
                     result.exceptionOrNull()?.message?.toastError()
@@ -64,14 +64,17 @@ class UserInfoViewModel : BaseViewModel() {
                     e,
                     "UserInfoViewModel",
                     "updateScreenName",
-                    "Unexpected error during screen name update for user: ${UserInfoHelper.mLoginData?.userName}"
+                    "Unexpected error during screen name update for user: ${UserInfoHelper.mLoginData?.userName}",
                 )
                 ToastCenter.showError("修改昵称过程中发生错误，请稍后再试")
             }
         }
     }
 
-    fun updatePassword(oldPassword: String, newPassword: String) {
+    fun updatePassword(
+        oldPassword: String,
+        newPassword: String
+    ) {
         viewModelScope.launch {
             try {
                 showLoading()
@@ -85,7 +88,7 @@ class UserInfoViewModel : BaseViewModel() {
                             it,
                             "UserInfoViewModel",
                             "updatePassword",
-                            "Update password network request failed for user: ${UserInfoHelper.mLoginData?.userName}"
+                            "Update password network request failed for user: ${UserInfoHelper.mLoginData?.userName}",
                         )
                     }
                     result.exceptionOrNull()?.message?.toastError()
@@ -102,7 +105,7 @@ class UserInfoViewModel : BaseViewModel() {
                     e,
                     "UserInfoViewModel",
                     "updatePassword",
-                    "Unexpected error during password update for user: ${UserInfoHelper.mLoginData?.userName}"
+                    "Unexpected error during password update for user: ${UserInfoHelper.mLoginData?.userName}",
                 )
                 ToastCenter.showError("修改密码过程中发生错误，请稍后再试")
             }

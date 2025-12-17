@@ -40,8 +40,8 @@ object PlaybackSessionStatusProvider {
                 lastErrorMessage = null,
                 startedAtEpochMs = 0L,
                 firstRenderedAtEpochMs = null,
-                endedAtEpochMs = null
-            )
+                endedAtEpochMs = null,
+            ),
         )
 
     private fun updateStatus(transform: (PlaybackSessionStatus) -> PlaybackSessionStatus) {
@@ -68,8 +68,8 @@ object PlaybackSessionStatusProvider {
                 lastErrorMessage = null,
                 startedAtEpochMs = now,
                 firstRenderedAtEpochMs = null,
-                endedAtEpochMs = null
-            )
+                endedAtEpochMs = null,
+            ),
         )
     }
 
@@ -79,7 +79,10 @@ object PlaybackSessionStatusProvider {
         }
     }
 
-    fun updateFrameSize(width: Int, height: Int) {
+    fun updateFrameSize(
+        width: Int,
+        height: Int
+    ) {
         updateStatus { current ->
             current.copy(videoSizePx = VideoSizePx(width, height))
         }
@@ -96,15 +99,19 @@ object PlaybackSessionStatusProvider {
         }
     }
 
-    fun markFallback(reason: SubtitleFallbackReason, error: Throwable?) {
-        val message = error?.message
-            ?: error?.javaClass?.simpleName
-            ?: reason.name
+    fun markFallback(
+        reason: SubtitleFallbackReason,
+        error: Throwable?
+    ) {
+        val message =
+            error?.message
+                ?: error?.javaClass?.simpleName
+                ?: reason.name
         updateStatus { current ->
             current.copy(
                 fallbackTriggered = true,
                 fallbackReasonCode = reason,
-                lastErrorMessage = message
+                lastErrorMessage = message,
             )
         }
     }

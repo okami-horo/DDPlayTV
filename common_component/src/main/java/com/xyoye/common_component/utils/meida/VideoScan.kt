@@ -14,23 +14,21 @@ import java.io.File
  */
 
 object VideoScan {
-
     /**
      * 遍历路径内的视频文件
      */
-    fun traverse(filePath: String): List<VideoEntity> {
-        return try {
+    fun traverse(filePath: String): List<VideoEntity> =
+        try {
             traverse(File(filePath))
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "VideoScan.traverse",
-                "遍历视频文件失败: $filePath"
+                "遍历视频文件失败: $filePath",
             )
             e.printStackTrace()
             emptyList()
         }
-    }
 
     /**
      * 遍历文件内的视频文件，包括文件自身
@@ -49,7 +47,8 @@ object VideoScan {
         if (file.exists().not() || file.canRead().not()) {
             return emptyList()
         }
-        return file.listFiles()
+        return file
+            .listFiles()
             ?.flatMap { traverse(it) }
             ?: emptyList()
     }
@@ -57,8 +56,8 @@ object VideoScan {
     /**
      * 生成视频数据库实体
      */
-    private fun generateVideoEntity(file: File): VideoEntity {
-        return VideoEntity(
+    private fun generateVideoEntity(file: File): VideoEntity =
+        VideoEntity(
             0,
             0,
             0,
@@ -69,9 +68,8 @@ object VideoScan {
             getVideoDuration(file),
             file.length(),
             isFilter = false,
-            isExtend = true
+            isExtend = true,
         )
-    }
 
     /**
      * 获取视频时长
@@ -83,14 +81,15 @@ object VideoScan {
         val retriever = MediaMetadataRetriever()
         return try {
             retriever.setDataSource(BaseApplication.getAppContext(), Uri.fromFile(videoFile))
-            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            retriever
+                .extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                 ?.toLongOrNull()
                 ?: 0
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "VideoScan.getVideoDuration",
-                "获取视频时长失败: ${videoFile.absolutePath}"
+                "获取视频时长失败: ${videoFile.absolutePath}",
             )
             e.printStackTrace()
             0

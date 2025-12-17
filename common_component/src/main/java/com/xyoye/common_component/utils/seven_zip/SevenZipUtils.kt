@@ -11,13 +11,11 @@ import java.io.RandomAccessFile
 import java.util.*
 import kotlin.coroutines.resume
 
-
 /**
  * Created by xyoye on 2020/12/9.
  */
 
 object SevenZipUtils {
-
     fun getArchiveFormat(fileExtension: String): ArchiveFormat? {
         if (fileExtension.isEmpty()) return null
         for (format in ArchiveFormat.values()) {
@@ -29,7 +27,6 @@ object SevenZipUtils {
         }
         return null
     }
-
 
     @Throws(IOException::class)
     suspend fun extractFile(rarFile: File): String? {
@@ -48,18 +45,21 @@ object SevenZipUtils {
         }
     }
 
-    suspend fun extractFile(compressFile: File, destDir: File) =
-        suspendCancellableCoroutine<String?> { continuation ->
-            if (!compressFile.exists() || !compressFile.isFile) throw IOException("compress file not found")
-            if (!destDir.exists() || !destDir.isDirectory) throw IOException("Dest directory not found")
+    suspend fun extractFile(
+        compressFile: File,
+        destDir: File
+    ) = suspendCancellableCoroutine<String?> { continuation ->
+        if (!compressFile.exists() || !compressFile.isFile) throw IOException("compress file not found")
+        if (!destDir.exists() || !destDir.isDirectory) throw IOException("Dest directory not found")
 
-            val randomAccessFile = RandomAccessFile(compressFile, "r")
-            val accessFileInStream = RandomAccessFileInStream(randomAccessFile)
+        val randomAccessFile = RandomAccessFile(compressFile, "r")
+        val accessFileInStream = RandomAccessFileInStream(randomAccessFile)
 
-            val inArchive = SevenZip.openInArchive(null, accessFileInStream)
-            val extractCallback = ArchiveExtractCallback(inArchive, destDir) {
+        val inArchive = SevenZip.openInArchive(null, accessFileInStream)
+        val extractCallback =
+            ArchiveExtractCallback(inArchive, destDir) {
                 continuation.resume(it)
             }
-            inArchive.extract(null, false, extractCallback)
-        }
+        inArchive.extract(null, false, extractCallback)
+    }
 }

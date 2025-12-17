@@ -9,8 +9,5 @@ import com.xyoye.player.kernel.inter.AbstractVideoPlayer
  */
 
 class VlcPlayerFactory : PlayerFactory() {
-
-    override fun createPlayer(context: Context): AbstractVideoPlayer {
-        return VlcVideoPlayer(context)
-    }
+    override fun createPlayer(context: Context): AbstractVideoPlayer = VlcVideoPlayer(context)
 }

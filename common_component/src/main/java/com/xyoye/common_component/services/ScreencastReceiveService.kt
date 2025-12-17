@@ -8,10 +8,13 @@ import com.alibaba.android.arouter.facade.template.IProvider
  */
 
 interface ScreencastReceiveService : IProvider {
-
     fun isRunning(context: Context): Boolean
 
     fun stopService(context: Context)
 
-    fun startService(context: Context, port: Int, password: String?)
+    fun startService(
+        context: Context,
+        port: Int,
+        password: String?
+    )
 }

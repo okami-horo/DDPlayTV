@@ -25,7 +25,6 @@ import java.util.Date
 class WebDavStorage(
     library: MediaLibraryEntity
 ) : AbstractStorage(library) {
-
     private val sardine = OkHttpSardine(UnsafeOkHttpClient.client)
 
     init {
@@ -40,19 +39,19 @@ class WebDavStorage(
         return pathFile(rootPath, true)
     }
 
-    override suspend fun openFile(file: StorageFile): InputStream? {
-        return try {
+    override suspend fun openFile(file: StorageFile): InputStream? =
+        try {
             sardine.get(file.fileUrl())
         } catch (e: Exception) {
             e.printStackTrace()
             ErrorReportHelper.postCatchedException(e, "WebDAV", "打开文件失败: ${file.fileUrl()}")
             null
         }
-    }
 
-    override suspend fun listFiles(file: StorageFile): List<StorageFile> {
-        return try {
-            sardine.list(file.fileUrl())
+    override suspend fun listFiles(file: StorageFile): List<StorageFile> =
+        try {
+            sardine
+                .list(file.fileUrl())
                 .filter { isChildFile(file.fileUrl(), it.href) }
                 .map { WebDavStorageFile(it, this) }
         } catch (e: Exception) {
@@ -60,9 +59,11 @@ class WebDavStorage(
             ErrorReportHelper.postCatchedException(e, "WebDAV", "获取文件列表失败: ${file.fileUrl()}")
             emptyList()
         }
-    }
 
-    override suspend fun pathFile(path: String, isDirectory: Boolean): StorageFile {
+    override suspend fun pathFile(
+        path: String,
+        isDirectory: Boolean
+    ): StorageFile {
         val hrefUrl = resolvePath(path).toString()
         val davResource = CustomDavResource(hrefUrl)
         return WebDavStorageFile(davResource, this)
@@ -75,19 +76,18 @@ class WebDavStorage(
         }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String {
-        return file.fileUrl()
-    }
+    override suspend fun createPlayUrl(file: StorageFile): String = file.fileUrl()
 
     override fun getNetworkHeaders(): Map<String, String>? {
-        val accountInfo = getAccountInfo()
-            ?: return null
+        val accountInfo =
+            getAccountInfo()
+                ?: return null
         val credential = Credentials.basic(accountInfo.first, accountInfo.second)
         return mapOf(Pair(HeaderKey.AUTHORIZATION, credential))
     }
 
-    override suspend fun test(): Boolean {
-        return try {
+    override suspend fun test(): Boolean =
+        try {
             sardine.list(getRootFile().fileUrl())
             true
         } catch (e: Exception) {
@@ -96,7 +96,6 @@ class WebDavStorage(
             ToastCenter.showError("连接失败: ${e.message}")
             false
         }
-    }
 
     private fun getAccountInfo(): Pair<String, String>? {
         if (library.account.isNullOrEmpty()) {
@@ -105,7 +104,10 @@ class WebDavStorage(
         return Pair(library.account ?: "", library.password ?: "")
     }
 
-    private fun isChildFile(parent: String, child: URI): Boolean {
+    private fun isChildFile(
+        parent: String,
+        child: URI
+    ): Boolean {
         try {
             val parentPath = URI(parent).path
             val childPath = child.path
@@ -117,17 +119,20 @@ class WebDavStorage(
         return false
     }
 
-    private class CustomDavResource(href: String, isDirectory: Boolean = true) : DavResource(
-        href,
-        Date(),
-        Date(),
-        if (isDirectory) "httpd/unix-directory" else "application/octet-stream",
-        0,
-        "",
-        "",
-        emptyList(),
-        "",
-        emptyList(),
-        emptyMap()
-    )
+    private class CustomDavResource(
+        href: String,
+        isDirectory: Boolean = true
+    ) : DavResource(
+            href,
+            Date(),
+            Date(),
+            if (isDirectory) "httpd/unix-directory" else "application/octet-stream",
+            0,
+            "",
+            "",
+            emptyList(),
+            "",
+            emptyList(),
+            emptyMap(),
+        )
 }

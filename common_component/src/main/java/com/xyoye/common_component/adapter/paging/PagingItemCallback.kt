@@ -10,19 +10,17 @@ class PagingItemCallback<T>(
     private val mAreItemsTheSame: (T, T) -> Boolean = { o, n -> o == n },
     private val mAreContentsTheSame: (T, T) -> Boolean = { o, n -> o == n }
 ) : DiffUtil.ItemCallback<T>() {
-
     companion object {
-        fun <T> getDefault(): PagingItemCallback<T> {
-            return PagingItemCallback()
-        }
+        fun <T> getDefault(): PagingItemCallback<T> = PagingItemCallback()
     }
 
-    override fun areItemsTheSame(oldItem: T & Any, newItem: T & Any): Boolean {
-        return mAreItemsTheSame(oldItem, newItem)
-    }
+    override fun areItemsTheSame(
+        oldItem: T & Any,
+        newItem: T & Any
+    ): Boolean = mAreItemsTheSame(oldItem, newItem)
 
-    override fun areContentsTheSame(oldItem: T & Any, newItem: T & Any): Boolean {
-        return mAreContentsTheSame(oldItem, newItem)
-    }
-
+    override fun areContentsTheSame(
+        oldItem: T & Any,
+        newItem: T & Any
+    ): Boolean = mAreContentsTheSame(oldItem, newItem)
 }

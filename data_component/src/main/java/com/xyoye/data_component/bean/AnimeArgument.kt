@@ -14,14 +14,12 @@ data class AnimeArgument(
     val title: String = "",
     val imageUrl: String = ""
 ) : Parcelable {
-
     companion object {
-        fun fromData(data: AnimeData): AnimeArgument {
-            return AnimeArgument(
+        fun fromData(data: AnimeData): AnimeArgument =
+            AnimeArgument(
                 data.animeId,
                 data.animeTitle.orEmpty(),
-                data.imageUrl.orEmpty()
+                data.imageUrl.orEmpty(),
             )
-        }
     }
 }

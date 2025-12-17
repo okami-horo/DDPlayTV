@@ -29,7 +29,8 @@ import com.xyoye.user_component.ui.weight.DeveloperMenus
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
-class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
+class MainActivity :
+    BaseActivity<MainViewModel, ActivityMainBinding>(),
     LoginObserver {
     companion object {
         private const val TAG_FRAGMENT_HOME = "tag_fragment_home"
@@ -55,37 +56,37 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            MainViewModel::class.java
+            MainViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_main
 
     override fun initView() {
         ARouter.getInstance().inject(this)
-        //隐藏返回按钮
+        // 隐藏返回按钮
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(false)
             setDisplayShowTitleEnabled(true)
         }
 
-        //默认显示媒体库页面
-        //标题
+        // 默认显示媒体库页面
+        // 标题
         title = "媒体库"
         LogFacade.d(LogModule.CORE, LOG_TAG, "init default tab=media")
-        //移除所有已添加的fragment，防止如旋转屏幕后导致的屏幕错乱
+        // 移除所有已添加的fragment，防止如旋转屏幕后导致的屏幕错乱
         supportFragmentManager.findAndRemoveFragment(
             TAG_FRAGMENT_HOME,
             TAG_FRAGMENT_MEDIA,
-            TAG_FRAGMENT_PERSONAL
+            TAG_FRAGMENT_PERSONAL,
         )
-        //切换到媒体库页面
+        // 切换到媒体库页面
         switchFragment(TAG_FRAGMENT_MEDIA)
-        //底部导航栏设置选中
+        // 底部导航栏设置选中
         dataBinding.navigationView.post {
             dataBinding.navigationView.selectedItemId = R.id.navigation_media
         }
 
-        //设置底部导航栏事件
+        // 设置底部导航栏事件
         dataBinding.navigationView.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.navigation_home -> {
@@ -119,7 +120,10 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (checkServiceExit()) {
                 return true
@@ -144,27 +148,25 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         return super.onOptionsItemSelected(item)
     }
 
-    override fun getLoginLiveData(): MutableLiveData<LoginData> {
-        return viewModel.reLoginLiveData
-    }
+    override fun getLoginLiveData(): MutableLiveData<LoginData> = viewModel.reLoginLiveData
 
     private fun switchFragment(tag: String) {
-        //重复打开当前页面，不进行任何操作
+        // 重复打开当前页面，不进行任何操作
         if (tag == fragmentTag) {
             return
         }
 
-        //隐藏上一个布局，fragmentTag不为空代表上一个布局已存在
+        // 隐藏上一个布局，fragmentTag不为空代表上一个布局已存在
         if (fragmentTag.isNotEmpty()) {
             supportFragmentManager.hideFragment(previousFragment)
         }
 
         when (tag) {
             TAG_FRAGMENT_HOME -> {
-                //根据TAG寻找页面
+                // 根据TAG寻找页面
                 val fragment = supportFragmentManager.findFragmentByTag(TAG_FRAGMENT_HOME)
                 if (fragment == null) {
-                    //根据TAG无法找到页面，通过路由寻找页面，找到页面则添加
+                    // 根据TAG无法找到页面，通过路由寻找页面，找到页面则添加
                     getFragment(RouteTable.Anime.HomeFragment)?.also {
                         addFragment(it, TAG_FRAGMENT_HOME)
                         homeFragment = it
@@ -172,7 +174,7 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
                         fragmentTag = tag
                     }
                 } else {
-                    //根据TAG找到页面，显示
+                    // 根据TAG找到页面，显示
                     supportFragmentManager.showFragment(fragment)
                     homeFragment = fragment
                     previousFragment = fragment
@@ -220,7 +222,10 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         }
     }
 
-    private fun addFragment(fragment: Fragment, tag: String) {
+    private fun addFragment(
+        fragment: Fragment,
+        tag: String
+    ) {
         supportFragmentManager
             .beginTransaction()
             .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
@@ -229,7 +234,8 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
     }
 
     private fun getFragment(path: String) =
-        ARouter.getInstance()
+        ARouter
+            .getInstance()
             .build(path)
             .navigation() as Fragment?
 
@@ -255,18 +261,20 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>(),
         if (isReceiveServiceRunning.not()) {
             return false
         }
-        CommonDialog.Builder(this).run {
-            tips = "确认退出？"
-            content = "投屏接收服务正在运行中，退出将中断投屏"
-            addNegative()
-            addPositive("退出") {
-                it.dismiss()
-                receiveService.stopService(this@MainActivity)
-                finish()
-                exitProcess(0)
-            }
-            build()
-        }.show()
+        CommonDialog
+            .Builder(this)
+            .run {
+                tips = "确认退出？"
+                content = "投屏接收服务正在运行中，退出将中断投屏"
+                addNegative()
+                addPositive("退出") {
+                    it.dismiss()
+                    receiveService.stopService(this@MainActivity)
+                    finish()
+                    exitProcess(0)
+                }
+                build()
+            }.show()
         return true
     }
 }

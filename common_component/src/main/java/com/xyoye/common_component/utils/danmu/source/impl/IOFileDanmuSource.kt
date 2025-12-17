@@ -1,7 +1,7 @@
 package com.xyoye.common_component.utils.danmu.source.impl
 
-import com.xyoye.common_component.utils.danmu.source.AbstractDanmuSource
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.utils.danmu.source.AbstractDanmuSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -15,7 +15,6 @@ import java.io.InputStream
 class IOFileDanmuSource(
     private val path: String
 ) : AbstractDanmuSource() {
-
     override suspend fun getStream(): InputStream? {
         val file = getIOFile() ?: return null
         return try {
@@ -26,7 +25,7 @@ class IOFileDanmuSource(
             ErrorReportHelper.postCatchedException(
                 e,
                 "IOFileDanmuSource.getStream",
-                "打开弹幕IO文件流失败: $path"
+                "打开弹幕IO文件流失败: $path",
             )
             e.printStackTrace()
             null
@@ -34,14 +33,15 @@ class IOFileDanmuSource(
     }
 
     private fun getIOFile(): File? {
-        if (path.isEmpty())
+        if (path.isEmpty()) {
             return null
+        }
 
         val file = File(path)
-        if (!file.exists() || file.isDirectory)
+        if (!file.exists() || file.isDirectory) {
             return null
+        }
 
         return file
     }
-
 }

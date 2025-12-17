@@ -12,31 +12,41 @@ import com.xyoye.player.utils.RenderMeasureHelper
  * Created by xyoye on 2020/11/3.
  */
 
-class RenderTextureView(context: Context) : TextureView(context), InterSurfaceView {
-
+class RenderTextureView(
+    context: Context
+) : TextureView(context),
+    InterSurfaceView {
     private val mMeasureHelper = RenderMeasureHelper()
     private var mSurfaceTexture: SurfaceTexture? = null
     private var mSurface: Surface? = null
 
     private lateinit var mVideoPlayer: AbstractVideoPlayer
 
-    private val listener = object : SurfaceTextureListener {
-        override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
+    private val listener =
+        object : SurfaceTextureListener {
+            override fun onSurfaceTextureSizeChanged(
+                surface: SurfaceTexture,
+                width: Int,
+                height: Int
+            ) {
+            }
 
-        }
+            override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
 
-        override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
+            override fun onSurfaceTextureDestroyed(surface: SurfaceTexture) = false
 
-        override fun onSurfaceTextureDestroyed(surface: SurfaceTexture) = false
-
-        override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
-            mSurfaceTexture = surface
-            mSurface = Surface(surface)
-            if (this@RenderTextureView::mVideoPlayer.isInitialized) {
-                mVideoPlayer.setSurface(mSurface!!)
+            override fun onSurfaceTextureAvailable(
+                surface: SurfaceTexture,
+                width: Int,
+                height: Int
+            ) {
+                mSurfaceTexture = surface
+                mSurface = Surface(surface)
+                if (this@RenderTextureView::mVideoPlayer.isInitialized) {
+                    mVideoPlayer.setSurface(mSurface!!)
+                }
             }
         }
-    }
 
     init {
         surfaceTextureListener = listener
@@ -46,7 +56,10 @@ class RenderTextureView(context: Context) : TextureView(context), InterSurfaceVi
         mVideoPlayer = player
     }
 
-    override fun setVideoSize(videoWidth: Int, videoHeight: Int) {
+    override fun setVideoSize(
+        videoWidth: Int,
+        videoHeight: Int
+    ) {
         if (videoWidth > 0 && videoHeight > 0) {
             mMeasureHelper.mVideoWidth = videoWidth
             mMeasureHelper.mVideoHeight = videoHeight
@@ -78,7 +91,10 @@ class RenderTextureView(context: Context) : TextureView(context), InterSurfaceVi
         mSurfaceTexture?.release()
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    override fun onMeasure(
+        widthMeasureSpec: Int,
+        heightMeasureSpec: Int
+    ) {
         val measuredSize = mMeasureHelper.doMeasure(widthMeasureSpec, heightMeasureSpec)
         setMeasuredDimension(measuredSize[0], measuredSize[1])
     }

@@ -29,12 +29,30 @@ class MpvNativeBridge {
 
     sealed interface Event {
         object Prepared : Event
+
         object RenderingStart : Event
+
         object Completed : Event
-        data class VideoSize(val width: Int, val height: Int) : Event
-        data class Buffering(val started: Boolean) : Event
-        data class Error(val code: Int?, val reason: Int?, val message: String?) : Event
-        data class LogMessage(val level: Int, val message: String?) : Event
+
+        data class VideoSize(
+            val width: Int,
+            val height: Int
+        ) : Event
+
+        data class Buffering(
+            val started: Boolean
+        ) : Event
+
+        data class Error(
+            val code: Int?,
+            val reason: Int?,
+            val message: String?
+        ) : Event
+
+        data class LogMessage(
+            val level: Int,
+            val message: String?
+        ) : Event
     }
 
     private var nativeHandle: Long = 0
@@ -87,12 +105,16 @@ class MpvNativeBridge {
         }
     }
 
-    fun setDataSource(path: String, headers: Map<String, String>): Boolean {
+    fun setDataSource(
+        path: String,
+        headers: Map<String, String>
+    ): Boolean {
         if (nativeHandle == 0L) return false
-        val headerArray = headers.entries
-            .sortedBy { it.key.lowercase() }
-            .map { "${it.key}: ${it.value}" }
-            .toTypedArray()
+        val headerArray =
+            headers.entries
+                .sortedBy { it.key.lowercase() }
+                .map { "${it.key}: ${it.value}" }
+                .toTypedArray()
         val success = nativeSetDataSource(nativeHandle, path, headerArray)
         if (!success) {
             Log.w(TAG, "mpv setDataSource failed: ${lastError().orEmpty()}")
@@ -134,13 +156,14 @@ class MpvNativeBridge {
 
     fun applyDefaultOptions(logLevel: LogLevel?) {
         if (nativeHandle == 0L) return
-        val mpvLevel = when (logLevel) {
-            null -> "no"
-            LogLevel.ERROR -> "error"
-            LogLevel.WARN -> "warn"
-            LogLevel.INFO -> "info"
-            LogLevel.DEBUG -> "v"
-        }
+        val mpvLevel =
+            when (logLevel) {
+                null -> "no"
+                LogLevel.ERROR -> "error"
+                LogLevel.WARN -> "warn"
+                LogLevel.INFO -> "info"
+                LogLevel.DEBUG -> "v"
+            }
         if (!nativeSetLogLevel(nativeHandle, mpvLevel)) {
             Log.w(TAG, "mpv setLogLevel($mpvLevel) failed: ${lastError().orEmpty()}")
         }
@@ -164,7 +187,10 @@ class MpvNativeBridge {
         setOption("force-seekable", if (enabled) "yes" else "no")
     }
 
-    fun setSurfaceSize(width: Int, height: Int) {
+    fun setSurfaceSize(
+        width: Int,
+        height: Int
+    ) {
         if (nativeHandle == 0L) return
         if (width <= 0 || height <= 0) return
         setOption("android-surface-size", "${width}x$height")
@@ -203,16 +229,20 @@ class MpvNativeBridge {
             val id = parts[1].toIntOrNull() ?: return@mapNotNull null
             val selected = parts[2] == "1"
             val title = parts[3].ifEmpty { "Track $id" }
-            val trackType = when (nativeType) {
-                TRACK_TYPE_AUDIO -> TrackType.AUDIO
-                TRACK_TYPE_SUBTITLE -> TrackType.SUBTITLE
-                else -> return@mapNotNull null
-            }
+            val trackType =
+                when (nativeType) {
+                    TRACK_TYPE_AUDIO -> TrackType.AUDIO
+                    TRACK_TYPE_SUBTITLE -> TrackType.SUBTITLE
+                    else -> return@mapNotNull null
+                }
             TrackInfo(id, trackType, nativeType, title, selected)
         }
     }
 
-    fun selectTrack(nativeType: Int, trackId: Int): Boolean {
+    fun selectTrack(
+        nativeType: Int,
+        trackId: Int
+    ): Boolean {
         if (nativeHandle == 0L) return false
         return nativeSelectTrack(nativeHandle, nativeType, trackId)
     }
@@ -222,13 +252,17 @@ class MpvNativeBridge {
         return nativeDeselectTrack(nativeHandle, nativeType)
     }
 
-    fun addExternalTrack(type: TrackType, path: String): Boolean {
+    fun addExternalTrack(
+        type: TrackType,
+        path: String
+    ): Boolean {
         if (nativeHandle == 0L || path.isEmpty()) return false
-        val nativeType = when (type) {
-            TrackType.AUDIO -> TRACK_TYPE_AUDIO
-            TrackType.SUBTITLE -> TRACK_TYPE_SUBTITLE
-            else -> return false
-        }
+        val nativeType =
+            when (type) {
+                TrackType.AUDIO -> TRACK_TYPE_AUDIO
+                TrackType.SUBTITLE -> TRACK_TYPE_SUBTITLE
+                else -> return false
+            }
         return nativeAddExternalTrack(nativeHandle, nativeType, path)
     }
 
@@ -243,18 +277,24 @@ class MpvNativeBridge {
     }
 
     @Keep
-    private fun onNativeEvent(type: Int, arg1: Long, arg2: Long, message: String?) {
-        val event = when (type) {
-            EVENT_PREPARED -> Event.Prepared
-            EVENT_VIDEO_SIZE -> Event.VideoSize(arg1.toInt(), arg2.toInt())
-            EVENT_RENDERING_START -> Event.RenderingStart
-            EVENT_COMPLETED -> Event.Completed
-            EVENT_BUFFERING_START -> Event.Buffering(true)
-            EVENT_BUFFERING_END -> Event.Buffering(false)
-            EVENT_ERROR -> Event.Error(arg1.toInt(), arg2.toInt(), message)
-            EVENT_LOG_MESSAGE -> Event.LogMessage(arg1.toInt(), message)
-            else -> null
-        }
+    private fun onNativeEvent(
+        type: Int,
+        arg1: Long,
+        arg2: Long,
+        message: String?
+    ) {
+        val event =
+            when (type) {
+                EVENT_PREPARED -> Event.Prepared
+                EVENT_VIDEO_SIZE -> Event.VideoSize(arg1.toInt(), arg2.toInt())
+                EVENT_RENDERING_START -> Event.RenderingStart
+                EVENT_COMPLETED -> Event.Completed
+                EVENT_BUFFERING_START -> Event.Buffering(true)
+                EVENT_BUFFERING_END -> Event.Buffering(false)
+                EVENT_ERROR -> Event.Error(arg1.toInt(), arg2.toInt(), message)
+                EVENT_LOG_MESSAGE -> Event.LogMessage(arg1.toInt(), message)
+                else -> null
+            }
         if (event != null) {
             mainHandler.post {
                 eventListener?.invoke(event)
@@ -284,6 +324,7 @@ class MpvNativeBridge {
         private val nativeLoaded: Boolean
         private val nativeLinked: Boolean
         private val availabilityMessage: String?
+
         @Volatile
         private var appContextRegistered: Boolean = false
 
@@ -335,19 +376,32 @@ class MpvNativeBridge {
         private external fun nativeDestroy(handle: Long)
 
         @JvmStatic
-        private external fun nativeSetSurface(handle: Long, surface: Surface?)
+        private external fun nativeSetSurface(
+            handle: Long,
+            surface: Surface?
+        )
 
         @JvmStatic
-        private external fun nativeStartEventLoop(handle: Long, bridge: MpvNativeBridge)
+        private external fun nativeStartEventLoop(
+            handle: Long,
+            bridge: MpvNativeBridge
+        )
 
         @JvmStatic
         private external fun nativeStopEventLoop(handle: Long)
 
         @JvmStatic
-        private external fun nativeSetOptionString(handle: Long, name: String, value: String): Boolean
+        private external fun nativeSetOptionString(
+            handle: Long,
+            name: String,
+            value: String
+        ): Boolean
 
         @JvmStatic
-        private external fun nativeSetLogLevel(handle: Long, level: String): Boolean
+        private external fun nativeSetLogLevel(
+            handle: Long,
+            level: String
+        ): Boolean
 
         @JvmStatic
         private external fun nativeGetVideoSize(handle: Long): Long
@@ -356,10 +410,17 @@ class MpvNativeBridge {
         private external fun nativeListTracks(handle: Long): Array<String>?
 
         @JvmStatic
-        private external fun nativeSelectTrack(handle: Long, trackType: Int, trackId: Int): Boolean
+        private external fun nativeSelectTrack(
+            handle: Long,
+            trackType: Int,
+            trackId: Int
+        ): Boolean
 
         @JvmStatic
-        private external fun nativeDeselectTrack(handle: Long, trackType: Int): Boolean
+        private external fun nativeDeselectTrack(
+            handle: Long,
+            trackType: Int
+        ): Boolean
 
         @JvmStatic
         private external fun nativeAddExternalTrack(
@@ -385,19 +446,34 @@ class MpvNativeBridge {
         private external fun nativeStop(handle: Long)
 
         @JvmStatic
-        private external fun nativeSeek(handle: Long, positionMs: Long)
+        private external fun nativeSeek(
+            handle: Long,
+            positionMs: Long
+        )
 
         @JvmStatic
-        private external fun nativeSetSpeed(handle: Long, speed: Float)
+        private external fun nativeSetSpeed(
+            handle: Long,
+            speed: Float
+        )
 
         @JvmStatic
-        private external fun nativeSetVolume(handle: Long, volume: Float)
+        private external fun nativeSetVolume(
+            handle: Long,
+            volume: Float
+        )
 
         @JvmStatic
-        private external fun nativeSetLooping(handle: Long, looping: Boolean)
+        private external fun nativeSetLooping(
+            handle: Long,
+            looping: Boolean
+        )
 
         @JvmStatic
-        private external fun nativeSetSubtitleDelay(handle: Long, offsetMs: Long)
+        private external fun nativeSetSubtitleDelay(
+            handle: Long,
+            offsetMs: Long
+        )
 
         @JvmStatic
         private external fun nativeGetPosition(handle: Long): Long
@@ -409,7 +485,10 @@ class MpvNativeBridge {
         private external fun nativeSetAndroidAppContext(context: Any)
     }
 
-    private fun setOption(name: String, value: String) {
+    private fun setOption(
+        name: String,
+        value: String
+    ) {
         val success = nativeSetOptionString(nativeHandle, name, value)
         if (!success) {
             Log.w(TAG, "mpv option $name=$value rejected: ${lastError().orEmpty()}")

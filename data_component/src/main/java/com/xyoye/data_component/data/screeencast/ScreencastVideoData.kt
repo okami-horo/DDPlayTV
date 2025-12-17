@@ -15,9 +15,8 @@ data class ScreencastData(
     val port: Int,
     val relatedVideos: List<ScreencastVideoData>,
     val playUniqueKey: String,
-    val httpHeader: Map<String, String>? = null,
+    val httpHeader: Map<String, String>? = null
 ) : Parcelable {
-
     @IgnoredOnParcel
     var ip: String? = null
 }

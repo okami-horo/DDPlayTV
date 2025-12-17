@@ -11,20 +11,19 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-
 /**
  * Created by xyoye on 2022/1/14
  */
 object EntropyUtils {
-
     private const val DEFAULT_AES_KEY = "IiHcoJPwt5TCrR2r"
 
     /**
      * md5加密字符串
      */
     fun string2Md5(string: String?): String {
-        if (TextUtils.isEmpty(string))
+        if (TextUtils.isEmpty(string)) {
             return ""
+        }
 
         val messageDigest = MessageDigest.getInstance("MD5")
         messageDigest.update(string!!.toByteArray())
@@ -53,7 +52,7 @@ object EntropyUtils {
             ErrorReportHelper.postCatchedException(
                 e,
                 "EntropyUtils.file2Md5",
-                "计算文件MD5失败: ${file.absolutePath}"
+                "计算文件MD5失败: ${file.absolutePath}",
             )
             e.printStackTrace()
         } finally {
@@ -66,7 +65,11 @@ object EntropyUtils {
     /**
      * AES加密字符串
      */
-    fun aesEncode(key: String?, content: String, base64Flag: Int = Base64.DEFAULT): String? {
+    fun aesEncode(
+        key: String?,
+        content: String,
+        base64Flag: Int = Base64.DEFAULT
+    ): String? {
         try {
             val encodeKey = key ?: DEFAULT_AES_KEY
             val secretKey = SecretKeySpec(encodeKey.toByteArray(), "AES")
@@ -80,7 +83,7 @@ object EntropyUtils {
             ErrorReportHelper.postCatchedException(
                 e,
                 "EntropyUtils.aesEncode",
-                "AES加密失败"
+                "AES加密失败",
             )
             e.printStackTrace()
         }
@@ -90,7 +93,11 @@ object EntropyUtils {
     /**
      * AES解密字符串
      */
-    fun aesDecode(key: String?, content: String, base64Flag: Int = Base64.DEFAULT): String? {
+    fun aesDecode(
+        key: String?,
+        content: String,
+        base64Flag: Int = Base64.DEFAULT
+    ): String? {
         try {
             val decodeKey = key ?: DEFAULT_AES_KEY
             val secretKey = SecretKeySpec(decodeKey.toByteArray(), "AES")
@@ -105,7 +112,7 @@ object EntropyUtils {
             ErrorReportHelper.postCatchedException(
                 e,
                 "EntropyUtils.aesDecode",
-                "AES解密失败"
+                "AES解密失败",
             )
             e.printStackTrace()
         }

@@ -12,9 +12,11 @@ import androidx.annotation.FloatRange
 
 class ColorRange(
     @ColorInt val start: Int,
-    @ColorInt val end: Int,
+    @ColorInt val end: Int
 ) {
-    fun take(@FloatRange(from = 0.0, to = 1.0) percent: Float): Int {
+    fun take(
+        @FloatRange(from = 0.0, to = 1.0) percent: Float
+    ): Int {
         val red = (Color.red(start) + (Color.red(end) - Color.red(start)) * percent).toInt()
         val green = (Color.green(start) + (Color.green(end) - Color.green(start)) * percent).toInt()
         val blue = (Color.blue(start) + (Color.blue(end) - Color.blue(start)) * percent).toInt()

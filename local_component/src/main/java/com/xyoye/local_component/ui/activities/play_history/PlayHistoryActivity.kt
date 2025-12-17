@@ -20,7 +20,6 @@ import com.xyoye.local_component.ui.weight.PlayHistoryMenus
 
 @Route(path = RouteTable.Local.PlayHistory)
 class PlayHistoryActivity : BaseActivity<PlayHistoryViewModel, ActivityPlayHistoryBinding>() {
-
     @Autowired
     @JvmField
     var typeValue: String = MediaType.LOCAL_STORAGE.value
@@ -33,7 +32,7 @@ class PlayHistoryActivity : BaseActivity<PlayHistoryViewModel, ActivityPlayHisto
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            PlayHistoryViewModel::class.java
+            PlayHistoryViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_play_history
@@ -44,11 +43,12 @@ class PlayHistoryActivity : BaseActivity<PlayHistoryViewModel, ActivityPlayHisto
         mediaType = MediaType.fromValue(typeValue)
         viewModel.mediaType = mediaType
 
-        title = when (mediaType) {
-            MediaType.MAGNET_LINK -> "磁链播放"
-            MediaType.STREAM_LINK -> "串流播放"
-            else -> "播放历史"
-        }
+        title =
+            when (mediaType) {
+                MediaType.MAGNET_LINK -> "磁链播放"
+                MediaType.STREAM_LINK -> "串流播放"
+                else -> "播放历史"
+            }
         dataBinding.addLinkBt.isVisible = mediaType == MediaType.MAGNET_LINK || mediaType == MediaType.STREAM_LINK
 
         initRv()
@@ -74,7 +74,8 @@ class PlayHistoryActivity : BaseActivity<PlayHistoryViewModel, ActivityPlayHisto
             dataBinding.playHistoryRv.setData(it)
         }
         viewModel.playLiveData.observe(this) {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Player.Player)
                 .navigation()
         }
@@ -96,10 +97,11 @@ class PlayHistoryActivity : BaseActivity<PlayHistoryViewModel, ActivityPlayHisto
         dataBinding.playHistoryRv.apply {
             layoutManager = vertical()
 
-            adapter = PlayHistoryAdapter(
-                this@PlayHistoryActivity,
-                viewModel
-            ).createAdapter()
+            adapter =
+                PlayHistoryAdapter(
+                    this@PlayHistoryActivity,
+                    viewModel,
+                ).createAdapter()
         }
     }
 

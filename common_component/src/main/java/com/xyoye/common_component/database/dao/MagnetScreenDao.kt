@@ -13,7 +13,6 @@ import com.xyoye.data_component.helper.MagnetScreenConverter
 
 @Dao
 interface MagnetScreenDao {
-
     @Query("SELECT * FROM magnet_screen WHERE screen_type = (:screenType)  ORDER BY screen_name ASC")
     @TypeConverters(MagnetScreenConverter::class)
     fun getAll(screenType: MagnetScreenType): LiveData<MutableList<MagnetScreenEntity>>

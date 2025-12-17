@@ -8,13 +8,10 @@ import androidx.room.Ignore
  */
 
 data class FolderBean(
-
     @ColumnInfo(name = "folder_path")
     var folderPath: String,
-
     @ColumnInfo(name = "file_count")
     var fileCount: Int,
-
     @ColumnInfo(name = "filter")
     var isFilter: Boolean = false
 ) {

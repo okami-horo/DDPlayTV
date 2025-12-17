@@ -21,7 +21,6 @@ class CommonEditDialog(
     private val checkBlock: ((result: String) -> Boolean)? = null,
     private val callback: (result: String) -> Unit
 ) : BaseBottomDialog<DialogCommonEditBinding>(activity) {
-
     var onNegativeCallback: (() -> Unit)? = null
 
     private lateinit var binding: DialogCommonEditBinding
@@ -39,7 +38,10 @@ class CommonEditDialog(
         }
 
         setPositiveListener {
-            val result = binding.inputEt.text.toString().trim()
+            val result =
+                binding.inputEt.text
+                    .toString()
+                    .trim()
             if (editBean.canInputEmpty.not() && result.isEmpty()) {
                 ToastCenter.showWarning(editBean.emptyWarningMsg)
                 return@setPositiveListener

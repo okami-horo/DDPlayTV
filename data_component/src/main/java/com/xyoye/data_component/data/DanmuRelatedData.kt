@@ -19,4 +19,3 @@ data class DanmuRelatedData(
 data class DanmuRelatedUrlData(
     val url: String = ""
 ) : Parcelable
-

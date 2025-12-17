@@ -11,28 +11,21 @@ import com.xyoye.data_component.enums.StorageSort
  */
 
 object StorageSortOption {
-
-    fun getSort(): StorageSort {
-        return StorageSort.formValue(AppConfig.getStorageSortType())
-    }
+    fun getSort(): StorageSort = StorageSort.formValue(AppConfig.getStorageSortType())
 
     fun setSort(sort: StorageSort): Boolean {
         AppConfig.putStorageSortType(sort.value)
         return true
     }
 
-    fun isAsc(): Boolean {
-        return AppConfig.isStorageSortAsc()
-    }
+    fun isAsc(): Boolean = AppConfig.isStorageSortAsc()
 
     fun changeAsc(): Boolean {
         AppConfig.putStorageSortAsc(!isAsc())
         return true
     }
 
-    fun isDirectoryFirst(): Boolean {
-        return AppConfig.isStorageSortDirectoryFirst()
-    }
+    fun isDirectoryFirst(): Boolean = AppConfig.isStorageSortDirectoryFirst()
 
     fun changeDirectoryFirst(): Boolean {
         AppConfig.putStorageSortDirectoryFirst(!isDirectoryFirst())
@@ -49,7 +42,7 @@ object StorageSortOption {
                 getName = { it.fileName() },
                 isDirectory = { it.isDirectory() },
                 asc,
-                directoryFirst
+                directoryFirst,
             )
         } else {
             FileSizeComparator(
@@ -57,7 +50,7 @@ object StorageSortOption {
                 getSize = { it.fileLength() },
                 isDirectory = { it.isDirectory() },
                 asc,
-                directoryFirst
+                directoryFirst,
             )
         }
     }

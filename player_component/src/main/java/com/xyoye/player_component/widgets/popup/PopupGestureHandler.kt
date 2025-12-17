@@ -12,7 +12,6 @@ import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.getScreenHeight
 import com.xyoye.common_component.utils.getScreenWidth
 
-
 /**
  * Created by xyoye on 2022/11/10.
  */
@@ -21,7 +20,6 @@ import com.xyoye.common_component.utils.getScreenWidth
 class PopupGestureHandler(
     private val viewPosition: PopupPositionListener
 ) : View.OnTouchListener {
-
     companion object {
         val POPUP_MARGIN_X = dp2px(10)
         val POPUP_MARGIN_Y = dp2px(50)
@@ -40,7 +38,10 @@ class PopupGestureHandler(
 
     private val mInterpolator = DecelerateInterpolator()
 
-    override fun onTouch(v: View, event: MotionEvent): Boolean {
+    override fun onTouch(
+        v: View,
+        event: MotionEvent
+    ): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 lastX = event.rawX
@@ -63,7 +64,6 @@ class PopupGestureHandler(
             MotionEvent.ACTION_UP -> {
                 correctPosition(v.context, v.width, v.height)
             }
-
         }
         return true
     }
@@ -87,18 +87,23 @@ class PopupGestureHandler(
     /**
      * 位置修正
      */
-    fun correctPosition(context: Context, viewWidth: Int, viewHeight: Int) {
+    fun correctPosition(
+        context: Context,
+        viewWidth: Int,
+        viewHeight: Int
+    ) {
         val screenWidth = context.applicationContext.getScreenWidth(false)
         val screenHeight = context.applicationContext.getScreenHeight(false)
 
         val startX = viewPosition.getPosition().x
-        val endX = if (startX * 2 + viewWidth > screenWidth) {
-            // 超出屏幕一半时靠右
-            screenWidth - viewWidth - POPUP_MARGIN_X
-        } else {
-            // 靠左
-            POPUP_MARGIN_X
-        }
+        val endX =
+            if (startX * 2 + viewWidth > screenWidth) {
+                // 超出屏幕一半时靠右
+                screenWidth - viewWidth - POPUP_MARGIN_X
+            } else {
+                // 靠左
+                POPUP_MARGIN_X
+            }
 
         val startY = viewPosition.getPosition().y
         var endY = startY
@@ -112,11 +117,12 @@ class PopupGestureHandler(
         val startPoint = Point(startX, startY)
         val endPoint = Point(endX, endY)
 
-        mAnimator = ValueAnimator.ofObject(PointEvaluator(), startPoint, endPoint).apply {
-            addUpdateListener {
-                viewPosition.setPosition(it.animatedValue as Point)
+        mAnimator =
+            ValueAnimator.ofObject(PointEvaluator(), startPoint, endPoint).apply {
+                addUpdateListener {
+                    viewPosition.setPosition(it.animatedValue as Point)
+                }
             }
-        }
         startAnimator()
     }
 

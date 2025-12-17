@@ -5,12 +5,15 @@ package com.xyoye.player.controller.video
  */
 
 interface InterGestureView : InterControllerView {
-
     fun onStartSlide()
 
     fun onStopSlide()
 
-    fun onPositionChange(newPosition: Long, currentPosition: Long, duration: Long)
+    fun onPositionChange(
+        newPosition: Long,
+        currentPosition: Long,
+        duration: Long
+    )
 
     fun onBrightnessChange(percent: Int)
 

@@ -19,9 +19,10 @@ class LogFormatter(
     private val fieldFilter: LogFieldFilter = FieldFilter,
     private val maxDebugContextEntries: Int = MAX_DEBUG_CONTEXT_ENTRIES
 ) {
-    private val utcDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
-        timeZone = TimeZone.getTimeZone("UTC")
-    }
+    private val utcDateFormat =
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
 
     fun format(event: LogEvent): String {
         val contextInfo = prepareContext(event)
@@ -54,15 +55,16 @@ class LogFormatter(
         val highlightPart = renderHighlightForLogcat(contextInfo.highlight)
         val contextPart = renderInlineContext(contextInfo.context)
         val droppedPart = if (contextInfo.droppedCount > 0) " ctx_dropped=${contextInfo.droppedCount}" else ""
-        val prefix = buildString {
-            append("${event.level}/${event.module.code}")
-            event.tag?.let { append(" [${sanitizeTag(it)}]") }
-            if (event.sequenceId > 0) append(" #${event.sequenceId}")
-            if (highlightPart.isNotEmpty()) {
-                append(" ")
-                append(highlightPart)
+        val prefix =
+            buildString {
+                append("${event.level}/${event.module.code}")
+                event.tag?.let { append(" [${sanitizeTag(it)}]") }
+                if (event.sequenceId > 0) append(" #${event.sequenceId}")
+                if (highlightPart.isNotEmpty()) {
+                    append(" ")
+                    append(highlightPart)
+                }
             }
-        }
         return buildString {
             append(prefix)
             append(": ")
@@ -95,7 +97,7 @@ class LogFormatter(
             return ContextRender(
                 highlight = highlight.toSortedMap(),
                 context = sortedRemaining,
-                droppedCount = 0
+                droppedCount = 0,
             )
         }
         val kept = sortedRemaining.entries.take(maxDebugContextEntries).associate { it.toPair() }
@@ -103,13 +105,13 @@ class LogFormatter(
         return ContextRender(
             highlight = highlight.toSortedMap(),
             context = kept,
-            droppedCount = dropped
+            droppedCount = dropped,
         )
     }
 
     private fun renderHighlightForFile(highlight: Map<String, String>): List<String> {
         if (highlight.isEmpty()) return emptyList()
-        return highlight.entries.sortedBy { it.key }.map { (k, v) -> "ctx_${k}=${v}" }
+        return highlight.entries.sortedBy { it.key }.map { (k, v) -> "ctx_$k=$v" }
     }
 
     private fun renderHighlightForLogcat(highlight: Map<String, String>): String {
@@ -140,7 +142,10 @@ class LogFormatter(
 
     private fun sanitizeTag(tag: LogTag): String = sanitize("${tag.module.code}:${tag.value}", MAX_TAG_LENGTH)
 
-    private fun sanitize(raw: String, limit: Int): String {
+    private fun sanitize(
+        raw: String,
+        limit: Int
+    ): String {
         val cleaned = raw.replace('\n', ' ').replace('\r', ' ').trim()
         if (cleaned.length <= limit) return cleaned
         return cleaned.take(limit) + "..."
@@ -156,19 +161,39 @@ class LogFormatter(
      * 可根据级别 / 模块裁剪上下文字段或控制额外信息输出。
      */
     interface LogFieldFilter {
-        fun filterContext(level: LogLevel, module: LogModule, context: Map<String, String>): Map<String, String>
-        fun includeThread(level: LogLevel, module: LogModule): Boolean
-        fun includeThrowable(level: LogLevel, module: LogModule): Boolean
+        fun filterContext(
+            level: LogLevel,
+            module: LogModule,
+            context: Map<String, String>
+        ): Map<String, String>
+
+        fun includeThread(
+            level: LogLevel,
+            module: LogModule
+        ): Boolean
+
+        fun includeThrowable(
+            level: LogLevel,
+            module: LogModule
+        ): Boolean
     }
 
     object FieldFilter : LogFieldFilter {
-        override fun filterContext(level: LogLevel, module: LogModule, context: Map<String, String>): Map<String, String> {
-            return context
-        }
+        override fun filterContext(
+            level: LogLevel,
+            module: LogModule,
+            context: Map<String, String>
+        ): Map<String, String> = context
 
-        override fun includeThread(level: LogLevel, module: LogModule): Boolean = true
+        override fun includeThread(
+            level: LogLevel,
+            module: LogModule
+        ): Boolean = true
 
-        override fun includeThrowable(level: LogLevel, module: LogModule): Boolean = true
+        override fun includeThrowable(
+            level: LogLevel,
+            module: LogModule
+        ): Boolean = true
     }
 
     companion object {
@@ -180,13 +205,14 @@ class LogFormatter(
         private const val MAX_THREAD_NAME_LENGTH = 48
         private const val MAX_DEBUG_CONTEXT_ENTRIES = 6
 
-        private val HIGHLIGHT_KEYS = mapOf(
-            "scene" to "scene",
-            "errorcode" to "errorCode",
-            "sessionid" to "sessionId",
-            "requestid" to "requestId",
-            "action" to "action",
-            "source" to "source"
-        )
+        private val HIGHLIGHT_KEYS =
+            mapOf(
+                "scene" to "scene",
+                "errorcode" to "errorCode",
+                "sessionid" to "sessionId",
+                "requestid" to "requestId",
+                "action" to "action",
+                "source" to "source",
+            )
     }
 }

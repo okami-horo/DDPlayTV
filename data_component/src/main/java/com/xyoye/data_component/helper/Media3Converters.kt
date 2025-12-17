@@ -5,22 +5,17 @@ import com.xyoye.data_component.entity.media3.DownloadRequiredAction
 import com.xyoye.data_component.entity.media3.Media3RolloutSource
 
 class Media3Converters {
-
     @TypeConverter
     fun rolloutSourceToString(source: Media3RolloutSource?): String? = source?.name
 
     @TypeConverter
-    fun stringToRolloutSource(value: String?): Media3RolloutSource? {
-        return value?.let { Media3RolloutSource.valueOf(it) }
-    }
+    fun stringToRolloutSource(value: String?): Media3RolloutSource? = value?.let { Media3RolloutSource.valueOf(it) }
 
     @TypeConverter
     fun requiredActionToString(action: DownloadRequiredAction?): String? = action?.name
 
     @TypeConverter
-    fun stringToRequiredAction(value: String?): DownloadRequiredAction? {
-        return value?.let { DownloadRequiredAction.valueOf(it) }
-    }
+    fun stringToRequiredAction(value: String?): DownloadRequiredAction? = value?.let { DownloadRequiredAction.valueOf(it) }
 
     @TypeConverter
     fun logsToString(logs: List<String>?): String? {

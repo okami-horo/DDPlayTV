@@ -26,7 +26,6 @@ class SettingOffsetTimeView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingOffsetTimeBinding>(context, attrs, defStyleAttr) {
-
     private val layoutHeight = dp2px(100).toFloat()
     private val actionViews = mutableListOf<TextView>()
     private var mSettingType = SettingViewType.DANMU_OFFSET_TIME
@@ -41,53 +40,56 @@ class SettingOffsetTimeView(
 
     override fun onSettingVisibilityChanged(isVisible: Boolean) {
         if (isVisible) {
-            ViewCompat.animate(viewBinding.root)
+            ViewCompat
+                .animate(viewBinding.root)
                 .translationY(0f)
                 .setDuration(500)
-                .setListener(object : ViewPropertyAnimatorListener {
-                    override fun onAnimationStart(view: View) {
-                        onViewShow()
-                    }
+                .setListener(
+                    object : ViewPropertyAnimatorListener {
+                        override fun onAnimationStart(view: View) {
+                            onViewShow()
+                        }
 
-                    override fun onAnimationEnd(view: View) {
-                        onViewShowed()
-                    }
+                        override fun onAnimationEnd(view: View) {
+                            onViewShowed()
+                        }
 
-                    override fun onAnimationCancel(view: View) {
-                        onViewHide()
-                    }
-                })
-                .start()
+                        override fun onAnimationCancel(view: View) {
+                            onViewHide()
+                        }
+                    },
+                ).start()
         } else {
-            ViewCompat.animate(viewBinding.root)
+            ViewCompat
+                .animate(viewBinding.root)
                 .translationY(layoutHeight)
                 .setDuration(500)
-                .setListener(object : ViewPropertyAnimatorListener {
-                    override fun onAnimationStart(view: View) {
-                        onViewHide()
-                    }
+                .setListener(
+                    object : ViewPropertyAnimatorListener {
+                        override fun onAnimationStart(view: View) {
+                            onViewHide()
+                        }
 
-                    override fun onAnimationEnd(view: View) {
+                        override fun onAnimationEnd(view: View) {
+                        }
 
-                    }
-
-                    override fun onAnimationCancel(view: View) {
-
-                    }
-                })
-                .start()
+                        override fun onAnimationCancel(view: View) {
+                        }
+                    },
+                ).start()
         }
     }
 
-    override fun isSettingShowing(): Boolean {
-        return viewBinding.root.translationY == 0f
-    }
+    override fun isSettingShowing(): Boolean = viewBinding.root.translationY == 0f
 
     override fun onViewShow() {
         changeTime(0f, dispatch = false)
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (isSettingShowing().not()) {
             return false
         }
@@ -113,19 +115,25 @@ class SettingOffsetTimeView(
                     return@setOnClickListener
                 }
 
-                val time = textView.text.toString().toFloatOrNull()
-                    ?: return@setOnClickListener
+                val time =
+                    textView.text.toString().toFloatOrNull()
+                        ?: return@setOnClickListener
                 changeTime(time)
             }
         }
     }
 
-    private fun changeTime(time: Float, reset: Boolean = false, dispatch: Boolean = true) {
-        val offsetTime = if (mSettingType == SettingViewType.SUBTITLE_OFFSET_TIME) {
-            PlayerInitializer.Subtitle.offsetPosition
-        } else {
-            PlayerInitializer.Danmu.offsetPosition
-        }
+    private fun changeTime(
+        time: Float,
+        reset: Boolean = false,
+        dispatch: Boolean = true
+    ) {
+        val offsetTime =
+            if (mSettingType == SettingViewType.SUBTITLE_OFFSET_TIME) {
+                PlayerInitializer.Subtitle.offsetPosition
+            } else {
+                PlayerInitializer.Danmu.offsetPosition
+            }
         val currentOffset = time * 1000
         var newOffset = offsetTime + currentOffset
 
@@ -144,11 +152,12 @@ class SettingOffsetTimeView(
         }
 
         val display = "${numberFormat(abs(newOffset / 1000))}秒"
-        val status = when {
-            newOffset > 0 -> "提前"
-            newOffset < 0 -> "延迟"
-            else -> ""
-        }
+        val status =
+            when {
+                newOffset > 0 -> "提前"
+                newOffset < 0 -> "延迟"
+                else -> ""
+            }
 
         viewBinding.tvDisplay.text = display
         viewBinding.tvStatus.text = status
@@ -187,12 +196,11 @@ class SettingOffsetTimeView(
         }
     }
 
-    private fun numberFormat(num: Float): String {
-        return DecimalFormat("0.#").run {
+    private fun numberFormat(num: Float): String =
+        DecimalFormat("0.#").run {
             roundingMode = RoundingMode.HALF_UP
             format(num)
         }
-    }
 
     fun setSettingType(settingType: SettingViewType) {
         this.mSettingType = settingType

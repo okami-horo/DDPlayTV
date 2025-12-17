@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.xyoye.cache.CacheManager
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.PlayState
@@ -25,6 +27,12 @@ import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.facoty.PlayerFactory
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.inter.VideoPlayerEventListener
+import com.xyoye.player.subtitle.backend.CanvasTextRendererBackend
+import com.xyoye.player.subtitle.backend.LibassRendererBackend
+import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
+import com.xyoye.player.subtitle.backend.SubtitleRenderEnvironment
+import com.xyoye.player.subtitle.backend.SubtitleRenderer
+import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.player.surface.InterSurfaceView
 import com.xyoye.player.surface.SurfaceFactory
 import com.xyoye.player.utils.AudioFocusHelper
@@ -32,15 +40,7 @@ import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.wrapper.InterVideoPlayer
 import com.xyoye.player.wrapper.InterVideoTrack
 import com.xyoye.player_component.utils.PlayRecorder
-import com.xyoye.player.subtitle.backend.CanvasTextRendererBackend
-import com.xyoye.player.subtitle.backend.LibassRendererBackend
-import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
-import com.xyoye.player.subtitle.backend.SubtitleRenderEnvironment
-import com.xyoye.player.subtitle.backend.SubtitleRenderer
-import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
-import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.subtitle.MixedSubtitle
-import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 
 /**
  * Created by xyoye on 2020/11/3.
@@ -54,35 +54,36 @@ class DanDanVideoPlayer(
     InterVideoPlayer,
     InterVideoTrack,
     VideoPlayerEventListener {
-    //播放状态
+    // 播放状态
     private var mCurrentPlayState = PlayState.STATE_IDLE
 
-    //默认组件参数
-    private val mDefaultLayoutParams = LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        Gravity.CENTER
-    )
+    // 默认组件参数
+    private val mDefaultLayoutParams =
+        LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            Gravity.CENTER,
+        )
 
-    //音频焦点监听
+    // 音频焦点监听
     private var mAudioFocusHelper: AudioFocusHelper
 
-    //视图控制器
+    // 视图控制器
     private var mVideoController: VideoController? = null
 
-    //渲染视图组件
+    // 渲染视图组件
     private var mRenderView: InterSurfaceView? = null
 
-    //播放器
+    // 播放器
     private lateinit var mVideoPlayer: AbstractVideoPlayer
 
-    //播放资源
+    // 播放资源
     private lateinit var videoSource: BaseVideoSource
 
-    //当前音量
+    // 当前音量
     private var mCurrentVolume = PointF(0f, 0f)
 
-    //当前视图缩放类型
+    // 当前视图缩放类型
     private var mScreenScale = PlayerInitializer.screenScale
 
     private var subtitleRenderer: SubtitleRenderer? = null
@@ -90,8 +91,9 @@ class DanDanVideoPlayer(
         SubtitleFallbackDispatcher.NO_OP
 
     init {
-        val audioManager = context.applicationContext
-            .getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val audioManager =
+            context.applicationContext
+                .getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val lifecycleScope = (context as AppCompatActivity).lifecycleScope
         mAudioFocusHelper = AudioFocusHelper(this, audioManager, lifecycleScope)
     }
@@ -127,19 +129,19 @@ class DanDanVideoPlayer(
         }
     }
 
-    override fun getVideoSource(): BaseVideoSource {
-        return videoSource
-    }
+    override fun getVideoSource(): BaseVideoSource = videoSource
 
     override fun getDuration(): Long {
-        if (isInPlayState())
+        if (isInPlayState()) {
             return mVideoPlayer.getDuration()
+        }
         return 0
     }
 
     override fun getCurrentPosition(): Long {
-        if (isInPlayState())
+        if (isInPlayState()) {
             return mVideoPlayer.getCurrentPosition()
+        }
         return 0
     }
 
@@ -158,9 +160,7 @@ class DanDanVideoPlayer(
         setVolume(PointF(volume, volume))
     }
 
-    override fun isSilence(): Boolean {
-        return mCurrentVolume.x + mCurrentVolume.y == 0f
-    }
+    override fun isSilence(): Boolean = mCurrentVolume.x + mCurrentVolume.y == 0f
 
     override fun setVolume(point: PointF) {
         mCurrentVolume = point
@@ -189,13 +189,14 @@ class DanDanVideoPlayer(
 
     override fun getTcpSpeed() = mVideoPlayer.getTcpSpeed()
 
-    override fun getRenderView(): InterSurfaceView? {
-        return mRenderView
-    }
+    override fun getRenderView(): InterSurfaceView? = mRenderView
 
     override fun getVideoSize() = mVideoPlayer.getVideoSize()
 
-    override fun onVideoSizeChange(width: Int, height: Int) {
+    override fun onVideoSizeChange(
+        width: Int,
+        height: Int
+    ) {
         mRenderView?.setScaleType(mScreenScale)
         mRenderView?.setVideoSize(width, height)
         mVideoController?.setVideoSize(mVideoPlayer.getVideoSize())
@@ -218,7 +219,10 @@ class DanDanVideoPlayer(
         PlayRecorder.recordProgress(videoSource, 0, getDuration())
     }
 
-    override fun onInfo(what: Int, extra: Int) {
+    override fun onInfo(
+        what: Int,
+        extra: Int
+    ) {
         when (what) {
             PlayerConstant.MEDIA_INFO_BUFFERING_START -> {
                 setPlayState(PlayState.STATE_BUFFERING_PAUSED)
@@ -254,25 +258,31 @@ class DanDanVideoPlayer(
 
     private fun initPlayer() {
         mAudioFocusHelper.enable = PlayerInitializer.isEnableAudioFocus
-        //初始化播放器
-        mVideoPlayer = PlayerFactory.getFactory(PlayerInitializer.playerType)
-            .createPlayer(context).apply {
-                setPlayerEventListener(this@DanDanVideoPlayer)
-                initPlayer()
-            }
+        // 初始化播放器
+        mVideoPlayer =
+            PlayerFactory
+                .getFactory(PlayerInitializer.playerType)
+                .createPlayer(context)
+                .apply {
+                    setPlayerEventListener(this@DanDanVideoPlayer)
+                    initPlayer()
+                }
 
-        //初始化渲染布局
+        // 初始化渲染布局
         mRenderView?.apply {
             this@DanDanVideoPlayer.removeView(getView())
             release()
         }
-        mRenderView = SurfaceFactory.getFactory(
-            PlayerInitializer.playerType, PlayerInitializer.surfaceType
-        ).createRenderView(context)
-            .apply {
-                this@DanDanVideoPlayer.addView(getView(), 0, mDefaultLayoutParams)
-                attachPlayer(mVideoPlayer)
-            }
+        mRenderView =
+            SurfaceFactory
+                .getFactory(
+                    PlayerInitializer.playerType,
+                    PlayerInitializer.surfaceType,
+                ).createRenderView(context)
+                .apply {
+                    this@DanDanVideoPlayer.addView(getView(), 0, mDefaultLayoutParams)
+                    attachPlayer(mVideoPlayer)
+                }
 
         setExtraOption()
     }
@@ -287,16 +297,18 @@ class DanDanVideoPlayer(
         }
         val controller = mVideoController ?: return
         val backend = PlayerInitializer.Subtitle.backend
-        val environment = SubtitleRenderEnvironment(
-            context,
-            controller.getSubtitleController(),
-            this,
-            subtitleFallbackDispatcher
-        )
-        val renderer = when (backend) {
-            SubtitleRendererBackend.LEGACY_CANVAS -> CanvasTextRendererBackend()
-            SubtitleRendererBackend.LIBASS -> LibassRendererBackend()
-        }
+        val environment =
+            SubtitleRenderEnvironment(
+                context,
+                controller.getSubtitleController(),
+                this,
+                subtitleFallbackDispatcher,
+            )
+        val renderer =
+            when (backend) {
+                SubtitleRendererBackend.LEGACY_CANVAS -> CanvasTextRendererBackend()
+                SubtitleRendererBackend.LIBASS -> LibassRendererBackend()
+            }
         renderer.bind(environment)
         renderer.onSurfaceTypeChanged(PlayerInitializer.surfaceType)
         subtitleRenderer = renderer
@@ -309,8 +321,8 @@ class DanDanVideoPlayer(
         }
     }
 
-    private fun startPrepare(): Boolean {
-        return if (videoSource.getVideoUrl().isNotEmpty()) {
+    private fun startPrepare(): Boolean =
+        if (videoSource.getVideoUrl().isNotEmpty()) {
             mVideoPlayer.setDataSource(videoSource.getVideoUrl(), videoSource.getHttpHeader())
             mVideoPlayer.prepareAsync()
             setPlayState(PlayState.STATE_PREPARING)
@@ -319,21 +331,19 @@ class DanDanVideoPlayer(
             setPlayState(PlayState.STATE_ERROR)
             false
         }
-    }
 
     private fun setPlayState(playState: PlayState) {
         mCurrentPlayState = playState
         mVideoController?.setPlayState(playState)
     }
 
-    private fun isInPlayState(): Boolean {
-        return this::mVideoPlayer.isInitialized
-            && mCurrentPlayState != PlayState.STATE_ERROR
-            && mCurrentPlayState != PlayState.STATE_IDLE
-            && mCurrentPlayState != PlayState.STATE_PREPARING
-            && mCurrentPlayState != PlayState.STATE_START_ABORT
-            && mCurrentPlayState != PlayState.STATE_COMPLETED
-    }
+    private fun isInPlayState(): Boolean =
+        this::mVideoPlayer.isInitialized &&
+            mCurrentPlayState != PlayState.STATE_ERROR &&
+            mCurrentPlayState != PlayState.STATE_IDLE &&
+            mCurrentPlayState != PlayState.STATE_PREPARING &&
+            mCurrentPlayState != PlayState.STATE_START_ABORT &&
+            mCurrentPlayState != PlayState.STATE_COMPLETED
 
     fun resume() {
         if (isInPlayState() && !mVideoPlayer.isPlaying()) {
@@ -351,42 +361,41 @@ class DanDanVideoPlayer(
         if (this::videoSource.isInitialized.not()) {
             return
         }
-        //保存最后一帧
+        // 保存最后一帧
         PlayRecorder.recordImage(videoSource.getUniqueKey(), mRenderView)
-        //保存播放进度
+        // 保存播放进度
         PlayRecorder.recordProgress(videoSource, getCurrentPosition(), getDuration())
     }
 
     fun release() {
         if (mCurrentPlayState != PlayState.STATE_IDLE) {
             destroySubtitleRenderer()
-            //释放缓存
+            // 释放缓存
             CacheManager.release()
-            //释放播放器控制器
+            // 释放播放器控制器
             mVideoController?.destroy()
-            //释放播放器
+            // 释放播放器
             mVideoPlayer.release()
-            //关闭常亮
+            // 关闭常亮
             keepScreenOn = false
-            //释放渲染布局
+            // 释放渲染布局
             mRenderView?.run {
                 this@DanDanVideoPlayer.removeView(getView())
                 release()
             }
-            //取消音频焦点
+            // 取消音频焦点
             mAudioFocusHelper.abandonFocus()
-            //重置播放状态
+            // 重置播放状态
             setPlayState(PlayState.STATE_IDLE)
         }
     }
 
-    fun onBackPressed(): Boolean {
-        return mVideoController?.onBackPressed() ?: false
-    }
+    fun onBackPressed(): Boolean = mVideoController?.onBackPressed() ?: false
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        return mVideoController?.onKeyDown(keyCode, event) ?: false
-    }
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean = mVideoController?.onKeyDown(keyCode, event) ?: false
 
     fun setVideoSource(source: BaseVideoSource) {
         videoSource = source
@@ -419,11 +428,12 @@ class DanDanVideoPlayer(
         // IMPORTANT: do not reuse the same LayoutParams instance across children.
         // Reusing mDefaultLayoutParams caused overlay alignment code to mutate
         // gravity/margins on the render view, leading to asymmetric black bars.
-        val lp = FrameLayout.LayoutParams(
-            mDefaultLayoutParams.width,
-            mDefaultLayoutParams.height,
-            mDefaultLayoutParams.gravity
-        )
+        val lp =
+            FrameLayout.LayoutParams(
+                mDefaultLayoutParams.width,
+                mDefaultLayoutParams.height,
+                mDefaultLayoutParams.gravity,
+            )
         addView(view, insertIndex, lp)
     }
 
@@ -444,25 +454,15 @@ class DanDanVideoPlayer(
         mVideoPlayer.setSubtitleOffset(PlayerInitializer.Subtitle.offsetPosition)
     }
 
-    override fun supportAddTrack(type: TrackType): Boolean {
-        return mVideoPlayer.supportAddTrack(type)
-    }
+    override fun supportAddTrack(type: TrackType): Boolean = mVideoPlayer.supportAddTrack(type)
 
-    override fun addTrack(track: VideoTrackBean): Boolean {
-        return mVideoPlayer.addTrack(track)
-    }
+    override fun addTrack(track: VideoTrackBean): Boolean = mVideoPlayer.addTrack(track)
 
-    override fun getTracks(type: TrackType): List<VideoTrackBean> {
-        return mVideoPlayer.getTracks(type)
-    }
+    override fun getTracks(type: TrackType): List<VideoTrackBean> = mVideoPlayer.getTracks(type)
 
-    override fun selectTrack(track: VideoTrackBean) {
-        return mVideoPlayer.selectTrack(track)
-    }
+    override fun selectTrack(track: VideoTrackBean) = mVideoPlayer.selectTrack(track)
 
-    override fun deselectTrack(type: TrackType) {
-        return mVideoPlayer.deselectTrack(type)
-    }
+    override fun deselectTrack(type: TrackType) = mVideoPlayer.deselectTrack(type)
 
     fun switchSubtitleBackend(target: SubtitleRendererBackend) {
         if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {

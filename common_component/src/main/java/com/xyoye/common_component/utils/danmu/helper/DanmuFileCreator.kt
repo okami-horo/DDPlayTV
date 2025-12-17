@@ -16,11 +16,13 @@ import java.util.Date
  */
 
 object DanmuFileCreator {
-
     /**
      * 创建弹幕文件，文件路径的组成为：默认弹幕文件夹 + 番剧名 + 剧集名
      */
-    fun create(animeTitle: String, episodeTitle: String): File? {
+    fun create(
+        animeTitle: String,
+        episodeTitle: String
+    ): File? {
         try {
             val originDirectoryName = animeTitle.ifEmpty { "未知" }
             val originFileName = episodeTitle.ifEmpty { "DANMU_${Date().toText("yyyy-MM-dd_HH-mm")}" }
@@ -43,7 +45,7 @@ object DanmuFileCreator {
             ErrorReportHelper.postCatchedException(
                 e,
                 "DanmuFileCreator.create",
-                "创建弹幕文件失败: $animeTitle - $episodeTitle"
+                "创建弹幕文件失败: $animeTitle - $episodeTitle",
             )
             return null
         }

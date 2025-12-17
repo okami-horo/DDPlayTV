@@ -18,12 +18,13 @@ class BackupDomainInterceptor : Interceptor {
         val oldRequest = chain.request()
         val newRequest = oldRequest.newBuilder()
         val newBaseUrl = Uri.parse(AppConfig.getBackupDomain())
-        val newUrl = oldRequest.url
-            .newBuilder()
-            .scheme(newBaseUrl.scheme ?: "")
-            .host(newBaseUrl.host ?: "")
-            .port(newBaseUrl.port)
-            .build()
+        val newUrl =
+            oldRequest.url
+                .newBuilder()
+                .scheme(newBaseUrl.scheme ?: "")
+                .host(newBaseUrl.host ?: "")
+                .port(newBaseUrl.port)
+                .build()
         return chain.proceed(newRequest.url(newUrl).build())
     }
 }

@@ -18,7 +18,6 @@ class SubtitleSurfaceLifecycleHandler(
     private val fallbackController: SubtitleFallbackController? = null,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) {
-
     fun onSurfaceAvailable(
         surface: Surface?,
         viewType: SubtitleViewType,
@@ -32,17 +31,18 @@ class SubtitleSurfaceLifecycleHandler(
         telemetryEnabled: Boolean = true
     ) {
         tracker.onSurfaceRecreated()
-        val target = tracker.updateSurface(
-            surface = surface,
-            viewType = viewType,
-            width = width,
-            height = height,
-            rotation = rotation,
-            scale = scale,
-            colorFormat = colorFormat,
-            supportsHardwareBuffer = supportsHardwareBuffer,
-            vsyncId = vsyncId
-        )
+        val target =
+            tracker.updateSurface(
+                surface = surface,
+                viewType = viewType,
+                width = width,
+                height = height,
+                rotation = rotation,
+                scale = scale,
+                colorFormat = colorFormat,
+                supportsHardwareBuffer = supportsHardwareBuffer,
+                vsyncId = vsyncId,
+            )
         val surfaceId = tracker.surfaceId() ?: buildFallbackId()
         renderer.bindSurface(surfaceId, surface, target, telemetryEnabled)
         fallbackController?.let { controller ->
@@ -62,17 +62,18 @@ class SubtitleSurfaceLifecycleHandler(
         vsyncId: Long? = null,
         telemetryEnabled: Boolean = true
     ) {
-        val target = tracker.updateSurface(
-            surface = surface,
-            viewType = viewType,
-            width = width,
-            height = height,
-            rotation = rotation,
-            scale = scale,
-            colorFormat = colorFormat,
-            supportsHardwareBuffer = supportsHardwareBuffer,
-            vsyncId = vsyncId
-        )
+        val target =
+            tracker.updateSurface(
+                surface = surface,
+                viewType = viewType,
+                width = width,
+                height = height,
+                rotation = rotation,
+                scale = scale,
+                colorFormat = colorFormat,
+                supportsHardwareBuffer = supportsHardwareBuffer,
+                vsyncId = vsyncId,
+            )
         tracker.surfaceId()?.let {
             renderer.bindSurface(it, surface, target, telemetryEnabled)
         }
@@ -88,7 +89,5 @@ class SubtitleSurfaceLifecycleHandler(
         renderer.detachSurface()
     }
 
-    private fun buildFallbackId(): String {
-        return "surface-${System.currentTimeMillis()}"
-    }
+    private fun buildFallbackId(): String = "surface-${System.currentTimeMillis()}"
 }

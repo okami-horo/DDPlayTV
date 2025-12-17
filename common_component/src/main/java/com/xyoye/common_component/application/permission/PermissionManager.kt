@@ -15,7 +15,6 @@ import com.xyoye.common_component.utils.ErrorReportHelper
  */
 
 class PermissionManager : Fragment() {
-
     companion object {
         private const val FRAGMENT_TAG = "tag_fragment_permission_manager"
         private const val KEY_PERMISSION_LAUNCHER = "key_permission_launcher"
@@ -29,11 +28,12 @@ class PermissionManager : Fragment() {
             fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let {
                 transaction.remove(it)
             }
-            PermissionManager().apply {
-                this.permissionResult = permissionResult
-                transaction.add(this, FRAGMENT_TAG)
-                transaction.commitNow()
-            }.requestPermissions(permissions)
+            PermissionManager()
+                .apply {
+                    this.permissionResult = permissionResult
+                    transaction.add(this, FRAGMENT_TAG)
+                    transaction.commitNow()
+                }.requestPermissions(permissions)
         }
     }
 
@@ -73,7 +73,7 @@ class PermissionManager : Fragment() {
             ErrorReportHelper.postCatchedException(
                 e,
                 "PermissionManager.onRequestComplete",
-                "移除权限请求Fragment失败"
+                "移除权限请求Fragment失败",
             )
             e.printStackTrace()
         }
@@ -85,31 +85,30 @@ class PermissionManager : Fragment() {
     ) : DefaultLifecycleObserver {
         private lateinit var requestPermissions: ActivityResultLauncher<Array<String>>
 
-        //ActivityResultRegistry会在ON_DESTROY后，将请求结果保存在PendingResult中，并在下次ON_START时回调
-        //但在此权限请求工具中，每次请求都会新建Fragment，所以不应在ON_START接收上一次的结果
+        // ActivityResultRegistry会在ON_DESTROY后，将请求结果保存在PendingResult中，并在下次ON_START时回调
+        // 但在此权限请求工具中，每次请求都会新建Fragment，所以不应在ON_START接收上一次的结果
         private var mRequestedPermission = false
 
         override fun onCreate(lifecycleOwner: LifecycleOwner) {
-            requestPermissions = registry.register(
-                KEY_PERMISSION_LAUNCHER,
-                lifecycleOwner,
-                ActivityResultContracts.RequestMultiplePermissions()
-            ) { grantState ->
-                if (mRequestedPermission.not()) {
-                    return@register
+            requestPermissions =
+                registry.register(
+                    KEY_PERMISSION_LAUNCHER,
+                    lifecycleOwner,
+                    ActivityResultContracts.RequestMultiplePermissions(),
+                ) { grantState ->
+                    if (mRequestedPermission.not()) {
+                        return@register
+                    }
+                    val deniedPermissions = grantState.filter { it.value.not() }.map { it.key }
+                    if (deniedPermissions.isEmpty()) {
+                        // 不存在未授权的权限
+                        manager.onPermissionGranted()
+                    } else {
+                        // 存在未授权的权限
+                        manager.onPermissionDenied(deniedPermissions)
+                    }
+                    manager.onRequestComplete()
                 }
-                val deniedPermissions = grantState.filter { it.value.not() }.map { it.key }
-                if (deniedPermissions.isEmpty()) {
-                    //不存在未授权的权限
-                    manager.onPermissionGranted()
-                } else {
-                    //存在未授权的权限
-                    manager.onPermissionDenied(deniedPermissions)
-                }
-                manager.onRequestComplete()
-            }
-
-
         }
 
         override fun onDestroy(owner: LifecycleOwner) {

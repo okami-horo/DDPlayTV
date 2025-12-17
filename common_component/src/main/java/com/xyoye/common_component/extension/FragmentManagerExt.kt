@@ -26,7 +26,8 @@ fun FragmentManager.findAndRemoveFragment(vararg tags: String) {
     beginTransaction().run {
         tags.forEach {
             findFragmentByTag(it)?.also { fragment ->
-                this.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
+                this
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
                     .remove(fragment)
             }
         }

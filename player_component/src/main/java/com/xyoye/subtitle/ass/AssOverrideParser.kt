@@ -6,10 +6,14 @@ import kotlin.math.absoluteValue
  * ASS 覆写标签解析工具：负责提取首个覆写块并解析常用标签。
  */
 object AssOverrideParser {
+    data class Alignment(
+        val value: Int
+    )
 
-    data class Alignment(val value: Int)
-
-    data class Position(val x: Float, val y: Float)
+    data class Position(
+        val x: Float,
+        val y: Float
+    )
 
     data class Move(
         val fromX: Float,
@@ -20,9 +24,14 @@ object AssOverrideParser {
         val endTime: Float? = null
     )
 
-    data class Rotation(val angle: Float)
+    data class Rotation(
+        val angle: Float
+    )
 
-    data class PlayRes(val width: Int, val height: Int)
+    data class PlayRes(
+        val width: Int,
+        val height: Int
+    )
 
     const val DEFAULT_PLAY_RES_X = 1280
     const val DEFAULT_PLAY_RES_Y = 720
@@ -32,14 +41,16 @@ object AssOverrideParser {
     private const val MAX_TIME_ABS = 3_600_000f
 
     private val anPattern = Regex("""\\an(\d)""", RegexOption.IGNORE_CASE)
-    private val posPattern = Regex(
-        """\\pos\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)""",
-        RegexOption.IGNORE_CASE
-    )
-    private val movePattern = Regex(
-        """\\move\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*(?:,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*)?\)""",
-        RegexOption.IGNORE_CASE
-    )
+    private val posPattern =
+        Regex(
+            """\\pos\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)""",
+            RegexOption.IGNORE_CASE,
+        )
+    private val movePattern =
+        Regex(
+            """\\move\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*(?:,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*)?\)""",
+            RegexOption.IGNORE_CASE,
+        )
     private val frzPattern = Regex("""\\frz\s*(-?\d+(?:\.\d+)?)""", RegexOption.IGNORE_CASE)
 
     /**
@@ -223,9 +234,7 @@ object AssOverrideParser {
         return if (remainder == 0f) 0f else remainder
     }
 
-    private fun isFiniteCoordinate(value: Float): Boolean {
-        return value.isFinite() && value.absoluteValue <= MAX_COORDINATE_ABS
-    }
+    private fun isFiniteCoordinate(value: Float): Boolean = value.isFinite() && value.absoluteValue <= MAX_COORDINATE_ABS
 
     private fun isFiniteTime(value: Float?): Boolean {
         if (value == null) {

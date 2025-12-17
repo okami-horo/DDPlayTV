@@ -20,7 +20,6 @@ class SettingController(
     private val addView: (InterSettingView) -> Unit,
     private val onSettingHidden: (() -> Unit)? = null
 ) : InterSettingController {
-
     private lateinit var playerSettingView: PlayerSettingView
     private lateinit var switchVideoSourceView: SwitchVideoSourceView
     private lateinit var keywordBlockView: KeywordBlockView
@@ -44,11 +43,12 @@ class SettingController(
     private val showingSettingViews = mutableListOf<InterSettingView>()
     private var isPopupMode = false
 
-    override fun isSettingViewShowing(): Boolean {
-        return showingSettingViews.find { it.isSettingShowing() } != null
-    }
+    override fun isSettingViewShowing(): Boolean = showingSettingViews.find { it.isSettingShowing() } != null
 
-    override fun showSettingView(viewType: SettingViewType, extra: Any?) {
+    override fun showSettingView(
+        viewType: SettingViewType,
+        extra: Any?
+    ) {
         if (isPopupMode) {
             return
         }
@@ -77,7 +77,10 @@ class SettingController(
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         val iterator = showingSettingViews.iterator()
         while (iterator.hasNext()) {
             val view = iterator.next()
@@ -91,7 +94,6 @@ class SettingController(
     }
 
     override fun settingRelease() {
-
     }
 
     fun setDatabaseBlock(
@@ -117,7 +119,10 @@ class SettingController(
             .setSwitchVideoSourceBlock(block)
     }
 
-    private fun getSettingView(type: SettingViewType, extra: Any? = null): InterSettingView {
+    private fun getSettingView(
+        type: SettingViewType,
+        extra: Any? = null
+    ): InterSettingView {
         when (type) {
             SettingViewType.PLAYER_SETTING -> {
                 if (this::playerSettingView.isInitialized.not()) {
@@ -157,7 +162,7 @@ class SettingController(
                     addView.invoke(screenShotView)
                 }
                 return screenShotView
-                */
+                 */
             }
 
             SettingViewType.SEARCH_DANMU -> {

@@ -14,7 +14,6 @@ import kotlinx.parcelize.Parcelize
 data class AlistDirectoryData(
     @Json(name = "total")
     val fileCount: Int = 0,
-
     @Json(name = "content")
     val fileList: List<AlistFileData> = emptyList()
 ) : Parcelable

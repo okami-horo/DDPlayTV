@@ -18,12 +18,10 @@ class VideoStorageFile(
     storage: VideoStorage,
     private val entity: Any
 ) : AbstractStorageFile(storage) {
-    override fun getRealFile(): Any {
-        return entity
-    }
+    override fun getRealFile(): Any = entity
 
-    override fun filePath(): String {
-        return when (entity) {
+    override fun filePath(): String =
+        when (entity) {
             is FolderBean -> {
                 entity.folderPath
             }
@@ -36,10 +34,9 @@ class VideoStorageFile(
                 ""
             }
         }
-    }
 
-    override fun fileUrl(): String {
-        return when (entity) {
+    override fun fileUrl(): String =
+        when (entity) {
             is FolderBean -> {
                 entity.folderPath
             }
@@ -52,7 +49,6 @@ class VideoStorageFile(
                 ""
             }
         }
-    }
 
     override fun fileCover(): String? {
         if (isDirectory()) {
@@ -67,12 +63,10 @@ class VideoStorageFile(
         return fileUrl()
     }
 
-    override fun isDirectory(): Boolean {
-        return entity is FolderBean
-    }
+    override fun isDirectory(): Boolean = entity is FolderBean
 
-    override fun fileName(): String {
-        return when (entity) {
+    override fun fileName(): String =
+        when (entity) {
             is FolderBean -> {
                 getFileName(entity.folderPath)
             }
@@ -85,15 +79,14 @@ class VideoStorageFile(
                 ""
             }
         }
-    }
 
-    override fun clone(): StorageFile {
-        return VideoStorageFile(
-            storage as VideoStorage, entity
+    override fun clone(): StorageFile =
+        VideoStorageFile(
+            storage as VideoStorage,
+            entity,
         ).also {
             it.playHistory = playHistory
         }
-    }
 
     override fun fileLength(): Long {
         if (entity is VideoEntity) {
@@ -116,13 +109,12 @@ class VideoStorageFile(
         return ""
     }
 
-    override fun isVideoFile(): Boolean {
-        return entity is VideoEntity && com.xyoye.common_component.utils.isVideoFile(fileName())
-    }
+    override fun isVideoFile(): Boolean =
+        entity is VideoEntity &&
+            com.xyoye.common_component.utils
+                .isVideoFile(fileName())
 
-    override fun isStoragePathParent(childPath: String): Boolean {
-        return filePath() == getDirPath(childPath)
-    }
+    override fun isStoragePathParent(childPath: String): Boolean = filePath() == getDirPath(childPath)
 
     override fun videoDuration(): Long {
         if (entity is VideoEntity) {

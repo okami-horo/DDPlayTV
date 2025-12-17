@@ -17,22 +17,29 @@ object Media3FormatUtil {
      * 根据后缀和常见信号推断 MIME，并在不支持 Dolby Vision 时回退到 HEVC。
      * 仅做“播放尽量成功”优化，不做严格语义保证。
      */
-    fun normalizeMime(context: Context, uri: Uri): String? {
+    fun normalizeMime(
+        context: Context,
+        uri: Uri
+    ): String? {
         val lower = uri.toString().lowercase(Locale.getDefault())
-        val infer = when {
-            lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".m4v") -> null // 容器内再判
-            lower.endsWith(".mkv") -> null
-            lower.endsWith(".hevc") || lower.endsWith(".h265") -> MimeTypes.VIDEO_H265
-            lower.endsWith(".h264") || lower.endsWith(".avc") -> MimeTypes.VIDEO_H264
-            lower.endsWith(".av1") || lower.contains("av01") -> MimeTypes.VIDEO_AV1
-            lower.contains("dvhe") || lower.contains("dvh1") || lower.contains("dav1") -> MimeTypes.VIDEO_DOLBY_VISION
-            lower.endsWith(".vc1") || lower.contains("wvc1") -> "video/wvc1"
-            else -> null
-        }
+        val infer =
+            when {
+                lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".m4v") -> null // 容器内再判
+                lower.endsWith(".mkv") -> null
+                lower.endsWith(".hevc") || lower.endsWith(".h265") -> MimeTypes.VIDEO_H265
+                lower.endsWith(".h264") || lower.endsWith(".avc") -> MimeTypes.VIDEO_H264
+                lower.endsWith(".av1") || lower.contains("av01") -> MimeTypes.VIDEO_AV1
+                lower.contains("dvhe") || lower.contains("dvh1") || lower.contains("dav1") -> MimeTypes.VIDEO_DOLBY_VISION
+                lower.endsWith(".vc1") || lower.contains("wvc1") -> "video/wvc1"
+                else -> null
+            }
         return resolveDolbyVisionFallback(context, infer)
     }
 
-    private fun resolveDolbyVisionFallback(context: Context, mime: String?): String? {
+    private fun resolveDolbyVisionFallback(
+        context: Context,
+        mime: String?
+    ): String? {
         if (mime != MimeTypes.VIDEO_DOLBY_VISION) return mime
 
         val dvSupported = hasDecoder(MimeTypes.VIDEO_DOLBY_VISION)
@@ -43,7 +50,7 @@ object Media3FormatUtil {
             Media3Diagnostics.logFormatDowngrade(
                 MimeTypes.VIDEO_DOLBY_VISION,
                 MimeTypes.VIDEO_H265,
-                if (!dvSupported) "decoder_absent" else "display_not_hdr_dv"
+                if (!dvSupported) "decoder_absent" else "display_not_hdr_dv",
             )
             return MimeTypes.VIDEO_H265
         }
@@ -62,30 +69,34 @@ object Media3FormatUtil {
         val supportsHlg = hdrTypes.contains(Display.HdrCapabilities.HDR_TYPE_HLG)
 
         return when {
-            supportsDv -> listOf(
-                MimeTypes.VIDEO_DOLBY_VISION,
-                MimeTypes.VIDEO_H265, // HDR10/10+ 常见封装
-                MimeTypes.VIDEO_AV1,
-                MimeTypes.VIDEO_H264
-            )
-            supportsHdr10Plus || supportsHdr10 || supportsHlg -> listOf(
-                MimeTypes.VIDEO_H265,
-                MimeTypes.VIDEO_AV1,
-                MimeTypes.VIDEO_H264
-            )
-            else -> listOf(
-                MimeTypes.VIDEO_H264,
-                MimeTypes.VIDEO_AV1,
-                MimeTypes.VIDEO_H265
-            )
+            supportsDv ->
+                listOf(
+                    MimeTypes.VIDEO_DOLBY_VISION,
+                    MimeTypes.VIDEO_H265, // HDR10/10+ 常见封装
+                    MimeTypes.VIDEO_AV1,
+                    MimeTypes.VIDEO_H264,
+                )
+            supportsHdr10Plus || supportsHdr10 || supportsHlg ->
+                listOf(
+                    MimeTypes.VIDEO_H265,
+                    MimeTypes.VIDEO_AV1,
+                    MimeTypes.VIDEO_H264,
+                )
+            else ->
+                listOf(
+                    MimeTypes.VIDEO_H264,
+                    MimeTypes.VIDEO_AV1,
+                    MimeTypes.VIDEO_H265,
+                )
         }
     }
 
-    private fun hasDecoder(mime: String): Boolean = try {
-        MediaCodecUtil.getDecoderInfos(mime, /* requiresSecure = */ false, /* requiresTunneling = */ false).isNotEmpty()
-    } catch (_: Exception) {
-        false
-    }
+    private fun hasDecoder(mime: String): Boolean =
+        try {
+            MediaCodecUtil.getDecoderInfos(mime, false, false).isNotEmpty()
+        } catch (_: Exception) {
+            false
+        }
 
     fun getDisplayHdrTypes(context: Context): IntArray {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
@@ -146,6 +157,7 @@ object Media3FormatUtil {
     }
 
     private val dvCodecsPrefixes = listOf("dvhe", "dvh1", "dav1")
+
     // Dolby Vision profile 8 compatibility ids follow dovi_tool/ISO BMFF conventions.
     private const val COMPATIBILITY_SDR = 1
     private const val COMPATIBILITY_HDR10 = 2

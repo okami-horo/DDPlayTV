@@ -8,7 +8,6 @@ import com.xyoye.data_component.enums.SettingViewType
  */
 
 interface InterSettingController {
-
     /**
      * 当前视图是否正在显示
      */
@@ -17,14 +16,20 @@ interface InterSettingController {
     /**
      * 根据 viewType 显示对应的视图
      */
-    fun showSettingView(viewType: SettingViewType, extra: Any? = null)
+    fun showSettingView(
+        viewType: SettingViewType,
+        extra: Any? = null
+    )
 
     /**
      * 隐藏所有面板设置类视图
      */
     fun hideSettingView()
 
-    fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean
+    fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean
 
     fun settingRelease()
 }

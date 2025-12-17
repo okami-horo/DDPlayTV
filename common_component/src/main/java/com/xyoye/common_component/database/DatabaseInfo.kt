@@ -7,8 +7,8 @@ import com.xyoye.common_component.database.dao.DanmuBlockDao
 import com.xyoye.common_component.database.dao.ExtendFolderDao
 import com.xyoye.common_component.database.dao.MagnetScreenDao
 import com.xyoye.common_component.database.dao.MagnetSearchHistoryDao
-import com.xyoye.common_component.database.dao.MediaLibraryDao
 import com.xyoye.common_component.database.dao.Media3Dao
+import com.xyoye.common_component.database.dao.MediaLibraryDao
 import com.xyoye.common_component.database.dao.PlayHistoryDao
 import com.xyoye.common_component.database.dao.VideoDao
 import com.xyoye.data_component.entity.AnimeSearchHistoryEntity
@@ -28,22 +28,22 @@ import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
 
 @Database(
     entities =
-    [VideoEntity::class,
-        MagnetSearchHistoryEntity::class,
-        AnimeSearchHistoryEntity::class,
-        MagnetScreenEntity::class,
-        MediaLibraryEntity::class,
-        PlayHistoryEntity::class,
-        DanmuBlockEntity::class,
-        ExtendFolderEntity::class,
-        RolloutToggleSnapshot::class,
-        DownloadAssetCheck::class
-    ],
+        [
+            VideoEntity::class,
+            MagnetSearchHistoryEntity::class,
+            AnimeSearchHistoryEntity::class,
+            MagnetScreenEntity::class,
+            MediaLibraryEntity::class,
+            PlayHistoryEntity::class,
+            DanmuBlockEntity::class,
+            ExtendFolderEntity::class,
+            RolloutToggleSnapshot::class,
+            DownloadAssetCheck::class,
+        ],
     version = 14,
-    exportSchema = false
+    exportSchema = false,
 )
 abstract class DatabaseInfo : RoomDatabase() {
-
     abstract fun getVideoDao(): VideoDao
 
     abstract fun getAnimeSearchHistoryDao(): AnimeSearchHistoryDao

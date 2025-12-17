@@ -10,88 +10,87 @@ import com.xyoye.mmkv_annotation.MMKVKotlinClass
 
 @MMKVKotlinClass(className = "AppConfig")
 object AppConfigTable {
-    //是否展示欢迎页
+    // 是否展示欢迎页
     @MMKVFiled
     const val showSplashAnimation = false
 
-    //缓存路径
+    // 缓存路径
     @MMKVFiled
     val cachePath = DefaultConfig.DEFAULT_CACHE_PATH
 
-    //是否展示隐藏文件
+    // 是否展示隐藏文件
     @MMKVFiled
     var showHiddenFile = false
 
+    // 是否展示FTP播放视频提示
     @MMKVFiled
-    //是否展示FTP播放视频提示
     var showFTPVideoTips = true
 
+    // 磁链搜索节点
     @MMKVFiled
-    //磁链搜索节点
     var magnetResDomain: String? = null
 
+    // 最后一次更新云屏蔽信息的时间
     @MMKVFiled
-    //最后一次更新云屏蔽信息的时间
     var cloudBlockUpdateTime: Long = 0
 
+    // 深色模式状态
     @MMKVFiled
-    //深色模式状态
     var darkMode: Int = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
 
+    // 常用目录1
     @MMKVFiled
-    //常用目录1
     var commonlyFolder1: String? = null
 
+    // 常用目录2
     @MMKVFiled
-    //常用目录2
     var commonlyFolder2: String? = null
 
+    // 上次打开目录
     @MMKVFiled
-    //上次打开目录
     var lastOpenFolder: String? = null
 
+    // 上次打开目录开关
     @MMKVFiled
-    //上次打开目录开关
     var lastOpenFolderEnable: Boolean = true
 
+    // 上次搜索弹幕记录
     @MMKVFiled
-    //上次搜索弹幕记录
     var lastSearchDanmuJson: String? = null
 
+    // 文件排序类型
     @MMKVFiled
-    //文件排序类型
     var storageSortType: Int = StorageSort.NAME.value
 
+    // 文件排序升序
     @MMKVFiled
-    //文件排序升序
     var storageSortAsc: Boolean = true
 
+    // 文件排序文件夹优先
     @MMKVFiled
-    //文件排序文件夹优先
     var storageSortDirectoryFirst: Boolean = true
 
+    // 播放历史排序类型
     @MMKVFiled
-    //播放历史排序类型
     var historySortType: Int = HistorySort.TIME.value
 
+    // 播放历史排序升序
     @MMKVFiled
-    //播放历史排序升序
     var historySortAsc: Boolean = false
 
+    // 是否启用备用域名
     @MMKVFiled
-    //是否启用备用域名
     var backupDomainEnable: Boolean = false
 
+    // 备用域名地址
     @MMKVFiled
-    //备用域名地址
     var backupDomain: String = Api.DAN_DAN_SPARE
 
+    // 支持的视频后缀
     @MMKVFiled
-    //支持的视频后缀
     var supportVideoExtension: String = VideoExtension.supportText
 
-    @MMKVFiled
     // Jsoup的User-Agent
+    @MMKVFiled
     var jsoupUserAgent: String = DefaultConfig.DEFAULT_JSOUP_USER_AGENT
-
 }

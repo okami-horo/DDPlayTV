@@ -43,7 +43,7 @@ class ItemDecorationDrawable : ItemDecoration {
         if (mDivider == null || layoutManager.childCount == 0) {
             return
         }
-        //判断总的数量是否可以整除
+        // 判断总的数量是否可以整除
         val spanCount = layoutManager.spanCount
         var left: Int
         var right: Int
@@ -53,24 +53,29 @@ class ItemDecorationDrawable : ItemDecoration {
         if (layoutManager.orientation == GridLayoutManager.VERTICAL) {
             for (i in 0 until childCount) {
                 val child = parent.getChildAt(i)
-                //将带有颜色的分割线处于中间位置
+                // 将带有颜色的分割线处于中间位置
                 val centerLeft =
-                    ((layoutManager.getLeftDecorationWidth(child) + layoutManager.getRightDecorationWidth(
-                        child
-                    )).toFloat()
-                            * spanCount / (spanCount + 1) + 1 - leftRight) / 2
+                    (
+                        (
+                            layoutManager.getLeftDecorationWidth(child) +
+                                layoutManager.getRightDecorationWidth(
+                                    child,
+                                )
+                        ).toFloat() *
+                            spanCount / (spanCount + 1) + 1 - leftRight
+                    ) / 2
                 val centerTop =
                     (layoutManager.getBottomDecorationHeight(child) + 1 - topBottom) / 2f
-                //得到它在总数里面的位置
+                // 得到它在总数里面的位置
                 val position = parent.getChildAdapterPosition(child)
-                //获取它所占有的比重
+                // 获取它所占有的比重
                 val spanSize = lookup.getSpanSize(position)
-                //获取每排的位置
+                // 获取每排的位置
                 val spanIndex = lookup.getSpanIndex(position, layoutManager.spanCount)
-                //判断是否为第一排
+                // 判断是否为第一排
                 val isFirst =
                     layoutManager.spanSizeLookup.getSpanGroupIndex(position, spanCount) == 0
-                //画上边的，第一排不需要上边的,只需要在最左边的那项的时候画一次就好
+                // 画上边的，第一排不需要上边的,只需要在最左边的那项的时候画一次就好
                 if (!isFirst && spanIndex == 0) {
                     left = layoutManager.getLeftDecorationWidth(child)
                     right = parent.width - layoutManager.getLeftDecorationWidth(child)
@@ -79,9 +84,9 @@ class ItemDecorationDrawable : ItemDecoration {
                     mDivider!!.setBounds(left, top, right, bottom)
                     mDivider!!.draw(c)
                 }
-                //最右边的一排不需要右边的
+                // 最右边的一排不需要右边的
                 val isRight = spanIndex + spanSize == spanCount
-                if (!isRight) { //计算右边的
+                if (!isRight) { // 计算右边的
                     left = (child.right + centerLeft).toInt()
                     right = left + leftRight
                     top = child.top
@@ -96,24 +101,29 @@ class ItemDecorationDrawable : ItemDecoration {
         } else {
             for (i in 0 until childCount) {
                 val child = parent.getChildAt(i)
-                //将带有颜色的分割线处于中间位置
+                // 将带有颜色的分割线处于中间位置
                 val centerLeft =
                     (layoutManager.getRightDecorationWidth(child) + 1 - leftRight) / 2f
                 val centerTop =
-                    ((layoutManager.getTopDecorationHeight(child) + layoutManager.getBottomDecorationHeight(
-                        child
-                    )).toFloat()
-                            * spanCount / (spanCount + 1) - topBottom) / 2
-                //得到它在总数里面的位置
+                    (
+                        (
+                            layoutManager.getTopDecorationHeight(child) +
+                                layoutManager.getBottomDecorationHeight(
+                                    child,
+                                )
+                        ).toFloat() *
+                            spanCount / (spanCount + 1) - topBottom
+                    ) / 2
+                // 得到它在总数里面的位置
                 val position = parent.getChildAdapterPosition(child)
-                //获取它所占有的比重
+                // 获取它所占有的比重
                 val spanSize = lookup.getSpanSize(position)
-                //获取每排的位置
+                // 获取每排的位置
                 val spanIndex = lookup.getSpanIndex(position, layoutManager.spanCount)
-                //判断是否为第一列
+                // 判断是否为第一列
                 val isFirst =
                     layoutManager.spanSizeLookup.getSpanGroupIndex(position, spanCount) == 0
-                //画左边的，第一排不需要左边的,只需要在最上边的那项的时候画一次就好
+                // 画左边的，第一排不需要左边的,只需要在最上边的那项的时候画一次就好
                 if (!isFirst && spanIndex == 0) {
                     left = (child.left - centerLeft).toInt() - leftRight
                     right = left + leftRight
@@ -122,9 +132,9 @@ class ItemDecorationDrawable : ItemDecoration {
                     mDivider!!.setBounds(left, top, right, bottom)
                     mDivider!!.draw(c)
                 }
-                //最下的一排不需要下边的
+                // 最下的一排不需要下边的
                 val isRight = spanIndex + spanSize == spanCount
-                if (!isRight) { //计算右边的
+                if (!isRight) { // 计算右边的
                     left = child.left
                     if (!isFirst) {
                         left -= centerLeft.toInt()
@@ -150,17 +160,17 @@ class ItemDecorationDrawable : ItemDecoration {
             view.layoutParams as GridLayoutManager.LayoutParams
         val childPosition = parent.getChildAdapterPosition(view)
         val spanCount = layoutManager.spanCount
-        if (layoutManager.orientation == GridLayoutManager.VERTICAL) { //判断是否在第一排
+        if (layoutManager.orientation == GridLayoutManager.VERTICAL) { // 判断是否在第一排
             if (layoutManager.spanSizeLookup.getSpanGroupIndex(
                     childPosition,
-                    spanCount
+                    spanCount,
                 ) == 0
-            ) { //第一排的需要上面
+            ) { // 第一排的需要上面
                 outRect.top = topBottom
             }
             outRect.bottom = topBottom
-            //这里忽略和合并项的问题，只考虑占满和单一的问题
-            if (lp.spanSize == spanCount) { //占满
+            // 这里忽略和合并项的问题，只考虑占满和单一的问题
+            if (lp.spanSize == spanCount) { // 占满
                 outRect.left = leftRight
                 outRect.right = leftRight
             } else {
@@ -172,14 +182,14 @@ class ItemDecorationDrawable : ItemDecoration {
         } else {
             if (layoutManager.spanSizeLookup.getSpanGroupIndex(
                     childPosition,
-                    spanCount
+                    spanCount,
                 ) == 0
-            ) { //第一排的需要left
+            ) { // 第一排的需要left
                 outRect.left = leftRight
             }
             outRect.right = leftRight
-            //这里忽略和合并项的问题，只考虑占满和单一的问题
-            if (lp.spanSize == spanCount) { //占满
+            // 这里忽略和合并项的问题，只考虑占满和单一的问题
+            if (lp.spanSize == spanCount) { // 占满
                 outRect.top = topBottom
                 outRect.bottom = topBottom
             } else {

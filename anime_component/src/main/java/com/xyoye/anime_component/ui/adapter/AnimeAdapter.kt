@@ -22,39 +22,42 @@ import com.xyoye.data_component.data.AnimeData
  */
 
 class AnimeAdapter {
-
     companion object {
-        fun getAdapter(activity: Activity) = buildAdapter {
+        fun getAdapter(activity: Activity) =
+            buildAdapter {
+                addEmptyView(R.layout.layout_empty)
 
-            addEmptyView(R.layout.layout_empty)
+                addItem<AnimeData, ItemAnimeBinding>(R.layout.item_anime) {
+                    initView { data, _, _ ->
+                        itemBinding.apply {
+                            coverIv.loadAnimeCover(data.imageUrl)
 
-            addItem<AnimeData, ItemAnimeBinding>(R.layout.item_anime) {
-                initView { data, _, _ ->
-                    itemBinding.apply {
-                        coverIv.loadAnimeCover(data.imageUrl)
+                            followTagView.isGone = !UserConfig.isUserLoggedIn() || !data.isFavorited
+                            animeNameTv.text = data.animeTitle
+                            itemLayout.setOnClickListener {
+                                // 防止快速点击
+                                if (FastClickFilter.isNeedFilter()) {
+                                    return@setOnClickListener
+                                }
 
-                        followTagView.isGone = !UserConfig.isUserLoggedIn() || !data.isFavorited
-                        animeNameTv.text = data.animeTitle
-                        itemLayout.setOnClickListener {
-                            //防止快速点击
-                            if (FastClickFilter.isNeedFilter()) {
-                                return@setOnClickListener
+                                ViewCompat.setTransitionName(coverIv, "cover_image")
+                                val options =
+                                    ActivityOptionsCompat.makeSceneTransitionAnimation(
+                                        activity,
+                                        coverIv,
+                                        coverIv.transitionName,
+                                    )
+
+                                ARouter
+                                    .getInstance()
+                                    .build(RouteTable.Anime.AnimeDetail)
+                                    .withParcelable("animeArgument", AnimeArgument.fromData(data))
+                                    .withOptionsCompat(options)
+                                    .navigation(activity)
                             }
-
-                            ViewCompat.setTransitionName(coverIv, "cover_image")
-                            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                                activity, coverIv, coverIv.transitionName
-                            )
-
-                            ARouter.getInstance()
-                                .build(RouteTable.Anime.AnimeDetail)
-                                .withParcelable("animeArgument", AnimeArgument.fromData(data))
-                                .withOptionsCompat(options)
-                                .navigation(activity)
                         }
                     }
                 }
             }
-        }
     }
 }

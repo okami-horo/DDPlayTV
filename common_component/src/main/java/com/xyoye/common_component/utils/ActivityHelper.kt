@@ -10,7 +10,6 @@ import java.util.*
  */
 
 class ActivityHelper private constructor() : Application.ActivityLifecycleCallbacks {
-
     private object Holder {
         val instance = ActivityHelper()
     }
@@ -35,12 +34,15 @@ class ActivityHelper private constructor() : Application.ActivityLifecycleCallba
         return mActivityList.first { isActivityAlive(it) }
     }
 
-    override fun onActivityCreated(activity: Activity, p1: Bundle?) {
+    override fun onActivityCreated(
+        activity: Activity,
+        p1: Bundle?
+    ) {
         setTopActivity(activity)
     }
 
     override fun onActivityStarted(activity: Activity) {
-        //ignore
+        // ignore
     }
 
     override fun onActivityResumed(activity: Activity) {
@@ -48,15 +50,18 @@ class ActivityHelper private constructor() : Application.ActivityLifecycleCallba
     }
 
     override fun onActivityPaused(activity: Activity) {
-        //ignore
+        // ignore
     }
 
     override fun onActivityStopped(activity: Activity) {
-        //ignore
+        // ignore
     }
 
-    override fun onActivitySaveInstanceState(activity: Activity, p1: Bundle) {
-        //ignore
+    override fun onActivitySaveInstanceState(
+        activity: Activity,
+        p1: Bundle
+    ) {
+        // ignore
     }
 
     override fun onActivityDestroyed(activity: Activity) {
@@ -74,11 +79,7 @@ class ActivityHelper private constructor() : Application.ActivityLifecycleCallba
         }
     }
 
-    private fun isActivityAlive(activity: Activity): Boolean {
-        return activity.isFinishing.not() && activity.isDestroyed.not()
-    }
+    private fun isActivityAlive(activity: Activity): Boolean = activity.isFinishing.not() && activity.isDestroyed.not()
 
-    fun findActivity(clazz: Class<*>): Activity? {
-        return mActivityList.lastOrNull { it.javaClass == clazz }
-    }
+    fun findActivity(clazz: Class<*>): Activity? = mActivityList.lastOrNull { it.javaClass == clazz }
 }

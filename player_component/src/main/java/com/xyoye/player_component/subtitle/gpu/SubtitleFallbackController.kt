@@ -13,9 +13,8 @@ class SubtitleFallbackController(
     private val pipelineController: SubtitlePipelineController,
     private val reporter: SubtitleFallbackReporter = SubtitleFallbackReporter
 ) {
-
     suspend fun forceFallback(reason: SubtitlePipelineFallbackReason): SubtitlePipelineState? {
-        val state = pipelineController.fallback(SubtitlePipelineMode.Fallback_CPU, reason)
+        val state = pipelineController.fallback(SubtitlePipelineMode.FALLBACK_CPU, reason)
         state?.let { reporter.onFallback(reason, it.surfaceId, recoverable = false) }
         return state
     }

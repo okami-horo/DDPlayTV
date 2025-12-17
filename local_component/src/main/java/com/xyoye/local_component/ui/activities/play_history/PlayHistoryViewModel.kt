@@ -8,8 +8,8 @@ import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.storage.StorageFactory
-import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.storage.impl.LinkStorage
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
@@ -19,7 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class PlayHistoryViewModel : BaseViewModel() {
-
     private val _historyLiveData = MutableLiveData<List<PlayHistoryEntity>>()
     val historyLiveData: LiveData<List<PlayHistoryEntity>> = _historyLiveData
     val playLiveData = MutableLiveData<Any>()
@@ -32,18 +31,19 @@ class PlayHistoryViewModel : BaseViewModel() {
     fun updatePlayHistory() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val historyData = if (mediaType == MediaType.OTHER_STORAGE) {
-                    DatabaseManager.instance.getPlayHistoryDao().getAll()
-                } else {
-                    DatabaseManager.instance.getPlayHistoryDao().getSingleMediaType(mediaType)
-                }
+                val historyData =
+                    if (mediaType == MediaType.OTHER_STORAGE) {
+                        DatabaseManager.instance.getPlayHistoryDao().getAll()
+                    } else {
+                        DatabaseManager.instance.getPlayHistoryDao().getSingleMediaType(mediaType)
+                    }
                 _historyLiveData.postValue(historyData)
             } catch (e: Exception) {
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "PlayHistoryViewModel",
                     "updatePlayHistory",
-                    "Media type: $mediaType"
+                    "Media type: $mediaType",
                 )
             }
         }
@@ -59,7 +59,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     e,
                     "PlayHistoryViewModel",
                     "removeHistory",
-                    "History ID: ${history.id}, URL: ${history.url}"
+                    "History ID: ${history.id}, URL: ${history.url}",
                 )
             }
         }
@@ -80,7 +80,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     e,
                     "PlayHistoryViewModel",
                     "clearHistory",
-                    "Media type: $mediaType"
+                    "Media type: $mediaType",
                 )
             }
         }
@@ -103,7 +103,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     e,
                     "PlayHistoryViewModel",
                     "changeSortOption",
-                    "Sort option: ${option.javaClass.simpleName}"
+                    "Sort option: ${option.javaClass.simpleName}",
                 )
             }
         }
@@ -120,7 +120,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     e,
                     "PlayHistoryViewModel",
                     "unbindDanmu",
-                    "History ID: ${history.id}, URL: ${history.url}"
+                    "History ID: ${history.id}, URL: ${history.url}",
                 )
             }
         }
@@ -137,7 +137,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     e,
                     "PlayHistoryViewModel",
                     "unbindSubtitle",
-                    "History ID: ${history.id}, URL: ${history.url}"
+                    "History ID: ${history.id}, URL: ${history.url}",
                 )
             }
         }
@@ -154,13 +154,16 @@ class PlayHistoryViewModel : BaseViewModel() {
                     e,
                     "PlayHistoryViewModel",
                     "openHistory",
-                    "History ID: ${history.id}, URL: ${history.url}"
+                    "History ID: ${history.id}, URL: ${history.url}",
                 )
             }
         }
     }
 
-    fun openStreamLink(link: String, headers: Map<String, String>?) {
+    fun openStreamLink(
+        link: String,
+        headers: Map<String, String>?
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (setupLinkSource(link, headers)) {
@@ -171,7 +174,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     e,
                     "PlayHistoryViewModel",
                     "openStreamLink",
-                    "Link: $link"
+                    "Link: $link",
                 )
             }
         }
@@ -180,11 +183,12 @@ class PlayHistoryViewModel : BaseViewModel() {
     private suspend fun setupHistorySource(history: PlayHistoryEntity): Boolean {
         return try {
             showLoading()
-            val mediaSource = history.storageId
-                ?.run { DatabaseManager.instance.getMediaLibraryDao().getById(this) }
-                ?.run { StorageFactory.createStorage(this) }
-                ?.run { historyFile(history) }
-                ?.run { StorageVideoSourceFactory.create(this) }
+            val mediaSource =
+                history.storageId
+                    ?.run { DatabaseManager.instance.getMediaLibraryDao().getById(this) }
+                    ?.run { StorageFactory.createStorage(this) }
+                    ?.run { historyFile(history) }
+                    ?.run { StorageVideoSourceFactory.create(this) }
             hideLoading()
 
             if (mediaSource == null) {
@@ -199,22 +203,27 @@ class PlayHistoryViewModel : BaseViewModel() {
                 e,
                 "PlayHistoryViewModel",
                 "setupHistorySource",
-                "History ID: ${history.id}, Storage ID: ${history.storageId}"
+                "History ID: ${history.id}, Storage ID: ${history.storageId}",
             )
             ToastCenter.showError("播放失败，找不到播放资源")
             false
         }
     }
 
-    private suspend fun setupLinkSource(link: String, headers: Map<String, String>?): Boolean {
+    private suspend fun setupLinkSource(
+        link: String,
+        headers: Map<String, String>?
+    ): Boolean {
         return try {
             showLoading()
-            val mediaSource = MediaLibraryEntity.STREAM.copy(url = link)
-                .run { StorageFactory.createStorage(this) }
-                ?.run { this as? LinkStorage }
-                ?.apply { this.setupHttpHeader(headers) }
-                ?.run { getRootFile() }
-                ?.run { StorageVideoSourceFactory.create(this) }
+            val mediaSource =
+                MediaLibraryEntity.STREAM
+                    .copy(url = link)
+                    .run { StorageFactory.createStorage(this) }
+                    ?.run { this as? LinkStorage }
+                    ?.apply { this.setupHttpHeader(headers) }
+                    ?.run { getRootFile() }
+                    ?.run { StorageVideoSourceFactory.create(this) }
             hideLoading()
 
             if (mediaSource == null) {
@@ -229,7 +238,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                 e,
                 "PlayHistoryViewModel",
                 "setupLinkSource",
-                "Link: $link"
+                "Link: $link",
             )
             ToastCenter.showError("播放失败，找不到播放资源")
             false

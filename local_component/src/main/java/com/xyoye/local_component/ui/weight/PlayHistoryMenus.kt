@@ -16,9 +16,11 @@ class PlayHistoryMenus private constructor(
     private val activity: PlayHistoryActivity,
     menu: Menu
 ) {
-
     companion object {
-        fun inflater(activity: PlayHistoryActivity, menu: Menu): PlayHistoryMenus {
+        fun inflater(
+            activity: PlayHistoryActivity,
+            menu: Menu
+        ): PlayHistoryMenus {
             activity.menuInflater.inflate(R.menu.menu_history, menu)
             return PlayHistoryMenus(activity, menu)
         }
@@ -43,12 +45,13 @@ class PlayHistoryMenus private constructor(
             return
         }
 
-        val changed = when (item.itemId) {
-            R.id.action_sort_by_time -> sortOption.setSort(HistorySort.TIME)
-            R.id.action_sort_by_name -> sortOption.setSort(HistorySort.NAME)
-            R.id.action_sort_order_asc -> sortOption.changeAsc()
-            else -> false
-        }
+        val changed =
+            when (item.itemId) {
+                R.id.action_sort_by_time -> sortOption.setSort(HistorySort.TIME)
+                R.id.action_sort_by_name -> sortOption.setSort(HistorySort.NAME)
+                R.id.action_sort_order_asc -> sortOption.changeAsc()
+                else -> false
+            }
         if (changed) {
             updateSortItem()
             onSortChanged?.invoke(sortOption)
@@ -65,16 +68,18 @@ class PlayHistoryMenus private constructor(
     }
 
     private fun showClearConfirmDialog() {
-        CommonDialog.Builder(activity).run {
-            tips = "清空播放记录"
-            content = "清空播放记录，将同时移除弹幕和字幕绑定记录，确定清空?"
-            addNegative()
-            addPositive {
-                it.dismiss()
-                onClearHistory?.invoke()
-            }
-            build()
-        }.show()
+        CommonDialog
+            .Builder(activity)
+            .run {
+                tips = "清空播放记录"
+                content = "清空播放记录，将同时移除弹幕和字幕绑定记录，确定清空?"
+                addNegative()
+                addPositive {
+                    it.dismiss()
+                    onClearHistory?.invoke()
+                }
+                build()
+            }.show()
     }
 
     fun onClearHistory(block: () -> Unit) {

@@ -23,19 +23,16 @@ import com.xyoye.open_cc.OpenCCFile
  * Created by xyoye on 2020/4/13.
  */
 
-open class BaseApplication : Application(), ImageLoaderFactory {
+open class BaseApplication :
+    Application(),
+    ImageLoaderFactory {
     companion object {
-
         private var APPLICATION_CONTEXT: Application? = null
         private var mMainHandler: Handler? = null
 
-        fun getAppContext(): Context {
-            return APPLICATION_CONTEXT!!
-        }
+        fun getAppContext(): Context = APPLICATION_CONTEXT!!
 
-        fun getMainHandler(): Handler {
-            return mMainHandler!!
-        }
+        fun getMainHandler(): Handler = mMainHandler!!
     }
 
     override fun attachBaseContext(base: Context?) {
@@ -47,7 +44,7 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         CrashReport.initCrashReport(
             this,
             SecurityHelperConfig.BUGLY_APP_ID,
-            BuildConfig.DEBUG
+            BuildConfig.DEBUG,
         )
     }
 
@@ -58,7 +55,7 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         LogFacade.i(
             LogModule.CORE,
             "APP-Init",
-            "application onCreate start process=${android.os.Process.myPid()}"
+            "application onCreate start process=${android.os.Process.myPid()}",
         )
 
         if (BuildConfig.DEBUG) {
@@ -75,11 +72,10 @@ open class BaseApplication : Application(), ImageLoaderFactory {
         LogFacade.i(LogModule.CORE, "APP-Init", "application onCreate finished")
     }
 
-    override fun newImageLoader(): ImageLoader {
-        return ImageLoader.Builder(this)
+    override fun newImageLoader(): ImageLoader =
+        ImageLoader
+            .Builder(this)
             .components {
                 add(VideoFrameDecoder.Factory())
-            }
-            .build()
-    }
+            }.build()
 }

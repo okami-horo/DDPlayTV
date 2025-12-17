@@ -12,13 +12,11 @@ import com.xyoye.local_component.databinding.DialogShooterSecretBinding
  */
 
 class ShooterSecretDialog(
-    private val activity: Activity,
+    private val activity: Activity
 ) : BaseBottomDialog<DialogShooterSecretBinding>(activity) {
-
     override fun getChildLayoutId() = R.layout.dialog_shooter_secret
 
     override fun initView(binding: DialogShooterSecretBinding) {
-
         setTitle("完善API密钥")
 
         setNegativeListener { dismiss() }

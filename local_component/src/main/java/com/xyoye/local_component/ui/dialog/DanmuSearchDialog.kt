@@ -77,22 +77,23 @@ class DanmuSearchDialog(
                 return@setPositiveListener
             }
 
-            val episodeId = when {
-                binding.episodeRb.isChecked -> {
-                    val episodeStr = binding.episodeEt.text.toString()
-                    if (episodeStr.isEmpty()) {
-                        ToastCenter.showWarning("已选剧集类型，剧集不能为空")
-                        return@setPositiveListener
+            val episodeId =
+                when {
+                    binding.episodeRb.isChecked -> {
+                        val episodeStr = binding.episodeEt.text.toString()
+                        if (episodeStr.isEmpty()) {
+                            ToastCenter.showWarning("已选剧集类型，剧集不能为空")
+                            return@setPositiveListener
+                        }
+                        episodeStr
                     }
-                    episodeStr
+                    binding.ovaRb.isChecked -> {
+                        "movie"
+                    }
+                    else -> {
+                        ""
+                    }
                 }
-                binding.ovaRb.isChecked -> {
-                    "movie"
-                }
-                else -> {
-                    ""
-                }
-            }
 
             listener.invoke(animeName, episodeId)
             dismiss()
@@ -119,7 +120,7 @@ class DanmuSearchDialog(
         binding.keywordLabelsView.setLabels(keywordList)
         binding.keywordLabelsView.setOnLabelClickListener { _, data, _ ->
             if (!binding.animeNameEt.text.isNullOrEmpty()) {
-                //已有文字，则先添加一个空格
+                // 已有文字，则先添加一个空格
                 binding.animeNameEt.append(" ")
             }
             binding.animeNameEt.append(data as String)
@@ -128,11 +129,13 @@ class DanmuSearchDialog(
 
     private fun initHistoryKeyword() {
         val lastDanmuSearchJson = AppConfig.getLastSearchDanmuJson()
-        if (lastDanmuSearchJson.isNullOrEmpty())
+        if (lastDanmuSearchJson.isNullOrEmpty()) {
             return
+        }
 
-        val lastSearchBean = JsonHelper
-            .parseJson<DanmuSearchBean>(lastDanmuSearchJson) ?: return
+        val lastSearchBean =
+            JsonHelper
+                .parseJson<DanmuSearchBean>(lastDanmuSearchJson) ?: return
 
         val tips = "$tipsIndex." + R.string.tips_danmu_history_keyword.toResString()
         binding.keywordHistoryTips.text = tips

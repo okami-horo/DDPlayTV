@@ -17,7 +17,6 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class LogPolicyTest {
-
     @Rule
     @JvmField
     val tempFolder = TemporaryFolder()
@@ -47,18 +46,19 @@ class LogPolicyTest {
     fun disableDebugFilePreventsDiskWrites() {
         val context = TestLogContext(tempFolder.newFolder("policy_files"))
         val writer = LogWriter(context)
-        val runtimeState = LogRuntimeState(
-            activePolicy = LogPolicy.defaultReleasePolicy(),
-            debugToggleState = DebugToggleState.ON_CURRENT_SESSION,
-            debugSessionEnabled = true
-        )
+        val runtimeState =
+            LogRuntimeState(
+                activePolicy = LogPolicy.defaultReleasePolicy(),
+                debugToggleState = DebugToggleState.ON_CURRENT_SESSION,
+                debugSessionEnabled = true,
+            )
         writer.updateRuntimeState(runtimeState)
         writer.submit(
             LogEvent(
                 level = LogLevel.INFO,
                 module = LogModule.CORE,
-                message = "should stay in logcat only"
-            )
+                message = "should stay in logcat only",
+            ),
         )
         Thread.sleep(200)
         assertFalse(LogPaths.currentLogFile(context).exists())

@@ -15,6 +15,5 @@ data class RemoteScanData(
     val port: Int,
     val machineName: String?,
     val tokenRequired: Boolean,
-
     var selectedIP: String?
 ) : Parcelable

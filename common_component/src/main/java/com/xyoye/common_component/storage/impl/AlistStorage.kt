@@ -5,8 +5,8 @@ import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.repository.AlistRepository
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.storage.AbstractStorage
-import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.storage.file.impl.AlistStorageFile
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.alist.AlistFileData
@@ -22,20 +22,19 @@ import java.io.InputStream
 class AlistStorage(
     library: MediaLibraryEntity
 ) : AbstractStorage(library) {
-
     private var token: String = ""
 
     private val rootUrl by lazy { rootUri.toString() }
 
-    override suspend fun listFiles(file: StorageFile): List<StorageFile> {
-        return AlistRepository.openDirectory(rootUrl, token, file.filePath())
+    override suspend fun listFiles(file: StorageFile): List<StorageFile> =
+        AlistRepository
+            .openDirectory(rootUrl, token, file.filePath())
             .getOrNull()
             ?.successData
             ?.fileList
             ?.map {
                 AlistStorageFile(file.filePath(), it, this)
             } ?: emptyList()
-    }
 
     override suspend fun getRootFile(): StorageFile? {
         val newToken = refreshToken() ?: return null
@@ -43,11 +42,12 @@ class AlistStorage(
 
         val result = AlistRepository.getUserInfo(rootUrl, token)
         if (result.isFailure) {
-             ToastCenter.showToast("${result.exceptionOrNull()?.message}")
+            ToastCenter.showToast("${result.exceptionOrNull()?.message}")
             return null
         }
 
-        return result.getOrNull()
+        return result
+            .getOrNull()
             ?.successData
             ?.let {
                 AlistFileData("/", true)
@@ -57,15 +57,20 @@ class AlistStorage(
     }
 
     override suspend fun openFile(file: StorageFile): InputStream? {
-        val rawUrl = getStorageFileUrl(file)
-            ?: return null
+        val rawUrl =
+            getStorageFileUrl(file)
+                ?: return null
 
-        return ResourceRepository.getResourceResponseBody(rawUrl)
+        return ResourceRepository
+            .getResourceResponseBody(rawUrl)
             .getOrNull()
             ?.byteStream()
     }
 
-    override suspend fun pathFile(path: String, isDirectory: Boolean): StorageFile? {
+    override suspend fun pathFile(
+        path: String,
+        isDirectory: Boolean
+    ): StorageFile? {
         if (token.isEmpty()) {
             token = refreshToken() ?: return null
         }
@@ -73,7 +78,8 @@ class AlistStorage(
         val pathUri = Uri.parse(path)
         val fileName = pathUri.lastPathSegment
         val parentPath = pathUri.path?.removeSuffix("/$fileName") ?: "/"
-        return AlistRepository.openFile(rootUrl, token, path)
+        return AlistRepository
+            .openFile(rootUrl, token, path)
             .getOrNull()
             ?.successData
             ?.let {
@@ -81,11 +87,10 @@ class AlistStorage(
             }
     }
 
-    override suspend fun historyFile(history: PlayHistoryEntity): StorageFile? {
-        return history.storagePath
+    override suspend fun historyFile(history: PlayHistoryEntity): StorageFile? =
+        history.storagePath
             ?.let { pathFile(it, false) }
             ?.also { it.playHistory = history }
-    }
 
     override suspend fun createPlayUrl(file: StorageFile): String? {
         return if (PlayerConfig.getUsePlayerType() == PlayerType.TYPE_MPV_PLAYER.value) {
@@ -100,22 +105,21 @@ class AlistStorage(
                 upstreamUrl = upstream,
                 // Provide file length so the proxy can expose a seekable HTTP stream to mpv (Range support).
                 contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L,
-                fileName = fileName
+                fileName = fileName,
             )
         } else {
             getStorageFileUrl(file)
         }
     }
 
-    override suspend fun test(): Boolean {
-        return refreshToken()?.isNotEmpty() == true
-    }
+    override suspend fun test(): Boolean = refreshToken()?.isNotEmpty() == true
 
     private suspend fun refreshToken(): String? {
         val username = library.account ?: return null
         val password = library.password ?: return null
 
-        return AlistRepository.login(rootUrl, username, password)
+        return AlistRepository
+            .login(rootUrl, username, password)
             .getOrNull()
             ?.successData
             ?.token
@@ -142,7 +146,10 @@ class AlistStorage(
         return cachedSign?.let { buildProxyUrl(file.filePath(), it) }
     }
 
-    private fun buildProxyUrl(path: String, sign: String): String {
+    private fun buildProxyUrl(
+        path: String,
+        sign: String
+    ): String {
         val baseUrl = rootUrl.removeSuffix("/")
         val normalizedPath = if (path.startsWith("/")) path else "/$path"
         val encodedPath = Uri.encode(normalizedPath, "/")
@@ -150,22 +157,30 @@ class AlistStorage(
         return "$baseUrl/d$encodedPath?sign=$encodedSign"
     }
 
-    private suspend fun fetchRawUrl(file: StorageFile, forceRefreshToken: Boolean): String? {
+    private suspend fun fetchRawUrl(
+        file: StorageFile,
+        forceRefreshToken: Boolean
+    ): String? {
         if (!ensureToken(forceRefreshToken)) {
             return null
         }
-        return AlistRepository.openFile(rootUrl, token, file.filePath())
+        return AlistRepository
+            .openFile(rootUrl, token, file.filePath())
             .getOrNull()
             ?.successData
             ?.rawUrl
             ?.takeIf { it.isNotEmpty() }
     }
 
-    private suspend fun fetchSign(file: StorageFile, forceRefreshToken: Boolean): String? {
+    private suspend fun fetchSign(
+        file: StorageFile,
+        forceRefreshToken: Boolean
+    ): String? {
         if (!ensureToken(forceRefreshToken)) {
             return null
         }
-        return AlistRepository.openFile(rootUrl, token, file.filePath())
+        return AlistRepository
+            .openFile(rootUrl, token, file.filePath())
             .getOrNull()
             ?.successData
             ?.sign

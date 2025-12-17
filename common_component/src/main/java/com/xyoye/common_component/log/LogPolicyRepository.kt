@@ -16,14 +16,15 @@ class LogPolicyRepository(
     private val timeProvider: () -> Long = { System.currentTimeMillis() },
     private val storage: LogConfigStorage = MmkvLogConfigStorage()
 ) {
-    private val stateRef = AtomicReference(
-        buildRuntimeState(
-            policy = defaultPolicy,
-            source = PolicySource.DEFAULT,
-            toggleState = DebugToggleState.OFF,
-            lastUpdated = timeProvider()
+    private val stateRef =
+        AtomicReference(
+            buildRuntimeState(
+                policy = defaultPolicy,
+                source = PolicySource.DEFAULT,
+                toggleState = DebugToggleState.OFF,
+                lastUpdated = timeProvider(),
+            ),
         )
-    )
     private val listeners = CopyOnWriteArrayList<(LogRuntimeState) -> Unit>()
 
     fun loadFromStorage(): LogRuntimeState {
@@ -36,13 +37,16 @@ class LogPolicyRepository(
 
     fun getState(): LogRuntimeState = stateRef.get()
 
-    fun updatePolicy(policy: LogPolicy, source: PolicySource = PolicySource.USER_OVERRIDE): LogRuntimeState =
+    fun updatePolicy(
+        policy: LogPolicy,
+        source: PolicySource = PolicySource.USER_OVERRIDE
+    ): LogRuntimeState =
         updateState { current ->
             buildRuntimeState(
                 policy = policy,
                 source = source,
                 toggleState = current.debugToggleState,
-                lastUpdated = timeProvider()
+                lastUpdated = timeProvider(),
             )
         }
 
@@ -51,13 +55,14 @@ class LogPolicyRepository(
         forceEnableFile: Boolean? = null
     ): LogRuntimeState =
         updateState { current ->
-            val policyToUse = forceEnableFile?.let { current.activePolicy.copy(enableDebugFile = it) }
-                ?: current.activePolicy
+            val policyToUse =
+                forceEnableFile?.let { current.activePolicy.copy(enableDebugFile = it) }
+                    ?: current.activePolicy
             buildRuntimeState(
                 policy = policyToUse,
                 source = current.policySource,
                 toggleState = toggleState,
-                lastUpdated = timeProvider()
+                lastUpdated = timeProvider(),
             )
         }
 
@@ -87,13 +92,14 @@ class LogPolicyRepository(
 
     private fun readStoredRuntime(): LogRuntimeState {
         val storedLevel = safeLogLevel(storage.readDefaultLevel(), defaultPolicy.defaultLevel)
-        val storedPolicy = LogPolicy(
-            name = storage.readPolicyName() ?: defaultPolicy.name,
-            defaultLevel = storedLevel,
-            enableDebugFile = storage.readDebugFileEnabled(),
-            samplingRules = emptyList(),
-            exportable = storage.readExportable()
-        )
+        val storedPolicy =
+            LogPolicy(
+                name = storage.readPolicyName() ?: defaultPolicy.name,
+                defaultLevel = storedLevel,
+                enableDebugFile = storage.readDebugFileEnabled(),
+                samplingRules = emptyList(),
+                exportable = storage.readExportable(),
+            )
         val source = safePolicySource(storage.readPolicySource()) ?: PolicySource.DEFAULT
         val toggle = safeDebugToggle(storage.readDebugToggleState()) ?: DebugToggleState.OFF
         val lastUpdated = storage.readLastPolicyUpdateTime().takeIf { it > 0 } ?: timeProvider()
@@ -101,7 +107,7 @@ class LogPolicyRepository(
             policy = storedPolicy,
             source = source,
             toggleState = toggle,
-            lastUpdated = lastUpdated
+            lastUpdated = lastUpdated,
         )
     }
 
@@ -123,19 +129,19 @@ class LogPolicyRepository(
             debugToggleState = effectiveToggle,
             debugSessionEnabled = sessionEnabled,
             lastPolicyUpdateTime = lastUpdated,
-            recentErrors = emptyList()
+            recentErrors = emptyList(),
         )
     }
 
-    private fun safeLogLevel(raw: String?, fallback: LogLevel): LogLevel {
-        return runCatching { raw?.let { LogLevel.valueOf(it) } }.getOrNull() ?: fallback
-    }
+    private fun safeLogLevel(
+        raw: String?,
+        fallback: LogLevel
+    ): LogLevel =
+        runCatching {
+            raw?.let { LogLevel.valueOf(it) }
+        }.getOrNull() ?: fallback
 
-    private fun safePolicySource(raw: String?): PolicySource? {
-        return runCatching { raw?.let { PolicySource.valueOf(it) } }.getOrNull()
-    }
+    private fun safePolicySource(raw: String?): PolicySource? = runCatching { raw?.let { PolicySource.valueOf(it) } }.getOrNull()
 
-    private fun safeDebugToggle(raw: String?): DebugToggleState? {
-        return runCatching { raw?.let { DebugToggleState.valueOf(it) } }.getOrNull()
-    }
+    private fun safeDebugToggle(raw: String?): DebugToggleState? = runCatching { raw?.let { DebugToggleState.valueOf(it) } }.getOrNull()
 }

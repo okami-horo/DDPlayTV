@@ -22,7 +22,6 @@ import kotlin.random.Random
  */
 
 class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
-
     private var mStorageFile: SmbStorageFile? = null
     private var mStorage: SmbStorage? = null
     private var mContentType: String = "video/*"
@@ -40,8 +39,7 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
     }
 
     companion object {
-
-        //随机端口
+        // 随机端口
         private fun randomPort() = Random.nextInt(20000, 30000)
 
         @JvmStatic
@@ -52,21 +50,23 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
         val storage = mStorage ?: return resourceNotFound
         val storageFile = mStorageFile ?: return resourceNotFound
 
-        //关闭之前打开的数据流
+        // 关闭之前打开的数据流
         IOUtils.closeIO(mInputStream)
 
-        //重新打开数据流，重要，否则无法设置offset
-        val inputStream = getInputStream(storage, storageFile)
-            ?: return resourceOpenFailed
+        // 重新打开数据流，重要，否则无法设置offset
+        val inputStream =
+            getInputStream(storage, storageFile)
+                ?: return resourceOpenFailed
         mInputStream = inputStream
 
-        //解析Range
+        // 解析Range
         val rangeText = session.headers["range"]
-        val rangeArray = rangeText?.run {
-            RangeUtils.getRange(this, storageFile.fileLength())
-        }
+        val rangeArray =
+            rangeText?.run {
+                RangeUtils.getRange(this, storageFile.fileLength())
+            }
 
-        //存在range，且contentLength != 0
+        // 存在range，且contentLength != 0
         return if (rangeArray != null && rangeArray[2] != 0L) {
             getPartialResponse(inputStream, rangeArray, storageFile.fileLength())
         } else {
@@ -74,7 +74,10 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
         }
     }
 
-    private fun getInputStream(storage: Storage, file: StorageFile) = runBlocking {
+    private fun getInputStream(
+        storage: Storage,
+        file: StorageFile
+    ) = runBlocking {
         storage.openFile(file)
     }
 
@@ -84,20 +87,21 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
         sourceLength: Long
     ): Response {
         try {
-            //设置Offset
+            // 设置Offset
             inputStream.skip(rangeArray[0])
         } catch (e: IOException) {
             e.printStackTrace()
             ErrorReportHelper.postCatchedException(e, "SMBPlayServer", "设置偏移量失败: offset=${rangeArray[0]}")
         }
-        //响应内容
-        val response = newFixedLengthResponse(
-            Response.Status.PARTIAL_CONTENT,
-            mContentType,
-            inputStream,
-            sourceLength
-        )
-        //添加响应头
+        // 响应内容
+        val response =
+            newFixedLengthResponse(
+                Response.Status.PARTIAL_CONTENT,
+                mContentType,
+                inputStream,
+                sourceLength,
+            )
+        // 添加响应头
         val contentRange = "bytes ${rangeArray[0]}-${rangeArray[1]}/$sourceLength"
         response.addHeader("Accept-Ranges", "bytes")
         response.addHeader("Content-Range", contentRange)
@@ -105,29 +109,26 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
         return response
     }
 
-    private fun getOKResponse(inputStream: InputStream): Response {
-        return newChunkedResponse(
+    private fun getOKResponse(inputStream: InputStream): Response =
+        newChunkedResponse(
             Response.Status.OK,
             mContentType,
-            inputStream
+            inputStream,
         )
-    }
 
-    private fun resourceNotFoundResponse(): Response {
-        return newFixedLengthResponse(
+    private fun resourceNotFoundResponse(): Response =
+        newFixedLengthResponse(
             Response.Status.NOT_FOUND,
             "*/*",
-            "resource not found"
+            "resource not found",
         )
-    }
 
-    private fun resourceOpenFailedResponse(): Response {
-        return newFixedLengthResponse(
+    private fun resourceOpenFailedResponse(): Response =
+        newFixedLengthResponse(
             Response.Status.INTERNAL_ERROR,
             "*/*",
-            "open resource failed"
+            "open resource failed",
         )
-    }
 
     private fun getContentType(filePath: String): String {
         if (filePath.isEmpty()) {

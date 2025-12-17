@@ -19,7 +19,6 @@ import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class LogFileQualityInstrumentedTest {
-
     private lateinit var context: Context
 
     @Before
@@ -36,58 +35,68 @@ class LogFileQualityInstrumentedTest {
     @Test
     fun structuredLogsRemainCompactInFiles() {
         val writer = LogWriter(context)
-        val runtime = LogRuntimeState(
-            activePolicy = LogPolicy.debugSessionPolicy(minLevel = LogLevel.DEBUG, enableFile = true),
-            debugToggleState = DebugToggleState.ON_CURRENT_SESSION,
-            debugSessionEnabled = true
-        )
+        val runtime =
+            LogRuntimeState(
+                activePolicy = LogPolicy.debugSessionPolicy(minLevel = LogLevel.DEBUG, enableFile = true),
+                debugToggleState = DebugToggleState.ON_CURRENT_SESSION,
+                debugSessionEnabled = true,
+            )
         writer.updateRuntimeState(runtime)
 
-        val events = listOf(
-            LogEvent(
-                level = LogLevel.INFO,
-                module = LogModule.PLAYER,
-                tag = LogTag(LogModule.PLAYER, "Engine"),
-                message = "prepare playback",
-                context = mapOf(
-                    "scene" to "playback",
-                    "sessionId" to "sess-1",
-                    "requestId" to "req-1"
-                )
-            ),
-            LogEvent(
-                level = LogLevel.WARN,
-                module = LogModule.NETWORK,
-                tag = LogTag(LogModule.NETWORK, "Api"),
-                message = "retry request",
-                context = mapOf(
-                    "scene" to "playback",
-                    "errorCode" to "E-RATE",
-                    "attempt" to "2"
-                )
-            ),
-            LogEvent(
-                level = LogLevel.DEBUG,
-                module = LogModule.PLAYER,
-                tag = LogTag(LogModule.PLAYER, "Buffer"),
-                message = "buffer stats collected",
-                context = mapOf(
-                    "scene" to "playback",
-                    "detail" to "long detail line1\nline2",
-                    "extraA" to "valueA",
-                    "extraB" to "valueB",
-                    "extraC" to "valueC",
-                    "extraD" to "valueD",
-                    "extraE" to "valueE",
-                    "noisy" to "valueF"
-                )
+        val events =
+            listOf(
+                LogEvent(
+                    level = LogLevel.INFO,
+                    module = LogModule.PLAYER,
+                    tag = LogTag(LogModule.PLAYER, "Engine"),
+                    message = "prepare playback",
+                    context =
+                        mapOf(
+                            "scene" to "playback",
+                            "sessionId" to "sess-1",
+                            "requestId" to "req-1",
+                        ),
+                ),
+                LogEvent(
+                    level = LogLevel.WARN,
+                    module = LogModule.NETWORK,
+                    tag = LogTag(LogModule.NETWORK, "Api"),
+                    message = "retry request",
+                    context =
+                        mapOf(
+                            "scene" to "playback",
+                            "errorCode" to "E-RATE",
+                            "attempt" to "2",
+                        ),
+                ),
+                LogEvent(
+                    level = LogLevel.DEBUG,
+                    module = LogModule.PLAYER,
+                    tag = LogTag(LogModule.PLAYER, "Buffer"),
+                    message = "buffer stats collected",
+                    context =
+                        mapOf(
+                            "scene" to "playback",
+                            "detail" to "long detail line1\nline2",
+                            "extraA" to "valueA",
+                            "extraB" to "valueB",
+                            "extraC" to "valueC",
+                            "extraD" to "valueD",
+                            "extraE" to "valueE",
+                            "noisy" to "valueF",
+                        ),
+                ),
             )
-        )
 
         events.forEach { writer.submit(it) }
         Thread.sleep(600)
 
-        val lines = LogPaths.currentLogFile(context).takeIf { it.exists() }?.readLines().orEmpty()
+        val lines =
+            LogPaths
+                .currentLogFile(context)
+                .takeIf { it.exists() }
+                ?.readLines()
+                .orEmpty()
 
         Assert.assertEquals(events.size, lines.size)
         Assert.assertTrue(lines.all { it.contains("level=") && it.contains("module=") })

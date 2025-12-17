@@ -5,7 +5,6 @@ package com.xyoye.common_component.network.config
  */
 
 object Api {
-
     // 占位
     const val PLACEHOLDER = "http://127.0.0.1:80/"
 

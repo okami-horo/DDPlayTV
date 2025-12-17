@@ -15,7 +15,6 @@ data class CommonJsonModel<T : Parcelable>(
     val message: String = "",
     val data: T? = null
 ) : Parcelable {
-
     val isSuccess: Boolean get() = code == 200
 
     val successData: T? get() = if (isSuccess) data else null

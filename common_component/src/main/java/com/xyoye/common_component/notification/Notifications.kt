@@ -11,7 +11,6 @@ import com.xyoye.common_component.utils.ErrorReportHelper
  */
 
 object Notifications {
-
     object ChannelGroup {
         const val SCREENCAST = "screen_cast"
     }
@@ -33,7 +32,7 @@ object Notifications {
             ErrorReportHelper.postCatchedException(
                 e,
                 "Notifications.setupNotificationChannels",
-                "设置通知渠道失败"
+                "设置通知渠道失败",
             )
             e.printStackTrace()
         }
@@ -46,21 +45,21 @@ object Notifications {
             listOf(
                 buildNotificationChannelGroup(ChannelGroup.SCREENCAST) {
                     setName("投屏")
-                }
-            )
+                },
+            ),
         )
 
         notificationService.createNotificationChannelsCompat(
             listOf(
                 buildNotificationChannel(
                     Channel.SCREENCAST_RECEIVE,
-                    NotificationManagerCompat.IMPORTANCE_LOW
+                    NotificationManagerCompat.IMPORTANCE_LOW,
                 ) {
                     setName("投屏内容接收服务")
                     setGroup(ChannelGroup.SCREENCAST)
                     setShowBadge(false)
-                }
-            )
+                },
+            ),
         )
     }
 }

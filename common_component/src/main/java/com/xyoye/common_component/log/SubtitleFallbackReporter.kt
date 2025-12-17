@@ -1,8 +1,8 @@
 package com.xyoye.common_component.log
 
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.data_component.enums.SubtitlePipelineFallbackReason
 import com.xyoye.data_component.enums.SubtitlePipelineMode
-import com.xyoye.common_component.log.model.LogModule
 
 /**
  * Structured logger for GPU subtitle fallback/recovery events to keep logcat
@@ -19,7 +19,7 @@ object SubtitleFallbackReporter {
         LogFacade.w(
             LogModule.SUBTITLE,
             TAG,
-            "fallback reason=${reason.name} recoverable=$recoverable surface=$surfaceId"
+            "fallback reason=${reason.name} recoverable=$recoverable surface=$surfaceId",
         )
     }
 
@@ -32,7 +32,7 @@ object SubtitleFallbackReporter {
         LogFacade.i(
             LogModule.SUBTITLE,
             TAG,
-            "recovery target=${targetMode.name} success=$succeeded reason=${reason?.name} surface=$surfaceId"
+            "recovery target=${targetMode.name} success=$succeeded reason=${reason?.name} surface=$surfaceId",
         )
     }
 }

@@ -8,9 +8,9 @@ import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.collectable
 import com.xyoye.common_component.extension.toastError
-import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.network.repository.OtherRepository
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,12 +21,10 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.util.LinkedList
 
-
 /**
  * Created by xyoye on 2022/1/24
  */
 class BindExtraSourceViewModel : BaseViewModel() {
-
     companion object {
         private const val MAX_SEGMENT_CACHE_SIZE = 50
         private const val MAX_SEARCH_TEXT_CACHE_SIZE = 25
@@ -41,12 +39,14 @@ class BindExtraSourceViewModel : BaseViewModel() {
     private lateinit var storageFile: StorageFile
 
     val storageFileFlow: StateFlow<StorageFile> by lazy {
-        DatabaseManager.instance.getPlayHistoryDao().getPlayHistoryFlow(
-            storageFile.uniqueKey(),
-            storageFile.storage.library.id
-        ).map {
-            storageFile.clone().apply { playHistory = it }
-        }.stateIn(viewModelScope, SharingStarted.Lazily, storageFile)
+        DatabaseManager.instance
+            .getPlayHistoryDao()
+            .getPlayHistoryFlow(
+                storageFile.uniqueKey(),
+                storageFile.storage.library.id,
+            ).map {
+                storageFile.clone().apply { playHistory = it }
+            }.stateIn(viewModelScope, SharingStarted.Lazily, storageFile)
     }
 
     private val _searchTextFlow = MutableSharedFlow<String>(1)
@@ -93,7 +93,7 @@ class BindExtraSourceViewModel : BaseViewModel() {
                         exception ?: RuntimeException("Unknown segment words error"),
                         "BindExtraSourceViewModel",
                         "segmentTitle",
-                        "File: ${storageFile.fileName()}"
+                        "File: ${storageFile.fileName()}",
                     )
                     exception?.message?.toastError()
                     return@launch
@@ -114,7 +114,7 @@ class BindExtraSourceViewModel : BaseViewModel() {
                     e,
                     "BindExtraSourceViewModel",
                     "segmentTitle",
-                    "Unexpected error for file: ${storageFile.fileName()}"
+                    "Unexpected error for file: ${storageFile.fileName()}",
                 )
                 e.message?.toastError()
             }
@@ -127,12 +127,15 @@ class BindExtraSourceViewModel : BaseViewModel() {
     private fun parseSegmentResult(json: String): List<String>? {
         return try {
             val responseJson = JSONObject(json)
-            val resultKey = responseJson.names()?.get(0)?.toString()
-                ?: return null
-            val jsonArray = responseJson.optJSONArray(resultKey)
-                ?: return null
-            val wordArray = jsonArray.optJSONArray(0)
-                ?: return null
+            val resultKey =
+                responseJson.names()?.get(0)?.toString()
+                    ?: return null
+            val jsonArray =
+                responseJson.optJSONArray(resultKey)
+                    ?: return null
+            val wordArray =
+                jsonArray.optJSONArray(0)
+                    ?: return null
 
             val words = mutableListOf<String>()
             val wordLength = wordArray.length()
@@ -146,7 +149,7 @@ class BindExtraSourceViewModel : BaseViewModel() {
                 e,
                 "BindExtraSourceViewModel",
                 "parseSegmentResult",
-                "JSON parsing error"
+                "JSON parsing error",
             )
             null
         }
@@ -208,13 +211,16 @@ class BindExtraSourceViewModel : BaseViewModel() {
                 e,
                 "BindExtraSourceViewModel",
                 "matchSearchTextCache",
-                "File: ${target.fileName()}"
+                "File: ${target.fileName()}",
             )
             null
         }
     }
 
-    private fun addSearchTextCache(file: StorageFile, text: String) {
+    private fun addSearchTextCache(
+        file: StorageFile,
+        text: String
+    ) {
         val dir = parseFileDir(file.filePath())
         val name = file.fileName()
         searchTextCache.addFirst(Triple(dir, name, text))

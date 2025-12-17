@@ -1,16 +1,16 @@
 package com.xyoye.player.subtitle.backend
 
-import android.os.SystemClock
 import android.view.Choreographer
 import android.view.Surface
 import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
-import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.data_component.enums.SurfaceType
+import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.data_component.enums.SubtitleViewType
+import com.xyoye.data_component.enums.SurfaceType
+import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.subtitle.ui.SubtitleSurfaceOverlay
 import com.xyoye.player_component.subtitle.gpu.AssGpuRenderer
 import com.xyoye.player_component.subtitle.gpu.LocalSubtitlePipelineApi
@@ -19,7 +19,6 @@ import com.xyoye.player_component.subtitle.gpu.SubtitleOutputTargetTracker
 import com.xyoye.player_component.subtitle.gpu.SubtitlePipelineController
 import com.xyoye.player_component.subtitle.gpu.SubtitleRecoveryCoordinator
 import com.xyoye.player_component.subtitle.gpu.SubtitleSurfaceLifecycleHandler
-import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.subtitle.MixedSubtitle
 
 /**
@@ -84,12 +83,11 @@ class LibassRendererBackend : SubtitleRenderer {
         // No-op: GPU pipeline handles output via dedicated overlay surface.
     }
 
-    override fun supportsExternalTrack(extension: String): Boolean {
-        return when (extension.lowercase()) {
+    override fun supportsExternalTrack(extension: String): Boolean =
+        when (extension.lowercase()) {
             "ass", "ssa" -> true
             else -> false
         }
-    }
 
     override fun loadExternalSubtitle(path: String): Boolean {
         LogFacade.i(LogModule.PLAYER, TAG, "GPU libass backend loaded: $path")
@@ -110,40 +108,11 @@ class LibassRendererBackend : SubtitleRenderer {
     }
 
     private fun attachOverlay(env: SubtitleRenderEnvironment) {
-        val overlay = SubtitleSurfaceOverlay(env.context).apply {
-            bindPlayerView(env.playerView)
-            setOnFrameSizeChanged { width, height ->
-                val surface = holder.surface
-                if (surface != null && surface.isValid) {
-                    lifecycleHandler?.onSurfaceSizeChanged(
-                        surface = surface,
-                        viewType = SubtitleViewType.SurfaceView,
-                        width = width,
-                        height = height,
-                        rotation = 0,
-                        telemetryEnabled = true
-                    )
-                }
-            }
-            setSurfaceStateListener(object : SubtitleSurfaceOverlay.SurfaceStateListener {
-                override fun onSurfaceDestroyed() {
-                    lifecycleHandler?.onSurfaceDestroyed()
-                }
-
-                override fun onSurfaceCreated(surface: Surface?, width: Int, height: Int) {
-                    if (surface != null && surface.isValid) {
-                        lifecycleHandler?.onSurfaceAvailable(
-                            surface = surface,
-                            viewType = SubtitleViewType.SurfaceView,
-                            width = width,
-                            height = height,
-                            rotation = 0,
-                            telemetryEnabled = true
-                        )
-                    }
-                }
-
-                override fun onSurfaceChanged(surface: Surface?, width: Int, height: Int) {
+        val overlay =
+            SubtitleSurfaceOverlay(env.context).apply {
+                bindPlayerView(env.playerView)
+                setOnFrameSizeChanged { width, height ->
+                    val surface = holder.surface
                     if (surface != null && surface.isValid) {
                         lifecycleHandler?.onSurfaceSizeChanged(
                             surface = surface,
@@ -151,12 +120,52 @@ class LibassRendererBackend : SubtitleRenderer {
                             width = width,
                             height = height,
                             rotation = 0,
-                            telemetryEnabled = true
+                            telemetryEnabled = true,
                         )
                     }
                 }
-            })
-        }
+                setSurfaceStateListener(
+                    object : SubtitleSurfaceOverlay.SurfaceStateListener {
+                        override fun onSurfaceDestroyed() {
+                            lifecycleHandler?.onSurfaceDestroyed()
+                        }
+
+                        override fun onSurfaceCreated(
+                            surface: Surface?,
+                            width: Int,
+                            height: Int
+                        ) {
+                            if (surface != null && surface.isValid) {
+                                lifecycleHandler?.onSurfaceAvailable(
+                                    surface = surface,
+                                    viewType = SubtitleViewType.SurfaceView,
+                                    width = width,
+                                    height = height,
+                                    rotation = 0,
+                                    telemetryEnabled = true,
+                                )
+                            }
+                        }
+
+                        override fun onSurfaceChanged(
+                            surface: Surface?,
+                            width: Int,
+                            height: Int
+                        ) {
+                            if (surface != null && surface.isValid) {
+                                lifecycleHandler?.onSurfaceSizeChanged(
+                                    surface = surface,
+                                    viewType = SubtitleViewType.SurfaceView,
+                                    width = width,
+                                    height = height,
+                                    rotation = 0,
+                                    telemetryEnabled = true,
+                                )
+                            }
+                        }
+                    },
+                )
+            }
         env.playerView.attachSubtitleOverlay(overlay)
         this.overlay = overlay
     }
@@ -176,22 +185,24 @@ class LibassRendererBackend : SubtitleRenderer {
         choreographer?.removeFrameCallback(frameCallback)
     }
 
-    private val frameCallback = object : Choreographer.FrameCallback {
-        override fun doFrame(frameTimeNanos: Long) {
-            if (!renderLoopRunning) return
-            val gpuRenderer = renderer
-            val env = environment
-            val targetTracker = tracker
-            if (gpuRenderer != null && env != null && targetTracker?.currentTarget != null) {
-                val pts = env.playerView.getCurrentPosition().let { current ->
-                    (current + SubtitlePreferenceUpdater.currentOffset()).coerceAtLeast(0L)
+    private val frameCallback =
+        object : Choreographer.FrameCallback {
+            override fun doFrame(frameTimeNanos: Long) {
+                if (!renderLoopRunning) return
+                val gpuRenderer = renderer
+                val env = environment
+                val targetTracker = tracker
+                if (gpuRenderer != null && env != null && targetTracker?.currentTarget != null) {
+                    val pts =
+                        env.playerView.getCurrentPosition().let { current ->
+                            (current + SubtitlePreferenceUpdater.currentOffset()).coerceAtLeast(0L)
+                        }
+                    val vsyncId = frameTimeNanos / 1_000_000L
+                    gpuRenderer.renderFrame(pts, vsyncId)
                 }
-                val vsyncId = frameTimeNanos / 1_000_000L
-                gpuRenderer.renderFrame(pts, vsyncId)
+                choreographer?.postFrameCallback(this)
             }
-            choreographer?.postFrameCallback(this)
         }
-    }
 
     companion object {
         private const val TAG = "LibassRendererGPU"

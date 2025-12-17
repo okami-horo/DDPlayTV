@@ -18,45 +18,54 @@ import javax.net.ssl.X509TrustManager
  */
 
 object UnsafeOkHttpClient {
+    private val unSafeTrustManager =
+        object : X509TrustManager {
+            @SuppressLint("TrustAllX509TrustManager")
+            @Throws(CertificateException::class)
+            override fun checkClientTrusted(
+                chain: Array<X509Certificate>,
+                authType: String
+            ) {
+            }
 
-    private val unSafeTrustManager = object : X509TrustManager {
-        @SuppressLint("TrustAllX509TrustManager")
-        @Throws(CertificateException::class)
-        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {
+            @SuppressLint("TrustAllX509TrustManager")
+            @Throws(CertificateException::class)
+            override fun checkServerTrusted(
+                chain: Array<X509Certificate>,
+                authType: String
+            ) {
+            }
+
+            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
         }
 
-        @SuppressLint("TrustAllX509TrustManager")
-        @Throws(CertificateException::class)
-        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
+    private val sslContext =
+        SSLContext.getInstance("TLS").apply {
+            init(null, arrayOf(unSafeTrustManager), null)
         }
-
-        override fun getAcceptedIssuers(): Array<X509Certificate> {
-            return arrayOf()
-        }
-    }
-
-    private val sslContext = SSLContext.getInstance("TLS").apply {
-        init(null, arrayOf(unSafeTrustManager), null)
-    }
 
     val client: OkHttpClient by lazy {
-        val cookieStore = object : CookieJar {
-            private val store = mutableMapOf<String, MutableList<Cookie>>()
+        val cookieStore =
+            object : CookieJar {
+                private val store = mutableMapOf<String, MutableList<Cookie>>()
 
-            override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-                if (cookies.isEmpty()) return
-                store[url.host] = cookies.toMutableList()
-            }
+                override fun saveFromResponse(
+                    url: HttpUrl,
+                    cookies: List<Cookie>
+                ) {
+                    if (cookies.isEmpty()) return
+                    store[url.host] = cookies.toMutableList()
+                }
 
-            override fun loadForRequest(url: HttpUrl): List<Cookie> {
-                return store[url.host] ?: emptyList()
+                override fun loadForRequest(url: HttpUrl): List<Cookie> = store[url.host] ?: emptyList()
             }
-        }
-        val builder = OkHttpClient.Builder()
-            .sslSocketFactory(sslContext.socketFactory, unSafeTrustManager)
-            .hostnameVerifier { _, _ -> true }
-            .cookieJar(cookieStore)
-            .addNetworkInterceptor(RedirectAuthorizationInterceptor())
+        val builder =
+            OkHttpClient
+                .Builder()
+                .sslSocketFactory(sslContext.socketFactory, unSafeTrustManager)
+                .hostnameVerifier { _, _ -> true }
+                .cookieJar(cookieStore)
+                .addNetworkInterceptor(RedirectAuthorizationInterceptor())
         if (BuildConfig.DEBUG) {
             builder.addNetworkInterceptor(LoggerInterceptor().webDav())
         }

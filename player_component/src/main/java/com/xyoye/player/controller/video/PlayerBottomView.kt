@@ -13,12 +13,12 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
-import com.xyoye.player.controller.action.PlayerAction
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.SettingViewType
+import com.xyoye.player.controller.action.PlayerAction
 import com.xyoye.player.utils.formatDuration
 import com.xyoye.player.wrapper.ControlWrapper
 import com.xyoye.player_component.R
@@ -32,8 +32,9 @@ class PlayerBottomView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : LinearLayout(context, attrs, defStyleAttr), InterControllerView, OnSeekBarChangeListener {
-
+) : LinearLayout(context, attrs, defStyleAttr),
+    InterControllerView,
+    OnSeekBarChangeListener {
     private var mIsDragging = false
     private lateinit var mControlWrapper: ControlWrapper
     private var controlsInputEnabled = false
@@ -45,12 +46,13 @@ class PlayerBottomView(
 
     private var isControllerVisible = false
 
-    private val viewBinding = DataBindingUtil.inflate<LayoutPlayerBottomBinding>(
-        LayoutInflater.from(context),
-        R.layout.layout_player_bottom,
-        this,
-        true
-    )
+    private val viewBinding =
+        DataBindingUtil.inflate<LayoutPlayerBottomBinding>(
+            LayoutInflater.from(context),
+            R.layout.layout_player_bottom,
+            this,
+            true,
+        )
 
     init {
 
@@ -87,7 +89,7 @@ class PlayerBottomView(
                 sendDanmuBlock?.invoke(it)
             }.show()
         }
-        */
+         */
         viewBinding.sendDanmuTv.apply {
             isVisible = false
             isEnabled = false
@@ -123,7 +125,6 @@ class PlayerBottomView(
         viewBinding.playSeekBar.setOnSeekBarChangeListener(this)
         updateFocusNavigation()
         updateControlsInteractiveState(false)
-
     }
 
     override fun attach(controlWrapper: ControlWrapper) {
@@ -151,7 +152,11 @@ class PlayerBottomView(
             }
             isControllerVisible = true
             updateControlsInteractiveState(true)
-            ViewCompat.animate(viewBinding.playerBottomLl).translationY(0f).setDuration(300).start()
+            ViewCompat
+                .animate(viewBinding.playerBottomLl)
+                .translationY(0f)
+                .setDuration(300)
+                .start()
             post {
                 if (!viewBinding.playIv.hasFocus()) {
                     viewBinding.playIv.requestFocus()
@@ -163,7 +168,9 @@ class PlayerBottomView(
             }
             isControllerVisible = false
             val height = viewBinding.playerBottomLl.height.toFloat()
-            ViewCompat.animate(viewBinding.playerBottomLl).translationY(height)
+            ViewCompat
+                .animate(viewBinding.playerBottomLl)
+                .translationY(height)
                 .setDuration(300)
                 .start()
             clearFocus()
@@ -208,9 +215,13 @@ class PlayerBottomView(
         }
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
-        if (mIsDragging)
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
+        if (mIsDragging) {
             return
+        }
 
         if (duration > 0) {
             viewBinding.playSeekBar.isEnabled = true
@@ -221,8 +232,9 @@ class PlayerBottomView(
         }
 
         var bufferedPercent = mControlWrapper.getBufferedPercentage()
-        if (bufferedPercent > 95)
+        if (bufferedPercent > 95) {
             bufferedPercent = 100
+        }
         viewBinding.playSeekBar.secondaryProgress = bufferedPercent
 
         viewBinding.durationTv.text = formatDuration(duration)
@@ -231,21 +243,24 @@ class PlayerBottomView(
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
-        //显示状态与锁定状态相反
+        // 显示状态与锁定状态相反
         onVisibilityChanged(!isLocked)
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
-
     }
 
     override fun onPopupModeChanged(isPopup: Boolean) {
-
     }
 
-    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        if (!fromUser)
+    override fun onProgressChanged(
+        seekBar: SeekBar?,
+        progress: Int,
+        fromUser: Boolean
+    ) {
+        if (!fromUser) {
             return
+        }
         val duration = mControlWrapper.getDuration()
         val newPosition = (duration * progress) / viewBinding.playSeekBar.max
         viewBinding.currentPositionTv.text =
@@ -281,25 +296,29 @@ class PlayerBottomView(
         viewBinding.ivPreviousSource.isVisible = videoSource.hasPreviousSource()
         viewBinding.videoListIv.isVisible = videoSource.getGroupSize() > 1
 
-        //下一个视频资源是否可用
+        // 下一个视频资源是否可用
         val hasNextSource = videoSource.hasNextSource()
         viewBinding.ivNextSource.isEnabled = hasNextSource
         val nextIcon = R.drawable.ic_video_next.toResDrawable()
         if (hasNextSource.not() && nextIcon != null) {
-            nextIcon.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                R.color.gray_60.toResColor(), BlendModeCompat.SRC_IN
-            )
+            nextIcon.colorFilter =
+                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                    R.color.gray_60.toResColor(),
+                    BlendModeCompat.SRC_IN,
+                )
         }
         viewBinding.ivNextSource.setImageDrawable(nextIcon)
 
-        //上一个视频资源是否可用
+        // 上一个视频资源是否可用
         val hasPreviousSource = videoSource.hasPreviousSource()
         viewBinding.ivPreviousSource.isEnabled = hasPreviousSource
         val previousIcon = R.drawable.ic_video_previous.toResDrawable()
         if (hasPreviousSource.not() && previousIcon != null) {
-            previousIcon.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                R.color.gray_60.toResColor(), BlendModeCompat.SRC_IN
-            )
+            previousIcon.colorFilter =
+                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                    R.color.gray_60.toResColor(),
+                    BlendModeCompat.SRC_IN,
+                )
         }
         viewBinding.ivPreviousSource.setImageDrawable(previousIcon)
         updateFocusNavigation()
@@ -307,13 +326,14 @@ class PlayerBottomView(
 
     private fun updateControlsInteractiveState(enabled: Boolean) {
         controlsInputEnabled = enabled
-        val focusables = listOf(
-            viewBinding.playIv,
-            viewBinding.ivPreviousSource,
-            viewBinding.ivNextSource,
-            viewBinding.videoListIv,
-            viewBinding.danmuControlIv
-        )
+        val focusables =
+            listOf(
+                viewBinding.playIv,
+                viewBinding.ivPreviousSource,
+                viewBinding.ivNextSource,
+                viewBinding.videoListIv,
+                viewBinding.danmuControlIv,
+            )
         focusables.forEach { view ->
             view.isFocusable = enabled
             view.isFocusableInTouchMode = enabled

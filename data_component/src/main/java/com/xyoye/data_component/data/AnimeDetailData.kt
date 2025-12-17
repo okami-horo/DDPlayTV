@@ -14,7 +14,8 @@ import kotlinx.parcelize.Parcelize
 @JsonClass(generateAdapter = true)
 data class AnimeDetailData(
     var bangumi: BangumiData? = null
-) : CommonJsonData(), Parcelable
+) : CommonJsonData(),
+    Parcelable
 
 @Parcelize
 @JsonClass(generateAdapter = true)
@@ -49,14 +50,12 @@ data class EpisodeData(
     val episodeTitle: String = "",
     val lastWatched: String? = null,
     val airDate: String? = null,
-
     @Json(ignore = true)
     val title: String = "",
     @Json(ignore = true)
     val subtitle: String = "",
     @Json(ignore = true)
     val searchEpisodeNum: String = "",
-
     @Json(ignore = true)
     val watchTime: String? = null,
     @Json(ignore = true)
@@ -66,7 +65,6 @@ data class EpisodeData(
     @Json(ignore = true)
     val inMarkMode: Boolean = false
 ) : Parcelable {
-
     @Json(ignore = true)
     val markAble get() = lastWatched == null
 
@@ -77,5 +75,6 @@ data class EpisodeData(
 @Parcelize
 @JsonClass(generateAdapter = true)
 data class TagData(
-    var id: Int, var name: String
+    var id: Int,
+    var name: String
 ) : Parcelable

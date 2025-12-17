@@ -18,16 +18,18 @@ import com.xyoye.player_component.databinding.LayoutPlayerControllerBinding
  * Created by xyoye on 2022/11/13.
  */
 
-class PlayerControlView(context: Context): InterControllerView {
-
+class PlayerControlView(
+    context: Context
+) : InterControllerView {
     private val isScreenShotEnabled = false
 
-    private val viewBinding = DataBindingUtil.inflate<LayoutPlayerControllerBinding>(
-        LayoutInflater.from(context),
-        R.layout.layout_player_controller,
-        null,
-        false
-    )
+    private val viewBinding =
+        DataBindingUtil.inflate<LayoutPlayerControllerBinding>(
+            LayoutInflater.from(context),
+            R.layout.layout_player_controller,
+            null,
+            false,
+        )
 
     private lateinit var mControlWrapper: ControlWrapper
 
@@ -36,7 +38,7 @@ class PlayerControlView(context: Context): InterControllerView {
         viewBinding.playerLockIv.setOnClickListener {
             mControlWrapper.toggleLockState()
         }
-        */
+         */
         viewBinding.playerLockIv.apply {
             isVisible = false
             isEnabled = false
@@ -65,34 +67,36 @@ class PlayerControlView(context: Context): InterControllerView {
         if (mControlWrapper.isLocked().not()) {
             updateShotVisible(isVisible)
         }
-        */
+         */
         updateShotVisible(isVisible)
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
-
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
-
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
         /*
         viewBinding.playerLockIv.isSelected = isLocked
         updateShotVisible(!isLocked)
-        */
+         */
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
-
     }
 
     override fun onPopupModeChanged(isPopup: Boolean) {
-
     }
 
-    fun showMessage(text: String, time: MessageTime) {
+    fun showMessage(
+        text: String,
+        time: MessageTime
+    ) {
         viewBinding.messageContainer.showMessage(text, time)
     }
 
@@ -121,7 +125,7 @@ class PlayerControlView(context: Context): InterControllerView {
                 .start()
         }
     }
-    */
+     */
 
     private fun updateShotVisible(isVisible: Boolean) {
         if (isScreenShotEnabled.not()) {
@@ -130,13 +134,15 @@ class PlayerControlView(context: Context): InterControllerView {
         }
         if (isVisible) {
             viewBinding.playerShotIv.isVisible = true
-            ViewCompat.animate(viewBinding.playerShotIv)
+            ViewCompat
+                .animate(viewBinding.playerShotIv)
                 .translationX(0f)
                 .setDuration(300)
                 .start()
         } else {
             val translateX = dp2px(60).toFloat()
-            ViewCompat.animate(viewBinding.playerShotIv)
+            ViewCompat
+                .animate(viewBinding.playerShotIv)
                 .translationX(translateX)
                 .setDuration(300)
                 .start()

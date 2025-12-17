@@ -9,12 +9,8 @@ import com.xyoye.data_component.enums.MediaType
 
 open class MediaTypeConverter {
     @TypeConverter
-    fun formValue(value: String): MediaType {
-        return MediaType.fromValue(value)
-    }
+    fun formValue(value: String): MediaType = MediaType.fromValue(value)
 
     @TypeConverter
-    fun enumToValue(type: MediaType): String {
-        return type.value
-    }
+    fun enumToValue(type: MediaType): String = type.value
 }

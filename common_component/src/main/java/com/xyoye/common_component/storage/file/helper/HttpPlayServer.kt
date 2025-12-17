@@ -16,15 +16,16 @@ import kotlin.random.Random
  * It forwards requests to an upstream URL and provides stable Range responses.
  */
 class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
-
     private var upstreamUrl: String? = null
     private var upstreamHeaders: Map<String, String> = emptyMap()
     private var contentType: String = "application/octet-stream"
     private var contentLength: Long = -1L
+
     @Volatile
     private var seekEnabled: Boolean = false
 
     private val upstreamRangeLock = Any()
+
     @Volatile
     private var lastUpstreamRangeAtMs: Long = 0L
 
@@ -43,59 +44,63 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
     }
 
     override fun serve(session: IHTTPSession): Response {
-        val url = upstreamUrl
-            ?: return newFixedLengthResponse(
-                Response.Status.NOT_FOUND,
-                "text/plain",
-                "upstream not configured"
-            )
+        val url =
+            upstreamUrl
+                ?: return newFixedLengthResponse(
+                    Response.Status.NOT_FOUND,
+                    "text/plain",
+                    "upstream not configured",
+                )
 
         val rangeHeader = session.headers["range"]
         val hasRange = !rangeHeader.isNullOrBlank()
         val supportsRange = contentLength > 0
-        val requestedRange = if (supportsRange && hasRange) {
-            RangeUtils.parseRange(rangeHeader!!, contentLength)
-        } else {
-            null
-        }
+        val requestedRange =
+            if (supportsRange && hasRange) {
+                RangeUtils.parseRange(rangeHeader!!, contentLength)
+            } else {
+                null
+            }
         if (supportsRange && hasRange && requestedRange == null) {
             return newFixedLengthResponse(Response.Status.RANGE_NOT_SATISFIABLE, "text/plain", "")
         }
-        val upstreamRangeHeader = if (supportsRange && hasRange && requestedRange != null) {
-            val maxBytes = if (seekEnabled) maxRangeBytesAfterPlay else maxRangeBytesBeforePlay
-            val start = requestedRange.first
-            val end = minOf(requestedRange.second, start + maxBytes - 1)
-            "bytes=$start-$end"
-        } else {
-            null
-        }
+        val upstreamRangeHeader =
+            if (supportsRange && hasRange && requestedRange != null) {
+                val maxBytes = if (seekEnabled) maxRangeBytesAfterPlay else maxRangeBytesBeforePlay
+                val start = requestedRange.first
+                val end = minOf(requestedRange.second, start + maxBytes - 1)
+                "bytes=$start-$end"
+            } else {
+                null
+            }
 
-        val response = if (supportsRange && hasRange) {
-            synchronized(upstreamRangeLock) {
-                throttleUpstreamRange()
+        val response =
+            if (supportsRange && hasRange) {
+                synchronized(upstreamRangeLock) {
+                    throttleUpstreamRange()
+                    fetchUpstream(
+                        url,
+                        buildUpstreamHeaders(
+                            clientHeaders = session.headers,
+                            rangeHeader = upstreamRangeHeader,
+                            forwardRange = true,
+                        ),
+                    )
+                }
+            } else {
                 fetchUpstream(
                     url,
                     buildUpstreamHeaders(
                         clientHeaders = session.headers,
-                        rangeHeader = upstreamRangeHeader,
-                        forwardRange = true
-                    )
+                        rangeHeader = null,
+                        forwardRange = false,
+                    ),
                 )
-            }
-        } else {
-            fetchUpstream(
-                url,
-                buildUpstreamHeaders(
-                    clientHeaders = session.headers,
-                    rangeHeader = null,
-                    forwardRange = false
-                )
+            } ?: return newFixedLengthResponse(
+                Response.Status.INTERNAL_ERROR,
+                "text/plain",
+                "upstream request failed",
             )
-        } ?: return newFixedLengthResponse(
-            Response.Status.INTERNAL_ERROR,
-            "text/plain",
-            "upstream request failed"
-        )
 
         if (!response.isSuccessful) {
             // If upstream rejects probing ranges (403), let mpv fall back to linear playback instead of failing open().
@@ -105,37 +110,41 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
             return newFixedLengthResponse(
                 toStatus(response.code()),
                 "text/plain",
-                "upstream http ${response.code()}"
+                "upstream http ${response.code()}",
             )
         }
 
-        val body = response.body()
-            ?: return newFixedLengthResponse(
-                Response.Status.INTERNAL_ERROR,
-                "text/plain",
-                "empty upstream body"
-            )
+        val body =
+            response.body()
+                ?: return newFixedLengthResponse(
+                    Response.Status.INTERNAL_ERROR,
+                    "text/plain",
+                    "empty upstream body",
+                )
 
         val upstreamContentRange = response.headers()["Content-Range"]
         val isPartial = response.code() == 206 || upstreamContentRange != null
 
         val status = if (isPartial) Response.Status.PARTIAL_CONTENT else Response.Status.OK
-        val contentRange = upstreamContentRange ?: requestedRange?.let { (start, end) ->
-            "bytes $start-$end/$contentLength"
-        }
+        val contentRange =
+            upstreamContentRange ?: requestedRange?.let { (start, end) ->
+                "bytes $start-$end/$contentLength"
+            }
 
-        val responseLength = when {
-            supportsRange && isPartial && requestedRange != null ->
-                (requestedRange.second - requestedRange.first + 1).coerceAtLeast(0)
-            supportsRange && !isPartial -> contentLength
-            else -> body.contentLength()
-        }.takeIf { it > 0 } ?: -1L
+        val responseLength =
+            when {
+                supportsRange && isPartial && requestedRange != null ->
+                    (requestedRange.second - requestedRange.first + 1).coerceAtLeast(0)
+                supportsRange && !isPartial -> contentLength
+                else -> body.contentLength()
+            }.takeIf { it > 0 } ?: -1L
 
-        val nanoResponse = if (responseLength > 0) {
-            newFixedLengthResponse(status, contentType, body.byteStream(), responseLength)
-        } else {
-            newChunkedResponse(status, contentType, body.byteStream())
-        }
+        val nanoResponse =
+            if (responseLength > 0) {
+                newFixedLengthResponse(status, contentType, body.byteStream(), responseLength)
+            } else {
+                newChunkedResponse(status, contentType, body.byteStream())
+            }
 
         if (supportsRange) {
             nanoResponse.addHeader("Accept-Ranges", "bytes")
@@ -148,12 +157,10 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         seekEnabled = enabled
     }
 
-    fun isServingUrl(url: String): Boolean {
-        return url.startsWith("http://127.0.0.1:$listeningPort/")
-    }
+    fun isServingUrl(url: String): Boolean = url.startsWith("http://127.0.0.1:$listeningPort/")
 
-    private fun toStatus(code: Int): Response.Status {
-        return when (code) {
+    private fun toStatus(code: Int): Response.Status =
+        when (code) {
             200 -> Response.Status.OK
             206 -> Response.Status.PARTIAL_CONTENT
             400 -> Response.Status.BAD_REQUEST
@@ -165,7 +172,6 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
             503 -> Response.Status.SERVICE_UNAVAILABLE
             else -> Response.Status.INTERNAL_ERROR
         }
-    }
 
     private fun buildUpstreamHeaders(
         clientHeaders: Map<String, String>,
@@ -176,7 +182,11 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         merged.putAll(upstreamHeaders)
         // Forward a small allowlist of client headers; some upstreams require them (e.g. for Range/auth).
         val existingKeys = merged.keys.map { it.lowercase() }.toSet()
-        fun putIfAbsent(header: String, value: String?) {
+
+        fun putIfAbsent(
+            header: String,
+            value: String?
+        ) {
             if (value.isNullOrBlank()) return
             if (existingKeys.contains(header.lowercase())) return
             merged[header] = value
@@ -193,14 +203,17 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         return merged
     }
 
-    private fun fetchUpstream(url: String, headers: Map<String, String>): retrofit2.Response<okhttp3.ResponseBody>? {
+    private fun fetchUpstream(
+        url: String,
+        headers: Map<String, String>
+    ): retrofit2.Response<okhttp3.ResponseBody>? {
         return runBlocking {
             runCatching { Retrofit.extendedService.getResourceResponse(url, headers) }
                 .getOrElse { throwable ->
                     ErrorReportHelper.postCatchedException(
                         throwable,
                         "HttpPlayServer",
-                        "上游请求失败 url=$url headers=${headers.keys.joinToString()}"
+                        "上游请求失败 url=$url headers=${headers.keys.joinToString()}",
                     )
                     return@runBlocking null
                 }
@@ -209,10 +222,11 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
 
     private fun throttleUpstreamRange() {
         val now = nowMs()
-        val prePlayIntervalMs = runCatching { PlayerConfig.getMpvProxyRangeMinIntervalMs() }
-            .getOrDefault(200)
-            .coerceIn(0, 2000)
-            .toLong()
+        val prePlayIntervalMs =
+            runCatching { PlayerConfig.getMpvProxyRangeMinIntervalMs() }
+                .getOrDefault(200)
+                .coerceIn(0, 2000)
+                .toLong()
         val minIntervalMs = if (seekEnabled) 20L else prePlayIntervalMs
         val elapsed = now - lastUpstreamRangeAtMs
         val waitMs = minIntervalMs - elapsed
@@ -243,7 +257,7 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "HttpPlayServer",
-                "启动播放服务器失败: timeout=${timeoutMs}ms"
+                "启动播放服务器失败: timeout=${timeoutMs}ms",
             )
             false
         }

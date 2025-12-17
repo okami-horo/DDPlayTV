@@ -5,11 +5,17 @@ import com.xyoye.common_component.log.model.LogRuntimeState
 
 interface LogConfigStorage {
     fun readPolicyName(): String?
+
     fun readDefaultLevel(): String?
+
     fun readDebugFileEnabled(): Boolean
+
     fun readExportable(): Boolean
+
     fun readPolicySource(): String?
+
     fun readDebugToggleState(): String?
+
     fun readLastPolicyUpdateTime(): Long
 
     fun write(state: LogRuntimeState)

@@ -19,9 +19,7 @@ data class UDPDeviceBean(
     val httpPort: Int = 0,
     val deviceName: String = "未知投屏设备",
     val needPassword: Boolean = false,
-    val count: Int = 0,
+    val count: Int = 0
 ) : Parcelable {
-    fun getDisplayAddress(): String {
-        return "http://$ipAddress:$httpPort"
-    }
+    fun getDisplayAddress(): String = "http://$ipAddress:$httpPort"
 }

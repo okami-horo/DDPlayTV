@@ -14,7 +14,6 @@ import com.xyoye.data_component.enums.VideoScreenScale
  */
 
 object PlayerInitializer {
-
     var isPrintLog: Boolean = true
     var isOrientationEnabled = true
     var isEnableAudioFocus = true

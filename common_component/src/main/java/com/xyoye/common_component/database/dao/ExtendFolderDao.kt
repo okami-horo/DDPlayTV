@@ -12,7 +12,6 @@ import com.xyoye.data_component.entity.ExtendFolderEntity
 
 @Dao
 interface ExtendFolderDao {
-
     @Query("SELECT * FROM extend_folder")
     suspend fun getAll(): MutableList<ExtendFolderEntity>
 

@@ -2,11 +2,11 @@ package com.xyoye.player_component.media3.render
 
 import androidx.media3.common.Format
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.video.VideoFrameMetadataListener
-import androidx.media3.common.Tracks
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
@@ -21,8 +21,8 @@ class SubtitleRenderScheduler(
     private val player: ExoPlayer,
     private val renderer: AssGpuRenderer,
     private val frameCleaner: SubtitleFrameCleaner = renderer.frameCleaner
-) : AnalyticsListener, VideoFrameMetadataListener {
-
+) : AnalyticsListener,
+    VideoFrameMetadataListener {
     private var started = false
     private var offsetMs: Long = SubtitlePreferenceUpdater.currentOffset()
 
@@ -51,7 +51,10 @@ class SubtitleRenderScheduler(
         renderer.renderFrame(ptsMs, vsyncId)
     }
 
-    override fun onPositionDiscontinuity(eventTime: AnalyticsListener.EventTime, reason: Int) {
+    override fun onPositionDiscontinuity(
+        eventTime: AnalyticsListener.EventTime,
+        reason: Int
+    ) {
         frameCleaner.onSeek()
     }
 
@@ -59,11 +62,17 @@ class SubtitleRenderScheduler(
         frameCleaner.onSeek()
     }
 
-    override fun onTracksChanged(eventTime: AnalyticsListener.EventTime, tracks: Tracks) {
+    override fun onTracksChanged(
+        eventTime: AnalyticsListener.EventTime,
+        tracks: Tracks
+    ) {
         frameCleaner.onTrackChanged()
     }
 
-    override fun onPlaybackStateChanged(eventTime: AnalyticsListener.EventTime, state: Int) {
+    override fun onPlaybackStateChanged(
+        eventTime: AnalyticsListener.EventTime,
+        state: Int
+    ) {
         if (state == Player.STATE_ENDED) {
             frameCleaner.onTrackChanged()
         }

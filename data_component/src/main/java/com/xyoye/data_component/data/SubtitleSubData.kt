@@ -24,7 +24,6 @@ data class SubDetailData(
     val upload_time: String?,
     val subtype: String?,
     val lang: LanguageData?,
-
     val filename: String?,
     val size: Long?,
     val url: String?,
@@ -39,8 +38,8 @@ data class LanguageData(
 @JsonClass(generateAdapter = true)
 data class SubFileData(
     val url: String?,
-    //fileName
+    // fileName
     val f: String?,
-    //size
+    // size
     val s: String?
 )

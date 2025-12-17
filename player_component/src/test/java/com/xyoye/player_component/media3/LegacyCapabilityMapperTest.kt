@@ -12,36 +12,38 @@ import org.junit.Test
 
 @Media3Dependent("Mapper enforces codec/subtitle compatibility for Media3 capabilities")
 class LegacyCapabilityMapperTest {
-
     private val mapper = LegacyCapabilityMapper()
 
     @Test
     fun map_returnsTracks_whenAllInputsSupported() {
-        val input = LegacyCapabilityInput(
-            renderers = listOf(
-                LegacyRendererConfig(
-                    name = "video-main",
-                    mimeType = "video/avc",
-                    bitrateKbps = 4200,
-                    drmRequired = true
-                ),
-                LegacyRendererConfig(
-                    name = "audio-main",
-                    mimeType = "audio/mp4a-latm",
-                    language = "zh",
-                    isDefault = true
-                )
-            ),
-            subtitles = listOf(
-                LegacySubtitleConfig(
-                    id = "sub-ass",
-                    language = "zh",
-                    format = "ass",
-                    offsetMs = 120
-                )
-            ),
-            drmSchemes = listOf("widevine")
-        )
+        val input =
+            LegacyCapabilityInput(
+                renderers =
+                    listOf(
+                        LegacyRendererConfig(
+                            name = "video-main",
+                            mimeType = "video/avc",
+                            bitrateKbps = 4200,
+                            drmRequired = true,
+                        ),
+                        LegacyRendererConfig(
+                            name = "audio-main",
+                            mimeType = "audio/mp4a-latm",
+                            language = "zh",
+                            isDefault = true,
+                        ),
+                    ),
+                subtitles =
+                    listOf(
+                        LegacySubtitleConfig(
+                            id = "sub-ass",
+                            language = "zh",
+                            format = "ass",
+                            offsetMs = 120,
+                        ),
+                    ),
+                drmSchemes = listOf("widevine"),
+            )
 
         val result = mapper.map(input)
 
@@ -54,16 +56,18 @@ class LegacyCapabilityMapperTest {
 
     @Test
     fun map_flagsBlockingIssues_whenCodecOrDrmUnsupported() {
-        val input = LegacyCapabilityInput(
-            renderers = listOf(
-                LegacyRendererConfig(
-                    name = "video-av1",
-                    mimeType = "video/av1",
-                    drmRequired = true
-                )
-            ),
-            drmSchemes = listOf("fairplay")
-        )
+        val input =
+            LegacyCapabilityInput(
+                renderers =
+                    listOf(
+                        LegacyRendererConfig(
+                            name = "video-av1",
+                            mimeType = "video/av1",
+                            drmRequired = true,
+                        ),
+                    ),
+                drmSchemes = listOf("fairplay"),
+            )
 
         val result = mapper.map(input)
 
@@ -74,21 +78,24 @@ class LegacyCapabilityMapperTest {
 
     @Test
     fun map_reportsNonBlockingSubtitleIssues() {
-        val input = LegacyCapabilityInput(
-            renderers = listOf(
-                LegacyRendererConfig(
-                    name = "video-main",
-                    mimeType = "video/avc"
-                )
-            ),
-            subtitles = listOf(
-                LegacySubtitleConfig(
-                    id = "sub-ttml",
-                    language = "jp",
-                    format = "ttml"
-                )
+        val input =
+            LegacyCapabilityInput(
+                renderers =
+                    listOf(
+                        LegacyRendererConfig(
+                            name = "video-main",
+                            mimeType = "video/avc",
+                        ),
+                    ),
+                subtitles =
+                    listOf(
+                        LegacySubtitleConfig(
+                            id = "sub-ttml",
+                            language = "jp",
+                            format = "ttml",
+                        ),
+                    ),
             )
-        )
 
         val result = mapper.map(input)
 

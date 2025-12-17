@@ -14,16 +14,19 @@ import com.xyoye.subtitle.SubtitleType
  */
 
 @UnstableApi
-class SubtitleController(context: Context) : InterSubtitleController {
+class SubtitleController(
+    context: Context
+) : InterSubtitleController {
     private val subtitleTextView = SubtitleTextView(context)
     private val subtitleImageView = SubtitleImageView(context)
     private val externalSubtitleView = ExternalSubtitleView(context)
 
-    private val subtitleViews: Array<InterControllerView> = arrayOf(
-        subtitleTextView,
-        subtitleImageView,
-        externalSubtitleView
-    )
+    private val subtitleViews: Array<InterControllerView> =
+        arrayOf(
+            subtitleTextView,
+            subtitleImageView,
+            externalSubtitleView,
+        )
 
     override fun updateSubtitleOffsetTime() {
         externalSubtitleView.updateOffsetTime()
@@ -60,7 +63,7 @@ class SubtitleController(context: Context) : InterSubtitleController {
     override fun onSubtitleTextOutput(subtitle: MixedSubtitle) {
         when (subtitle.type) {
             SubtitleType.TEXT -> {
-                //显示文字字幕前，清空图片字幕
+                // 显示文字字幕前，清空图片字幕
                 if (!subtitleImageView.isEmptySubtitle()) {
                     subtitleImageView.setSubtitle(null)
                 }
@@ -68,7 +71,7 @@ class SubtitleController(context: Context) : InterSubtitleController {
             }
 
             SubtitleType.BITMAP -> {
-                //显示图片字幕前，清空文字字幕
+                // 显示图片字幕前，清空文字字幕
                 if (!subtitleTextView.isEmptySubtitle()) {
                     subtitleTextView.setSubtitle(null)
                 }
@@ -76,24 +79,19 @@ class SubtitleController(context: Context) : InterSubtitleController {
             }
 
             else -> {
-
             }
         }
     }
 
-    override fun supportAddTrack(type: TrackType): Boolean {
-        return type == TrackType.SUBTITLE
-    }
+    override fun supportAddTrack(type: TrackType): Boolean = type == TrackType.SUBTITLE
 
-    override fun addTrack(track: VideoTrackBean): Boolean {
-        return externalSubtitleView.addTrack(track)
-    }
+    override fun addTrack(track: VideoTrackBean): Boolean = externalSubtitleView.addTrack(track)
 
-    override fun getTracks(type: TrackType): List<VideoTrackBean> {
-        return externalSubtitleView.getAddedTrack()
+    override fun getTracks(type: TrackType): List<VideoTrackBean> =
+        externalSubtitleView
+            .getAddedTrack()
             ?.let { listOf(it) }
             ?: emptyList()
-    }
 
     override fun selectTrack(track: VideoTrackBean) {
         externalSubtitleView.setTrackSelected(true)
@@ -106,9 +104,7 @@ class SubtitleController(context: Context) : InterSubtitleController {
         externalSubtitleView.setTrackSelected(false)
     }
 
-    fun getViews(): Array<InterControllerView> {
-        return subtitleViews
-    }
+    fun getViews(): Array<InterControllerView> = subtitleViews
 
     fun reloadExternalTrack() {
         externalSubtitleView.reloadCurrentTrack()

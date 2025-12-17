@@ -28,6 +28,7 @@ internal object PathParser {
     private const val LOGTAG = "PathParser"
 
     // Copy from Arrays.copyOfRange() which is only available from API level 9.
+
     /**
      * Copies elements from `original` into a new array, from indexes start (inclusive) to
      * end (exclusive). The original order of elements is preserved.
@@ -42,7 +43,11 @@ internal object PathParser {
      * @throws IllegalArgumentException       if `start > end`
      * @throws NullPointerException           if `original == null`
      */
-    private fun copyOfRange(original: FloatArray, start: Int, end: Int): FloatArray {
+    private fun copyOfRange(
+        original: FloatArray,
+        start: Int,
+        end: Int
+    ): FloatArray {
         require(start <= end)
         val originalLength = original.size
         if (start < 0 || start > originalLength) {
@@ -67,7 +72,7 @@ internal object PathParser {
             try {
                 PathDataNode.nodesToPath(
                     nodes,
-                    path
+                    path,
                 )
             } catch (e: RuntimeException) {
                 throw RuntimeException("Error in parsing $pathData", e)
@@ -104,7 +109,7 @@ internal object PathParser {
             addNode(
                 list,
                 pathData[start],
-                FloatArray(0)
+                FloatArray(0),
             )
         }
         return list.toTypedArray()
@@ -142,8 +147,8 @@ internal object PathParser {
             return false
         }
         for (i in nodesFrom.indices) {
-            if (nodesFrom[i].mType != nodesTo[i].mType
-                || nodesFrom[i].mParams.size != nodesTo[i].mParams.size
+            if (nodesFrom[i].mType != nodesTo[i].mType ||
+                nodesFrom[i].mParams.size != nodesTo[i].mParams.size
             ) {
                 return false
             }
@@ -170,7 +175,10 @@ internal object PathParser {
         }
     }
 
-    private fun nextStart(s: String, end: Int): Int {
+    private fun nextStart(
+        s: String,
+        end: Int
+    ): Int {
         var mEnd = end
         var c: Char
         while (mEnd < s.length) {
@@ -179,8 +187,9 @@ internal object PathParser {
             // used for floating point numbers' scientific notation.
             // Therefore, when searching for next command, we should ignore 'e'
             // and 'E'.
-            if (((c - 'A') * (c - 'Z') <= 0 || (c - 'a') * (c - 'z') <= 0)
-                && c != 'e' && c != 'E'
+            if (((c - 'A') * (c - 'Z') <= 0 || (c - 'a') * (c - 'z') <= 0) &&
+                c != 'e' &&
+                c != 'E'
             ) {
                 return mEnd
             }
@@ -204,46 +213,47 @@ internal object PathParser {
      * @param s the string containing a command and list of floats
      * @return array of floats
      */
-    private fun getFloats(s: String): FloatArray {
-        return if (s[0] == 'z' || s[0] == 'Z') {
+    private fun getFloats(s: String): FloatArray =
+        if (s[0] == 'z' || s[0] == 'Z') {
             FloatArray(0)
-        } else try {
-            val results = FloatArray(s.length)
-            var count = 0
-            var startPosition = 1
-            var endPosition = 0
-            val result = ExtractFloatResult()
-            val totalLength = s.length
-            // The startPosition should always be the first character of the
-            // current number, and endPosition is the character after the current
-            // number.
-            while (startPosition < totalLength) {
-                extract(
-                    s,
-                    startPosition,
-                    result
-                )
-                endPosition = result.mEndPosition
-                if (startPosition < endPosition) {
-                    results[count++] =
-                        s.substring(startPosition, endPosition).toFloat()
-                }
-                startPosition =
-                    if (result.mEndWithNegOrDot) { // Keep the '-' or '.' sign with next number.
-                        endPosition
-                    } else {
-                        endPosition + 1
+        } else {
+            try {
+                val results = FloatArray(s.length)
+                var count = 0
+                var startPosition = 1
+                var endPosition = 0
+                val result = ExtractFloatResult()
+                val totalLength = s.length
+                // The startPosition should always be the first character of the
+                // current number, and endPosition is the character after the current
+                // number.
+                while (startPosition < totalLength) {
+                    extract(
+                        s,
+                        startPosition,
+                        result,
+                    )
+                    endPosition = result.mEndPosition
+                    if (startPosition < endPosition) {
+                        results[count++] =
+                            s.substring(startPosition, endPosition).toFloat()
                     }
+                    startPosition =
+                        if (result.mEndWithNegOrDot) { // Keep the '-' or '.' sign with next number.
+                            endPosition
+                        } else {
+                            endPosition + 1
+                        }
+                }
+                copyOfRange(
+                    results,
+                    0,
+                    count,
+                )
+            } catch (e: NumberFormatException) {
+                throw RuntimeException("error in parsing \"$s\"", e)
             }
-            copyOfRange(
-                results,
-                0,
-                count
-            )
-        } catch (e: NumberFormatException) {
-            throw RuntimeException("error in parsing \"$s\"", e)
         }
-    }
 
     /**
      * Calculate the position of the next comma or space or negative sign
@@ -270,7 +280,7 @@ internal object PathParser {
             when (s[currentIndex]) {
                 ' ', ',' ->
                     foundSeparator = true
-                '-' ->  // The negative sign following a 'e' or 'E' is not a separator.
+                '-' -> // The negative sign following a 'e' or 'E' is not a separator.
                     if (currentIndex != start && !isPrevExponential) {
                         foundSeparator = true
                         result.mEndWithNegOrDot = true
@@ -295,7 +305,7 @@ internal object PathParser {
         result.mEndPosition = currentIndex
     }
 
-    private class ExtractFloatResult() {
+    private class ExtractFloatResult {
         // We need to return the position of the next separator and whether the
         // next float starts with a '-' or a '.'.
         var mEndPosition = 0
@@ -312,6 +322,7 @@ internal object PathParser {
          * @hide
          */
         var mType: Char
+
         /**
          * @hide
          */
@@ -324,11 +335,12 @@ internal object PathParser {
 
         internal constructor(n: PathDataNode) {
             mType = n.mType
-            mParams = copyOfRange(
-                n.mParams,
-                0,
-                n.mParams.size
-            )
+            mParams =
+                copyOfRange(
+                    n.mParams,
+                    0,
+                    n.mParams.size,
+                )
         }
 
         /**
@@ -346,8 +358,10 @@ internal object PathParser {
             fraction: Float
         ) {
             for (i in nodeFrom.mParams.indices) {
-                mParams[i] = (nodeFrom.mParams[i] * (1 - fraction)
-                        + nodeTo.mParams[i] * fraction)
+                mParams[i] = (
+                    nodeFrom.mParams[i] * (1 - fraction) +
+                        nodeTo.mParams[i] * fraction
+                )
             }
         }
 
@@ -370,15 +384,18 @@ internal object PathParser {
                         current,
                         previousCommand,
                         node[i].mType,
-                        node[i].mParams
+                        node[i].mParams,
                     )
                     previousCommand = node[i].mType
                 }
             }
 
             private fun addCommand(
-                path: Path, current: FloatArray,
-                previousCmd: Char, cmd: Char, `val`: FloatArray
+                path: Path,
+                current: FloatArray,
+                previousCmd: Char,
+                cmd: Char,
+                `val`: FloatArray
             ) {
                 var previousCmd = previousCmd
                 var incr = 2
@@ -472,7 +489,7 @@ internal object PathParser {
                                 `val`[k + 2],
                                 `val`[k + 3],
                                 `val`[k + 4],
-                                `val`[k + 5]
+                                `val`[k + 5],
                             )
                             ctrlPointX = currentX + `val`[k + 2]
                             ctrlPointY = currentY + `val`[k + 3]
@@ -486,7 +503,7 @@ internal object PathParser {
                                 `val`[k + 2],
                                 `val`[k + 3],
                                 `val`[k + 4],
-                                `val`[k + 5]
+                                `val`[k + 5],
                             )
                             currentX = `val`[k + 4]
                             currentY = `val`[k + 5]
@@ -502,9 +519,12 @@ internal object PathParser {
                                 reflectiveCtrlPointY = currentY - ctrlPointY
                             }
                             path.rCubicTo(
-                                reflectiveCtrlPointX, reflectiveCtrlPointY,
-                                `val`[k + 0], `val`[k + 1],
-                                `val`[k + 2], `val`[k + 3]
+                                reflectiveCtrlPointX,
+                                reflectiveCtrlPointY,
+                                `val`[k + 0],
+                                `val`[k + 1],
+                                `val`[k + 2],
+                                `val`[k + 3],
                             )
                             ctrlPointX = currentX + `val`[k + 0]
                             ctrlPointY = currentY + `val`[k + 1]
@@ -525,7 +545,7 @@ internal object PathParser {
                                 `val`[k + 0],
                                 `val`[k + 1],
                                 `val`[k + 2],
-                                `val`[k + 3]
+                                `val`[k + 3],
                             )
                             ctrlPointX = `val`[k + 0]
                             ctrlPointY = `val`[k + 1]
@@ -537,7 +557,7 @@ internal object PathParser {
                                 `val`[k + 0],
                                 `val`[k + 1],
                                 `val`[k + 2],
-                                `val`[k + 3]
+                                `val`[k + 3],
                             )
                             ctrlPointX = currentX + `val`[k + 0]
                             ctrlPointY = currentY + `val`[k + 1]
@@ -549,7 +569,7 @@ internal object PathParser {
                                 `val`[k + 0],
                                 `val`[k + 1],
                                 `val`[k + 2],
-                                `val`[k + 3]
+                                `val`[k + 3],
                             )
                             ctrlPointX = `val`[k + 0]
                             ctrlPointY = `val`[k + 1]
@@ -565,8 +585,10 @@ internal object PathParser {
                                 reflectiveCtrlPointY = currentY - ctrlPointY
                             }
                             path.rQuadTo(
-                                reflectiveCtrlPointX, reflectiveCtrlPointY,
-                                `val`[k + 0], `val`[k + 1]
+                                reflectiveCtrlPointX,
+                                reflectiveCtrlPointY,
+                                `val`[k + 0],
+                                `val`[k + 1],
                             )
                             ctrlPointX = currentX + reflectiveCtrlPointX
                             ctrlPointY = currentY + reflectiveCtrlPointY
@@ -582,8 +604,10 @@ internal object PathParser {
                                 reflectiveCtrlPointY = 2 * currentY - ctrlPointY
                             }
                             path.quadTo(
-                                reflectiveCtrlPointX, reflectiveCtrlPointY,
-                                `val`[k + 0], `val`[k + 1]
+                                reflectiveCtrlPointX,
+                                reflectiveCtrlPointY,
+                                `val`[k + 0],
+                                `val`[k + 1],
                             )
                             ctrlPointX = reflectiveCtrlPointX
                             ctrlPointY = reflectiveCtrlPointY
@@ -602,7 +626,7 @@ internal object PathParser {
                                 `val`[k + 1],
                                 `val`[k + 2],
                                 `val`[k + 3] != 0f,
-                                `val`[k + 4] != 0f
+                                `val`[k + 4] != 0f,
                             )
                             currentX += `val`[k + 5]
                             currentY += `val`[k + 6]
@@ -620,7 +644,7 @@ internal object PathParser {
                                 `val`[k + 1],
                                 `val`[k + 2],
                                 `val`[k + 3] != 0f,
-                                `val`[k + 4] != 0f
+                                `val`[k + 4] != 0f,
                             )
                             currentX = `val`[k + 5]
                             currentY = `val`[k + 6]
@@ -650,36 +674,45 @@ internal object PathParser {
                 theta: Float,
                 isMoreThanHalf: Boolean,
                 isPositiveArc: Boolean
-            ) { /* Convert rotation angle from degrees to radians */
+            ) { // Convert rotation angle from degrees to radians
                 val thetaD = Math.toRadians(theta.toDouble())
-                /* Pre-compute rotation matrix entries */
+                // Pre-compute rotation matrix entries
                 val cosTheta = Math.cos(thetaD)
                 val sinTheta = Math.sin(thetaD)
-                /* Transform (x0, y0) and (x1, y1) into unit space */ /* using (inverse) rotation, followed by (inverse) scale */
+                // Transform (x0, y0) and (x1, y1) into unit space
+                // using (inverse) rotation, followed by (inverse) scale
                 val x0p = (x0 * cosTheta + y0 * sinTheta) / a
                 val y0p = (-x0 * sinTheta + y0 * cosTheta) / b
                 val x1p = (x1 * cosTheta + y1 * sinTheta) / a
                 val y1p = (-x1 * sinTheta + y1 * cosTheta) / b
-                /* Compute differences and averages */
+                // Compute differences and averages
                 val dx = x0p - x1p
                 val dy = y0p - y1p
                 val xm = (x0p + x1p) / 2
                 val ym = (y0p + y1p) / 2
-                /* Solve for intersecting unit circles */
+                // Solve for intersecting unit circles
                 val dsq = dx * dx + dy * dy
                 if (dsq == 0.0) {
                     LogFacade.w(LogModule.CORE, LOGTAG, "Points are coincident")
-                    return  /* Points are coincident */
+                    return // Points are coincident
                 }
                 val disc = 1.0 / dsq - 1.0 / 4.0
                 if (disc < 0.0) {
                     LogFacade.w(LogModule.CORE, LOGTAG, "Points are too far apart $dsq")
                     val adjust = (Math.sqrt(dsq) / 1.99999).toFloat()
                     drawArc(
-                        p, x0, y0, x1, y1, a * adjust,
-                        b * adjust, theta, isMoreThanHalf, isPositiveArc
+                        p,
+                        x0,
+                        y0,
+                        x1,
+                        y1,
+                        a * adjust,
+                        b * adjust,
+                        theta,
+                        isMoreThanHalf,
+                        isPositiveArc,
                     )
-                    return  /* Points are too far apart */
+                    return // Points are too far apart
                 }
                 val s = sqrt(disc)
                 val sdx = s * dx
@@ -718,7 +751,7 @@ internal object PathParser {
                     y0.toDouble(),
                     thetaD,
                     eta0,
-                    sweep
+                    sweep,
                 )
             }
 
@@ -785,7 +818,7 @@ internal object PathParser {
                         q2x.toFloat(),
                         q2y.toFloat(),
                         e2x.toFloat(),
-                        e2y.toFloat()
+                        e2y.toFloat(),
                     )
                     eta1 = eta2
                     e1x = e2x

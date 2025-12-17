@@ -24,12 +24,9 @@ class DeveloperAuthenticateDialog(
     private val activity: Activity,
     private val onAuthenticate: () -> Unit
 ) : BaseBottomDialog<DialogDeveloperAuthenticateBinding>(activity) {
-
     private lateinit var binding: DialogDeveloperAuthenticateBinding
 
-    override fun getChildLayoutId(): Int {
-        return R.layout.dialog_developer_authenticate
-    }
+    override fun getChildLayoutId(): Int = R.layout.dialog_developer_authenticate
 
     override fun initView(binding: DialogDeveloperAuthenticateBinding) {
         this.binding = binding
@@ -100,7 +97,10 @@ class DeveloperAuthenticateDialog(
     /**
      * 认证成功
      */
-    private fun authenticateSuccess(appId: String, appSecret: String) {
+    private fun authenticateSuccess(
+        appId: String,
+        appSecret: String
+    ) {
         DevelopConfig.putAppId(appId)
         DevelopConfig.putAppSecret(appSecret)
         ToastCenter.showSuccess("认证成功")

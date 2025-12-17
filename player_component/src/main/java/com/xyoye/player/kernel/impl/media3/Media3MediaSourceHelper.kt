@@ -5,13 +5,13 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
+import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
-import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.exoplayer.dash.DashMediaSource
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.smoothstreaming.SsMediaSource
@@ -19,23 +19,23 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.utils.PathHelper
-import com.xyoye.player.kernel.impl.media3.Media3CodecPolicy
 import java.util.Locale
 
 @UnstableApi
 object Media3MediaSourceHelper {
-
     private val appContext get() = BaseApplication.getAppContext()
     private lateinit var cache: Cache
 
-    private val userAgent: String = Util.getUserAgent(
-        appContext,
-        appContext.applicationInfo.name
-    )
+    private val userAgent: String =
+        Util.getUserAgent(
+            appContext,
+            appContext.applicationInfo.name,
+        )
 
-    private val httpFactory = LoggingHttpDataSourceFactory()
-        .setUserAgent(userAgent)
-        .setAllowCrossProtocolRedirects(true)
+    private val httpFactory =
+        LoggingHttpDataSourceFactory()
+            .setUserAgent(userAgent)
+            .setAllowCrossProtocolRedirects(true)
 
     fun getMediaSource(
         uri: String,
@@ -44,9 +44,11 @@ object Media3MediaSourceHelper {
     ): MediaSource {
         val contentUri = Uri.parse(uri)
         val normalizedMime = Media3FormatUtil.normalizeMime(appContext, contentUri)
-        val mediaItemBuilder = MediaItem.Builder()
-            .setUri(contentUri)
-            .setMimeType(normalizedMime)
+        val mediaItemBuilder =
+            MediaItem
+                .Builder()
+                .setUri(contentUri)
+                .setMimeType(normalizedMime)
 
         val headersWithDefaults = headers?.toMap()
 
@@ -54,11 +56,12 @@ object Media3MediaSourceHelper {
 
         headersWithDefaults?.let { applyHeaders(it) }
 
-        val dataSourceFactory = if (isCacheEnabled) {
-            cacheDataSource()
-        } else {
-            DefaultDataSource.Factory(appContext, httpFactory)
-        }
+        val dataSourceFactory =
+            if (isCacheEnabled) {
+                cacheDataSource()
+            } else {
+                DefaultDataSource.Factory(appContext, httpFactory)
+            }
 
         val resolvedContentType = resolveContentType(uri, contentUri, headersWithDefaults)
 
@@ -68,28 +71,36 @@ object Media3MediaSourceHelper {
             C.CONTENT_TYPE_DASH -> DashMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
             C.CONTENT_TYPE_SS -> SsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
             C.CONTENT_TYPE_HLS -> HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
-            else -> ProgressiveMediaSource.Factory(
-                dataSourceFactory,
-                RewritingExtractorsFactory()
-            ).createMediaSource(mediaItem)
+            else ->
+                ProgressiveMediaSource
+                    .Factory(
+                        dataSourceFactory,
+                        RewritingExtractorsFactory(),
+                    ).createMediaSource(mediaItem)
         }
     }
 
     private fun cacheDataSource(): CacheDataSource.Factory {
         if (!this::cache.isInitialized) {
-            cache = SimpleCache(
-                PathHelper.getPlayCacheDirectory(),
-                LeastRecentlyUsedCacheEvictor(512L * 1024 * 1024),
-                StandaloneDatabaseProvider(appContext)
-            )
+            cache =
+                SimpleCache(
+                    PathHelper.getPlayCacheDirectory(),
+                    LeastRecentlyUsedCacheEvictor(512L * 1024 * 1024),
+                    StandaloneDatabaseProvider(appContext),
+                )
         }
-        return CacheDataSource.Factory()
+        return CacheDataSource
+            .Factory()
             .setCache(cache)
             .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
             .setUpstreamDataSourceFactory(DefaultDataSource.Factory(appContext, httpFactory))
     }
 
-    private fun resolveContentType(rawUri: String, contentUri: Uri, headers: Map<String, String>?): Int {
+    private fun resolveContentType(
+        rawUri: String,
+        contentUri: Uri,
+        headers: Map<String, String>?
+    ): Int {
         val byExtension = inferContentType(rawUri)
         if (byExtension != C.CONTENT_TYPE_OTHER) {
             return byExtension
@@ -103,22 +114,28 @@ object Media3MediaSourceHelper {
         return byExtension
     }
 
-    private fun sniffHttpContentType(contentUri: Uri, headers: Map<String, String>?): String? {
+    private fun sniffHttpContentType(
+        contentUri: Uri,
+        headers: Map<String, String>?
+    ): String? {
         if (contentUri.scheme != "http" && contentUri.scheme != "https") {
             return null
         }
         val dataSource = httpFactory.createDataSource()
         headers?.forEach { dataSource.setRequestProperty(it.key, it.value) }
-        val dataSpec = DataSpec.Builder()
-            .setUri(contentUri)
-            .setHttpMethod(DataSpec.HTTP_METHOD_HEAD)
-            .build()
+        val dataSpec =
+            DataSpec
+                .Builder()
+                .setUri(contentUri)
+                .setHttpMethod(DataSpec.HTTP_METHOD_HEAD)
+                .build()
         return runCatching {
             dataSource.open(dataSpec)
-            val contentType = dataSource.responseHeaders.entries
-                .firstOrNull { it.key.equals("Content-Type", ignoreCase = true) }
-                ?.value
-                ?.firstOrNull()
+            val contentType =
+                dataSource.responseHeaders.entries
+                    .firstOrNull { it.key.equals("Content-Type", ignoreCase = true) }
+                    ?.value
+                    ?.firstOrNull()
             dataSource.close()
             contentType
         }.getOrNull()

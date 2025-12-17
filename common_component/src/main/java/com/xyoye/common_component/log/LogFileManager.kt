@@ -57,7 +57,7 @@ open class LogFileManager(
                 path = file.absolutePath,
                 sizeBytes = file.length(),
                 lastModified = file.lastModified(),
-                readable = file.canRead()
+                readable = file.canRead(),
             )
         }
     }
@@ -70,16 +70,17 @@ open class LogFileManager(
         if (!dir.exists() || !dir.isDirectory) {
             return emptyList()
         }
-        val files = dir.listFiles { file ->
-            LogFileMeta.ALLOWED_FILE_NAMES.contains(file.name)
-        } ?: return emptyList()
+        val files =
+            dir.listFiles { file ->
+                LogFileMeta.ALLOWED_FILE_NAMES.contains(file.name)
+            } ?: return emptyList()
         return files.sortedBy { it.name }.map { file ->
             LogFileMeta(
                 fileName = file.name,
                 path = file.absolutePath,
                 sizeBytes = file.length(),
                 lastModified = file.lastModified(),
-                readable = file.canRead()
+                readable = file.canRead(),
             )
         }
     }
@@ -131,7 +132,10 @@ open class LogFileManager(
         current.writeText("")
     }
 
-    private fun appendFileWithClamp(source: File, target: File) {
+    private fun appendFileWithClamp(
+        source: File,
+        target: File
+    ) {
         if (source.length() == 0L) return
         ensureWritableSpace()
         if (!target.exists()) {

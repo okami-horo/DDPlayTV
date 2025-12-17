@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class LogDiskErrorInstrumentedTest {
-
     private lateinit var context: Context
 
     @Before
@@ -42,33 +41,36 @@ class LogDiskErrorInstrumentedTest {
         val errors = mutableListOf<Throwable>()
         val writeAttempted = CountDownLatch(1)
         val errorHandled = CountDownLatch(1)
-        val faultyManager = object : LogFileManager(context) {
-            override fun appendLine(line: String) {
-                writeAttempted.countDown()
-                throw IOException("simulate disk full")
+        val faultyManager =
+            object : LogFileManager(context) {
+                override fun appendLine(line: String) {
+                    writeAttempted.countDown()
+                    throw IOException("simulate disk full")
+                }
             }
-        }
-        val writer = LogWriter(
-            context = context,
-            fileManager = faultyManager
-        ) { error ->
-            errors.add(error)
-            errorHandled.countDown()
-        }
+        val writer =
+            LogWriter(
+                context = context,
+                fileManager = faultyManager,
+            ) { error ->
+                errors.add(error)
+                errorHandled.countDown()
+            }
 
-        val runtimeState = LogRuntimeState(
-            activePolicy = LogPolicy.debugSessionPolicy(),
-            debugToggleState = DebugToggleState.ON_CURRENT_SESSION,
-            debugSessionEnabled = true
-        )
+        val runtimeState =
+            LogRuntimeState(
+                activePolicy = LogPolicy.debugSessionPolicy(),
+                debugToggleState = DebugToggleState.ON_CURRENT_SESSION,
+                debugSessionEnabled = true,
+            )
         writer.updateRuntimeState(runtimeState)
 
         writer.submit(
             LogEvent(
                 level = LogLevel.ERROR,
                 module = LogModule.CORE,
-                message = "trigger disk error"
-            )
+                message = "trigger disk error",
+            ),
         )
 
         // 等待写入被尝试且错误被处理（handleFileError 运行完毕）

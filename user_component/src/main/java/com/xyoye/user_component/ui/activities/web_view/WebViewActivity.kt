@@ -29,7 +29,6 @@ import com.xyoye.user_component.ui.weight.WebViewProgress
 @SuppressLint("SetJavaScriptEnabled")
 @Route(path = RouteTable.User.WebView)
 class WebViewActivity : BaseActivity<WebViewViewModel, ActivityWebViewBinding>() {
-
     @JvmField
     @Autowired
     var titleText: String = ""
@@ -47,7 +46,7 @@ class WebViewActivity : BaseActivity<WebViewViewModel, ActivityWebViewBinding>()
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            WebViewViewModel::class.java
+            WebViewViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_web_view
@@ -63,12 +62,13 @@ class WebViewActivity : BaseActivity<WebViewViewModel, ActivityWebViewBinding>()
 
         title = titleText
 
-        //进度条
-        progressView = WebViewProgress(this).apply {
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp2px(4))
-            setColor(R.color.text_blue.toResColor())
-            setProgress(10)
-        }
+        // 进度条
+        progressView =
+            WebViewProgress(this).apply {
+                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp2px(4))
+                setColor(R.color.text_blue.toResColor())
+                setProgress(10)
+            }
 
         dataBinding.webView.apply {
             addView(progressView)
@@ -80,39 +80,46 @@ class WebViewActivity : BaseActivity<WebViewViewModel, ActivityWebViewBinding>()
                 javaScriptCanOpenWindowsAutomatically = true
                 allowUniversalAccessFromFileURLs = true
             }
-            webViewClient = object : WebViewClient() {
+            webViewClient =
+                object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(
+                        view: WebView?,
+                        request: WebResourceRequest?
+                    ): Boolean {
+                        val uri = request?.url ?: return false
 
-                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                    val uri = request?.url ?: return false
+                        // 选取b站视频时，考虑将APP协议地址转换为普通番剧地址
+                        val bangumiUrl = considerMapBangumiUrl(uri)
+                        if (bangumiUrl != null && bangumiUrl != view?.url) {
+                            view?.loadUrl(bangumiUrl)
+                            return true
+                        }
 
-                    // 选取b站视频时，考虑将APP协议地址转换为普通番剧地址
-                    val bangumiUrl = considerMapBangumiUrl(uri)
-                    if (bangumiUrl != null && bangumiUrl != view?.url) {
-                        view?.loadUrl(bangumiUrl)
-                        return true
+                        // 非http(s)协议资源，不加载
+                        if (uri.scheme?.startsWith("http") != true) {
+                            return true
+                        }
+
+                        return false
                     }
-
-                    // 非http(s)协议资源，不加载
-                    if (uri.scheme?.startsWith("http") != true) {
-                        return true
-                    }
-
-                    return false
                 }
-            }
 
-            webChromeClient = object : WebChromeClient() {
-                override fun onProgressChanged(view: WebView, newProgress: Int) {
-                    if (newProgress == 100) {
-                        //加载完毕进度条消失
-                        progressView.isGone = true
-                    } else {
-                        //更新进度
-                        progressView.setProgress(newProgress)
+            webChromeClient =
+                object : WebChromeClient() {
+                    override fun onProgressChanged(
+                        view: WebView,
+                        newProgress: Int
+                    ) {
+                        if (newProgress == 100) {
+                            // 加载完毕进度条消失
+                            progressView.isGone = true
+                        } else {
+                            // 更新进度
+                            progressView.setProgress(newProgress)
+                        }
+                        super.onProgressChanged(view, newProgress)
                     }
-                    super.onProgressChanged(view, newProgress)
                 }
-            }
         }
 
         dataBinding.webView.loadUrl(realUrl)
@@ -126,9 +133,10 @@ class WebViewActivity : BaseActivity<WebViewViewModel, ActivityWebViewBinding>()
             return null
         }
 
-        val isAppBangumiUrl = schemeUri.scheme == "bilibili"
-                && schemeUri.host == "bangumi"
-                && schemeUri.pathSegments.firstOrNull() == "season"
+        val isAppBangumiUrl =
+            schemeUri.scheme == "bilibili" &&
+                schemeUri.host == "bangumi" &&
+                schemeUri.pathSegments.firstOrNull() == "season"
         if (isAppBangumiUrl.not()) {
             return null
         }
@@ -138,7 +146,8 @@ class WebViewActivity : BaseActivity<WebViewViewModel, ActivityWebViewBinding>()
             return null
         }
 
-        return Uri.parse(Api.BILI_BILI_M)
+        return Uri
+            .parse(Api.BILI_BILI_M)
             .buildUpon()
             .appendPath("bangumi")
             .appendPath("play")
@@ -165,7 +174,10 @@ class WebViewActivity : BaseActivity<WebViewViewModel, ActivityWebViewBinding>()
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (dataBinding.webView.canGoBack()) {
                 dataBinding.webView.goBack()

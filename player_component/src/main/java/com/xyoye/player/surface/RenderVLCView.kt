@@ -15,7 +15,6 @@ import org.videolan.libvlc.util.VLCVideoLayout
 class RenderVLCView(
     context: Context
 ) : InterSurfaceView {
-
     private lateinit var mVideoPlayer: VlcVideoPlayer
 
     private val vlcLayout = VLCVideoLayout(context)
@@ -25,29 +24,29 @@ class RenderVLCView(
         player.attachRenderView(vlcLayout)
     }
 
-    override fun setVideoSize(videoWidth: Int, videoHeight: Int) {
-
+    override fun setVideoSize(
+        videoWidth: Int,
+        videoHeight: Int
+    ) {
     }
 
     override fun setVideoRotation(degree: Int) {
-
     }
 
     override fun setScaleType(screenScale: VideoScreenScale) {
-        val scale = when (screenScale) {
-            VideoScreenScale.SCREEN_SCALE_16_9 -> MediaPlayer.ScaleType.SURFACE_16_9
-            VideoScreenScale.SCREEN_SCALE_4_3 -> MediaPlayer.ScaleType.SURFACE_4_3
-            VideoScreenScale.SCREEN_SCALE_CENTER_CROP -> MediaPlayer.ScaleType.SURFACE_FIT_SCREEN
-            VideoScreenScale.SCREEN_SCALE_ORIGINAL -> MediaPlayer.ScaleType.SURFACE_ORIGINAL
-            VideoScreenScale.SCREEN_SCALE_MATCH_PARENT -> MediaPlayer.ScaleType.SURFACE_FILL
-            VideoScreenScale.SCREEN_SCALE_DEFAULT -> MediaPlayer.ScaleType.SURFACE_BEST_FIT
-        }
+        val scale =
+            when (screenScale) {
+                VideoScreenScale.SCREEN_SCALE_16_9 -> MediaPlayer.ScaleType.SURFACE_16_9
+                VideoScreenScale.SCREEN_SCALE_4_3 -> MediaPlayer.ScaleType.SURFACE_4_3
+                VideoScreenScale.SCREEN_SCALE_CENTER_CROP -> MediaPlayer.ScaleType.SURFACE_FIT_SCREEN
+                VideoScreenScale.SCREEN_SCALE_ORIGINAL -> MediaPlayer.ScaleType.SURFACE_ORIGINAL
+                VideoScreenScale.SCREEN_SCALE_MATCH_PARENT -> MediaPlayer.ScaleType.SURFACE_FILL
+                VideoScreenScale.SCREEN_SCALE_DEFAULT -> MediaPlayer.ScaleType.SURFACE_BEST_FIT
+            }
         mVideoPlayer.setScale(scale)
     }
 
-    override fun getView(): View {
-        return vlcLayout
-    }
+    override fun getView(): View = vlcLayout
 
     override fun refresh() {
         if (this::mVideoPlayer.isInitialized) {
@@ -56,6 +55,5 @@ class RenderVLCView(
     }
 
     override fun release() {
-
     }
 }

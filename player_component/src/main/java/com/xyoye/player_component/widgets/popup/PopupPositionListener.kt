@@ -7,7 +7,6 @@ import android.graphics.Point
  */
 
 interface PopupPositionListener {
-
     fun setPosition(point: Point)
 
     fun getPosition(): Point

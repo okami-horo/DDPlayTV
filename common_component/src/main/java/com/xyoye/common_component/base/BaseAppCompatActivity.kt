@@ -13,10 +13,9 @@ import java.lang.ref.WeakReference
  */
 
 abstract class BaseAppCompatActivity<V : ViewDataBinding> : AppCompatActivity() {
-
     protected lateinit var dataBinding: V
 
-    protected var loadingReference : WeakReference<BaseLoadingDialog>? = null
+    protected var loadingReference: WeakReference<BaseLoadingDialog>? = null
 
     protected var mToolbar: Toolbar? = null
 
@@ -55,7 +54,7 @@ abstract class BaseAppCompatActivity<V : ViewDataBinding> : AppCompatActivity() 
     open fun showLoading(msg: String = "") {
         hideLoading()
         loadingReference = WeakReference(BaseLoadingDialog(this, msg))
-        if (!isFinishing){
+        if (!isFinishing) {
             loadingReference!!.get()?.show()
         }
     }

@@ -14,16 +14,12 @@ import com.xyoye.data_component.helper.MagnetScreenConverter
 @Entity(tableName = "magnet_screen")
 @TypeConverters(MagnetScreenConverter::class)
 data class MagnetScreenEntity(
-
     @ColumnInfo(name = "screen_id")
     var screenId: Int,
-
     @ColumnInfo(name = "screen_name")
     var screenName: String,
-
     @ColumnInfo(name = "screen_type")
     var screenType: MagnetScreenType,
-
     @PrimaryKey(autoGenerate = true)
     var id: Int = 0
 )

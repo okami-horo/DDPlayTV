@@ -35,7 +35,7 @@ class ServerController(
         NanoHTTPD.newFixedLengthResponse(
             Response.Status.NOT_FOUND,
             NanoHTTPD.MIME_HTML,
-            "资源不存在"
+            "资源不存在",
         )
     }
 
@@ -43,18 +43,20 @@ class ServerController(
         NanoHTTPD.newFixedLengthResponse(
             Response.Status.RANGE_NOT_SATISFIABLE,
             NanoHTTPD.MIME_HTML,
-            "请求资源位置不合法"
+            "请求资源位置不合法",
         )
     }
 
     suspend fun handleSession(session: IHTTPSession): Response {
-        val targetVideoSource = session.parameters[ScreencastConstants.Param.uniqueKey]
-            ?.firstOrNull()
-            ?.let { findVideoSource(it) }
-            ?: return resourceNotFound
+        val targetVideoSource =
+            session.parameters[ScreencastConstants.Param.uniqueKey]
+                ?.firstOrNull()
+                ?.let { findVideoSource(it) }
+                ?: return resourceNotFound
 
-        val api = ProviderApi.fromPath(session.uri)
-            ?: return resourceNotFound
+        val api =
+            ProviderApi.fromPath(session.uri)
+                ?: return resourceNotFound
 
         return when (api) {
             ProviderApi.VIDEO -> createVideoResponse(targetVideoSource, session)
@@ -102,14 +104,15 @@ class ServerController(
             }
         }
 
-        return NanoHTTPD.newFixedLengthResponse(
-            Response.Status.REDIRECT,
-            getContentType(redirectUrl),
-            "redirect to real source"
-        ).apply {
-            addHeader("Location", redirectUrl)
-            addHeader(HeaderKey.AUTH_REDIRECT, "redirect")
-        }
+        return NanoHTTPD
+            .newFixedLengthResponse(
+                Response.Status.REDIRECT,
+                getContentType(redirectUrl),
+                "redirect to real source",
+            ).apply {
+                addHeader("Location", redirectUrl)
+                addHeader(HeaderKey.AUTH_REDIRECT, "redirect")
+            }
     }
 
     /**
@@ -120,8 +123,9 @@ class ServerController(
         session: IHTTPSession
     ): Response {
         val storageFile = videoSource.getStorageFile()
-        val inputStream = storageFile.storage.openFile(storageFile)
-            ?: return resourceNotFound
+        val inputStream =
+            storageFile.storage.openFile(storageFile)
+                ?: return resourceNotFound
 
         // 解析Range
         val rangeText = session.headers["range"] ?: ""
@@ -140,19 +144,20 @@ class ServerController(
         }
 
         // 尝试跳过Range的起始字节数据
-        val skipped = try {
-            inputStream.skip(range.first)
-        } catch (e: IOException) {
-            // 上报I/O异常，投屏过程中的关键异常
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "ServerController",
-                "createVideoResponseDirect",
-                "跳过Range字节时发生I/O异常，rangeFirst=${range.first}"
-            )
-            e.printStackTrace()
-            -1L
-        }
+        val skipped =
+            try {
+                inputStream.skip(range.first)
+            } catch (e: IOException) {
+                // 上报I/O异常，投屏过程中的关键异常
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "ServerController",
+                    "createVideoResponseDirect",
+                    "跳过Range字节时发生I/O异常，rangeFirst=${range.first}",
+                )
+                e.printStackTrace()
+                -1L
+            }
 
         // 跳过失败，返回200
         if (skipped == -1L) {
@@ -164,15 +169,16 @@ class ServerController(
         val contentRange = "bytes ${range.first}-${range.second}/$rangeLength"
 
         // 返回206
-        return NanoHTTPD.newFixedLengthResponse(
-            Response.Status.PARTIAL_CONTENT,
-            contentType,
-            inputStream,
-            rangeLength
-        ).apply {
-            addHeader("Accept-Ranges", "bytes")
-            addHeader("Content-Range", contentRange)
-        }
+        return NanoHTTPD
+            .newFixedLengthResponse(
+                Response.Status.PARTIAL_CONTENT,
+                contentType,
+                inputStream,
+                rangeLength,
+            ).apply {
+                addHeader("Accept-Ranges", "bytes")
+                addHeader("Content-Range", contentRange)
+            }
     }
 
     /**
@@ -189,15 +195,13 @@ class ServerController(
     /**
      * 创建弹幕资源响应结果
      */
-    private fun createDanmuResponse(
-        videoSource: BaseVideoSource
-    ): Response {
-        //弹幕文件路径为空
+    private fun createDanmuResponse(videoSource: BaseVideoSource): Response {
+        // 弹幕文件路径为空
         val danmuPath = videoSource.getDanmu()?.danmuPath
         if (danmuPath.isNullOrEmpty()) {
             return resourceNotFound
         }
-        //弹幕文件不存在
+        // 弹幕文件不存在
         val danmuFile = File(danmuPath)
         if (danmuFile.exists().not() || danmuFile.canRead().not()) {
             return resourceNotFound
@@ -206,22 +210,20 @@ class ServerController(
         return NanoHTTPD.newChunkedResponse(
             Response.Status.OK,
             "*/xml",
-            FileInputStream(danmuFile)
+            FileInputStream(danmuFile),
         )
     }
 
     /**
      * 创建字幕资源响应结果
      */
-    private fun createSubtitleResponse(
-        videoSource: BaseVideoSource
-    ): Response {
-        //字幕文件路径为空
+    private fun createSubtitleResponse(videoSource: BaseVideoSource): Response {
+        // 字幕文件路径为空
         val subtitlePath = videoSource.getSubtitlePath()
         if (subtitlePath.isNullOrEmpty()) {
             return resourceNotFound
         }
-        //字幕文件路径为空
+        // 字幕文件路径为空
         val subtitleFile = File(subtitlePath)
         if (subtitleFile.exists().not() || subtitleFile.canRead().not()) {
             return resourceNotFound
@@ -231,7 +233,7 @@ class ServerController(
         return NanoHTTPD.newChunkedResponse(
             Response.Status.OK,
             "*/$fileNameExtension",
-            FileInputStream(subtitleFile)
+            FileInputStream(subtitleFile),
         )
     }
 
@@ -248,14 +250,17 @@ class ServerController(
             return NanoHTTPD.newFixedLengthResponse(
                 Response.Status.PRECONDITION_FAILED,
                 NanoHTTPD.MIME_HTML,
-                "参数错误"
+                "参数错误",
             )
         }
 
         // 修改本地播放记录中的进度
-        val newHistory = videoSource.getStorageFile().playHistory
-            ?.copy(videoPosition = position, videoDuration = duration, playTime = Date())
-            ?: return resourceNotFound
+        val newHistory =
+            videoSource
+                .getStorageFile()
+                .playHistory
+                ?.copy(videoPosition = position, videoDuration = duration, playTime = Date())
+                ?: return resourceNotFound
 
         // 更新本地播放记录
         DatabaseManager.instance.getPlayHistoryDao().insert(newHistory)
@@ -263,7 +268,7 @@ class ServerController(
         return NanoHTTPD.newFixedLengthResponse(
             Response.Status.OK,
             NanoHTTPD.MIME_HTML,
-            "播放记录已更新"
+            "播放记录已更新",
         )
     }
 

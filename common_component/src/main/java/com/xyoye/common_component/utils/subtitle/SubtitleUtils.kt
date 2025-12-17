@@ -12,27 +12,26 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-
 /**
  * Created by xyoye on 2020/12/1.
  */
 
 object SubtitleUtils {
-
     fun saveSubtitle(
         fileName: String,
         inputStream: InputStream,
-        directoryName: String? = null,
+        directoryName: String? = null
     ): String? {
-        val directory = if (directoryName != null && directoryName.isNotEmpty()) {
-            val directory = File(PathHelper.getSubtitleDirectory(), directoryName)
-            if (directory.exists().not()) {
-                directory.mkdirs()
+        val directory =
+            if (directoryName != null && directoryName.isNotEmpty()) {
+                val directory = File(PathHelper.getSubtitleDirectory(), directoryName)
+                if (directory.exists().not()) {
+                    directory.mkdirs()
+                }
+                directory
+            } else {
+                PathHelper.getSubtitleDirectory()
             }
-            directory
-        } else {
-            PathHelper.getSubtitleDirectory()
-        }
 
         val subtitleFileName = fileName.formatFileName()
         val subtitleFile = File(directory, subtitleFileName)
@@ -55,7 +54,7 @@ object SubtitleUtils {
             ErrorReportHelper.postCatchedException(
                 e,
                 "SubtitleUtils.saveSubtitle",
-                "保存字幕文件失败: $fileName"
+                "保存字幕文件失败: $fileName",
             )
             e.printStackTrace()
             return null
@@ -69,14 +68,14 @@ object SubtitleUtils {
         fileName: String,
         inputStream: InputStream
     ): String? {
-        //创建压缩文件
+        // 创建压缩文件
         var outputStream: OutputStream? = null
         val zipFile = File(PathHelper.getSubtitleDirectory(), fileName.formatFileName())
         if (zipFile.exists()) {
             zipFile.delete()
         }
         try {
-            //保存
+            // 保存
             zipFile.createNewFile()
             outputStream = BufferedOutputStream(FileOutputStream(zipFile, false))
             val data = ByteArray(512 * 1024)
@@ -86,13 +85,13 @@ object SubtitleUtils {
             }
             outputStream.flush()
 
-            //解压
+            // 解压
             return SevenZipUtils.extractFile(zipFile)
         } catch (e: IOException) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "SubtitleUtils.saveAndUnzipFile",
-                "保存并解压字幕文件失败: $fileName"
+                "保存并解压字幕文件失败: $fileName",
             )
             e.printStackTrace()
         } finally {

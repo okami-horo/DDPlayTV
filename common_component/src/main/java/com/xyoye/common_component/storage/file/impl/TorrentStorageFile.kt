@@ -16,35 +16,22 @@ class TorrentStorageFile(
     storage: TorrentStorage,
     private val fileInfo: TorrentFileInfo
 ) : AbstractStorageFile(storage) {
-    override fun getRealFile(): TorrentFileInfo {
-        return fileInfo
-    }
+    override fun getRealFile(): TorrentFileInfo = fileInfo
 
-    override fun filePath(): String {
-        return fileInfo.mSubPath
-    }
+    override fun filePath(): String = fileInfo.mSubPath
 
-    override fun fileUrl(): String {
-        return Uri.parse(fileInfo.mSubPath).toString()
-    }
+    override fun fileUrl(): String = Uri.parse(fileInfo.mSubPath).toString()
 
-    override fun isDirectory(): Boolean {
-        return fileInfo.mFileIndex == -1
-    }
+    override fun isDirectory(): Boolean = fileInfo.mFileIndex == -1
 
-    override fun fileName(): String {
-        return fileInfo.mFileName
-    }
+    override fun fileName(): String = fileInfo.mFileName
 
-    override fun fileLength(): Long {
-        return fileInfo.mFileSize
-    }
+    override fun fileLength(): Long = fileInfo.mFileSize
 
-    override fun clone(): StorageFile {
-        return TorrentStorageFile(storage as TorrentStorage, fileInfo).also {
+    override fun clone(): StorageFile =
+        TorrentStorageFile(storage as TorrentStorage, fileInfo).also {
             it.playHistory = playHistory
         }
-    }
 
     override fun uniqueKey(): String {
         val hash = getFileNameNoExtension(fileInfo.mSubPath)

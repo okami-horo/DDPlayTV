@@ -28,13 +28,12 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            AnimeSeasonViewModel::class.java
+            AnimeSeasonViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_anime_season
 
     override fun initView() {
-
         title = "季度番剧"
 
         initObserver()
@@ -51,28 +50,29 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
 
             layoutManager = grid(4)
 
-            adapter = buildAdapter {
-                addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            typeNameTv.text = data.typeName
-                            typeNameTv.setTextColorRes(if (data.isChecked) R.color.text_theme else R.color.text_black)
-                            itemLayout.setOnClickListener {
-                                if (data.isEnable) {
-                                    viewModel.checkYear(data.typeId)
-                                } else {
-                                    DatePickerDialog(
-                                        this@AnimeSeasonActivity,
-                                        data.typeId.toInt()
-                                    ) {
-                                        viewModel.checkYear(it.toString())
-                                    }.show()
+            adapter =
+                buildAdapter {
+                    addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                typeNameTv.text = data.typeName
+                                typeNameTv.setTextColorRes(if (data.isChecked) R.color.text_theme else R.color.text_black)
+                                itemLayout.setOnClickListener {
+                                    if (data.isEnable) {
+                                        viewModel.checkYear(data.typeId)
+                                    } else {
+                                        DatePickerDialog(
+                                            this@AnimeSeasonActivity,
+                                            data.typeId.toInt(),
+                                        ) {
+                                            viewModel.checkYear(it.toString())
+                                        }.show()
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
         }
 
         dataBinding.seasonRv.apply {
@@ -80,27 +80,28 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
 
             layoutManager = grid(4)
 
-            adapter = buildAdapter {
-                addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            typeNameTv.text = data.typeName
-                            typeNameTv.setTextColorRes(
-                                when {
-                                    !data.isEnable -> R.color.text_gray
-                                    data.isChecked -> R.color.text_theme
-                                    else -> R.color.text_black
-                                }
-                            )
-                            itemLayout.setOnClickListener {
-                                if (data.isEnable) {
-                                    viewModel.checkSeason(data.typeId)
+            adapter =
+                buildAdapter {
+                    addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                typeNameTv.text = data.typeName
+                                typeNameTv.setTextColorRes(
+                                    when {
+                                        !data.isEnable -> R.color.text_gray
+                                        data.isChecked -> R.color.text_theme
+                                        else -> R.color.text_black
+                                    },
+                                )
+                                itemLayout.setOnClickListener {
+                                    if (data.isEnable) {
+                                        viewModel.checkSeason(data.typeId)
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
         }
 
         dataBinding.sortRv.apply {
@@ -108,26 +109,25 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
 
             layoutManager = grid(4)
 
-            adapter = buildAdapter {
+            adapter =
+                buildAdapter {
+                    addItemDecoration(ItemDecorationSpace(dp2px(2), 0))
 
-                addItemDecoration(ItemDecorationSpace(dp2px(2), 0))
-
-                addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
-                    initView { data, position, _ ->
-                        itemBinding.apply {
-                            typeNameTv.text = data.typeName
-                            typeNameTv.setTextColorRes(if (data.isChecked) R.color.text_theme else R.color.text_black)
-                            itemLayout.setOnClickListener {
-                                viewModel.checkSort(position)
+                    addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
+                        initView { data, position, _ ->
+                            itemBinding.apply {
+                                typeNameTv.text = data.typeName
+                                typeNameTv.setTextColorRes(if (data.isChecked) R.color.text_theme else R.color.text_black)
+                                itemLayout.setOnClickListener {
+                                    viewModel.checkSort(position)
+                                }
                             }
                         }
                     }
                 }
-            }
         }
 
         dataBinding.animeRv.apply {
-
             layoutManager = gridEmpty(3)
 
             adapter = animeAdapter
@@ -137,8 +137,8 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
                 ItemDecorationDrawable(
                     pxValue,
                     pxValue,
-                    R.color.item_bg_color.toResColor(this@AnimeSeasonActivity)
-                )
+                    R.color.item_bg_color.toResColor(this@AnimeSeasonActivity),
+                ),
             )
         }
     }
@@ -153,7 +153,7 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
         }
 
         viewModel.animeLiveData.observe(this) {
-            //保留recycler view位置，避免滚动
+            // 保留recycler view位置，避免滚动
             val recyclerSaveState = dataBinding.animeRv.layoutManager?.onSaveInstanceState()
             dataBinding.animeRv.setData(it)
             dataBinding.animeRv.layoutManager?.onRestoreInstanceState(recyclerSaveState)

@@ -15,6 +15,7 @@ class SubtitleOutputTargetTracker {
     private val targetState = MutableStateFlow<SubtitleOutputTarget?>(null)
     private val surfaceState = MutableStateFlow<Surface?>(null)
     private val surfaceIdCounter = AtomicLong(0L)
+
     @Volatile
     private var currentSurfaceId: String? = null
 
@@ -37,16 +38,17 @@ class SubtitleOutputTargetTracker {
         supportsHardwareBuffer: Boolean = false,
         vsyncId: Long? = null
     ): SubtitleOutputTarget {
-        val target = SubtitleOutputTarget(
-            viewType = viewType,
-            width = width,
-            height = height,
-            scale = scale,
-            rotation = rotation,
-            colorFormat = colorFormat,
-            supportsHardwareBuffer = supportsHardwareBuffer,
-            vsyncId = vsyncId
-        )
+        val target =
+            SubtitleOutputTarget(
+                viewType = viewType,
+                width = width,
+                height = height,
+                scale = scale,
+                rotation = rotation,
+                colorFormat = colorFormat,
+                supportsHardwareBuffer = supportsHardwareBuffer,
+                vsyncId = vsyncId,
+            )
         targetState.value = target
         surfaceState.value = surface
         if (currentSurfaceId == null) {

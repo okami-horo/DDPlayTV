@@ -3,9 +3,9 @@ package com.xyoye.player.controller.base
 import android.content.Context
 import android.util.AttributeSet
 import android.view.KeyEvent
-import com.xyoye.player.controller.video.InterGestureView
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player.controller.action.PlayerAction
+import com.xyoye.player.controller.video.InterGestureView
 import com.xyoye.player.remote.RemoteKeyDispatcher
 
 /**
@@ -17,33 +17,35 @@ abstract class TvVideoController(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseVideoController(context, attrs, defStyleAttr) {
+    private val remoteKeyDispatcher =
+        RemoteKeyDispatcher(
+            object : RemoteKeyDispatcher.RemoteKeyAction {
+                override fun togglePlay() {
+                    dispatchAction(PlayerAction.TogglePlay)
+                }
 
-    private val remoteKeyDispatcher = RemoteKeyDispatcher(object : RemoteKeyDispatcher.RemoteKeyAction {
-        override fun togglePlay() {
-            dispatchAction(PlayerAction.TogglePlay)
-        }
+                override fun seekBy(offsetMs: Long) {
+                    dispatchAction(PlayerAction.SeekBy(offsetMs))
+                }
 
-        override fun seekBy(offsetMs: Long) {
-            dispatchAction(PlayerAction.SeekBy(offsetMs))
-        }
+                override fun showController() {
+                    dispatchAction(PlayerAction.ShowController)
+                }
 
-        override fun showController() {
-            dispatchAction(PlayerAction.ShowController)
-        }
+                override fun openPlayerSettings() {
+                    dispatchAction(PlayerAction.OpenPlayerSettings)
+                }
 
-        override fun openPlayerSettings() {
-            dispatchAction(PlayerAction.OpenPlayerSettings)
-        }
-
-        override fun openEpisodePanel(): Boolean {
-            val videoSource = mControlWrapper.getVideoSource()
-            if (videoSource.getGroupSize() <= 1) {
-                return false
-            }
-            dispatchAction(PlayerAction.OpenEpisodePanel)
-            return true
-        }
-    })
+                override fun openEpisodePanel(): Boolean {
+                    val videoSource = mControlWrapper.getVideoSource()
+                    if (videoSource.getGroupSize() <= 1) {
+                        return false
+                    }
+                    dispatchAction(PlayerAction.OpenEpisodePanel)
+                    return true
+                }
+            },
+        )
 
     private var pendingSeekStartPosition: Long? = null
     private var pendingSeekOffset: Long = 0L
@@ -57,15 +59,16 @@ abstract class TvVideoController(
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val isDpadKey = when (event.keyCode) {
-            KeyEvent.KEYCODE_DPAD_CENTER,
-            KeyEvent.KEYCODE_DPAD_LEFT,
-            KeyEvent.KEYCODE_DPAD_RIGHT,
-            KeyEvent.KEYCODE_DPAD_UP,
-            KeyEvent.KEYCODE_DPAD_DOWN,
-            KeyEvent.KEYCODE_MENU -> true
-            else -> false
-        }
+        val isDpadKey =
+            when (event.keyCode) {
+                KeyEvent.KEYCODE_DPAD_CENTER,
+                KeyEvent.KEYCODE_DPAD_LEFT,
+                KeyEvent.KEYCODE_DPAD_RIGHT,
+                KeyEvent.KEYCODE_DPAD_UP,
+                KeyEvent.KEYCODE_DPAD_DOWN,
+                KeyEvent.KEYCODE_MENU -> true
+                else -> false
+            }
         if (event.action == KeyEvent.ACTION_DOWN && isDpadKey) {
             handlingFromDispatch = true
             val state = currentUiState()
@@ -83,7 +86,10 @@ abstract class TvVideoController(
         return super.dispatchKeyEvent(event)
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (handlingFromDispatch) {
             return super.onKeyDown(keyCode, event)
         }
@@ -141,7 +147,7 @@ abstract class TvVideoController(
             isControllerShowing = controllerVisible,
             isSettingShowing = mControlWrapper.isSettingViewShowing(),
             isPopupMode = isPopupMode(),
-            hasControllerFocus = hasFocus
+            hasControllerFocus = hasFocus,
         )
     }
 
@@ -192,7 +198,10 @@ abstract class TvVideoController(
         }
     }
 
-    private fun updateSeekSlide(targetPosition: Long, duration: Long) {
+    private fun updateSeekSlide(
+        targetPosition: Long,
+        duration: Long
+    ) {
         val currentPosition = pendingSeekStartPosition ?: return
         for (entry in mControlComponents.entries) {
             val view = entry.key

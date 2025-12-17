@@ -15,7 +15,6 @@ class AggressiveRenderersFactory(
     context: Context,
     private val selector: MediaCodecSelector = AggressiveMediaCodecSelector()
 ) : DefaultRenderersFactory(context) {
-
     init {
         // 允许在首选解码器失败时回退其他实现
         setEnableDecoderFallback(true)
@@ -36,11 +35,12 @@ class AggressiveRenderersFactory(
             context,
             extensionRendererMode,
             selector,
-            /* enableDecoderFallback = */ true,
+            // enableDecoderFallback =
+            true,
             eventHandler,
             eventListener,
             allowedVideoJoiningTimeMs,
-            out
+            out,
         )
     }
 
@@ -59,11 +59,12 @@ class AggressiveRenderersFactory(
             context,
             extensionRendererMode,
             selector,
-            /* enableDecoderFallback = */ true,
+            // enableDecoderFallback =
+            true,
             audioSink,
             eventHandler,
             eventListener,
-            out
+            out,
         )
     }
 }

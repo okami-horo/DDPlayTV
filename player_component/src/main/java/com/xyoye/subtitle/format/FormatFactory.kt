@@ -7,8 +7,8 @@ import java.util.*
  * Created by xyoye on 2018/9/20.
  */
 object FormatFactory {
-    fun findFormat(path: String): TimedTextFileFormat? {
-        return when (getFileExtension(path).uppercase(Locale.ROOT)) {
+    fun findFormat(path: String): TimedTextFileFormat? =
+        when (getFileExtension(path).uppercase(Locale.ROOT)) {
             "ASS" -> FormatASS()
             "SCC" -> FormatSCC()
             "SRT" -> FormatSRT()
@@ -16,5 +16,4 @@ object FormatFactory {
             "XML" -> FormatTTML()
             else -> null
         }
-    }
 }

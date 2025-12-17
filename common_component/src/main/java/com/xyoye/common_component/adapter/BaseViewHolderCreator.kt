@@ -9,7 +9,10 @@ import androidx.databinding.ViewDataBinding
  */
 
 abstract class BaseViewHolderCreator<V : ViewDataBinding> {
-    abstract fun isForViewType(data: Any?, position: Int): Boolean
+    abstract fun isForViewType(
+        data: Any?,
+        position: Int
+    ): Boolean
 
     abstract fun getResourceId(): Int
 

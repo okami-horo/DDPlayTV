@@ -12,8 +12,9 @@ import com.xyoye.common_component.R
  */
 
 abstract class AnimatedAdapter<VH : RecyclerView.ViewHolder> : RecyclerView.Adapter<VH>() {
-
-    enum class AnimationType(val resId: Int) {
+    enum class AnimationType(
+        val resId: Int
+    ) {
         VERTICAL(R.anim.anime_adapter_vertical),
 
         HORIZONTAL(R.anim.anime_adapter_horizontal),
@@ -35,11 +36,15 @@ abstract class AnimatedAdapter<VH : RecyclerView.ViewHolder> : RecyclerView.Adap
     private var animationType = AnimationType.SCALE
 
     private var recyclerView: RecyclerView? = null
-    private val clearAnimationListener = object : RecyclerView.OnScrollListener() {
-        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-            clearAnimation()
+    private val clearAnimationListener =
+        object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(
+                recyclerView: RecyclerView,
+                newState: Int
+            ) {
+                clearAnimation()
+            }
         }
-    }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
@@ -58,9 +63,12 @@ abstract class AnimatedAdapter<VH : RecyclerView.ViewHolder> : RecyclerView.Adap
     protected fun bindViewHolderAnimation(holder: VH) {
         holder.itemView.clearAnimation()
         if (isAnimating) {
-            val animation = AnimationUtils.loadAnimation(
-                holder.itemView.context, animationType.resId
-            ).apply { startOffset = animationStartOffset.toLong() }
+            val animation =
+                AnimationUtils
+                    .loadAnimation(
+                        holder.itemView.context,
+                        animationType.resId,
+                    ).apply { startOffset = animationStartOffset.toLong() }
             animationStartOffset += ANIMATION_STAGGER_MILLIS
             holder.itemView.startAnimation(animation)
             postStopAnimation()

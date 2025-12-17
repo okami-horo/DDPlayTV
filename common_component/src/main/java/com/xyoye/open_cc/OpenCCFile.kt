@@ -44,7 +44,9 @@ object OpenCCFile {
             }
         } catch (e: Exception) {
             com.xyoye.common_component.utils.ErrorReportHelper.postCatchedException(
-                e, "OpenCCFile", "Failed to initialize OpenCC files"
+                e,
+                "OpenCCFile",
+                "Failed to initialize OpenCC files",
             )
         }
     }
@@ -52,7 +54,11 @@ object OpenCCFile {
     /**
      * 从assets目录中复制文件到本地
      */
-    private fun copyFileFromAssets(context: Context, assetsFilePath: String, destFilePath: String) {
+    private fun copyFileFromAssets(
+        context: Context,
+        assetsFilePath: String,
+        destFilePath: String
+    ) {
         var inputStream: InputStream? = null
         var fileOutputStream: FileOutputStream? = null
         try {

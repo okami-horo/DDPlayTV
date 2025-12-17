@@ -10,6 +10,7 @@ import com.xyoye.data_component.enums.SubtitlePipelineStatus
 
 object SubtitleTelemetryLogger {
     private const val TAG = "SUB-GPU"
+
     @Volatile
     private var enabled: Boolean = false
 
@@ -19,13 +20,21 @@ object SubtitleTelemetryLogger {
 
     private fun shouldLog(): Boolean = enabled
 
-    fun logSample(sample: TelemetrySample, state: SubtitlePipelineState?) {
+    fun logSample(
+        sample: TelemetrySample,
+        state: SubtitlePipelineState?
+    ) {
         if (!shouldLog()) return
-        val builder = StringBuilder()
-            .append("frame=").append(sample.frameStatus.name)
-            .append(" pts=").append(sample.subtitlePtsMs)
-            .append(" render=").append(sample.renderLatencyMs)
-            .append(" upload=").append(sample.uploadLatencyMs)
+        val builder =
+            StringBuilder()
+                .append("frame=")
+                .append(sample.frameStatus.name)
+                .append(" pts=")
+                .append(sample.subtitlePtsMs)
+                .append(" render=")
+                .append(sample.renderLatencyMs)
+                .append(" upload=")
+                .append(sample.uploadLatencyMs)
 
         sample.compositeLatencyMs?.let { builder.append(" composite=").append(it) }
         sample.dropReason?.let { builder.append(" drop=").append(it) }
@@ -50,7 +59,7 @@ object SubtitleTelemetryLogger {
         LogFacade.w(
             LogModule.SUBTITLE,
             TAG,
-            "fallback from=${event.fromMode.name} to=${event.toMode.name} reason=${event.reason.name} recoverable=${event.recoverable} surface=${event.surfaceId}"
+            "fallback from=${event.fromMode.name} to=${event.toMode.name} reason=${event.reason.name} recoverable=${event.recoverable} surface=${event.surfaceId}",
         )
     }
 

@@ -12,4 +12,5 @@ import kotlinx.parcelize.Parcelize
 @JsonClass(generateAdapter = true)
 data class BangumiAnimeData(
     var bangumiList: MutableList<AnimeData> = mutableListOf()
-) : CommonJsonData(), Parcelable
+) : CommonJsonData(),
+    Parcelable

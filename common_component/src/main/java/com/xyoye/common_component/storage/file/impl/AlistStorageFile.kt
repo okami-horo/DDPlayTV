@@ -18,9 +18,7 @@ class AlistStorageFile(
     private val fileData: AlistFileData,
     storage: AlistStorage
 ) : AbstractStorageFile(storage) {
-    override fun getRealFile(): Any {
-        return fileData
-    }
+    override fun getRealFile(): Any = fileData
 
     override fun filePath(): String {
         val uriBuilder = Uri.Builder().encodedPath(parentPath)
@@ -32,9 +30,7 @@ class AlistStorageFile(
         return uriBuilder.build().toString()
     }
 
-    override fun fileUrl(): String {
-        return filePath()
-    }
+    override fun fileUrl(): String = filePath()
 
     override fun fileCover(): String? {
         if (isDirectory()) {
@@ -53,24 +49,18 @@ class AlistStorageFile(
         return null
     }
 
-    override fun isDirectory(): Boolean {
-        return fileData.isDirectory
-    }
+    override fun isDirectory(): Boolean = fileData.isDirectory
 
-    override fun fileName(): String {
-        return fileData.name
-    }
+    override fun fileName(): String = fileData.name
 
-    override fun fileLength(): Long {
-        return fileData.size
-    }
+    override fun fileLength(): Long = fileData.size
 
-    override fun clone(): StorageFile {
-        return AlistStorageFile(
-            parentPath, fileData, storage as AlistStorage
+    override fun clone(): StorageFile =
+        AlistStorageFile(
+            parentPath,
+            fileData,
+            storage as AlistStorage,
         ).also {
             it.playHistory = playHistory
         }
-    }
-
 }

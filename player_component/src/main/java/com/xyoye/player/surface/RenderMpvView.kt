@@ -9,39 +9,50 @@ import com.xyoye.player.kernel.impl.mpv.MpvVideoPlayer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.RenderMeasureHelper
 
-class RenderMpvView(context: Context) : TextureView(context), InterSurfaceView {
-
+class RenderMpvView(
+    context: Context
+) : TextureView(context),
+    InterSurfaceView {
     private val measureHelper = RenderMeasureHelper()
     private var surfaceTextureRef: SurfaceTexture? = null
     private var surface: Surface? = null
     private lateinit var videoPlayer: AbstractVideoPlayer
 
-    private val listener = object : SurfaceTextureListener {
-        override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
-            if (this@RenderMpvView::videoPlayer.isInitialized) {
-                (videoPlayer as? MpvVideoPlayer)?.setSurfaceSize(width, height)
+    private val listener =
+        object : SurfaceTextureListener {
+            override fun onSurfaceTextureSizeChanged(
+                surface: SurfaceTexture,
+                width: Int,
+                height: Int
+            ) {
+                if (this@RenderMpvView::videoPlayer.isInitialized) {
+                    (videoPlayer as? MpvVideoPlayer)?.setSurfaceSize(width, height)
+                }
+            }
+
+            override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+            }
+
+            override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
+                this@RenderMpvView.surface?.release()
+                this@RenderMpvView.surface = null
+                surfaceTextureRef = null
+                return true
+            }
+
+            override fun onSurfaceTextureAvailable(
+                surface: SurfaceTexture,
+                width: Int,
+                height: Int
+            ) {
+                surfaceTextureRef = surface
+                this@RenderMpvView.surface = Surface(surface)
+                if (this@RenderMpvView::videoPlayer.isInitialized) {
+                    this@RenderMpvView.surface?.let { videoPlayer.setSurface(it) }
+                    (videoPlayer as? MpvVideoPlayer)?.setSurfaceSize(width, height)
+                }
             }
         }
-
-        override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
-        }
-
-        override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
-            this@RenderMpvView.surface?.release()
-            this@RenderMpvView.surface = null
-            surfaceTextureRef = null
-            return true
-        }
-
-        override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
-            surfaceTextureRef = surface
-            this@RenderMpvView.surface = Surface(surface)
-            if (this@RenderMpvView::videoPlayer.isInitialized) {
-                this@RenderMpvView.surface?.let { videoPlayer.setSurface(it) }
-                (videoPlayer as? MpvVideoPlayer)?.setSurfaceSize(width, height)
-            }
-        }
-    }
 
     init {
         surfaceTextureListener = listener
@@ -54,7 +65,10 @@ class RenderMpvView(context: Context) : TextureView(context), InterSurfaceView {
         surface?.let { player.setSurface(it) }
     }
 
-    override fun setVideoSize(videoWidth: Int, videoHeight: Int) {
+    override fun setVideoSize(
+        videoWidth: Int,
+        videoHeight: Int
+    ) {
         if (videoWidth > 0 && videoHeight > 0) {
             measureHelper.mVideoWidth = videoWidth
             measureHelper.mVideoHeight = videoHeight
@@ -88,7 +102,10 @@ class RenderMpvView(context: Context) : TextureView(context), InterSurfaceView {
         surfaceTextureRef = null
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    override fun onMeasure(
+        widthMeasureSpec: Int,
+        heightMeasureSpec: Int
+    ) {
         val measuredSize = measureHelper.doMeasure(widthMeasureSpec, heightMeasureSpec)
         setMeasuredDimension(measuredSize[0], measuredSize[1])
     }

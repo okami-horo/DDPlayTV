@@ -21,23 +21,25 @@ class OverlayPermissionActivity : AppCompatActivity() {
 
         private var permissionCallback: ((Boolean) -> Unit)? = null
 
-        fun requestOverlayPermission(context: Context, callback: ((Boolean) -> Unit)? = null) {
+        fun requestOverlayPermission(
+            context: Context,
+            callback: ((Boolean) -> Unit)? = null
+        ) {
             permissionCallback = callback
 
             context.startActivity(
                 Intent(context, OverlayPermissionActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
+                },
             )
         }
 
-        fun hasOverlayPermission(context: Context = BaseApplication.getAppContext()): Boolean {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        fun hasOverlayPermission(context: Context = BaseApplication.getAppContext()): Boolean =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 Settings.canDrawOverlays(context)
             } else {
                 true
             }
-        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,7 +65,11 @@ class OverlayPermissionActivity : AppCompatActivity() {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
         super.onActivityResult(requestCode, resultCode, data)
         onPermissionResult(hasOverlayPermission(this))
     }

@@ -30,62 +30,57 @@ import java.io.InputStream
  * Created by xyoye on 2023/4/12
  */
 
-class ScreencastStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
-
+class ScreencastStorage(
+    library: MediaLibraryEntity
+) : AbstractStorage(library) {
     private var screencastData: ScreencastData? = null
 
-    override suspend fun listFiles(file: StorageFile): List<StorageFile> {
-        return directoryFiles
-    }
+    override suspend fun listFiles(file: StorageFile): List<StorageFile> = directoryFiles
 
-    override suspend fun getRootFile(): StorageFile? {
-        return screencastData?.let { data ->
+    override suspend fun getRootFile(): StorageFile? =
+        screencastData?.let { data ->
             directoryFiles.firstOrNull { file ->
                 file.uniqueKey() == data.playUniqueKey
             }
         }
-    }
 
-    override suspend fun openFile(file: StorageFile): InputStream? {
-        return null
-    }
+    override suspend fun openFile(file: StorageFile): InputStream? = null
 
-    override suspend fun pathFile(path: String, isDirectory: Boolean): StorageFile? {
-        return null
-    }
+    override suspend fun pathFile(
+        path: String,
+        isDirectory: Boolean
+    ): StorageFile? = null
 
     override suspend fun historyFile(history: PlayHistoryEntity): StorageFile {
         val uri = Uri.parse(history.url)
         val httpHeader = history.httpHeader?.run { JsonHelper.parseJsonMap(this) }
 
-        val videoData = ScreencastVideoData(
-            history.videoName,
-            history.uniqueKey,
-            history.episodeId,
-            history.danmuPath?.let { getFileName(it) },
-            history.subtitlePath?.let { getFileName(it) },
-            history.videoPosition,
-            history.videoDuration
-        )
+        val videoData =
+            ScreencastVideoData(
+                history.videoName,
+                history.uniqueKey,
+                history.episodeId,
+                history.danmuPath?.let { getFileName(it) },
+                history.subtitlePath?.let { getFileName(it) },
+                history.videoPosition,
+                history.videoDuration,
+            )
 
-        val screencastData = ScreencastData(
-            uri.port,
-            listOf(videoData),
-            history.uniqueKey,
-            httpHeader,
-        ).apply {
-            ip = uri.host
-        }
+        val screencastData =
+            ScreencastData(
+                uri.port,
+                listOf(videoData),
+                history.uniqueKey,
+                httpHeader,
+            ).apply {
+                ip = uri.host
+            }
         return ScreencastStorageFile(this, screencastData, videoData)
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String {
-        return file.fileUrl()
-    }
+    override suspend fun createPlayUrl(file: StorageFile): String = file.fileUrl()
 
-    override fun getNetworkHeaders(): Map<String, String>? {
-        return screencastData?.httpHeader
-    }
+    override fun getNetworkHeaders(): Map<String, String>? = screencastData?.httpHeader
 
     override suspend fun cacheDanmu(file: StorageFile): LocalDanmuBean? {
         val videoData = (file as ScreencastStorageFile).getRealFile()
@@ -94,15 +89,18 @@ class ScreencastStorage(library: MediaLibraryEntity) : AbstractStorage(library) 
             return null
         }
 
-        val danmuUrl = screencastData?.let { ScreencastConstants.ProviderApi.DANMU.buildUrl(it, videoData) }
-            ?: return null
-        val stream = ResourceRepository.getResourceResponseBody(danmuUrl).getOrNull()?.byteStream()
-            ?: return null
-        val episode = DanmuEpisodeData(
-            animeTitle = "screencast",
-            episodeId = videoData.episodeId.orEmpty(),
-            episodeTitle = getFileNameNoExtension(danmuFileName)
-        )
+        val danmuUrl =
+            screencastData?.let { ScreencastConstants.ProviderApi.DANMU.buildUrl(it, videoData) }
+                ?: return null
+        val stream =
+            ResourceRepository.getResourceResponseBody(danmuUrl).getOrNull()?.byteStream()
+                ?: return null
+        val episode =
+            DanmuEpisodeData(
+                animeTitle = "screencast",
+                episodeId = videoData.episodeId.orEmpty(),
+                episodeTitle = getFileNameNoExtension(danmuFileName),
+            )
         return DanmuFinder.instance.saveStream(episode, stream)
     }
 
@@ -113,8 +111,9 @@ class ScreencastStorage(library: MediaLibraryEntity) : AbstractStorage(library) 
             return null
         }
 
-        val subtitleUrl = screencastData?.let { ScreencastConstants.ProviderApi.SUBTITLE.buildUrl(it, videoData) }
-            ?: return null
+        val subtitleUrl =
+            screencastData?.let { ScreencastConstants.ProviderApi.SUBTITLE.buildUrl(it, videoData) }
+                ?: return null
 
         try {
             val result = ResourceRepository.getResourceResponse(subtitleUrl)
@@ -122,11 +121,11 @@ class ScreencastStorage(library: MediaLibraryEntity) : AbstractStorage(library) 
             if (response.code() != NanoHTTPD.Response.Status.OK.requestStatus) return null
             val responseBody = response.body() ?: return null
 
-            //下载并使用投屏字幕
+            // 下载并使用投屏字幕
             return SubtitleUtils.saveSubtitle(
                 subtitleFileName,
                 responseBody.byteStream(),
-                directoryName = "screencast"
+                directoryName = "screencast",
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -136,16 +135,17 @@ class ScreencastStorage(library: MediaLibraryEntity) : AbstractStorage(library) 
     }
 
     override suspend fun test(): Boolean {
-        val result = ScreencastRepository.init(
-            "http://${library.screencastAddress}:${library.port}",
-            library.password?.aesEncode()?.authorizationValue()
-        )
+        val result =
+            ScreencastRepository.init(
+                "http://${library.screencastAddress}:${library.port}",
+                library.password?.aesEncode()?.authorizationValue(),
+            )
         if (result.isFailure) {
             val exception = result.exceptionOrNull()
             ErrorReportHelper.postCatchedException(
-                exception ?: RuntimeException("Unknown screencast init error"), 
-                "Screencast", 
-                "初始化投屏服务失败: ${library.screencastAddress}:${library.port}"
+                exception ?: RuntimeException("Unknown screencast init error"),
+                "Screencast",
+                "初始化投屏服务失败: ${library.screencastAddress}:${library.port}",
             )
             exception?.message?.toastError()
             return false
@@ -158,41 +158,43 @@ class ScreencastStorage(library: MediaLibraryEntity) : AbstractStorage(library) 
      */
     suspend fun bindScreencastData(data: ScreencastData) {
         screencastData = data
-        directoryFiles = data.relatedVideos.map {
-            ScreencastStorageFile(this, data, it).apply {
-                playHistory = findPlayHistory(it)
+        directoryFiles =
+            data.relatedVideos.map {
+                ScreencastStorageFile(this, data, it).apply {
+                    playHistory = findPlayHistory(it)
+                }
             }
-        }
     }
 
     /**
      * 寻找视频的播放记录
      */
-    private suspend fun findPlayHistory(
-        videoData: ScreencastVideoData
-    ): PlayHistoryEntity? {
-        val playHistory = DatabaseManager.instance
-            .getPlayHistoryDao()
-            .getPlayHistory(videoData.uniqueKey, library.id)
+    private suspend fun findPlayHistory(videoData: ScreencastVideoData): PlayHistoryEntity? {
+        val playHistory =
+            DatabaseManager.instance
+                .getPlayHistoryDao()
+                .getPlayHistory(videoData.uniqueKey, library.id)
 
         // 播放进度优先级，投屏资源进度 > 历史记录进度
         if (videoData.position == 0L && videoData.duration == 0L) {
             return playHistory
         }
 
-        val newHistory = playHistory ?: PlayHistoryEntity(
-            0,
-            "",
-            "",
-            mediaType = library.mediaType,
-            uniqueKey = videoData.uniqueKey,
-            storageId = library.id,
-        )
-        return newHistory.copy(
-            videoPosition = videoData.position,
-            videoDuration = videoData.duration
-        ).also {
-            DatabaseManager.instance.getPlayHistoryDao().insert(it)
-        }
+        val newHistory =
+            playHistory ?: PlayHistoryEntity(
+                0,
+                "",
+                "",
+                mediaType = library.mediaType,
+                uniqueKey = videoData.uniqueKey,
+                storageId = library.id,
+            )
+        return newHistory
+            .copy(
+                videoPosition = videoData.position,
+                videoDuration = videoData.duration,
+            ).also {
+                DatabaseManager.instance.getPlayHistoryDao().insert(it)
+            }
     }
 }

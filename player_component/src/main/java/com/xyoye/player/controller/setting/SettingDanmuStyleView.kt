@@ -11,7 +11,6 @@ import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutSettingDanmuStyleBinding
 
-
 /**
  * Created by xyoye on 2022/1/10
  */
@@ -21,7 +20,6 @@ class SettingDanmuStyleView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingDanmuStyleBinding>(context, attrs, defStyleAttr) {
-
     init {
         initSettingListener()
     }
@@ -42,7 +40,10 @@ class SettingDanmuStyleView(
         viewBinding.danmuSizeSb.requestFocus()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (isSettingShowing().not()) {
             return false
         }
@@ -52,25 +53,25 @@ class SettingDanmuStyleView(
     }
 
     private fun applyDanmuStyleStatus() {
-        //文字大小
+        // 文字大小
         val danmuSizePercent = PlayerInitializer.Danmu.size
         val danmuSizeText = "$danmuSizePercent%"
         viewBinding.danmuSizeTv.text = danmuSizeText
         viewBinding.danmuSizeSb.progress = danmuSizePercent
 
-        //弹幕速度
+        // 弹幕速度
         val danmuSpeedPercent = PlayerInitializer.Danmu.speed
         val danmuSpeedText = "$danmuSpeedPercent%"
         viewBinding.danmuSpeedTv.text = danmuSpeedText
         viewBinding.danmuSpeedSb.progress = danmuSpeedPercent
 
-        //弹幕透明度
+        // 弹幕透明度
         val danmuAlphaPercent = PlayerInitializer.Danmu.alpha
         val danmuAlphaText = "$danmuAlphaPercent%"
         viewBinding.danmuAlphaTv.text = danmuAlphaText
         viewBinding.danmuAlphaSb.progress = danmuAlphaPercent
 
-        //弹幕描边宽度
+        // 弹幕描边宽度
         val danmuStokePercent = PlayerInitializer.Danmu.stoke
         val danmuStokeText = "$danmuStokePercent%"
         viewBinding.danmuStokeTv.text = danmuStokeText
@@ -102,8 +103,9 @@ class SettingDanmuStyleView(
     }
 
     private fun updateSize(progress: Int) {
-        if (PlayerInitializer.Danmu.size == progress)
+        if (PlayerInitializer.Danmu.size == progress) {
             return
+        }
 
         val progressText = "$progress%"
         viewBinding.danmuSizeTv.text = progressText
@@ -116,8 +118,9 @@ class SettingDanmuStyleView(
     }
 
     private fun updateSpeed(progress: Int) {
-        if (PlayerInitializer.Danmu.speed == progress)
+        if (PlayerInitializer.Danmu.speed == progress) {
             return
+        }
 
         val progressText = "$progress%"
         viewBinding.danmuSpeedTv.text = progressText
@@ -130,8 +133,9 @@ class SettingDanmuStyleView(
     }
 
     private fun updateAlpha(progress: Int) {
-        if (PlayerInitializer.Danmu.alpha == progress)
+        if (PlayerInitializer.Danmu.alpha == progress) {
             return
+        }
 
         val progressText = "$progress%"
         viewBinding.danmuAlphaTv.text = progressText
@@ -144,8 +148,9 @@ class SettingDanmuStyleView(
     }
 
     private fun updateStroke(progress: Int) {
-        if (PlayerInitializer.Danmu.stoke == progress)
+        if (PlayerInitializer.Danmu.stoke == progress) {
             return
+        }
 
         val progressText = "$progress%"
         viewBinding.danmuStokeTv.text = progressText
@@ -168,13 +173,12 @@ class SettingDanmuStyleView(
         viewBinding.tvResetDanmuConfig.isVisible = isConfigChanged()
     }
 
-    private fun isConfigChanged(): Boolean {
-        return PlayerInitializer.Danmu.offsetPosition != PlayerInitializer.Danmu.DEFAULT_POSITION
-                || PlayerInitializer.Danmu.size != PlayerInitializer.Danmu.DEFAULT_SIZE
-                || PlayerInitializer.Danmu.alpha != PlayerInitializer.Danmu.DEFAULT_ALPHA
-                || PlayerInitializer.Danmu.stoke != PlayerInitializer.Danmu.DEFAULT_STOKE
-                || PlayerInitializer.Danmu.speed != PlayerInitializer.Danmu.DEFAULT_SPEED
-    }
+    private fun isConfigChanged(): Boolean =
+        PlayerInitializer.Danmu.offsetPosition != PlayerInitializer.Danmu.DEFAULT_POSITION ||
+            PlayerInitializer.Danmu.size != PlayerInitializer.Danmu.DEFAULT_SIZE ||
+            PlayerInitializer.Danmu.alpha != PlayerInitializer.Danmu.DEFAULT_ALPHA ||
+            PlayerInitializer.Danmu.stoke != PlayerInitializer.Danmu.DEFAULT_STOKE ||
+            PlayerInitializer.Danmu.speed != PlayerInitializer.Danmu.DEFAULT_SPEED
 
     private fun handleKeyCode(keyCode: Int) {
         if (viewBinding.tvResetDanmuConfig.hasFocus()) {

@@ -15,11 +15,9 @@ import com.xyoye.user_component.databinding.DialogVideoExtensionSupportSettingBi
 class VideoExtensionSupportSettingDialog(
     activity: Activity
 ) : BaseBottomDialog<DialogVideoExtensionSupportSettingBinding>(activity) {
-
     override fun getChildLayoutId() = R.layout.dialog_video_extension_support_setting
 
     override fun initView(binding: DialogVideoExtensionSupportSettingBinding) {
-
         setTitle("设置支持的视频扩展名")
 
         binding.etVideoExtension.setText(VideoExtension.supportText)
@@ -40,7 +38,7 @@ class VideoExtensionSupportSettingDialog(
                 e,
                 "VideoExtensionSupportSettingDialog",
                 "resetExtension",
-                "Failed to reset video extension settings"
+                "Failed to reset video extension settings",
             )
             ToastCenter.showError("重置扩展名设置失败")
         }
@@ -64,7 +62,7 @@ class VideoExtensionSupportSettingDialog(
                 e,
                 "VideoExtensionSupportSettingDialog",
                 "updateExtension",
-                "Failed to update video extension settings with text: ${binding.etVideoExtension.text}"
+                "Failed to update video extension settings with text: ${binding.etVideoExtension.text}",
             )
             ToastCenter.showError("更新扩展名设置失败")
         }

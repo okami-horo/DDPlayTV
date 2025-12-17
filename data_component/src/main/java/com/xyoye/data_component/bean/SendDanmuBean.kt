@@ -10,7 +10,7 @@ data class SendDanmuBean(
     var position: Long,
     var text: String = "",
     var isSmallSize: Boolean = false,
-    var isScroll : Boolean = true,
+    var isScroll: Boolean = true,
     var isTop: Boolean = false,
-    var color: Int = Color.WHITE,
+    var color: Int = Color.WHITE
 )

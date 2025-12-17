@@ -3,12 +3,15 @@ package com.xyoye.common_component.utils
 import okhttp3.internal.toLongOrDefault
 
 object RangeUtils {
-
-    fun getRange(rangeText: String, contentLength: Long): Array<Long> {
+    fun getRange(
+        rangeText: String,
+        contentLength: Long
+    ): Array<Long> {
         val rangArray = Array<Long>(3) { 0 }
 
-        val range = parseRange(rangeText, contentLength)
-            ?: return rangArray
+        val range =
+            parseRange(rangeText, contentLength)
+                ?: return rangArray
 
         rangArray[0] = range.first
         rangArray[1] = range.second
@@ -19,7 +22,10 @@ object RangeUtils {
     /**
      * 解析Range请求头的值
      */
-    fun parseRange(rangeValue: String, contentLength: Long): Pair<Long, Long>? {
+    fun parseRange(
+        rangeValue: String,
+        contentLength: Long
+    ): Pair<Long, Long>? {
         if (contentLength <= 0) {
             return null
         }

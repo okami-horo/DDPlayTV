@@ -8,5 +8,6 @@ import com.xyoye.data_component.entity.media3.Media3BackgroundMode
  */
 interface MediaSessionCommandBridge {
     fun updateSessionCommands(commands: Set<String>)
+
     fun updateBackgroundModes(modes: Set<Media3BackgroundMode>)
 }

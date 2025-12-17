@@ -23,19 +23,18 @@ import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.data_component.data.CommonTypeData
 
 class SearchAnimeFragment :
-    BaseFragment<SearchAnimeFragmentViewModel, FragmentSearchAnimeBinding>(), SearchListener {
+    BaseFragment<SearchAnimeFragmentViewModel, FragmentSearchAnimeBinding>(),
+    SearchListener {
     private lateinit var animeAdapter: BaseAdapter
 
     companion object {
-        fun newInstance(): SearchAnimeFragment {
-            return SearchAnimeFragment()
-        }
+        fun newInstance(): SearchAnimeFragment = SearchAnimeFragment()
     }
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            SearchAnimeFragmentViewModel::class.java
+            SearchAnimeFragmentViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.fragment_search_anime
@@ -90,25 +89,26 @@ class SearchAnimeFragment :
 
             addItemDecoration(ItemDecorationSpace(dp2px(2)))
 
-            adapter = buildAdapter {
-                addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
-                    initView { data, position, _ ->
-                        itemBinding.apply {
-                            typeNameTv.text = data.typeName
-                            typeNameTv.setTextColorRes(
-                                if (data.isChecked) R.color.text_screen_checked_color else R.color.text_black
-                            )
+            adapter =
+                buildAdapter {
+                    addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
+                        initView { data, position, _ ->
+                            itemBinding.apply {
+                                typeNameTv.text = data.typeName
+                                typeNameTv.setTextColorRes(
+                                    if (data.isChecked) R.color.text_screen_checked_color else R.color.text_black,
+                                )
 
-                            itemLayout.isSelected = data.isChecked
+                                itemLayout.isSelected = data.isChecked
 
-                            itemLayout.setOnClickListener {
-                                (mAttachActivity as SearchActivity).hideSearchKeyboard()
-                                viewModel.checkType(position)
+                                itemLayout.setOnClickListener {
+                                    (mAttachActivity as SearchActivity).hideSearchKeyboard()
+                                    viewModel.checkType(position)
+                                }
                             }
                         }
                     }
                 }
-            }
         }
 
         dataBinding.sortRv.apply {
@@ -116,27 +116,27 @@ class SearchAnimeFragment :
 
             layoutManager = grid(viewModel.screenSpanCount)
 
-            adapter = buildAdapter {
+            adapter =
+                buildAdapter {
+                    addItemDecoration(ItemDecorationSpace(dp2px(2), 0))
 
-                addItemDecoration(ItemDecorationSpace(dp2px(2), 0))
+                    addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
+                        initView { data, position, _ ->
+                            itemBinding.apply {
+                                typeNameTv.text = data.typeName
+                                typeNameTv.setTextColorRes(
+                                    if (data.isChecked) R.color.text_screen_checked_color else R.color.text_black,
+                                )
+                                itemLayout.isSelected = data.isChecked
 
-                addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
-                    initView { data, position, _ ->
-                        itemBinding.apply {
-                            typeNameTv.text = data.typeName
-                            typeNameTv.setTextColorRes(
-                                if (data.isChecked) R.color.text_screen_checked_color else R.color.text_black
-                            )
-                            itemLayout.isSelected = data.isChecked
-
-                            itemLayout.setOnClickListener {
-                                (mAttachActivity as SearchActivity).hideSearchKeyboard()
-                                viewModel.checkSort(position)
+                                itemLayout.setOnClickListener {
+                                    (mAttachActivity as SearchActivity).hideSearchKeyboard()
+                                    viewModel.checkSort(position)
+                                }
                             }
                         }
                     }
                 }
-            }
         }
 
         dataBinding.animeRv.apply {
@@ -149,8 +149,8 @@ class SearchAnimeFragment :
                 ItemDecorationDrawable(
                     pxValue,
                     pxValue,
-                    R.color.item_bg_color.toResColor(mAttachActivity)
-                )
+                    R.color.item_bg_color.toResColor(mAttachActivity),
+                ),
             )
         }
     }
@@ -165,7 +165,7 @@ class SearchAnimeFragment :
         }
 
         viewModel.animeLiveData.observe(this) {
-            //保留recycler view位置，避免滚动
+            // 保留recycler view位置，避免滚动
             val recyclerSaveState = dataBinding.animeRv.layoutManager?.onSaveInstanceState()
             dataBinding.animeRv.setData(it)
             dataBinding.animeRv.layoutManager?.onRestoreInstanceState(recyclerSaveState)

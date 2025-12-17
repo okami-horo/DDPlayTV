@@ -11,7 +11,6 @@ import com.xyoye.player.utils.MessageTime
  */
 
 interface InterVideoController {
-
     /**
      * 开启控制器视图隐藏倒计时
      */
@@ -30,7 +29,10 @@ interface InterVideoController {
     /**
      * 提示消息
      */
-    fun showMessage(text: String, time: MessageTime = MessageTime.SHOT)
+    fun showMessage(
+        text: String,
+        time: MessageTime = MessageTime.SHOT
+    )
 
     /**
      * 设置播放器是否锁定

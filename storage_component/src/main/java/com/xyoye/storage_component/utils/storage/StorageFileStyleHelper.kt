@@ -21,26 +21,31 @@ class StorageFileStyleHelper(
     private val activity: StorageFileActivity,
     private val binding: ActivityStorageFileBinding
 ) {
-    //标题栏是否已折叠
+    // 标题栏是否已折叠
     private var mToolbarCollapsed: Boolean = false
 
-    //标题栏折叠后颜色
+    // 标题栏折叠后颜色
     private val mToolbarCollapsedColor = R.color.layout_bg_color.toResColor(activity)
 
-    //标题栏展开后颜色
+    // 标题栏展开后颜色
     private val mToolbarExpandedColor = R.color.item_bg_color.toResColor(activity)
 
-    //标题栏颜色动画
+    // 标题栏颜色动画
     private var mColorAnimator: ValueAnimator? = null
 
     init {
-        activity.lifecycle.addObserver(object : LifecycleEventObserver {
-            override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-                if (event == Lifecycle.Event.ON_DESTROY) {
-                    mColorAnimator?.cancel()
+        activity.lifecycle.addObserver(
+            object : LifecycleEventObserver {
+                override fun onStateChanged(
+                    source: LifecycleOwner,
+                    event: Lifecycle.Event
+                ) {
+                    if (event == Lifecycle.Event.ON_DESTROY) {
+                        mColorAnimator?.cancel()
+                    }
                 }
-            }
-        })
+            },
+        )
     }
 
     /**
@@ -66,19 +71,22 @@ class StorageFileStyleHelper(
     private fun startAnimation() {
         mColorAnimator?.cancel()
 
-        ValueAnimator.ofArgb(
-            getAnimatorFromColor(), getAnimatorToColor()
-        ).apply {
-            duration = 300
-            addUpdateListener { changeStyle(it.animatedValue as Int) }
-            start()
-        }.also {
-            mColorAnimator = it
-        }
+        ValueAnimator
+            .ofArgb(
+                getAnimatorFromColor(),
+                getAnimatorToColor(),
+            ).apply {
+                duration = 300
+                addUpdateListener { changeStyle(it.animatedValue as Int) }
+                start()
+            }.also {
+                mColorAnimator = it
+            }
     }
 
     private fun changeStyle(color: Int) {
-        ImmersionBar.with(activity)
+        ImmersionBar
+            .with(activity)
             .statusBarColorInt(color)
             .fitsSystemWindows(true)
             .statusBarDarkFont(!activity.isNightMode())
@@ -86,19 +94,17 @@ class StorageFileStyleHelper(
         binding.appbarLayout.setBackgroundColor(color)
     }
 
-    private fun getAnimatorFromColor(): Int {
-        return if (mToolbarCollapsed) {
+    private fun getAnimatorFromColor(): Int =
+        if (mToolbarCollapsed) {
             mToolbarExpandedColor
         } else {
             mToolbarCollapsedColor
         }
-    }
 
-    private fun getAnimatorToColor(): Int {
-        return if (mToolbarCollapsed) {
+    private fun getAnimatorToColor(): Int =
+        if (mToolbarCollapsed) {
             mToolbarCollapsedColor
         } else {
             mToolbarExpandedColor
         }
-    }
 }

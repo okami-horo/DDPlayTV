@@ -18,7 +18,6 @@ class StreamLinkDialog(
     activity: AppCompatActivity,
     private val callback: (link: String, header: Map<String, String>?) -> Unit
 ) : BaseBottomDialog<DialogStreamLinkBinding>(activity) {
-
     private lateinit var binding: DialogStreamLinkBinding
 
     override fun getChildLayoutId() = R.layout.dialog_stream_link

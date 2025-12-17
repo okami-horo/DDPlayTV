@@ -33,30 +33,43 @@ import retrofit2.http.QueryMap
  */
 
 interface DanDanService {
-
     @GET("api/v2/bangumi/shin")
-    suspend fun getWeeklyAnime(@QueryMap params: RequestParams): BangumiAnimeData
+    suspend fun getWeeklyAnime(
+        @QueryMap params: RequestParams
+    ): BangumiAnimeData
 
     @GET("api/v2/homepage/banner")
     suspend fun getHomeBanner(): BannerData
 
     @GET("api/v2/bangumi/{animeId}")
-    suspend fun getAnimeDetail(@Path("animeId") animeId: String): AnimeDetailData
+    suspend fun getAnimeDetail(
+        @Path("animeId") animeId: String
+    ): AnimeDetailData
 
     @POST("/api/v2/favorite")
-    suspend fun followAnime(@Body body: RequestBody): CommonJsonData
+    suspend fun followAnime(
+        @Body body: RequestBody
+    ): CommonJsonData
 
     @DELETE("/api/v2/favorite/{animeId}")
-    suspend fun cancelFollowAnime(@Path("animeId") animeId: String): CommonJsonData
+    suspend fun cancelFollowAnime(
+        @Path("animeId") animeId: String
+    ): CommonJsonData
 
     @GET("api/v2/favorite")
-    suspend fun getFollowedAnime(@QueryMap params: RequestParams): FollowAnimeData
+    suspend fun getFollowedAnime(
+        @QueryMap params: RequestParams
+    ): FollowAnimeData
 
     @GET("/api/v2/search/anime")
-    suspend fun searchAnime(@QueryMap params: RequestParams): SearchAnimeData
+    suspend fun searchAnime(
+        @QueryMap params: RequestParams
+    ): SearchAnimeData
 
     @GET("/api/v2/search/tag")
-    suspend fun searchAnimeByTag(@QueryMap params: RequestParams): AnimeTagData
+    suspend fun searchAnimeByTag(
+        @QueryMap params: RequestParams
+    ): AnimeTagData
 
     @GET("/api/v2/bangumi/season/anime/{year}/{month}")
     suspend fun getSeasonAnime(
@@ -65,10 +78,14 @@ interface DanDanService {
     ): BangumiAnimeData
 
     @POST("/api/v2/match")
-    suspend fun matchDanmu(@Body body: RequestBody): DanmuMatchData
+    suspend fun matchDanmu(
+        @Body body: RequestBody
+    ): DanmuMatchData
 
     @GET("/api/v2/search/episodes")
-    suspend fun searchDanmu(@QueryMap params: RequestParams): DanmuSearchData
+    suspend fun searchDanmu(
+        @QueryMap params: RequestParams
+    ): DanmuSearchData
 
     @GET("api/v2/comment/{episodeId}")
     @Headers("accept-encoding: gzip")
@@ -84,41 +101,59 @@ interface DanDanService {
     ): SendDanmuData
 
     @GET("/api/v2/related/{episodeId}")
-    suspend fun getRelatedDanmu(@Path("episodeId") episodeId: String): DanmuRelatedData
+    suspend fun getRelatedDanmu(
+        @Path("episodeId") episodeId: String
+    ): DanmuRelatedData
 
     @GET("/api/v2/extcomment")
     @Headers("accept-encoding: gzip")
-    suspend fun getRelatedDanmuContent(@QueryMap params: RequestParams): DanmuData
+    suspend fun getRelatedDanmuContent(
+        @QueryMap params: RequestParams
+    ): DanmuData
 
     @POST("api/v2/login")
-    suspend fun login(@Body body: RequestBody): LoginData
+    suspend fun login(
+        @Body body: RequestBody
+    ): LoginData
 
     @GET("api/v2/login/renew")
     suspend fun refreshToken(): LoginData
 
     @POST("api/v2/register")
-    suspend fun register(@Body body: RequestBody): LoginData
+    suspend fun register(
+        @Body body: RequestBody
+    ): LoginData
 
     @POST("api/v2/register/resetpassword")
-    suspend fun resetPassword(@Body body: RequestBody): CommonJsonData
+    suspend fun resetPassword(
+        @Body body: RequestBody
+    ): CommonJsonData
 
     @POST("api/v2/register/findmyid")
-    suspend fun retrieveAccount(@Body body: RequestBody): CommonJsonData
+    suspend fun retrieveAccount(
+        @Body body: RequestBody
+    ): CommonJsonData
 
     @GET("api/v2/playhistory")
     suspend fun getPlayHistory(): CloudHistoryListData
 
     @POST("/api/v2/user/profile")
-    suspend fun updateScreenName(@Body body: RequestBody): CommonJsonData
+    suspend fun updateScreenName(
+        @Body body: RequestBody
+    ): CommonJsonData
 
     @POST("/api/v2/user/password")
-    suspend fun updatePassword(@Body body: RequestBody): CommonJsonData
+    suspend fun updatePassword(
+        @Body body: RequestBody
+    ): CommonJsonData
 
     @GET("/config/filter.xml")
     suspend fun getCloudFilters(): ResponseBody
 
     @POST("/api/v2/playhistory")
-    suspend fun addPlayHistory(@Body body: RequestBody): CommonJsonData
+    suspend fun addPlayHistory(
+        @Body body: RequestBody
+    ): CommonJsonData
 
     @GET("api/v2/login/renew")
     suspend fun checkAuthenticate(

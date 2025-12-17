@@ -64,7 +64,7 @@ dependencies {
     implementation(Dependencies.Github.keyboard_panel)
 
     // TODO 暂时移除，编译出64位后再考虑重新添加
-    //implementation "com.github.ctiao:ndkbitmap-armv7a:0.9.21"
+    // implementation "com.github.ctiao:ndkbitmap-armv7a:0.9.21"
 
     implementation("androidx.media3:media3-exoplayer:$media3Version")
     implementation("androidx.media3:media3-exoplayer-dash:$media3Version")

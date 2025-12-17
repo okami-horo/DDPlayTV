@@ -19,13 +19,16 @@ import com.xyoye.storage_component.ui.fragment.storage_file.StorageFileFragment
 
 object StorageFilePathAdapter {
     object PathDivider
+
     object MarginDivider
 
     private val marginDivider = MarginDivider
     private val pathDivider = PathDivider
 
-    fun build(activity: StorageFileActivity, onPathClick: (path: StorageFilePath) -> Unit) = buildAdapter {
-
+    fun build(
+        activity: StorageFileActivity,
+        onPathClick: (path: StorageFilePath) -> Unit
+    ) = buildAdapter {
         setupDiffUtil {
             areContentsTheSame(isSameStoragePathContent())
         }
@@ -40,19 +43,25 @@ object StorageFilePathAdapter {
                     onPathClick.invoke(data)
                 }
 
-                itemBinding.tvPath.setOnKeyListener(object : View.OnKeyListener {
-                    override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
-                        if (event?.action != KeyEvent.ACTION_DOWN || v?.isFocused != true) {
+                itemBinding.tvPath.setOnKeyListener(
+                    object : View.OnKeyListener {
+                        override fun onKey(
+                            v: View?,
+                            keyCode: Int,
+                            event: KeyEvent?
+                        ): Boolean {
+                            if (event?.action != KeyEvent.ACTION_DOWN || v?.isFocused != true) {
+                                return false
+                            }
+                            if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                                // 由于系统无法将焦点传递到Fragment，手动处理焦点传递
+                                activity.dispatchFocus()
+                                return true
+                            }
                             return false
                         }
-                        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-                            //由于系统无法将焦点传递到Fragment，手动处理焦点传递
-                            activity.dispatchFocus()
-                            return true
-                        }
-                        return false
-                    }
-                })
+                    },
+                )
             }
         }
 
@@ -80,19 +89,19 @@ object StorageFilePathAdapter {
         return pathList
     }
 
-    private fun isSameStoragePathContent() = { old: Any, new: Any ->
-        val oldItem = old as? StorageFilePath?
-        val newItem = new as? StorageFilePath?
-        oldItem?.name == newItem?.name
-                && oldItem?.route == newItem?.route
-                && oldItem?.isLast == newItem?.isLast
-    }
+    private fun isSameStoragePathContent() =
+        { old: Any, new: Any ->
+            val oldItem = old as? StorageFilePath?
+            val newItem = new as? StorageFilePath?
+            oldItem?.name == newItem?.name &&
+                oldItem?.route == newItem?.route &&
+                oldItem?.isLast == newItem?.isLast
+        }
 
-    private fun getPathColor(path: StorageFilePath): Int {
-        return if (path.isLast) {
+    private fun getPathColor(path: StorageFilePath): Int =
+        if (path.isLast) {
             R.color.text_theme
         } else {
             R.color.text_black
         }.toResColor()
-    }
 }

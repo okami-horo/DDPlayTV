@@ -8,6 +8,5 @@ import com.xyoye.common_component.storage.file.StorageFile
  */
 
 interface StorageFileProvider : IProvider {
-
     fun getShareStorageFile(): StorageFile?
 }

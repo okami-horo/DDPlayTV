@@ -13,7 +13,6 @@ import com.xyoye.data_component.helper.Loading
  */
 
 abstract class BaseActivity<VM : BaseViewModel, V : ViewDataBinding> : BaseAppCompatActivity<V>() {
-
     private val viewModelInit: ViewModelInit<VM> by lazy {
         initViewModel()
     }
@@ -21,7 +20,7 @@ abstract class BaseActivity<VM : BaseViewModel, V : ViewDataBinding> : BaseAppCo
     protected val viewModel: VM by lazy {
         ViewModelProvider(
             viewModelStore,
-            ViewModelProvider.AndroidViewModelFactory(application)
+            ViewModelProvider.AndroidViewModelFactory(application),
         ).get(viewModelInit.clazz)
     }
 
@@ -34,7 +33,8 @@ abstract class BaseActivity<VM : BaseViewModel, V : ViewDataBinding> : BaseAppCo
     }
 
     override fun initStatusBar() {
-        ImmersionBar.with(this)
+        ImmersionBar
+            .with(this)
             .fitsSystemWindows(true)
             .statusBarDarkFont(isNightMode().not())
             .statusBarColor(R.color.status_bar_color)
@@ -57,5 +57,8 @@ abstract class BaseActivity<VM : BaseViewModel, V : ViewDataBinding> : BaseAppCo
 
     abstract fun initViewModel(): ViewModelInit<VM>
 
-    data class ViewModelInit<VM>(val variableId: Int, val clazz: Class<VM>)
+    data class ViewModelInit<VM>(
+        val variableId: Int,
+        val clazz: Class<VM>
+    )
 }

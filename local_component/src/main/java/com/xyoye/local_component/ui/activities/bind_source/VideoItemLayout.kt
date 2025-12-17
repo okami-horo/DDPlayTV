@@ -28,10 +28,12 @@ import com.xyoye.local_component.databinding.ActivityBindExtraSourceBinding
  */
 
 object VideoItemLayout {
-
     private val tagDecoration = ItemDecorationOrientation(5.dp(), 0, RecyclerView.HORIZONTAL)
 
-    fun initVideoLayout(dataBinding: ActivityBindExtraSourceBinding, data: StorageFile) {
+    fun initVideoLayout(
+        dataBinding: ActivityBindExtraSourceBinding,
+        data: StorageFile
+    ) {
         dataBinding.videoLayout.run {
             itemLayout.setBackgroundColor(R.color.item_bg_color.toResColor())
 
@@ -66,14 +68,18 @@ object VideoItemLayout {
         }
     }
 
-    private fun setupVideoTag(tagRv: RecyclerView, data: StorageFile) {
+    private fun setupVideoTag(
+        tagRv: RecyclerView,
+        data: StorageFile
+    ) {
         tagRv.apply {
             layoutManager = horizontal()
-            adapter = buildAdapter {
-                addItem(R.layout.item_storage_video_tag) {
-                    initView(tagItem())
+            adapter =
+                buildAdapter {
+                    addItem(R.layout.item_storage_video_tag) {
+                        initView(tagItem())
+                    }
                 }
-            }
             removeItemDecoration(tagDecoration)
             addItemDecoration(tagDecoration)
             setData(generateVideoTags(data))
@@ -107,13 +113,9 @@ object VideoItemLayout {
         return tagList
     }
 
-    private fun isShowDanmu(file: StorageFile): Boolean {
-        return file.playHistory?.danmuPath?.isNotEmpty() == true
-    }
+    private fun isShowDanmu(file: StorageFile): Boolean = file.playHistory?.danmuPath?.isNotEmpty() == true
 
-    private fun isShowSubtitle(file: StorageFile): Boolean {
-        return file.playHistory?.subtitlePath?.isNotEmpty() == true
-    }
+    private fun isShowSubtitle(file: StorageFile): Boolean = file.playHistory?.subtitlePath?.isNotEmpty() == true
 
     private fun getProgress(file: StorageFile): String {
         val position = file.playHistory?.videoPosition ?: 0

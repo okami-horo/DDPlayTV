@@ -1,3 +1,5 @@
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
+
 buildscript {
     repositories {
         google()
@@ -12,6 +14,7 @@ buildscript {
 
 plugins {
     id("com.github.ben-manes.versions") version "0.44.0"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.1" apply false
 }
 
 allprojects {
@@ -20,6 +23,20 @@ allprojects {
         mavenCentral()
         maven("https://developer.huawei.com/repo/")
         maven("https://maven.aliyun.com/nexus/content/repositories/releases/")
+    }
+}
+
+subprojects {
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+
+    configure<KtlintExtension> {
+        version.set("1.3.1")
+        android.set(true)
+        ignoreFailures.set(false)
+        filter {
+            exclude("**/build/**")
+            exclude("**/generated/**")
+        }
     }
 }
 

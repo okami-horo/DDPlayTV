@@ -6,7 +6,6 @@ import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.data_component.bean.subtitle.SubtitleOutputTarget
 
 class AssGpuNativeBridge {
-
     data class NativeRenderResult(
         val rendered: Boolean,
         val renderLatencyMs: Long,
@@ -27,7 +26,10 @@ class AssGpuNativeBridge {
     val isReady: Boolean
         get() = handle != 0L
 
-    fun attachSurface(surface: Surface?, target: SubtitleOutputTarget): Boolean {
+    fun attachSurface(
+        surface: Surface?,
+        target: SubtitleOutputTarget
+    ): Boolean {
         if (!isReady) return false
         val vsyncId = target.vsyncId ?: 0L
         return nativeAttachSurface(
@@ -39,7 +41,7 @@ class AssGpuNativeBridge {
             target.rotation,
             target.colorFormat,
             target.supportsHardwareBuffer,
-            vsyncId
+            vsyncId,
         )
     }
 
@@ -48,7 +50,11 @@ class AssGpuNativeBridge {
         nativeDetachSurface(handle)
     }
 
-    fun renderFrame(subtitlePtsMs: Long, vsyncId: Long, telemetryEnabled: Boolean = true): NativeRenderResult {
+    fun renderFrame(
+        subtitlePtsMs: Long,
+        vsyncId: Long,
+        telemetryEnabled: Boolean = true
+    ): NativeRenderResult {
         if (!isReady) {
             return NativeRenderResult(rendered = false, renderLatencyMs = 0, uploadLatencyMs = 0, compositeLatencyMs = 0)
         }
@@ -66,7 +72,11 @@ class AssGpuNativeBridge {
         nativeSetGlobalOpacity(handle, percent)
     }
 
-    fun loadTrack(path: String, fontDirs: List<String>, defaultFont: String?) {
+    fun loadTrack(
+        path: String,
+        fontDirs: List<String>,
+        defaultFont: String?
+    ) {
         if (!isReady) return
         nativeLoadTrack(handle, path, fontDirs.toTypedArray(), defaultFont)
     }
@@ -91,7 +101,7 @@ class AssGpuNativeBridge {
             rendered = raw[0] != 0L,
             renderLatencyMs = raw[1],
             uploadLatencyMs = raw[2],
-            compositeLatencyMs = raw[3]
+            compositeLatencyMs = raw[3],
         )
     }
 
@@ -122,9 +132,15 @@ class AssGpuNativeBridge {
 
     private external fun nativeFlush(handle: Long)
 
-    private external fun nativeSetTelemetryEnabled(handle: Long, enabled: Boolean)
+    private external fun nativeSetTelemetryEnabled(
+        handle: Long,
+        enabled: Boolean
+    )
 
-    private external fun nativeSetGlobalOpacity(handle: Long, percent: Int)
+    private external fun nativeSetGlobalOpacity(
+        handle: Long,
+        percent: Int
+    )
 
     private external fun nativeLoadTrack(
         handle: Long,

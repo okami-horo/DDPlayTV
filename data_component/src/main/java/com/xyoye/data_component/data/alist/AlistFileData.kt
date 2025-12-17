@@ -15,21 +15,15 @@ import kotlinx.parcelize.Parcelize
 data class AlistFileData constructor(
     @NullToEmptyString
     val name: String = "",
-
     @Json(name = "is_dir")
     val isDirectory: Boolean = false,
-
     @Json(name = "raw_url")
     @NullToEmptyString
     val rawUrl: String = "",
-
     @NullToEmptyString
     val thumb: String = "",
-
     val size: Long = 0L,
-
     @Json(name = "sign")
     @NullToEmptyString
-    val sign: String = "",
-
+    val sign: String = ""
 ) : Parcelable

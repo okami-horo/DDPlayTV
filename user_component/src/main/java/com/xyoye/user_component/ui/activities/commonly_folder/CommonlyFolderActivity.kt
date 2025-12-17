@@ -8,25 +8,21 @@ import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.common_component.weight.dialog.FileManagerDialog
 import com.xyoye.data_component.enums.FileManagerAction
-
 import com.xyoye.user_component.BR
 import com.xyoye.user_component.R
 import com.xyoye.user_component.databinding.ActivityCommonlyFolderBinding
 
 @Route(path = RouteTable.User.CommonManager)
-class CommonlyFolderActivity :
-    BaseActivity<CommonlyFolderViewModel, ActivityCommonlyFolderBinding>() {
-
+class CommonlyFolderActivity : BaseActivity<CommonlyFolderViewModel, ActivityCommonlyFolderBinding>() {
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            CommonlyFolderViewModel::class.java
+            CommonlyFolderViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_commonly_folder
 
     override fun initView() {
-
         var commonFolder1Path = AppConfig.getCommonlyFolder1()
         commonFolder1Path =
             if (commonFolder1Path.isNullOrEmpty()) "路径：未设置" else "路径：$commonFolder1Path"
@@ -43,14 +39,13 @@ class CommonlyFolderActivity :
     }
 
     private fun initListener() {
-
         val defaultPath = Environment.getExternalStorageDirectory().absolutePath
 
         dataBinding.commonlyFolder1Ll.setOnClickListener {
             FileManagerDialog(
                 this,
                 FileManagerAction.ACTION_SELECT_DIRECTORY,
-                defaultPath
+                defaultPath,
             ) {
                 AppConfig.putCommonlyFolder1(it)
                 val path = "路径：$it"
@@ -62,7 +57,7 @@ class CommonlyFolderActivity :
             FileManagerDialog(
                 this,
                 FileManagerAction.ACTION_SELECT_DIRECTORY,
-                defaultPath
+                defaultPath,
             ) {
                 AppConfig.putCommonlyFolder2(it)
                 val path = "路径：$it"
@@ -71,31 +66,36 @@ class CommonlyFolderActivity :
         }
 
         dataBinding.commonlyFolder1Ll.setOnLongClickListener {
-            CommonDialog.Builder(this).apply {
-                content = "确认删除常用文件夹1？"
-                addPositive {
-                    AppConfig.putCommonlyFolder1("")
-                    dataBinding.commonlyFolder1Tv.text = "路径：未设置"
-                    it.dismiss()
-                }
-                addNegative { it.dismiss() }
-            }.build().show()
+            CommonDialog
+                .Builder(this)
+                .apply {
+                    content = "确认删除常用文件夹1？"
+                    addPositive {
+                        AppConfig.putCommonlyFolder1("")
+                        dataBinding.commonlyFolder1Tv.text = "路径：未设置"
+                        it.dismiss()
+                    }
+                    addNegative { it.dismiss() }
+                }.build()
+                .show()
             return@setOnLongClickListener true
         }
 
         dataBinding.commonlyFolder2Ll.setOnLongClickListener {
-            CommonDialog.Builder(this).apply {
-                content = "确认删除常用文件夹2？"
-                addPositive {
-                    AppConfig.putCommonlyFolder2("")
-                    dataBinding.commonlyFolder2Tv.text = "路径：未设置"
-                    it.dismiss()
-                }
-                addNegative { it.dismiss() }
-            }.build().show()
+            CommonDialog
+                .Builder(this)
+                .apply {
+                    content = "确认删除常用文件夹2？"
+                    addPositive {
+                        AppConfig.putCommonlyFolder2("")
+                        dataBinding.commonlyFolder2Tv.text = "路径：未设置"
+                        it.dismiss()
+                    }
+                    addNegative { it.dismiss() }
+                }.build()
+                .show()
             return@setOnLongClickListener true
         }
-
 
         dataBinding.lastOpenFolderSw.setOnCheckedChangeListener { _, isChecked ->
             AppConfig.putLastOpenFolderEnable(isChecked)

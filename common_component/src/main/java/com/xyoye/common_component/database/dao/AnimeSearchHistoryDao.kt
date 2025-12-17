@@ -11,7 +11,6 @@ import com.xyoye.data_component.helper.DateConverter
 
 @Dao
 interface AnimeSearchHistoryDao {
-
     @Query("SELECT search_text FROM anime_search_history ORDER BY search_time DESC LIMIT 10 OFFSET 0")
     fun getAll(): LiveData<MutableList<String>>
 

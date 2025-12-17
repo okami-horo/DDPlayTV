@@ -9,7 +9,6 @@ import com.xyoye.common_component.log.model.LogTag
  * 对业务代码暴露的统一日志门面。
  */
 object LogFacade {
-
     fun d(
         module: LogModule,
         tag: String? = null,
@@ -51,14 +50,15 @@ object LogFacade {
         throwable: Throwable? = null
     ) {
         val logTag = tag?.takeIf { it.isNotBlank() }?.let { LogTag(module, it) }
-        val event = LogEvent(
-            level = level,
-            module = module,
-            tag = logTag,
-            message = message,
-            context = context,
-            throwable = throwable
-        )
+        val event =
+            LogEvent(
+                level = level,
+                module = module,
+                tag = logTag,
+                message = message,
+                context = context,
+                throwable = throwable,
+            )
         LogSystem.log(event)
     }
 }

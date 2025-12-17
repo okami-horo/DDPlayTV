@@ -23,11 +23,11 @@ import com.xyoye.user_component.ui.dialog.UserCoverDialog
 
 @Route(path = RouteTable.User.PersonalFragment)
 class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersonalBinding>() {
-
-    override fun initViewModel() = ViewModelInit(
-        BR.viewModel,
-        PersonalFragmentViewModel::class.java
-    )
+    override fun initViewModel() =
+        ViewModelInit(
+            BR.viewModel,
+            PersonalFragmentViewModel::class.java,
+        )
 
     override fun getLayoutId() = R.layout.fragment_personal
 
@@ -87,7 +87,6 @@ class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersona
     }
 
     private fun initClick() {
-
         dataBinding.userCoverIv.setOnClickListener {
             UserCoverDialog(requireActivity()) {
                 val typedArray = resources.obtainTypedArray(R.array.cover)
@@ -99,89 +98,107 @@ class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersona
         }
 
         dataBinding.userAccountCl.setOnClickListener {
-            if (!checkLoggedIn())
+            if (!checkLoggedIn()) {
                 return@setOnClickListener
+            }
 
-            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                mAttachActivity, dataBinding.userCoverIv, dataBinding.userCoverIv.transitionName
-            )
+            val options =
+                ActivityOptionsCompat.makeSceneTransitionAnimation(
+                    mAttachActivity,
+                    dataBinding.userCoverIv,
+                    dataBinding.userCoverIv.transitionName,
+                )
 
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.User.UserInfo)
                 .withOptionsCompat(options)
                 .navigation(mAttachActivity)
         }
 
         dataBinding.followAnimeLl.setOnClickListener {
-            if (!checkLoggedIn())
+            if (!checkLoggedIn()) {
                 return@setOnClickListener
+            }
 
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Anime.AnimeFollow)
                 .withParcelable("followData", viewModel.followData)
                 .navigation()
         }
 
         dataBinding.cloudHistoryLl.setOnClickListener {
-            if (!checkLoggedIn())
+            if (!checkLoggedIn()) {
                 return@setOnClickListener
+            }
 
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Anime.AnimeHistory)
                 .withParcelable("historyData", viewModel.historyData)
                 .navigation()
         }
 
         dataBinding.playerSettingLl.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.User.SettingPlayer)
                 .navigation()
         }
 
         dataBinding.scanManagerLl.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.User.ScanManager)
                 .navigation()
         }
 
         dataBinding.cacheManagerLl.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.User.CacheManager)
                 .navigation()
         }
 
         dataBinding.commonlyManagerLl.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.User.CommonManager)
                 .navigation()
         }
 
         dataBinding.bilibiliDanmuLl.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Local.BiliBiliDanmu)
                 .navigation()
         }
 
         dataBinding.shooterSubtitleLl.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Local.ShooterSubtitle)
                 .navigation()
         }
 
         dataBinding.screencastReceiverLl.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Stream.ScreencastReceiver)
                 .navigation()
         }
 
         dataBinding.appSettingLl.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.User.SettingApp)
                 .navigation()
         }
 
         dataBinding.developerSettingLl?.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.User.SettingDeveloper)
                 .navigation()
         }
@@ -192,7 +209,8 @@ class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersona
      */
     private fun checkLoggedIn(): Boolean {
         if (!UserConfig.isUserLoggedIn()) {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.User.UserLogin)
                 .navigation()
             return false

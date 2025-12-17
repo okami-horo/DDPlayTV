@@ -11,9 +11,18 @@ class NoOpTelemetrySink : Media3TelemetrySink {
         autoplay: Boolean
     ) = Unit
 
-    override suspend fun recordFirstFrame(session: PlaybackSession, latencyMs: Long) = Unit
+    override suspend fun recordFirstFrame(
+        session: PlaybackSession,
+        latencyMs: Long
+    ) = Unit
 
-    override suspend fun recordError(session: PlaybackSession, throwable: Throwable) = Unit
+    override suspend fun recordError(
+        session: PlaybackSession,
+        throwable: Throwable
+    ) = Unit
 
-    override suspend fun recordCastTransfer(session: PlaybackSession, targetId: String?) = Unit
+    override suspend fun recordCastTransfer(
+        session: PlaybackSession,
+        targetId: String?
+    ) = Unit
 }

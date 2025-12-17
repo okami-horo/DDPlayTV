@@ -15,49 +15,30 @@ import com.xyoye.data_component.data.screeencast.ScreencastVideoData
 class ScreencastStorageFile(
     storage: ScreencastStorage,
     private val screencastData: ScreencastData,
-    private val videoData: ScreencastVideoData,
+    private val videoData: ScreencastVideoData
 ) : AbstractStorageFile(storage) {
-    override fun getRealFile(): ScreencastVideoData {
-        return videoData
-    }
+    override fun getRealFile(): ScreencastVideoData = videoData
 
-    override fun filePath(): String {
-        return ScreencastConstants.ProviderApi.VIDEO.buildUrl(screencastData, videoData)
-    }
+    override fun filePath(): String = ScreencastConstants.ProviderApi.VIDEO.buildUrl(screencastData, videoData)
 
-    override fun fileUrl(): String {
-        return Uri.parse(filePath()).toString()
-    }
+    override fun fileUrl(): String = Uri.parse(filePath()).toString()
 
-    override fun isDirectory(): Boolean {
-        return false
-    }
+    override fun isDirectory(): Boolean = false
 
-    override fun fileName(): String {
-        return videoData.title
-    }
+    override fun fileName(): String = videoData.title
 
-    override fun fileLength(): Long {
-        return 0
-    }
+    override fun fileLength(): Long = 0
 
-    override fun clone(): StorageFile {
-        return ScreencastStorageFile(
+    override fun clone(): StorageFile =
+        ScreencastStorageFile(
             storage as ScreencastStorage,
             screencastData,
-            videoData
+            videoData,
         ).also { it.playHistory = playHistory }
-    }
 
-    override fun isVideoFile(): Boolean {
-        return true
-    }
+    override fun isVideoFile(): Boolean = true
 
-    override fun uniqueKey(): String {
-        return videoData.uniqueKey
-    }
+    override fun uniqueKey(): String = videoData.uniqueKey
 
-    fun getCallbackUrl(): String {
-        return ScreencastConstants.ProviderApi.CALLBACK.buildUrl(screencastData, videoData)
-    }
+    fun getCallbackUrl(): String = ScreencastConstants.ProviderApi.CALLBACK.buildUrl(screencastData, videoData)
 }

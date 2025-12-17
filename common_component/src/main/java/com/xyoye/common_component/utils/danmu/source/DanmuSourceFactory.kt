@@ -16,26 +16,26 @@ import com.xyoye.data_component.enums.ResourceType
  */
 
 object DanmuSourceFactory {
-
-    fun build(source: BaseVideoSource): DanmuSource? {
-        return build(source.getVideoUrl(), source.getHttpHeader() ?: emptyMap())
-    }
+    fun build(source: BaseVideoSource): DanmuSource? = build(source.getVideoUrl(), source.getHttpHeader() ?: emptyMap())
 
     fun build(storageFile: StorageFile): DanmuSource? {
-        val url = if (storageFile is VideoStorageFile || storageFile is DocumentStorageFile) {
-            storageFile.filePath()
-        } else {
-            null
-        }
+        val url =
+            if (storageFile is VideoStorageFile || storageFile is DocumentStorageFile) {
+                storageFile.filePath()
+            } else {
+                null
+            }
         return build(url.orEmpty())
     }
 
-    fun build(url: String, headers: Map<String, String> = emptyMap()): DanmuSource? {
-        return when (url.resourceType()) {
+    fun build(
+        url: String,
+        headers: Map<String, String> = emptyMap()
+    ): DanmuSource? =
+        when (url.resourceType()) {
             ResourceType.File -> IOFileDanmuSource(url)
             ResourceType.URI -> DocumentFileDanmuSource(Uri.parse(url))
             ResourceType.URL -> NetworkDanmuSource(url, headers)
             else -> null
         }
-    }
 }

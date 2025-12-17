@@ -4,9 +4,9 @@ import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.utils.danmu.source.AbstractDanmuSource
 import kotlinx.coroutines.delay
 import java.io.InputStream
-import java.net.SocketTimeoutException
-import java.net.SocketException
 import java.io.InterruptedIOException
+import java.net.SocketException
+import java.net.SocketTimeoutException
 
 /**
  * Created by xyoye on 2024/1/14.
@@ -16,14 +16,13 @@ class NetworkDanmuSource(
     private val url: String,
     private val headers: Map<String, String> = emptyMap()
 ) : AbstractDanmuSource() {
-
-    override suspend fun getStream(): InputStream? {
-        return retryWithBackoff {
-            ResourceRepository.getResourceResponseBody(url, headers)
+    override suspend fun getStream(): InputStream? =
+        retryWithBackoff {
+            ResourceRepository
+                .getResourceResponseBody(url, headers)
                 .getOrNull()
                 ?.byteStream()
         }
-    }
 
     /**
      * 带指数退避的重试机制

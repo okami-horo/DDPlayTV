@@ -15,11 +15,10 @@ import kotlin.system.exitProcess
 
 @Route(path = RouteTable.User.SwitchTheme)
 class SwitchThemesActivity : BaseActivity<SwitchThemesViewModel, ActivitySwitchThemesBinding>() {
-
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            SwitchThemesViewModel::class.java
+            SwitchThemesViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_switch_themes
@@ -38,22 +37,25 @@ class SwitchThemesActivity : BaseActivity<SwitchThemesViewModel, ActivitySwitchT
             val targetMode = viewModel.targetMode.get() ?: return true
 
             if (viewModel.needReboot.get() == true) {
-                CommonDialog.Builder(this).apply {
-                    content = "新的设置需要重启应用才能生效"
-                    addPositive {
-                        it.dismiss()
+                CommonDialog
+                    .Builder(this)
+                    .apply {
+                        content = "新的设置需要重启应用才能生效"
+                        addPositive {
+                            it.dismiss()
 
-                        AppConfig.putDarkMode(targetMode)
+                            AppConfig.putDarkMode(targetMode)
 
-                        val intent = packageManager.getLaunchIntentForPackage(packageName)
-                        startActivity(intent)
+                            val intent = packageManager.getLaunchIntentForPackage(packageName)
+                            startActivity(intent)
 
-                        exitProcess(0)
-                    }
-                    addNegative {
-                        it.dismiss()
-                    }
-                }.build().show()
+                            exitProcess(0)
+                        }
+                        addNegative {
+                            it.dismiss()
+                        }
+                    }.build()
+                    .show()
             } else {
                 AppCompatDelegate.setDefaultNightMode(targetMode)
                 AppConfig.putDarkMode(targetMode)

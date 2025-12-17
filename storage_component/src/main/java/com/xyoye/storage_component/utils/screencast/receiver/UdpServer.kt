@@ -27,16 +27,15 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 
 object UdpServer {
-
     private var TAG = UdpServer::class.java.simpleName
 
-    //UDPSocket
+    // UDPSocket
     private var multicastSocket: MulticastSocket? = null
 
-    //组播地址
+    // 组播地址
     private var multicastAddress: InetAddress? = null
 
-    //组播次数
+    // 组播次数
     private var multicastCount = 0
 
     private var isRunning = AtomicBoolean(false)
@@ -44,7 +43,10 @@ object UdpServer {
     /**
      * 启动组播发送
      */
-    suspend fun startMulticastEmit(httpPort: Int, needPassword: Boolean) {
+    suspend fun startMulticastEmit(
+        httpPort: Int,
+        needPassword: Boolean
+    ) {
         stopMulticastEmit()
 
         if (initMulticastSocket().not()) {
@@ -85,7 +87,7 @@ object UdpServer {
                 e,
                 "UdpServer",
                 "initMulticastSocket",
-                "组播Socket初始化失败，host=${ScreencastConstants.Multicast.host}"
+                "组播Socket初始化失败，host=${ScreencastConstants.Multicast.host}",
             )
             e.printStackTrace()
         }
@@ -96,17 +98,21 @@ object UdpServer {
     /**
      * 发送组播
      */
-    private fun sendMulticast(httpPort: Int, needPassword: Boolean) {
+    private fun sendMulticast(
+        httpPort: Int,
+        needPassword: Boolean
+    ) {
         try {
-            val udpDeviceBean = UDPDeviceBean(
-                httpPort = httpPort,
-                deviceName = getDeviceName(),
-                count = multicastCount,
-                needPassword = needPassword
-            )
+            val udpDeviceBean =
+                UDPDeviceBean(
+                    httpPort = httpPort,
+                    deviceName = getDeviceName(),
+                    count = multicastCount,
+                    needPassword = needPassword,
+                )
             val msg = JsonHelper.toJson(udpDeviceBean) ?: return
 
-            //组播内容加密
+            // 组播内容加密
             val entropyMsg = EntropyUtils.aesEncode(ScreencastConstants.Multicast.secret, msg)
             if (TextUtils.isEmpty(entropyMsg)) {
                 return
@@ -126,7 +132,7 @@ object UdpServer {
                 e,
                 "UdpServer",
                 "sendMulticast",
-                "发送组播消息失败，httpPort=$httpPort, multicastCount=$multicastCount"
+                "发送组播消息失败，httpPort=$httpPort, multicastCount=$multicastCount",
             )
             e.printStackTrace()
         }
@@ -136,14 +142,15 @@ object UdpServer {
      * 获取设备名称
      */
     private fun getDeviceName(): String {
-        var deviceName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
-            Settings.Global.getString(
-                BaseApplication.getAppContext().contentResolver,
-                Settings.Global.DEVICE_NAME
-            )
-        } else {
-            null
-        }
+        var deviceName =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
+                Settings.Global.getString(
+                    BaseApplication.getAppContext().contentResolver,
+                    Settings.Global.DEVICE_NAME,
+                )
+            } else {
+                null
+            }
         if (TextUtils.isEmpty(deviceName)) {
             deviceName = "${Build.BRAND}_${Build.DEVICE}"
         }

@@ -14,7 +14,6 @@ import com.xyoye.data_component.bean.LocalDanmuBean
  */
 
 object StorageVideoSourceFactory {
-
     suspend fun create(file: StorageFile): StorageVideoSource? {
         val storage = file.storage
         val videoSources = getVideoSources(storage)
@@ -28,18 +27,21 @@ object StorageVideoSourceFactory {
             videoSources,
             danmu,
             subtitlePath,
-            audioPath
+            audioPath,
         )
     }
 
-    private suspend fun findLocalDanmu(file: StorageFile, storage: Storage): LocalDanmuBean? {
-        //从播放记录读取弹幕
+    private suspend fun findLocalDanmu(
+        file: StorageFile,
+        storage: Storage
+    ): LocalDanmuBean? {
+        // 从播放记录读取弹幕
         val history = file.playHistory
         if (history?.danmuPath?.isNotEmpty() == true) {
             return LocalDanmuBean(history.danmuPath!!, history.episodeId)
         }
 
-        //是否匹配同文件夹内同名弹幕
+        // 是否匹配同文件夹内同名弹幕
         if (DanmuConfig.isAutoLoadSameNameDanmu()) {
             return storage.cacheDanmu(file)
         }
@@ -47,15 +49,18 @@ object StorageVideoSourceFactory {
         return null
     }
 
-    private suspend fun getSubtitlePath(file: StorageFile, storage: Storage): String? {
+    private suspend fun getSubtitlePath(
+        file: StorageFile,
+        storage: Storage
+    ): String? {
         val subtitleNotFound = null
 
-        //从播放记录读取弹幕
+        // 从播放记录读取弹幕
         if (file.playHistory?.subtitlePath?.isNotEmpty() == true) {
             return file.playHistory?.subtitlePath
         }
 
-        //是否匹配同文件夹内同名字幕
+        // 是否匹配同文件夹内同名字幕
         if (SubtitleConfig.isAutoLoadSameNameSubtitle()) {
             return storage.cacheSubtitle(file)
                 ?: subtitleNotFound
@@ -64,10 +69,9 @@ object StorageVideoSourceFactory {
         return subtitleNotFound
     }
 
-    private fun getVideoSources(storage: Storage): List<StorageFile> {
-        return storage.directoryFiles
+    private fun getVideoSources(storage: Storage): List<StorageFile> =
+        storage.directoryFiles
             .filter { it.isVideoFile() }
             .filter { AppConfig.isShowHiddenFile() || !it.fileName().startsWith(".") }
             .sortedWith(StorageSortOption.comparator())
-    }
 }

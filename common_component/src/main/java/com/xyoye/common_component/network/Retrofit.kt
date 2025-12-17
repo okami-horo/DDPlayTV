@@ -43,7 +43,8 @@ class Retrofit private constructor() {
     }
 
     private val danDanClient: OkHttpClient by lazy {
-        OkHttpClient.Builder()
+        OkHttpClient
+            .Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
@@ -60,7 +61,8 @@ class Retrofit private constructor() {
     }
 
     private val commonClient: OkHttpClient by lazy {
-        OkHttpClient.Builder()
+        OkHttpClient
+            .Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
@@ -75,7 +77,8 @@ class Retrofit private constructor() {
     private val moshiConverterFactory = MoshiConverterFactory.create(JsonHelper.MO_SHI)
 
     private val danDanService: DanDanService by lazy {
-        Retrofit.Builder()
+        Retrofit
+            .Builder()
             .addConverterFactory(moshiConverterFactory)
             .client(danDanClient)
             .baseUrl(Api.DAN_DAN_OPEN)
@@ -84,7 +87,8 @@ class Retrofit private constructor() {
     }
 
     private val magnetService: MagnetService by lazy {
-        Retrofit.Builder()
+        Retrofit
+            .Builder()
             .addConverterFactory(moshiConverterFactory)
             .client(commonClient)
             .baseUrl(Api.DAN_DAN_RES)
@@ -93,7 +97,8 @@ class Retrofit private constructor() {
     }
 
     private val extendedService: ExtendedService by lazy {
-        Retrofit.Builder()
+        Retrofit
+            .Builder()
             .addConverterFactory(moshiConverterFactory)
             .client(commonClient)
             .baseUrl(Api.PLACEHOLDER)
@@ -102,7 +107,8 @@ class Retrofit private constructor() {
     }
 
     private val remoteService: RemoteService by lazy {
-        Retrofit.Builder()
+        Retrofit
+            .Builder()
             .addConverterFactory(moshiConverterFactory)
             .client(commonClient)
             .baseUrl(Api.PLACEHOLDER)
@@ -111,7 +117,8 @@ class Retrofit private constructor() {
     }
 
     private val screencastService: ScreencastService by lazy {
-        Retrofit.Builder()
+        Retrofit
+            .Builder()
             .addConverterFactory(moshiConverterFactory)
             .client(commonClient)
             .baseUrl(Api.PLACEHOLDER)
@@ -120,7 +127,8 @@ class Retrofit private constructor() {
     }
 
     private val alistService: AlistService by lazy {
-        Retrofit.Builder()
+        Retrofit
+            .Builder()
             .addConverterFactory(moshiConverterFactory)
             .client(commonClient)
             .baseUrl(Api.PLACEHOLDER)
@@ -129,7 +137,8 @@ class Retrofit private constructor() {
     }
 
     private val media3Service: Media3Service by lazy {
-        Retrofit.Builder()
+        Retrofit
+            .Builder()
             .addConverterFactory(moshiConverterFactory)
             .client(commonClient)
             .baseUrl(Api.MEDIA3)

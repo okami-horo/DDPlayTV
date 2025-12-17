@@ -8,12 +8,15 @@ import androidx.room.TypeConverter
 
 open class BooleanConverter {
     @TypeConverter
-    fun formBoolean(value: Boolean?): Int? {
-        return if (value == null) null else if (value) 1 else 0
-    }
+    fun formBoolean(value: Boolean?): Int? =
+        if (value == null) {
+            null
+        } else if (value) {
+            1
+        } else {
+            0
+        }
 
     @TypeConverter
-    fun intToBoolean(intValue: Int?): Boolean? {
-        return intValue == 1
-    }
+    fun intToBoolean(intValue: Int?): Boolean? = intValue == 1
 }

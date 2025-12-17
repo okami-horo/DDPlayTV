@@ -7,8 +7,8 @@ import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.aesEncode
 import com.xyoye.common_component.extension.authorizationValue
 import com.xyoye.common_component.extension.toastError
-import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.network.repository.ScreencastRepository
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.getFileName
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -21,55 +21,59 @@ import kotlinx.coroutines.launch
  */
 
 class MediaViewModel : BaseViewModel() {
-
-    val mediaLibWithStatusLiveData = DatabaseManager.instance
-        .getMediaLibraryDao()
-        .getAll()
-        .map { libraries ->
-            libraries.onEach {
-                it.running = false
-            }.filter { it.mediaType != MediaType.SCREEN_CAST }
-                .toMutableList()
-        }
+    val mediaLibWithStatusLiveData =
+        DatabaseManager.instance
+            .getMediaLibraryDao()
+            .getAll()
+            .map { libraries ->
+                libraries
+                    .onEach {
+                        it.running = false
+                    }.filter { it.mediaType != MediaType.SCREEN_CAST }
+                    .toMutableList()
+            }
 
     fun initLocalStorage() {
         viewModelScope.launch(context = Dispatchers.IO) {
             try {
-                //播放历史首条记录
-                DatabaseManager.instance.getPlayHistoryDao().gitLastPlay(
-                    MediaType.LOCAL_STORAGE,
-                    MediaType.OTHER_STORAGE,
-                    MediaType.FTP_SERVER,
-                    MediaType.SMB_SERVER,
-                    MediaType.REMOTE_STORAGE,
-                    MediaType.WEBDAV_SERVER
-                )?.apply {
-                    MediaLibraryEntity.HISTORY.url = url
-                }
+                // 播放历史首条记录
+                DatabaseManager.instance
+                    .getPlayHistoryDao()
+                    .gitLastPlay(
+                        MediaType.LOCAL_STORAGE,
+                        MediaType.OTHER_STORAGE,
+                        MediaType.FTP_SERVER,
+                        MediaType.SMB_SERVER,
+                        MediaType.REMOTE_STORAGE,
+                        MediaType.WEBDAV_SERVER,
+                    )?.apply {
+                        MediaLibraryEntity.HISTORY.url = url
+                    }
 
-                //磁链播放首条记录
+                // 磁链播放首条记录
                 DatabaseManager.instance.getPlayHistoryDao().gitLastPlay(MediaType.MAGNET_LINK)?.apply {
                     MediaLibraryEntity.TORRENT.describe = getFileName(torrentPath)
                 }
 
-                //串流播放首条记录
+                // 串流播放首条记录
                 DatabaseManager.instance.getPlayHistoryDao().gitLastPlay(MediaType.STREAM_LINK)?.apply {
                     MediaLibraryEntity.STREAM.describe = url
                 }
 
-                DatabaseManager.instance.getMediaLibraryDao()
+                DatabaseManager.instance
+                    .getMediaLibraryDao()
                     .insert(
                         MediaLibraryEntity.LOCAL,
                         MediaLibraryEntity.STREAM,
                         MediaLibraryEntity.TORRENT,
-                        MediaLibraryEntity.HISTORY
+                        MediaLibraryEntity.HISTORY,
                     )
             } catch (e: Exception) {
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "MediaViewModel",
                     "initLocalStorage",
-                    "Database operation failed"
+                    "Database operation failed",
                 )
             }
         }
@@ -78,14 +82,15 @@ class MediaViewModel : BaseViewModel() {
     fun deleteStorage(data: MediaLibraryEntity) {
         viewModelScope.launch(context = Dispatchers.IO) {
             try {
-                DatabaseManager.instance.getMediaLibraryDao()
+                DatabaseManager.instance
+                    .getMediaLibraryDao()
                     .delete(data.url, data.mediaType)
             } catch (e: Exception) {
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "MediaViewModel",
                     "deleteStorage",
-                    "Failed to delete storage: ${data.url}"
+                    "Failed to delete storage: ${data.url}",
                 )
             }
         }
@@ -95,10 +100,11 @@ class MediaViewModel : BaseViewModel() {
         viewModelScope.launch {
             try {
                 showLoading()
-                val result = ScreencastRepository.init(
-                    "http://${receiver.screencastAddress}:${receiver.port}",
-                    receiver.password?.aesEncode()?.authorizationValue()
-                )
+                val result =
+                    ScreencastRepository.init(
+                        "http://${receiver.screencastAddress}:${receiver.port}",
+                        receiver.password?.aesEncode()?.authorizationValue(),
+                    )
                 hideLoading()
 
                 if (result.isFailure) {
@@ -107,7 +113,7 @@ class MediaViewModel : BaseViewModel() {
                         exception ?: RuntimeException("Unknown screencast connection error"),
                         "MediaViewModel",
                         "checkScreenDeviceRunning",
-                        "Screencast address: ${receiver.screencastAddress}:${receiver.port}"
+                        "Screencast address: ${receiver.screencastAddress}:${receiver.port}",
                     )
                     exception?.message?.toastError()
                     return@launch
@@ -120,7 +126,7 @@ class MediaViewModel : BaseViewModel() {
                     e,
                     "MediaViewModel",
                     "checkScreenDeviceRunning",
-                    "Unexpected error during screencast check"
+                    "Unexpected error during screencast check",
                 )
                 e.message?.toastError()
             }

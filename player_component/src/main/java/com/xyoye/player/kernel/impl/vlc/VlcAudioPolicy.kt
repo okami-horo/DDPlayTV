@@ -48,12 +48,13 @@ object VlcAudioPolicy {
     }
 
     private fun supportsPcm32(): Boolean {
-        val encoding32 = try {
-            AudioFormat::class.java.getField("ENCODING_PCM_32BIT").getInt(null)
-        } catch (e: Exception) {
-            VideoLog.d("$TAG--probe--> PCM32 field missing, treat as unsupported")
-            return false
-        }
+        val encoding32 =
+            try {
+                AudioFormat::class.java.getField("ENCODING_PCM_32BIT").getInt(null)
+            } catch (e: Exception) {
+                VideoLog.d("$TAG--probe--> PCM32 field missing, treat as unsupported")
+                return false
+            }
 
         return try {
             val sampleRate = 44_100
@@ -64,22 +65,27 @@ object VlcAudioPolicy {
                 return false
             }
 
-            val attributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
-                .build()
-            val format = AudioFormat.Builder()
-                .setSampleRate(sampleRate)
-                .setEncoding(encoding32)
-                .setChannelMask(channelMask)
-                .build()
-            val track = AudioTrack(
-                attributes,
-                format,
-                bufferSize,
-                AudioTrack.MODE_STREAM,
-                AudioManager.AUDIO_SESSION_ID_GENERATE
-            )
+            val attributes =
+                AudioAttributes
+                    .Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
+                    .build()
+            val format =
+                AudioFormat
+                    .Builder()
+                    .setSampleRate(sampleRate)
+                    .setEncoding(encoding32)
+                    .setChannelMask(channelMask)
+                    .build()
+            val track =
+                AudioTrack(
+                    attributes,
+                    format,
+                    bufferSize,
+                    AudioTrack.MODE_STREAM,
+                    AudioManager.AUDIO_SESSION_ID_GENERATE,
+                )
             val initialized = track.state == AudioTrack.STATE_INITIALIZED
             track.release()
             if (!initialized) {

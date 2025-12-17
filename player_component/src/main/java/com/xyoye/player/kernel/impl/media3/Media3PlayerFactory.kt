@@ -7,7 +7,5 @@ import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 
 @UnstableApi
 class Media3PlayerFactory : PlayerFactory() {
-    override fun createPlayer(context: Context): AbstractVideoPlayer {
-        return Media3VideoPlayer(context.applicationContext)
-    }
+    override fun createPlayer(context: Context): AbstractVideoPlayer = Media3VideoPlayer(context.applicationContext)
 }

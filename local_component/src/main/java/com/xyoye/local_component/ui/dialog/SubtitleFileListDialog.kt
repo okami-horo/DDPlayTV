@@ -20,7 +20,6 @@ class SubtitleFileListDialog(
     private val subtitleList: MutableList<SubFileData>,
     private val callback: (fileName: String, url: String) -> Unit
 ) : BaseBottomDialog<DialogSubtitleFileListBinding>(activity) {
-
     override fun getChildLayoutId() = R.layout.dialog_subtitle_file_list
 
     override fun initView(binding: DialogSubtitleFileListBinding) {
@@ -34,28 +33,29 @@ class SubtitleFileListDialog(
         val iterator = subtitleList.iterator()
         while (iterator.hasNext()) {
             val fileData = iterator.next()
-            if (fileData.url == null || fileData.f == null)
+            if (fileData.url == null || fileData.f == null) {
                 iterator.remove()
+            }
         }
 
         binding.subtitleFileRv.apply {
             layoutManager = vertical()
 
-            adapter = buildAdapter {
-
-                addItem<SubFileData, ItemSubtitleFileBinding>(R.layout.item_subtitle_file) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            fileNameTv.text = data.f
-                            fileSizeTv.text = data.s
-                            itemLayout.setOnClickListener {
-                                dismiss()
-                                callback.invoke(data.f!!, data.url!!)
+            adapter =
+                buildAdapter {
+                    addItem<SubFileData, ItemSubtitleFileBinding>(R.layout.item_subtitle_file) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                fileNameTv.text = data.f
+                                fileSizeTv.text = data.s
+                                itemLayout.setOnClickListener {
+                                    dismiss()
+                                    callback.invoke(data.f!!, data.url!!)
+                                }
                             }
                         }
                     }
                 }
-            }
 
             setData(subtitleList)
         }

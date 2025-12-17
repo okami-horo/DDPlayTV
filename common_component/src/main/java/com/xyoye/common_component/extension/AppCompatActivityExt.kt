@@ -12,6 +12,4 @@ fun Context.isNightMode(): Boolean {
     return mode == Configuration.UI_MODE_NIGHT_YES
 }
 
-fun Context.isLandScreen(): Boolean {
-    return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-}
+fun Context.isLandScreen(): Boolean = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE

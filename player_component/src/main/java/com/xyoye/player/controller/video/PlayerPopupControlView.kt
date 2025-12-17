@@ -22,19 +22,21 @@ class PlayerPopupControlView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), InterControllerView {
-    //悬浮窗关闭回调
+) : FrameLayout(context, attrs, defStyleAttr),
+    InterControllerView {
+    // 悬浮窗关闭回调
     private var mExitPlayerBlock: (() -> Unit)? = null
 
-    //退出悬浮窗模式回调
-    private var mExitPopupModeBlock:(() -> Unit)? = null
+    // 退出悬浮窗模式回调
+    private var mExitPopupModeBlock: (() -> Unit)? = null
 
-    private val viewBinding = DataBindingUtil.inflate<LayoutPlayerPopupControlBinding>(
-        LayoutInflater.from(context),
-        R.layout.layout_player_popup_control,
-        this,
-        true
-    )
+    private val viewBinding =
+        DataBindingUtil.inflate<LayoutPlayerPopupControlBinding>(
+            LayoutInflater.from(context),
+            R.layout.layout_player_popup_control,
+            this,
+            true,
+        )
 
     private lateinit var mControlWrapper: ControlWrapper
 
@@ -80,19 +82,19 @@ class PlayerPopupControlView(
         mControlWrapper = controlWrapper
     }
 
-    override fun getView(): View {
-        return this
-    }
+    override fun getView(): View = this
 
     override fun onVisibilityChanged(isVisible: Boolean) {
         if (isVisible) {
-            ViewCompat.animate(viewBinding.settingLayout)
+            ViewCompat
+                .animate(viewBinding.settingLayout)
                 .alpha(1f)
                 .setDuration(300)
                 .withStartAction { viewBinding.settingLayout.isVisible = true }
                 .start()
         } else {
-            ViewCompat.animate(viewBinding.settingLayout)
+            ViewCompat
+                .animate(viewBinding.settingLayout)
                 .alpha(0f)
                 .setDuration(300)
                 .withEndAction { viewBinding.settingLayout.isVisible = false }
@@ -131,28 +133,29 @@ class PlayerPopupControlView(
         }
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
         if (duration > 0) {
             viewBinding.playProgress.progress =
                 (position.toFloat() / duration * viewBinding.playProgress.max).toInt()
         }
 
         var bufferedPercent = mControlWrapper.getBufferedPercentage()
-        if (bufferedPercent > 95)
+        if (bufferedPercent > 95) {
             bufferedPercent = 100
+        }
         viewBinding.playProgress.secondaryProgress = bufferedPercent
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
-
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
-
     }
 
     override fun onPopupModeChanged(isPopup: Boolean) {
-
     }
 
     fun setExitPlayerObserver(block: () -> Unit) {

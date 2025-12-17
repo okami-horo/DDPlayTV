@@ -37,7 +37,7 @@ class StorageFileViewModel : BaseViewModel() {
                     e,
                     "StorageFileViewModel",
                     "playItem",
-                    "播放文件失败: ${file.fileName()}"
+                    "播放文件失败: ${file.fileName()}",
                 )
                 ToastCenter.showError("播放失败: ${e.message}")
             }
@@ -47,9 +47,11 @@ class StorageFileViewModel : BaseViewModel() {
     fun castItem(file: StorageFile) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                //获取所有可用的投屏设备
-                val devices = DatabaseManager.instance.getMediaLibraryDao()
-                    .getByMediaTypeSuspend(MediaType.SCREEN_CAST)
+                // 获取所有可用的投屏设备
+                val devices =
+                    DatabaseManager.instance
+                        .getMediaLibraryDao()
+                        .getByMediaTypeSuspend(MediaType.SCREEN_CAST)
 
                 if (devices.isEmpty()) {
                     ToastCenter.showError("无可用投屏设备")
@@ -66,14 +68,17 @@ class StorageFileViewModel : BaseViewModel() {
                     e,
                     "StorageFileViewModel",
                     "castItem",
-                    "投屏文件失败: ${file.fileName()}"
+                    "投屏文件失败: ${file.fileName()}",
                 )
                 ToastCenter.showError("投屏失败: ${e.message}")
             }
         }
     }
 
-    fun castItem(file: StorageFile, device: MediaLibraryEntity) {
+    fun castItem(
+        file: StorageFile,
+        device: MediaLibraryEntity
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (setupVideoSource(file) && ensureDownloadAllowed(file)) {
@@ -84,7 +89,7 @@ class StorageFileViewModel : BaseViewModel() {
                     e,
                     "StorageFileViewModel",
                     "castItem",
-                    "投屏到设备失败: ${device.displayName}, 文件: ${file.fileName()}"
+                    "投屏到设备失败: ${device.displayName}, 文件: ${file.fileName()}",
                 )
                 ToastCenter.showError("投屏失败: ${e.message}")
             }
@@ -127,8 +132,8 @@ class StorageFileViewModel : BaseViewModel() {
         VideoSourceManager.getInstance().attachMedia3LaunchParams(
             Media3LaunchParams(
                 mediaId = media3DownloadId(file),
-                sourceType = mediaType.toMedia3SourceType()
-            )
+                sourceType = mediaType.toMedia3SourceType(),
+            ),
         )
         VideoSourceManager.getInstance().setSource(mediaSource)
         return true
@@ -140,11 +145,12 @@ class StorageFileViewModel : BaseViewModel() {
         }
         val downloadId = media3DownloadId(file)
         val lastVerified = file.playHistory?.playTime?.time
-        val outcome = downloadValidator.validate(
-            downloadId = downloadId,
-            mediaId = downloadId,
-            lastVerifiedAt = lastVerified
-        )
+        val outcome =
+            downloadValidator.validate(
+                downloadId = downloadId,
+                mediaId = downloadId,
+                lastVerifiedAt = lastVerified,
+            )
         return when (outcome) {
             is DownloadValidator.ValidationOutcome.AllowPlayback -> {
                 if (outcome.audioOnly) {
@@ -162,9 +168,7 @@ class StorageFileViewModel : BaseViewModel() {
         }
     }
 
-    private fun requiresOfflineValidation(file: StorageFile): Boolean {
-        return file.storage.library.mediaType == MediaType.MAGNET_LINK
-    }
+    private fun requiresOfflineValidation(file: StorageFile): Boolean = file.storage.library.mediaType == MediaType.MAGNET_LINK
 
     private fun media3DownloadId(file: StorageFile): String {
         if (file.storage.library.mediaType == MediaType.MAGNET_LINK) {

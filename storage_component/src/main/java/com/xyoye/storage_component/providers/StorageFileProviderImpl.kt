@@ -14,14 +14,12 @@ import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivit
 
 @Route(path = RouteTable.Stream.StorageFileProvider, name = "媒体库文件共享提供者")
 class StorageFileProviderImpl : StorageFileProvider {
-
     override fun init(context: Context?) {
-
     }
 
-    override fun getShareStorageFile(): StorageFile? {
-        return ActivityHelper.instance.findActivity(StorageFileActivity::class.java)
+    override fun getShareStorageFile(): StorageFile? =
+        ActivityHelper.instance
+            .findActivity(StorageFileActivity::class.java)
             ?.run { this as? StorageFileActivity }
             ?.shareStorageFile
-    }
 }

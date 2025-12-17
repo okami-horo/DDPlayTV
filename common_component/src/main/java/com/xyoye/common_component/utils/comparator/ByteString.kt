@@ -6,12 +6,13 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.min
 
-@Parcelize
 // @see https://youtrack.jetbrains.com/issue/KT-24842
 // @Parcelize throws IllegalAccessError if the primary constructor is private.
+@Parcelize
 class ByteString internal constructor(
     private val bytes: ByteArray
-) : Comparable<ByteString>, Parcelable {
+) : Comparable<ByteString>,
+    Parcelable {
     val length: Int
         get() = bytes.size
 
@@ -28,7 +29,10 @@ class ByteString internal constructor(
 
     fun borrowBytes(): ByteArray = bytes
 
-    fun startsWith(prefix: ByteString, startIndex: Int = 0): Boolean {
+    fun startsWith(
+        prefix: ByteString,
+        startIndex: Int = 0
+    ): Boolean {
         if (startIndex !in 0..length - prefix.length) {
             return false
         }
@@ -40,7 +44,10 @@ class ByteString internal constructor(
         return true
     }
 
-    fun indexOf(byte: Byte, fromIndex: Int = 0): Int {
+    fun indexOf(
+        byte: Byte,
+        fromIndex: Int = 0
+    ): Int {
         for (index in fromIndex.coerceAtLeast(0) until length) {
             if (this[index] == byte) {
                 return index
@@ -51,7 +58,10 @@ class ByteString internal constructor(
 
     fun contains(byte: Byte): Boolean = indexOf(byte) != -1
 
-    fun indexOf(substring: ByteString, fromIndex: Int = 0): Int {
+    fun indexOf(
+        substring: ByteString,
+        fromIndex: Int = 0
+    ): Int {
         for (index in fromIndex.coerceAtLeast(0) until length - substring.length) {
             if (startsWith(substring, index)) {
                 return index
@@ -62,7 +72,10 @@ class ByteString internal constructor(
 
     fun contains(substring: ByteString): Boolean = indexOf(substring) != -1
 
-    fun substring(start: Int, end: Int = length): ByteString {
+    fun substring(
+        start: Int,
+        end: Int = length
+    ): ByteString {
         val length = length
         if (start < 0 || end > length || start > end) {
             throw IndexOutOfBoundsException()
@@ -142,17 +155,20 @@ class ByteString internal constructor(
     }
 
     companion object {
+        fun fromBytes(
+            bytes: ByteArray,
+            start: Int = 0,
+            end: Int = bytes.size
+        ): ByteString = ByteString(bytes.copyOfRange(start, end))
 
-        fun fromBytes(bytes: ByteArray, start: Int = 0, end: Int = bytes.size): ByteString =
-            ByteString(bytes.copyOfRange(start, end))
-
-        fun fromString(string: String): ByteString =
-            ByteString(string.toByteArray()).apply { stringCache = string }
+        fun fromString(string: String): ByteString = ByteString(string.toByteArray()).apply { stringCache = string }
     }
 }
 
-fun ByteArray.toByteString(start: Int = 0, end: Int = size): ByteString =
-    ByteString.fromBytes(this, start, end)
+fun ByteArray.toByteString(
+    start: Int = 0,
+    end: Int = size
+): ByteString = ByteString.fromBytes(this, start, end)
 
 fun String.toByteString(): ByteString = ByteString.fromString(this)
 

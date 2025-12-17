@@ -22,13 +22,12 @@ data class DanmuAnimeData(
     val animeId: Int = 0,
     val animeTitle: String = "",
     val episodes: List<DanmuEpisodeData> = emptyList(),
-
     @Json(ignore = true)
     val isRecommend: Boolean = false,
     @Json(ignore = true)
     val isBound: Boolean = false,
     @Json(ignore = true)
-    val isSelected: Boolean = false,
+    val isSelected: Boolean = false
 ) : Parcelable
 
 @Parcelize
@@ -38,7 +37,6 @@ data class DanmuEpisodeData(
     val animeTitle: String = "",
     val episodeId: String = "",
     val episodeTitle: String = "",
-
     @Json(ignore = true)
     val isRecommend: Boolean = false,
     @Json(ignore = true)

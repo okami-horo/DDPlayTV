@@ -29,13 +29,14 @@ class DocumentTreeLauncher(
     }
 
     override fun onCreate(lifecycleOwner: LifecycleOwner) {
-        openDocumentTree = activity.activityResultRegistry.register(
-            KEY_OPEN_DOCUMENT_TREE,
-            lifecycleOwner,
-            ActivityResultContracts.OpenDocumentTree()
-        ) {
-            onResult.invoke(it)
-        }
+        openDocumentTree =
+            activity.activityResultRegistry.register(
+                KEY_OPEN_DOCUMENT_TREE,
+                lifecycleOwner,
+                ActivityResultContracts.OpenDocumentTree(),
+            ) {
+                onResult.invoke(it)
+            }
     }
 
     fun launch() {
@@ -47,7 +48,7 @@ class DocumentTreeLauncher(
                 e,
                 "DocumentTreeLauncher",
                 "launch",
-                "SAF授权页启动失败"
+                "SAF授权页启动失败",
             )
             e.printStackTrace()
             ToastCenter.showError("无法启动SAF授权页")
@@ -57,7 +58,7 @@ class DocumentTreeLauncher(
                 e,
                 "DocumentTreeLauncher",
                 "launch",
-                "启动document tree时发生意外异常"
+                "启动document tree时发生意外异常",
             )
             e.printStackTrace()
             ToastCenter.showError("启动文件选择器失败")

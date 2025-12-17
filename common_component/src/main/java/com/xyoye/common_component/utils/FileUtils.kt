@@ -6,11 +6,9 @@ import android.os.Build
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.extension.isValid
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.utils.ErrorReportHelper
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
-
 
 /**
  * Created by xyoye on 2020/9/7.
@@ -19,9 +17,13 @@ import java.io.IOException
 /**
  * 获取父文件夹路径
  */
-fun getDirPath(filePath: String, separator: String = File.separator): String {
-    if (filePath.isEmpty())
+fun getDirPath(
+    filePath: String,
+    separator: String = File.separator
+): String {
+    if (filePath.isEmpty()) {
         return ""
+    }
     val lastSep = filePath.lastIndexOf(separator)
     return if (lastSep == -1) "" else filePath.substring(0, lastSep)
 }
@@ -29,9 +31,7 @@ fun getDirPath(filePath: String, separator: String = File.separator): String {
 /**
  * 通过文件获取文件名，包括文件扩展名
  */
-fun getFileName(file: File?): String {
-    return if (file == null) "" else getFileName(file.absolutePath)
-}
+fun getFileName(file: File?): String = if (file == null) "" else getFileName(file.absolutePath)
 
 /**
  * 通过路径获取文件名，包括文件扩展名
@@ -45,9 +45,7 @@ fun getFileName(filePath: String?): String {
 /**
  * 通过文件获取文件名，不包括文件扩展名
  */
-fun getFileNameNoExtension(file: File?): String {
-    return if (file == null) "" else getFileNameNoExtension(file.absolutePath)
-}
+fun getFileNameNoExtension(file: File?): String = if (file == null) "" else getFileNameNoExtension(file.absolutePath)
 
 /**
  * 通过路径获取文件名，不包括文件扩展名
@@ -61,26 +59,33 @@ fun getFileNameNoExtension(filePath: String?): String {
     }
     return if (lastPoi == -1 || lastSep > lastPoi) {
         filePath.substring(lastSep + 1)
-    } else
+    } else {
         filePath.substring(lastSep + 1, lastPoi)
+    }
 }
 
 /**
  * 通过路径获取父文件夹名
  */
-fun getParentFolderName(filePath: String, separator: String = File.separator): String {
-    return getFolderName(getDirPath(filePath, separator), separator)
-}
+fun getParentFolderName(
+    filePath: String,
+    separator: String = File.separator
+): String = getFolderName(getDirPath(filePath, separator), separator)
+
 /**
  * 通过路径获取文件夹名
  */
-fun getFolderName(folderPath: String, separator: String = File.separator): String {
+fun getFolderName(
+    folderPath: String,
+    separator: String = File.separator
+): String {
     var tempFolderPath = folderPath
 
     if (tempFolderPath.isEmpty()) return ""
 
-    while (tempFolderPath.endsWith(separator))
+    while (tempFolderPath.endsWith(separator)) {
         tempFolderPath = tempFolderPath.substring(0, tempFolderPath.length - 1)
+    }
 
     val index = tempFolderPath.lastIndexOf(separator)
     return if (index > 0 && index + 1 < tempFolderPath.length) {
@@ -94,10 +99,12 @@ fun getFolderName(folderPath: String, separator: String = File.separator): Strin
  * 检查文件是否存在
  */
 fun isFileExist(filePath: String?): Boolean {
-    if (filePath.isNullOrEmpty())
+    if (filePath.isNullOrEmpty()) {
         return false
-    if (File(filePath).isValid())
+    }
+    if (File(filePath).isValid()) {
         return true
+    }
 
     if (Build.VERSION.SDK_INT >= 29) {
         try {
@@ -110,7 +117,7 @@ fun isFileExist(filePath: String?): Boolean {
                 ErrorReportHelper.postCatchedException(
                     ignore,
                     "FileUtils.isFileExist",
-                    "关闭AssetFileDescriptor失败: $filePath"
+                    "关闭AssetFileDescriptor失败: $filePath",
                 )
             }
         } catch (e: FileNotFoundException) {
@@ -124,9 +131,7 @@ fun isFileExist(filePath: String?): Boolean {
 /**
  * 获取文件格式
  */
-fun getFileExtension(file: File): String {
-    return getFileExtension(file.path)
-}
+fun getFileExtension(file: File): String = getFileExtension(file.path)
 
 /**
  * 获取文件格式
@@ -168,19 +173,22 @@ private val SEASON_REGEX = Regex("^Season \\d+\$")
  * 对于符合 kodi 电视剧媒体库结构的视频目录（格式为 Season XX），会返回 <pre>目录名 (Season XX)</pre>。
  * 否则，仍然直接返回目录名。
  */
-fun getRecognizableFileName(storageFile: StorageFile): String {
-    return if (storageFile.isDirectory() && storageFile.fileName().matches(SEASON_REGEX)) {
+fun getRecognizableFileName(storageFile: StorageFile): String =
+    if (storageFile.isDirectory() && storageFile.fileName().matches(SEASON_REGEX)) {
         // For kodi TV show library's season directory, add the parent directory name as the prefix
-        val parent = try { Uri.parse(storageFile.filePath()).pathSegments } catch (e: Exception) { 
-            ErrorReportHelper.postCatchedException(
-                e,
-                "FileUtils.getRecognizableFileName",
-                "解析文件路径URI失败: ${storageFile.filePath()}"
-            )
-            null
-        }
-            ?.takeIf { it.size > 1 }
-            ?.let { it[it.size - 2] }
+        val parent =
+            try {
+                Uri.parse(storageFile.filePath()).pathSegments
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedException(
+                    e,
+                    "FileUtils.getRecognizableFileName",
+                    "解析文件路径URI失败: ${storageFile.filePath()}",
+                )
+                null
+            }?.takeIf { it.size > 1 }
+                ?.let { it[it.size - 2] }
         if (parent != null) "$parent (${storageFile.fileName()})" else storageFile.fileName()
-    } else storageFile.fileName()
-}
+    } else {
+        storageFile.fileName()
+    }

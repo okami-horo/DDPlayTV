@@ -3,7 +3,6 @@ package com.xyoye.dandanplay.app.cast
 import com.xyoye.data_component.entity.media3.CastTarget
 import com.xyoye.data_component.entity.media3.PlaybackSession
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
-import com.xyoye.player_component.media3.fallback.CodecFallbackDecision
 import com.xyoye.player_component.media3.fallback.CodecFallbackHandler
 import com.xyoye.player_component.media3.mapper.LegacyCapabilityResult
 
@@ -24,7 +23,6 @@ data class CastSessionPayload(
 class Media3CastManager(
     private val codecFallbackHandler: CodecFallbackHandler
 ) {
-
     /*
     fun prepareCastSession(
         targetId: String,
@@ -48,13 +46,11 @@ class Media3CastManager(
             fallbackMessage = message
         )
     }
-    */
+     */
     fun prepareCastSession(
         targetId: String,
         session: PlaybackSession,
         capability: PlayerCapabilityContract,
         capabilityResult: LegacyCapabilityResult?
-    ): CastSessionPayload {
-        throw UnsupportedOperationException("Cast sender is disabled for TV builds")
-    }
+    ): CastSessionPayload = throw UnsupportedOperationException("Cast sender is disabled for TV builds")
 }

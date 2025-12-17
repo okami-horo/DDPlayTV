@@ -9,15 +9,15 @@ import com.xyoye.mmkv_annotation.MMKVKotlinClass
 
 @MMKVKotlinClass(className = "UserConfig")
 object UserConfigTable {
-    //用户是否已登录
+    // 用户是否已登录
     @MMKVFiled
     const val userLoggedIn = false
 
-    //用户token
+    // 用户token
     @MMKVFiled
     const val userToken = ""
 
-    //用户头像索引
+    // 用户头像索引
     @MMKVFiled
     const val userCoverIndex = -1
 }

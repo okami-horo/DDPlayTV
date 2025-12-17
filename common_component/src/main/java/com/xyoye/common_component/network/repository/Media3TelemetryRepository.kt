@@ -17,11 +17,20 @@ interface Media3TelemetrySink {
         autoplay: Boolean
     )
 
-    suspend fun recordFirstFrame(session: PlaybackSession, latencyMs: Long)
+    suspend fun recordFirstFrame(
+        session: PlaybackSession,
+        latencyMs: Long
+    )
 
-    suspend fun recordError(session: PlaybackSession, throwable: Throwable)
+    suspend fun recordError(
+        session: PlaybackSession,
+        throwable: Throwable
+    )
 
-    suspend fun recordCastTransfer(session: PlaybackSession, targetId: String?)
+    suspend fun recordCastTransfer(
+        session: PlaybackSession,
+        targetId: String?
+    )
 }
 
 /**
@@ -29,15 +38,15 @@ interface Media3TelemetrySink {
  * When a flush fails, events are re-queued so they can be retried on the next trigger.
  */
 class Media3TelemetryRepository(
-    private val mapper: TelemetryEventMapper = TelemetryEventMapper(
-        media3VersionProvider = { BuildConfig.MEDIA3_VERSION }
-    ),
+    private val mapper: TelemetryEventMapper =
+        TelemetryEventMapper(
+            media3VersionProvider = { BuildConfig.MEDIA3_VERSION },
+        ),
     private val emitter: suspend (TelemetryEvent) -> Result<Unit> = { event ->
         Media3Repository.emitTelemetry(event)
     },
     private val batchSize: Int = DEFAULT_BATCH_SIZE
 ) : Media3TelemetrySink {
-
     private val mutex = Mutex()
     private val pending = ArrayDeque<TelemetryEvent>()
 
@@ -46,10 +55,11 @@ class Media3TelemetryRepository(
         snapshot: RolloutToggleSnapshot?,
         autoplay: Boolean
     ) {
-        val metrics = mutableMapOf<String, Any?>(
-            "autoplay" to autoplay,
-            "sourceType" to session.sourceType.name
-        )
+        val metrics =
+            mutableMapOf<String, Any?>(
+                "autoplay" to autoplay,
+                "sourceType" to session.sourceType.name,
+            )
         snapshot?.let {
             metrics["toggleSource"] = it.source.name
             metrics["toggleValue"] = it.value
@@ -57,29 +67,39 @@ class Media3TelemetryRepository(
         enqueue(session, Media3TelemetryEventType.STARTUP, metrics)
     }
 
-    override suspend fun recordFirstFrame(session: PlaybackSession, latencyMs: Long) {
+    override suspend fun recordFirstFrame(
+        session: PlaybackSession,
+        latencyMs: Long
+    ) {
         enqueue(
             session = session,
             eventType = Media3TelemetryEventType.FIRST_FRAME,
             metrics = mapOf("latencyMs" to latencyMs),
-            flush = true
+            flush = true,
         )
     }
 
-    override suspend fun recordError(session: PlaybackSession, throwable: Throwable) {
-        val metrics = mapOf(
-            "errorMessage" to (throwable.message ?: "unknown"),
-            "errorType" to throwable::class.java.simpleName
-        )
+    override suspend fun recordError(
+        session: PlaybackSession,
+        throwable: Throwable
+    ) {
+        val metrics =
+            mapOf(
+                "errorMessage" to (throwable.message ?: "unknown"),
+                "errorType" to throwable::class.java.simpleName,
+            )
         enqueue(
             session = session,
             eventType = Media3TelemetryEventType.ERROR,
             metrics = metrics,
-            flush = true
+            flush = true,
         )
     }
 
-    override suspend fun recordCastTransfer(session: PlaybackSession, targetId: String?) {
+    override suspend fun recordCastTransfer(
+        session: PlaybackSession,
+        targetId: String?
+    ) {
         if (targetId.isNullOrBlank()) {
             return
         }
@@ -87,7 +107,7 @@ class Media3TelemetryRepository(
             session = session,
             eventType = Media3TelemetryEventType.CAST_TRANSFER,
             metrics = mapOf("targetId" to targetId),
-            flush = true
+            flush = true,
         )
     }
 
@@ -106,13 +126,14 @@ class Media3TelemetryRepository(
         flush: Boolean = false
     ) {
         mutex.withLock {
-            val event = mapper.createEvent(
-                session = session,
-                eventType = eventType,
-                metrics = metrics,
-                deviceInfo = deviceInfo,
-                isForeground = isForeground
-            )
+            val event =
+                mapper.createEvent(
+                    session = session,
+                    eventType = eventType,
+                    metrics = metrics,
+                    deviceInfo = deviceInfo,
+                    isForeground = isForeground,
+                )
             pending += event
             if (pending.size >= batchSize || flush) {
                 flushLocked()
@@ -136,7 +157,7 @@ class Media3TelemetryRepository(
                     throwable ?: IllegalStateException("Telemetry emit failed"),
                     TAG,
                     "flush",
-                    "eventType=${event.eventType}"
+                    "eventType=${event.eventType}",
                 )
                 pending.addFirst(event)
                 pending.addAll(queue)

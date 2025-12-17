@@ -14,7 +14,6 @@ import com.xyoye.user_component.databinding.ActivityLoginBinding
 
 @Route(path = RouteTable.User.UserLogin)
 class LoginActivity : BaseActivity<LoginViewModel, ActivityLoginBinding>() {
-
     @Autowired
     @JvmField
     var userAccount: String? = null
@@ -22,7 +21,7 @@ class LoginActivity : BaseActivity<LoginViewModel, ActivityLoginBinding>() {
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            LoginViewModel::class.java
+            LoginViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_login
@@ -46,7 +45,6 @@ class LoginActivity : BaseActivity<LoginViewModel, ActivityLoginBinding>() {
             userPasswordEt.addTextChangedListener {
                 userAccountLayout.error = ""
             }
-
         }
 
         viewModel.accountErrorLiveData.observe(this) {

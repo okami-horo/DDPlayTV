@@ -1,0 +1,26 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+continuation_indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{kt,kts}]
+ktlint_code_style = ktlint_official
+ij_kotlin_allow_trailing_comma = false
+ktlint_standard_package-name = disabled
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_backing-property-naming = disabled
+ktlint_standard_property-naming = disabled
+ktlint_standard_max-line-length = disabled
+ktlint_standard_no-consecutive-comments = disabled
+ktlint_standard_no-empty-file = disabled
+ktlint_standard_filename = disabled
+ktlint_standard_function-naming = disabled
+
+[*.md]
+trim_trailing_whitespace = false

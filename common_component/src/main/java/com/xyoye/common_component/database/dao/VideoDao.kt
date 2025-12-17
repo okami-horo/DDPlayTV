@@ -29,24 +29,25 @@ interface VideoDao {
     @Query("SELECT * FROM video WHERE folder_path = (:folderPath)")
     suspend fun getVideoInFolderSuspend(folderPath: String): MutableList<VideoEntity>
 
-    //SELECT old.folder,COUNT(*),new.filter
-    //FROM file AS old
-    //Left JOIN (SELECT folder,filter FROM file WHERE filter = '1' GROUP BY folder) AS new ON new.folder = old.folder
-    //GROUP BY old.folder
+    // SELECT old.folder,COUNT(*),new.filter
+    // FROM file AS old
+    // Left JOIN (SELECT folder,filter FROM file WHERE filter = '1' GROUP BY folder) AS new ON new.folder = old.folder
+    // GROUP BY old.folder
     @Query(
         "SELECT video.folder_path,COUNT(*) AS file_count, filter_table.filter " +
-                "FROM video " +
-                "LEFT JOIN ( SELECT folder_path, filter FROM video WHERE filter = (:isFilter) GROUP BY folder_path) AS filter_table " +
-                "ON filter_table.folder_path = video.folder_path " +
-                "GROUP BY video.folder_path"
+            "FROM video " +
+            "LEFT JOIN ( SELECT folder_path, filter FROM video WHERE filter = (:isFilter) GROUP BY folder_path) AS filter_table " +
+            "ON filter_table.folder_path = video.folder_path " +
+            "GROUP BY video.folder_path",
     )
     fun getAllFolder(isFilter: Boolean = true): LiveData<MutableList<FolderBean>>
 
-    @Query("SELECT video.folder_path,COUNT(*) AS file_count,video.filter " +
+    @Query(
+        "SELECT video.folder_path,COUNT(*) AS file_count,video.filter " +
             "FROM video " +
             "LEFT JOIN(SELECT folder_path FROM video WHERE filter = (:notFilter) GROUP BY folder_path) AS filter_table " +
             "ON filter_table.folder_path = video.folder_path WHERE filter_table.folder_path IS NULL " +
-            "GROUP BY video.folder_path"
+            "GROUP BY video.folder_path",
     )
     suspend fun getFolderByFilter(notFilter: Boolean = true): MutableList<FolderBean>
 
@@ -78,14 +79,27 @@ interface VideoDao {
     suspend fun deleteAll()
 
     @Query("UPDATE video SET danmu_path = (:danmuPath), danmu_id = (:danmuId) WHERE file_path = (:filePath)")
-    suspend fun updateDanmu(filePath: String, danmuPath: String?, danmuId: Int = 0)
+    suspend fun updateDanmu(
+        filePath: String,
+        danmuPath: String?,
+        danmuId: Int = 0
+    )
 
     @Query("UPDATE video SET subtitle_path = (:subtitlePath) WHERE file_path = (:filePath)")
-    suspend fun updateSubtitle(filePath: String, subtitlePath: String?)
+    suspend fun updateSubtitle(
+        filePath: String,
+        subtitlePath: String?
+    )
 
     @Query("UPDATE video SET filter = (:filter) WHERE folder_path = (:folderPath)")
-    suspend fun updateFolderFilter(filter: Boolean, folderPath: String)
+    suspend fun updateFolderFilter(
+        filter: Boolean,
+        folderPath: String
+    )
 
     @Query("UPDATE video SET video_duration = (:duration) WHERE file_path = (:filePath)")
-    suspend fun updateDuration(duration: Long, filePath: String)
+    suspend fun updateDuration(
+        duration: Long,
+        filePath: String
+    )
 }

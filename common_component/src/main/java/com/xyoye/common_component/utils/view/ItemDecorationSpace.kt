@@ -38,8 +38,10 @@ class ItemDecorationSpace : ItemDecoration {
     }
 
     override fun getItemOffsets(
-        outRect: Rect, view: View,
-        parent: RecyclerView, state: RecyclerView.State
+        outRect: Rect,
+        view: View,
+        parent: RecyclerView,
+        state: RecyclerView.State
     ) {
         outRect.top = top
         outRect.left = left

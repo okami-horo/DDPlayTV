@@ -5,5 +5,9 @@ package com.xyoye.player.utils
  */
 
 interface ProgressObserver {
-    fun saveProgress(url: String, position: Long, duration: Long)
+    fun saveProgress(
+        url: String,
+        position: Long,
+        duration: Long
+    )
 }
