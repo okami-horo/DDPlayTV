@@ -187,6 +187,21 @@ class MpvNativeBridge {
         setOption("force-seekable", if (enabled) "yes" else "no")
     }
 
+    fun setSubtitleFonts(
+        fontsDir: String,
+        defaultFontFamily: String
+    ) {
+        if (nativeHandle == 0L) return
+        if (fontsDir.isNotBlank()) {
+            setOption("sub-fonts-dir", fontsDir)
+        }
+        if (defaultFontFamily.isNotBlank()) {
+            setOption("sub-font", defaultFontFamily)
+        }
+        // On Android builds we ship fonts via app cache, so don't rely on system font providers.
+        setOption("sub-font-provider", "none")
+    }
+
     fun setSurfaceSize(
         width: Int,
         height: Int

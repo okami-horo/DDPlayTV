@@ -9,6 +9,7 @@ import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.LogSystem
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.file.helper.HttpPlayServer
+import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
@@ -70,6 +71,9 @@ class MpvVideoPlayer(
                 null
             }
         nativeBridge.applyDefaultOptions(logLevel)
+        SubtitleFontManager.ensureDefaultFont(appContext)
+        val fontsDir = SubtitleFontManager.getFontsDirectoryPath(appContext).orEmpty()
+        nativeBridge.setSubtitleFonts(fontsDir, SubtitleFontManager.DEFAULT_FONT_FAMILY)
         nativeBridge.setLooping(looping)
         nativeBridge.setSpeed(playbackSpeed)
     }
