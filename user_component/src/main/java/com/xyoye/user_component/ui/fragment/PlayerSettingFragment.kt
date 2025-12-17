@@ -192,8 +192,10 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         override fun putInt(key: String?, value: Int) {
             try {
                 when (key) {
-                    "mpv_proxy_range_interval_ms" ->
-                        PlayerConfig.putMpvProxyRangeMinIntervalMs(value.coerceIn(0, 2000))
+                    "mpv_proxy_range_interval_ms" -> {
+                        val normalized = ((value + 50) / 100) * 100
+                        PlayerConfig.putMpvProxyRangeMinIntervalMs(normalized.coerceIn(0, 2000))
+                    }
                     else -> super.putInt(key, value)
                 }
             } catch (e: Exception) {
