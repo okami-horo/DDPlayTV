@@ -64,6 +64,9 @@ fun AppExtension.setupSignConfigs(project: Project) = apply {
     buildTypes {
         getByName("debug") {
             signingConfig = signingConfigs.findByName(this.name)
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            resValue("string", "app_name", "弹弹play 概念版 (Debug)")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
