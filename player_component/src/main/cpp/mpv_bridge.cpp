@@ -1281,6 +1281,28 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeGetVideoSize(
     return (width << 32) | (height & 0xffffffff);
 }
 
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeGetHwdecCurrent(
+    JNIEnv* env, jclass, jlong handle) {
+    auto* session = fromHandle(handle);
+    if (session == nullptr) return nullptr;
+#if MPV_PREBUILT_AVAILABLE
+    if (session->handle == nullptr) return nullptr;
+    char* value = mpv_get_property_string(session->handle, "hwdec-current");
+    if (value == nullptr) {
+        return nullptr;
+    }
+    jstring result = env->NewStringUTF(value);
+    mpv_free(value);
+    return result;
+#else
+    (void)env;
+    (void)handle;
+    set_last_error("libmpv.so not linked; hwdec-current unavailable");
+    return nullptr;
+#endif
+}
+
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetDataSource(
     JNIEnv* env, jclass, jlong handle, jstring path, jobjectArray headers) {

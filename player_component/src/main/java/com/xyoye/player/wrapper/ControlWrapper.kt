@@ -363,6 +363,8 @@ class ControlWrapper(
         mVideoPlayer.updateSubtitleOffsetTime()
     }
 
+    override fun getDecodeType() = mVideoPlayer.getDecodeType()
+
     override fun onSubtitleTextOutput(subtitle: MixedSubtitle) {
         mSubtitleController.onSubtitleTextOutput(subtitle)
     }

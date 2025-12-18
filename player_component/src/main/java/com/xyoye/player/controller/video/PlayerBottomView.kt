@@ -22,6 +22,7 @@ import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.controller.action.PlayerAction
 import com.xyoye.player.utils.formatDuration
 import com.xyoye.player.wrapper.ControlWrapper
+import com.xyoye.player.utils.DecodeType
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutPlayerBottomBinding
 
@@ -131,6 +132,7 @@ class PlayerBottomView(
     override fun attach(controlWrapper: ControlWrapper) {
         mControlWrapper = controlWrapper
         syncDanmuToggleState()
+        updateDecodeTypeHint()
     }
 
     override fun getView() = this
@@ -151,10 +153,12 @@ class PlayerBottomView(
             if (isControllerVisible) {
                 // Avoid re-focusing play on every DPAD event when controller is already visible.
                 syncDanmuToggleState()
+                updateDecodeTypeHint()
                 return
             }
             isControllerVisible = true
             syncDanmuToggleState()
+            updateDecodeTypeHint()
             updateControlsInteractiveState(true)
             ViewCompat
                 .animate(viewBinding.playerBottomLl)
@@ -183,6 +187,7 @@ class PlayerBottomView(
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
+        updateDecodeTypeHint()
         when (playState) {
             PlayState.STATE_IDLE -> {
                 viewBinding.playSeekBar.progress = 0
@@ -379,5 +384,15 @@ class PlayerBottomView(
         if (this::mControlWrapper.isInitialized.not()) return
         val userVisible = mControlWrapper.isUserDanmuVisible()
         viewBinding.danmuControlIv.isSelected = userVisible.not()
+    }
+
+    private fun updateDecodeTypeHint() {
+        val decodeType =
+            if (this::mControlWrapper.isInitialized) {
+                mControlWrapper.getDecodeType()
+            } else {
+                DecodeType.HW
+            }
+        viewBinding.decodeTypeTv.text = decodeType.label
     }
 }

@@ -15,6 +15,7 @@ import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
+import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.PlayerConstant
 
 class MpvVideoPlayer(
@@ -31,6 +32,7 @@ class MpvVideoPlayer(
     private var isPrepared = false
     private var isPreparing = false
     private var isPlaying = false
+    private var decodeType: DecodeType = DecodeType.SW
     private var playbackSpeed = PlayerInitializer.Player.videoSpeed
     private var looping = PlayerInitializer.isLooping
     private var initializationError: Exception? = null
@@ -206,6 +208,7 @@ class MpvVideoPlayer(
         isPrepared = false
         isPreparing = false
         isPlaying = false
+        decodeType = DecodeType.SW
         videoSize = Point(0, 0)
         initializationError = null
     }
@@ -217,6 +220,7 @@ class MpvVideoPlayer(
         isPrepared = false
         isPreparing = false
         isPlaying = false
+        decodeType = DecodeType.SW
     }
 
     override fun seekTo(timeMs: Long) {
@@ -285,6 +289,11 @@ class MpvVideoPlayer(
     override fun getBufferedPercentage(): Int = 0
 
     override fun getTcpSpeed(): Long = 0
+
+    override fun getDecodeType(): DecodeType {
+        refreshDecodeTypeFromNative()
+        return decodeType
+    }
 
     override fun supportAddTrack(type: TrackType): Boolean = type == TrackType.AUDIO || type == TrackType.SUBTITLE
 
@@ -409,6 +418,7 @@ class MpvVideoPlayer(
             }
             is MpvNativeBridge.Event.RenderingStart -> {
                 isPlaying = true
+                refreshDecodeTypeFromNative()
                 val path = dataSource
                 if (!path.isNullOrEmpty()) {
                     runCatching {
@@ -430,6 +440,20 @@ class MpvVideoPlayer(
                 mPlayerEventListener.onVideoSizeChange(event.width, event.height)
             }
         }
+    }
+
+    private fun refreshDecodeTypeFromNative() {
+        if (!nativeBridge.isAvailable) {
+            decodeType = DecodeType.SW
+            return
+        }
+        val current = nativeBridge.hwdecCurrent()?.trim().orEmpty()
+        decodeType =
+            if (current.isEmpty() || current.equals("no", ignoreCase = true) || current.equals("none", ignoreCase = true)) {
+                DecodeType.SW
+            } else {
+                DecodeType.HW
+            }
     }
 
     private fun sanitizeMpvLog(message: String): String {

@@ -5,6 +5,7 @@ import android.graphics.PointF
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.player.surface.InterSurfaceView
+import com.xyoye.player.utils.DecodeType
 
 /**
  * Created by xyoye on 2020/11/1.
@@ -110,4 +111,9 @@ interface InterVideoPlayer : InterVideoTrack {
      * 更新字幕偏移时间
      */
     fun updateSubtitleOffsetTime()
+
+    /**
+     * 当前解码方式（UI 提示用）
+     */
+    fun getDecodeType(): DecodeType = DecodeType.HW
 }

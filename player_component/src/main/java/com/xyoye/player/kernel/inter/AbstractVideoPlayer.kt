@@ -4,6 +4,7 @@ import android.graphics.Point
 import android.view.Surface
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
+import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.wrapper.InterVideoTrack
 
 /**
@@ -140,6 +141,11 @@ abstract class AbstractVideoPlayer : InterVideoTrack {
      * 获取网络加载速度
      */
     abstract fun getTcpSpeed(): Long
+
+    /**
+     * 当前解码方式（UI 提示用）
+     */
+    open fun getDecodeType(): DecodeType = DecodeType.HW
 
     // ------------轨道信息-------------------
 

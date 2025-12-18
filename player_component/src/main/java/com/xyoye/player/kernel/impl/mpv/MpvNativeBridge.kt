@@ -234,6 +234,11 @@ class MpvNativeBridge {
         return width to height
     }
 
+    fun hwdecCurrent(): String? {
+        if (nativeHandle == 0L) return null
+        return nativeGetHwdecCurrent(nativeHandle)
+    }
+
     fun listTracks(): List<TrackInfo> {
         if (nativeHandle == 0L) return emptyList()
         val rawTracks = nativeListTracks(nativeHandle) ?: return emptyList()
@@ -420,6 +425,9 @@ class MpvNativeBridge {
 
         @JvmStatic
         private external fun nativeGetVideoSize(handle: Long): Long
+
+        @JvmStatic
+        private external fun nativeGetHwdecCurrent(handle: Long): String?
 
         @JvmStatic
         private external fun nativeListTracks(handle: Long): Array<String>?

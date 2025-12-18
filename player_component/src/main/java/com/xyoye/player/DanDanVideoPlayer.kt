@@ -189,6 +189,8 @@ class DanDanVideoPlayer(
 
     override fun getTcpSpeed() = mVideoPlayer.getTcpSpeed()
 
+    override fun getDecodeType() = mVideoPlayer.getDecodeType()
+
     override fun getRenderView(): InterSurfaceView? = mRenderView
 
     override fun getVideoSize() = mVideoPlayer.getVideoSize()
