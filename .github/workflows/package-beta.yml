@@ -1,10 +1,10 @@
 name: package beta
 
-# 主分支提交代码时，构建最新测试包
+# develop 分支提交代码时，构建最新测试包
 on:
   push:
     branches:
-      - '**'  # 匹配所有分支
+      - develop
   workflow_dispatch:  # 允许手动触发
 
 jobs:

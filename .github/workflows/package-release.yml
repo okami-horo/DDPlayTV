@@ -1,10 +1,10 @@
 name: package release
 
-# 提交带Tag时，构建正式包
+# master 分支提交代码时，构建正式包
 on:
   push:
-    tags:
-      - "*"
+    branches:
+      - master
   workflow_dispatch:  # 允许手动触发
 
 jobs:
