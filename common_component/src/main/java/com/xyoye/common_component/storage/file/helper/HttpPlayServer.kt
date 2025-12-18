@@ -224,7 +224,7 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         val now = nowMs()
         val prePlayIntervalMs =
             runCatching { PlayerConfig.getMpvProxyRangeMinIntervalMs() }
-                .getOrDefault(200)
+                .getOrDefault(1000)
                 .coerceIn(0, 2000)
                 .toLong()
         val minIntervalMs = if (seekEnabled) 20L else prePlayIntervalMs

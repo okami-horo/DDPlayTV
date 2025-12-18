@@ -66,7 +66,7 @@ fun AppExtension.setupSignConfigs(project: Project) = apply {
             signingConfig = signingConfigs.findByName(this.name)
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            resValue("string", "app_name", "弹弹play 概念版 (Debug)")
+            resValue("string", "app_name", "DDPlayTV (Debug)")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -94,7 +94,7 @@ fun AppExtension.setupOutputApk() = apply {
         outputs.filter { it is ApkVariantOutput }
             .map { it as ApkVariantOutput }
             .onEach {
-                it.outputFileName = "dandanplay_v${Versions.versionName}_${it.name}.apk"
+                it.outputFileName = "ddplaytv_v${Versions.versionName}_${it.name}.apk"
             }
     }
 }

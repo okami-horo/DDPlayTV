@@ -59,7 +59,9 @@ class SplashActivity : BaseAppCompatActivity<ActivitySplashBinding>() {
             duration = 2000
         }
 
-        val appName = "弹弹play 概念版 v${packageManager.getPackageInfo(packageName, 0).versionName}"
+        val appName = "${getString(R.string.app_name)} v${
+            packageManager.getPackageInfo(packageName, 0).versionName
+        }"
 
         dataBinding.run {
             appNameTv.text = appName
