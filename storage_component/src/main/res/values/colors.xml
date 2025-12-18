@@ -8,4 +8,9 @@
     <color name="radar_background_line_color">#15096dbe</color>
 
     <color name="background_screencast_device">#44cccccc</color>
+
+    <color name="font_cache_accent">#2095F4</color>
+    <color name="font_cache_text_primary">#111111</color>
+    <color name="font_cache_text_secondary">#666666</color>
+    <color name="font_cache_text_tertiary">#999999</color>
 </resources>

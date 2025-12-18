@@ -112,9 +112,9 @@ jobs:
           for abi in ${abis[@]}
           do
             # 原文件名
-            original_name="dandanplay_v${{ env.BUILD_VERSION }}_${abi}-${{ env.BUILD_TYPE }}.apk"
+            original_name="ddplaytv_v${{ env.BUILD_VERSION }}_${abi}-${{ env.BUILD_TYPE }}.apk"
             # 新文件名（包含分支信息）
-            new_name="dandanplay_v${{ env.BUILD_VERSION }}_${abi}-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk"
+            new_name="ddplaytv_v${{ env.BUILD_VERSION }}_${abi}-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk"
             mv app/build/outputs/apk/${{ env.BUILD_TYPE }}/${original_name} ${new_name}
           done
 
@@ -132,8 +132,8 @@ jobs:
             👤 提交者: ${{ github.event.head_commit.author.name }}
           prerelease: true
           files: |
-            dandanplay_v${{ env.BUILD_VERSION }}_arm64-v8a-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
-            dandanplay_v${{ env.BUILD_VERSION }}_armeabi-v7a-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
-            dandanplay_v${{ env.BUILD_VERSION }}_universal-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
+            ddplaytv_v${{ env.BUILD_VERSION }}_arm64-v8a-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
+            ddplaytv_v${{ env.BUILD_VERSION }}_armeabi-v7a-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
+            ddplaytv_v${{ env.BUILD_VERSION }}_universal-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -71,6 +71,10 @@
     <string name="text_font_cache_title">缓存字幕字体</string>
     <string name="text_font_cache_progress_default">准备缓存字体…</string>
     <string name="text_font_cache_progress_format">已缓存字体 %1$d/%2$d</string>
+    <string name="text_font_cache_subtitle">正在准备字幕字体，保障字幕正常显示</string>
+    <string name="text_font_cache_state">字体文件缓存中</string>
+    <string name="text_font_cache_progress_percent">%1$d%%</string>
+    <string name="text_font_cache_notice">字体缓存完成后将自动开始播放，请保持网络连接</string>
     <string name="text_font_cache_prompt">检测到字体文件夹，是否加载字幕字体？</string>
     <string name="text_font_cache_empty">字体目录为空，跳过缓存</string>
     <string name="text_font_cache_dir_error">字体缓存目录不可用</string>

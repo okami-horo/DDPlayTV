@@ -90,11 +90,14 @@ fun AppExtension.setupSignConfigs(project: Project) = apply {
 }
 
 fun AppExtension.setupOutputApk() = apply {
-    applicationVariants.all {
+    applicationVariants.all { variant ->
         outputs.filter { it is ApkVariantOutput }
             .map { it as ApkVariantOutput }
-            .onEach {
-                it.outputFileName = "ddplaytv_v${Versions.versionName}_${it.name}.apk"
+            .onEach { output ->
+                val abi = output.filters.firstOrNull()?.identifier ?: "universal"
+                val buildTypeName = variant.buildType.name
+                val versionName = variant.versionName ?: Versions.versionName
+                output.outputFileName = "ddplaytv_v${versionName}_${abi}-${buildTypeName}.apk"
             }
     }
 }
