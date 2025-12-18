@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <data />
 
     <LinearLayout
@@ -35,7 +36,7 @@
                         android:contentDescription="@null"
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_font_cache"
-                        android:tint="@color/font_cache_accent" />
+                        app:tint="@color/font_cache_accent" />
                 </FrameLayout>
 
                 <LinearLayout

@@ -3,6 +3,7 @@ package com.xyoye.common_component.config
 import android.os.Build
 import android.security.KeyPairGeneratorSpec
 import android.util.Base64
+import androidx.annotation.RequiresApi
 import com.xyoye.common_component.BuildConfig
 import com.xyoye.common_component.base.app.BaseApplication
 import java.math.BigInteger
@@ -187,6 +188,7 @@ object DeveloperCredentialStore {
             getOrCreateSecretKeyPreM()
         }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun getOrCreateSecretKeyM(): SecretKey? =
         runCatching {
             val keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
