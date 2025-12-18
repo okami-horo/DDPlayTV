@@ -5,6 +5,7 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.config.DevelopConfig
+import com.xyoye.common_component.config.DeveloperCredentialStore
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.common_component.utils.SupervisorScope
@@ -40,8 +41,8 @@ class DeveloperMenus private constructor(
 
     private val isDeveloperAuthenticate: Boolean
         get() =
-            DevelopConfig.getAppId()?.isNotEmpty() == true &&
-                DevelopConfig.getAppSecret()?.isNotEmpty() == true
+            DeveloperCredentialStore.getAppId()?.isNotEmpty() == true &&
+                DeveloperCredentialStore.getAppSecret()?.isNotEmpty() == true
 
     init {
         updateItem()

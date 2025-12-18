@@ -57,6 +57,7 @@ jobs:
         env:
           BUGLY_APP_ID: ${{ secrets.BUGLY_APP_ID }}
           DANDAN_APP_ID: ${{ secrets.DANDAN_APP_ID }}
+          DANDAN_APP_SECRET: ${{ secrets.DANDAN_APP_SECRET }}
           ALIYUN_SECRET: ${{ secrets.ALIYUN_SECRET }}
         run: |
           echo "✅ Secrets injected for beta build"
@@ -94,6 +95,7 @@ jobs:
           # 应用密钥 - 从Secrets注入
           BUGLY_APP_ID: ${{ secrets.BUGLY_APP_ID }}
           DANDAN_APP_ID: ${{ secrets.DANDAN_APP_ID }}
+          DANDAN_APP_SECRET: ${{ secrets.DANDAN_APP_SECRET }}
           ALIYUN_SECRET: ${{ secrets.ALIYUN_SECRET }}
         run: chmod +x gradlew &&./gradlew clean assemble${{ env.BUILD_TYPE }} --stacktrace
 

@@ -1,6 +1,6 @@
 package com.xyoye.common_component.network.helper
 
-import com.xyoye.common_component.config.DevelopConfig
+import com.xyoye.common_component.config.DeveloperCredentialStore
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -26,8 +26,8 @@ class DeveloperCertificateInterceptor : Interceptor {
         }
 
         // 未配置凭证，不做处理
-        val appId = DevelopConfig.getAppId()
-        val appSecret = DevelopConfig.getAppSecret()
+        val appId = DeveloperCredentialStore.getAppId()
+        val appSecret = DeveloperCredentialStore.getAppSecret()
         if (appId.isNullOrEmpty() || appSecret.isNullOrEmpty()) {
             return chain.proceed(oldRequest)
         }

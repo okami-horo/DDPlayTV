@@ -19,6 +19,18 @@ object DevelopConfigTable {
     @MMKVFiled
     const val appSecret = ""
 
+    // AppId（加密后存储）
+    @MMKVFiled
+    const val appIdEncrypted = ""
+
+    // App Secret（加密后存储）
+    @MMKVFiled
+    const val appSecretEncrypted = ""
+
+    // API < 23 时使用：RSA 包裹的 AES Key（Base64）
+    @MMKVFiled
+    const val devCredentialAesKeyWrapped = ""
+
     // 是否已自动显示认证弹窗
     @MMKVFiled
     const val isAutoShowAuthDialog = false
