@@ -52,6 +52,10 @@ android {
     packagingOptions {
         jniLibs {
             pickFirsts.add("lib/**/libc++_shared.so")
+            // Prevent duplicate packaging when the same prebuilt .so is present in both jniLibs and
+            // externalNativeBuild (CMake IMPORTED targets are copied into intermediates/cxx).
+            pickFirsts.add("lib/**/libmpv.so")
+            pickFirsts.add("lib/**/libass.so")
         }
     }
     sourceSets {
@@ -62,6 +66,12 @@ android {
             jniLibs.srcDir(unstrippedJniLibsDir)
         }
         getByName("release") {
+            jniLibs.srcDir(strippedJniLibsDir)
+        }
+        // `moduleSetup()` defines a `beta` buildType for all library modules. Ensure beta builds
+        // ship the same stripped native binaries as release; otherwise mpv will appear "missing"
+        // only in beta/release-like packages.
+        getByName("beta") {
             jniLibs.srcDir(strippedJniLibsDir)
         }
     }
@@ -124,6 +134,10 @@ val stripReleaseJniLibs by tasks.registering {
 }
 
 tasks.matching { it.name == "mergeReleaseJniLibFolders" }.configureEach {
+    dependsOn(stripReleaseJniLibs)
+}
+
+tasks.matching { it.name == "mergeBetaJniLibFolders" }.configureEach {
     dependsOn(stripReleaseJniLibs)
 }
 
