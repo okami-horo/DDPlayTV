@@ -14,14 +14,9 @@ class RemoteStorageFile(
     storage: RemoteStorage,
     private val videoData: RemoteVideoData
 ) : AbstractStorageFile(storage) {
+    override fun getRealFile(): RemoteVideoData = videoData
 
-    override fun getRealFile(): RemoteVideoData {
-        return videoData
-    }
-
-    override fun filePath(): String {
-        return videoData.absolutePath
-    }
+    override fun filePath(): String = videoData.absolutePath
 
     override fun fileUrl(): String {
         if (videoData.absolutePath == "/" && videoData.isFolder) {
@@ -33,40 +28,28 @@ class RemoteStorageFile(
             .toString()
     }
 
-    override fun isDirectory(): Boolean {
-        return videoData.isFolder
-    }
+    override fun isDirectory(): Boolean = videoData.isFolder
 
-    override fun fileName(): String {
-        return videoData.getEpisodeName()
-    }
+    override fun fileName(): String = videoData.getEpisodeName()
 
     override fun fileLength(): Long {
-        if (isDirectory())
+        if (isDirectory()) {
             return 0
+        }
         return videoData.Size
     }
 
-    override fun clone(): StorageFile {
-        return RemoteStorageFile(
+    override fun clone(): StorageFile =
+        RemoteStorageFile(
             storage as RemoteStorage,
             videoData,
         ).also { it.playHistory = playHistory }
-    }
 
-    override fun uniqueKey(): String {
-        return videoData.Hash.ifEmpty { videoData.absolutePath }.toMd5String()
-    }
+    override fun uniqueKey(): String = videoData.Hash.ifEmpty { videoData.absolutePath }.toMd5String()
 
-    override fun childFileCount(): Int {
-        return videoData.childData.size
-    }
+    override fun childFileCount(): Int = videoData.childData.size
 
-    override fun isVideoFile(): Boolean {
-        return isFile()
-    }
+    override fun isVideoFile(): Boolean = isFile()
 
-    override fun videoDuration(): Long {
-        return videoData.Duration
-    }
+    override fun videoDuration(): Long = videoData.Duration
 }

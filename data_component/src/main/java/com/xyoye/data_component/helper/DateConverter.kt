@@ -11,12 +11,8 @@ import java.util.*
 
 open class DateConverter {
     @TypeConverter
-    fun formTimestamp(value: Long?): Date? {
-        return if (value == null) null else Date(value)
-    }
+    fun formTimestamp(value: Long?): Date? = if (value == null) null else Date(value)
 
     @TypeConverter
-    fun dateToTimestamp(date: Date?): Long? {
-        return date?.time
-    }
+    fun dateToTimestamp(date: Date?): Long? = date?.time
 }

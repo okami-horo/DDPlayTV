@@ -7,7 +7,6 @@ import com.xyoye.common_component.network.Retrofit
  */
 
 object UserRepository : BaseRepository() {
-
     /**
      * 账号登录
      */
@@ -27,14 +26,14 @@ object UserRepository : BaseRepository() {
             Retrofit.danDanService.login(it)
         }
 
-
     /**
      * 刷新Token
      */
-    suspend fun refreshToken() = request()
-        .doGet {
-            Retrofit.danDanService.refreshToken()
-        }
+    suspend fun refreshToken() =
+        request()
+            .doGet {
+                Retrofit.danDanService.refreshToken()
+            }
 
     /**
      * 注册账号
@@ -98,16 +97,20 @@ object UserRepository : BaseRepository() {
     /**
      * 修改昵称
      */
-    suspend fun updateScreenName(screenName: String) = request()
-        .param("screenName", screenName)
-        .doPost {
-            Retrofit.danDanService.updateScreenName(it)
-        }
+    suspend fun updateScreenName(screenName: String) =
+        request()
+            .param("screenName", screenName)
+            .doPost {
+                Retrofit.danDanService.updateScreenName(it)
+            }
 
     /**
      * 修改密码
      */
-    suspend fun updatePassword(oldPassword: String, newPassword: String) = request()
+    suspend fun updatePassword(
+        oldPassword: String,
+        newPassword: String
+    ) = request()
         .param("oldPassword", oldPassword)
         .param("newPassword", newPassword)
         .doPost {
@@ -117,7 +120,10 @@ object UserRepository : BaseRepository() {
     /**
      * 校验凭证
      */
-    suspend fun checkAuthenticate(appId: String, appSecret: String) = request()
+    suspend fun checkAuthenticate(
+        appId: String,
+        appSecret: String
+    ) = request()
         .doGet {
             Retrofit.danDanService.checkAuthenticate(appId, appSecret, 1)
         }

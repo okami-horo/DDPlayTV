@@ -17,7 +17,6 @@ import retrofit2.http.POST
  */
 
 interface AlistService {
-
     @POST("/api/auth/login")
     suspend fun login(
         @Header(HeaderKey.BASE_URL) baseUrl: String,
@@ -27,7 +26,7 @@ interface AlistService {
     @GET("/api/me")
     suspend fun getUserInfo(
         @Header(HeaderKey.BASE_URL) baseUrl: String,
-        @Header(HeaderKey.AUTHORIZATION) authorization: String?,
+        @Header(HeaderKey.AUTHORIZATION) authorization: String?
     ): CommonJsonModel<AlistRootData>
 
     @POST("/api/fs/list")

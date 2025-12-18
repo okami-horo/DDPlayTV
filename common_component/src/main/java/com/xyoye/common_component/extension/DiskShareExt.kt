@@ -16,39 +16,34 @@ import java.util.*
  * Created by xyoye on 2023/1/15.
  */
 
-fun DiskShare.openFile(path: String): File {
-    return openFile(
+fun DiskShare.openFile(path: String): File =
+    openFile(
         path,
         setOf(AccessMask.FILE_READ_DATA),
         setOf(FileAttributes.FILE_ATTRIBUTE_READONLY),
         setOf(SMB2ShareAccess.FILE_SHARE_READ),
         SMB2CreateDisposition.FILE_OPEN,
-        setOf(SMB2CreateOptions.FILE_RANDOM_ACCESS)
+        setOf(SMB2CreateOptions.FILE_RANDOM_ACCESS),
     )
-}
 
-fun DiskShare.openDirectory(path: String): Directory {
-    return openDirectory(
+fun DiskShare.openDirectory(path: String): Directory =
+    openDirectory(
         path,
         EnumSet.of(AccessMask.FILE_LIST_DIRECTORY),
         setOf(FileAttributes.FILE_ATTRIBUTE_DIRECTORY),
         setOf(SMB2ShareAccess.FILE_SHARE_READ),
         SMB2CreateDisposition.FILE_OPEN,
-        null
+        null,
     )
-}
 
-fun DiskShare.open(path: String): DiskEntry {
-    return open(
+fun DiskShare.open(path: String): DiskEntry =
+    open(
         path,
         EnumSet.of(AccessMask.GENERIC_READ),
         null,
         SMB2ShareAccess.ALL,
         SMB2CreateDisposition.FILE_OPEN,
-        null
+        null,
     )
-}
 
-fun DiskEntry.standardFileInfo(): FileStandardInformation {
-    return getFileInformation(FileStandardInformation::class.java)
-}
+fun DiskEntry.standardFileInfo(): FileStandardInformation = getFileInformation(FileStandardInformation::class.java)

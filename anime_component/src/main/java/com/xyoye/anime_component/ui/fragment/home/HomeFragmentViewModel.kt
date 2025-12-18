@@ -30,7 +30,7 @@ class HomeFragmentViewModel : BaseViewModel() {
                     exception ?: RuntimeException("Get weekly anime failed with unknown error"),
                     "HomeFragmentViewModel",
                     "getWeeklyAnime",
-                    "获取每周动画数据失败"
+                    "获取每周动画数据失败",
                 )
                 exception?.message?.toastError()
                 return@launch
@@ -52,7 +52,7 @@ class HomeFragmentViewModel : BaseViewModel() {
                     exception ?: RuntimeException("Get home banner failed with unknown error"),
                     "HomeFragmentViewModel",
                     "getBanners",
-                    "获取首页横幅数据失败"
+                    "获取首页横幅数据失败",
                 )
                 exception?.message?.toastError()
                 return@launch

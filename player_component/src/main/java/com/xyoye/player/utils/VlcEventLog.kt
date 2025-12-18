@@ -36,11 +36,12 @@ object VlcEventLog {
 
     fun log(event: MediaPlayer.Event) {
         when (event.type) {
-            MediaPlayer.Event.Buffering -> LogFacade.d(
-                LogModule.PLAYER,
-                TAG,
-                eventType[event.type] + ":" + event.buffering
-            )
+            MediaPlayer.Event.Buffering ->
+                LogFacade.d(
+                    LogModule.PLAYER,
+                    TAG,
+                    eventType[event.type] + ":" + event.buffering,
+                )
             else -> LogFacade.d(LogModule.PLAYER, TAG, eventType[event.type] ?: "Unknown")
         }
     }

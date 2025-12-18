@@ -13,19 +13,18 @@ import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ActivityPlayerInterceptorBinding
 
 @Route(path = RouteTable.Player.Player)
-class PlayerInterceptorActivity :
-    BaseActivity<PlayerInterceptorViewModel, ActivityPlayerInterceptorBinding>() {
-
+class PlayerInterceptorActivity : BaseActivity<PlayerInterceptorViewModel, ActivityPlayerInterceptorBinding>() {
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            PlayerInterceptorViewModel::class.java
+            PlayerInterceptorViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_player_interceptor
 
     override fun initStatusBar() {
-        ImmersionBar.with(this)
+        ImmersionBar
+            .with(this)
             .fullScreen(true)
             .hideBar(BarHide.FLAG_HIDE_STATUS_BAR)
             .init()
@@ -38,7 +37,8 @@ class PlayerInterceptorActivity :
             return
         }
 
-        ARouter.getInstance()
+        ARouter
+            .getInstance()
             .build(RouteTable.Player.PlayerCenter)
             .navigation()
         finish()

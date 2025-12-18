@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
  * so non-player modules (storage/local/download) can align their UX with the active rollout.
  */
 object Media3SessionStore {
-
     private val sessionState = MutableStateFlow<PlaybackSession?>(null)
     private val capabilityState = MutableStateFlow<PlayerCapabilityContract?>(null)
 

@@ -7,12 +7,14 @@ import java.io.File
  */
 
 object OpenCC {
-
     init {
         System.loadLibrary("open_cc")
     }
 
-    private external fun convert(text: String, configJsonPath: String): String
+    private external fun convert(
+        text: String,
+        configJsonPath: String
+    ): String
 
     fun convertSC(text: String): String {
         val config = OpenCCFile.t2s
@@ -32,14 +34,18 @@ object OpenCC {
         return convert(text, config)
     }
 
-    private fun convert(text: String, config: File): String {
-        return try {
+    private fun convert(
+        text: String,
+        config: File
+    ): String =
+        try {
             convert(text, config.absolutePath)
         } catch (t: Throwable) {
             com.xyoye.common_component.utils.ErrorReportHelper.postCatchedException(
-                t, "OpenCC", "Failed to convert text with config: ${config.absolutePath}"
+                t,
+                "OpenCC",
+                "Failed to convert text with config: ${config.absolutePath}",
             )
             text
         }
-    }
 }

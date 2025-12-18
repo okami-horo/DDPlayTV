@@ -28,14 +28,15 @@ class ScanActivityLauncher(
     }
 
     override fun onCreate(lifecycleOwner: LifecycleOwner) {
-        launchScanActivity = activity.activityResultRegistry.register(
-            KEY_LAUNCH_SCAN_ACTIVITY,
-            lifecycleOwner,
-            ActivityResultContracts.StartActivityForResult()
-        ) {
-            val scanData = it.data?.getParcelableExtra<RemoteScanData>("scan_data")
-            onResult.invoke(scanData)
-        }
+        launchScanActivity =
+            activity.activityResultRegistry.register(
+                KEY_LAUNCH_SCAN_ACTIVITY,
+                lifecycleOwner,
+                ActivityResultContracts.StartActivityForResult(),
+            ) {
+                val scanData = it.data?.getParcelableExtra<RemoteScanData>("scan_data")
+                onResult.invoke(scanData)
+            }
     }
 
     fun launch() {

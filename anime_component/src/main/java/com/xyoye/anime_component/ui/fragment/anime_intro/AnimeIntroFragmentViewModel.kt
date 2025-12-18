@@ -40,9 +40,13 @@ class AnimeIntroFragmentViewModel : BaseViewModel() {
         expandInfoFiled.set(!expand)
     }
 
-    private fun getAnimeStatus(isOnAir: Boolean, airDay: Int): String {
-        if (!isOnAir)
+    private fun getAnimeStatus(
+        isOnAir: Boolean,
+        airDay: Int
+    ): String {
+        if (!isOnAir) {
             return "已完结"
+        }
         return when (airDay) {
             0 -> "每周日更新"
             1 -> "每周一更新"
@@ -56,16 +60,19 @@ class AnimeIntroFragmentViewModel : BaseViewModel() {
     }
 
     private fun getRating(rating: Double) =
-        if (rating <= 0)
+        if (rating <= 0) {
             "暂无"
-        else
+        } else {
             DecimalFormat("0.0").format(rating)
+        }
 
     private fun getAnimeInfo(metadata: MutableList<String>?): String? {
-        if (metadata == null)
+        if (metadata == null) {
             return null
-        if (metadata.size == 0)
+        }
+        if (metadata.size == 0) {
             return null
+        }
 
         val infoBuilder = StringBuilder()
         metadata.forEach {

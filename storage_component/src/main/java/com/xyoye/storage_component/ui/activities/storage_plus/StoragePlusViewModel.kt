@@ -18,10 +18,15 @@ class StoragePlusViewModel : BaseViewModel() {
     private val _exitLiveData = MutableLiveData<Any>()
     var exitLiveData: LiveData<Any> = _exitLiveData
 
-    fun addStorage(oldLibrary: MediaLibraryEntity?, newLibrary: MediaLibraryEntity) {
+    fun addStorage(
+        oldLibrary: MediaLibraryEntity?,
+        newLibrary: MediaLibraryEntity
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
-            val duplicateLibrary = DatabaseManager.instance.getMediaLibraryDao()
-                .getByUrl(newLibrary.url, newLibrary.mediaType)
+            val duplicateLibrary =
+                DatabaseManager.instance
+                    .getMediaLibraryDao()
+                    .getByUrl(newLibrary.url, newLibrary.mediaType)
             if (duplicateLibrary != null && duplicateLibrary.id != oldLibrary?.id) {
                 ToastCenter.showError("保存失败，媒体库地址已存在")
                 return@launch

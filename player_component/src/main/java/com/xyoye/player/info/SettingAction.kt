@@ -2,7 +2,11 @@ package com.xyoye.player.info
 
 import com.xyoye.player_component.R
 
-enum class SettingAction(val type: SettingActionType, val display: String, val icon: Int) {
+enum class SettingAction(
+    val type: SettingActionType,
+    val display: String,
+    val icon: Int
+) {
     AUDIO_TRACK(SettingActionType.VIDEO, "音轨", R.drawable.ic_setting_audio_track),
 
     VIDEO_ASPECT(SettingActionType.VIDEO, "比例", R.drawable.ic_setting_video_aspect),
@@ -29,5 +33,5 @@ enum class SettingAction(val type: SettingActionType, val display: String, val i
 
     NEXT_EPISODE(SettingActionType.OTHER, "顺序播放", R.drawable.ic_setting_order_play),
 
-    SCREEN_SHOT(SettingActionType.OTHER, "截屏", R.mipmap.ic_video_screenshot),
+    SCREEN_SHOT(SettingActionType.OTHER, "截屏", R.mipmap.ic_video_screenshot)
 }

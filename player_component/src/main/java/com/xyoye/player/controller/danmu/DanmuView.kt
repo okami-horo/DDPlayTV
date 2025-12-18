@@ -30,7 +30,6 @@ import master.flame.danmaku.ui.widget.DanmakuView
 import java.io.File
 import kotlin.math.max
 
-
 /**
  * Created by xyoye on 2020/11/17.
  */
@@ -39,7 +38,8 @@ class DanmuView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : DanmakuView(context, attrs, defStyleAttr), InterControllerView {
+) : DanmakuView(context, attrs, defStyleAttr),
+    InterControllerView {
     companion object {
         private const val DANMU_MAX_TEXT_SIZE = 2f
         private const val DANMU_MAX_TEXT_ALPHA = 1f
@@ -65,6 +65,9 @@ class DanmuView(
     // 当前弹幕轨道是否被选中
     private var mTrackSelected = false
 
+    // 用户层面的显示状态（与 UI 开关绑定）
+    private var userVisible = true
+
     // 弹幕是否加载完成
     private var mDanmuLoaded = false
 
@@ -73,34 +76,34 @@ class DanmuView(
 
         initDanmuContext()
 
-        setCallback(object : DrawHandler.Callback {
-            override fun drawingFinished() {
+        setCallback(
+            object : DrawHandler.Callback {
+                override fun drawingFinished() {
+                }
 
-            }
+                override fun danmakuShown(danmaku: BaseDanmaku?) {
+                }
 
-            override fun danmakuShown(danmaku: BaseDanmaku?) {
-
-            }
-
-            override fun prepared() {
-                post {
-                    mDanmuLoaded = true
-                    if (mControlWrapper.isPlaying()) {
-                        val position = if (mSeekPosition == INVALID_VALUE) {
-                            mControlWrapper.getCurrentPosition() + PlayerInitializer.Danmu.offsetPosition
-                        } else {
-                            mSeekPosition
+                override fun prepared() {
+                    post {
+                        mDanmuLoaded = true
+                        if (mControlWrapper.isPlaying()) {
+                            val position =
+                                if (mSeekPosition == INVALID_VALUE) {
+                                    mControlWrapper.getCurrentPosition() + PlayerInitializer.Danmu.offsetPosition
+                                } else {
+                                    mSeekPosition
+                                }
+                            seekTo(position)
+                            mSeekPosition = INVALID_VALUE
                         }
-                        seekTo(position)
-                        mSeekPosition = INVALID_VALUE
                     }
                 }
-            }
 
-            override fun updateTimer(timer: DanmakuTimer?) {
-
-            }
-        })
+                override fun updateTimer(timer: DanmakuTimer?) {
+                }
+            },
+        )
     }
 
     override fun attach(controlWrapper: ControlWrapper) {
@@ -108,7 +111,6 @@ class DanmuView(
     }
 
     override fun onVisibilityChanged(isVisible: Boolean) {
-
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
@@ -148,20 +150,20 @@ class DanmuView(
         }
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
-
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
-
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
-
     }
 
     override fun onPopupModeChanged(isPopup: Boolean) {
-        //悬浮窗状态下，将弹幕文字大小与描边缩小为原来的50%
+        // 悬浮窗状态下，将弹幕文字大小与描边缩小为原来的50%
         val sizeProgress = PlayerInitializer.Danmu.size / 100f
         var size = sizeProgress * DANMU_MAX_TEXT_SIZE
         if (isPopup) {
@@ -187,13 +189,17 @@ class DanmuView(
 
     override fun release() {
         mAddedTrack = null
+        mTrackSelected = false
         hide()
         clear()
         clearDanmakusOnScreen()
         super.release()
     }
 
-    fun seekTo(timeMs: Long, isPlaying: Boolean) {
+    fun seekTo(
+        timeMs: Long,
+        isPlaying: Boolean
+    ) {
         if (isPlaying && mDanmuLoaded) {
             seekTo(timeMs + PlayerInitializer.Danmu.offsetPosition)
         } else {
@@ -202,12 +208,14 @@ class DanmuView(
     }
 
     fun addTrack(track: VideoTrackBean): Boolean {
-        val danmu = track.type.getDanmu(track.trackResource)
-            ?: return false
+        val danmu =
+            track.type.getDanmu(track.trackResource)
+                ?: return false
 
         val danmuFile = File(danmu.danmuPath)
-        if (danmuFile.exists().not())
+        if (danmuFile.exists().not()) {
             return false
+        }
 
         // 释放上一次加载的弹幕
         release()
@@ -222,9 +230,10 @@ class DanmuView(
 
         mAddedTrack = track
         mDanmuLoaded = false
-        val danmuParser = BiliDanmakuParser().apply {
-            load(dataSource)
-        }
+        val danmuParser =
+            BiliDanmakuParser().apply {
+                load(dataSource)
+            }
         prepare(danmuParser, mDanmakuContext)
         return true
     }
@@ -233,7 +242,7 @@ class DanmuView(
 
     fun setTrackSelected(selected: Boolean) {
         mTrackSelected = selected
-        setDanmuVisible(selected)
+        syncVisibility()
     }
 
     fun toggleVisible() {
@@ -241,7 +250,17 @@ class DanmuView(
             return
         }
 
-        setDanmuVisible(isShown.not())
+        userVisible = userVisible.not()
+        syncVisibility()
+    }
+
+    fun setUserVisible(visible: Boolean) {
+        userVisible = visible
+        syncVisibility()
+    }
+
+    fun isUserVisible(): Boolean {
+        return userVisible
     }
 
     private fun setDanmuVisible(visible: Boolean) {
@@ -252,32 +271,36 @@ class DanmuView(
         }
     }
 
+    private fun syncVisibility() {
+        setDanmuVisible(mTrackSelected && userVisible)
+    }
+
     private fun initDanmuContext() {
-        //设置禁止重叠
+        // 设置禁止重叠
         val overlappingPair: MutableMap<Int, Boolean> = HashMap()
         overlappingPair[BaseDanmaku.TYPE_SCROLL_LR] = true
         overlappingPair[BaseDanmaku.TYPE_SCROLL_RL] = true
         overlappingPair[BaseDanmaku.TYPE_FIX_TOP] = true
         overlappingPair[BaseDanmaku.TYPE_FIX_BOTTOM] = true
 
-        //弹幕更新方式, 0:Choreographer, 1:new Thread, 2:DrawHandler
+        // 弹幕更新方式, 0:Choreographer, 1:new Thread, 2:DrawHandler
         val danmuUpdateMethod: Byte =
             if (PlayerInitializer.Danmu.updateInChoreographer) 0 else 2
 
         mDanmakuContext.apply {
-            //合并重复弹幕
+            // 合并重复弹幕
             isDuplicateMergingEnabled = true
-            //弹幕view开启绘制缓存
+            // 弹幕view开启绘制缓存
             enableDanmakuDrawingCache(true)
-            //设置禁止重叠
+            // 设置禁止重叠
             mDanmakuContext.preventOverlapping(overlappingPair)
-            //使用DrawHandler驱动刷新，避免在高刷新率时时间轴错位
+            // 使用DrawHandler驱动刷新，避免在高刷新率时时间轴错位
             updateMethod = danmuUpdateMethod
-            //添加关键字过滤器
+            // 添加关键字过滤器
             registerFilter(mKeywordFilter)
-            //添加正则过滤器
+            // 添加正则过滤器
             registerFilter(mRegexFilter)
-            //添加简繁转换器
+            // 添加简繁转换器
             registerFilter(mLanguageConverter)
         }
 
@@ -358,7 +381,10 @@ class DanmuView(
         mDanmakuContext.setMaximumVisibleSizeInScreen(PlayerInitializer.Danmu.maxNum)
     }
 
-    fun addBlackList(isRegex: Boolean, vararg keyword: String) {
+    fun addBlackList(
+        isRegex: Boolean,
+        vararg keyword: String
+    ) {
         keyword.forEach {
             if (isRegex) {
                 mRegexFilter.addRegex(it)
@@ -369,7 +395,10 @@ class DanmuView(
         notifyFilterChanged()
     }
 
-    fun removeBlackList(isRegex: Boolean, keyword: String) {
+    fun removeBlackList(
+        isRegex: Boolean,
+        keyword: String
+    ) {
         if (isRegex) {
             mRegexFilter.removeRegex(keyword)
         } else {
@@ -393,16 +422,15 @@ class DanmuView(
         }
     }
 
-    fun isDanmuLoaded(): Boolean {
-        return mDanmuLoaded
-    }
+    fun isDanmuLoaded(): Boolean = mDanmuLoaded
 
     fun addDanmuToView(danmuBean: SendDanmuBean) {
-        val type = when {
-            danmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
-            danmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
-            else -> BaseDanmaku.TYPE_FIX_BOTTOM
-        }
+        val type =
+            when {
+                danmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
+                danmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
+                else -> BaseDanmaku.TYPE_FIX_BOTTOM
+            }
 
         val danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(type)
         danmaku.apply {
@@ -426,7 +454,7 @@ class DanmuView(
     }
 
     private fun notifyFilterChanged() {
-        //该方法内部会调用弹幕刷新，能达到相应效果
+        // 该方法内部会调用弹幕刷新，能达到相应效果
         mDanmakuContext.addUserHashBlackList()
     }
 }

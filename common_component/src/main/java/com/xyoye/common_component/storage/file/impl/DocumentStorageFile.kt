@@ -16,25 +16,19 @@ class DocumentStorageFile(
     storage: DocumentFileStorage,
     fileNameAndMimeType: Pair<String, String>? = null
 ) : AbstractStorageFile(storage) {
-
-    //查询文件名与文件类型
-    //自定义只查询一次，如果使用DocumentFile的方法，会执行两次查询
-    private val mFileNameAndMimeType = fileNameAndMimeType
-        ?: documentFile.fileNameAndMineType()
+    // 查询文件名与文件类型
+    // 自定义只查询一次，如果使用DocumentFile的方法，会执行两次查询
+    private val mFileNameAndMimeType =
+        fileNameAndMimeType
+            ?: documentFile.fileNameAndMineType()
 
     private val mFileLength = documentFile.length()
 
-    override fun getRealFile(): Any {
-        return documentFile
-    }
+    override fun getRealFile(): Any = documentFile
 
-    override fun filePath(): String {
-        return documentFile.uri.encodedPath ?: ""
-    }
+    override fun filePath(): String = documentFile.uri.encodedPath ?: ""
 
-    override fun fileUrl(): String {
-        return documentFile.uri.toString()
-    }
+    override fun fileUrl(): String = documentFile.uri.toString()
 
     override fun fileCover(): String? {
         if (isDirectory()) {
@@ -49,31 +43,20 @@ class DocumentStorageFile(
         return fileUrl()
     }
 
-    override fun storagePath(): String {
-        return fileUrl()
-    }
+    override fun storagePath(): String = fileUrl()
 
-    override fun isDirectory(): Boolean {
-        return mFileNameAndMimeType.second == DocumentsContract.Document.MIME_TYPE_DIR
-    }
+    override fun isDirectory(): Boolean = mFileNameAndMimeType.second == DocumentsContract.Document.MIME_TYPE_DIR
 
-    override fun fileName(): String {
-        return mFileNameAndMimeType.first
-    }
+    override fun fileName(): String = mFileNameAndMimeType.first
 
-    override fun fileLength(): Long {
-        return mFileLength
-    }
+    override fun fileLength(): Long = mFileLength
 
-    override fun canRead(): Boolean {
-        return documentFile.canRead()
-    }
+    override fun canRead(): Boolean = documentFile.canRead()
 
-    override fun clone(): StorageFile {
-        return DocumentStorageFile(
+    override fun clone(): StorageFile =
+        DocumentStorageFile(
             documentFile,
             storage as DocumentFileStorage,
-            mFileNameAndMimeType
+            mFileNameAndMimeType,
         ).also { it.playHistory = playHistory }
-    }
 }

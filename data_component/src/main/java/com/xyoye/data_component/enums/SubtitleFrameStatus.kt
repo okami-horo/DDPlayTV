@@ -9,8 +9,6 @@ enum class SubtitleFrameStatus {
     Skipped;
 
     companion object {
-        fun fromName(value: String?): SubtitleFrameStatus {
-            return values().firstOrNull { it.name.equals(value, true) } ?: Rendered
-        }
+        fun fromName(value: String?): SubtitleFrameStatus = values().firstOrNull { it.name.equals(value, true) } ?: Rendered
     }
 }

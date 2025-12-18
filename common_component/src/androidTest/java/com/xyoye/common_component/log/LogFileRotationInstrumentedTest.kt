@@ -12,7 +12,6 @@ import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class LogFileRotationInstrumentedTest {
-
     private lateinit var context: Context
 
     @Before

@@ -16,9 +16,11 @@ import com.xyoye.local_component.ui.activities.bilibili_danmu.BilibiliDanmuActiv
 class BiliBiliDanmuMenus private constructor(
     private val activity: BilibiliDanmuActivity
 ) {
-
     companion object {
-        fun inflater(activity: BilibiliDanmuActivity, menu: Menu): BiliBiliDanmuMenus {
+        fun inflater(
+            activity: BilibiliDanmuActivity,
+            menu: Menu
+        ): BiliBiliDanmuMenus {
             activity.menuInflater.inflate(R.menu.menu_bilibili_danmu, menu)
             return BiliBiliDanmuMenus(activity)
         }
@@ -39,7 +41,7 @@ class BiliBiliDanmuMenus private constructor(
                 "User-Agent不应为空",
                 "请输入User-Agent",
                 defaultText = AppConfig.getJsoupUserAgent(),
-                inputTips = "使用【选取链接下载】时，会携带此User-Agent请求链接的网页内容"
+                inputTips = "使用【选取链接下载】时，会携带此User-Agent请求链接的网页内容",
             ),
         ) {
             AppConfig.putJsoupUserAgent(it)

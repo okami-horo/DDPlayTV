@@ -15,7 +15,6 @@ import retrofit2.http.*
  */
 
 interface ScreencastService {
-
     @GET(ScreencastConstants.ReceiverApi.init)
     suspend fun init(
         @Header(HeaderKey.BASE_URL) url: String,

@@ -13,9 +13,15 @@ interface VideoPlayerEventListener {
 
     fun onCompletion()
 
-    fun onVideoSizeChange(width: Int, height: Int)
+    fun onVideoSizeChange(
+        width: Int,
+        height: Int
+    )
 
-    fun onInfo(what: Int, extra: Int)
+    fun onInfo(
+        what: Int,
+        extra: Int
+    )
 
     fun onSubtitleTextOutput(subtitle: MixedSubtitle)
 }

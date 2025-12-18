@@ -9,7 +9,9 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 管理内部存储下的 debug.log / debug_old.log 双文件。
+ * 管理本地 debug.log / debug_old.log 双文件。
+ * - 优先写入外部缓存根目录下的 logs 子目录（示例：/sdcard/Android/data/<package>/files/logs）
+ * - 外部目录不可用时回退到内部 files/logs
  * - 冷启动时将上一会话的 debug.log 合并到 debug_old.log（按上限裁剪）
  * - 仅在需要写入时创建目录和文件
  */
@@ -55,7 +57,7 @@ open class LogFileManager(
                 path = file.absolutePath,
                 sizeBytes = file.length(),
                 lastModified = file.lastModified(),
-                readable = file.canRead()
+                readable = file.canRead(),
             )
         }
     }
@@ -68,16 +70,17 @@ open class LogFileManager(
         if (!dir.exists() || !dir.isDirectory) {
             return emptyList()
         }
-        val files = dir.listFiles { file ->
-            LogFileMeta.ALLOWED_FILE_NAMES.contains(file.name)
-        } ?: return emptyList()
+        val files =
+            dir.listFiles { file ->
+                LogFileMeta.ALLOWED_FILE_NAMES.contains(file.name)
+            } ?: return emptyList()
         return files.sortedBy { it.name }.map { file ->
             LogFileMeta(
                 fileName = file.name,
                 path = file.absolutePath,
                 sizeBytes = file.length(),
                 lastModified = file.lastModified(),
-                readable = file.canRead()
+                readable = file.canRead(),
             )
         }
     }
@@ -129,7 +132,10 @@ open class LogFileManager(
         current.writeText("")
     }
 
-    private fun appendFileWithClamp(source: File, target: File) {
+    private fun appendFileWithClamp(
+        source: File,
+        target: File
+    ) {
         if (source.length() == 0L) return
         ensureWritableSpace()
         if (!target.exists()) {

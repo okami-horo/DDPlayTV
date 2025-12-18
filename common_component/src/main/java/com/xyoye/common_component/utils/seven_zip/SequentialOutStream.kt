@@ -10,9 +10,7 @@ import java.io.IOException
 class SequentialOutStream constructor(
     private val destDir: File,
     private var fileName: String
-) :
-    ISequentialOutStream {
-
+) : ISequentialOutStream {
     @Throws(SevenZipException::class)
     override fun write(data: ByteArray?): Int {
         if (data == null || data.isEmpty()) {
@@ -34,7 +32,7 @@ class SequentialOutStream constructor(
             ErrorReportHelper.postCatchedException(
                 e,
                 "SequentialOutStream.write",
-                "写入7z文件失败: $fileName"
+                "写入7z文件失败: $fileName",
             )
             throw SevenZipException("failed to write file: $fileName")
         }

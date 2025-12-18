@@ -9,4 +9,3 @@ enum class SubtitleFallbackReason {
     UNSUPPORTED_FORMAT,
     USER_REQUEST
 }
-

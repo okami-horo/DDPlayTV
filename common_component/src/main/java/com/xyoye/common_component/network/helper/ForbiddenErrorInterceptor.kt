@@ -6,7 +6,6 @@ import com.xyoye.common_component.utils.SecurityHelper
 import okhttp3.Interceptor
 import okhttp3.Response
 import retrofit2.HttpException
-import java.io.IOException
 
 /**
  * 403错误诊断和恢复拦截器
@@ -15,7 +14,6 @@ import java.io.IOException
  * Created by Claude Code on 2025-09-22.
  */
 class ForbiddenErrorInterceptor : Interceptor {
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val response = chain.proceed(request)
@@ -42,7 +40,10 @@ class ForbiddenErrorInterceptor : Interceptor {
     /**
      * 诊断403错误的可能原因
      */
-    private fun diagnose403Error(path: String, headers: okhttp3.Headers): String {
+    private fun diagnose403Error(
+        path: String,
+        headers: okhttp3.Headers
+    ): String {
         val diagnosis = StringBuilder()
 
         // 检查用户认证状态
@@ -64,9 +65,14 @@ class ForbiddenErrorInterceptor : Interceptor {
         diagnosis.append("官方应用认证: $isOfficial\n")
 
         // 检查签名相关信息
-        val signatureHeaders = listOf(
-            "X-Signature", "X-Timestamp", "X-Nonce", "X-App-Version", "X-Platform"
-        )
+        val signatureHeaders =
+            listOf(
+                "X-Signature",
+                "X-Timestamp",
+                "X-Nonce",
+                "X-App-Version",
+                "X-Platform",
+            )
 
         diagnosis.append("签名相关头信息:\n")
         signatureHeaders.forEach { headerName ->
@@ -100,21 +106,27 @@ class ForbiddenErrorInterceptor : Interceptor {
     /**
      * 上报403错误详情
      */
-    private fun report403Error(path: String, headers: okhttp3.Headers, diagnosis: String) {
-        val errorInfo = buildString {
-            append("HTTP 403 Forbidden 错误详情:\n")
-            append(diagnosis)
-            append("\n完整请求头:\n")
-            headers.toMultimap().forEach { (key, values) ->
-                // 隐藏敏感信息
-                val safeValues = if (key.equals("Authorization", ignoreCase = true)) {
-                    values.map { "***" }
-                } else {
-                    values
+    private fun report403Error(
+        path: String,
+        headers: okhttp3.Headers,
+        diagnosis: String
+    ) {
+        val errorInfo =
+            buildString {
+                append("HTTP 403 Forbidden 错误详情:\n")
+                append(diagnosis)
+                append("\n完整请求头:\n")
+                headers.toMultimap().forEach { (key, values) ->
+                    // 隐藏敏感信息
+                    val safeValues =
+                        if (key.equals("Authorization", ignoreCase = true)) {
+                            values.map { "***" }
+                        } else {
+                            values
+                        }
+                    append("  $key: $safeValues\n")
                 }
-                append("  $key: $safeValues\n")
             }
-        }
 
         // 使用专门的方法上报403错误，包含认证诊断信息
         val mockResponse = retrofit2.Response.error<Any>(403, okhttp3.ResponseBody.create(null, ""))
@@ -123,14 +135,18 @@ class ForbiddenErrorInterceptor : Interceptor {
             httpException,
             "ForbiddenErrorInterceptor",
             "intercept",
-            errorInfo
+            errorInfo,
         )
     }
 
     /**
      * 尝试恢复策略
      */
-    private fun tryRecovery(chain: Interceptor.Chain, request: okhttp3.Request, diagnosis: String): Response {
+    private fun tryRecovery(
+        chain: Interceptor.Chain,
+        request: okhttp3.Request,
+        diagnosis: String
+    ): Response {
         val userToken = UserConfig.getUserToken()
         val isLoggedIn = UserConfig.isUserLoggedIn()
 
@@ -142,17 +158,19 @@ class ForbiddenErrorInterceptor : Interceptor {
         // 如果是Authorization头缺失或格式错误，尝试重新构建请求
         val authHeader = request.headers["Authorization"]
         if (authHeader.isNullOrEmpty() || !authHeader.startsWith("Bearer ")) {
-            val newRequest = request.newBuilder()
-                .removeHeader("Authorization")
-                .header("Authorization", "Bearer $userToken")
-                .build()
+            val newRequest =
+                request
+                    .newBuilder()
+                    .removeHeader("Authorization")
+                    .header("Authorization", "Bearer $userToken")
+                    .build()
 
             try {
                 val newResponse = chain.proceed(newRequest)
                 if (newResponse.code != 403) {
                     ErrorReportHelper.postException(
-                        "403错误恢复成功：重新构建Authorization头\n${diagnosis}",
-                        "ForbiddenErrorInterceptor"
+                        "403错误恢复成功：重新构建Authorization头\n$diagnosis",
+                        "ForbiddenErrorInterceptor",
                     )
                     return newResponse
                 }
@@ -160,7 +178,7 @@ class ForbiddenErrorInterceptor : Interceptor {
                 ErrorReportHelper.postCatchedException(
                     e,
                     "ForbiddenErrorInterceptor",
-                    "403错误恢复失败：重新构建请求时发生异常\n${diagnosis}"
+                    "403错误恢复失败：重新构建请求时发生异常\n$diagnosis",
                 )
             }
         }

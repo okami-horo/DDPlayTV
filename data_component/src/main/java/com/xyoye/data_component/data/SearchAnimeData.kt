@@ -12,4 +12,5 @@ import kotlinx.parcelize.Parcelize
 @JsonClass(generateAdapter = true)
 data class SearchAnimeData(
     var animes: MutableList<AnimeData> = mutableListOf()
-) : CommonJsonData(), Parcelable
+) : CommonJsonData(),
+    Parcelable

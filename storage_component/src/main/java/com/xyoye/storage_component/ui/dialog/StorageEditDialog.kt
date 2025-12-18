@@ -12,7 +12,6 @@ import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivit
 abstract class StorageEditDialog<T : ViewDataBinding>(
     private val activity: StoragePlusActivity
 ) : BaseBottomDialog<T>(activity) {
-
     abstract fun onTestResult(result: Boolean)
 
     override fun onCreate(savedInstanceState: Bundle?) {

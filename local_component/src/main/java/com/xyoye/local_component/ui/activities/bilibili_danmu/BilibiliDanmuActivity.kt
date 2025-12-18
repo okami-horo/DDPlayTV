@@ -28,7 +28,7 @@ class BilibiliDanmuActivity : BaseActivity<BilibiliDanmuViewModel, ActivityBilib
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            BilibiliDanmuViewModel::class.java
+            BilibiliDanmuViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_bilibili_danmu
@@ -55,7 +55,11 @@ class BilibiliDanmuActivity : BaseActivity<BilibiliDanmuViewModel, ActivityBilib
         showActionDialog()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
         if (requestCode == REQUEST_CODE_SELECT_URL) {
             if (resultCode == RESULT_OK) {
                 data?.getStringExtra("url_data")?.let {
@@ -80,10 +84,12 @@ class BilibiliDanmuActivity : BaseActivity<BilibiliDanmuViewModel, ActivityBilib
         BottomActionDialog(
             this,
             DownloadType.values().map { it.toAction() },
-            "下载弹幕"
+            "下载弹幕",
         ) {
             if (it.actionId == DownloadType.SELECT) {
-                ARouter.getInstance().build(RouteTable.User.WebView)
+                ARouter
+                    .getInstance()
+                    .build(RouteTable.User.WebView)
                     .withString("titleText", "选择链接")
                     .withString("url", "http://www.bilibili.com")
                     .withBoolean("isSelectMode", true)
@@ -96,15 +102,18 @@ class BilibiliDanmuActivity : BaseActivity<BilibiliDanmuViewModel, ActivityBilib
     }
 
     private fun showInputDialog(type: DownloadType) {
-        val editBean = when (type) {
-            DownloadType.URL -> EditBean("输入链接下载", "链接不能为空", "番剧链接")
-            DownloadType.AV_CODE -> EditBean("输入AV号下载", "AV号不能为空", "纯数字AV号")
-            DownloadType.BV_CODE -> EditBean("输入BV号下载", "BV号不能为空", "完整BV号")
-            else -> return
-        }
+        val editBean =
+            when (type) {
+                DownloadType.URL -> EditBean("输入链接下载", "链接不能为空", "番剧链接")
+                DownloadType.AV_CODE -> EditBean("输入AV号下载", "AV号不能为空", "纯数字AV号")
+                DownloadType.BV_CODE -> EditBean("输入BV号下载", "BV号不能为空", "完整BV号")
+                else -> return
+            }
 
         CommonEditDialog(
-            this, editBean, type == DownloadType.AV_CODE
+            this,
+            editBean,
+            type == DownloadType.AV_CODE,
         ) {
             when (type) {
                 DownloadType.URL -> viewModel.downloadByUrl(it)
@@ -115,7 +124,10 @@ class BilibiliDanmuActivity : BaseActivity<BilibiliDanmuViewModel, ActivityBilib
         }.show()
     }
 
-    private enum class DownloadType(val title: String, val icon: Int) {
+    private enum class DownloadType(
+        val title: String,
+        val icon: Int
+    ) {
         SELECT("选取链接下载", R.drawable.ic_select_link),
         URL("输入链接下载", R.drawable.ic_input_code),
         AV_CODE("输入av号下载", R.drawable.ic_input_code),

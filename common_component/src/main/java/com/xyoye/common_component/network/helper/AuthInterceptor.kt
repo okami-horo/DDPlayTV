@@ -11,11 +11,12 @@ import okhttp3.Response
  */
 
 class AuthInterceptor : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): Response {
-        return chain.proceed(
-            chain.request().newBuilder()
+    override fun intercept(chain: Interceptor.Chain): Response =
+        chain.proceed(
+            chain
+                .request()
+                .newBuilder()
                 .header(HeaderKey.AUTHORIZATION, UserConfig.getUserToken()?.authorizationValue().orEmpty())
-                .build()
+                .build(),
         )
-    }
 }

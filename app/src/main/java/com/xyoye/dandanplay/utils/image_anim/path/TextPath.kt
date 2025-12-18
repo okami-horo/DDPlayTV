@@ -6,7 +6,11 @@ import java.util.*
 /**
  * Created by xyoye on 2019/9/15.
  */
-class TextPath constructor(str: String, scale: Float = 1f, textIntervalPx: Float = 14f) {
+class TextPath constructor(
+    str: String,
+    scale: Float = 1f,
+    textIntervalPx: Float = 14f
+) {
     var width = 0f
     var height = 0f
     val path: Path = Path()
@@ -32,7 +36,7 @@ class TextPath constructor(str: String, scale: Float = 1f, textIntervalPx: Float
         textIntervalPx: Float
     ): ArrayList<FloatArray> {
         val pathData = ArrayList<FloatArray>()
-        //上下左右偏移5px
+        // 上下左右偏移5px
         val padding = 5
         var offsetForWidth = padding.toFloat()
         for (element in str) {
@@ -43,11 +47,11 @@ class TextPath constructor(str: String, scale: Float = 1f, textIntervalPx: Float
             }
             val points = TextPathUtils.pointList[pos]
             val pointCount = points!!.size / 4
-            //当前字最左点
+            // 当前字最左点
             var minX = 0f
-            //当前字最右点
+            // 当前字最右点
             var maxX = 0f
-            //对Path进行缩放，同时获取整体宽高
+            // 对Path进行缩放，同时获取整体宽高
             for (j in 0 until pointCount) {
                 val line = FloatArray(4)
                 for (k in 0..3) {

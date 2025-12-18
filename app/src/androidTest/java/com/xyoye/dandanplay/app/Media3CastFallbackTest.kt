@@ -24,36 +24,40 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @Ignore("Cast sender feature disabled for TV build")
 class Media3CastFallbackTest {
-
     @Test
     fun audioOnlyFallback_isPropagatedToCastPayload() {
         val manager = Media3CastManager(CodecFallbackHandler())
         val session = playbackSession()
-        val contract = PlayerCapabilityContract(
-            sessionId = session.sessionId,
-            capabilities = listOf(Media3Capability.CAST),
-            castTargets = listOf(
-                CastTarget(id = "living-room", name = "Living Room", type = CastTargetType.CHROMECAST)
+        val contract =
+            PlayerCapabilityContract(
+                sessionId = session.sessionId,
+                capabilities = listOf(Media3Capability.CAST),
+                castTargets =
+                    listOf(
+                        CastTarget(id = "living-room", name = "Living Room", type = CastTargetType.CHROMECAST),
+                    ),
             )
-        )
-        val codecIssues = LegacyCapabilityResult(
-            mediaTracks = emptyList(),
-            subtitleTracks = emptyList(),
-            issues = listOf(
-                LegacyCapabilityIssue(
-                    code = "UNSUPPORTED_CODEC",
-                    message = "Codec h265 not supported on cast target",
-                    blocking = true
-                )
+        val codecIssues =
+            LegacyCapabilityResult(
+                mediaTracks = emptyList(),
+                subtitleTracks = emptyList(),
+                issues =
+                    listOf(
+                        LegacyCapabilityIssue(
+                            code = "UNSUPPORTED_CODEC",
+                            message = "Codec h265 not supported on cast target",
+                            blocking = true,
+                        ),
+                    ),
             )
-        )
 
-        val payload = manager.prepareCastSession(
-            targetId = "living-room",
-            session = session,
-            capability = contract,
-            capabilityResult = codecIssues
-        )
+        val payload =
+            manager.prepareCastSession(
+                targetId = "living-room",
+                session = session,
+                capability = contract,
+                capabilityResult = codecIssues,
+            )
 
         assertTrue(payload.audioOnly)
         assertEquals("Codec h265 not supported on cast target", payload.fallbackMessage)
@@ -65,32 +69,34 @@ class Media3CastFallbackTest {
     fun fullPlayback_castsWithoutFallback() {
         val manager = Media3CastManager(CodecFallbackHandler())
         val session = playbackSession()
-        val contract = PlayerCapabilityContract(
-            sessionId = session.sessionId,
-            capabilities = listOf(Media3Capability.CAST),
-            castTargets = listOf(
-                CastTarget(id = "office", name = "Office Display", type = CastTargetType.DLNA)
+        val contract =
+            PlayerCapabilityContract(
+                sessionId = session.sessionId,
+                capabilities = listOf(Media3Capability.CAST),
+                castTargets =
+                    listOf(
+                        CastTarget(id = "office", name = "Office Display", type = CastTargetType.DLNA),
+                    ),
             )
-        )
 
-        val payload = manager.prepareCastSession(
-            targetId = "office",
-            session = session,
-            capability = contract,
-            capabilityResult = null
-        )
+        val payload =
+            manager.prepareCastSession(
+                targetId = "office",
+                session = session,
+                capability = contract,
+                capabilityResult = null,
+            )
 
         assertFalse(payload.audioOnly)
         assertEquals("office", payload.target.id)
         assertEquals(null, payload.fallbackMessage)
     }
 
-    private fun playbackSession(): PlaybackSession {
-        return PlaybackSession(
+    private fun playbackSession(): PlaybackSession =
+        PlaybackSession(
             sessionId = "session-cast",
             mediaId = "media-1",
             sourceType = Media3SourceType.STREAM,
-            playerEngine = Media3PlayerEngine.MEDIA3
+            playerEngine = Media3PlayerEngine.MEDIA3,
         )
-    }
 }

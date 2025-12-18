@@ -27,15 +27,15 @@ class SendDanmuDialog(
     private val mContext: Context,
     private val callback: (SendDanmuBean) -> Unit
 ) : Dialog(mContext) {
-
     private var danmuData = SendDanmuBean(videoPosition)
 
-    private val viewBinding = DataBindingUtil.inflate<LayoutSendDanmuBinding>(
-        LayoutInflater.from(context),
-        R.layout.layout_send_danmu,
-        null,
-        false
-    )
+    private val viewBinding =
+        DataBindingUtil.inflate<LayoutSendDanmuBinding>(
+            LayoutInflater.from(context),
+            R.layout.layout_send_danmu,
+            null,
+            false,
+        )
 
     private val mediumDanmuIv = viewBinding.danmuFontPanel.findViewById<ImageView>(R.id.medium_danmu_iv)
     private val smallDanmuIv = viewBinding.danmuFontPanel.findViewById<ImageView>(R.id.small_danmu_iv)
@@ -57,7 +57,8 @@ class SendDanmuDialog(
         }
 
         if (mContext is AppCompatActivity) {
-            PanelSwitchHelper.Builder(mContext.window, viewBinding.root)
+            PanelSwitchHelper
+                .Builder(mContext.window, viewBinding.root)
                 .addPanelChangeListener {
                     onNone {
                         dismiss()
@@ -96,7 +97,8 @@ class SendDanmuDialog(
         super.dismiss()
 
         if (mContext is AppCompatActivity) {
-            ImmersionBar.with(mContext)
+            ImmersionBar
+                .with(mContext)
                 .fullScreen(true)
                 .hideBar(BarHide.FLAG_HIDE_STATUS_BAR)
                 .init()
@@ -115,12 +117,15 @@ class SendDanmuDialog(
         viewBinding.danmuInputEt.addTextChangedListener(
             afterTextChanged = {
                 viewBinding.sendDanmuIv.isSelected = it?.length != 0
-            }
+            },
         )
 
         viewBinding.sendDanmuIv.setOnClickListener {
-            val danmuText = viewBinding.danmuInputEt.text.toString().trim()
-            if (danmuText.isEmpty()){
+            val danmuText =
+                viewBinding.danmuInputEt.text
+                    .toString()
+                    .trim()
+            if (danmuText.isEmpty()) {
                 ToastCenter.showOriginalToast("弹幕内容不能为空")
                 return@setOnClickListener
             }
@@ -163,7 +168,7 @@ class SendDanmuDialog(
         }
     }
 
-    private fun updatePanel(){
+    private fun updatePanel() {
         smallDanmuIv.isSelected = danmuData.isSmallSize
         mediumDanmuIv.isSelected = !danmuData.isSmallSize
 

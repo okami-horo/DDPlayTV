@@ -29,9 +29,7 @@ import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.data.EpisodeData
 
-class AnimeEpisodeFragment :
-    BaseFragment<AnimeEpisodeFragmentViewModel, FragmentAnimeEpisodeBinding>() {
-
+class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, FragmentAnimeEpisodeBinding>() {
     private val parentViewModel: AnimeDetailViewModel by viewModels(ownerProducer = { mAttachActivity })
 
     // 番剧详情Activity
@@ -49,67 +47,66 @@ class AnimeEpisodeFragment :
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            AnimeEpisodeFragmentViewModel::class.java
+            AnimeEpisodeFragmentViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.fragment_anime_episode
 
     override fun initView() {
-
-        val episodeAdapter = buildAdapter {
-            setupDiffUtil {
-                areItemsTheSame { old: Any, new: Any ->
-                    val oldItem = old as? EpisodeData
-                    val newItem = new as? EpisodeData
-                    oldItem?.episodeId == newItem?.episodeId
+        val episodeAdapter =
+            buildAdapter {
+                setupDiffUtil {
+                    areItemsTheSame { old: Any, new: Any ->
+                        val oldItem = old as? EpisodeData
+                        val newItem = new as? EpisodeData
+                        oldItem?.episodeId == newItem?.episodeId
+                    }
                 }
-            }
 
-            addItem<EpisodeData, ItemAnimeEpisodeBinding>(R.layout.item_anime_episode) {
-                initView { data, _, _ ->
-                    itemBinding.apply {
-                        // 剧集信息
-                        tvEpisodeTitle.text = data.title
-                        tvEpisodeSubtitle.text = data.subtitle
+                addItem<EpisodeData, ItemAnimeEpisodeBinding>(R.layout.item_anime_episode) {
+                    initView { data, _, _ ->
+                        itemBinding.apply {
+                            // 剧集信息
+                            tvEpisodeTitle.text = data.title
+                            tvEpisodeSubtitle.text = data.subtitle
 
-                        // 观看时间
-                        groupWatchTime.isGone = data.watchTime.isNullOrEmpty()
-                        tvWatchTime.text = data.watchTime
+                            // 观看时间
+                            groupWatchTime.isGone = data.watchTime.isNullOrEmpty()
+                            tvWatchTime.text = data.watchTime
 
-                        // 已看状态
-                        tvEpisodeTitle.isSelected = data.watched
-                        cbEpisodeMark.isChecked = data.isMarked
+                            // 已看状态
+                            tvEpisodeTitle.isSelected = data.watched
+                            cbEpisodeMark.isChecked = data.isMarked
 
-                        // 按钮的显示
-                        ivEpisodePlay.isVisible = data.inMarkMode.not() && data.histories.isNotEmpty()
-                        ivEpisodeMarkViewed.isVisible = data.inMarkMode.not() && data.markAble
-                        flEpisodeMark.isVisible = data.inMarkMode
+                            // 按钮的显示
+                            ivEpisodePlay.isVisible = data.inMarkMode.not() && data.histories.isNotEmpty()
+                            ivEpisodeMarkViewed.isVisible = data.inMarkMode.not() && data.markAble
+                            flEpisodeMark.isVisible = data.inMarkMode
 
-                        ivEpisodeMarkViewed.setOnClickListener {
-                            considerMarkAsViewed(data)
-                        }
+                            ivEpisodeMarkViewed.setOnClickListener {
+                                considerMarkAsViewed(data)
+                            }
 
-                        itemLayout.setOnClickListener {
-                            if (viewModel.markModeFlow.value) {
-                                viewModel.markEpisodeById(data.episodeId)
-                            } else {
-                                searchEpisodeResource(data)
+                            itemLayout.setOnClickListener {
+                                if (viewModel.markModeFlow.value) {
+                                    viewModel.markEpisodeById(data.episodeId)
+                                } else {
+                                    searchEpisodeResource(data)
+                                }
+                            }
+
+                            itemLayout.setOnLongClickListener {
+                                viewModel.toggleMarkMode(true)
+                                return@setOnLongClickListener true
+                            }
+
+                            ivEpisodePlay.setOnClickListener {
+                                playStorageEpisode(data)
                             }
                         }
-
-                        itemLayout.setOnLongClickListener {
-                            viewModel.toggleMarkMode(true)
-                            return@setOnLongClickListener true
-                        }
-
-                        ivEpisodePlay.setOnClickListener {
-                            playStorageEpisode(data)
-                        }
                     }
-
                 }
             }
-        }
 
         dataBinding.episodeRv.apply {
             layoutManager = vertical()
@@ -153,8 +150,9 @@ class AnimeEpisodeFragment :
             animeDetailActivity?.refreshAnimeDetail()
         }
 
-        viewModel.playVideoFLow.collectAtStarted(this) {
-            ARouter.getInstance()
+        viewModel.playVideoFlow.collectAtStarted(this) {
+            ARouter
+                .getInstance()
                 .build(RouteTable.Player.Player)
                 .navigation()
         }
@@ -198,17 +196,16 @@ class AnimeEpisodeFragment :
      * 搜索剧集资源
      */
     private fun searchEpisodeResource(data: EpisodeData) {
-        ARouter.getInstance()
+        ARouter
+            .getInstance()
             .build(RouteTable.Anime.Search)
             .withString(
                 "animeTitle",
-                viewModel.animeTitleField.get()
-            )
-            .withString(
+                viewModel.animeTitleField.get(),
+            ).withString(
                 "searchWord",
-                "${viewModel.animeSearchWordField.get()} ${data.searchEpisodeNum}"
-            )
-            .withBoolean("isSearchMagnet", true)
+                "${viewModel.animeSearchWordField.get()} ${data.searchEpisodeNum}",
+            ).withBoolean("isSearchMagnet", true)
             .navigation()
     }
 
@@ -221,29 +218,33 @@ class AnimeEpisodeFragment :
             return
         }
 
-        CommonDialog.Builder(mAttachActivity).apply {
-            content = "确认标记 ${data.title} 为已看？"
-            addPositive {
-                viewModel.submitEpisodesViewed(listOf(data.episodeId))
-                it.dismiss()
-            }
-            addNegative {
-                it.dismiss()
-            }
-        }.build().show()
+        CommonDialog
+            .Builder(mAttachActivity)
+            .apply {
+                content = "确认标记 ${data.title} 为已看？"
+                addPositive {
+                    viewModel.submitEpisodesViewed(listOf(data.episodeId))
+                    it.dismiss()
+                }
+                addNegative {
+                    it.dismiss()
+                }
+            }.build()
+            .show()
     }
 
     /**
      * 播放媒体库中的视频
      */
     private fun playStorageEpisode(episode: EpisodeData) {
-        val actionList = episode.histories.mapIndexedNotNull { index, history ->
-            val library = history.library ?: return@mapIndexedNotNull null
-            SheetActionBean(index, library.displayName, library.mediaType.cover, history.entity.storagePath)
-        }
+        val actionList =
+            episode.histories.mapIndexedNotNull { index, history ->
+                val library = history.library ?: return@mapIndexedNotNull null
+                SheetActionBean(index, library.displayName, library.mediaType.cover, history.entity.storagePath)
+            }
         BottomActionDialog(mAttachActivity, actionList, "选择播放记录") {
             viewModel.playLocalEpisode(
-                episode.histories[it.actionId as Int]
+                episode.histories[it.actionId as Int],
             )
             return@BottomActionDialog true
         }.show()

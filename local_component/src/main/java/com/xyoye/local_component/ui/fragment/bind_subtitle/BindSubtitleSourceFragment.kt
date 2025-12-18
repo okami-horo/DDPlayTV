@@ -29,13 +29,10 @@ import com.xyoye.local_component.ui.dialog.ShooterSecretDialog
 import com.xyoye.local_component.ui.dialog.SubtitleDetailDialog
 import com.xyoye.local_component.ui.dialog.SubtitleFileListDialog
 
-
 /**
  * Created by xyoye on 2022/1/25
  */
-class BindSubtitleSourceFragment :
-    BaseFragment<BindSubtitleSourceFragmentViewModel, FragmentBindSubtitleSourceBinding>() {
-
+class BindSubtitleSourceFragment : BaseFragment<BindSubtitleSourceFragmentViewModel, FragmentBindSubtitleSourceBinding>() {
     companion object {
         fun newInstance() = BindSubtitleSourceFragment()
     }
@@ -44,10 +41,11 @@ class BindSubtitleSourceFragment :
 
     private lateinit var subtitleAdapter: BasePagingAdapter<SubtitleSourceBean>
 
-    override fun initViewModel() = ViewModelInit(
-        BR.viewModel,
-        BindSubtitleSourceFragmentViewModel::class.java
-    )
+    override fun initViewModel() =
+        ViewModelInit(
+            BR.viewModel,
+            BindSubtitleSourceFragmentViewModel::class.java,
+        )
 
     override fun getLayoutId() = R.layout.fragment_bind_subtitle_source
 
@@ -64,36 +62,38 @@ class BindSubtitleSourceFragment :
     }
 
     private fun initRv() {
-        subtitleAdapter = buildPagingAdapter {
+        subtitleAdapter =
+            buildPagingAdapter {
+                addItem<SubtitleSourceBean, ItemSubtitleSearchSourceBinding>(R.layout.item_subtitle_search_source) {
+                    initView { data, position, _ ->
+                        itemBinding.apply {
+                            val describe =
+                                if (data.isMatch) {
+                                    "来源: ${data.source}"
+                                } else {
+                                    "语言: ${data.language}"
+                                }
+                            val positionText = (position + 1).toString()
 
-            addItem<SubtitleSourceBean, ItemSubtitleSearchSourceBinding>(R.layout.item_subtitle_search_source) {
-                initView { data, position, _ ->
-                    itemBinding.apply {
-                        val describe = if (data.isMatch) {
-                            "来源: ${data.source}"
-                        } else {
-                            "语言: ${data.language}"
-                        }
-                        val positionText = (position + 1).toString()
-
-                        positionTv.text = positionText
-                        subtitleNameTv.text = data.name
-                        subtitleDescribeTv.text = describe
-                        itemLayout.setOnClickListener {
-                            if (data.isMatch) {
-                                viewModel.downloadSearchSubtitle(data.name, data.matchUrl)
-                            } else {
-                                viewModel.detailSearchSubtitle(data)
+                            positionTv.text = positionText
+                            subtitleNameTv.text = data.name
+                            subtitleDescribeTv.text = describe
+                            itemLayout.setOnClickListener {
+                                if (data.isMatch) {
+                                    viewModel.downloadSearchSubtitle(data.name, data.matchUrl)
+                                } else {
+                                    viewModel.detailSearchSubtitle(data)
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        val contactAdapter = subtitleAdapter.withLoadStateFooter(
-            PagingFooterAdapter { subtitleAdapter.retry() }
-        )
+        val contactAdapter =
+            subtitleAdapter.withLoadStateFooter(
+                PagingFooterAdapter { subtitleAdapter.retry() },
+            )
 
         dataBinding.subtitleRv.apply {
             layoutManager = vertical()
@@ -123,14 +123,14 @@ class BindSubtitleSourceFragment :
                 downloadOne = {
                     SubtitleFileListDialog(
                         requireActivity(),
-                        it.filelist!!
+                        it.filelist!!,
                     ) { fileName, url ->
                         viewModel.downloadSearchSubtitle(fileName, url)
                     }.show()
                 },
                 downloadZip = { fileName, url ->
                     viewModel.downloadSearchSubtitle(fileName, url, true)
-                }
+                },
             ).show()
         }
 
@@ -138,7 +138,7 @@ class BindSubtitleSourceFragment :
             FileManagerDialog(
                 requireActivity(),
                 FileManagerAction.ACTION_SELECT_SUBTITLE,
-                dirPath
+                dirPath,
             ) {
                 viewModel.databaseSubtitle(it)
                 ToastCenter.showSuccess("绑定字幕成功！")
@@ -147,7 +147,7 @@ class BindSubtitleSourceFragment :
 
         parentViewModel.searchTextFlow.collectAtStarted(
             this,
-            minActiveState = Lifecycle.State.RESUMED
+            minActiveState = Lifecycle.State.RESUMED,
         ) {
             val shooterSecret = SubtitleConfig.getShooterSecret()
             if (shooterSecret.isNullOrEmpty()) {
@@ -187,7 +187,7 @@ class BindSubtitleSourceFragment :
     private fun selectLocalSubtitleFile() {
         FileManagerDialog(
             requireActivity(),
-            FileManagerAction.ACTION_SELECT_SUBTITLE
+            FileManagerAction.ACTION_SELECT_SUBTITLE,
         ) {
             if (it.toFile().isInvalid()) {
                 ToastCenter.showError("绑定字幕失败，字幕不存在或内容为空")

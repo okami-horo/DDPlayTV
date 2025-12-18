@@ -11,8 +11,6 @@ enum class SubtitlePipelineFallbackReason {
     UNKNOWN;
 
     companion object {
-        fun fromReason(reason: String?): SubtitlePipelineFallbackReason {
-            return values().firstOrNull { it.name.equals(reason, true) } ?: UNKNOWN
-        }
+        fun fromReason(reason: String?): SubtitlePipelineFallbackReason = values().firstOrNull { it.name.equals(reason, true) } ?: UNKNOWN
     }
 }

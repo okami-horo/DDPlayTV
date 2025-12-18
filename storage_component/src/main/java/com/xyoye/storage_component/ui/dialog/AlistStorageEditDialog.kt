@@ -18,7 +18,6 @@ class AlistStorageEditDialog(
     private val activity: StoragePlusActivity,
     private val library: MediaLibraryEntity?
 ) : StorageEditDialog<DialogAlistLoginBinding>(activity) {
-
     private lateinit var binding: DialogAlistLoginBinding
 
     override fun getChildLayoutId() = R.layout.dialog_alist_login
@@ -29,12 +28,13 @@ class AlistStorageEditDialog(
 
         setTitle(if (isEditMode) "编辑Alist帐号" else "添加Alist帐号")
 
-        val editLibrary = library ?: MediaLibraryEntity(
-            0,
-            "",
-            "",
-            MediaType.ALSIT_STORAGE
-        )
+        val editLibrary =
+            library ?: MediaLibraryEntity(
+                0,
+                "",
+                "",
+                MediaType.ALSIT_STORAGE,
+            )
         binding.library = editLibrary
 
         binding.serverTestConnectTv.setOnClickListener {

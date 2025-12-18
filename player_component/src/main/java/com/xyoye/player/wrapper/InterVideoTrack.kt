@@ -8,7 +8,6 @@ import com.xyoye.data_component.enums.TrackType
  */
 
 interface InterVideoTrack {
-
     /**
      * 是否支持添加轨道
      */

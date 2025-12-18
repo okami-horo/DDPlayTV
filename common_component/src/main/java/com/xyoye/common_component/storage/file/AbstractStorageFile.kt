@@ -14,7 +14,6 @@ import com.xyoye.data_component.entity.PlayHistoryEntity
 abstract class AbstractStorageFile(
     abstractStorage: AbstractStorage
 ) : StorageFile {
-
     private val uniqueKey: String by lazy {
         val libraryId = storage.library.id
         val filePath = fileUrl()
@@ -29,57 +28,40 @@ abstract class AbstractStorageFile(
         if (isDirectory()) {
             return null
         }
-        val cachedCoverFile = uniqueKey().toCoverFile()
-            ?: return null
+        val cachedCoverFile =
+            uniqueKey().toCoverFile()
+                ?: return null
         if (cachedCoverFile.isInvalid()) {
             return null
         }
         return cachedCoverFile.absolutePath
     }
 
-    override fun storagePath(): String {
-        return filePath()
-    }
+    override fun storagePath(): String = filePath()
 
-    override fun uniqueKey(): String {
-        return uniqueKey
-    }
+    override fun uniqueKey(): String = uniqueKey
 
-    override fun isFile(): Boolean {
-        return isDirectory().not()
-    }
+    override fun isFile(): Boolean = isDirectory().not()
 
-    override fun isRootFile(): Boolean {
-        return fileUrl() == storage.rootUri.toString()
-    }
+    override fun isRootFile(): Boolean = fileUrl() == storage.rootUri.toString()
 
-    override fun childFileCount(): Int {
-        return 0
-    }
+    override fun childFileCount(): Int = 0
 
-    override fun <T> getFile(): T? {
-        return getRealFile() as? T
-    }
+    override fun <T> getFile(): T? = getRealFile() as? T
 
     override fun close() {
-        //do nothing
+        // do nothing
     }
 
-    override fun canRead(): Boolean {
-        return true
-    }
+    override fun canRead(): Boolean = true
 
-    override fun isVideoFile(): Boolean {
-        return com.xyoye.common_component.utils.isVideoFile(fileName())
-    }
+    override fun isVideoFile(): Boolean =
+        com.xyoye.common_component.utils
+            .isVideoFile(fileName())
 
-    override fun isStoragePathParent(childPath: String): Boolean {
-        return childPath.startsWith(storagePath())
-    }
+    override fun isStoragePathParent(childPath: String): Boolean = childPath.startsWith(storagePath())
 
-    override fun videoDuration(): Long {
-        return 0
-    }
+    override fun videoDuration(): Long = 0
 
     abstract fun getRealFile(): Any
 }

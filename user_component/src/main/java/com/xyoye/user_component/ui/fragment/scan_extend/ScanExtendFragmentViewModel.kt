@@ -14,7 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ScanExtendFragmentViewModel : BaseViewModel() {
-
     val extendFolderLiveData = MutableLiveData<MutableList<Any>>()
     val extendAppendedLiveData = MutableLiveData<Any>()
 
@@ -23,9 +22,9 @@ class ScanExtendFragmentViewModel : BaseViewModel() {
             try {
                 val entities = DatabaseManager.instance.getExtendFolderDao().getAll()
                 val extendFolderList = arrayListOf<Any>()
-                //扩展目录
+                // 扩展目录
                 extendFolderList.addAll(entities)
-                //添加按钮
+                // 添加按钮
                 extendFolderList.add(0)
                 extendFolderLiveData.postValue(extendFolderList)
             } catch (e: Exception) {
@@ -33,7 +32,7 @@ class ScanExtendFragmentViewModel : BaseViewModel() {
                     e,
                     "ScanExtendFragmentViewModel",
                     "getExtendFolder",
-                    "Failed to get extend folder list from database"
+                    "Failed to get extend folder list from database",
                 )
             }
         }
@@ -53,7 +52,7 @@ class ScanExtendFragmentViewModel : BaseViewModel() {
                     e,
                     "ScanExtendFragmentViewModel",
                     "removeExtendFolder",
-                    "Failed to remove extend folder: ${entity.folderPath}"
+                    "Failed to remove extend folder: ${entity.folderPath}",
                 )
             }
         }
@@ -88,7 +87,7 @@ class ScanExtendFragmentViewModel : BaseViewModel() {
                     e,
                     "ScanExtendFragmentViewModel",
                     "addExtendFolder",
-                    "Failed to add extend folder: $folderPath"
+                    "Failed to add extend folder: $folderPath",
                 )
                 ToastCenter.showError("添加扩展目录失败，请稍后再试")
             }
@@ -109,7 +108,7 @@ class ScanExtendFragmentViewModel : BaseViewModel() {
                     e,
                     "ScanExtendFragmentViewModel",
                     "refreshVideoStorage",
-                    "Failed to refresh video storage"
+                    "Failed to refresh video storage",
                 )
             }
         }

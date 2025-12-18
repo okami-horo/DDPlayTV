@@ -29,7 +29,6 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class DeveloperLoggingPreferenceTest {
-
     private lateinit var context: Context
 
     @Before
@@ -76,7 +75,9 @@ class DeveloperLoggingPreferenceTest {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
     }
 
-    private fun selectLogLevel(@StringRes entryRes: Int) {
+    private fun selectLogLevel(
+        @StringRes entryRes: Int
+    ) {
         val label = context.getString(entryRes)
         onView(withText(label)).perform(click())
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()

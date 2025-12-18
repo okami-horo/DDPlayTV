@@ -26,7 +26,8 @@ class SplashActivity : BaseAppCompatActivity<ActivitySplashBinding>() {
     override fun getLayoutId() = R.layout.activity_splash
 
     override fun initStatusBar() {
-        ImmersionBar.with(this)
+        ImmersionBar
+            .with(this)
             .transparentBar()
             .statusBarDarkFont(false)
             .init()
@@ -58,39 +59,40 @@ class SplashActivity : BaseAppCompatActivity<ActivitySplashBinding>() {
             duration = 2000
         }
 
-        val appName = "弹弹play 概念版 v${packageManager.getPackageInfo(packageName, 0).versionName}"
+        val appName = "${getString(R.string.app_name)} v${
+            packageManager.getPackageInfo(packageName, 0).versionName
+        }"
 
         dataBinding.run {
             appNameTv.text = appName
 
-            textPathView.setAnimListener(object : TextPathAnimView.AnimListener {
-                override fun onStart() {
+            textPathView.setAnimListener(
+                object : TextPathAnimView.AnimListener {
+                    override fun onStart() {
+                    }
 
-                }
+                    override fun onEnd() {
+                        textPathView.postDelayed({
+                            launchActivity()
+                        }, 350)
+                    }
 
-                override fun onEnd() {
-                    textPathView.postDelayed({
-                        launchActivity()
-                    }, 350)
-                }
-
-                override fun onLoop() {
-
-                }
-            })
+                    override fun onLoop() {
+                    }
+                },
+            )
             textPathView.startAnim()
             iconSvgView.start()
             appNameLl.startAnimation(alphaAnimation)
         }
     }
 
-    override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-        return if (event!!.keyCode == KeyEvent.KEYCODE_BACK) {
+    override fun dispatchKeyEvent(event: KeyEvent?): Boolean =
+        if (event!!.keyCode == KeyEvent.KEYCODE_BACK) {
             true
         } else {
             super.dispatchKeyEvent(event)
         }
-    }
 
     override fun onDestroy() {
         dataBinding.textPathView.cancelAnim()

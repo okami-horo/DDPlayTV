@@ -23,8 +23,8 @@ class SubtitleImageView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), InterControllerView {
-
+) : FrameLayout(context, attrs, defStyleAttr),
+    InterControllerView {
     private lateinit var mControlWrapper: ControlWrapper
     private val subtitleView = SubtitleView(context)
 
@@ -43,19 +43,18 @@ class SubtitleImageView(
     override fun getView() = this
 
     override fun onVisibilityChanged(isVisible: Boolean) {
-
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
-
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
-
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
-
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
@@ -65,13 +64,13 @@ class SubtitleImageView(
         videoWidth = if (videoWidth == 0) LayoutParams.MATCH_PARENT else videoWidth
         videoHeight = if (videoHeight == 0) LayoutParams.MATCH_PARENT else videoHeight
 
-        subtitleView.layoutParams = LayoutParams(videoWidth, videoHeight).apply {
-            gravity = Gravity.CENTER
-        }
+        subtitleView.layoutParams =
+            LayoutParams(videoWidth, videoHeight).apply {
+                gravity = Gravity.CENTER
+            }
     }
 
     override fun onPopupModeChanged(isPopup: Boolean) {
-
     }
 
     fun isEmptySubtitle() = lastCues.isNullOrEmpty()

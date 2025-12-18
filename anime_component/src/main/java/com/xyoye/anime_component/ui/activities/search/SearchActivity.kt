@@ -41,7 +41,7 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            SearchViewModel::class.java
+            SearchViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_search
@@ -84,27 +84,37 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
             return@setOnEditorActionListener false
         }
 
-        dataBinding.searchEt.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(editable: Editable?) {
-                val textLength = editable?.length ?: 0
-                if (textLength > 0) {
-                    if (dataBinding.searchEt.isFocused) {
-                        dataBinding.clearTextIv.isVisible = true
+        dataBinding.searchEt.addTextChangedListener(
+            object : TextWatcher {
+                override fun afterTextChanged(editable: Editable?) {
+                    val textLength = editable?.length ?: 0
+                    if (textLength > 0) {
+                        if (dataBinding.searchEt.isFocused) {
+                            dataBinding.clearTextIv.isVisible = true
+                        }
+                    } else {
+                        dataBinding.clearTextIv.isVisible = false
+                        clearText()
                     }
-                } else {
-                    dataBinding.clearTextIv.isVisible = false
-                    clearText()
                 }
-            }
 
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                }
 
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-
-            }
-        })
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int
+                ) {
+                }
+            },
+        )
 
         dataBinding.searchEt.setOnFocusChangeListener { _, isFocus ->
             val searchText = dataBinding.searchEt.text?.toString() ?: ""
@@ -123,26 +133,28 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
             clearText()
         }
 
-        dataBinding.viewpager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-            override fun onPageScrollStateChanged(state: Int) {
-            }
-
-            override fun onPageScrolled(
-                position: Int,
-                positionOffset: Float,
-                positionOffsetPixels: Int
-            ) {
-            }
-
-            override fun onPageSelected(position: Int) {
-                dataBinding.searchEt.hint = when (position) {
-                    0 -> getString(R.string.search_anime_hint)
-                    1 -> getString(R.string.search_magnet_hint)
-                    else -> ""
+        dataBinding.viewpager.addOnPageChangeListener(
+            object : ViewPager.OnPageChangeListener {
+                override fun onPageScrollStateChanged(state: Int) {
                 }
-            }
 
-        })
+                override fun onPageScrolled(
+                    position: Int,
+                    positionOffset: Float,
+                    positionOffsetPixels: Int
+                ) {
+                }
+
+                override fun onPageSelected(position: Int) {
+                    dataBinding.searchEt.hint =
+                        when (position) {
+                            0 -> getString(R.string.search_anime_hint)
+                            1 -> getString(R.string.search_magnet_hint)
+                            else -> ""
+                        }
+                }
+            },
+        )
     }
 
     private fun search(searchText: String) {
@@ -174,24 +186,20 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
         fragmentManager: FragmentManager,
         private val searchWord: String?
     ) : FragmentPagerAdapter(
-        fragmentManager,
-        BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT
-    ) {
+            fragmentManager,
+            BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT,
+        ) {
         private var titles = arrayOf("搜番剧", "搜资源")
 
-        override fun getItem(position: Int): Fragment {
-            return when (position) {
+        override fun getItem(position: Int): Fragment =
+            when (position) {
                 0 -> SearchAnimeFragment.newInstance()
                 1 -> SearchMagnetFragment.newInstance(searchWord)
                 else -> throw IndexOutOfBoundsException("only 2 fragment, but position : $position")
-
             }
-        }
 
         override fun getCount() = titles.size
 
-        override fun getPageTitle(position: Int): CharSequence {
-            return titles[position]
-        }
+        override fun getPageTitle(position: Int): CharSequence = titles[position]
     }
 }

@@ -11,13 +11,10 @@ import java.util.*
 @Entity(tableName = "anime_search_history", indices = [Index(value = arrayOf("search_text"), unique = true)])
 @TypeConverters(DateConverter::class)
 data class AnimeSearchHistoryEntity(
-
     @ColumnInfo(name = "search_text")
     var searchText: String,
-
     @PrimaryKey(autoGenerate = true)
     var id: Int = 0,
-
     @ColumnInfo(name = "search_time")
     var searchTime: Date = Date()
 )

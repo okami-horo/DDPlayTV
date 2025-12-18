@@ -8,10 +8,7 @@ import androidx.annotation.DrawableRes
 
 data class SheetActionBean(
     val actionId: Any,
-
     val actionName: String,
-
     @DrawableRes val actionIconRes: Int = -1,
-
     val describe: String? = null
 )

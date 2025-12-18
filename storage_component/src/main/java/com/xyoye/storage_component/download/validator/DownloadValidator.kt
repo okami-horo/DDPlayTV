@@ -14,46 +14,51 @@ class DownloadValidator(
         Media3Repository.validateDownload(request)
     }
 ) {
-
     suspend fun validate(
         downloadId: String,
         mediaId: String,
         lastVerifiedAt: Long?
     ): ValidationOutcome {
-        val request = DownloadValidationRequestData(
-            downloadId = downloadId,
-            mediaId = mediaId,
-            media3Version = media3Version,
-            lastVerifiedAt = lastVerifiedAt
-        )
-        val response = validateCall(request).getOrElse {
-            return ValidationOutcome.Blocked(it.message ?: "Download validation failed")
-        }
-        val history = DownloadAssetCheck(
-            downloadId = response.downloadId,
-            mediaId = request.mediaId,
-            lastVerifiedAt = System.currentTimeMillis(),
-            isCompatible = response.isCompatible,
-            requiredAction = response.requiredAction,
-            verificationLogs = response.verificationLogs
-        )
+        val request =
+            DownloadValidationRequestData(
+                downloadId = downloadId,
+                mediaId = mediaId,
+                media3Version = media3Version,
+                lastVerifiedAt = lastVerifiedAt,
+            )
+        val response =
+            validateCall(request).getOrElse {
+                return ValidationOutcome.Blocked(it.message ?: "Download validation failed")
+            }
+        val history =
+            DownloadAssetCheck(
+                downloadId = response.downloadId,
+                mediaId = request.mediaId,
+                lastVerifiedAt = System.currentTimeMillis(),
+                isCompatible = response.isCompatible,
+                requiredAction = response.requiredAction,
+                verificationLogs = response.verificationLogs,
+            )
         Media3LocalStore.upsertDownloadCheck(history)
         return when (response.requiredAction) {
-            DownloadRequiredAction.NONE -> ValidationOutcome.AllowPlayback(
-                audioOnly = false,
-                message = response.verificationLogs.firstOrNull()
-            )
+            DownloadRequiredAction.NONE ->
+                ValidationOutcome.AllowPlayback(
+                    audioOnly = false,
+                    message = response.verificationLogs.firstOrNull(),
+                )
 
-            DownloadRequiredAction.AUDIO_ONLY_FALLBACK -> ValidationOutcome.AllowPlayback(
-                audioOnly = true,
-                message = response.verificationLogs.firstOrNull()
-            )
+            DownloadRequiredAction.AUDIO_ONLY_FALLBACK ->
+                ValidationOutcome.AllowPlayback(
+                    audioOnly = true,
+                    message = response.verificationLogs.firstOrNull(),
+                )
 
             DownloadRequiredAction.REVALIDATE,
-            DownloadRequiredAction.REDOWNLOAD -> ValidationOutcome.Blocked(
-                response.verificationLogs.firstOrNull()
-                    ?: "Download requires additional validation"
-            )
+            DownloadRequiredAction.REDOWNLOAD ->
+                ValidationOutcome.Blocked(
+                    response.verificationLogs.firstOrNull()
+                        ?: "Download requires additional validation",
+                )
         }
     }
 

@@ -13,7 +13,6 @@ import java.io.InputStream
  */
 
 interface DanmuFinder {
-
     companion object {
         val instance: DanmuFinder by lazy {
             DanmuFinderImpl(DanmuQuery.instance)
@@ -33,12 +32,18 @@ interface DanmuFinder {
     /**
      * 下载剧集对应的官方弹幕
      */
-    suspend fun downloadEpisode(episode: DanmuEpisodeData, withRelated: Boolean = true): LocalDanmuBean?
+    suspend fun downloadEpisode(
+        episode: DanmuEpisodeData,
+        withRelated: Boolean = true
+    ): LocalDanmuBean?
 
     /**
      * 下载剧集对应的第三方弹幕
      */
-    suspend fun downloadRelated(episode: DanmuEpisodeData, related: List<DanmuRelatedUrlData>): LocalDanmuBean?
+    suspend fun downloadRelated(
+        episode: DanmuEpisodeData,
+        related: List<DanmuRelatedUrlData>
+    ): LocalDanmuBean?
 
     /**
      * 搜索弹幕
@@ -53,5 +58,8 @@ interface DanmuFinder {
     /**
      * 保存剧集对应的字幕流数据
      */
-    suspend fun saveStream(episode: DanmuEpisodeData, inputStream: InputStream): LocalDanmuBean?
+    suspend fun saveStream(
+        episode: DanmuEpisodeData,
+        inputStream: InputStream
+    ): LocalDanmuBean?
 }

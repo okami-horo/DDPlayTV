@@ -15,18 +15,25 @@ import retrofit2.http.*
  */
 
 interface ExtendedService {
-
     @GET("${Api.THUNDER_SUB}{hash}.json")
-    suspend fun matchSubtitleFormThunder(@Path("hash") hash: String): SubtitleThunderData
+    suspend fun matchSubtitleFormThunder(
+        @Path("hash") hash: String
+    ): SubtitleThunderData
 
     @POST(Api.SHOOTER_SUB)
-    suspend fun matchSubtitleFormShooter(@Body body: RequestBody): List<SubtitleShooterData>
+    suspend fun matchSubtitleFormShooter(
+        @Body body: RequestBody
+    ): List<SubtitleShooterData>
 
     @GET("${Api.ASSRT_SUB}v1/sub/search")
-    suspend fun searchSubtitle(@QueryMap params: RequestParams): SubtitleSubData
+    suspend fun searchSubtitle(
+        @QueryMap params: RequestParams
+    ): SubtitleSubData
 
     @GET("${Api.ASSRT_SUB}v1/sub/detail")
-    suspend fun searchSubtitleDetail(@QueryMap params: RequestParams): SubtitleSubData
+    suspend fun searchSubtitleDetail(
+        @QueryMap params: RequestParams
+    ): SubtitleSubData
 
     @GET
     @Streaming
@@ -44,8 +51,12 @@ interface ExtendedService {
 
     @GET("${Api.BILI_BILI_API}x/web-interface/view")
     @Streaming
-    suspend fun getCidInfo(@QueryMap params: RequestParams): BiliBiliCidData
+    suspend fun getCidInfo(
+        @QueryMap params: RequestParams
+    ): BiliBiliCidData
 
     @POST("${Api.HAN_LP}/api/parse")
-    suspend fun segmentWords(@Body body: RequestBody): retrofit2.Response<ResponseBody>
+    suspend fun segmentWords(
+        @Body body: RequestBody
+    ): retrofit2.Response<ResponseBody>
 }

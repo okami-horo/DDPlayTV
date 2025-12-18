@@ -14,7 +14,6 @@ import com.xyoye.user_component.databinding.FragmentScanFilterBinding
 import com.xyoye.user_component.databinding.ItemFilterFolderBinding
 
 class ScanFilterFragment : BaseFragment<ScanFilterFragmentViewModel, FragmentScanFilterBinding>() {
-
     companion object {
         fun newInstance() = ScanFilterFragment()
     }
@@ -22,44 +21,44 @@ class ScanFilterFragment : BaseFragment<ScanFilterFragmentViewModel, FragmentSca
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            ScanFilterFragmentViewModel::class.java
+            ScanFilterFragmentViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.fragment_scan_filter
 
     override fun initView() {
-
         dataBinding.filterFolderRv.apply {
             itemAnimator = null
 
             layoutManager = vertical()
 
-            adapter = buildAdapter {
-                addItem<FolderBean, ItemFilterFolderBinding>(R.layout.item_filter_folder) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            val fileCountText = "${data.fileCount}视频"
+            adapter =
+                buildAdapter {
+                    addItem<FolderBean, ItemFilterFolderBinding>(R.layout.item_filter_folder) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                val fileCountText = "${data.fileCount}视频"
 
-                            folderTv.text = getFolderName(data.folderPath)
-                            fileCountTv.text = fileCountText
+                                folderTv.text = getFolderName(data.folderPath)
+                                fileCountTv.text = fileCountText
 
-                            folderIv.setImageResource(if (data.isFilter) R.drawable.ic_folder_filter else R.drawable.ic_folder)
-                            folderTv.setTextColorRes(if (data.isFilter) R.color.text_red else R.color.text_black)
-                            fileCountTv.setTextColorRes(if (data.isFilter) R.color.text_red else R.color.text_gray)
+                                folderIv.setImageResource(if (data.isFilter) R.drawable.ic_folder_filter else R.drawable.ic_folder)
+                                folderTv.setTextColorRes(if (data.isFilter) R.color.text_red else R.color.text_black)
+                                fileCountTv.setTextColorRes(if (data.isFilter) R.color.text_red else R.color.text_gray)
 
-                            filterFolderCb.setOnCheckedChangeListener(null)
-                            filterFolderCb.isChecked = data.isFilter
-                            filterFolderCb.setOnCheckedChangeListener { _, isChecked ->
-                                viewModel.updateFolder(data.folderPath, isChecked)
-                            }
+                                filterFolderCb.setOnCheckedChangeListener(null)
+                                filterFolderCb.isChecked = data.isFilter
+                                filterFolderCb.setOnCheckedChangeListener { _, isChecked ->
+                                    viewModel.updateFolder(data.folderPath, isChecked)
+                                }
 
-                            itemLayout.setOnClickListener {
-                                viewModel.updateFolder(data.folderPath, !data.isFilter)
+                                itemLayout.setOnClickListener {
+                                    viewModel.updateFolder(data.folderPath, !data.isFilter)
+                                }
                             }
                         }
                     }
                 }
-            }
         }
 
         viewModel.folderLiveData.observe(this) {

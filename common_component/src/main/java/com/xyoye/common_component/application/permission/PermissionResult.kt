@@ -5,7 +5,6 @@ package com.xyoye.common_component.application.permission
  */
 
 class PermissionResult {
-
     private var permissionGranted: (() -> Unit)? = null
     private var permissionDenied: ((List<String>) -> Unit)? =
         null

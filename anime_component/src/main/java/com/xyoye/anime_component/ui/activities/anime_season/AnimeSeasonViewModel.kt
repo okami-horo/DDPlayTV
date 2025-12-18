@@ -20,18 +20,20 @@ import java.util.Calendar
 import java.util.Collections
 
 class AnimeSeasonViewModel : BaseViewModel() {
-    private val seasonData = mutableListOf(
-        CommonTypeData("10月", "10"),
-        CommonTypeData("7月", "7"),
-        CommonTypeData("4月", "4"),
-        CommonTypeData("1月", "1")
-    )
+    private val seasonData =
+        mutableListOf(
+            CommonTypeData("10月", "10"),
+            CommonTypeData("7月", "7"),
+            CommonTypeData("4月", "4"),
+            CommonTypeData("1月", "1"),
+        )
 
-    private val sortTypeData = mutableListOf(
-        CommonTypeData("名称", AnimeSortType.NAME.value),
-        CommonTypeData("评分", AnimeSortType.RATING.value),
-        CommonTypeData("关注", AnimeSortType.FOLLOW.value)
-    )
+    private val sortTypeData =
+        mutableListOf(
+            CommonTypeData("名称", AnimeSortType.NAME.value),
+            CommonTypeData("评分", AnimeSortType.RATING.value),
+            CommonTypeData("关注", AnimeSortType.FOLLOW.value),
+        )
 
     private var sortType = AnimeSortType.NONE
     private lateinit var seasonAnimeData: BangumiAnimeData
@@ -39,12 +41,13 @@ class AnimeSeasonViewModel : BaseViewModel() {
 
     init {
         val nowYear = Calendar.getInstance().get(Calendar.YEAR)
-        years = mutableListOf(
-            CommonTypeData(nowYear.toString() + "年", nowYear.toString()),
-            CommonTypeData((nowYear - 1).toString() + "年", (nowYear - 1).toString()),
-            CommonTypeData((nowYear - 2).toString() + "年", (nowYear - 2).toString()),
-            CommonTypeData("更多", "-1").also { it.isEnable = false }
-        )
+        years =
+            mutableListOf(
+                CommonTypeData(nowYear.toString() + "年", nowYear.toString()),
+                CommonTypeData((nowYear - 1).toString() + "年", (nowYear - 1).toString()),
+                CommonTypeData((nowYear - 2).toString() + "年", (nowYear - 2).toString()),
+                CommonTypeData("更多", "-1").also { it.isEnable = false },
+            )
     }
 
     val yearsLiveData = MutableLiveData<MutableList<CommonTypeData>>()
@@ -63,7 +66,7 @@ class AnimeSeasonViewModel : BaseViewModel() {
 
     fun checkYear(year: String) {
         var selectLastItem = true
-        //是否在默认的年份中
+        // 是否在默认的年份中
         for (yearData in years) {
             if (year == yearData.typeId) {
                 yearData.isChecked = true
@@ -74,7 +77,7 @@ class AnimeSeasonViewModel : BaseViewModel() {
             }
         }
 
-        //选中最后一个item
+        // 选中最后一个item
         if (selectLastItem) {
             years.last().isChecked = true
             years.last().typeName = year + "年"
@@ -114,8 +117,8 @@ class AnimeSeasonViewModel : BaseViewModel() {
             return
         }
 
-        if (!UserConfig.isUserLoggedIn()
-            && AnimeSortType.formValue(sortTypeData[position].typeId) == AnimeSortType.FOLLOW
+        if (!UserConfig.isUserLoggedIn() &&
+            AnimeSortType.formValue(sortTypeData[position].typeId) == AnimeSortType.FOLLOW
         ) {
             ToastCenter.showWarning(R.string.tips_login_required.toResString())
             return
@@ -153,10 +156,10 @@ class AnimeSeasonViewModel : BaseViewModel() {
 
     private fun getSeasonData(year: Int) {
         var isSeasonChecked = false
-        //设置所有月份都是可用的
+        // 设置所有月份都是可用的
         for (season in seasonData) {
             season.isEnable = true
-            //有已选中月份，直接使用
+            // 有已选中月份，直接使用
             if (season.isChecked) {
                 isSeasonChecked = true
                 getSeasonAnime(year.toString(), season.typeId)
@@ -169,12 +172,12 @@ class AnimeSeasonViewModel : BaseViewModel() {
         }
 
         val nowYear = Calendar.getInstance().get(Calendar.YEAR)
-        //如果是当年数据，某些月份可能需要不可点击
+        // 如果是当年数据，某些月份可能需要不可点击
         if (year == nowYear) {
-            //当前月份
+            // 当前月份
             val nowMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
             for (season in seasonData) {
-                //可选月份是否大于当前月份
+                // 可选月份是否大于当前月份
                 if (season.typeId.toInt() > nowMonth) {
                     season.isEnable = false
                 } else {
@@ -191,7 +194,10 @@ class AnimeSeasonViewModel : BaseViewModel() {
         }
     }
 
-    private fun getSeasonAnime(year: String, month: String) {
+    private fun getSeasonAnime(
+        year: String,
+        month: String
+    ) {
         viewModelScope.launch {
             val result = AnimeRepository.getSeasonAnime(year, month)
 
@@ -201,7 +207,7 @@ class AnimeSeasonViewModel : BaseViewModel() {
                     exception ?: RuntimeException("Get season anime failed with unknown error"),
                     "AnimeSeasonViewModel",
                     "getSeasonAnime",
-                    "年份: $year, 月份: $month"
+                    "年份: $year, 月份: $month",
                 )
                 exception?.message?.toastError()
                 return@launch
@@ -224,20 +230,24 @@ class AnimeSeasonViewModel : BaseViewModel() {
             return
         }
         if (this::seasonAnimeData.isInitialized) {
-            val sortedList = mutableListOf<AnimeData>().also {
-                it.addAll(seasonAnimeData.bangumiList)
-            }
-            Collections.sort(sortedList, kotlin.Comparator { o1, o2 ->
-                return@Comparator when (sortType) {
-                    AnimeSortType.FOLLOW -> o1.isFavorited.compareTo(o2.isFavorited)
-
-                    AnimeSortType.RATING -> o2.rating.compareTo(o1.rating)
-
-                    AnimeSortType.NAME -> stringCompare(o1.animeTitle, o2.animeTitle)
-
-                    else -> 0
+            val sortedList =
+                mutableListOf<AnimeData>().also {
+                    it.addAll(seasonAnimeData.bangumiList)
                 }
-            })
+            Collections.sort(
+                sortedList,
+                kotlin.Comparator { o1, o2 ->
+                    return@Comparator when (sortType) {
+                        AnimeSortType.FOLLOW -> o1.isFavorited.compareTo(o2.isFavorited)
+
+                        AnimeSortType.RATING -> o2.rating.compareTo(o1.rating)
+
+                        AnimeSortType.NAME -> stringCompare(o1.animeTitle, o2.animeTitle)
+
+                        else -> 0
+                    }
+                },
+            )
             animeLiveData.postValue(sortedList)
         }
     }

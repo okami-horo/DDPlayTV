@@ -11,20 +11,24 @@ import com.xyoye.common_component.services.ScreencastReceiveService
 
 @Route(path = RouteTable.Stream.ScreencastReceive, name = "投屏内容接收服务")
 class ScreencastReceiveServiceImpl : ScreencastReceiveService {
-
     override fun init(context: Context?) {
-
     }
 
-    override fun isRunning(context: Context): Boolean {
-        return com.xyoye.storage_component.services.ScreencastReceiveService.isRunning(context)
-    }
+    override fun isRunning(context: Context): Boolean =
+        com.xyoye.storage_component.services.ScreencastReceiveService
+            .isRunning(context)
 
     override fun stopService(context: Context) {
-        com.xyoye.storage_component.services.ScreencastReceiveService.stop(context)
+        com.xyoye.storage_component.services.ScreencastReceiveService
+            .stop(context)
     }
 
-    override fun startService(context: Context, port: Int, password: String?) {
-        com.xyoye.storage_component.services.ScreencastReceiveService.start(context, port, password)
+    override fun startService(
+        context: Context,
+        port: Int,
+        password: String?
+    ) {
+        com.xyoye.storage_component.services.ScreencastReceiveService
+            .start(context, port, password)
     }
 }

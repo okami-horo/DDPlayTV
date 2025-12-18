@@ -9,12 +9,14 @@ class ArchiveExtractCallback constructor(
     private val destDir: File,
     private val callback: (destDirPath: String?) -> Unit
 ) : IArchiveExtractCallback {
-
     private var totalProgress: Long = 0
     private var isCompleted = false
 
     @Throws(SevenZipException::class)
-    override fun getStream(index: Int, extractAskMode: ExtractAskMode?): ISequentialOutStream {
+    override fun getStream(
+        index: Int,
+        extractAskMode: ExtractAskMode?
+    ): ISequentialOutStream {
         val fileName: String =
             getFileName(inArchive.getProperty(index, PropID.PATH) as String)
         return SequentialOutStream(destDir, fileName)

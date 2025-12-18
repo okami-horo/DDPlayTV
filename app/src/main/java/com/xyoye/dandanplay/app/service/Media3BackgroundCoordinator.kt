@@ -1,7 +1,6 @@
 package com.xyoye.dandanplay.app.service
 
 import com.xyoye.data_component.entity.media3.Media3BackgroundMode
-import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 
 /**
@@ -11,7 +10,6 @@ import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 class Media3BackgroundCoordinator(
     private val bridge: MediaSessionCommandBridge
 ) {
-
     private var lastCommands: Set<String> = emptySet()
     private var lastModes: Set<Media3BackgroundMode> = emptySet()
 
@@ -42,7 +40,7 @@ class Media3BackgroundCoordinator(
         val modes = contract.backgroundModes.toSet()
         emitCommands(commands)
         emitModes(modes)
-        */
+         */
     }
 
     private fun emitCommands(commands: Set<String>) {

@@ -15,7 +15,6 @@ import retrofit2.http.QueryMap
  */
 
 interface RemoteService {
-
     @GET("/api/v1/library")
     suspend fun getStorageFiles(
         @Header(HeaderKey.BASE_URL) baseUrl: String,

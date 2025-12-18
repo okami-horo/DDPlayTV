@@ -14,33 +14,35 @@ import org.junit.Test
 
 @Media3Dependent("Telemetry mapper encodes Media3 session identifiers")
 class TelemetryEventMapperTest {
-
-    private val mapper = TelemetryEventMapper(
-        media3VersionProvider = { "1.8.0-test" },
-        idProvider = { "event-id-123" },
-        timestampProvider = { 42L }
-    )
+    private val mapper =
+        TelemetryEventMapper(
+            media3VersionProvider = { "1.8.0-test" },
+            idProvider = { "event-id-123" },
+            timestampProvider = { 42L },
+        )
 
     @Test
     fun createEvent_injectsIdentifiersAndSessionMetadata() {
-        val session = PlaybackSession(
-            sessionId = "session-1",
-            mediaId = "media-9",
-            sourceType = Media3SourceType.STREAM,
-            playerEngine = Media3PlayerEngine.MEDIA3,
-            toggleCohort = Media3ToggleCohort.TREATMENT,
-            metrics = PlaybackSessionMetrics(firstFrameTargetMs = 2_000)
-        )
+        val session =
+            PlaybackSession(
+                sessionId = "session-1",
+                mediaId = "media-9",
+                sourceType = Media3SourceType.STREAM,
+                playerEngine = Media3PlayerEngine.MEDIA3,
+                toggleCohort = Media3ToggleCohort.TREATMENT,
+                metrics = PlaybackSessionMetrics(firstFrameTargetMs = 2_000),
+            )
         val metricsInput = mapOf("startupMs" to 1_200L)
         val deviceInfo = mapOf("device" to "Pixel 9")
 
-        val event = mapper.createEvent(
-            session = session,
-            eventType = Media3TelemetryEventType.STARTUP,
-            metrics = metricsInput,
-            deviceInfo = deviceInfo,
-            isForeground = false
-        )
+        val event =
+            mapper.createEvent(
+                session = session,
+                eventType = Media3TelemetryEventType.STARTUP,
+                metrics = metricsInput,
+                deviceInfo = deviceInfo,
+                isForeground = false,
+            )
 
         assertEquals("event-id-123", event.eventId)
         assertEquals("session-1", event.sessionId)
@@ -58,26 +60,28 @@ class TelemetryEventMapperTest {
 
     @Test
     fun createEvent_doesNotMutateProvidedMetricMap() {
-        val session = PlaybackSession(
-            sessionId = "session-2",
-            mediaId = "media-101",
-            sourceType = Media3SourceType.DOWNLOAD,
-            playerEngine = Media3PlayerEngine.EXO_LEGACY
-        )
+        val session =
+            PlaybackSession(
+                sessionId = "session-2",
+                mediaId = "media-101",
+                sourceType = Media3SourceType.DOWNLOAD,
+                playerEngine = Media3PlayerEngine.EXO_LEGACY,
+            )
         val metricsInput = mutableMapOf<String, Any?>("bufferingRatio" to 0.12)
 
-        val event = mapper.createEvent(
-            session = session,
-            eventType = Media3TelemetryEventType.BUFFERING,
-            metrics = metricsInput
-        )
+        val event =
+            mapper.createEvent(
+                session = session,
+                eventType = Media3TelemetryEventType.BUFFERING,
+                metrics = metricsInput,
+            )
 
         assertEquals(
             mapOf(
                 "bufferingRatio" to 0.12,
-                "toggleCohort" to "UNKNOWN"
+                "toggleCohort" to "UNKNOWN",
             ),
-            event.metrics
+            event.metrics,
         )
         assertEquals(mapOf("bufferingRatio" to 0.12), metricsInput)
     }

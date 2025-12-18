@@ -11,11 +11,12 @@ object SubtitlePreferenceUpdater {
         SubtitleConfig.putSubtitleOffsetMs(offsetMs)
     }
 
-    fun currentOffset(): Long {
-        return SubtitleConfig.getSubtitleOffsetMs()
-    }
+    fun currentOffset(): Long = SubtitleConfig.getSubtitleOffsetMs()
 
-    fun persistBackend(backend: SubtitleRendererBackend, source: RendererPreferenceSource) {
+    fun persistBackend(
+        backend: SubtitleRendererBackend,
+        source: RendererPreferenceSource
+    ) {
         SubtitleConfig.putSubtitleRendererBackend(backend.name)
         SubtitleConfig.putSubtitleRendererSource(source.name)
         SubtitleConfig.putSubtitleRendererUpdatedAt(System.currentTimeMillis())

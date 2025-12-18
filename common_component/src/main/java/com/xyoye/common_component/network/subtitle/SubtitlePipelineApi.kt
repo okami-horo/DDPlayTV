@@ -46,7 +46,10 @@ data class FallbackCommand(
     val targetMode: SubtitlePipelineMode,
     val reason: SubtitlePipelineFallbackReason? = null
 ) {
-    fun toEvent(fromMode: SubtitlePipelineMode, surfaceId: String?): FallbackEvent? {
+    fun toEvent(
+        fromMode: SubtitlePipelineMode,
+        surfaceId: String?
+    ): FallbackEvent? {
         val resolvedReason = reason ?: return null
         val timestamp = System.currentTimeMillis()
         return FallbackEvent(
@@ -55,7 +58,7 @@ data class FallbackCommand(
             toMode = targetMode,
             reason = resolvedReason,
             surfaceId = surfaceId,
-            recoverable = targetMode == SubtitlePipelineMode.GPU_GL
+            recoverable = targetMode == SubtitlePipelineMode.GPU_GL,
         )
     }
 }

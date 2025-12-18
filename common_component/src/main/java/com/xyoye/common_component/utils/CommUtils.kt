@@ -40,16 +40,19 @@ fun formatDuration(millis: Long): String {
 /**
  * 字符串比较
  */
-fun stringCompare(str1: String?, str2: String?): Int {
-    return if (str1 == null && str2 == null)
+fun stringCompare(
+    str1: String?,
+    str2: String?
+): Int =
+    if (str1 == null && str2 == null) {
         0
-    else if (str1 == null)
+    } else if (str1 == null) {
         -1
-    else if (str2 == null)
+    } else if (str2 == null) {
         1
-    else
+    } else {
         Collator.getInstance(Locale.CHINESE).compare(str1, str2)
-}
+    }
 
 fun getDomainFormUrl(url: String): String {
     val regex = Regex("(?<=://)[a-zA-Z.0-9]+(?=/)")

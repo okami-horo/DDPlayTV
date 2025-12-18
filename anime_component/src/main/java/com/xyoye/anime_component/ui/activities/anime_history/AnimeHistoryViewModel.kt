@@ -10,12 +10,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class AnimeHistoryViewModel : BaseViewModel() {
-    private val _historiesFlow = MutableStateFlow<List<AnimeData>>(emptyList())
-    private val _searchWordFlow = MutableStateFlow("")
+    private val historiesFlow = MutableStateFlow<List<AnimeData>>(emptyList())
+    private val searchWordFlow = MutableStateFlow("")
 
-    val displayHistoriesFlow = combine(_historiesFlow, _searchWordFlow) { histories, searchWord ->
-        combineAnimeFilter(histories, searchWord)
-    }
+    val displayHistoriesFlow =
+        combine(historiesFlow, searchWordFlow) { histories, searchWord ->
+            combineAnimeFilter(histories, searchWord)
+        }
 
     fun getCloudHistory() {
         viewModelScope.launch {
@@ -28,12 +29,12 @@ class AnimeHistoryViewModel : BaseViewModel() {
                 return@launch
             }
 
-            _historiesFlow.emit(result.getOrNull()?.playHistoryAnimes ?: emptyList())
+            historiesFlow.emit(result.getOrNull()?.playHistoryAnimes ?: emptyList())
         }
     }
 
     fun searchAnime(keyword: String) {
-        _searchWordFlow.value = keyword
+        searchWordFlow.value = keyword
     }
 
     private fun combineAnimeFilter(

@@ -27,7 +27,6 @@ class DanmuDownloadDialog(
     private val downloadRelated: (List<DanmuRelatedUrlData>) -> Unit,
     private val downloadOfficial: (withRelated: Boolean) -> Unit
 ) : BaseBottomDialog<DialogDanmuDowanloadBinding>(activity) {
-
     private val danmuSources: MutableList<DanmuSourceBean> = generateDanmuSources()
 
     override fun getChildLayoutId() = R.layout.dialog_danmu_dowanload
@@ -85,40 +84,44 @@ class DanmuDownloadDialog(
             itemAnimator = null
             layoutManager = vertical()
 
-            adapter = buildAdapter {
-
-                setupDiffUtil {
-                    newDataInstance { it }
-                    areItemsTheSame { old, new ->
-                        (old as DanmuSourceBean).sourceUrl == (new as DanmuSourceBean).sourceUrl
-                    }
-                }
-
-                addItem<DanmuSourceBean, ItemDanmuSourceSelectBinding>(R.layout.item_danmu_source_select) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            danmuSourceCb.isChecked = data.isChecked
-                            danmuSourceCb.text = data.sourceName
-                            danmuSourceDescribeTv.text = data.sourceDescribe
-                        }
-
-                        itemBinding.root.setOnClickListener {
-                            selectSource(data, binding)
+            adapter =
+                buildAdapter {
+                    setupDiffUtil {
+                        newDataInstance { it }
+                        areItemsTheSame { old, new ->
+                            (old as DanmuSourceBean).sourceUrl == (new as DanmuSourceBean).sourceUrl
                         }
                     }
+
+                    addItem<DanmuSourceBean, ItemDanmuSourceSelectBinding>(R.layout.item_danmu_source_select) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                danmuSourceCb.isChecked = data.isChecked
+                                danmuSourceCb.text = data.sourceName
+                                danmuSourceDescribeTv.text = data.sourceDescribe
+                            }
+
+                            itemBinding.root.setOnClickListener {
+                                selectSource(data, binding)
+                            }
+                        }
+                    }
                 }
-            }
         }
     }
 
-    private fun selectSource(source: DanmuSourceBean, binding: DialogDanmuDowanloadBinding) {
-        val newSources = danmuSources.map {
-            if (it.sourceUrl == source.sourceUrl) {
-                it.copy(isChecked = it.isChecked.not())
-            } else {
-                it
+    private fun selectSource(
+        source: DanmuSourceBean,
+        binding: DialogDanmuDowanloadBinding
+    ) {
+        val newSources =
+            danmuSources.map {
+                if (it.sourceUrl == source.sourceUrl) {
+                    it.copy(isChecked = it.isChecked.not())
+                } else {
+                    it
+                }
             }
-        }
 
         danmuSources.clear()
         danmuSources.addAll(newSources)
@@ -127,24 +130,25 @@ class DanmuDownloadDialog(
 
     private fun generateDanmuSources(): MutableList<DanmuSourceBean> {
         val downloadSources = mutableListOf<DanmuSourceBean>()
-        //弹弹play源
+        // 弹弹play源
         DanmuSourceBean(
             "弹弹Play",
             episode.episodeId.toString(),
             "www.dandanplay.com",
             isOfficial = true,
             isChecked = true,
-            format = 0
+            format = 0,
         ).let {
             downloadSources.add(it)
         }
 
-        //第三方源
-        relatedData.map {
-            DanmuSourceBean(getDomainFormUrl(it.url), it.url, it.url)
-        }.let {
-            downloadSources.addAll(it)
-        }
+        // 第三方源
+        relatedData
+            .map {
+                DanmuSourceBean(getDomainFormUrl(it.url), it.url, it.url)
+            }.let {
+                downloadSources.addAll(it)
+            }
 
         return downloadSources
     }

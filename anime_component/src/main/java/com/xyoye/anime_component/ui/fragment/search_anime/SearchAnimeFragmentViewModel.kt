@@ -23,25 +23,27 @@ import kotlinx.coroutines.launch
 import java.util.Collections
 
 class SearchAnimeFragmentViewModel : BaseViewModel() {
-    private val animeTypeData = mutableListOf(
-        CommonTypeData("TV动画", "tvseries"),
-        CommonTypeData("剧场版", "movie"),
-        CommonTypeData("OVA", "ova"),
-        CommonTypeData("日 剧", "jpdrama"),
-        CommonTypeData("日本电影", "jpmovie"),
-        CommonTypeData("网络放送", "web"),
-        CommonTypeData("TV特送", "tvspecial"),
-        CommonTypeData("未知分类", "unknown"),
-        CommonTypeData("MV", "musicvideo"),
-        CommonTypeData("其 它", "other")
-    )
+    private val animeTypeData =
+        mutableListOf(
+            CommonTypeData("TV动画", "tvseries"),
+            CommonTypeData("剧场版", "movie"),
+            CommonTypeData("OVA", "ova"),
+            CommonTypeData("日 剧", "jpdrama"),
+            CommonTypeData("日本电影", "jpmovie"),
+            CommonTypeData("网络放送", "web"),
+            CommonTypeData("TV特送", "tvspecial"),
+            CommonTypeData("未知分类", "unknown"),
+            CommonTypeData("MV", "musicvideo"),
+            CommonTypeData("其 它", "other"),
+        )
 
-    private val sortTypeData = mutableListOf(
-        CommonTypeData("上映日期", AnimeSortType.DATE.value),
-        CommonTypeData("名称", AnimeSortType.NAME.value),
-        CommonTypeData("评分", AnimeSortType.RATING.value),
-        CommonTypeData("关注", AnimeSortType.FOLLOW.value)
-    )
+    private val sortTypeData =
+        mutableListOf(
+            CommonTypeData("上映日期", AnimeSortType.DATE.value),
+            CommonTypeData("名称", AnimeSortType.NAME.value),
+            CommonTypeData("评分", AnimeSortType.RATING.value),
+            CommonTypeData("关注", AnimeSortType.FOLLOW.value),
+        )
 
     val screenSpanCount = 4
 
@@ -79,7 +81,7 @@ class SearchAnimeFragmentViewModel : BaseViewModel() {
                     exception ?: RuntimeException("Search anime failed with unknown error"),
                     "SearchAnimeFragmentViewModel",
                     "search",
-                    "搜索关键字: $searchWord, 搜索类型: $searchType"
+                    "搜索关键字: $searchWord, 搜索类型: $searchType",
                 )
                 exception?.message?.toastError()
                 return@launch
@@ -104,7 +106,7 @@ class SearchAnimeFragmentViewModel : BaseViewModel() {
                 animeTypeData.subList(0, screenSpanCount)
             } else {
                 animeTypeData
-            }
+            },
         )
     }
 
@@ -156,8 +158,8 @@ class SearchAnimeFragmentViewModel : BaseViewModel() {
             return
         }
 
-        if (!UserConfig.isUserLoggedIn()
-            && AnimeSortType.formValue(sortTypeData[position].typeId) == AnimeSortType.FOLLOW
+        if (!UserConfig.isUserLoggedIn() &&
+            AnimeSortType.formValue(sortTypeData[position].typeId) == AnimeSortType.FOLLOW
         ) {
             ToastCenter.showWarning(R.string.tips_login_required.toResString())
             return
@@ -219,22 +221,26 @@ class SearchAnimeFragmentViewModel : BaseViewModel() {
             return
         }
         if (this::searchAnimeData.isInitialized) {
-            val sortedList = mutableListOf<AnimeData>().also {
-                it.addAll(searchAnimeData.animes)
-            }
-            Collections.sort(sortedList, kotlin.Comparator { o1, o2 ->
-                return@Comparator when (sortType) {
-                    AnimeSortType.FOLLOW -> o1.isFavorited.compareTo(o2.isFavorited)
-
-                    AnimeSortType.RATING -> o1.rating.compareTo(o2.rating)
-
-                    AnimeSortType.DATE -> stringCompare(o2.startDate, o1.startDate)
-
-                    AnimeSortType.NAME -> stringCompare(o1.animeTitle, o2.animeTitle)
-
-                    else -> 0
+            val sortedList =
+                mutableListOf<AnimeData>().also {
+                    it.addAll(searchAnimeData.animes)
                 }
-            })
+            Collections.sort(
+                sortedList,
+                kotlin.Comparator { o1, o2 ->
+                    return@Comparator when (sortType) {
+                        AnimeSortType.FOLLOW -> o1.isFavorited.compareTo(o2.isFavorited)
+
+                        AnimeSortType.RATING -> o1.rating.compareTo(o2.rating)
+
+                        AnimeSortType.DATE -> stringCompare(o2.startDate, o1.startDate)
+
+                        AnimeSortType.NAME -> stringCompare(o1.animeTitle, o2.animeTitle)
+
+                        else -> 0
+                    }
+                },
+            )
             animeLiveData.postValue(sortedList)
         }
     }

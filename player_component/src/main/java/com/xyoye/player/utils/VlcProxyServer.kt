@@ -24,7 +24,7 @@ class VlcProxyServer private constructor() : NanoHTTPD(randomPort()) {
     }
 
     companion object {
-        //随机端口
+        // 随机端口
         private fun randomPort() = Random.nextInt(30000, 40000)
 
         @JvmStatic
@@ -35,12 +35,13 @@ class VlcProxyServer private constructor() : NanoHTTPD(randomPort()) {
         session ?: return super.serve(session)
 
         val proxyResponse = getProxyResponse(session)
-        val response = newFixedLengthResponse(
-            Status.lookup(proxyResponse.code) ?: Status.OK,
-            proxyResponse.header("Content-Type"),
-            proxyResponse.body?.byteStream(),
-            proxyResponse.body?.contentLength() ?: 0
-        )
+        val response =
+            newFixedLengthResponse(
+                Status.lookup(proxyResponse.code) ?: Status.OK,
+                proxyResponse.header("Content-Type"),
+                proxyResponse.body?.byteStream(),
+                proxyResponse.body?.contentLength() ?: 0,
+            )
         val headers = proxyResponse.headers
 
         for (index in 0 until headers.size) {
@@ -52,7 +53,10 @@ class VlcProxyServer private constructor() : NanoHTTPD(randomPort()) {
         return response
     }
 
-    fun getInputStreamUrl(url: String, headers: Map<String, String>): String {
+    fun getInputStreamUrl(
+        url: String,
+        headers: Map<String, String>
+    ): String {
         this.url = url
         this.headers = headers.toMap()
         val encodeFileName = URLEncoder.encode(getFileName(url), "utf-8")
@@ -114,12 +118,7 @@ class VlcProxyServer private constructor() : NanoHTTPD(randomPort()) {
         return call.execute()
     }
 
-    private fun shouldRemoveHeader(headerKey: String): Boolean {
-        return removeHeaderKeys.any { headerKey.equals(it, true) }
-    }
+    private fun shouldRemoveHeader(headerKey: String): Boolean = removeHeaderKeys.any { headerKey.equals(it, true) }
 
-    private fun shouldPersistHeader(headerKey: String): Boolean {
-        return persistentHeaderKeys.any { headerKey.equals(it, true) }
-    }
-
+    private fun shouldPersistHeader(headerKey: String): Boolean = persistentHeaderKeys.any { headerKey.equals(it, true) }
 }

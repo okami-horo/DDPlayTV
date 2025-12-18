@@ -8,14 +8,12 @@ import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-
 /**
  * Created by xyoye on 2022/1/24
  *
  * 用于手动迁移数据库数据
  */
 object ManualMigration {
-
     suspend fun migrate() {
         migrate_6_7()
     }
@@ -27,27 +25,29 @@ object ManualMigration {
      */
     private suspend fun migrate_6_7() {
         val isMigrated = DatabaseConfig.isIsMigrated_6_7()
-        if (isMigrated)
+        if (isMigrated) {
             return
+        }
 
         withContext(Dispatchers.IO) {
             val videoList = DatabaseManager.instance.getVideoDao().getAll()
-            val historyList = videoList.mapNotNull {
-                if (it.danmuPath.isNullOrEmpty() && it.subtitlePath.isNullOrEmpty()) {
-                    null
-                } else {
-                    PlayHistoryEntity(
-                        0,
-                        "",
-                        "",
-                        MediaType.LOCAL_STORAGE,
-                        danmuPath = it.danmuPath,
-                        episodeId = it.danmuId.toString(),
-                        subtitlePath = it.subtitlePath,
-                        uniqueKey = it.filePath.toMd5String()
-                    )
+            val historyList =
+                videoList.mapNotNull {
+                    if (it.danmuPath.isNullOrEmpty() && it.subtitlePath.isNullOrEmpty()) {
+                        null
+                    } else {
+                        PlayHistoryEntity(
+                            0,
+                            "",
+                            "",
+                            MediaType.LOCAL_STORAGE,
+                            danmuPath = it.danmuPath,
+                            episodeId = it.danmuId.toString(),
+                            subtitlePath = it.subtitlePath,
+                            uniqueKey = it.filePath.toMd5String(),
+                        )
+                    }
                 }
-            }
 
             if (historyList.isNotEmpty()) {
                 DatabaseManager.instance.getPlayHistoryDao().insert(*historyList.toTypedArray())

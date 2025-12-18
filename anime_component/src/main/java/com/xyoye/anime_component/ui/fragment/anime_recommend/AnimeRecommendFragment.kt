@@ -24,21 +24,18 @@ import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.data_component.bean.AnimeArgument
 import com.xyoye.data_component.data.AnimeData
 
-class AnimeRecommendFragment :
-    BaseFragment<AnimeRecommendFragmentViewModel, FragmentAnimeRecommendBinding>() {
-
+class AnimeRecommendFragment : BaseFragment<AnimeRecommendFragmentViewModel, FragmentAnimeRecommendBinding>() {
     private val parentViewModel: AnimeDetailViewModel by viewModels(ownerProducer = { mAttachActivity })
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            AnimeRecommendFragmentViewModel::class.java
+            AnimeRecommendFragmentViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.fragment_anime_recommend
 
     override fun initView() {
-
         initRv()
 
         initObserver()
@@ -58,28 +55,33 @@ class AnimeRecommendFragment :
         dataBinding.recommendMoreRv.apply {
             layoutManager = grid(2)
 
-            adapter = buildAdapter {
-                addItem<AnimeData, ItemAnimeRecommendBinding>(R.layout.item_anime_recommend) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            animeCoverIv.loadAnimeCover(data.imageUrl)
-                            animeTitleTv.text = data.animeTitle
-                            animeStatusTv.text = if (data.isOnAir) "连载中" else "已完结"
-                            itemLayout.setOnClickListener {
-                                ViewCompat.setTransitionName(animeCoverIv, "cover_image")
-                                val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                                    mAttachActivity, animeCoverIv, animeCoverIv.transitionName
-                                )
-                                ARouter.getInstance()
-                                    .build(RouteTable.Anime.AnimeDetail)
-                                    .withParcelable("animeArgument", AnimeArgument.fromData(data))
-                                    .withOptionsCompat(options)
-                                    .navigation(mAttachActivity)
+            adapter =
+                buildAdapter {
+                    addItem<AnimeData, ItemAnimeRecommendBinding>(R.layout.item_anime_recommend) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                animeCoverIv.loadAnimeCover(data.imageUrl)
+                                animeTitleTv.text = data.animeTitle
+                                animeStatusTv.text = if (data.isOnAir) "连载中" else "已完结"
+                                itemLayout.setOnClickListener {
+                                    ViewCompat.setTransitionName(animeCoverIv, "cover_image")
+                                    val options =
+                                        ActivityOptionsCompat.makeSceneTransitionAnimation(
+                                            mAttachActivity,
+                                            animeCoverIv,
+                                            animeCoverIv.transitionName,
+                                        )
+                                    ARouter
+                                        .getInstance()
+                                        .build(RouteTable.Anime.AnimeDetail)
+                                        .withParcelable("animeArgument", AnimeArgument.fromData(data))
+                                        .withOptionsCompat(options)
+                                        .navigation(mAttachActivity)
+                                }
                             }
                         }
                     }
                 }
-            }
 
             addItemDecoration(ItemDecorationSpace(10))
         }

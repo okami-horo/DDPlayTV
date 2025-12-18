@@ -38,9 +38,9 @@ abstract class BaseVideoController(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), InterVideoController,
+) : FrameLayout(context, attrs, defStyleAttr),
+    InterVideoController,
     OrientationHelper.OnOrientationChangeListener {
-
     protected lateinit var mControlWrapper: ControlWrapper
 
     protected var mIsLocked = false
@@ -51,23 +51,24 @@ abstract class BaseVideoController(
     protected val mOrientationHelper = OrientationHelper(context)
     protected val attachLifecycle = (context as LifecycleOwner)
 
-    //播放失败回调
+    // 播放失败回调
     protected var mPlayErrorBlock: (() -> Unit)? = null
 
-    //播放完成回调
+    // 播放完成回调
     protected var mPlayCompletionBlock: (() -> Unit)? = null
 
-    //隐藏视图Runnable
+    // 隐藏视图Runnable
     protected var mHideControllerJob: Job? = null
 
-    //刷新进度Runnable
-    protected var mUpdateProgress: Runnable = object : Runnable {
-        override fun run() {
-            val position = mControlWrapper.getCurrentPosition()
-            handleProgressChanged(mControlWrapper.getDuration(), position)
-            postDelayed(this, 500L)
+    // 刷新进度Runnable
+    protected var mUpdateProgress: Runnable =
+        object : Runnable {
+            override fun run() {
+                val position = mControlWrapper.getCurrentPosition()
+                handleProgressChanged(mControlWrapper.getDuration(), position)
+                postDelayed(this, 500L)
+            }
         }
-    }
 
     private var mIsStartProgress = false
 
@@ -78,13 +79,14 @@ abstract class BaseVideoController(
         val subtitleController = getSubtitleController()
         val settingController = getSettingController()
 
-        mControlWrapper = ControlWrapper(
-            mediaPlayer,
-            videoController,
-            danmuController,
-            subtitleController,
-            settingController
-        )
+        mControlWrapper =
+            ControlWrapper(
+                mediaPlayer,
+                videoController,
+                danmuController,
+                subtitleController,
+                settingController,
+            )
         for (entry in mControlComponents.entries) {
             entry.key.attach(mControlWrapper)
         }
@@ -155,12 +157,13 @@ abstract class BaseVideoController(
 
     override fun startFadeOut() {
         mHideControllerJob?.cancel()
-        mHideControllerJob = attachLifecycle.lifecycleScope.launch {
-            delay(mDefaultTimeOutMs)
-            withContext(Dispatchers.Main) {
-                hideController()
+        mHideControllerJob =
+            attachLifecycle.lifecycleScope.launch {
+                delay(mDefaultTimeOutMs)
+                withContext(Dispatchers.Main) {
+                    hideController()
+                }
             }
-        }
     }
 
     override fun stopFadeOut() {
@@ -172,7 +175,7 @@ abstract class BaseVideoController(
         /*
         mIsLocked = locked
         handleLockStateChanged(locked)
-        */
+         */
         mIsLocked = false
     }
 
@@ -186,15 +189,17 @@ abstract class BaseVideoController(
     override fun isPopupMode() = mIsPopupMode
 
     override fun startProgress() {
-        if (mIsStartProgress)
+        if (mIsStartProgress) {
             return
+        }
         mIsStartProgress = true
         post(mUpdateProgress)
     }
 
     override fun stopProgress() {
-        if (!mIsStartProgress)
+        if (!mIsStartProgress) {
             return
+        }
         mIsStartProgress = false
         removeCallbacks(mUpdateProgress)
     }
@@ -204,14 +209,17 @@ abstract class BaseVideoController(
     }
 
     override fun onOrientationChanged(orientation: Int) {
-        if (!PlayerInitializer.isOrientationEnabled)
+        if (!PlayerInitializer.isOrientationEnabled) {
             return
+        }
 
-        if (attachLifecycle.lifecycle.currentState == Lifecycle.State.DESTROYED)
+        if (attachLifecycle.lifecycle.currentState == Lifecycle.State.DESTROYED) {
             return
+        }
 
-        if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN)
+        if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN) {
             return
+        }
 
         val attachActivity = (context as AppCompatActivity)
         if (orientation in 60..120) {
@@ -244,11 +252,12 @@ abstract class BaseVideoController(
     }
 
     open fun setDismissTimeOut(timeOut: Long) {
-        mDefaultTimeOutMs = if (timeOut > 0) {
-            timeOut
-        } else {
-            5000L
-        }
+        mDefaultTimeOutMs =
+            if (timeOut > 0) {
+                timeOut
+            } else {
+                5000L
+            }
     }
 
     open fun onBackPressed() = false
@@ -257,25 +266,22 @@ abstract class BaseVideoController(
         mControlWrapper.togglePlay()
     }
 
-
     open fun onVisibilityChanged(isVisible: Boolean) {
-
     }
 
     open fun onLockStateChanged(isLocked: Boolean) {
-
     }
 
     open fun onPopupModeChanged(isPopup: Boolean) {
-
     }
 
-    open fun onProgressChanged(duration: Long, position: Long) {
-
+    open fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
     }
 
     open fun onVideoSizeChanged(videoSize: Point) {
-
     }
 
     open fun isWrapperInitialized() = ::mControlWrapper.isInitialized
@@ -322,7 +328,10 @@ abstract class BaseVideoController(
         onPopupModeChanged(isPopup)
     }
 
-    private fun handleProgressChanged(duration: Long, position: Long) {
+    private fun handleProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
         for (entry in mControlComponents.entries) {
             entry.key.onProgressChanged(duration, position)
         }

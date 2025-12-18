@@ -35,8 +35,7 @@ class PlayerSettingView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutPlayerSettingBinding>(context, attrs, defStyleAttr) {
-
-    //操作项集合
+    // 操作项集合
     private val settingItems = generateItems()
 
     init {
@@ -45,12 +44,11 @@ class PlayerSettingView(
 
     override fun getLayoutId() = R.layout.layout_player_setting
 
-    override fun getSettingViewType(): SettingViewType {
-        return SettingViewType.PLAYER_SETTING
-    }
+    override fun getSettingViewType(): SettingViewType = SettingViewType.PLAYER_SETTING
 
     override fun onViewShow() {
-        settingItems.asSequence()
+        settingItems
+            .asSequence()
             .filter { it is SettingItem }
             .forEach { applyItemStatus(it as SettingItem) }
         viewBinding.settingRv.setData(settingItems)
@@ -61,8 +59,11 @@ class PlayerSettingView(
         viewBinding.settingRv.clearFocus()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        //未展示
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
+        // 未展示
         if (isSettingShowing().not()) {
             return false
         }
@@ -81,45 +82,48 @@ class PlayerSettingView(
 
     private fun initRv() {
         viewBinding.settingRv.apply {
-            layoutManager = grid(4).apply {
-                spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                    override fun getSpanSize(position: Int): Int {
-                        if (settingItems[position] is SettingActionType) {
-                            return 4
+            layoutManager =
+                grid(4).apply {
+                    spanSizeLookup =
+                        object : GridLayoutManager.SpanSizeLookup() {
+                            override fun getSpanSize(position: Int): Int {
+                                if (settingItems[position] is SettingActionType) {
+                                    return 4
+                                }
+                                return 1
+                            }
                         }
-                        return 1
-                    }
                 }
-            }
 
-            adapter = buildAdapter {
-                addItem<Any, ItemPlayerSettingBinding>(R.layout.item_player_setting) {
-                    checkType { data, _ -> data is SettingItem }
-                    initView { data, _, _ ->
-                        (data as SettingItem).apply {
-                            itemBinding.tvSetting.text = display
-                            itemBinding.ivSetting.setImageResource(icon)
-                            itemBinding.ivSetting.isSelected = selected
-                            itemBinding.ivSetting.setOnClickListener {
-                                onItemClick(this)
+            adapter =
+                buildAdapter {
+                    addItem<Any, ItemPlayerSettingBinding>(R.layout.item_player_setting) {
+                        checkType { data, _ -> data is SettingItem }
+                        initView { data, _, _ ->
+                            (data as SettingItem).apply {
+                                itemBinding.tvSetting.text = display
+                                itemBinding.ivSetting.setImageResource(icon)
+                                itemBinding.ivSetting.isSelected = selected
+                                itemBinding.ivSetting.setOnClickListener {
+                                    onItemClick(this)
+                                }
                             }
                         }
                     }
-                }
 
-                addItem<Any, ItemPlayerSettingTypeBinding>(R.layout.item_player_setting_type) {
-                    checkType { data, _ -> data is SettingActionType }
-                    initView { data, _, _ ->
-                        (data as SettingActionType).apply {
-                            itemBinding.tvType.text = display
+                    addItem<Any, ItemPlayerSettingTypeBinding>(R.layout.item_player_setting_type) {
+                        checkType { data, _ -> data is SettingActionType }
+                        initView { data, _, _ ->
+                            (data as SettingActionType).apply {
+                                itemBinding.tvType.text = display
+                            }
                         }
                     }
+
+                    itemAnimator = null
+
+                    addItemDecoration(ItemDecorationSpace(0, dp2px(8)))
                 }
-
-                itemAnimator = null
-
-                addItemDecoration(ItemDecorationSpace(0, dp2px(8)))
-            }
         }
     }
 
@@ -127,8 +131,9 @@ class PlayerSettingView(
      * 处理KeyCode事件
      */
     private fun handleKeyCode(keyCode: Int): Boolean {
-        val focusedView = viewBinding.settingRv.focusedChild
-            ?: return false
+        val focusedView =
+            viewBinding.settingRv.focusedChild
+                ?: return false
         val focusedIndex = viewBinding.settingRv.getChildAdapterPosition(focusedView)
         if (focusedIndex == -1) {
             return false
@@ -141,45 +146,55 @@ class PlayerSettingView(
     /**
      * 根据KeyCode与当前焦点位置，取得目标焦点位置
      */
-    private fun getTargetIndexByKeyCode(keyCode: Int, focusedIndex: Int): Int {
+    private fun getTargetIndexByKeyCode(
+        keyCode: Int,
+        focusedIndex: Int
+    ): Int {
         when (keyCode) {
-            //左规则
+            // 左规则
             KeyEvent.KEYCODE_DPAD_LEFT -> {
                 return settingItems.previousItemIndex<SettingItem>(focusedIndex)
             }
-            //右规则
+            // 右规则
             KeyEvent.KEYCODE_DPAD_RIGHT -> {
                 return settingItems.nextItemIndex<SettingItem>(focusedIndex)
             }
-            //上、下规则
-            //按类型分组后，找到当前焦点所在分组的位置，取上/下一个分组的同样位置
+            // 上、下规则
+            // 按类型分组后，找到当前焦点所在分组的位置，取上/下一个分组的同样位置
             else -> {
                 val focusedItem = settingItems[focusedIndex]
-                //item按分类分组
-                val groupedItemMap = settingItems.asSequence()
-                    .filter { it is SettingItem }
-                    .groupBy { (it as SettingItem).action.type }
-                //当前焦点所在分组
-                val focusedList = groupedItemMap.values
-                    .find { it.contains(focusedItem) }
-                    ?: return -1
-                //当前焦点item在分组的位置
+                // item按分类分组
+                val groupedItemMap =
+                    settingItems
+                        .asSequence()
+                        .filter { it is SettingItem }
+                        .groupBy { (it as SettingItem).action.type }
+                // 当前焦点所在分组
+                val focusedList =
+                    groupedItemMap.values
+                        .find { it.contains(focusedItem) }
+                        ?: return -1
+                // 当前焦点item在分组的位置
                 val focusedIndexInList = focusedList.indexOf(focusedItem)
                 val listIndexInMap = groupedItemMap.values.indexOf(focusedList)
-                val targetList = if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-                    //上一列分组，无则取最后一列分组
-                    groupedItemMap.values.toList()
-                        .getOrNull(listIndexInMap - 1)
-                        ?: groupedItemMap.values.last()
-                } else {
-                    //下一列分组，无则取第一列分组
-                    groupedItemMap.values.toList()
-                        .getOrNull(listIndexInMap + 1)
-                        ?: groupedItemMap.values.first()
-                }
-                //分组对应焦点位置的Item，无则取最后一个
-                val upItem = targetList.getOrNull(focusedIndexInList)
-                    ?: targetList.last()
+                val targetList =
+                    if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                        // 上一列分组，无则取最后一列分组
+                        groupedItemMap.values
+                            .toList()
+                            .getOrNull(listIndexInMap - 1)
+                            ?: groupedItemMap.values.last()
+                    } else {
+                        // 下一列分组，无则取第一列分组
+                        groupedItemMap.values
+                            .toList()
+                            .getOrNull(listIndexInMap + 1)
+                            ?: groupedItemMap.values.first()
+                    }
+                // 分组对应焦点位置的Item，无则取最后一个
+                val upItem =
+                    targetList.getOrNull(focusedIndexInList)
+                        ?: targetList.last()
                 return settingItems.indexOf(upItem)
             }
         }
@@ -190,21 +205,24 @@ class PlayerSettingView(
      */
     private fun generateItems(): List<Any> {
         val items = mutableListOf<Any>()
-        val disabledActions = setOf(
-            SettingAction.SCREEN_SHOT,
-            SettingAction.BACKGROUND_PLAY
-        )
-        SettingAction.values()
+        val disabledActions =
+            setOf(
+                SettingAction.SCREEN_SHOT,
+                SettingAction.BACKGROUND_PLAY,
+            )
+        SettingAction
+            .values()
             .asSequence()
             .filterNot { disabledActions.contains(it) }
             .sortedBy {
                 it.type.widget
             }.groupBy {
                 it.type
-            }.entries.forEach {
+            }.entries
+            .forEach {
                 items.add(it.key)
                 items.addAll(
-                    it.value.map { action -> SettingItem(action, action.display, action.icon) }
+                    it.value.map { action -> SettingItem(action, action.display, action.icon) },
                 )
             }
         return items
@@ -223,8 +241,8 @@ class PlayerSettingView(
             }
 
             SettingAction.VIDEO_SPEED -> {
-                selected = PlayerInitializer.Player.videoSpeed != PlayerInitializer.Player.DEFAULT_SPEED
-                    || PlayerInitializer.Player.pressVideoSpeed != PlayerInitializer.Player.DEFAULT_PRESS_SPEED
+                selected = PlayerInitializer.Player.videoSpeed != PlayerInitializer.Player.DEFAULT_SPEED ||
+                    PlayerInitializer.Player.pressVideoSpeed != PlayerInitializer.Player.DEFAULT_PRESS_SPEED
             }
 
             SettingAction.BACKGROUND_PLAY -> {
@@ -236,10 +254,10 @@ class PlayerSettingView(
             }
 
             SettingAction.DANMU_STYLE -> {
-                selected = PlayerInitializer.Danmu.size != PlayerInitializer.Danmu.DEFAULT_SIZE
-                    || PlayerInitializer.Danmu.alpha != PlayerInitializer.Danmu.DEFAULT_ALPHA
-                    || PlayerInitializer.Danmu.stoke != PlayerInitializer.Danmu.DEFAULT_STOKE
-                    || PlayerInitializer.Danmu.speed != PlayerInitializer.Danmu.DEFAULT_SPEED
+                selected = PlayerInitializer.Danmu.size != PlayerInitializer.Danmu.DEFAULT_SIZE ||
+                    PlayerInitializer.Danmu.alpha != PlayerInitializer.Danmu.DEFAULT_ALPHA ||
+                    PlayerInitializer.Danmu.stoke != PlayerInitializer.Danmu.DEFAULT_STOKE ||
+                    PlayerInitializer.Danmu.speed != PlayerInitializer.Danmu.DEFAULT_SPEED
             }
 
             SettingAction.DANMU_TIME -> {
@@ -253,10 +271,10 @@ class PlayerSettingView(
 
             SettingAction.SUBTITLE_STYLE -> {
                 selected =
-                    PlayerInitializer.Subtitle.textSize != PlayerInitializer.Subtitle.DEFAULT_SIZE
-                        || PlayerInitializer.Subtitle.strokeWidth != PlayerInitializer.Subtitle.DEFAULT_STROKE
-                        || PlayerInitializer.Subtitle.textColor != PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR
-                        || PlayerInitializer.Subtitle.strokeColor != PlayerInitializer.Subtitle.DEFAULT_STROKE_COLOR
+                    PlayerInitializer.Subtitle.textSize != PlayerInitializer.Subtitle.DEFAULT_SIZE ||
+                    PlayerInitializer.Subtitle.strokeWidth != PlayerInitializer.Subtitle.DEFAULT_STROKE ||
+                    PlayerInitializer.Subtitle.textColor != PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR ||
+                    PlayerInitializer.Subtitle.strokeColor != PlayerInitializer.Subtitle.DEFAULT_STROKE_COLOR
             }
 
             SettingAction.SUBTITLE_TIME -> {
@@ -355,8 +373,12 @@ class PlayerSettingView(
         }
     }
 
-    private fun updateItemStatus(action: SettingAction, newStatus: Boolean) {
-        settingItems.find { it is SettingItem && it.action == action }
+    private fun updateItemStatus(
+        action: SettingAction,
+        newStatus: Boolean
+    ) {
+        settingItems
+            .find { it is SettingItem && it.action == action }
             ?.let { (it as SettingItem).selected = newStatus }
         viewBinding.settingRv.setData(settingItems)
     }

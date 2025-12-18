@@ -22,7 +22,6 @@ class MagnetScreenDialog(
     private val screenType: MagnetScreenType,
     private val block: (MagnetScreenEntity) -> Unit
 ) : BaseBottomDialog<DialogMagnetScreenBinding>(activity) {
-
     override fun getChildLayoutId() = R.layout.dialog_magnet_screen
 
     override fun initView(binding: DialogMagnetScreenBinding) {
@@ -32,23 +31,22 @@ class MagnetScreenDialog(
         setPositiveVisible(false)
 
         binding.screenRv.apply {
-
             layoutManager = grid(2)
 
-            adapter = buildAdapter {
-
-                addItem<MagnetScreenEntity, ItemMagnetScreenBinding>(R.layout.item_magnet_screen) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            screenTv.text = data.screenName
-                            itemLayout.setOnClickListener {
-                                dismiss()
-                                block.invoke(data)
+            adapter =
+                buildAdapter {
+                    addItem<MagnetScreenEntity, ItemMagnetScreenBinding>(R.layout.item_magnet_screen) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                screenTv.text = data.screenName
+                                itemLayout.setOnClickListener {
+                                    dismiss()
+                                    block.invoke(data)
+                                }
                             }
                         }
                     }
                 }
-            }
 
             setData(screenData)
         }

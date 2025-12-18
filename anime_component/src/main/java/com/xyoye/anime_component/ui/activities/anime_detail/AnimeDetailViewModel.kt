@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
 class AnimeDetailViewModel : BaseViewModel() {
-
     val animeIdField = ObservableField<String>()
     val animeTitleField = ObservableField<String>()
     val animeStatusField = ObservableField<String>()
@@ -37,7 +36,7 @@ class AnimeDetailViewModel : BaseViewModel() {
                     exception ?: RuntimeException("Get anime detail failed with unknown error"),
                     "AnimeDetailViewModel",
                     "getAnimeDetail",
-                    "动画ID: $animeId"
+                    "动画ID: $animeId",
                 )
                 exception?.message?.toastError()
                 return@launch
@@ -65,11 +64,12 @@ class AnimeDetailViewModel : BaseViewModel() {
             val isFollowed = followLiveData.value ?: false
             val animeId = animeIdField.get()!!
 
-            val result = if (isFollowed) {
-                AnimeRepository.cancelFollowAnime(animeId)
-            } else {
-                AnimeRepository.followAnime(animeId)
-            }
+            val result =
+                if (isFollowed) {
+                    AnimeRepository.cancelFollowAnime(animeId)
+                } else {
+                    AnimeRepository.followAnime(animeId)
+                }
 
             if (result.isFailure) {
                 val exception = result.exceptionOrNull()
@@ -78,7 +78,7 @@ class AnimeDetailViewModel : BaseViewModel() {
                     exception ?: RuntimeException("$status anime failed with unknown error"),
                     "AnimeDetailViewModel",
                     "followAnime",
-                    "动画ID: $animeId, 操作: $status"
+                    "动画ID: $animeId, 操作: $status",
                 )
                 ToastCenter.showError("${status}失败，请重试")
                 return@launch
@@ -89,8 +89,9 @@ class AnimeDetailViewModel : BaseViewModel() {
     }
 
     private fun getRating(rating: Double) =
-        if (rating <= 0)
+        if (rating <= 0) {
             "暂无"
-        else
+        } else {
             DecimalFormat("0.0").format(rating)
+        }
 }

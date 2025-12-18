@@ -19,8 +19,9 @@ import java.io.InputStream
  * Created by xyoye on 2023/4/3
  */
 
-class TorrentStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
-
+class TorrentStorage(
+    library: MediaLibraryEntity
+) : AbstractStorage(library) {
     init {
         try {
             PlayTaskManager.init()
@@ -29,7 +30,7 @@ class TorrentStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                 e,
                 "TorrentStorage",
                 "init",
-                "初始化PlayTaskManager失败"
+                "初始化PlayTaskManager失败",
             )
         }
     }
@@ -41,7 +42,7 @@ class TorrentStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                 ErrorReportHelper.postException(
                     "Failed to get torrent from file",
                     "TorrentStorage",
-                    RuntimeException("getTorrentFormFile returned null for file: ${file.fileName()}")
+                    RuntimeException("getTorrentFormFile returned null for file: ${file.fileName()}"),
                 )
                 ToastCenter.showError("获取种子文件失败")
                 return emptyList()
@@ -50,7 +51,7 @@ class TorrentStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                 ErrorReportHelper.postException(
                     "Torrent file has no sub files",
                     "TorrentStorage",
-                    RuntimeException("Torrent path: ${torrent.torrentPath}")
+                    RuntimeException("Torrent path: ${torrent.torrentPath}"),
                 )
                 ToastCenter.showError("解析种子文件失败")
                 return emptyList()
@@ -63,60 +64,61 @@ class TorrentStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                 e,
                 "TorrentStorage",
                 "listFiles",
-                "文件名: ${file.fileName()}"
+                "文件名: ${file.fileName()}",
             )
             ToastCenter.showError("列举种子文件失败")
             emptyList()
         }
     }
 
-    override suspend fun getRootFile(): StorageFile {
-        return try {
+    override suspend fun getRootFile(): StorageFile =
+        try {
             TorrentStorageFile(
                 this,
                 TorrentFileInfo().apply {
                     mFileIndex = -1
                     mSubPath = library.url
-                }
+                },
             )
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedExceptionWithContext(
                 e,
                 "TorrentStorage",
                 "getRootFile",
-                "媒体库URL: ${library.url}"
+                "媒体库URL: ${library.url}",
             )
             throw e
         }
-    }
 
-    override suspend fun openFile(file: StorageFile): InputStream? {
-        return null
-    }
+    override suspend fun openFile(file: StorageFile): InputStream? = null
 
-    override suspend fun pathFile(path: String, isDirectory: Boolean): StorageFile? {
-        return null
-    }
+    override suspend fun pathFile(
+        path: String,
+        isDirectory: Boolean
+    ): StorageFile? = null
 
     override suspend fun historyFile(history: PlayHistoryEntity): StorageFile? {
         return try {
-            val torrentPath = history.torrentPath
-                ?: return null
-            val torrent = TorrentBean.formInfo(
-                torrentPath,
-                ThunderManager.getInstance().getTaskInfo(torrentPath)
-            )
-
-            val fileInfo = torrent.mSubFileInfo?.find {
-                it.mFileIndex == history.torrentIndex
-            } ?: run {
-                ErrorReportHelper.postException(
-                    "File not found in torrent",
-                    "TorrentStorage",
-                    RuntimeException("Torrent index ${history.torrentIndex} not found in torrent: $torrentPath")
+            val torrentPath =
+                history.torrentPath
+                    ?: return null
+            val torrent =
+                TorrentBean.formInfo(
+                    torrentPath,
+                    ThunderManager.getInstance().getTaskInfo(torrentPath),
                 )
-                return null
-            }
+
+            val fileInfo =
+                torrent.mSubFileInfo?.find {
+                    it.mFileIndex == history.torrentIndex
+                } ?: run {
+                    ErrorReportHelper.postException(
+                        "File not found in torrent",
+                        "TorrentStorage",
+                        RuntimeException("Torrent index ${history.torrentIndex} not found in torrent: $torrentPath"),
+                    )
+                    return null
+                }
 
             TorrentStorageFile(this, fileInfo).also {
                 it.playHistory = history
@@ -126,7 +128,7 @@ class TorrentStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                 e,
                 "TorrentStorage",
                 "historyFile",
-                "种子路径: ${history.torrentPath}, 索引: ${history.torrentIndex}"
+                "种子路径: ${history.torrentPath}, 索引: ${history.torrentIndex}",
             )
             null
         }
@@ -134,21 +136,22 @@ class TorrentStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
 
     override suspend fun createPlayUrl(file: StorageFile): String? {
         return try {
-            val torrent = getTorrentFormFile(file)
-                ?: run {
-                    ErrorReportHelper.postException(
-                        "Failed to get torrent for play URL creation",
-                        "TorrentStorage",
-                        RuntimeException("getTorrentFormFile returned null for file: ${file.fileName()}")
-                    )
-                    return null
-                }
+            val torrent =
+                getTorrentFormFile(file)
+                    ?: run {
+                        ErrorReportHelper.postException(
+                            "Failed to get torrent for play URL creation",
+                            "TorrentStorage",
+                            RuntimeException("getTorrentFormFile returned null for file: ${file.fileName()}"),
+                        )
+                        return null
+                    }
             val fileIndex = (file as TorrentStorageFile).getRealFile().mFileIndex
             if (fileIndex == -1) {
                 ErrorReportHelper.postException(
                     "Invalid file index for play URL creation",
                     "TorrentStorage",
-                    RuntimeException("File index is -1 for file: ${file.fileName()}")
+                    RuntimeException("File index is -1 for file: ${file.fileName()}"),
                 )
                 return null
             }
@@ -158,22 +161,18 @@ class TorrentStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                 e,
                 "TorrentStorage",
                 "createPlayUrl",
-                "文件名: ${file.fileName()}"
+                "文件名: ${file.fileName()}",
             )
             null
         }
     }
 
-    override suspend fun cacheDanmu(file: StorageFile): LocalDanmuBean? {
-        return null
-    }
+    override suspend fun cacheDanmu(file: StorageFile): LocalDanmuBean? = null
 
-    override suspend fun cacheSubtitle(file: StorageFile): String? {
-        return null
-    }
+    override suspend fun cacheSubtitle(file: StorageFile): String? = null
 
-    private suspend fun torrentPath(url: String): String? {
-        return try {
+    private suspend fun torrentPath(url: String): String? =
+        try {
             val isMagnetLink = Uri.parse(url).scheme == "magnet"
             if (isMagnetLink) {
                 ThunderManager.getInstance().downloadTorrentFile(url)
@@ -185,11 +184,10 @@ class TorrentStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                 e,
                 "TorrentStorage",
                 "torrentPath",
-                "URL: $url"
+                "URL: $url",
             )
             null
         }
-    }
 
     private suspend fun getTorrentFormFile(file: StorageFile): TorrentBean? {
         return try {
@@ -199,20 +197,20 @@ class TorrentStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                 ErrorReportHelper.postException(
                     "Failed to get torrent path",
                     "TorrentStorage",
-                    RuntimeException("torrentPath returned null for path: ${directoryInfo.mSubPath}")
+                    RuntimeException("torrentPath returned null for path: ${directoryInfo.mSubPath}"),
                 )
                 return null
             }
             TorrentBean.formInfo(
                 torrentPath,
-                ThunderManager.getInstance().getTaskInfo(torrentPath)
+                ThunderManager.getInstance().getTaskInfo(torrentPath),
             )
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedExceptionWithContext(
                 e,
                 "TorrentStorage",
                 "getTorrentFormFile",
-                "文件名: ${file.fileName()}"
+                "文件名: ${file.fileName()}",
             )
             null
         }

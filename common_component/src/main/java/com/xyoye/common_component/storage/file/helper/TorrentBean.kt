@@ -11,8 +11,11 @@ class TorrentBean(
     val torrentPath: String
 ) : TorrentInfo() {
     companion object {
-        fun formInfo(torrentPath: String, info: TorrentInfo): TorrentBean {
-            return try {
+        fun formInfo(
+            torrentPath: String,
+            info: TorrentInfo
+        ): TorrentBean =
+            try {
                 TorrentBean(torrentPath).apply {
                     mFileCount = info.mFileCount
                     mInfoHash = info.mInfoHash
@@ -25,10 +28,9 @@ class TorrentBean(
                     e,
                     "TorrentBean",
                     "formInfo",
-                    "种子路径: $torrentPath"
+                    "种子路径: $torrentPath",
                 )
                 throw e
             }
-        }
     }
 }

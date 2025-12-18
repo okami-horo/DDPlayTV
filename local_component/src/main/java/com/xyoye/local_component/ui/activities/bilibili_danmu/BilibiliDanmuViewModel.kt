@@ -8,10 +8,9 @@ import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.network.config.Api
 import com.xyoye.common_component.network.repository.OtherRepository
 import com.xyoye.common_component.network.repository.ResourceRepository
-
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.PathHelper
 import com.xyoye.common_component.utils.danmu.DanmuFinder
-import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.AnimeCidData
 import com.xyoye.data_component.data.DanmuEpisodeData
@@ -25,13 +24,15 @@ import java.io.File
 import java.util.regex.Pattern
 
 class BilibiliDanmuViewModel : BaseViewModel() {
-
     val downloadMessageLiveData = MutableLiveData<String>()
     val clearMessageLiveData = MutableLiveData<Boolean>()
 
     private val gzipHeader = mapOf(Pair("Accept-Encoding", "gzip,deflate"))
 
-    fun downloadByCode(code: String, isAvCode: Boolean) {
+    fun downloadByCode(
+        code: String,
+        isAvCode: Boolean
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             clearDownloadMessage()
 
@@ -75,9 +76,10 @@ class BilibiliDanmuViewModel : BaseViewModel() {
 
         actionDo("开始下载弹幕")
         sendDownloadMessage("========================")
-        val resultList = animeCid.episodes.map {
-            saveEpisodeDanmu(it, animeCid.animeTitle)
-        }
+        val resultList =
+            animeCid.episodes.map {
+                saveEpisodeDanmu(it, animeCid.animeTitle)
+            }
         sendDownloadMessage("------------------------")
         sendDownloadMessage("========================")
 
@@ -120,7 +122,10 @@ class BilibiliDanmuViewModel : BaseViewModel() {
         }
     }
 
-    private suspend fun saveEpisodeDanmu(episodeCid: EpisodeCidData, animeTitle: String): LocalDanmuBean? {
+    private suspend fun saveEpisodeDanmu(
+        episodeCid: EpisodeCidData,
+        animeTitle: String
+    ): LocalDanmuBean? {
         val url = "${Api.BILI_BILI_COMMENT}${episodeCid.cid}.xml"
         sendDownloadMessage("------------------------")
         sendDownloadMessage("剧集：${episodeCid.title}")
@@ -145,23 +150,25 @@ class BilibiliDanmuViewModel : BaseViewModel() {
     }
 
     private suspend fun findVideoCidInJavaScript(url: String): EpisodeCidData? {
-        val htmlElement = try {
-            Jsoup.connect(url)
-                .userAgent(AppConfig.getJsoupUserAgent().orEmpty())
-                .timeout(10 * 1000)
-                .get()
-                .toString()
-        } catch (t: Throwable) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                t,
-                "BilibiliDanmuViewModel",
-                "findVideoCidInJavaScript",
-                "URL: $url"
-            )
-            t.printStackTrace()
-            sendDownloadMessage("错误：${t.message}")
-            return null
-        }
+        val htmlElement =
+            try {
+                Jsoup
+                    .connect(url)
+                    .userAgent(AppConfig.getJsoupUserAgent().orEmpty())
+                    .timeout(10 * 1000)
+                    .get()
+                    .toString()
+            } catch (t: Throwable) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    t,
+                    "BilibiliDanmuViewModel",
+                    "findVideoCidInJavaScript",
+                    "URL: $url",
+                )
+                t.printStackTrace()
+                sendDownloadMessage("错误：${t.message}")
+                return null
+            }
         val header = "__INITIAL_STATE__="
         val footer = ";(function"
         val footerRegex = footer.replace("(", "\\(")
@@ -172,20 +179,22 @@ class BilibiliDanmuViewModel : BaseViewModel() {
             return null
         }
 
-        val jsonObject = try {
-            JSONObject(matcher.group(0)?.removeSurrounding(header, footer).orEmpty())
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "BilibiliDanmuViewModel",
-                "findVideoCidInJavaScript",
-                "JSON parsing error"
-            )
-            return null
-        }
+        val jsonObject =
+            try {
+                JSONObject(matcher.group(0)?.removeSurrounding(header, footer).orEmpty())
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "BilibiliDanmuViewModel",
+                    "findVideoCidInJavaScript",
+                    "JSON parsing error",
+                )
+                return null
+            }
 
-        val videoJson = jsonObject.optJSONObject("videoData")
-            ?: return null
+        val videoJson =
+            jsonObject.optJSONObject("videoData")
+                ?: return null
 
         val cid = videoJson.optString("cid") ?: return null
         val episodeTitle = videoJson.optString("title")
@@ -194,54 +203,58 @@ class BilibiliDanmuViewModel : BaseViewModel() {
     }
 
     private suspend fun findAnimeCidInJavaScript(url: String): AnimeCidData? {
-        val htmlElement = try {
-            Jsoup.connect(url)
-                .userAgent(AppConfig.getJsoupUserAgent().orEmpty())
-                .timeout(10 * 1000)
-                .get()
-                .toString()
-        } catch (t: Throwable) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                t,
-                "BilibiliDanmuViewModel",
-                "findAnimeCidInJavaScript",
-                "URL: $url"
-            )
-            t.printStackTrace()
-            sendDownloadMessage("错误：${t.message}")
-            return null
-        }
+        val htmlElement =
+            try {
+                Jsoup
+                    .connect(url)
+                    .userAgent(AppConfig.getJsoupUserAgent().orEmpty())
+                    .timeout(10 * 1000)
+                    .get()
+                    .toString()
+            } catch (t: Throwable) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    t,
+                    "BilibiliDanmuViewModel",
+                    "findAnimeCidInJavaScript",
+                    "URL: $url",
+                )
+                t.printStackTrace()
+                sendDownloadMessage("错误：${t.message}")
+                return null
+            }
 
         val header = "window.__INITIAL_STATE__="
         val footer = "};"
 
-        val jsonObject = try {
-            val headerStart = htmlElement.indexOf(header)
-            if (headerStart == -1) {
+        val jsonObject =
+            try {
+                val headerStart = htmlElement.indexOf(header)
+                if (headerStart == -1) {
+                    return null
+                }
+                var content = htmlElement.substring(headerStart + header.length)
+
+                val footerStart = content.indexOf(footer)
+                if (footerStart == -1) {
+                    return null
+                }
+                content = content.substring(0, footerStart + 1)
+
+                JSONObject(content)
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "BilibiliDanmuViewModel",
+                    "findAnimeCidInJavaScript",
+                    "JSON parsing error",
+                )
                 return null
             }
-            var content = htmlElement.substring(headerStart + header.length)
-
-            val footerStart = content.indexOf(footer)
-            if (footerStart == -1) {
-                return null
-            }
-            content = content.substring(0, footerStart + 1)
-
-            JSONObject(content)
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "BilibiliDanmuViewModel",
-                "findAnimeCidInJavaScript",
-                "JSON parsing error"
-            )
-            return null
-        }
 
         val seasonTitle = jsonObject.optJSONObject("mediaInfo")?.optString("season_title").orEmpty()
-        val episodesJson = jsonObject.optJSONArray("epList")
-            ?: return null
+        val episodesJson =
+            jsonObject.optJSONArray("epList")
+                ?: return null
 
         val episodeList = mutableListOf<EpisodeCidData>()
         for (index in 0 until episodesJson.length()) {
@@ -258,7 +271,7 @@ class BilibiliDanmuViewModel : BaseViewModel() {
 
     private suspend fun actionDo(name: String) {
         sendDownloadMessage("")
-        sendDownloadMessage("操作：${name}")
+        sendDownloadMessage("操作：$name")
     }
 
     private suspend fun actionFailed() {

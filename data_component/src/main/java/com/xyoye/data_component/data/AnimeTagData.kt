@@ -12,4 +12,4 @@ import kotlinx.parcelize.Parcelize
 @JsonClass(generateAdapter = true)
 data class AnimeTagData(
     val animes: MutableList<AnimeData> = mutableListOf()
-): Parcelable
+) : Parcelable

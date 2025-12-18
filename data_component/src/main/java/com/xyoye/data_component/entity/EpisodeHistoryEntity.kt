@@ -11,14 +11,12 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class EpisodeHistoryEntity(
-
     @Embedded
     val entity: PlayHistoryEntity,
-
     @Relation(
         entity = MediaLibraryEntity::class,
         parentColumn = "storage_id",
-        entityColumn = "id"
+        entityColumn = "id",
     )
     val library: MediaLibraryEntity?
 ) : Parcelable

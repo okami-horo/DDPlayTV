@@ -21,9 +21,8 @@ class WebViewProgress(
     private var mHeight = 0
     private var progress = 0
 
-
     init {
-        //初始化画笔
+        // 初始化画笔
         mPaint = Paint()
         mPaint!!.isDither = true
         mPaint!!.isAntiAlias = true
@@ -31,12 +30,16 @@ class WebViewProgress(
         mPaint!!.color = Color.RED
     }
 
-    override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
+    override fun onSizeChanged(
+        w: Int,
+        h: Int,
+        ow: Int,
+        oh: Int
+    ) {
         mWidth = w
         mHeight = h
         super.onSizeChanged(w, h, ow, oh)
     }
-
 
     override fun onDraw(canvas: Canvas) {
         canvas.drawRect(0f, 0f, (mWidth * progress / 100).toFloat(), mHeight.toFloat(), mPaint!!)

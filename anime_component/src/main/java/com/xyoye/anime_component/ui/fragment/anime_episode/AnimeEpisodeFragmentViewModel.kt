@@ -49,47 +49,56 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
     val markModeFlow = _markModeFlow.collectable
 
     // 已被标记的剧集ID列表
-    private val _markedEpisodeIdsFlow = MutableStateFlow<List<String>>(emptyList())
+    private val markedEpisodeIdsFlow = MutableStateFlow<List<String>>(emptyList())
 
     // 原始剧集数据
-    private val _episodeListFlow = MutableStateFlow<List<EpisodeData>>(emptyList())
+    private val episodeListFlow = MutableStateFlow<List<EpisodeData>>(emptyList())
 
     // 剧集相关的本地播放记录数据
     @OptIn(FlowPreview::class)
-    private val _episodeHistoryFlow = _episodeListFlow.flatMapConcat { episodes ->
-        DatabaseManager.instance.getPlayHistoryDao().getEpisodeHistory(episodes.map { it.episodeId })
-    }
+    private val episodeHistoryFlow =
+        episodeListFlow.flatMapConcat { episodes ->
+            DatabaseManager.instance.getPlayHistoryDao().getEpisodeHistory(episodes.map { it.episodeId })
+        }
 
     // 补全数据后的的剧集数据
-    private val _formattedEpisodeFlow = _episodeListFlow.map { episodes ->
-        episodes.map { completeEpisodeInfo(it) }
-    }.combine(_episodeHistoryFlow) { episodes, histories ->
-        completeEpisodeHistory(episodes, histories)
-    }
+    private val formattedEpisodeFlow =
+        episodeListFlow
+            .map { episodes ->
+                episodes.map { completeEpisodeInfo(it) }
+            }.combine(episodeHistoryFlow) { episodes, histories ->
+                completeEpisodeHistory(episodes, histories)
+            }
 
     // 组合后的剧集列表
-    val displayEpisodesFlow = combine(
-        _formattedEpisodeFlow, _ascendingFlow, _markModeFlow, _markedEpisodeIdsFlow
-    ) { episodes, ascending, markMode, markedEpisodeIds ->
-        return@combine combineEpisodeData(episodes, ascending, markMode, markedEpisodeIds)
-    }.stateIn(
-        viewModelScope, SharingStarted.Lazily, emptyList()
-    )
+    val displayEpisodesFlow =
+        combine(
+            formattedEpisodeFlow,
+            _ascendingFlow,
+            _markModeFlow,
+            markedEpisodeIdsFlow,
+        ) { episodes, ascending, markMode, markedEpisodeIds ->
+            return@combine combineEpisodeData(episodes, ascending, markMode, markedEpisodeIds)
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.Lazily,
+            emptyList(),
+        )
 
     // 刷新番剧信息
     private val _refreshBangumiFlow = MutableSharedFlow<Any>()
     val refreshBangumiFlow = _refreshBangumiFlow.collectable
 
     // 播放视频
-    private val _playVideoFlow = MutableSharedFlow<Any>()
-    val playVideoFLow = _playVideoFlow.collectable
+    private val playVideoMutableFlow = MutableSharedFlow<Any>()
+    val playVideoFlow = playVideoMutableFlow.collectable
 
     fun setBangumiData(bangumiData: BangumiData) {
         animeTitleField.set(bangumiData.animeTitle)
         animeSearchWordField.set(bangumiData.searchKeyword)
         episodeCountField.set("共${bangumiData.episodes.size}集")
 
-        _episodeListFlow.value = bangumiData.episodes
+        episodeListFlow.value = bangumiData.episodes
     }
 
     /**
@@ -100,7 +109,7 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
         return episode.copy(
             title = titles.first,
             subtitle = titles.second,
-            searchEpisodeNum = getEpisodeNum(titles.first)
+            searchEpisodeNum = getEpisodeNum(titles.first),
         )
     }
 
@@ -116,12 +125,13 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
             val episodeHistories = animeHistories[episode.episodeId] ?: emptyList()
 
             // 获取云端与本地中最后的观看时间
-            val watchTime = episodeHistories
-                .map { it.entity.playTime }
-                .plus(getCloudPlayTime(episode))
-                .filterNotNull()
-                .maxOfOrNull { it }
-                ?.toText()
+            val watchTime =
+                episodeHistories
+                    .map { it.entity.playTime }
+                    .plus(getCloudPlayTime(episode))
+                    .filterNotNull()
+                    .maxOfOrNull { it }
+                    ?.toText()
             episode.copy(histories = episodeHistories, watchTime = watchTime)
         }
     }
@@ -134,17 +144,16 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
         ascending: Boolean,
         markMode: Boolean,
         markedEpisodeIds: List<String>
-    ): List<EpisodeData> {
-        return (if (ascending) episodes else episodes.asReversed())
+    ): List<EpisodeData> =
+        (if (ascending) episodes else episodes.asReversed())
             .filter {
                 markMode.not() || (markMode && it.markAble)
             }.map {
                 it.copy(
                     inMarkMode = markMode,
-                    isMarked = markedEpisodeIds.contains(it.episodeId)
+                    isMarked = markedEpisodeIds.contains(it.episodeId),
                 )
             }
-    }
 
     /**
      * 提取剧集名称及话数
@@ -177,7 +186,7 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
                 e,
                 "AnimeEpisodeFragmentViewModel",
                 "getCloudPlayTime",
-                "解析UTC时间失败: $time"
+                "解析UTC时间失败: $time",
             )
             null
         }
@@ -189,8 +198,9 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
      * 例：第5话  ->  5
      */
     private fun getEpisodeNum(episodeText: String?): String {
-        if (episodeText == null)
+        if (episodeText == null) {
             return ""
+        }
         val pattern = Pattern.compile("第(\\d+)话")
         val matcher = pattern.matcher(episodeText)
         if (matcher.find()) {
@@ -217,7 +227,7 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
      */
     fun toggleMarkMode(markMode: Boolean) {
         if (markMode) {
-            val markAbleCount = _episodeListFlow.value.count { it.markAble }
+            val markAbleCount = episodeListFlow.value.count { it.markAble }
             if (markAbleCount == 0) {
                 "没有需标记为已看的剧集".toastError()
                 return
@@ -226,7 +236,7 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
 
         _markModeFlow.value = markMode
         if (markMode.not()) {
-            _markedEpisodeIdsFlow.value = emptyList()
+            markedEpisodeIdsFlow.value = emptyList()
         }
     }
 
@@ -236,7 +246,7 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
     fun playLocalEpisode(episodeHistory: EpisodeHistoryEntity) {
         viewModelScope.launch(Dispatchers.IO) {
             if (setupHistorySource(episodeHistory)) {
-                _playVideoFlow.emit(Any())
+                playVideoMutableFlow.emit(Any())
             }
         }
     }
@@ -246,10 +256,11 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
      */
     private suspend fun setupHistorySource(episodeHistory: EpisodeHistoryEntity): Boolean {
         showLoading()
-        val mediaSource = episodeHistory.library
-            ?.let { StorageFactory.createStorage(it) }
-            ?.run { historyFile(episodeHistory.entity) }
-            ?.let { StorageVideoSourceFactory.create(it) }
+        val mediaSource =
+            episodeHistory.library
+                ?.let { StorageFactory.createStorage(it) }
+                ?.run { historyFile(episodeHistory.entity) }
+                ?.let { StorageVideoSourceFactory.create(it) }
         hideLoading()
 
         if (mediaSource == null) {
@@ -262,12 +273,13 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
     }
 
     private fun media3LaunchParams(history: EpisodeHistoryEntity): Media3LaunchParams {
-        val mediaId = history.entity.episodeId?.takeIf { it.isNotBlank() }
-            ?: history.entity.uniqueKey
+        val mediaId =
+            history.entity.episodeId?.takeIf { it.isNotBlank() }
+                ?: history.entity.uniqueKey
         val mediaType = history.library?.mediaType ?: history.entity.mediaType
         return Media3LaunchParams(
             mediaId = mediaId,
-            sourceType = mediaType.toMedia3SourceType()
+            sourceType = mediaType.toMedia3SourceType(),
         )
     }
 
@@ -275,41 +287,43 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
      * 标记所有剧集
      */
     fun markAllEpisode() {
-        val markedIds = _episodeListFlow.value
-            .filter { it.markAble }
-            .map { it.episodeId }
-        _markedEpisodeIdsFlow.value = markedIds
+        val markedIds =
+            episodeListFlow.value
+                .filter { it.markAble }
+                .map { it.episodeId }
+        markedEpisodeIdsFlow.value = markedIds
     }
 
     /**
      * 反选剧集标记
      */
     fun reverseEpisodeMark() {
-        val currentMarkedIds = _markedEpisodeIdsFlow.value
-        val newMarkedIds = _episodeListFlow.value
-            .filter { it.markAble && currentMarkedIds.contains(it.episodeId).not() }
-            .map { it.episodeId }
-        _markedEpisodeIdsFlow.value = newMarkedIds
+        val currentMarkedIds = markedEpisodeIdsFlow.value
+        val newMarkedIds =
+            episodeListFlow.value
+                .filter { it.markAble && currentMarkedIds.contains(it.episodeId).not() }
+                .map { it.episodeId }
+        markedEpisodeIdsFlow.value = newMarkedIds
     }
 
     /**
      * 标记剧集
      */
     fun markEpisodeById(episodeId: String) {
-        val markedIds = _markedEpisodeIdsFlow.value.toMutableList()
+        val markedIds = markedEpisodeIdsFlow.value.toMutableList()
         if (markedIds.contains(episodeId)) {
             markedIds.remove(episodeId)
         } else {
             markedIds.add(episodeId)
         }
-        _markedEpisodeIdsFlow.value = markedIds
+        markedEpisodeIdsFlow.value = markedIds
     }
 
     /**
      * 提交已标记的剧集列表为已观看
      */
     fun submitMarkedEpisodesViewed() {
-        val markedIds = _markedEpisodeIdsFlow.value
+        val markedIds = markedEpisodeIdsFlow.value
         if (markedIds.isEmpty()) {
             "未选中需要标记为已看的剧集".toastError()
             return
@@ -332,16 +346,15 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
                     exception ?: RuntimeException("Add episode play history failed with unknown error"),
                     "AnimeEpisodeFragmentViewModel",
                     "submitEpisodesViewed",
-                    "剧集ID列表: ${episodeIds.joinToString(", ")}"
+                    "剧集ID列表: ${episodeIds.joinToString(", ")}",
                 )
                 exception?.message?.toastError()
                 return@launch
             }
 
             _markModeFlow.emit(false)
-            _markedEpisodeIdsFlow.emit(emptyList())
+            markedEpisodeIdsFlow.emit(emptyList())
             _refreshBangumiFlow.emit(Any())
         }
     }
-
 }

@@ -8,7 +8,10 @@ import kotlinx.coroutines.launch
 class ScanFilterFragmentViewModel : BaseViewModel() {
     val folderLiveData = DatabaseManager.instance.getVideoDao().getAllFolder()
 
-    fun updateFolder(folderPath: String, filter: Boolean){
+    fun updateFolder(
+        folderPath: String,
+        filter: Boolean
+    ) {
         viewModelScope.launch {
             DatabaseManager.instance.getVideoDao().updateFolderFilter(filter, folderPath)
         }

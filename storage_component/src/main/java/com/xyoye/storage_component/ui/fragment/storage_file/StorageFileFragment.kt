@@ -19,9 +19,7 @@ import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.FragmentStorageFileBinding
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
 
-class StorageFileFragment :
-    BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>() {
-
+class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>() {
     private val directory: StorageFile? by lazy { ownerActivity.directory }
     private var lastFocusedIndex = RecyclerView.NO_POSITION
     private var pendingFocusIndex = RecyclerView.NO_POSITION
@@ -39,7 +37,7 @@ class StorageFileFragment :
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            StorageFileFragmentViewModel::class.java
+            StorageFileFragmentViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.fragment_storage_file
@@ -83,7 +81,7 @@ class StorageFileFragment :
         LogFacade.d(
             LogModule.STORAGE,
             TAG,
-            "setRecyclerViewItemFocusAble focusAble=$focusAble childCount=${binding.storageFileRv.childCount}"
+            "setRecyclerViewItemFocusAble focusAble=$focusAble childCount=${binding.storageFileRv.childCount}",
         )
         binding.storageFileRv.children.forEach { child ->
             val target = child.findViewWithTag<View>(focusTag) ?: child
@@ -104,14 +102,16 @@ class StorageFileFragment :
                     return@setOnKeyListener false
                 }
 
-                val rvAdapter = adapter ?: run {
-                    LogFacade.w(LogModule.STORAGE, TAG, "key event adapter null keyCode=$keyCode")
-                    return@setOnKeyListener false
-                }
-                val focusedChild = focusedChild ?: run {
-                    LogFacade.w(LogModule.STORAGE, TAG, "key event focusedChild null keyCode=$keyCode")
-                    return@setOnKeyListener false
-                }
+                val rvAdapter =
+                    adapter ?: run {
+                        LogFacade.w(LogModule.STORAGE, TAG, "key event adapter null keyCode=$keyCode")
+                        return@setOnKeyListener false
+                    }
+                val focusedChild =
+                    focusedChild ?: run {
+                        LogFacade.w(LogModule.STORAGE, TAG, "key event focusedChild null keyCode=$keyCode")
+                        return@setOnKeyListener false
+                    }
                 val currentIndex = getChildAdapterPosition(focusedChild)
                 if (currentIndex == RecyclerView.NO_POSITION) {
                     LogFacade.w(LogModule.STORAGE, TAG, "key event invalid position keyCode=$keyCode")
@@ -127,7 +127,7 @@ class StorageFileFragment :
                             LogFacade.d(
                                 LogModule.STORAGE,
                                 TAG,
-                                "key DOWN current=$currentIndex target=$nextIndex moved=$moved count=${rvAdapter.itemCount} repeat=${event.repeatCount}"
+                                "key DOWN current=$currentIndex target=$nextIndex moved=$moved count=${rvAdapter.itemCount} repeat=${event.repeatCount}",
                             )
                             if (moved) {
                                 lastFocusedIndex = nextIndex
@@ -138,7 +138,7 @@ class StorageFileFragment :
                             LogFacade.d(
                                 LogModule.STORAGE,
                                 TAG,
-                                "key DOWN reach end current=$currentIndex count=${rvAdapter.itemCount}"
+                                "key DOWN reach end current=$currentIndex count=${rvAdapter.itemCount}",
                             )
                             true
                         }
@@ -151,7 +151,7 @@ class StorageFileFragment :
                             LogFacade.d(
                                 LogModule.STORAGE,
                                 TAG,
-                                "key UP current=$currentIndex target=$previousIndex moved=$moved count=${rvAdapter.itemCount} repeat=${event.repeatCount}"
+                                "key UP current=$currentIndex target=$previousIndex moved=$moved count=${rvAdapter.itemCount} repeat=${event.repeatCount}",
                             )
                             if (moved) {
                                 lastFocusedIndex = previousIndex
@@ -185,17 +185,18 @@ class StorageFileFragment :
             return
         }
         val hasPending = pendingFocusIndex != RecyclerView.NO_POSITION && !reversed
-        val desiredIndex = when {
-            hasPending -> pendingFocusIndex
-            reversed -> adapter.itemCount - 1
-            else -> 0
-        }
+        val desiredIndex =
+            when {
+                hasPending -> pendingFocusIndex
+                reversed -> adapter.itemCount - 1
+                else -> 0
+            }
         val targetIndex = desiredIndex.coerceIn(0, adapter.itemCount - 1)
         pendingFocusIndex = RecyclerView.NO_POSITION
         LogFacade.d(
             LogModule.STORAGE,
             TAG,
-            "requestFocus start reversed=$reversed count=${adapter.itemCount} target=$targetIndex"
+            "requestFocus start reversed=$reversed count=${adapter.itemCount} target=$targetIndex",
         )
         if (binding.storageFileRv.requestIndexChildFocus(targetIndex)) {
             LogFacade.d(LogModule.STORAGE, TAG, "requestFocus direct success target=$targetIndex")
@@ -216,10 +217,11 @@ class StorageFileFragment :
     fun focusFile(uniqueKey: String) {
         val binding = bindingOrNull ?: return
         val adapter = binding.storageFileRv.adapter as? BaseAdapter ?: return
-        val targetIndex = adapter.items.indexOfFirst { item ->
-            val storageFile = item as? StorageFile ?: return@indexOfFirst false
-            storageFile.playHistory?.uniqueKey == uniqueKey
-        }
+        val targetIndex =
+            adapter.items.indexOfFirst { item ->
+                val storageFile = item as? StorageFile ?: return@indexOfFirst false
+                storageFile.playHistory?.uniqueKey == uniqueKey
+            }
         if (targetIndex == -1) {
             LogFacade.w(LogModule.STORAGE, TAG, "focusFile target not found uniqueKey=$uniqueKey")
             return
@@ -255,5 +257,4 @@ class StorageFileFragment :
             LogFacade.d(LogModule.STORAGE, TAG, "saveCurrentFocusIndex index=$index")
         }
     }
-
 }

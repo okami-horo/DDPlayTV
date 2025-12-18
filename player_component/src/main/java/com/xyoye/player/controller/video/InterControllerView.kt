@@ -11,7 +11,6 @@ import com.xyoye.player.wrapper.ControlWrapper
  */
 
 interface InterControllerView {
-
     fun attach(controlWrapper: ControlWrapper)
 
     fun getView(): View
@@ -20,7 +19,10 @@ interface InterControllerView {
 
     fun onPlayStateChanged(playState: PlayState) {}
 
-    fun onProgressChanged(duration: Long, position: Long) {}
+    fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {}
 
     fun onLockStateChanged(isLocked: Boolean) {}
 

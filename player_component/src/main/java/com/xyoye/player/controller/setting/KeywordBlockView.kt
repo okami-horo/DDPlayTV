@@ -23,7 +23,6 @@ class KeywordBlockView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutKeywordBlockBinding>(context, attrs, defStyleAttr) {
-
     private var addKeyword: ((keyword: String, isRegex: Boolean) -> Unit)? = null
     private var removeKeyword: ((id: Int) -> Unit)? = null
     private val keywordList = mutableListOf<DanmuBlockEntity>()
@@ -38,7 +37,10 @@ class KeywordBlockView(
 
     override fun getGravity() = Gravity.START
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (isSettingShowing().not()) {
             return false
         }
@@ -75,7 +77,7 @@ class KeywordBlockView(
                 return@setOnClickListener
             }
 
-            //是否为正则表达式
+            // 是否为正则表达式
             if (newKeyword.startsWith("regex=")) {
                 newKeyword = newKeyword.substring(6)
                 isRegex = true
@@ -109,7 +111,7 @@ class KeywordBlockView(
                 data?.keyword ?: ""
             }
 
-            //设置正则类型的标签为选中状态
+            // 设置正则类型的标签为选中状态
             val regexPositionList = mutableListOf<Int>()
             for ((index, entity) in it.withIndex()) {
                 if (entity.isRegex) {
@@ -118,7 +120,7 @@ class KeywordBlockView(
             }
             viewBinding.keywordLabelsView.setSelects(regexPositionList)
 
-            //按正则和关键字屏蔽
+            // 按正则和关键字屏蔽
             val regexList = mutableListOf<String>()
             val keywordList = mutableListOf<String>()
             it.forEach { entity ->
@@ -149,8 +151,10 @@ class KeywordBlockView(
         if (viewBinding.keywordBlockAddTv.hasFocus()) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.keywordBlockAddEt.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.keywordLabelsView.getChildAt(0)
-                    ?.requestFocus()
+                KeyEvent.KEYCODE_DPAD_DOWN ->
+                    viewBinding.keywordLabelsView
+                        .getChildAt(0)
+                        ?.requestFocus()
             }
             return true
         }
@@ -159,8 +163,9 @@ class KeywordBlockView(
     }
 
     private fun handleKeyLabelsView(keyCode: Int): Boolean {
-        val focusedChild = viewBinding.keywordLabelsView.focusedChild
-            ?: return false
+        val focusedChild =
+            viewBinding.keywordLabelsView.focusedChild
+                ?: return false
         val position = viewBinding.keywordLabelsView.indexOfChild(focusedChild)
         if (position == -1) {
             return false
@@ -169,20 +174,21 @@ class KeywordBlockView(
             viewBinding.keywordBlockAddTv.requestFocus()
             return true
         }
-        if (position == viewBinding.keywordLabelsView.childCount - 1
-            && (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_DOWN)
+        if (position == viewBinding.keywordLabelsView.childCount - 1 &&
+            (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_DOWN)
         ) {
             viewBinding.keywordBlockAddEt.requestFocus()
             return true
         }
 
-        val targetIndex = when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_LEFT -> position - 1
-            KeyEvent.KEYCODE_DPAD_RIGHT -> position + 1
-            KeyEvent.KEYCODE_DPAD_UP -> position - 1
-            KeyEvent.KEYCODE_DPAD_DOWN -> position + 1
-            else -> position
-        }
+        val targetIndex =
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> position - 1
+                KeyEvent.KEYCODE_DPAD_RIGHT -> position + 1
+                KeyEvent.KEYCODE_DPAD_UP -> position - 1
+                KeyEvent.KEYCODE_DPAD_DOWN -> position + 1
+                else -> position
+            }
         viewBinding.keywordLabelsView.getChildAt(targetIndex)?.requestFocus()
         return true
     }

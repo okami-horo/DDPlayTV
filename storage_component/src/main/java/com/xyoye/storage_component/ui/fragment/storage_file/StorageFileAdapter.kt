@@ -54,8 +54,10 @@ class StorageFileAdapter(
     private val activity: StorageFileActivity,
     private val viewModel: StorageFileFragmentViewModel
 ) {
-
-    private enum class ManageAction(val title: String, val icon: Int) {
+    private enum class ManageAction(
+        val title: String,
+        val icon: Int
+    ) {
         // TV端暂时关闭投屏
 //        SCREENCAST("投屏", com.xyoye.common_component.R.drawable.ic_video_cast),
         BIND_DANMU("手动查找弹幕", com.xyoye.common_component.R.drawable.ic_bind_danmu_manual),
@@ -70,8 +72,8 @@ class StorageFileAdapter(
 
     private val tagDecoration = ItemDecorationOrientation(5.dp(), 0, RecyclerView.HORIZONTAL)
 
-    fun create(): BaseAdapter {
-        return buildAdapter {
+    fun create(): BaseAdapter =
+        buildAdapter {
             setupVerticalAnimation()
 
             setupDiffUtil {
@@ -95,21 +97,22 @@ class StorageFileAdapter(
                 initView(videoItem())
             }
         }
-    }
 
-    private fun isSameStorageFileItem() = { old: Any, new: Any ->
-        (old as? StorageFile)?.uniqueKey() == (new as? StorageFile)?.uniqueKey()
-    }
+    private fun isSameStorageFileItem() =
+        { old: Any, new: Any ->
+            (old as? StorageFile)?.uniqueKey() == (new as? StorageFile)?.uniqueKey()
+        }
 
-    private fun isSameStorageFileContent() = { old: Any, new: Any ->
-        val oldItem = old as? StorageFile?
-        val newItem = new as? StorageFile?
-        oldItem?.fileUrl() == newItem?.fileUrl()
-                && oldItem?.fileName() == newItem?.fileName()
-                && oldItem?.childFileCount() == newItem?.childFileCount()
-                && oldItem?.playHistory == newItem?.playHistory
-                && oldItem?.playHistory?.isLastPlay == newItem?.playHistory?.isLastPlay
-    }
+    private fun isSameStorageFileContent() =
+        { old: Any, new: Any ->
+            val oldItem = old as? StorageFile?
+            val newItem = new as? StorageFile?
+            oldItem?.fileUrl() == newItem?.fileUrl() &&
+                oldItem?.fileName() == newItem?.fileName() &&
+                oldItem?.childFileCount() == newItem?.childFileCount() &&
+                oldItem?.playHistory == newItem?.playHistory &&
+                oldItem?.playHistory?.isLastPlay == newItem?.playHistory?.isLastPlay
+        }
 
     private fun isDirectoryItem(data: Any) = data is StorageFile && data.isDirectory()
 
@@ -118,10 +121,12 @@ class StorageFileAdapter(
     private fun BaseViewHolderCreator<ItemStorageFolderBinding>.directoryItem() =
         { data: StorageFile ->
             val childFileCount = data.childFileCount()
-            val fileCount = if (childFileCount > 0)
-                "${childFileCount}文件"
-            else
-                "目录"
+            val fileCount =
+                if (childFileCount > 0) {
+                    "${childFileCount}文件"
+                } else {
+                    "目录"
+                }
             itemBinding.folderTv.text = getRecognizableFileName(data)
             itemBinding.folderTv.setTextColor(getTitleColor(data))
             itemBinding.fileCountTv.text = fileCount
@@ -130,40 +135,45 @@ class StorageFileAdapter(
             }
         }
 
-    private fun BaseViewHolderCreator<ItemStorageVideoBinding>.videoItem() = { data: StorageFile ->
-        itemBinding.run {
-            coverIv.loadStorageFileCover(data)
+    private fun BaseViewHolderCreator<ItemStorageVideoBinding>.videoItem() =
+        { data: StorageFile ->
+            itemBinding.run {
+                coverIv.loadStorageFileCover(data)
 
-            titleTv.text = data.fileName()
-            titleTv.setTextColor(getTitleColor(data))
+                titleTv.text = data.fileName()
+                titleTv.setTextColor(getTitleColor(data))
 
-            val duration = getDuration(data)
-            durationTv.text = duration
-            durationTv.isVisible = duration.isNotEmpty()
+                val duration = getDuration(data)
+                durationTv.text = duration
+                durationTv.isVisible = duration.isNotEmpty()
 
-            setupVideoTag(tagRv, data)
+                setupVideoTag(tagRv, data)
 
-            itemLayout.setOnClickListener {
-                activity.openFile(data)
-            }
+                itemLayout.setOnClickListener {
+                    activity.openFile(data)
+                }
 
-            itemLayout.setOnLongClickListener {
-                showMoreAction(data, createShareOptions(itemLayout))
-                return@setOnLongClickListener true
-            }
+                itemLayout.setOnLongClickListener {
+                    showMoreAction(data, createShareOptions(itemLayout))
+                    return@setOnLongClickListener true
+                }
 
-            moreActionIv.setOnClickListener {
-                showMoreAction(data, createShareOptions(itemLayout))
+                moreActionIv.setOnClickListener {
+                    showMoreAction(data, createShareOptions(itemLayout))
+                }
             }
         }
-    }
 
-    private fun setupVideoTag(tagRv: RecyclerView, data: StorageFile) {
+    private fun setupVideoTag(
+        tagRv: RecyclerView,
+        data: StorageFile
+    ) {
         tagRv.apply {
             layoutManager = horizontal()
-            adapter = buildAdapter {
-                addItem(R.layout.item_storage_video_tag) { initView(tagItem()) }
-            }
+            adapter =
+                buildAdapter {
+                    addItem(R.layout.item_storage_video_tag) { initView(tagItem()) }
+                }
             removeItemDecoration(tagDecoration)
             addItemDecoration(tagDecoration)
             setData(generateVideoTags(data))
@@ -200,12 +210,15 @@ class StorageFileAdapter(
         return tagList
     }
 
-    private fun getTitleColor(file: StorageFile): Int {
-        return when (file.playHistory?.isLastPlay == true) {
-            true -> com.xyoye.common_component.R.color.text_theme.toResColor(activity)
-            else -> com.xyoye.common_component.R.color.text_black.toResColor(activity)
+    private fun getTitleColor(file: StorageFile): Int =
+        when (file.playHistory?.isLastPlay == true) {
+            true ->
+                com.xyoye.common_component.R.color.text_theme
+                    .toResColor(activity)
+            else ->
+                com.xyoye.common_component.R.color.text_black
+                    .toResColor(activity)
         }
-    }
 
     private fun getProgress(file: StorageFile): String {
         val position = file.playHistory?.videoPosition ?: 0
@@ -246,19 +259,16 @@ class StorageFileAdapter(
         } ?: ""
     }
 
-    private fun isShowDanmu(file: StorageFile): Boolean {
-        return file.playHistory?.danmuPath?.isNotEmpty() == true
-    }
+    private fun isShowDanmu(file: StorageFile): Boolean = file.playHistory?.danmuPath?.isNotEmpty() == true
 
-    private fun isShowSubtitle(file: StorageFile): Boolean {
-        return file.playHistory?.subtitlePath?.isNotEmpty() == true
-    }
+    private fun isShowSubtitle(file: StorageFile): Boolean = file.playHistory?.subtitlePath?.isNotEmpty() == true
 
-    private fun isShowAudio(file: StorageFile): Boolean {
-        return file.playHistory?.audioPath?.isNotEmpty() == true
-    }
+    private fun isShowAudio(file: StorageFile): Boolean = file.playHistory?.audioPath?.isNotEmpty() == true
 
-    private fun showMoreAction(file: StorageFile, options: ActivityOptionsCompat) {
+    private fun showMoreAction(
+        file: StorageFile,
+        options: ActivityOptionsCompat
+    ) {
         BottomActionDialog(activity, getMoreActions(file)) {
             when (it.actionId) {
                 ManageAction.BIND_DANMU -> bindExtraSource(file, true, options)
@@ -273,7 +283,6 @@ class StorageFileAdapter(
             return@BottomActionDialog true
         }.show()
     }
-
 
     private fun getMoreActions(file: StorageFile) =
         mutableListOf<SheetActionBean>().apply {
@@ -299,24 +308,24 @@ class StorageFileAdapter(
         options: ActivityOptionsCompat
     ) {
         activity.shareStorageFile = file
-        ARouter.getInstance()
+        ARouter
+            .getInstance()
             .build(RouteTable.Local.BindExtraSource)
             .withBoolean("isSearchDanmu", bindDanmu)
             .withOptionsCompat(options)
             .navigation(activity)
     }
 
-    private fun createShareOptions(
-        itemLayout: ConstraintLayout,
-    ) = ActivityOptionsCompat.makeSceneTransitionAnimation(
-        activity,
-        Pair(itemLayout, itemLayout.transitionName),
-    )
+    private fun createShareOptions(itemLayout: ConstraintLayout) =
+        ActivityOptionsCompat.makeSceneTransitionAnimation(
+            activity,
+            Pair(itemLayout, itemLayout.transitionName),
+        )
 
     private fun bindAudioSource(file: StorageFile) {
         FileManagerDialog(
             activity,
-            FileManagerAction.ACTION_SELECT_AUDIO
+            FileManagerAction.ACTION_SELECT_AUDIO,
         ) {
             if (it.toFile().isInvalid()) {
                 ToastCenter.showError("绑定音频失败，音频不存在或内容为空")

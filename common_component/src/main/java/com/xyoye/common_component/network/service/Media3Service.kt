@@ -14,7 +14,6 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface Media3Service {
-
     @POST("v1/media3/sessions")
     suspend fun createSession(
         @Body request: PlaybackSessionRequestData

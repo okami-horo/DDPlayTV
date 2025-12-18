@@ -7,17 +7,15 @@ import androidx.databinding.InverseMethod
  */
 
 object BindingConverter {
-
     @InverseMethod("stringToInt")
     @JvmStatic
-    fun intToString(oldValue: Int): String {
-        return oldValue.toString()
-    }
+    fun intToString(oldValue: Int): String = oldValue.toString()
 
     @JvmStatic
     fun stringToInt(oldValue: String): Int {
-        if (oldValue.isEmpty())
+        if (oldValue.isEmpty()) {
             return 0
+        }
         return oldValue.toInt()
     }
 }

@@ -13,16 +13,18 @@ import java.io.IOException
  */
 
 object JsonHelper {
-
-    val MO_SHI: Moshi = Moshi.Builder()
-        .add(NullToEmptyStringAdapter)
-        .add(NullToLongZeroAdapter)
-        .add(NullToIntZeroAdapter)
-        .build()
+    val MO_SHI: Moshi =
+        Moshi
+            .Builder()
+            .add(NullToEmptyStringAdapter)
+            .add(NullToLongZeroAdapter)
+            .add(NullToIntZeroAdapter)
+            .build()
 
     inline fun <reified T> parseJson(jsonStr: String): T? {
-        if (jsonStr.isEmpty())
+        if (jsonStr.isEmpty()) {
             return null
+        }
 
         try {
             val jsonAdapter = MO_SHI.adapter(T::class.java)
@@ -31,14 +33,14 @@ object JsonHelper {
             ErrorReportHelper.postCatchedException(
                 e,
                 "JsonHelper.parseJson",
-                "JSON解析IO异常: $jsonStr"
+                "JSON解析IO异常: $jsonStr",
             )
             e.printStackTrace()
         } catch (e: JsonDataException) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "JsonHelper.parseJson",
-                "JSON数据格式异常: $jsonStr"
+                "JSON数据格式异常: $jsonStr",
             )
             e.printStackTrace()
         }
@@ -46,8 +48,9 @@ object JsonHelper {
     }
 
     inline fun <reified T> parseJsonList(jsonStr: String): List<T> {
-        if (jsonStr.isEmpty())
+        if (jsonStr.isEmpty()) {
             return emptyList()
+        }
 
         try {
             val type = Types.newParameterizedType(List::class.java, T::class.java)
@@ -57,14 +60,14 @@ object JsonHelper {
             ErrorReportHelper.postCatchedException(
                 e,
                 "JsonHelper.parseJsonList",
-                "JSON列表解析IO异常: $jsonStr"
+                "JSON列表解析IO异常: $jsonStr",
             )
             e.printStackTrace()
         } catch (e: JsonDataException) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "JsonHelper.parseJsonList",
-                "JSON列表数据格式异常: $jsonStr"
+                "JSON列表数据格式异常: $jsonStr",
             )
             e.printStackTrace()
         }
@@ -72,8 +75,9 @@ object JsonHelper {
     }
 
     fun parseJsonMap(jsonStr: String): Map<String, String> {
-        if (jsonStr.isEmpty())
+        if (jsonStr.isEmpty()) {
             return emptyMap()
+        }
 
         try {
             val type =
@@ -84,14 +88,14 @@ object JsonHelper {
             ErrorReportHelper.postCatchedException(
                 e,
                 "JsonHelper.parseJsonMap",
-                "JSON映射解析IO异常: $jsonStr"
+                "JSON映射解析IO异常: $jsonStr",
             )
             e.printStackTrace()
         } catch (e: JsonDataException) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "JsonHelper.parseJsonMap",
-                "JSON映射数据格式异常: $jsonStr"
+                "JSON映射数据格式异常: $jsonStr",
             )
             e.printStackTrace()
         }
@@ -109,14 +113,14 @@ object JsonHelper {
             ErrorReportHelper.postCatchedException(
                 e,
                 "JsonHelper.toJson",
-                "对象转JSON IO异常"
+                "对象转JSON IO异常",
             )
             e.printStackTrace()
         } catch (e: JsonDataException) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "JsonHelper.toJson",
-                "对象转JSON数据格式异常"
+                "对象转JSON数据格式异常",
             )
             e.printStackTrace()
         }

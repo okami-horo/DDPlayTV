@@ -27,6 +27,7 @@ import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.media3.Media3SessionClient
 import com.xyoye.common_component.receiver.HeadsetBroadcastReceiver
 import com.xyoye.common_component.receiver.PlayerReceiverListener
 import com.xyoye.common_component.receiver.ScreenBroadcastReceiver
@@ -37,29 +38,28 @@ import com.xyoye.common_component.utils.screencast.ScreencastHandler
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.VideoTrackBean
-import com.xyoye.data_component.enums.DanmakuLanguage
-import com.xyoye.data_component.enums.MediaType
-import com.xyoye.data_component.enums.PlayerType
-import com.xyoye.data_component.enums.SurfaceType
-import com.xyoye.data_component.enums.SubtitleFallbackReason
-import com.xyoye.data_component.enums.VLCAudioOutput
-import com.xyoye.data_component.enums.VLCHWDecode
-import com.xyoye.common_component.media3.Media3SessionClient
 import com.xyoye.data_component.entity.media3.Media3BackgroundMode
 import com.xyoye.data_component.entity.media3.PlaybackSession
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
+import com.xyoye.data_component.enums.DanmakuLanguage
+import com.xyoye.data_component.enums.MediaType
+import com.xyoye.data_component.enums.PlayerType
+import com.xyoye.data_component.enums.SubtitleFallbackReason
+import com.xyoye.data_component.enums.SurfaceType
+import com.xyoye.data_component.enums.VLCAudioOutput
+import com.xyoye.data_component.enums.VLCHWDecode
 import com.xyoye.player.DanDanVideoPlayer
-import com.xyoye.player.kernel.impl.vlc.VlcAudioPolicy
 import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
-import com.xyoye.player_component.BR
-import com.xyoye.player_component.R
-import com.xyoye.player_component.databinding.ActivityPlayerBinding
-import com.xyoye.player_component.widgets.popup.PlayerPopupManager
+import com.xyoye.player.kernel.impl.vlc.VlcAudioPolicy
 import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
 import com.xyoye.player.subtitle.debug.PlaybackSessionStatusProvider
 import com.xyoye.player.subtitle.ui.SubtitleFallbackDialog
 import com.xyoye.player.subtitle.ui.SubtitleFallbackDialog.SubtitleFallbackAction
+import com.xyoye.player_component.BR
+import com.xyoye.player_component.R
+import com.xyoye.player_component.databinding.ActivityPlayerBinding
+import com.xyoye.player_component.widgets.popup.PlayerPopupManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -69,9 +69,11 @@ import java.io.File
 
 @UnstableApi
 @Route(path = RouteTable.Player.PlayerCenter)
-class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
-    PlayerReceiverListener, ScreencastHandler, SubtitleFallbackDispatcher {
-
+class PlayerActivity :
+    BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
+    PlayerReceiverListener,
+    ScreencastHandler,
+    SubtitleFallbackDispatcher {
     companion object {
         private const val MEDIA3_SESSION_SERVICE =
             "com.xyoye.dandanplay.app.service.Media3SessionService"
@@ -88,7 +90,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     private val danmuViewModel: PlayerDanmuViewModel by lazy {
         ViewModelProvider(
             viewModelStore,
-            ViewModelProvider.AndroidViewModelFactory(application)
+            ViewModelProvider.AndroidViewModelFactory(application),
         )[PlayerDanmuViewModel::class.java]
     }
 
@@ -102,23 +104,23 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         }
     }
 
-    //悬浮窗
+    // 悬浮窗
     private val popupManager: PlayerPopupManager by lazy {
         PlayerPopupManager(this)
     }
 
-    //锁屏广播
+    // 锁屏广播
     private lateinit var screenLockReceiver: ScreenBroadcastReceiver
 
-    //耳机广播
+    // 耳机广播
     private lateinit var headsetReceiver: HeadsetBroadcastReceiver
 
     private var videoSource: BaseVideoSource? = null
 
-    //电量管理
+    // 电量管理
     /*
     private var batteryHelper = BatteryHelper()
-    */
+     */
     private var media3SessionClient: Media3SessionClient? = null
     private var media3ServiceBound = false
     private var media3BackgroundModes: Set<Media3BackgroundMode> = emptySet()
@@ -127,38 +129,44 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     private var latestMedia3Capability: PlayerCapabilityContract? = null
     private var subtitleFallbackDialog: SubtitleFallbackDialog? = null
 
-    private val media3ServiceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            val client = service as? Media3SessionClient ?: return
-            media3SessionClient = client
-            media3ServiceBound = true
-            pushMedia3SessionToService()
-            media3BackgroundJob = lifecycleScope.launch {
-                client.backgroundModes().collectLatest { modes ->
-                    updateBackgroundModes(modes)
-                }
+    private val media3ServiceConnection =
+        object : ServiceConnection {
+            override fun onServiceConnected(
+                name: ComponentName?,
+                service: IBinder?
+            ) {
+                val client = service as? Media3SessionClient ?: return
+                media3SessionClient = client
+                media3ServiceBound = true
+                pushMedia3SessionToService()
+                media3BackgroundJob =
+                    lifecycleScope.launch {
+                        client.backgroundModes().collectLatest { modes ->
+                            updateBackgroundModes(modes)
+                        }
+                    }
+            }
+
+            override fun onServiceDisconnected(name: ComponentName?) {
+                media3ServiceBound = false
+                media3SessionClient = null
+                media3BackgroundJob?.cancel()
+                media3BackgroundJob = null
+                media3BackgroundModes = emptySet()
             }
         }
-
-        override fun onServiceDisconnected(name: ComponentName?) {
-            media3ServiceBound = false
-            media3SessionClient = null
-            media3BackgroundJob?.cancel()
-            media3BackgroundJob = null
-            media3BackgroundModes = emptySet()
-        }
-    }
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            PlayerViewModel::class.java
+            PlayerViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_player
 
     override fun initStatusBar() {
-        ImmersionBar.with(this)
+        ImmersionBar
+            .with(this)
             .fullScreen(true)
             .hideBar(BarHide.FLAG_HIDE_BAR)
             .init()
@@ -170,7 +178,11 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         LogFacade.d(
             LogModule.PLAYER,
             TAG_ACTIVITY,
-            "initView start intent=${intent?.action.orEmpty()} source=${VideoSourceManager.getInstance().getSource()?.javaClass?.simpleName ?: "null"}"
+            "initView start intent=${intent?.action.orEmpty()} source=${VideoSourceManager
+                .getInstance()
+                .getSource()
+                ?.javaClass
+                ?.simpleName ?: "null"}",
         )
 
         registerReceiver()
@@ -221,6 +233,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             unbindService(media3ServiceConnection)
             media3ServiceBound = false
         }
+        media3SessionClient = null
         media3BackgroundJob?.cancel()
         media3BackgroundJob = null
         media3BackgroundModes = emptySet()
@@ -234,7 +247,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         LogFacade.d(
             LogModule.PLAYER,
             TAG_ACTIVITY,
-            "onPause popupNotShowing=$popupNotShowing backgroundAllowed=$backgroundAllowed"
+            "onPause popupNotShowing=$popupNotShowing backgroundAllowed=$backgroundAllowed",
         )
         if (popupNotShowing && backgroundPlayDisable) {
             danDanPlayer.pause()
@@ -252,7 +265,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         danDanPlayer.release()
         /*
         batteryHelper.release()
-        */
+         */
         super.onDestroy()
     }
 
@@ -265,35 +278,39 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         finish()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        return danDanPlayer.onKeyDown(keyCode, event) or super.onKeyDown(keyCode, event)
-    }
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean = danDanPlayer.onKeyDown(keyCode, event) or super.onKeyDown(keyCode, event)
 
     override fun onScreenLocked() {
-
     }
 
     override fun onHeadsetRemoved() {
         danDanPlayer.pause()
     }
 
-    override fun onSubtitleBackendFallback(reason: SubtitleFallbackReason, error: Throwable?) {
+    override fun onSubtitleBackendFallback(
+        reason: SubtitleFallbackReason,
+        error: Throwable?
+    ) {
         runOnUiThread {
             if (subtitleFallbackDialog == null) {
-                subtitleFallbackDialog = SubtitleFallbackDialog(this) { action ->
-                    when (action) {
-                        SubtitleFallbackAction.SWITCH_TO_LEGACY -> handleSubtitleFallbackSwitch(reason)
-                        SubtitleFallbackAction.CONTINUE_CURRENT -> {
-                            LogFacade.w(
-                                LogModule.PLAYER,
-                                TAG_SUBTITLE,
-                                "User chose to continue with libass despite $reason"
-                            )
+                subtitleFallbackDialog =
+                    SubtitleFallbackDialog(this) { action ->
+                        when (action) {
+                            SubtitleFallbackAction.SWITCH_TO_LEGACY -> handleSubtitleFallbackSwitch(reason)
+                            SubtitleFallbackAction.CONTINUE_CURRENT -> {
+                                LogFacade.w(
+                                    LogModule.PLAYER,
+                                    TAG_SUBTITLE,
+                                    "User chose to continue with libass despite $reason",
+                                )
+                            }
                         }
+                    }.also { dialog ->
+                        dialog.setOnDismissListener { subtitleFallbackDialog = null }
                     }
-                }.also { dialog ->
-                    dialog.setOnDismissListener { subtitleFallbackDialog = null }
-                }
             }
             subtitleFallbackDialog?.show()
         }
@@ -305,7 +322,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         }
         SubtitlePreferenceUpdater.persistBackend(
             SubtitleRendererBackend.LEGACY_CANVAS,
-            RendererPreferenceSource.LOCAL_SETTINGS
+            RendererPreferenceSource.LOCAL_SETTINGS,
         )
         PlayerInitializer.Subtitle.backend = SubtitleRendererBackend.LEGACY_CANVAS
         PlaybackSessionStatusProvider.updateBackend(SubtitleRendererBackend.LEGACY_CANVAS)
@@ -319,7 +336,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         LogFacade.i(
             LogModule.PLAYER,
             TAG_CAST,
-            "receive screencast title=${videoSource.getVideoTitle()} type=${videoSource.getMediaType()}"
+            "receive screencast title=${videoSource.getVideoTitle()} type=${videoSource.getMediaType()}",
         )
         lifecycleScope.launch(Dispatchers.Main) {
             applyPlaySource(videoSource)
@@ -331,16 +348,18 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             LogFacade.w(
                 LogModule.PLAYER,
                 TAG_SOURCE,
-                "invalid source url=${source?.getVideoUrl()} type=${source?.getMediaType()}"
+                "invalid source url=${source?.getVideoUrl()} type=${source?.getMediaType()}",
             )
-            CommonDialog.Builder(this).run {
-                content = "解析播放参数失败"
-                addPositive("退出重试") {
-                    it.dismiss()
-                    finish()
-                }
-                build()
-            }.show()
+            CommonDialog
+                .Builder(this)
+                .run {
+                    content = "解析播放参数失败"
+                    addPositive("退出重试") {
+                        it.dismiss()
+                        finish()
+                    }
+                    build()
+                }.show()
             return false
         }
 
@@ -359,7 +378,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             LogFacade.i(
                 LogModule.PLAYER,
                 TAG_DANMAKU,
-                "match success cid=${matchDanmu?.episodeId} title=${curVideoSource.getVideoTitle()}"
+                "match success cid=${matchDanmu?.episodeId} title=${curVideoSource.getVideoTitle()}",
             )
             videoController.showMessage("匹配弹幕成功")
             videoController.addExtendTrack(VideoTrackBean.danmu(matchDanmu))
@@ -382,18 +401,18 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         videoController.apply {
             /*
             setBatteryHelper(batteryHelper)
-            */
+             */
 
-            //播放错误
+            // 播放错误
             observerPlayError {
                 LogFacade.e(
                     LogModule.PLAYER,
                     TAG_PLAYBACK,
-                    "play error title=${danDanPlayer.getVideoSource().getVideoTitle()} position=${danDanPlayer.getCurrentPosition()}"
+                    "play error title=${danDanPlayer.getVideoSource().getVideoTitle()} position=${danDanPlayer.getCurrentPosition()}",
                 )
                 showPlayErrorDialog()
             }
-            //退出播放
+            // 退出播放
             observerExitPlayer {
                 if (popupManager.isShowing()) {
                     LogFacade.d(LogModule.PLAYER, TAG_PLAYBACK, "exit from popup mode")
@@ -403,29 +422,29 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
                 LogFacade.i(
                     LogModule.PLAYER,
                     TAG_PLAYBACK,
-                    "exit player title=${danDanPlayer.getVideoSource().getVideoTitle()}"
+                    "exit player title=${danDanPlayer.getVideoSource().getVideoTitle()}",
                 )
                 finish()
             }
-            //弹幕屏蔽
+            // 弹幕屏蔽
             observerDanmuBlock(
                 cloudBlock = viewModel.cloudDanmuBlockLiveData,
                 add = { keyword, isRegex -> viewModel.addDanmuBlock(keyword, isRegex) },
                 remove = { id -> viewModel.removeDanmuBlock(id) },
-                queryAll = { viewModel.localDanmuBlockLiveData }
+                queryAll = { viewModel.localDanmuBlockLiveData },
             )
-            //弹幕搜索
+            // 弹幕搜索
             observerDanmuSearch(
                 search = { danmuViewModel.searchDanmu(it) },
                 download = { danmuViewModel.downloadDanmu(it) },
-                searchResult = { danmuViewModel.danmuSearchLiveData }
+                searchResult = { danmuViewModel.danmuSearchLiveData },
             )
-            //进入悬浮窗模式
+            // 进入悬浮窗模式
             observerEnterPopupMode {
                 enterPopupMode()
                 enterTaskBackground()
             }
-            //退出悬浮窗模式
+            // 退出悬浮窗模式
             observerExitPopupMode {
                 exitPopupMode()
                 exitTaskBackground()
@@ -442,7 +461,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         LogFacade.i(
             LogModule.PLAYER,
             TAG_SOURCE,
-            "apply start title=${newSource?.getVideoTitle()} type=${newSource?.getMediaType()} urlHash=${newSource?.getVideoUrl()?.hashCode()}"
+            "apply start title=${newSource?.getVideoTitle()} type=${newSource?.getMediaType()} urlHash=${newSource?.getVideoUrl()?.hashCode()}",
         )
         danDanPlayer.recordPlayInfo()
         danDanPlayer.pause()
@@ -479,7 +498,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             LogFacade.i(
                 LogModule.PLAYER,
                 TAG_PLAYBACK,
-                "start title=${source.getVideoTitle()} type=${source.getMediaType()} position=${source.getCurrentPosition()} speed=${PlayerConfig.getNewVideoSpeed()}"
+                "start title=${source.getVideoTitle()} type=${source.getMediaType()} position=${source.getCurrentPosition()} speed=${PlayerConfig.getNewVideoSpeed()}",
             )
         }
         /*
@@ -488,7 +507,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             LogFacade.d(LogModule.PLAYER, TAG_DANMAKU, "send request text=${it.text}")
             viewModel.sendDanmu(source.getDanmu(), it)
         }
-        */
+         */
 
         videoController.setSwitchVideoSourceBlock {
             LogFacade.i(LogModule.PLAYER, TAG_SOURCE, "switch request index=$it title=${source.getVideoTitle()}")
@@ -506,7 +525,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
                 LogFacade.d(
                     LogModule.PLAYER,
                     TAG_SOURCE,
-                    "select directory set path=${parent.absolutePath} type=${source.getMediaType()}"
+                    "select directory set path=${parent.absolutePath} type=${source.getMediaType()}",
                 )
             }
         }
@@ -517,9 +536,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
             LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "load history cid=${historyDanmu.episodeId}")
             videoController.addExtendTrack(VideoTrackBean.danmu(historyDanmu))
         } else if (
-            DanmuConfig.isAutoMatchDanmu()
-            && source.getMediaType() != MediaType.FTP_SERVER
-            && popupManager.isShowing().not()
+            DanmuConfig.isAutoMatchDanmu() &&
+            source.getMediaType() != MediaType.FTP_SERVER &&
+            popupManager.isShowing().not()
         ) {
             LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto match start title=${source.getVideoTitle()}")
             danmuViewModel.matchDanmu(source)
@@ -528,14 +547,14 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         // 视频已绑定字幕，直接加载
         val historySubtitle = source.getSubtitlePath()
         if (historySubtitle != null) {
-            LogFacade.i(LogModule.PLAYER, TAG_SUBTITLE, "load history path=${historySubtitle}")
+            LogFacade.i(LogModule.PLAYER, TAG_SUBTITLE, "load history path=$historySubtitle")
             videoController.addExtendTrack(VideoTrackBean.subtitle(historySubtitle))
         }
 
         // 视频已绑定音频，直接加载
         val historyAudio = source.getAudioPath()
         if (historyAudio != null) {
-            LogFacade.i(LogModule.PLAYER, TAG_SOURCE, "load history path=${historyAudio}")
+            LogFacade.i(LogModule.PLAYER, TAG_SOURCE, "load history path=$historyAudio")
             videoController.addExtendTrack(VideoTrackBean.audio(historyAudio))
         }
     }
@@ -548,7 +567,7 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         registerReceiver(headsetReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
         /*
         batteryHelper.registerReceiver(this)
-        */
+         */
     }
 
     private fun unregisterReceiver() {
@@ -563,21 +582,31 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         /*
         batteryHelper.unregisterReceiver(this)
         LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister battery receiver")
-        */
+         */
     }
 
     private fun initPlayerConfig() {
-        //播放器类型
-        PlayerInitializer.playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
+        // 播放器类型
+        val storedPlayerType = PlayerConfig.getUsePlayerType()
+        val resolvedPlayerType = PlayerType.valueOf(storedPlayerType)
+        if (resolvedPlayerType.value != storedPlayerType) {
+            LogFacade.w(
+                LogModule.PLAYER,
+                TAG_CONFIG,
+                "sanitize playerType stored=$storedPlayerType -> ${resolvedPlayerType.value}",
+            )
+            PlayerConfig.putUsePlayerType(resolvedPlayerType.value)
+        }
+        PlayerInitializer.playerType = resolvedPlayerType
         LogFacade.d(LogModule.PLAYER, TAG_CONFIG, "playerType=${PlayerInitializer.playerType}")
-        //是否使用SurfaceView
+        // 是否使用SurfaceView
         PlayerInitializer.surfaceType =
             if (PlayerConfig.isUseSurfaceView()) SurfaceType.VIEW_SURFACE else SurfaceType.VIEW_TEXTURE
-        //视频速度
+        // 视频速度
         PlayerInitializer.Player.videoSpeed = PlayerConfig.getNewVideoSpeed()
         // 长按视频速度
         PlayerInitializer.Player.pressVideoSpeed = PlayerConfig.getPressVideoSpeed()
-        //自动播放下一集
+        // 自动播放下一集
         PlayerInitializer.Player.isAutoPlayNext = PlayerConfig.isAutoPlayNext()
 
         PlayerInitializer.Player.vlcHWDecode =
@@ -587,10 +616,10 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         LogFacade.d(
             LogModule.PLAYER,
             TAG_CONFIG,
-            "vlc hw=${PlayerInitializer.Player.vlcHWDecode} audio=${PlayerInitializer.Player.vlcAudioOutput} compat=${PlayerConfig.isVlcAudioCompatMode()}"
+            "vlc hw=${PlayerInitializer.Player.vlcHWDecode} audio=${PlayerInitializer.Player.vlcAudioOutput} compat=${PlayerConfig.isVlcAudioCompatMode()}",
         )
 
-        //弹幕配置
+        // 弹幕配置
         PlayerInitializer.Danmu.size = DanmuConfig.getDanmuSize()
         PlayerInitializer.Danmu.speed = DanmuConfig.getDanmuSpeed()
         PlayerInitializer.Danmu.alpha = DanmuConfig.getDanmuAlpha()
@@ -608,10 +637,10 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         LogFacade.d(
             LogModule.PLAYER,
             TAG_CONFIG,
-            "danmu size=${PlayerInitializer.Danmu.size} speed=${PlayerInitializer.Danmu.speed} language=${PlayerInitializer.Danmu.language}"
+            "danmu size=${PlayerInitializer.Danmu.size} speed=${PlayerInitializer.Danmu.speed} language=${PlayerInitializer.Danmu.language}",
         )
 
-        //字幕配置
+        // 字幕配置
         PlayerInitializer.Subtitle.textSize = SubtitleConfig.getTextSize()
         PlayerInitializer.Subtitle.strokeWidth = SubtitleConfig.getStrokeWidth()
         PlayerInitializer.Subtitle.textColor = SubtitleConfig.getTextColor()
@@ -619,20 +648,21 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         PlayerInitializer.Subtitle.alpha = SubtitleConfig.getAlpha()
         PlayerInitializer.Subtitle.verticalOffset = SubtitleConfig.getVerticalOffset()
         val backend = SubtitleRendererBackend.fromName(SubtitleConfig.getSubtitleRendererBackend())
-        PlayerInitializer.Subtitle.backend = if (PlayerInitializer.playerType == PlayerType.TYPE_EXO_PLAYER) {
-            backend
-        } else {
-            LogFacade.w(
-                LogModule.PLAYER,
-                TAG_CONFIG,
-                "libass backend requires ExoPlayer, fallback to legacy for playerType=${PlayerInitializer.playerType}"
-            )
-            SubtitleRendererBackend.LEGACY_CANVAS
-        }
+        PlayerInitializer.Subtitle.backend =
+            if (PlayerInitializer.playerType == PlayerType.TYPE_EXO_PLAYER) {
+                backend
+            } else {
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    TAG_CONFIG,
+                    "libass backend requires ExoPlayer, fallback to legacy for playerType=${PlayerInitializer.playerType}",
+                )
+                SubtitleRendererBackend.LEGACY_CANVAS
+            }
         LogFacade.d(
             LogModule.PLAYER,
             TAG_CONFIG,
-            "subtitle size=${PlayerInitializer.Subtitle.textSize} stroke=${PlayerInitializer.Subtitle.strokeWidth} backend=${PlayerInitializer.Subtitle.backend}"
+            "subtitle size=${PlayerInitializer.Subtitle.textSize} stroke=${PlayerInitializer.Subtitle.strokeWidth} backend=${PlayerInitializer.Subtitle.backend}",
         )
     }
 
@@ -640,26 +670,40 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         val source = videoSource
         val isTorrentSource = source?.getMediaType() == MediaType.MAGNET_LINK
 
-        val tips = if (source is StorageVideoSource && isTorrentSource) {
-            val taskLog = PlayTaskBridge.getTaskLog(source.getPlayTaskId())
-            "播放失败，资源已失效或暂时无法访问，请尝试切换资源$taskLog"
-        } else {
-            "播放失败，请尝试更改播放器设置，或者切换其它播放内核"
-        }
-
-        val builder = AlertDialog.Builder(this@PlayerActivity)
-            .setTitle("错误")
-            .setCancelable(false)
-            .setMessage(tips)
-            .setNegativeButton("退出播放") { dialog, _ ->
-                dialog.dismiss()
-                this@PlayerActivity.finish()
+        val tips =
+            if (source is StorageVideoSource && isTorrentSource) {
+                val taskLog = PlayTaskBridge.getTaskLog(source.getPlayTaskId())
+                "播放失败，资源已失效或暂时无法访问，请尝试切换资源$taskLog"
+            } else {
+                "播放失败，请尝试更改播放器设置，或者切换其它播放内核"
             }
 
-        if (isTorrentSource) {
-            builder.setPositiveButton("播放器设置") { dialog, _ ->
+        val builder =
+            AlertDialog
+                .Builder(this@PlayerActivity)
+                .setTitle("错误")
+                .setCancelable(false)
+                .setMessage(tips)
+                .setNegativeButton("退出播放") { dialog, _ ->
+                    dialog.dismiss()
+                    this@PlayerActivity.finish()
+                }
+
+        if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
+            builder.setPositiveButton("切换默认内核重试") { dialog, _ ->
                 dialog.dismiss()
-                ARouter.getInstance()
+                val fallbackType = PlayerType.TYPE_EXO_PLAYER
+                PlayerConfig.putUsePlayerType(fallbackType.value)
+                initPlayerConfig()
+                videoSource?.let { applyPlaySource(it) } ?: this@PlayerActivity.finish()
+            }
+        }
+
+        if (isTorrentSource) {
+            builder.setNeutralButton("播放器设置") { dialog, _ ->
+                dialog.dismiss()
+                ARouter
+                    .getInstance()
                     .build(RouteTable.User.SettingPlayer)
                     .navigation()
                 this@PlayerActivity.finish()
@@ -700,13 +744,9 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
         media3BackgroundModes = modes
     }
 
-    private fun media3SupportsBackgroundPlayback(): Boolean {
-        return media3BackgroundModes.contains(Media3BackgroundMode.NOTIFICATION)
-    }
+    private fun media3SupportsBackgroundPlayback(): Boolean = media3BackgroundModes.contains(Media3BackgroundMode.NOTIFICATION)
 
-    private fun media3SupportsPip(): Boolean {
-        return media3BackgroundModes.contains(Media3BackgroundMode.PIP)
-    }
+    private fun media3SupportsPip(): Boolean = media3BackgroundModes.contains(Media3BackgroundMode.PIP)
 
     private fun enterPopupMode() {
         if (!media3SupportsPip()) {
@@ -741,9 +781,10 @@ class PlayerActivity : BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     }
 
     private fun exitTaskBackground() {
-        val intent = Intent(this, javaClass).apply {
-            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        }
+        val intent =
+            Intent(this, javaClass).apply {
+                addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            }
         startActivity(intent)
     }
 }

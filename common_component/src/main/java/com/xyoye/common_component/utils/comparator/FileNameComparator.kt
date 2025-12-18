@@ -19,8 +19,10 @@ class FileNameComparator<T>(
     private val asc: Boolean = true,
     private val directoryFirst: Boolean = true
 ) : Comparator<T> {
-
-    override fun compare(o1: T?, o2: T?): Int {
+    override fun compare(
+        o1: T?,
+        o2: T?
+    ): Int {
         if (o1 == null) {
             return if (asc) -1 else 1
         }
@@ -38,29 +40,38 @@ class FileNameComparator<T>(
         }
     }
 
-    private fun compareFileName(o1: T, o2: T): Int {
+    private fun compareFileName(
+        o1: T,
+        o2: T
+    ): Int {
         val key1 = nameKey(o1, o2, true)
         val key2 = nameKey(o1, o2, false)
         return key1.compareTo(key2)
     }
 
-    private fun nameKey(o1: T, o2: T, first: Boolean): CollationKey {
-        return if (first) {
+    private fun nameKey(
+        o1: T,
+        o2: T,
+        first: Boolean
+    ): CollationKey =
+        if (first) {
             if (asc) o1 else o2
         } else {
             if (asc) o2 else o1
         }.run(getName).run {
             Collator.getInstance().getCollateKey(this)
         }
-    }
 
-    private fun directory(o1: T, o2: T, first: Boolean): Boolean {
-        return if (first) {
+    private fun directory(
+        o1: T,
+        o2: T,
+        first: Boolean
+    ): Boolean =
+        if (first) {
             if (directoryFirst) o1 else o2
         } else {
             if (directoryFirst) o2 else o1
         }.run(isDirectory)
-    }
 }
 
 @Parcelize
@@ -68,7 +79,8 @@ private class ByteArrayCollationKey(
     @Suppress("CanBeParameter")
     private val source: String,
     private val bytes: ByteArray
-) : CollationKey(source), Parcelable {
+) : CollationKey(source),
+    Parcelable {
     override fun compareTo(other: CollationKey): Int {
         other as ByteArrayCollationKey
         return bytes.unsignedCompareTo(other.bytes)

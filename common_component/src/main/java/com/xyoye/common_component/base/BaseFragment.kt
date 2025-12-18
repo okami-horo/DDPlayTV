@@ -13,7 +13,6 @@ import com.xyoye.data_component.helper.Loading
  */
 
 abstract class BaseFragment<VM : BaseViewModel, V : ViewDataBinding> : BaseAppFragment<V>() {
-
     private val viewModelInit: ViewModelInit<VM> by lazy {
         initViewModel()
     }
@@ -21,7 +20,7 @@ abstract class BaseFragment<VM : BaseViewModel, V : ViewDataBinding> : BaseAppFr
     protected val viewModel: VM by lazy {
         ViewModelProvider(
             viewModelStore,
-            ViewModelProvider.AndroidViewModelFactory(mAttachActivity.application)
+            ViewModelProvider.AndroidViewModelFactory(mAttachActivity.application),
         ).get(viewModelInit.clazz)
     }
 
@@ -41,7 +40,7 @@ abstract class BaseFragment<VM : BaseViewModel, V : ViewDataBinding> : BaseAppFr
 
     open fun observeLoadingDialog() {
         viewModel.loadingObserver.observe(viewLifecycleOwner, {
-            when(it.first){
+            when (it.first) {
                 Loading.SHOW_LOADING -> showLoading()
                 Loading.SHOW_LOADING_MSG -> showLoading(it.second!!)
                 else -> hideLoading()
@@ -51,5 +50,8 @@ abstract class BaseFragment<VM : BaseViewModel, V : ViewDataBinding> : BaseAppFr
 
     abstract fun initViewModel(): ViewModelInit<VM>
 
-    data class ViewModelInit<VM>(val variableId: Int, val clazz: Class<VM>)
+    data class ViewModelInit<VM>(
+        val variableId: Int,
+        val clazz: Class<VM>
+    )
 }

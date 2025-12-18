@@ -16,10 +16,11 @@ import com.xyoye.common_component.utils.IOUtils
 fun DocumentFile.fileNameAndMineType(): Pair<String, String> {
     val contentResolver = BaseApplication.getAppContext().contentResolver
 
-    val queryColumn = arrayOf(
-        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-        DocumentsContract.Document.COLUMN_MIME_TYPE
-    )
+    val queryColumn =
+        arrayOf(
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            DocumentsContract.Document.COLUMN_MIME_TYPE,
+        )
 
     var cursor: Cursor? = null
     var fileName = ""
@@ -33,7 +34,9 @@ fun DocumentFile.fileNameAndMineType(): Pair<String, String> {
         }
     } catch (e: Exception) {
         com.xyoye.common_component.utils.ErrorReportHelper.postCatchedException(
-            e, "DocumentFileExt", "Failed to query document file info for uri: $uri"
+            e,
+            "DocumentFileExt",
+            "Failed to query document file info for uri: $uri",
         )
     } finally {
         IOUtils.closeIO(cursor)

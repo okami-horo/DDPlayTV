@@ -3,11 +3,9 @@ package com.xyoye.common_component.database.dao
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.xyoye.data_component.entity.DanmuBlockEntity
-import com.xyoye.data_component.helper.MediaTypeConverter
 
 @Dao
 interface DanmuBlockDao {
-
     @Query("SELECT * FROM danmu_block ORDER BY add_time DESC")
     fun getAll(): LiveData<MutableList<DanmuBlockEntity>>
 

@@ -1,4 +1,8 @@
 import setup.moduleSetup
+import java.util.Properties
+
+fun buildConfigString(value: String): String =
+    "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 plugins {
     id("com.android.library")
@@ -28,18 +32,43 @@ android {
 
         val media3Version = project.findProperty("media3Version")?.toString() ?: "1.8.0"
         buildConfigField("String", "MEDIA3_VERSION", "\"$media3Version\"")
-        
+
+        val localProperties =
+            Properties().apply {
+                val file = rootProject.file("local.properties")
+                if (file.exists()) {
+                    file.inputStream().use { load(it) }
+                }
+            }
+
         // 从环境变量或属性读取密钥，用于GitHub Actions注入
         // 本地开发时使用默认值，CI/CD时从Secrets注入
-        val buglyAppId = System.getenv("BUGLY_APP_ID") 
-            ?: project.findProperty("BUGLY_APP_ID")?.toString() 
-            ?: "DEFAULT_BUGLY_ID"
-        buildConfigField("String", "BUGLY_APP_ID", "\"$buglyAppId\"")
-        
-        val dandanAppId = System.getenv("DANDAN_APP_ID") 
-            ?: project.findProperty("DANDAN_APP_ID")?.toString() 
-            ?: "DEFAULT_DANDAN_ID"
-        buildConfigField("String", "DANDAN_APP_ID", "\"$dandanAppId\"")
+        val buglyAppId =
+            System.getenv("BUGLY_APP_ID")
+                ?: project.findProperty("BUGLY_APP_ID")?.toString()
+                ?: localProperties.getProperty("BUGLY_APP_ID")
+                ?: "DEFAULT_BUGLY_ID"
+        buildConfigField("String", "BUGLY_APP_ID", buildConfigString(buglyAppId))
+
+        val dandanAppId =
+            System.getenv("DANDAN_APP_ID")
+                ?: project.findProperty("DANDAN_APP_ID")?.toString()
+                ?: localProperties.getProperty("DANDAN_APP_ID")
+                ?: ""
+        buildConfigField("String", "DANDAN_APP_ID", buildConfigString(dandanAppId))
+
+        val dandanAppSecret =
+            System.getenv("DANDAN_APP_SECRET")
+                ?: project.findProperty("DANDAN_APP_SECRET")?.toString()
+                ?: localProperties.getProperty("DANDAN_APP_SECRET")
+                ?: ""
+        buildConfigField("String", "DANDAN_APP_SECRET", buildConfigString(dandanAppSecret))
+
+        buildConfigField(
+            "boolean",
+            "DANDAN_DEV_CREDENTIAL_INJECTED",
+            (dandanAppId.isNotBlank() && dandanAppSecret.isNotBlank()).toString(),
+        )
     }
     namespace = "com.xyoye.common_component"
 }

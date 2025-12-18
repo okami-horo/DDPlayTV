@@ -13,15 +13,16 @@ class SubtitleLoadSheddingPolicy(
     private val frameBudgetMs: Double = 25.0,
     private val dropBurstThreshold: Int = 5,
     private val throttleWindowMs: Long = 500L
-){
+) {
     private var throttleUntilMs: Long = 0L
     private var consecutiveOverBudget: Int = 0
 
-    fun allowRender(nowMs: Long = System.currentTimeMillis()): Boolean {
-        return nowMs >= throttleUntilMs
-    }
+    fun allowRender(nowMs: Long = System.currentTimeMillis()): Boolean = nowMs >= throttleUntilMs
 
-    fun evaluateTelemetry(sample: TelemetrySample, nowMs: Long = System.currentTimeMillis()): LoadSheddingDecision {
+    fun evaluateTelemetry(
+        sample: TelemetrySample,
+        nowMs: Long = System.currentTimeMillis()
+    ): LoadSheddingDecision {
         val composite = sample.compositeLatencyMs ?: 0.0
         val overBudget = (sample.renderLatencyMs + sample.uploadLatencyMs + composite) > frameBudgetMs
         val dropped = sample.frameStatus != SubtitleFrameStatus.Rendered
@@ -39,7 +40,7 @@ class SubtitleLoadSheddingPolicy(
             dropFrame = throttling,
             skipTelemetry = throttling,
             gpuOverutilized = overBudget || throttling,
-            vsyncMiss = dropped
+            vsyncMiss = dropped,
         )
     }
 }

@@ -10,8 +10,8 @@ import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.toMedia3SourceType
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.media3.Media3SessionStore
+import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.service.Media3CapabilityProvider
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.media3.Media3LaunchParams
@@ -33,7 +33,6 @@ import master.flame.danmaku.danmaku.model.BaseDanmaku
 import java.math.BigDecimal
 
 class PlayerViewModel : BaseViewModel() {
-
     companion object {
         private const val LOG_TAG = "PlayerViewModel"
     }
@@ -80,22 +79,23 @@ class PlayerViewModel : BaseViewModel() {
         }
         val provider = media3Provider ?: return
         viewModelScope.launch(Dispatchers.IO) {
-            provider.prepareSession(
-                params.mediaId,
-                params.sourceType,
-                params.requestedCapabilities,
-                params.autoplay
-            ).onSuccess { bundle ->
-                activeSessionId = bundle.session.sessionId
-                Media3SessionStore.update(bundle)
-                _media3SessionLiveData.postValue(bundle.session)
-                _media3CapabilityLiveData.postValue(bundle.capabilityContract)
-                _media3ToggleLiveData.postValue(bundle.toggleSnapshot)
-            }.onFailure {
-                LogFacade.e(LogModule.PLAYER, LOG_TAG, "prepareSession failed: ${it.message}")
-                _media3ErrorLiveData.postValue(it.message)
-                Media3SessionStore.clear()
-            }
+            provider
+                .prepareSession(
+                    params.mediaId,
+                    params.sourceType,
+                    params.requestedCapabilities,
+                    params.autoplay,
+                ).onSuccess { bundle ->
+                    activeSessionId = bundle.session.sessionId
+                    Media3SessionStore.update(bundle)
+                    _media3SessionLiveData.postValue(bundle.session)
+                    _media3CapabilityLiveData.postValue(bundle.capabilityContract)
+                    _media3ToggleLiveData.postValue(bundle.toggleSnapshot)
+                }.onFailure {
+                    LogFacade.e(LogModule.PLAYER, LOG_TAG, "prepareSession failed: ${it.message}")
+                    _media3ErrorLiveData.postValue(it.message)
+                    Media3SessionStore.clear()
+                }
         }
     }
 
@@ -106,7 +106,8 @@ class PlayerViewModel : BaseViewModel() {
         val provider = media3Provider ?: return
         val sessionId = activeSessionId ?: return
         viewModelScope.launch(Dispatchers.IO) {
-            provider.dispatchCapability(sessionId, capability, payload)
+            provider
+                .dispatchCapability(sessionId, capability, payload)
                 .onFailure {
                     LogFacade.w(LogModule.PLAYER, LOG_TAG, "dispatchCapability failed: ${it.message}")
                     _media3ErrorLiveData.postValue(it.message)
@@ -114,7 +115,10 @@ class PlayerViewModel : BaseViewModel() {
         }
     }
 
-    fun storeTrackAdded(videoSource: BaseVideoSource, track: VideoTrackBean) {
+    fun storeTrackAdded(
+        videoSource: BaseVideoSource,
+        track: VideoTrackBean
+    ) {
         val uniqueKey = videoSource.getUniqueKey()
         val storageId = videoSource.getStorageId()
         val historyDao = DatabaseManager.instance.getPlayHistoryDao()
@@ -148,10 +152,13 @@ class PlayerViewModel : BaseViewModel() {
         }
     }
 
-    fun addDanmuBlock(keyword: String, isRegex: Boolean) {
+    fun addDanmuBlock(
+        keyword: String,
+        isRegex: Boolean
+    ) {
         viewModelScope.launch {
             DatabaseManager.instance.getDanmuBlockDao().insert(
-                DanmuBlockEntity(0, keyword, isRegex)
+                DanmuBlockEntity(0, keyword, isRegex),
             )
         }
     }
@@ -162,7 +169,10 @@ class PlayerViewModel : BaseViewModel() {
         }
     }
 
-    fun sendDanmu(danmu: LocalDanmuBean?, sendDanmuBean: SendDanmuBean) {
+    fun sendDanmu(
+        danmu: LocalDanmuBean?,
+        sendDanmuBean: SendDanmuBean
+    ) {
         val episodeId = danmu?.episodeId
         if (episodeId?.isNotEmpty() == true) {
             sendDanmuToServer(sendDanmuBean, episodeId)
@@ -174,40 +184,47 @@ class PlayerViewModel : BaseViewModel() {
         }
     }
 
-    private fun sendDanmuToServer(sendDanmuBean: SendDanmuBean, episodeId: String) {
+    private fun sendDanmuToServer(
+        sendDanmuBean: SendDanmuBean,
+        episodeId: String
+    ) {
         viewModelScope.launch {
             try {
-                val time = BigDecimal(sendDanmuBean.position.toDouble() / 1000)
-                    .setScale(2, BigDecimal.ROUND_HALF_UP).toString()
+                val time =
+                    BigDecimal(sendDanmuBean.position.toDouble() / 1000)
+                        .setScale(2, BigDecimal.ROUND_HALF_UP)
+                        .toString()
 
-                val mode = when {
-                    sendDanmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
-                    sendDanmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
-                    else -> BaseDanmaku.TYPE_FIX_BOTTOM
-                }
+                val mode =
+                    when {
+                        sendDanmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
+                        sendDanmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
+                        else -> BaseDanmaku.TYPE_FIX_BOTTOM
+                    }
 
                 val color = sendDanmuBean.color and 0x00FFFFFF
 
-                val result = ResourceRepository.sendOneDanmu(
-                    episodeId,
-                    time,
-                    mode,
-                    color,
-                    sendDanmuBean.text
-                )
+                val result =
+                    ResourceRepository.sendOneDanmu(
+                        episodeId,
+                        time,
+                        mode,
+                        color,
+                        sendDanmuBean.text,
+                    )
 
                 if (result.isFailure) {
                     val exception = result.exceptionOrNull()
                     val message = exception?.message.orEmpty()
                     ToastCenter.showOriginalToast("发送弹幕失败\n$message")
-                    
+
                     // 上报网络请求失败的异常
                     if (exception != null) {
                         ErrorReportHelper.postCatchedExceptionWithContext(
                             exception,
                             "PlayerViewModel",
                             "sendDanmuToServer",
-                            "发送弹幕到服务器失败: $episodeId"
+                            "发送弹幕到服务器失败: $episodeId",
                         )
                     }
                 }
@@ -216,23 +233,28 @@ class PlayerViewModel : BaseViewModel() {
                     e,
                     "PlayerViewModel",
                     "sendDanmuToServer",
-                    "发送弹幕异常: $episodeId"
+                    "发送弹幕异常: $episodeId",
                 )
                 ToastCenter.showOriginalToast("发送弹幕失败: ${e.message}")
             }
         }
     }
 
-    private fun writeDanmuToFile(sendDanmuBean: SendDanmuBean, danmuPath: String) {
-        val time = BigDecimal(sendDanmuBean.position.toDouble() / 1000)
-            .setScale(2, BigDecimal.ROUND_HALF_UP)
-            .toString()
+    private fun writeDanmuToFile(
+        sendDanmuBean: SendDanmuBean,
+        danmuPath: String
+    ) {
+        val time =
+            BigDecimal(sendDanmuBean.position.toDouble() / 1000)
+                .setScale(2, BigDecimal.ROUND_HALF_UP)
+                .toString()
 
-        val mode = when {
-            sendDanmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
-            sendDanmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
-            else -> BaseDanmaku.TYPE_FIX_BOTTOM
-        }
+        val mode =
+            when {
+                sendDanmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
+                sendDanmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
+                else -> BaseDanmaku.TYPE_FIX_BOTTOM
+            }
 
         val unixTime = (System.currentTimeMillis() / 1000f).toInt().toString()
         val color = sendDanmuBean.color and 0x00FFFFFF

@@ -43,7 +43,6 @@ class FileManagerDialog(
     private val dismissWhenClickPositive: Boolean = true,
     private val listener: (resultPath: String) -> Unit
 ) : BaseBottomDialog<DialogFileManagerBinding>(activity) {
-
     private lateinit var binding: DialogFileManagerBinding
 
     private val mRootPath = Environment.getExternalStorageDirectory().absolutePath
@@ -72,7 +71,7 @@ class FileManagerDialog(
                 FileManagerAction.ACTION_SELECT_DIRECTORY -> "选择文件夹"
                 FileManagerAction.ACTION_SELECT_TORRENT -> "选择种子文件"
                 FileManagerAction.ACTION_SELECT_AUDIO -> "选择音频文件"
-            }
+            },
         )
 
         setPositiveVisible(action == FileManagerAction.ACTION_SELECT_DIRECTORY)
@@ -139,22 +138,22 @@ class FileManagerDialog(
 
             layoutManager = horizontal()
 
-            adapter = buildAdapter {
-
-                addItem<FilePathBean, ItemFileManagerPathBinding>(R.layout.item_file_manager_path) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            dirNameTv.text = data.name
-                            dirNameTv.setTextColorRes(
-                                if (data.isOpened) R.color.text_black else R.color.text_gray
-                            )
-                            dirNameTv.setOnClickListener {
-                                openTargetDirectory(data.path)
+            adapter =
+                buildAdapter {
+                    addItem<FilePathBean, ItemFileManagerPathBinding>(R.layout.item_file_manager_path) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                dirNameTv.text = data.name
+                                dirNameTv.setTextColorRes(
+                                    if (data.isOpened) R.color.text_black else R.color.text_gray,
+                                )
+                                dirNameTv.setOnClickListener {
+                                    openTargetDirectory(data.path)
+                                }
                             }
                         }
                     }
                 }
-            }
 
             val dividerSize = dp2px(16)
             val divider = R.drawable.ic_file_manager_arrow.toResDrawable()
@@ -170,33 +169,34 @@ class FileManagerDialog(
 
             layoutManager = vertical()
 
-            adapter = buildAdapter {
-                setupVerticalAnimation()
+            adapter =
+                buildAdapter {
+                    setupVerticalAnimation()
 
-                addItem<FileManagerBean, ItemFileManagerBinding>(R.layout.item_file_manager) {
-                    initView { data, _, _ ->
-                        itemBinding.apply {
-                            fileNameTv.text = data.fileName
-                            fileIv.setImageResource(
-                                if (data.isDirectory) R.drawable.ic_folder else getFileCover()
-                            )
-                            itemLayout.setOnClickListener {
-                                when {
-                                    data.isDirectory -> {
-                                        openChildDirectory(data.fileName)
-                                    }
+                    addItem<FileManagerBean, ItemFileManagerBinding>(R.layout.item_file_manager) {
+                        initView { data, _, _ ->
+                            itemBinding.apply {
+                                fileNameTv.text = data.fileName
+                                fileIv.setImageResource(
+                                    if (data.isDirectory) R.drawable.ic_folder else getFileCover(),
+                                )
+                                itemLayout.setOnClickListener {
+                                    when {
+                                        data.isDirectory -> {
+                                            openChildDirectory(data.fileName)
+                                        }
 
-                                    else -> {
-                                        dismiss()
-                                        AppConfig.putLastOpenFolder(currentDirPath)
-                                        listener.invoke(data.filePath)
+                                        else -> {
+                                            dismiss()
+                                            AppConfig.putLastOpenFolder(currentDirPath)
+                                            listener.invoke(data.filePath)
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
         }
     }
 
@@ -237,8 +237,8 @@ class FileManagerDialog(
             FilePathBean(
                 dirName,
                 currentDirPath,
-                true
-            )
+                true,
+            ),
         )
         binding.pathRv.setData(mPathData)
         binding.pathRv.scrollToPosition(mPathData.size - 1)
@@ -251,8 +251,9 @@ class FileManagerDialog(
      */
     private fun getDirectoryChildData(directory: File): MutableList<FileManagerBean> {
         val fileManagerData = mutableListOf<FileManagerBean>()
-        if (!directory.exists() || !directory.isDirectory)
+        if (!directory.exists() || !directory.isDirectory) {
             return fileManagerData
+        }
         val childFiles = directory.listFiles() ?: return fileManagerData
 
         for (childFile in childFiles) {
@@ -262,8 +263,8 @@ class FileManagerDialog(
                         FileManagerBean(
                             childFile.absolutePath,
                             getFolderName(childFile.absolutePath),
-                            isDirectory = true
-                        )
+                            isDirectory = true,
+                        ),
                     )
                 }
 
@@ -272,25 +273,27 @@ class FileManagerDialog(
                         FileManagerBean(
                             childFile.absolutePath,
                             getFileName(childFile.absolutePath),
-                            isDirectory = false
-                        )
+                            isDirectory = false,
+                        ),
                     )
                 }
             }
         }
 
-        fileManagerData.sortWith(FileNameComparator(
-            getName = { it.fileName },
-            isDirectory = { it.isDirectory }
-        ))
+        fileManagerData.sortWith(
+            FileNameComparator(
+                getName = { it.fileName },
+                isDirectory = { it.isDirectory },
+            ),
+        )
         return fileManagerData
     }
 
     /**
      * 是否为当前所可选中文件类型
      */
-    private fun isTargetFile(filePath: String): Boolean {
-        return when (action) {
+    private fun isTargetFile(filePath: String): Boolean =
+        when (action) {
             FileManagerAction.ACTION_SELECT_VIDEO -> isVideoFile(filePath)
 
             FileManagerAction.ACTION_SELECT_DANMU -> isDanmuFile(filePath)
@@ -303,7 +306,6 @@ class FileManagerDialog(
 
             else -> false
         }
-    }
 
     /**
      * 根据原始路径获取切割路径信息集合
@@ -321,7 +323,6 @@ class FileManagerDialog(
             return pathData
         }
 
-
         val lastSep = filePath.lastIndexOf(File.separator)
         val dirName = filePath.substring(lastSep + 1)
         val parentPath = filePath.substring(0, lastSep)
@@ -329,8 +330,8 @@ class FileManagerDialog(
         pathData.add(
             FilePathBean(
                 dirName,
-                filePath
-            )
+                filePath,
+            ),
         )
         pathData.addAll(getPathData(parentPath))
 
@@ -339,12 +340,12 @@ class FileManagerDialog(
 
     private fun setRootPathState(isSelected: Boolean) {
         binding.rootPathTv.setTextColorRes(
-            if (isSelected) R.color.text_black else R.color.text_gray
+            if (isSelected) R.color.text_black else R.color.text_gray,
         )
     }
 
-    private fun getFileCover(): Int {
-        return when (action) {
+    private fun getFileCover(): Int =
+        when (action) {
             FileManagerAction.ACTION_SELECT_VIDEO -> R.drawable.ic_file_video
 
             FileManagerAction.ACTION_SELECT_DANMU -> R.drawable.ic_file_xml
@@ -357,11 +358,10 @@ class FileManagerDialog(
 
             else -> R.drawable.ic_file_unknow
         }
-    }
 
     private fun setFileData(fileList: MutableList<FileManagerBean>) {
         binding.fileRv.setData(
-            fileList.filterHiddenFile { it.fileName }
+            fileList.filterHiddenFile { it.fileName },
         )
     }
 }

@@ -16,41 +16,45 @@ import com.xyoye.common_component.utils.ErrorReportHelper
  */
 
 class BaseAdapter : AnimatedAdapter<RecyclerView.ViewHolder>() {
-
     companion object {
-        //空布局数据
+        // 空布局数据
         val EMPTY_ITEM = Any()
 
-        //空布局ViewType
+        // 空布局ViewType
         const val VIEW_TYPE_EMPTY = -1
 
-        //最大item类型数量
+        // 最大item类型数量
         private const val FALLBACK_DELEGATE_VIEW_TYPE = Int.MAX_VALUE - 1
     }
 
-    //数据源
+    // 数据源
     val items: MutableList<Any> = mutableListOf()
 
-    //数据差异比较器
+    // 数据差异比较器
     var diffCreator: AdapterDiffCreator? = AdapterDiffCreator()
 
-    //viewHolder集合
+    // viewHolder集合
     private val typeHolders = SparseArrayCompat<BaseViewHolderCreator<out ViewDataBinding>>()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return BaseViewHolder(
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): RecyclerView.ViewHolder =
+        BaseViewHolder(
             DataBindingUtil.inflate(
                 LayoutInflater.from(parent.context),
                 getHolderCreator(viewType).getResourceId(),
                 parent,
-                false
-            )
+                false,
+            ),
         )
-    }
 
     override fun getItemCount() = items.size
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int
+    ) {
         onBindViewHolder(holder, position, mutableListOf())
     }
 
@@ -70,18 +74,18 @@ class BaseAdapter : AnimatedAdapter<RecyclerView.ViewHolder>() {
      * 根据item下标，获取ViewHolder所在集合位置
      */
     override fun getItemViewType(position: Int): Int {
-        if (items[position] == EMPTY_ITEM
-            && typeHolders.contains(VIEW_TYPE_EMPTY)
+        if (items[position] == EMPTY_ITEM &&
+            typeHolders.contains(VIEW_TYPE_EMPTY)
         ) {
             return VIEW_TYPE_EMPTY
         }
 
-        //只有一个ViewHolder时
+        // 只有一个ViewHolder时
         if (typeHolders.size() == 1) {
             return typeHolders.keyAt(0)
         }
 
-        //多个ViewHolder时，需要代码确认
+        // 多个ViewHolder时，需要代码确认
         for (i in 0 until typeHolders.size()) {
             if (typeHolders.keyAt(i) == VIEW_TYPE_EMPTY) {
                 continue
@@ -98,10 +102,9 @@ class BaseAdapter : AnimatedAdapter<RecyclerView.ViewHolder>() {
     /**
      * 根据viewType获取ViewHolder创建者
      */
-    private fun getHolderCreator(viewType: Int): BaseViewHolderCreator<out ViewDataBinding> {
-        return typeHolders.get(viewType)
+    private fun getHolderCreator(viewType: Int): BaseViewHolderCreator<out ViewDataBinding> =
+        typeHolders.get(viewType)
             ?: throw RuntimeException("no holder added for view type: $viewType")
-    }
 
     override fun setData(data: List<Any>) {
         super.setData(data)
@@ -115,7 +118,7 @@ class BaseAdapter : AnimatedAdapter<RecyclerView.ViewHolder>() {
                 ErrorReportHelper.postCatchedException(
                     e,
                     "BaseAdapter.setData",
-                    "DiffUtil计算差异失败，回退到全量刷新"
+                    "DiffUtil计算差异失败，回退到全量刷新",
                 )
                 setNotifyData(data)
             }
@@ -127,9 +130,12 @@ class BaseAdapter : AnimatedAdapter<RecyclerView.ViewHolder>() {
     /**
      * 使用DiffUtil刷新数据
      */
-    private fun setDiffData(data: List<Any>, diffCreator: AdapterDiffCreator) {
+    private fun setDiffData(
+        data: List<Any>,
+        diffCreator: AdapterDiffCreator
+    ) {
         val newItems = data.map { diffCreator.createNewData(it) }.toMutableList()
-        //数据为空时，显示空布局
+        // 数据为空时，显示空布局
         if (newItems.isEmpty() && typeHolders.contains(VIEW_TYPE_EMPTY)) {
             newItems.add(EMPTY_ITEM)
         }
@@ -148,7 +154,7 @@ class BaseAdapter : AnimatedAdapter<RecyclerView.ViewHolder>() {
         items.clear()
         items.addAll(data)
 
-        //数据为空时，显示空布局
+        // 数据为空时，显示空布局
         if (items.isEmpty() && typeHolders.contains(VIEW_TYPE_EMPTY)) {
             items.add(EMPTY_ITEM)
         }
@@ -158,18 +164,20 @@ class BaseAdapter : AnimatedAdapter<RecyclerView.ViewHolder>() {
     /**
      * 添加一个ViewHolder创建者，以下标作为key保存
      */
-    fun register(creator: BaseViewHolderCreator<out ViewDataBinding>, customViewType: Int? = null) =
-        apply {
-            var viewType = customViewType ?: typeHolders.size()
-            while (typeHolders.get(viewType) != null) {
-                viewType++
-                require(viewType < FALLBACK_DELEGATE_VIEW_TYPE) {
-                    "the number of view type has reached the maximum limit"
-                }
-            }
+    fun register(
+        creator: BaseViewHolderCreator<out ViewDataBinding>,
+        customViewType: Int? = null
+    ) = apply {
+        var viewType = customViewType ?: typeHolders.size()
+        while (typeHolders.get(viewType) != null) {
+            viewType++
             require(viewType < FALLBACK_DELEGATE_VIEW_TYPE) {
-                "the number of view type has reached the maximum limit : $FALLBACK_DELEGATE_VIEW_TYPE"
+                "the number of view type has reached the maximum limit"
             }
-            typeHolders.put(viewType, creator)
         }
+        require(viewType < FALLBACK_DELEGATE_VIEW_TYPE) {
+            "the number of view type has reached the maximum limit : $FALLBACK_DELEGATE_VIEW_TYPE"
+        }
+        typeHolders.put(viewType, creator)
+    }
 }

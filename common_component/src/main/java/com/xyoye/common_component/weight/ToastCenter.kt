@@ -24,7 +24,6 @@ import com.xyoye.common_component.extension.isNightMode
  */
 
 object ToastCenter {
-
     enum class Level {
         SUCCESS,
         ERROR,
@@ -41,29 +40,32 @@ object ToastCenter {
         ORIGINAL
     }
 
-    private val mLevelTitle = mapOf(
-        Pair(Level.SUCCESS, "成功"),
-        Pair(Level.ERROR, "错误"),
-        Pair(Level.WARNING, "警告"),
-        Pair(Level.INFO, "提示"),
-        Pair(Level.DELETE, "提示")
-    )
+    private val mLevelTitle =
+        mapOf(
+            Pair(Level.SUCCESS, "成功"),
+            Pair(Level.ERROR, "错误"),
+            Pair(Level.WARNING, "警告"),
+            Pair(Level.INFO, "提示"),
+            Pair(Level.DELETE, "提示"),
+        )
 
-    private val mLevelColor = mapOf(
-        Pair(Level.SUCCESS, R.color.success_color),
-        Pair(Level.ERROR, R.color.error_color),
-        Pair(Level.WARNING, R.color.warning_color),
-        Pair(Level.INFO, R.color.info_color),
-        Pair(Level.DELETE, R.color.delete_color)
-    )
+    private val mLevelColor =
+        mapOf(
+            Pair(Level.SUCCESS, R.color.success_color),
+            Pair(Level.ERROR, R.color.error_color),
+            Pair(Level.WARNING, R.color.warning_color),
+            Pair(Level.INFO, R.color.info_color),
+            Pair(Level.DELETE, R.color.delete_color),
+        )
 
-    private val mLevelDrawable = mapOf(
-        Pair(Level.SUCCESS, R.drawable.ic_toast_success),
-        Pair(Level.ERROR, R.drawable.ic_toast_error),
-        Pair(Level.WARNING, R.drawable.ic_toast_warning),
-        Pair(Level.INFO, R.drawable.ic_toast_info),
-        Pair(Level.DELETE, R.drawable.ic_toast_delete)
-    )
+    private val mLevelDrawable =
+        mapOf(
+            Pair(Level.SUCCESS, R.drawable.ic_toast_success),
+            Pair(Level.ERROR, R.drawable.ic_toast_error),
+            Pair(Level.WARNING, R.drawable.ic_toast_warning),
+            Pair(Level.INFO, R.drawable.ic_toast_info),
+            Pair(Level.DELETE, R.drawable.ic_toast_delete),
+        )
 
     private var isDarkMode = true
 
@@ -123,16 +125,17 @@ object ToastCenter {
         showType: ShowType = ShowType.DARK
     ) {
         val context = BaseApplication.getAppContext()
-        isDarkMode = when (showType) {
-            ShowType.DARK -> true
-            ShowType.COLOR -> false
-            ShowType.DAY_NIGHT -> !context.isNightMode()
-            ShowType.DAY_NAIGHT_REVERSE -> context.isNightMode()
-            ShowType.ORIGINAL -> {
-                showOriginalToast(context, message, toastDuration)
-                return
+        isDarkMode =
+            when (showType) {
+                ShowType.DARK -> true
+                ShowType.COLOR -> false
+                ShowType.DAY_NIGHT -> !context.isNightMode()
+                ShowType.DAY_NAIGHT_REVERSE -> context.isNightMode()
+                ShowType.ORIGINAL -> {
+                    showOriginalToast(context, message, toastDuration)
+                    return
+                }
             }
-        }
 
         BaseApplication.getMainHandler().post {
             makeAndShow(context, message, level, toastDuration, title)
@@ -146,13 +149,13 @@ object ToastCenter {
         toastDuration: Int = Toast.LENGTH_SHORT,
         title: String? = null
     ) {
-
-        val toastBinding = DataBindingUtil.inflate<LayoutLevelToastBinding>(
-            LayoutInflater.from(context),
-            R.layout.layout_level_toast,
-            null,
-            false
-        )
+        val toastBinding =
+            DataBindingUtil.inflate<LayoutLevelToastBinding>(
+                LayoutInflater.from(context),
+                R.layout.layout_level_toast,
+                null,
+                false,
+            )
 
         initToastBackground(toastBinding.root, level)
         initToastImage(toastBinding.toastIv, level)
@@ -168,23 +171,32 @@ object ToastCenter {
         }
     }
 
-    private fun initToastBackground(toastView: View, level: Level) {
+    private fun initToastBackground(
+        toastView: View,
+        level: Level
+    ) {
         val context = toastView.context
-        val backgroundColor = if (isDarkMode)
-            ContextCompat.getColor(context, R.color.toast_dark_color)
-        else
-            ContextCompat.getColor(context, getLevelColor(level))
+        val backgroundColor =
+            if (isDarkMode) {
+                ContextCompat.getColor(context, R.color.toast_dark_color)
+            } else {
+                ContextCompat.getColor(context, getLevelColor(level))
+            }
 
         toastView.background =
             ContextCompat.getDrawable(context, R.drawable.background_toast)?.also {
-                it.colorFilter = PorterDuffColorFilter(
-                    backgroundColor,
-                    PorterDuff.Mode.SRC_IN
-                )
+                it.colorFilter =
+                    PorterDuffColorFilter(
+                        backgroundColor,
+                        PorterDuff.Mode.SRC_IN,
+                    )
             }
     }
 
-    private fun initToastImage(imageView: ImageView, level: Level) {
+    private fun initToastImage(
+        imageView: ImageView,
+        level: Level
+    ) {
         val context = imageView.context
 
         val levelColor = ContextCompat.getColor(context, getLevelColor(level))
@@ -199,14 +211,19 @@ object ToastCenter {
         imageView.animation = imageAnimation
     }
 
-    private fun initToastTitle(textView: TextView, title: String?, level: Level) {
+    private fun initToastTitle(
+        textView: TextView,
+        title: String?,
+        level: Level
+    ) {
         val context = textView.context
 
-        val levelColor = if (isDarkMode) {
-            ContextCompat.getColor(context, getLevelColor(level))
-        } else {
-            Color.WHITE
-        }
+        val levelColor =
+            if (isDarkMode) {
+                ContextCompat.getColor(context, getLevelColor(level))
+            } else {
+                Color.WHITE
+            }
 
         textView.apply {
             setTextColor(levelColor)
@@ -214,12 +231,15 @@ object ToastCenter {
         }
     }
 
-    private fun getLevelDrawable(level: Level): Int =
-        mLevelDrawable[level] ?: R.drawable.ic_toast_info
+    private fun getLevelDrawable(level: Level): Int = mLevelDrawable[level] ?: R.drawable.ic_toast_info
 
     private fun getLevelColor(level: Level): Int = mLevelColor[level] ?: R.color.info_color
 
-    private fun showOriginalToast(context: Context, message: String, duration: Int) {
+    private fun showOriginalToast(
+        context: Context,
+        message: String,
+        duration: Int
+    ) {
         BaseApplication.getMainHandler().post {
             Toast.makeText(context, message, duration).show()
         }

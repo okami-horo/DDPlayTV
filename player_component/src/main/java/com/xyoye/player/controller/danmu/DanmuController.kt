@@ -13,8 +13,9 @@ import com.xyoye.player.wrapper.InterDanmuController
  * Created by xyoye on 2021/4/14.
  */
 
-class DanmuController(context: Context) : InterDanmuController {
-
+class DanmuController(
+    context: Context
+) : InterDanmuController {
     private val danmuView = DanmuView(context)
 
     override fun updateDanmuSize() {
@@ -61,30 +62,45 @@ class DanmuController(context: Context) : InterDanmuController {
         danmuView.toggleVisible()
     }
 
-    override fun allowSendDanmu(): Boolean {
-        return danmuView.isDanmuLoaded()
+    override fun setUserDanmuVisible(visible: Boolean) {
+        danmuView.setUserVisible(visible)
     }
+
+    override fun isUserDanmuVisible(): Boolean {
+        return danmuView.isUserVisible()
+    }
+
+    override fun allowSendDanmu(): Boolean = danmuView.isDanmuLoaded()
 
     override fun addDanmuToView(danmuBean: SendDanmuBean) {
         danmuView.addDanmuToView(danmuBean)
     }
 
-    override fun addBlackList(isRegex: Boolean, vararg keyword: String) {
+    override fun addBlackList(
+        isRegex: Boolean,
+        vararg keyword: String
+    ) {
         danmuView.addBlackList(isRegex, *keyword)
     }
 
-    override fun removeBlackList(isRegex: Boolean, keyword: String) {
+    override fun removeBlackList(
+        isRegex: Boolean,
+        keyword: String
+    ) {
         danmuView.removeBlackList(isRegex, keyword)
     }
 
     override fun setSpeed(speed: Float) {
-        //倍速小于1的情况下，弹幕没有按预期减速，因此禁用
+        // 倍速小于1的情况下，弹幕没有按预期减速，因此禁用
         if (speed >= 1f) {
             danmuView.setSpeed(speed)
         }
     }
 
-    override fun seekTo(timeMs: Long, isPlaying: Boolean) {
+    override fun seekTo(
+        timeMs: Long,
+        isPlaying: Boolean
+    ) {
         danmuView.seekTo(timeMs, isPlaying)
     }
 
@@ -96,17 +112,11 @@ class DanmuController(context: Context) : InterDanmuController {
         danmuView.release()
     }
 
-    override fun supportAddTrack(type: TrackType): Boolean {
-        return type == TrackType.DANMU
-    }
+    override fun supportAddTrack(type: TrackType): Boolean = type == TrackType.DANMU
 
-    override fun addTrack(track: VideoTrackBean): Boolean {
-        return danmuView.addTrack(track)
-    }
+    override fun addTrack(track: VideoTrackBean): Boolean = danmuView.addTrack(track)
 
-    override fun getTracks(type: TrackType): List<VideoTrackBean> {
-        return danmuView.getAddedTrack()?.let { listOf(it) } ?: emptyList()
-    }
+    override fun getTracks(type: TrackType): List<VideoTrackBean> = danmuView.getAddedTrack()?.let { listOf(it) } ?: emptyList()
 
     override fun selectTrack(track: VideoTrackBean) {
         danmuView.setTrackSelected(true)

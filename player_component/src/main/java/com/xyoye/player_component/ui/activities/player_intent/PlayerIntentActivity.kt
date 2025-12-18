@@ -13,20 +13,20 @@ import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ActivityPlayerIntentBinding
 
 class PlayerIntentActivity : BaseActivity<PlayerIntentViewModel, ActivityPlayerIntentBinding>() {
-
     private lateinit var videoUri: Uri
     private lateinit var videoUrl: String
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            PlayerIntentViewModel::class.java
+            PlayerIntentViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_player_intent
 
     override fun initStatusBar() {
-        ImmersionBar.with(this)
+        ImmersionBar
+            .with(this)
             .fullScreen(true)
             .hideBar(BarHide.FLAG_HIDE_STATUS_BAR)
             .init()
@@ -58,7 +58,8 @@ class PlayerIntentActivity : BaseActivity<PlayerIntentViewModel, ActivityPlayerI
 
     private fun observerPlay() {
         viewModel.playLiveData.observe(this) {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Player.Player)
                 .navigation()
             finish()

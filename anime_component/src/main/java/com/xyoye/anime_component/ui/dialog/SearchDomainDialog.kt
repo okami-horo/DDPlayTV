@@ -16,11 +16,9 @@ class SearchDomainDialog(
     private val activity: Activity,
     private val callback: (String) -> Unit
 ) : BaseBottomDialog<DialogSearchDomainBinding>(activity) {
-
     override fun getChildLayoutId() = R.layout.dialog_search_domain
 
     override fun initView(binding: DialogSearchDomainBinding) {
-
         setTitle("完善节点链接")
 
         val domainLink = AppConfig.getMagnetResDomain()

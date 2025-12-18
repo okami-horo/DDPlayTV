@@ -29,7 +29,6 @@ import java.util.Locale
  * 开发者设置页，配置日志与调试相关选项。
  */
 class DeveloperSettingFragment : PreferenceFragmentCompat() {
-
     companion object {
         fun newInstance() = DeveloperSettingFragment()
 
@@ -46,7 +45,10 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?
+    ) {
         try {
             preferenceManager.preferenceDataStore = DeveloperSettingDataStore()
             addPreferencesFromResource(R.xml.preference_developer_setting)
@@ -55,12 +57,15 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                 e,
                 "DeveloperSettingFragment",
                 "onCreatePreferences",
-                "加载开发者设置失败"
+                "加载开发者设置失败",
             )
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         initLogPreferences()
@@ -79,13 +84,14 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             val runtime = LogSystem.getRuntimeState()
             updateLogLevelPreference(this, runtime.activePolicy.defaultLevel)
             setOnPreferenceChangeListener { _, newValue ->
-                val level = (newValue as? String)?.let { raw ->
-                    runCatching { LogLevel.valueOf(raw) }.getOrNull()
-                } ?: return@setOnPreferenceChangeListener false
+                val level =
+                    (newValue as? String)?.let { raw ->
+                        runCatching { LogLevel.valueOf(raw) }.getOrNull()
+                    } ?: return@setOnPreferenceChangeListener false
                 val current = LogSystem.getRuntimeState()
                 LogSystem.updateLoggingPolicy(
                     current.activePolicy.copy(defaultLevel = level),
-                    PolicySource.USER_OVERRIDE
+                    PolicySource.USER_OVERRIDE,
                 )
                 updateLogLevelPreference(this, level)
                 true
@@ -98,18 +104,19 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             updateLogSummary(this, summaryOn, summaryOff)
             setOnPreferenceChangeListener { _, newValue ->
                 val enable = newValue as? Boolean ?: return@setOnPreferenceChangeListener false
-                val updatedState = if (enable) {
-                    LogSystem.startDebugSession()
-                } else {
-                    LogSystem.stopDebugSession()
-                }
+                val updatedState =
+                    if (enable) {
+                        LogSystem.startDebugSession()
+                    } else {
+                        LogSystem.stopDebugSession()
+                    }
                 val effective = updatedState.debugSessionEnabled
                 summary = if (effective) summaryOn else summaryOff
                 DevelopConfig.putDdLogEnable(effective)
                 LogFacade.i(
                     LogModule.USER,
                     TAG,
-                    "toggle debug session enable=$enable state=${updatedState.debugToggleState}"
+                    "toggle debug session enable=$enable state=${updatedState.debugToggleState}",
                 )
                 true
             }
@@ -138,47 +145,61 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             try {
                 title = getString(R.string.developer_bugly_status_title)
                 val statusInfo = SecurityHelperConfig.getBuglyStatusInfo()
-                summary = if (statusInfo.isInitialized) {
-                    if (statusInfo.isDebugMode) {
-                        getString(R.string.developer_bugly_status_on_debug)
-                    } else {
-                        val shortId = if (statusInfo.appId.length > 8) {
-                            statusInfo.appId.substring(0, 8) + "..."
+                summary =
+                    if (statusInfo.isInitialized) {
+                        if (statusInfo.isDebugMode) {
+                            getString(R.string.developer_bugly_status_on_debug)
                         } else {
-                            statusInfo.appId
+                            val shortId =
+                                if (statusInfo.appId.length > 8) {
+                                    statusInfo.appId.substring(0, 8) + "..."
+                                } else {
+                                    statusInfo.appId
+                                }
+                            getString(R.string.developer_bugly_status_on, shortId, statusInfo.source)
                         }
-                        getString(R.string.developer_bugly_status_on, shortId, statusInfo.source)
+                    } else {
+                        getString(R.string.developer_bugly_status_off)
                     }
-                } else {
-                    getString(R.string.developer_bugly_status_off)
-                }
 
                 setOnPreferenceClickListener {
                     try {
                         val statusInfo = SecurityHelperConfig.getBuglyStatusInfo()
-                        val message = buildString {
-                            append(getString(R.string.developer_bugly_status_detail_header)).append("\n\n")
-                            append(getString(R.string.developer_bugly_status_detail_state, if (statusInfo.isInitialized) "✅ 已初始化" else "❌ 未初始化")).append("\n")
-                            append(getString(R.string.developer_bugly_status_detail_app_id,
-                                if (statusInfo.isDebugMode) "test_debug_id (测试模式)" else statusInfo.appId)).append("\n")
-                            append(getString(R.string.developer_bugly_status_detail_source, statusInfo.source)).append("\n")
-                            append(getString(R.string.developer_bugly_status_detail_debug, if (statusInfo.isDebugMode) "是" else "否")).append("\n\n")
-                            if (statusInfo.isInitialized) {
-                                append(getString(R.string.developer_bugly_status_detail_working)).append("\n")
-                                if (statusInfo.isDebugMode) {
-                                    append(getString(R.string.developer_bugly_status_detail_notice))
+                        val message =
+                            buildString {
+                                append(getString(R.string.developer_bugly_status_detail_header)).append("\n\n")
+                                append(
+                                    getString(
+                                        R.string.developer_bugly_status_detail_state,
+                                        if (statusInfo.isInitialized) "✅ 已初始化" else "❌ 未初始化",
+                                    ),
+                                ).append("\n")
+                                append(
+                                    getString(
+                                        R.string.developer_bugly_status_detail_app_id,
+                                        if (statusInfo.isDebugMode) "test_debug_id (测试模式)" else statusInfo.appId,
+                                    ),
+                                ).append("\n")
+                                append(getString(R.string.developer_bugly_status_detail_source, statusInfo.source)).append("\n")
+                                append(
+                                    getString(R.string.developer_bugly_status_detail_debug, if (statusInfo.isDebugMode) "是" else "否"),
+                                ).append("\n\n")
+                                if (statusInfo.isInitialized) {
+                                    append(getString(R.string.developer_bugly_status_detail_working)).append("\n")
+                                    if (statusInfo.isDebugMode) {
+                                        append(getString(R.string.developer_bugly_status_detail_notice))
+                                    }
+                                } else {
+                                    append(getString(R.string.developer_bugly_status_detail_missing))
                                 }
-                            } else {
-                                append(getString(R.string.developer_bugly_status_detail_missing))
                             }
-                        }
                         ToastCenter.showSuccess(message)
                     } catch (e: Exception) {
                         ErrorReportHelper.postCatchedExceptionWithContext(
                             e,
                             "DeveloperSettingFragment",
                             "bugly_status_click",
-                            "Failed to show Bugly status information"
+                            "Failed to show Bugly status information",
                         )
                         ToastCenter.showError(getString(R.string.developer_bugly_status_failed))
                     }
@@ -189,22 +210,22 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                     e,
                     "DeveloperSettingFragment",
                     "bugly_status_setup",
-                    "Failed to setup Bugly status preference"
+                    "Failed to setup Bugly status preference",
                 )
             }
         }
     }
 
-    private fun buildSubtitleStatusSummary(): String {
-        return runCatching {
+    private fun buildSubtitleStatusSummary(): String =
+        runCatching {
             val providerClass = Class.forName(SUBTITLE_STATUS_PROVIDER)
             val snapshot = providerClass.getMethod("snapshot").invoke(null)
             val statusClass = snapshot.javaClass
-            fun <T> read(name: String): T? {
-                return runCatching {
+
+            fun <T> read(name: String): T? =
+                runCatching {
                     statusClass.getMethod("get$name").invoke(snapshot) as? T
                 }.getOrNull()
-            }
             val videoSize = read<Any>("VideoSizePx")
             val width = videoSize?.javaClass?.getMethod("getWidth")?.invoke(videoSize) as? Int ?: 0
             val height = videoSize?.javaClass?.getMethod("getHeight")?.invoke(videoSize) as? Int ?: 0
@@ -212,24 +233,27 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             val surface = (read<Any>("SurfaceType") as? Enum<*>)?.name ?: "-"
             val sessionId = read<String>("SessionId").orEmpty()
             val startedAt = read<Long>("StartedAtEpochMs") ?: 0L
-            val startedText = if (startedAt > 0L) {
-                dateFormat.format(Date(startedAt))
-            } else {
-                getString(R.string.developer_subtitle_session_status_summary_empty)
-            }
+            val startedText =
+                if (startedAt > 0L) {
+                    dateFormat.format(Date(startedAt))
+                } else {
+                    getString(R.string.developer_subtitle_session_status_summary_empty)
+                }
             val firstRenderedAt = read<Long>("FirstRenderedAtEpochMs")
-            val firstLatency = if (firstRenderedAt != null && startedAt > 0) {
-                "${firstRenderedAt - startedAt}ms"
-            } else {
-                "-"
-            }
+            val firstLatency =
+                if (firstRenderedAt != null && startedAt > 0) {
+                    "${firstRenderedAt - startedAt}ms"
+                } else {
+                    "-"
+                }
             val fallbackTriggered = read<Boolean>("FallbackTriggered") == true
             val fallbackReason = (read<Any>("FallbackReasonCode") as? Enum<*>)?.name
-            val fallbackValue = when {
-                fallbackTriggered && !fallbackReason.isNullOrEmpty() -> fallbackReason
-                fallbackTriggered -> "已触发"
-                else -> "未回退"
-            }
+            val fallbackValue =
+                when {
+                    fallbackTriggered && !fallbackReason.isNullOrEmpty() -> fallbackReason
+                    fallbackTriggered -> "已触发"
+                    else -> "未回退"
+                }
             val lastError = read<String>("LastErrorMessage") ?: "-"
             getString(
                 R.string.developer_subtitle_status_summary,
@@ -241,31 +265,32 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                 startedText,
                 firstLatency,
                 fallbackValue,
-                lastError
+                lastError,
             )
         }.getOrElse {
             LogFacade.w(LogModule.SUBTITLE, SUBTITLE_TAG, "failed to read subtitle session status: ${it.message}")
             getString(R.string.developer_subtitle_session_status_summary_empty)
         }
-    }
 
     private fun forceFallback() {
         SubtitlePreferenceUpdater.persistBackend(
             SubtitleRendererBackend.LEGACY_CANVAS,
-            RendererPreferenceSource.LOCAL_SETTINGS
+            RendererPreferenceSource.LOCAL_SETTINGS,
         )
         runCatching {
             val providerClass = Class.forName(SUBTITLE_STATUS_PROVIDER)
-            val updateBackend = providerClass.getMethod(
-                "updateBackend",
-                SubtitleRendererBackend::class.java
-            )
+            val updateBackend =
+                providerClass.getMethod(
+                    "updateBackend",
+                    SubtitleRendererBackend::class.java,
+                )
             updateBackend.invoke(null, SubtitleRendererBackend.LEGACY_CANVAS)
-            val markFallback = providerClass.getMethod(
-                "markFallback",
-                SubtitleFallbackReason::class.java,
-                Throwable::class.java
-            )
+            val markFallback =
+                providerClass.getMethod(
+                    "markFallback",
+                    SubtitleFallbackReason::class.java,
+                    Throwable::class.java,
+                )
             markFallback.invoke(null, SubtitleFallbackReason.USER_REQUEST, null)
         }.onFailure {
             LogFacade.w(LogModule.SUBTITLE, SUBTITLE_TAG, "force fallback reflection failed: ${it.message}")
@@ -293,20 +318,20 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         level: LogLevel
     ) {
         preference.value = level.name
-        preference.summary = getString(
-            R.string.developer_log_level_summary,
-            resolveLogLevelLabel(level)
-        )
+        preference.summary =
+            getString(
+                R.string.developer_log_level_summary,
+                resolveLogLevelLabel(level),
+            )
     }
 
-    private fun resolveLogLevelLabel(level: LogLevel): String {
-        return when (level) {
+    private fun resolveLogLevelLabel(level: LogLevel): String =
+        when (level) {
             LogLevel.DEBUG -> getString(R.string.developer_log_level_entry_debug)
             LogLevel.INFO -> getString(R.string.developer_log_level_entry_info)
             LogLevel.WARN -> getString(R.string.developer_log_level_entry_warn)
             LogLevel.ERROR -> getString(R.string.developer_log_level_entry_error)
         }
-    }
 
     private fun refreshLogPreferenceState() {
         val summaryOn = getString(R.string.developer_app_log_enable_summary_on)
@@ -321,14 +346,19 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
     }
 
     private class DeveloperSettingDataStore : PreferenceDataStore() {
-        override fun getBoolean(key: String?, defValue: Boolean): Boolean {
-            return when (key) {
+        override fun getBoolean(
+            key: String?,
+            defValue: Boolean
+        ): Boolean =
+            when (key) {
                 KEY_APP_LOG_ENABLE -> LogSystem.getRuntimeState().debugSessionEnabled
                 else -> defValue
             }
-        }
 
-        override fun putBoolean(key: String?, value: Boolean) {
+        override fun putBoolean(
+            key: String?,
+            value: Boolean
+        ) {
             when (key) {
                 KEY_APP_LOG_ENABLE -> {
                     DevelopConfig.putDdLogEnable(LogSystem.getRuntimeState().debugSessionEnabled)
@@ -336,24 +366,33 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             }
         }
 
-        override fun getString(key: String?, defValue: String?): String? {
-            return when (key) {
-                KEY_LOG_LEVEL -> LogSystem.getRuntimeState().activePolicy.defaultLevel.name
+        override fun getString(
+            key: String?,
+            defValue: String?
+        ): String? =
+            when (key) {
+                KEY_LOG_LEVEL ->
+                    LogSystem
+                        .getRuntimeState()
+                        .activePolicy.defaultLevel.name
                 else -> defValue
             }
-        }
 
-        override fun putString(key: String?, value: String?) {
+        override fun putString(
+            key: String?,
+            value: String?
+        ) {
             when (key) {
-                KEY_LOG_LEVEL -> value?.let { raw ->
-                    runCatching { LogLevel.valueOf(raw) }.getOrNull()?.let { level ->
-                        val current = LogSystem.getRuntimeState()
-                        LogSystem.updateLoggingPolicy(
-                            current.activePolicy.copy(defaultLevel = level),
-                            PolicySource.USER_OVERRIDE
-                        )
+                KEY_LOG_LEVEL ->
+                    value?.let { raw ->
+                        runCatching { LogLevel.valueOf(raw) }.getOrNull()?.let { level ->
+                            val current = LogSystem.getRuntimeState()
+                            LogSystem.updateLoggingPolicy(
+                                current.activePolicy.copy(defaultLevel = level),
+                                PolicySource.USER_OVERRIDE,
+                            )
+                        }
                     }
-                }
             }
         }
     }

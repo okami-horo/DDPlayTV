@@ -26,47 +26,46 @@ import kotlin.random.Random
  */
 
 class RadarScanView : View {
-
-    //背景线颜色
+    // 背景线颜色
     private var mBackgroundLineColor = 0
 
-    //背景线宽度
+    // 背景线宽度
     private var mBackgroundLineWidth = 0f
 
-    //扫描线颜色
+    // 扫描线颜色
     private var mScanLineColor = 0
 
-    //扫描线宽度
+    // 扫描线宽度
     private var mScanLineWidth = 0f
 
-    //扫描区域颜色
+    // 扫描区域颜色
     private var mScanFrameColor = 0
 
-    //扫描一圈时间
+    // 扫描一圈时间
     private var mScanOnceTimeMs = 2500
 
-    //扫描区域扇形的角度
+    // 扫描区域扇形的角度
     private val sweepAngle = 120f
 
-    //点颜色
+    // 点颜色
     private var mScanPointColor = 0
 
-    //最小点数量
+    // 最小点数量
     private var mMinPointCount = 0
 
-    //最大点数量
+    // 最大点数量
     private var mMaxPointCount = 0
 
-    //扫描动画
+    // 扫描动画
     private var mScanAnimator: ValueAnimator? = null
 
-    //扫描区域旋转角度
+    // 扫描区域旋转角度
     private var angle = 0
 
-    //扫描动画进度
+    // 扫描动画进度
     private var progress = 0f
 
-    //点集合
+    // 点集合
     private val points = mutableListOf<RectF>()
 
     private lateinit var mBackgroundLinePaint: Paint
@@ -79,7 +78,7 @@ class RadarScanView : View {
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
         context,
         attrs,
-        defStyleAttr
+        defStyleAttr,
     ) {
         setLayerType(LAYER_TYPE_SOFTWARE, null)
         initAttribute(attrs)
@@ -88,71 +87,84 @@ class RadarScanView : View {
 
     private fun initAttribute(attrs: AttributeSet?) {
         val attribute = context.obtainStyledAttributes(attrs, R.styleable.RadarScanView)
-        mBackgroundLineColor = attribute.getColor(
-            R.styleable.RadarScanView_background_line_color,
-            R.color.radar_background_line_color.toResColor(context)
-        )
+        mBackgroundLineColor =
+            attribute.getColor(
+                R.styleable.RadarScanView_background_line_color,
+                R.color.radar_background_line_color.toResColor(context),
+            )
 
-        mBackgroundLineWidth = attribute.getDimension(
-            R.styleable.RadarScanView_background_line_width,
-            dp2px(1).toFloat()
-        )
+        mBackgroundLineWidth =
+            attribute.getDimension(
+                R.styleable.RadarScanView_background_line_width,
+                dp2px(1).toFloat(),
+            )
 
-        mScanLineColor = attribute.getColor(
-            R.styleable.RadarScanView_scan_line_color,
-            R.color.radar_scan_line_color.toResColor(context)
-        )
-        mScanLineWidth = attribute.getDimension(
-            R.styleable.RadarScanView_scan_line_width,
-            dp2px(1.5f).toFloat()
-        )
+        mScanLineColor =
+            attribute.getColor(
+                R.styleable.RadarScanView_scan_line_color,
+                R.color.radar_scan_line_color.toResColor(context),
+            )
+        mScanLineWidth =
+            attribute.getDimension(
+                R.styleable.RadarScanView_scan_line_width,
+                dp2px(1.5f).toFloat(),
+            )
 
-        mScanFrameColor = attribute.getColor(
-            R.styleable.RadarScanView_scan_frame_color,
-            R.color.radar_scan_frame_color.toResColor(context)
-        )
-        mScanPointColor = attribute.getColor(
-            R.styleable.RadarScanView_scan_point_color,
-            R.color.radar_scan_point_color.toResColor(context)
-        )
-        mScanOnceTimeMs = attribute.getInt(
-            R.styleable.RadarScanView_scan_once_time,
-            mScanOnceTimeMs
-        )
-        mMinPointCount = attribute.getInt(
-            R.styleable.RadarScanView_scan_min_point,
-            2
-        )
-        mMaxPointCount = attribute.getInt(
-            R.styleable.RadarScanView_scan_max_point,
-            7
-        )
+        mScanFrameColor =
+            attribute.getColor(
+                R.styleable.RadarScanView_scan_frame_color,
+                R.color.radar_scan_frame_color.toResColor(context),
+            )
+        mScanPointColor =
+            attribute.getColor(
+                R.styleable.RadarScanView_scan_point_color,
+                R.color.radar_scan_point_color.toResColor(context),
+            )
+        mScanOnceTimeMs =
+            attribute.getInt(
+                R.styleable.RadarScanView_scan_once_time,
+                mScanOnceTimeMs,
+            )
+        mMinPointCount =
+            attribute.getInt(
+                R.styleable.RadarScanView_scan_min_point,
+                2,
+            )
+        mMaxPointCount =
+            attribute.getInt(
+                R.styleable.RadarScanView_scan_max_point,
+                7,
+            )
         attribute.recycle()
     }
 
     private fun initPaint() {
-        mBackgroundLinePaint = Paint().apply {
-            color = mBackgroundLineColor
-            style = Paint.Style.STROKE
-            strokeWidth = mBackgroundLineWidth
-            isAntiAlias = true
-        }
+        mBackgroundLinePaint =
+            Paint().apply {
+                color = mBackgroundLineColor
+                style = Paint.Style.STROKE
+                strokeWidth = mBackgroundLineWidth
+                isAntiAlias = true
+            }
 
-        mScanLinePaint = Paint().apply {
-            color = mScanLineColor
-            style = Paint.Style.STROKE
-            strokeWidth = mScanLineWidth
-            isAntiAlias = true
-            strokeCap = Paint.Cap.ROUND
-        }
+        mScanLinePaint =
+            Paint().apply {
+                color = mScanLineColor
+                style = Paint.Style.STROKE
+                strokeWidth = mScanLineWidth
+                isAntiAlias = true
+                strokeCap = Paint.Cap.ROUND
+            }
 
-        mScanFramePaint = Paint().apply {
-            isAntiAlias = true
-        }
+        mScanFramePaint =
+            Paint().apply {
+                isAntiAlias = true
+            }
 
-        mScanPointPaint = Paint().apply {
-            isAntiAlias = true
-        }
+        mScanPointPaint =
+            Paint().apply {
+                isAntiAlias = true
+            }
     }
 
     override fun onDetachedFromWindow() {
@@ -161,26 +173,35 @@ class RadarScanView : View {
         super.onDetachedFromWindow()
     }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+    override fun onSizeChanged(
+        w: Int,
+        h: Int,
+        oldw: Int,
+        oldh: Int
+    ) {
         super.onSizeChanged(w, h, oldw, oldh)
 
-        //扇形的渐变效果
-        mScanFramePaint.shader = SweepGradient(
-            width / 2f,
-            height / 2f,
-            intArrayOf(
-                Color.TRANSPARENT,
-                mScanFrameColor,
-            ),
-            floatArrayOf((360 - sweepAngle) / 360f, 1f)
-        )
+        // 扇形的渐变效果
+        mScanFramePaint.shader =
+            SweepGradient(
+                width / 2f,
+                height / 2f,
+                intArrayOf(
+                    Color.TRANSPARENT,
+                    mScanFrameColor,
+                ),
+                floatArrayOf((360 - sweepAngle) / 360f, 1f),
+            )
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    override fun onMeasure(
+        widthMeasureSpec: Int,
+        heightMeasureSpec: Int
+    ) {
         var width = MeasureSpec.getSize(widthMeasureSpec)
         var height = MeasureSpec.getSize(heightMeasureSpec)
 
-        //宽高相同
+        // 宽高相同
         val minSize = min(width, height)
         width = minSize
         height = minSize
@@ -189,14 +210,14 @@ class RadarScanView : View {
     }
 
     override fun onDraw(canvas: Canvas) {
-        //背景
+        // 背景
         drawBackgroundLine(canvas)
-        //点
+        // 点
         drawPoints(canvas)
-        //扫描区域
+        // 扫描区域
         drawScanFrame(canvas)
 
-        //第一次绘制结束后开启动画
+        // 第一次绘制结束后开启动画
         if (mScanAnimator == null) {
             initAnimator()
         }
@@ -205,67 +226,68 @@ class RadarScanView : View {
     }
 
     private fun initAnimator() {
-        mScanAnimator = ValueAnimator.ofInt(0, 360)
-            .apply {
-                repeatCount = -1
-                duration = mScanOnceTimeMs.toLong()
-                repeatMode = ValueAnimator.RESTART
-                interpolator = LinearInterpolator()
-                addUpdateListener {
-                    angle = it.animatedValue as Int
-                    progress = angle / 360f
-                    postInvalidate()
+        mScanAnimator =
+            ValueAnimator
+                .ofInt(0, 360)
+                .apply {
+                    repeatCount = -1
+                    duration = mScanOnceTimeMs.toLong()
+                    repeatMode = ValueAnimator.RESTART
+                    interpolator = LinearInterpolator()
+                    addUpdateListener {
+                        angle = it.animatedValue as Int
+                        progress = angle / 360f
+                        postInvalidate()
+                    }
+                    addListener(
+                        object : Animator.AnimatorListener {
+                            override fun onAnimationStart(p0: Animator) {
+                                // 创建点信息
+                                createPoints()
+                            }
+
+                            override fun onAnimationEnd(p0: Animator) {
+                            }
+
+                            override fun onAnimationCancel(p0: Animator) {
+                            }
+
+                            override fun onAnimationRepeat(p0: Animator) {
+                                // 重置点信息
+                                createPoints()
+                            }
+                        },
+                    )
+                    start()
                 }
-                addListener(object : Animator.AnimatorListener {
-                    override fun onAnimationStart(p0: Animator) {
-                        //创建点信息
-                        createPoints()
-                    }
-
-                    override fun onAnimationEnd(p0: Animator) {
-
-                    }
-
-                    override fun onAnimationCancel(p0: Animator) {
-
-                    }
-
-                    override fun onAnimationRepeat(p0: Animator) {
-                        //重置点信息
-                        createPoints()
-                    }
-
-                })
-                start()
-            }
     }
 
     /**
      * 背景线
      */
     private fun drawBackgroundLine(canvas: Canvas) {
-        //大圆
+        // 大圆
         val radius = min(width, height) / 2f - mBackgroundLineWidth
         canvas.drawCircle(width / 2f, height / 2f, radius, mBackgroundLinePaint)
 
-        //小圆
+        // 小圆
         val smallCircleRadius = radius / 2f - mBackgroundLineWidth
         canvas.drawCircle(width / 2f, height / 2f, smallCircleRadius, mBackgroundLinePaint)
 
-        //十字线
+        // 十字线
         canvas.drawLine(
             width / 2f,
             mBackgroundLineWidth,
             width / 2f,
             height.toFloat() - mBackgroundLineWidth,
-            mBackgroundLinePaint
+            mBackgroundLinePaint,
         )
         canvas.drawLine(
             mBackgroundLineWidth,
             height / 2f,
             width.toFloat() - mBackgroundLineWidth,
             height / 2f,
-            mBackgroundLinePaint
+            mBackgroundLinePaint,
         )
     }
 
@@ -273,10 +295,10 @@ class RadarScanView : View {
      * 扫描区域
      */
     private fun drawScanFrame(canvas: Canvas) {
-        //旋转画布
+        // 旋转画布
         canvas.rotate(angle.toFloat(), width / 2f, height / 2f)
 
-        //扫描渐变区域
+        // 扫描渐变区域
         canvas.drawArc(
             0f,
             0f,
@@ -285,15 +307,15 @@ class RadarScanView : View {
             -sweepAngle,
             sweepAngle,
             true,
-            mScanFramePaint
+            mScanFramePaint,
         )
-        //扫描线
+        // 扫描线
         canvas.drawLine(
             width / 2f + mBackgroundLineWidth,
             height / 2f,
             width - (mBackgroundLineWidth * 2),
             height / 2f,
-            mScanLinePaint
+            mScanLinePaint,
         )
     }
 
@@ -302,14 +324,14 @@ class RadarScanView : View {
      */
     private fun drawPoints(canvas: Canvas) {
         for (point in points) {
-            //大小渐增
+            // 大小渐增
             val pSize = progress * point.width()
 
-            //颜色透明度: 0 -> 255 -> 0
+            // 颜色透明度: 0 -> 255 -> 0
             val percent = if (progress - 0.5 > 0) 1 - progress else progress
             mScanPointPaint.color = mScanPointColor.opacity(percent)
 
-            //绘制点
+            // 绘制点
             canvas.drawCircle(point.left, point.top, pSize / 2, mScanPointPaint)
         }
     }
@@ -320,23 +342,23 @@ class RadarScanView : View {
     private fun createPoints() {
         points.clear()
 
-        //点所在范围圆的信息
+        // 点所在范围圆的信息
         val maxRadius = min(width, height) / 2f - mBackgroundLineWidth
         val centerX = (width / 2f)
         val centerY = (height / 2f)
-        //随机点数量
+        // 随机点数量
         val count = Random.nextInt(mMinPointCount, mMaxPointCount)
 
         for (i in 0..count) {
-            //随机大小
+            // 随机大小
             val rSize = Random.nextInt(10, 20)
             val size = dp2px(rSize).toFloat()
-            //随机角度
+            // 随机角度
             val rAngle = Random.nextFloat() * 360
-            //随机在圆半径上位置
+            // 随机在圆半径上位置
             val rRadius = Random.nextFloat() * (maxRadius - (size / 2))
 
-            //计算点位置
+            // 计算点位置
             val x = centerX + cos(rAngle * Math.PI / 180).toFloat() * rRadius
             val y = centerY + sin(rAngle * Math.PI / 180).toFloat() * rRadius
 

@@ -18,9 +18,8 @@ class PagingFooterViewHolder(
     parent: ViewGroup,
     private val retryCallback: (() -> Unit)?
 ) : RecyclerView.ViewHolder(
-    LayoutInflater.from(parent.context).inflate(R.layout.item_paging_footer, parent, false)
-) {
-
+        LayoutInflater.from(parent.context).inflate(R.layout.item_paging_footer, parent, false),
+    ) {
     private val binding = DataBindingUtil.bind<ItemPagingFooterBinding>(itemView)!!
     private val loadingAnimation =
         AnimationUtils.loadAnimation(itemView.context, R.anim.anim_footer_loading)

@@ -5,7 +5,8 @@ import android.content.ContextWrapper
 import androidx.test.core.app.ApplicationProvider
 import java.io.File
 
-internal class TestLogContext(private val dir: File) :
-    ContextWrapper(ApplicationProvider.getApplicationContext<Context>()) {
+internal class TestLogContext(
+    private val dir: File
+) : ContextWrapper(ApplicationProvider.getApplicationContext<Context>()) {
     override fun getFilesDir(): File = dir
 }

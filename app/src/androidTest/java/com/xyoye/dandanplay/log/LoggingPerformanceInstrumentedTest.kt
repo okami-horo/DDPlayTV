@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit
  */
 @RunWith(AndroidJUnit4::class)
 class LoggingPerformanceInstrumentedTest {
-
     private lateinit var context: Context
 
     @Before
@@ -52,15 +51,17 @@ class LoggingPerformanceInstrumentedTest {
 
     @Test
     fun compareDefaultAndHighVolumePolicies() {
-        val defaultResult = measureScenario(
-            policy = LogPolicy.defaultReleasePolicy(),
-            enableDebug = false
-        )
+        val defaultResult =
+            measureScenario(
+                policy = LogPolicy.defaultReleasePolicy(),
+                enableDebug = false,
+            )
 
-        val highVolumeResult = measureScenario(
-            policy = LogPolicy.highVolumePolicy(),
-            enableDebug = true
-        )
+        val highVolumeResult =
+            measureScenario(
+                policy = LogPolicy.highVolumePolicy(),
+                enableDebug = true,
+            )
 
         // 默认策略不应生成本地日志文件
         assertEquals(0L, defaultResult.fileSizeBytes)
@@ -70,15 +71,16 @@ class LoggingPerformanceInstrumentedTest {
         val coldStartBudget = defaultResult.coldStartMs + 1200
         assertTrue(
             "高日志量冷启动耗时超出预期: ${highVolumeResult.coldStartMs}ms > ${coldStartBudget}ms",
-            highVolumeResult.coldStartMs <= coldStartBudget
+            highVolumeResult.coldStartMs <= coldStartBudget,
         )
 
         // 高频交互阶段允许高日志量策略有额外开销，但不应超过基线的约 3 倍或额外 500ms（取更大值作为上限）
-        val interactionBudget = (defaultResult.interactionMs * 3)
-            .coerceAtLeast(defaultResult.interactionMs + 500)
+        val interactionBudget =
+            (defaultResult.interactionMs * 3)
+                .coerceAtLeast(defaultResult.interactionMs + 500)
         assertTrue(
             "高日志量交互耗时超出预期: ${highVolumeResult.interactionMs}ms > ${interactionBudget}ms",
-            highVolumeResult.interactionMs <= interactionBudget
+            highVolumeResult.interactionMs <= interactionBudget,
         )
     }
 
@@ -96,39 +98,42 @@ class LoggingPerformanceInstrumentedTest {
         }
 
         // 冷启动：首次日志写入（包含可能的文件 prepare）
-        val coldStartMs = measureMs {
-            LogSystem.log(
-                LogEvent(
-                    level = LogLevel.INFO,
-                    module = LogModule.CORE,
-                    message = "cold-start-log"
-                )
-            )
-            awaitWriterDrain()
-        }
-
-        // 高频交互：连续写入多条日志
-        val interactionMs = measureMs {
-            repeat(events) { index ->
+        val coldStartMs =
+            measureMs {
                 LogSystem.log(
                     LogEvent(
-                        level = LogLevel.DEBUG,
-                        module = LogModule.PLAYER,
-                        message = "interaction-$index",
-                        context = mapOf(
-                            "scene" to "performance_test",
-                            "seq" to index.toString()
-                        )
-                    )
+                        level = LogLevel.INFO,
+                        module = LogModule.CORE,
+                        message = "cold-start-log",
+                    ),
                 )
+                awaitWriterDrain()
             }
-            awaitWriterDrain()
-        }
+
+        // 高频交互：连续写入多条日志
+        val interactionMs =
+            measureMs {
+                repeat(events) { index ->
+                    LogSystem.log(
+                        LogEvent(
+                            level = LogLevel.DEBUG,
+                            module = LogModule.PLAYER,
+                            message = "interaction-$index",
+                            context =
+                                mapOf(
+                                    "scene" to "performance_test",
+                                    "seq" to index.toString(),
+                                ),
+                        ),
+                    )
+                }
+                awaitWriterDrain()
+            }
 
         return PerfResult(
             coldStartMs = coldStartMs,
             interactionMs = interactionMs,
-            fileSizeBytes = currentLogSize()
+            fileSizeBytes = currentLogSize(),
         )
     }
 
@@ -169,12 +174,13 @@ class LoggingPerformanceInstrumentedTest {
 
     private fun restoreDefaultPolicy() {
         LogSystem.updateLoggingPolicy(LogPolicy.defaultReleasePolicy(), PolicySource.DEFAULT)
-        val defaultState = LogRuntimeState(
-            activePolicy = LogPolicy.defaultReleasePolicy(),
-            policySource = PolicySource.DEFAULT,
-            debugToggleState = DebugToggleState.OFF,
-            debugSessionEnabled = false
-        )
+        val defaultState =
+            LogRuntimeState(
+                activePolicy = LogPolicy.defaultReleasePolicy(),
+                policySource = PolicySource.DEFAULT,
+                debugToggleState = DebugToggleState.OFF,
+                debugSessionEnabled = false,
+            )
         getLogWriter()?.updateRuntimeState(defaultState)
         LogSystem.stopDebugSession()
     }

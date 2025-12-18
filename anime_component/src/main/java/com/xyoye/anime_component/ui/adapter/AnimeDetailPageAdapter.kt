@@ -16,15 +16,13 @@ class AnimeDetailPageAdapter(
     activity: FragmentActivity,
     val tabs: Array<AnimeDetailTab>
 ) : FragmentStateAdapter(activity) {
-
     override fun getItemCount() = tabs.size
 
-    override fun createFragment(position: Int): Fragment {
-        return when (tabs[position]) {
+    override fun createFragment(position: Int): Fragment =
+        when (tabs[position]) {
             AnimeDetailTab.INFO -> AnimeIntroFragment()
             AnimeDetailTab.EPISODES -> AnimeEpisodeFragment()
             AnimeDetailTab.RECOMMEND -> AnimeRecommendFragment()
             else -> AnimeIntroFragment()
         }
-    }
 }

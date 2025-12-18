@@ -34,7 +34,7 @@ class AnimeFollowActivity : BaseActivity<AnimeFollowViewModel, ActivityAnimeFoll
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            AnimeFollowViewModel::class.java
+            AnimeFollowViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_anime_follow
@@ -45,7 +45,6 @@ class AnimeFollowActivity : BaseActivity<AnimeFollowViewModel, ActivityAnimeFoll
         title = "我的追番"
 
         dataBinding.followRv.apply {
-
             layoutManager = gridEmpty(3)
 
             adapter = animeAdapter
@@ -55,8 +54,8 @@ class AnimeFollowActivity : BaseActivity<AnimeFollowViewModel, ActivityAnimeFoll
                 ItemDecorationDrawable(
                     pxValue,
                     pxValue,
-                    R.color.item_bg_color.toResColor(this@AnimeFollowActivity)
-                )
+                    R.color.item_bg_color.toResColor(this@AnimeFollowActivity),
+                ),
             )
         }
 
@@ -72,13 +71,17 @@ class AnimeFollowActivity : BaseActivity<AnimeFollowViewModel, ActivityAnimeFoll
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        mMenus = AnimeSearchMenus.inflater(this, menu).apply {
-            onSearchTextChanged { viewModel.searchAnime(it) }
-        }
+        mMenus =
+            AnimeSearchMenus.inflater(this, menu).apply {
+                onSearchTextChanged { viewModel.searchAnime(it) }
+            }
         return super.onCreateOptionsMenu(menu)
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK && mMenus?.handleBackPressed() == true) {
             return true
         }

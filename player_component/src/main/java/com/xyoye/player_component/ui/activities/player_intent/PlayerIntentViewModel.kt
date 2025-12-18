@@ -30,18 +30,20 @@ class PlayerIntentViewModel : BaseViewModel() {
     fun addUnrecognizedFile(filePath: String) {
         SupervisorScope.IO.launch {
             val videoFile = File(filePath)
-            if (videoFile.exists().not())
+            if (videoFile.exists().not()) {
                 return@launch
+            }
 
             val videoData = DatabaseManager.instance.getVideoDao().findVideoByPath(filePath)
-            if (videoData != null)
+            if (videoData != null) {
                 return@launch
+            }
 
             val folderPath = getDirPath(filePath)
             val extendVideos = VideoScan.traverse(folderPath)
             if (extendVideos.isNotEmpty()) {
                 DatabaseManager.instance.getExtendFolderDao().insert(
-                    ExtendFolderEntity(folderPath, extendVideos.size)
+                    ExtendFolderEntity(folderPath, extendVideos.size),
                 )
             }
         }
@@ -57,11 +59,13 @@ class PlayerIntentViewModel : BaseViewModel() {
 
     private suspend fun setupLinkSource(link: String): Boolean {
         showLoading()
-        val mediaSource = MediaLibraryEntity.HISTORY.copy(url = link)
-            .run { StorageFactory.createStorage(this) }
-            ?.run { this as? LinkStorage }
-            ?.run { getRootFile() }
-            ?.run { StorageVideoSourceFactory.create(this) }
+        val mediaSource =
+            MediaLibraryEntity.HISTORY
+                .copy(url = link)
+                .run { StorageFactory.createStorage(this) }
+                ?.run { this as? LinkStorage }
+                ?.run { getRootFile() }
+                ?.run { StorageVideoSourceFactory.create(this) }
         hideLoading()
 
         if (mediaSource == null) {

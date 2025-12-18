@@ -12,4 +12,5 @@ import kotlinx.parcelize.Parcelize
 @JsonClass(generateAdapter = true)
 data class FollowAnimeData(
     val favorites: MutableList<AnimeData> = mutableListOf()
-) : CommonJsonData(), Parcelable
+) : CommonJsonData(),
+    Parcelable

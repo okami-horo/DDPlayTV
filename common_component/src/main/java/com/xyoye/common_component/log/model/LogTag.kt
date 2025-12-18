@@ -27,9 +27,7 @@ class LogTag(
         return result
     }
 
-    override fun toString(): String {
-        return "LogTag(module=$module, value=$value)"
-    }
+    override fun toString(): String = "LogTag(module=$module, value=$value)"
 
     companion object {
         const val MAX_TAG_LENGTH = 32

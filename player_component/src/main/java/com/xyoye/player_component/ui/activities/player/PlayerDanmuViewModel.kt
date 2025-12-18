@@ -23,7 +23,8 @@ class PlayerDanmuViewModel : BaseViewModel() {
 
     fun matchDanmu(videoSource: BaseVideoSource) {
         viewModelScope.launch(Dispatchers.IO) {
-            DanmuSourceFactory.build(videoSource)
+            DanmuSourceFactory
+                .build(videoSource)
                 ?.let {
                     DanmuFinder.instance.downloadMatched(it)
                 }?.let {
@@ -33,8 +34,9 @@ class PlayerDanmuViewModel : BaseViewModel() {
     }
 
     fun searchDanmu(searchText: String) {
-        if (searchText.isEmpty())
+        if (searchText.isEmpty()) {
             return
+        }
 
         viewModelScope.launch {
             val result = DanmuFinder.instance.search(searchText).flatMap { it.episodes }
@@ -45,10 +47,11 @@ class PlayerDanmuViewModel : BaseViewModel() {
     fun downloadDanmu(episode: DanmuEpisodeData) {
         viewModelScope.launch {
             showLoading()
-            val result = DanmuFinder.instance.downloadEpisode(episode) ?: run {
-                ToastCenter.showError("弹幕保存失败")
-                return@launch
-            }
+            val result =
+                DanmuFinder.instance.downloadEpisode(episode) ?: run {
+                    ToastCenter.showError("弹幕保存失败")
+                    return@launch
+                }
             hideLoading()
 
             downloadDanmuLiveData.postValue(result)

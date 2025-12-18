@@ -22,32 +22,31 @@ import kotlin.coroutines.cancellation.CancellationException
  * Created by xyoye on 2023/4/1.
  */
 
-class RemoteStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
-
+class RemoteStorage(
+    library: MediaLibraryEntity
+) : AbstractStorage(library) {
     private var storageFilesSnapshot = listOf<RemoteVideoData>()
 
     override var rootUri: Uri = generateRootUri()
 
-    override suspend fun listFiles(file: StorageFile): List<StorageFile> {
-        return if (file.isRootFile()) {
+    override suspend fun listFiles(file: StorageFile): List<StorageFile> =
+        if (file.isRootFile()) {
             getRemoteRootFiles() ?: emptyList()
         } else {
             (file as RemoteStorageFile).getRealFile().childData
         }.map { RemoteStorageFile(this, it) }
-    }
 
     override suspend fun getRootFile(): StorageFile {
         val videoData = RemoteVideoData(absolutePath = "/", isFolder = true)
         return RemoteStorageFile(this, videoData)
     }
 
-    override suspend fun openFile(file: StorageFile): InputStream? {
-        return null
-    }
+    override suspend fun openFile(file: StorageFile): InputStream? = null
 
-    override suspend fun pathFile(path: String, isDirectory: Boolean): StorageFile? {
-        return null
-    }
+    override suspend fun pathFile(
+        path: String,
+        isDirectory: Boolean
+    ): StorageFile? = null
 
     override suspend fun historyFile(history: PlayHistoryEntity): StorageFile? {
         val videoId = Uri.parse(history.url).lastPathSegment ?: return null
@@ -61,7 +60,8 @@ class RemoteStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         val fileUrl = (file as RemoteStorageFile).fileUrl()
         val token = library.remoteSecret ?: return fileUrl
 
-        return Uri.parse(fileUrl)
+        return Uri
+            .parse(fileUrl)
             .buildUpon()
             .appendQueryParameter("token", token)
             .build()
@@ -70,12 +70,13 @@ class RemoteStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
 
     override suspend fun cacheDanmu(file: StorageFile): LocalDanmuBean? {
         val videoData = (file as RemoteStorageFile).getRealFile()
-        val episode = DanmuEpisodeData(
-            episodeId = videoData.Id,
-            episodeTitle = videoData.EpisodeTitle,
-            animeId = videoData.AnimeId,
-            animeTitle = videoData.AnimeTitle
-        )
+        val episode =
+            DanmuEpisodeData(
+                episodeId = videoData.Id,
+                episodeTitle = videoData.EpisodeTitle,
+                animeId = videoData.AnimeId,
+                animeTitle = videoData.AnimeTitle,
+            )
         return DanmuFinder.instance.downloadEpisode(episode)
     }
 
@@ -83,18 +84,22 @@ class RemoteStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         val videoData = (file as RemoteStorageFile).getRealFile()
         val result = RemoteRepository.getRelatedSubtitles(this, videoData.Id)
 
-        val subtitleFileName = result.getOrNull()?.subtitles?.firstOrNull()?.fileName
-            ?: return null
+        val subtitleFileName =
+            result
+                .getOrNull()
+                ?.subtitles
+                ?.firstOrNull()
+                ?.fileName
+                ?: return null
 
-        return RemoteRepository.downloadSubtitle(this, videoData.Id, subtitleFileName)
+        return RemoteRepository
+            .downloadSubtitle(this, videoData.Id, subtitleFileName)
             .getOrNull()
             ?.byteStream()
             ?.let { SubtitleUtils.saveSubtitle(subtitleFileName, it) }
     }
 
-    override fun supportSearch(): Boolean {
-        return true
-    }
+    override fun supportSearch(): Boolean = true
 
     override suspend fun search(keyword: String): List<StorageFile> {
         if (keyword.isEmpty()) {
@@ -105,9 +110,7 @@ class RemoteStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             .map { RemoteStorageFile(this, it) }
     }
 
-    override suspend fun test(): Boolean {
-        return getRemoteRootFiles() != null
-    }
+    override suspend fun test(): Boolean = getRemoteRootFiles() != null
 
     private suspend fun getRemoteRootFiles(): List<RemoteVideoData>? {
         val result = RemoteRepository.getStorageFiles(this)

@@ -16,24 +16,26 @@ open class CommonDialog private constructor(
     activity: Activity,
     private val builder: Builder
 ) : BaseBottomDialog<DialogCommonBinding>(activity) {
+    private val delayTimer =
+        object : CountDownTimer(5000L, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                rootViewBinding.positiveBt.isEnabled = false
+                val time = (millisUntilFinished / 1000L).toInt() + 1
+                val timeText = "$time S"
+                rootViewBinding.positiveBt.setTextColorRes(R.color.text_gray)
+                setPositiveText(timeText)
+            }
 
-    private val delayTimer = object : CountDownTimer(5000L, 1000L) {
-        override fun onTick(millisUntilFinished: Long) {
-            rootViewBinding.positiveBt.isEnabled = false
-            val time = (millisUntilFinished / 1000L).toInt() + 1
-            val timeText = "$time S"
-            rootViewBinding.positiveBt.setTextColorRes(R.color.text_gray)
-            setPositiveText(timeText)
+            override fun onFinish() {
+                rootViewBinding.positiveBt.isEnabled = true
+                rootViewBinding.positiveBt.setTextColorRes(R.color.text_theme)
+                setPositiveText("确定")
+            }
         }
 
-        override fun onFinish() {
-            rootViewBinding.positiveBt.isEnabled = true
-            rootViewBinding.positiveBt.setTextColorRes(R.color.text_theme)
-            setPositiveText("确定")
-        }
-    }
-
-    open class Builder(private val activity: Activity) {
+    open class Builder(
+        private val activity: Activity
+    ) {
         var tips: String? = null
         var content: String = ""
         var cancelable = true
@@ -87,9 +89,7 @@ open class CommonDialog private constructor(
     override fun getChildLayoutId() = R.layout.dialog_common
 
     override fun initView(binding: DialogCommonBinding) {
-
         builder.apply {
-
             setTitle(tips ?: "提示")
 
             binding.contentTv.text = content

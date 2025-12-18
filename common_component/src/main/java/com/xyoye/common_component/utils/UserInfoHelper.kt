@@ -9,7 +9,6 @@ import com.xyoye.data_component.data.LoginData
  */
 
 object UserInfoHelper {
-
     val loginLiveData = MutableLiveData<LoginData>()
     var mLoginData: LoginData? = null
 
@@ -33,7 +32,7 @@ object UserInfoHelper {
         updateLoginInfo()
     }
 
-    fun updateLoginInfo(){
+    fun updateLoginInfo() {
         loginLiveData.postValue(mLoginData)
     }
 }

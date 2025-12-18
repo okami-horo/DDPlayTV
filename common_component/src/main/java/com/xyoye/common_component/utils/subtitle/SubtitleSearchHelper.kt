@@ -20,35 +20,37 @@ import kotlinx.coroutines.flow.flatMapLatest
  * Created by xyoye on 2021/3/25.
  */
 
-class SubtitleSearchHelper(private val scope: CoroutineScope) {
-
+class SubtitleSearchHelper(
+    private val scope: CoroutineScope
+) {
     private val searchKeyLiveData = MutableLiveData<String>()
 
-    val subtitleLiveData = searchKeyLiveData.asFlow()
-        .flatMapLatest {
-            getPager(it).flow.cachedIn(scope)
-        }.asLiveData()
+    val subtitleLiveData =
+        searchKeyLiveData
+            .asFlow()
+            .flatMapLatest {
+                getPager(it).flow.cachedIn(scope)
+            }.asLiveData()
 
     fun search(keyword: String) {
         searchKeyLiveData.postValue(keyword)
     }
 
-    private fun getPager(keyword: String): Pager<Int, SubtitleSourceBean> {
-        return Pager(
+    private fun getPager(keyword: String): Pager<Int, SubtitleSourceBean> =
+        Pager(
             config = PagingConfig(15, 15),
-            pagingSourceFactory = { SearchSubtitleSource(keyword) }
+            pagingSourceFactory = { SearchSubtitleSource(keyword) },
         )
-    }
 
-    private inner class SearchSubtitleSource(private val keyword: String) :
-        PagingSource<Int, SubtitleSourceBean>() {
-
+    private inner class SearchSubtitleSource(
+        private val keyword: String
+    ) : PagingSource<Int, SubtitleSourceBean>() {
         override suspend fun load(params: LoadParams<Int>): LoadResult<Int, SubtitleSourceBean> {
             if (params is LoadParams.Prepend) {
                 return LoadResult.Page(
                     data = listOf(),
                     prevKey = null,
-                    nextKey = null
+                    nextKey = null,
                 )
             }
 
@@ -65,21 +67,20 @@ class SubtitleSearchHelper(private val scope: CoroutineScope) {
                 }
             }
 
-            val subtitleData = result.getOrNull()?.sub?.subs?.map {
-                SubtitleSourceBean(
-                    it.id,
-                    it.native_name.ifNullOrBlank { it.videoname.orEmpty() },
-                    it.upload_time,
-                    it.subtype,
-                    it.lang?.desc
-                )
-            } ?: emptyList()
+            val subtitleData =
+                result.getOrNull()?.sub?.subs?.map {
+                    SubtitleSourceBean(
+                        it.id,
+                        it.native_name.ifNullOrBlank { it.videoname.orEmpty() },
+                        it.upload_time,
+                        it.subtype,
+                        it.lang?.desc,
+                    )
+                } ?: emptyList()
 
             return LoadResult.Page(subtitleData, null, page + 1)
         }
 
-        override fun getRefreshKey(state: PagingState<Int, SubtitleSourceBean>): Int? {
-            return null
-        }
+        override fun getRefreshKey(state: PagingState<Int, SubtitleSourceBean>): Int? = null
     }
 }

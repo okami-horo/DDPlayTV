@@ -27,9 +27,9 @@ import android.view.animation.Interpolator
 import androidx.annotation.ColorInt
 import androidx.annotation.IntDef
 import androidx.core.view.ViewCompat
-import com.xyoye.dandanplay.R
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.dandanplay.R
 
 /**
  * Animated SVG Drawing for Android
@@ -57,7 +57,6 @@ class AnimatedSvgView : View {
     private var mViewport = PointF(mViewportWidth, mViewportHeight)
     private val mGlyphData = mutableListOf<GlyphData>()
 
-
     /**
      * Get the animation state.
      *
@@ -76,82 +75,92 @@ class AnimatedSvgView : View {
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
         context,
         attrs,
-        defStyleAttr
+        defStyleAttr,
     ) {
         mFillPaint.apply {
             isAntiAlias = true
             style = Paint.Style.FILL
         }
         if (attrs != null) {
-            context.obtainStyledAttributes(
-                attrs,
-                R.styleable.AnimatedSvgView
-            ).run {
-                mViewportWidth = getFloat(R.styleable.AnimatedSvgView_animatedSvgImageSizeX, 512f)
-                aspectRatioWidth = getFloat(R.styleable.AnimatedSvgView_animatedSvgImageSizeX, 512f)
-                mViewportHeight = getFloat(R.styleable.AnimatedSvgView_animatedSvgImageSizeY, 512f)
-                aspectRatioHeight =
-                    getFloat(R.styleable.AnimatedSvgView_animatedSvgImageSizeY, 512f)
-                mTraceTime = getInt(R.styleable.AnimatedSvgView_animatedSvgTraceTime, 2000)
-                mTraceTimePerGlyph =
-                    getInt(R.styleable.AnimatedSvgView_animatedSvgTraceTimePerGlyph, 1000)
-                mFillStart = getInt(R.styleable.AnimatedSvgView_animatedSvgFillStart, 1200)
-                mFillTime = getInt(R.styleable.AnimatedSvgView_animatedSvgFillTime, 1000)
-                val traceMarkerLength =
-                    getInt(R.styleable.AnimatedSvgView_animatedSvgTraceMarkerLength, 16)
-                val glyphStringsId =
-                    getResourceId(R.styleable.AnimatedSvgView_animatedSvgGlyphStrings, 0)
-                val traceResidueColorsId =
-                    getResourceId(R.styleable.AnimatedSvgView_animatedSvgTraceResidueColors, 0)
-                val traceColorsId =
-                    getResourceId(R.styleable.AnimatedSvgView_animatedSvgTraceColors, 0)
-                val fillColorsId =
-                    getResourceId(R.styleable.AnimatedSvgView_animatedSvgFillColors, 0)
+            context
+                .obtainStyledAttributes(
+                    attrs,
+                    R.styleable.AnimatedSvgView,
+                ).run {
+                    mViewportWidth = getFloat(R.styleable.AnimatedSvgView_animatedSvgImageSizeX, 512f)
+                    aspectRatioWidth = getFloat(R.styleable.AnimatedSvgView_animatedSvgImageSizeX, 512f)
+                    mViewportHeight = getFloat(R.styleable.AnimatedSvgView_animatedSvgImageSizeY, 512f)
+                    aspectRatioHeight =
+                        getFloat(R.styleable.AnimatedSvgView_animatedSvgImageSizeY, 512f)
+                    mTraceTime = getInt(R.styleable.AnimatedSvgView_animatedSvgTraceTime, 2000)
+                    mTraceTimePerGlyph =
+                        getInt(R.styleable.AnimatedSvgView_animatedSvgTraceTimePerGlyph, 1000)
+                    mFillStart = getInt(R.styleable.AnimatedSvgView_animatedSvgFillStart, 1200)
+                    mFillTime = getInt(R.styleable.AnimatedSvgView_animatedSvgFillTime, 1000)
+                    val traceMarkerLength =
+                        getInt(R.styleable.AnimatedSvgView_animatedSvgTraceMarkerLength, 16)
+                    val glyphStringsId =
+                        getResourceId(R.styleable.AnimatedSvgView_animatedSvgGlyphStrings, 0)
+                    val traceResidueColorsId =
+                        getResourceId(R.styleable.AnimatedSvgView_animatedSvgTraceResidueColors, 0)
+                    val traceColorsId =
+                        getResourceId(R.styleable.AnimatedSvgView_animatedSvgTraceColors, 0)
+                    val fillColorsId =
+                        getResourceId(R.styleable.AnimatedSvgView_animatedSvgFillColors, 0)
 
-                mMarkerLength = TypedValue.applyDimension(
-                    TypedValue.COMPLEX_UNIT_DIP,
-                    traceMarkerLength.toFloat(),
-                    resources.displayMetrics
-                )
-                if (glyphStringsId != 0) {
-                    mGlyphStrings = resources.getStringArray(glyphStringsId)
-                    setTraceResidueColor(Color.argb(50, 0, 0, 0))
-                    setTraceColor(Color.BLACK)
+                    mMarkerLength =
+                        TypedValue.applyDimension(
+                            TypedValue.COMPLEX_UNIT_DIP,
+                            traceMarkerLength.toFloat(),
+                            resources.displayMetrics,
+                        )
+                    if (glyphStringsId != 0) {
+                        mGlyphStrings = resources.getStringArray(glyphStringsId)
+                        setTraceResidueColor(Color.argb(50, 0, 0, 0))
+                        setTraceColor(Color.BLACK)
+                    }
+                    if (traceResidueColorsId != 0) {
+                        mTraceResidueColors = resources.getIntArray(traceResidueColorsId)
+                    }
+                    if (traceColorsId != 0) {
+                        mTraceColors = resources.getIntArray(traceColorsId)
+                    }
+                    if (fillColorsId != 0) {
+                        mFillColors = resources.getIntArray(fillColorsId)
+                    }
+                    recycle()
                 }
-                if (traceResidueColorsId != 0) {
-                    mTraceResidueColors = resources.getIntArray(traceResidueColorsId)
-                }
-                if (traceColorsId != 0) {
-                    mTraceColors = resources.getIntArray(traceColorsId)
-                }
-                if (fillColorsId != 0) {
-                    mFillColors = resources.getIntArray(fillColorsId)
-                }
-                recycle()
-            }
 
             mViewport = PointF(mViewportWidth, mViewportHeight)
         }
         setLayerType(LAYER_TYPE_SOFTWARE, null)
     }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+    override fun onSizeChanged(
+        w: Int,
+        h: Int,
+        oldw: Int,
+        oldh: Int
+    ) {
         super.onSizeChanged(w, h, oldw, oldh)
         mWidth = w
         mHeight = h
         rebuildGlyphData()
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    override fun onMeasure(
+        widthMeasureSpec: Int,
+        heightMeasureSpec: Int
+    ) {
         var width = MeasureSpec.getSize(widthMeasureSpec)
         var height = MeasureSpec.getSize(heightMeasureSpec)
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
         if (
-            height <= 0
-            && width <= 0
-            && heightMode == MeasureSpec.UNSPECIFIED
-            && widthMode == MeasureSpec.UNSPECIFIED
+            height <= 0 &&
+            width <= 0 &&
+            heightMode == MeasureSpec.UNSPECIFIED &&
+            widthMode == MeasureSpec.UNSPECIFIED
         ) {
             width = 0
             height = 0
@@ -166,7 +175,7 @@ class AnimatedSvgView : View {
         }
         super.onMeasure(
             MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+            MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),
         )
     }
 
@@ -179,35 +188,39 @@ class AnimatedSvgView : View {
         val time = System.currentTimeMillis() - mStartTime
         // Draw outlines (starts as traced)
         for (i in mGlyphData.indices) {
-            val phase = constrain(
-                0f, 1f,
-                (time - (mTraceTime - mTraceTimePerGlyph) * i * 1f / mGlyphData.size) * 1f / mTraceTimePerGlyph
-            )
+            val phase =
+                constrain(
+                    0f,
+                    1f,
+                    (time - (mTraceTime - mTraceTimePerGlyph) * i * 1f / mGlyphData.size) * 1f / mTraceTimePerGlyph,
+                )
 
             val distance = INTERPOLATOR.getInterpolation(phase) * mGlyphData[i].length
             mGlyphData[i].paint.apply {
                 color = mTraceResidueColors[i]
-                pathEffect = DashPathEffect(
-                    floatArrayOf(
-                        distance,
-                        mGlyphData[i].length
-                    ),
-                    0f
-                )
+                pathEffect =
+                    DashPathEffect(
+                        floatArrayOf(
+                            distance,
+                            mGlyphData[i].length,
+                        ),
+                        0f,
+                    )
             }
             canvas.drawPath(mGlyphData[i].path, mGlyphData[i].paint)
 
             mGlyphData[i].paint.apply {
                 mTraceColors[i]
-                pathEffect = DashPathEffect(
-                    floatArrayOf(
+                pathEffect =
+                    DashPathEffect(
+                        floatArrayOf(
+                            0f,
+                            distance,
+                            if (phase > 0) mMarkerLength else 0f,
+                            mGlyphData[i].length,
+                        ),
                         0f,
-                        distance,
-                        if (phase > 0) mMarkerLength else 0f,
-                        mGlyphData[i].length
-                    ),
-                    0f
-                )
+                    )
             }
             canvas.drawPath(mGlyphData[i].path, mGlyphData[i].paint)
         }
@@ -244,11 +257,11 @@ class AnimatedSvgView : View {
      * before playing the animation.
      */
     private fun rebuildGlyphData() {
-        val X = mWidth / mViewport.x
-        val Y = mHeight / mViewport.y
+        val xScale = mWidth / mViewport.x
+        val yScale = mHeight / mViewport.y
         val scaleMatrix = Matrix()
-        val outerRect = RectF(X, X, Y, Y)
-        scaleMatrix.setScale(X, Y, outerRect.centerX(), outerRect.centerY())
+        val outerRect = RectF(xScale, xScale, yScale, yScale)
+        scaleMatrix.setScale(xScale, yScale, outerRect.centerX(), outerRect.centerY())
         mGlyphData.clear()
         for (i in mGlyphStrings.indices) {
             val glyphData = GlyphData()
@@ -256,11 +269,12 @@ class AnimatedSvgView : View {
                 style = Paint.Style.STROKE
                 isAntiAlias = true
                 color = Color.WHITE
-                strokeWidth = TypedValue.applyDimension(
-                    TypedValue.COMPLEX_UNIT_DIP,
-                    1f,
-                    resources.displayMetrics
-                )
+                strokeWidth =
+                    TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP,
+                        1f,
+                        resources.displayMetrics,
+                    )
             }
 
             try {
@@ -289,7 +303,10 @@ class AnimatedSvgView : View {
      * @param viewportWidth  the width
      * @param viewportHeight the height
      */
-    fun setViewportSize(viewportWidth: Float, viewportHeight: Float) {
+    fun setViewportSize(
+        viewportWidth: Float,
+        viewportHeight: Float
+    ) {
         mViewportWidth = viewportWidth
         mViewportHeight = viewportHeight
         aspectRatioWidth = viewportWidth
@@ -303,7 +320,9 @@ class AnimatedSvgView : View {
      *
      * @param color The color
      */
-    private fun setTraceResidueColor(@ColorInt color: Int) {
+    private fun setTraceResidueColor(
+        @ColorInt color: Int
+    ) {
         val length = mGlyphStrings.size
         val colors = IntArray(length)
         for (i in 0 until length) {
@@ -317,7 +336,9 @@ class AnimatedSvgView : View {
      *
      * @param color The color
      */
-    private fun setTraceColor(@ColorInt color: Int) {
+    private fun setTraceColor(
+        @ColorInt color: Int
+    ) {
         val length = mGlyphStrings.size
         val colors = IntArray(length)
         for (i in 0 until length) {
@@ -331,7 +352,9 @@ class AnimatedSvgView : View {
      *
      * @param color The color
      */
-    fun setFillColor(@ColorInt color: Int) {
+    fun setFillColor(
+        @ColorInt color: Int
+    ) {
         val length = mGlyphStrings.size
         val colors = IntArray(length)
         for (i in 0 until length) {
@@ -412,7 +435,9 @@ class AnimatedSvgView : View {
         mOnStateChangeListener = onStateChangeListener
     }
 
-    private fun changeState(@State state: Int) {
+    private fun changeState(
+        @State state: Int
+    ) {
         if (this.state == state) {
             return
         }
@@ -435,14 +460,16 @@ class AnimatedSvgView : View {
          * [.STATE_FILL_STARTED] or
          * [.STATE_FINISHED]
          */
-        fun onStateChange(@State state: Int)
+        fun onStateChange(
+            @State state: Int
+        )
     }
 
     @IntDef(
         STATE_NOT_STARTED,
         STATE_TRACE_STARTED,
         STATE_FILL_STARTED,
-        STATE_FINISHED
+        STATE_FINISHED,
     )
     annotation class State
 
@@ -457,14 +484,17 @@ class AnimatedSvgView : View {
          * The animation has been reset or hasn't started yet.
          */
         const val STATE_NOT_STARTED = 0
+
         /**
          * The SVG is being traced
          */
         const val STATE_TRACE_STARTED = 1
+
         /**
          * The SVG has been traced and is now being filled
          */
         const val STATE_FILL_STARTED = 2
+
         /**
          * The animation has finished
          */
@@ -472,8 +502,10 @@ class AnimatedSvgView : View {
         private const val TAG = "AnimatedSvgView"
         private val INTERPOLATOR: Interpolator = DecelerateInterpolator()
 
-        private fun constrain(min: Float, max: Float, v: Float): Float {
-            return min.coerceAtLeast(max.coerceAtMost(v))
-        }
+        private fun constrain(
+            min: Float,
+            max: Float,
+            v: Float
+        ): Float = min.coerceAtLeast(max.coerceAtMost(v))
     }
 }

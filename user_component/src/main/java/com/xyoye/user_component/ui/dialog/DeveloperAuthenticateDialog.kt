@@ -2,7 +2,7 @@ package com.xyoye.user_component.ui.dialog
 
 import android.app.Activity
 import com.xyoye.common_component.base.BaseActivity
-import com.xyoye.common_component.config.DevelopConfig
+import com.xyoye.common_component.config.DeveloperCredentialStore
 import com.xyoye.common_component.extension.startUrlActivity
 import com.xyoye.common_component.network.repository.UserRepository
 import com.xyoye.common_component.utils.SupervisorScope
@@ -24,20 +24,17 @@ class DeveloperAuthenticateDialog(
     private val activity: Activity,
     private val onAuthenticate: () -> Unit
 ) : BaseBottomDialog<DialogDeveloperAuthenticateBinding>(activity) {
-
     private lateinit var binding: DialogDeveloperAuthenticateBinding
 
-    override fun getChildLayoutId(): Int {
-        return R.layout.dialog_developer_authenticate
-    }
+    override fun getChildLayoutId(): Int = R.layout.dialog_developer_authenticate
 
     override fun initView(binding: DialogDeveloperAuthenticateBinding) {
         this.binding = binding
 
         setTitle("开发者认证")
 
-        binding.inputAppId.setText(DevelopConfig.getAppId())
-        binding.inputAppSecret.setText(DevelopConfig.getAppSecret())
+        binding.inputAppId.setText(DeveloperCredentialStore.getStoredAppIdForPrefill())
+        binding.inputAppSecret.setText(DeveloperCredentialStore.getStoredAppSecretForPrefill())
 
         setNegativeText("忽略")
         setNegativeListener {
@@ -100,9 +97,12 @@ class DeveloperAuthenticateDialog(
     /**
      * 认证成功
      */
-    private fun authenticateSuccess(appId: String, appSecret: String) {
-        DevelopConfig.putAppId(appId)
-        DevelopConfig.putAppSecret(appSecret)
+    private fun authenticateSuccess(
+        appId: String,
+        appSecret: String
+    ) {
+        DeveloperCredentialStore.putAppId(appId)
+        DeveloperCredentialStore.putAppSecret(appSecret)
         ToastCenter.showSuccess("认证成功")
         onAuthenticate.invoke()
         dismiss()

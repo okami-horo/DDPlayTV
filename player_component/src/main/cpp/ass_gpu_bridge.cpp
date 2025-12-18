@@ -46,6 +46,7 @@ void main() {
     outColor = vec4(rgb, alpha);
 }
 )";
+constexpr long long kDefaultEmbeddedChunkDurationMs = 5000;
 
 struct GpuContext {
     std::mutex mutex;
@@ -711,6 +712,101 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeLoadTrack
     UpdateFrameSizeIfNeeded(context);
     LogInfo("GPU subtitle track loaded");
     return JNI_TRUE;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeInitEmbeddedTrack(
+    JNIEnv *env,
+    jobject /*thiz*/,
+    jlong handle,
+    jbyteArray codec_private,
+    jobjectArray font_dirs,
+    jstring default_font) {
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr) return;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    EnsureAss(context);
+    const auto fontDirectories = JObjectArrayToStrings(env, font_dirs);
+    const std::string defaultFontPath = JStringToUtf8(env, default_font);
+    ConfigureFonts(context, defaultFontPath, fontDirectories);
+    if (context->track != nullptr) {
+        ass_free_track(context->track);
+        context->track = nullptr;
+    }
+    context->track = ass_new_track(context->library);
+    if (context->track == nullptr) {
+        LogError("Failed to create embedded SSA/ASS track");
+        return;
+    }
+    if (codec_private != nullptr) {
+        const jsize length = env->GetArrayLength(codec_private);
+        if (length > 0) {
+            jbyte *bytes = env->GetByteArrayElements(codec_private, nullptr);
+            ass_process_codec_private(context->track,
+                                      reinterpret_cast<char *>(bytes),
+                                      length);
+            env->ReleaseByteArrayElements(codec_private, bytes, JNI_ABORT);
+        }
+    }
+    UpdateFrameSizeIfNeeded(context);
+    context->pending_invalidate = true;
+    LogInfo("Embedded SSA/ASS track initialized");
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeAppendEmbeddedChunk(
+    JNIEnv *env,
+    jobject /*thiz*/,
+    jlong handle,
+    jbyteArray data,
+    jlong time_ms,
+    jlong duration_ms) {
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr) return;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    if (context->track == nullptr) {
+        LogError("Embedded chunk ignored: track not initialized");
+        return;
+    }
+    const jsize length = env->GetArrayLength(data);
+    if (length <= 0) {
+        return;
+    }
+    jbyte *bytes = env->GetByteArrayElements(data, nullptr);
+    const long long safe_duration = duration_ms > 0 ? duration_ms : kDefaultEmbeddedChunkDurationMs;
+    ass_process_chunk(context->track,
+                      reinterpret_cast<char *>(bytes),
+                      length,
+                      static_cast<long long>(time_ms),
+                      safe_duration);
+    env->ReleaseByteArrayElements(data, bytes, JNI_ABORT);
+    context->pending_invalidate = true;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeFlushEmbeddedEvents(
+    JNIEnv *env, jobject /*thiz*/, jlong handle) {
+    (void)env;
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr) return;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    if (context->track != nullptr) {
+        ass_flush_events(context->track);
+        context->pending_invalidate = true;
+    }
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeClearEmbeddedTrack(
+    JNIEnv *env, jobject /*thiz*/, jlong handle) {
+    (void)env;
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr) return;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    if (context->track != nullptr) {
+        ass_free_track(context->track);
+        context->track = nullptr;
+    }
 }
 
 extern "C" JNIEXPORT jlongArray JNICALL

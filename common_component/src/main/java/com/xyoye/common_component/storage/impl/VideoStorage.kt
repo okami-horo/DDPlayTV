@@ -26,9 +26,13 @@ import java.io.InputStream
  * Created by xyoye on 2023/3/22
  */
 
-class VideoStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
-
-    override suspend fun openDirectory(file: StorageFile, refresh: Boolean): List<StorageFile> {
+class VideoStorage(
+    library: MediaLibraryEntity
+) : AbstractStorage(library) {
+    override suspend fun openDirectory(
+        file: StorageFile,
+        refresh: Boolean
+    ): List<StorageFile> {
         if (refresh) {
             deepRefresh()
         }
@@ -50,16 +54,19 @@ class VideoStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         return VideoStorageFile(this, folderBean)
     }
 
-    override suspend fun openFile(file: StorageFile): InputStream {
-        return withContext(Dispatchers.IO) {
+    override suspend fun openFile(file: StorageFile): InputStream =
+        withContext(Dispatchers.IO) {
             FileInputStream(file.filePath())
         }
-    }
 
-    override suspend fun pathFile(path: String, isDirectory: Boolean): StorageFile? {
+    override suspend fun pathFile(
+        path: String,
+        isDirectory: Boolean
+    ): StorageFile? {
         if (isDirectory.not()) {
-            val videoEntity = DatabaseManager.instance.getVideoDao().getVideo(path)
-                ?: return null
+            val videoEntity =
+                DatabaseManager.instance.getVideoDao().getVideo(path)
+                    ?: return null
             return VideoStorageFile(this, videoEntity)
         }
         return null
@@ -72,14 +79,14 @@ class VideoStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String {
-        return file.filePath()
-    }
+    override suspend fun createPlayUrl(file: StorageFile): String = file.filePath()
 
     override suspend fun cacheDanmu(file: StorageFile): LocalDanmuBean? {
         val danmuFileName = getFileNameNoExtension(file.fileName()) + ".xml"
-        return file.getFile<VideoEntity>()
-            ?.folderPath.toFile()
+        return file
+            .getFile<VideoEntity>()
+            ?.folderPath
+            .toFile()
             ?.listFiles()
             ?.filter { it.isFile && isDanmuFile(it.absolutePath) }
             ?.find { getFileName(it.absolutePath) == danmuFileName }
@@ -87,30 +94,31 @@ class VideoStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             ?.let { LocalDanmuBean(it) }
     }
 
-    override suspend fun cacheSubtitle(file: StorageFile): String? {
-        return file.getFile<VideoEntity>()
-            ?.folderPath.toFile()
+    override suspend fun cacheSubtitle(file: StorageFile): String? =
+        file
+            .getFile<VideoEntity>()
+            ?.folderPath
+            .toFile()
             ?.listFiles()
             ?.filter { it.isFile && isSubtitleFile(it.absolutePath) }
             ?.run { SubtitleFinder.preferred(this, file.fileName()) { getFileName(it) } }
             ?.absolutePath
-    }
 
-    override fun supportSearch(): Boolean {
-        return true
-    }
+    override fun supportSearch(): Boolean = true
 
     override suspend fun search(keyword: String): List<StorageFile> {
         if (keyword.isEmpty()) {
             return openDirectory(directory ?: getRootFile(), false)
         }
-        return DatabaseManager.instance.getVideoDao().getAll()
+        return DatabaseManager.instance
+            .getVideoDao()
+            .getAll()
             .filter { it.filePath.contains(keyword) }
             .map { VideoStorageFile(this, it) }
     }
 
-    private suspend fun openStorageDirectory(storageFile: StorageFile): List<StorageFile> {
-        return if (storageFile.isRootFile()) {
+    private suspend fun openStorageDirectory(storageFile: StorageFile): List<StorageFile> =
+        if (storageFile.isRootFile()) {
             DatabaseManager.instance
                 .getVideoDao()
                 .getFolderByFilter()
@@ -121,26 +129,29 @@ class VideoStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                 .getVideoInFolder(storageFile.filePath())
                 .map { VideoStorageFile(this, it) }
         }
-    }
 
     private suspend fun deepRefresh() {
-        //系统视频数据 = 自定义扫描目录视频 + MediaStore中系统视频
-        val systemVideos = DatabaseManager.instance.getExtendFolderDao().getAll()
-            .flatMap { VideoScan.traverse(it.folderPath) }
-            .plus(MediaResolver.queryVideo())
-            .distinctBy { it.filePath }
+        // 系统视频数据 = 自定义扫描目录视频 + MediaStore中系统视频
+        val systemVideos =
+            DatabaseManager.instance
+                .getExtendFolderDao()
+                .getAll()
+                .flatMap { VideoScan.traverse(it.folderPath) }
+                .plus(MediaResolver.queryVideo())
+                .distinctBy { it.filePath }
 
-        //数据库视频数据
+        // 数据库视频数据
         val databaseVideos = DatabaseManager.instance.getVideoDao().getAll()
 
-        //从数据库中移除，不在系统视频数据中的数据库视频
+        // 从数据库中移除，不在系统视频数据中的数据库视频
         databaseVideos
             .map { it.filePath }
             .filterNot { filePath -> systemVideos.any { it.filePath == filePath } }
             .let { DatabaseManager.instance.getVideoDao().deleteByPaths(it) }
 
-        //往数据库中添加，不在数据库视频中的系统视频数据
-        systemVideos.filterNot { video -> databaseVideos.any { it.filePath == video.filePath } }
+        // 往数据库中添加，不在数据库视频中的系统视频数据
+        systemVideos
+            .filterNot { video -> databaseVideos.any { it.filePath == video.filePath } }
             .let { DatabaseManager.instance.getVideoDao().insert(*it.toTypedArray()) }
     }
 }

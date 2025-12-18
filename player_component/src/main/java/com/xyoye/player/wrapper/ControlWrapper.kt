@@ -30,7 +30,6 @@ class ControlWrapper(
     InterDanmuController,
     InterSubtitleController,
     InterSettingController {
-
     /**
      * ------------------Player Controller----------------------
      */
@@ -50,11 +49,11 @@ class ControlWrapper(
     override fun getCurrentPosition() = mVideoPlayer.getCurrentPosition()
 
     override fun seekTo(timeMs: Long) {
-        //播放器
+        // 播放器
         mVideoPlayer.seekTo(timeMs)
-        //弹幕
+        // 弹幕
         seekTo(timeMs, isPlaying())
-        //视图
+        // 视图
         if (isPlaying()) {
             startProgress()
         } else {
@@ -103,23 +102,22 @@ class ControlWrapper(
      * ------------------Player Track Controller----------------------
      */
 
-    override fun supportAddTrack(type: TrackType): Boolean {
-        return mVideoPlayer.supportAddTrack(type)
-    }
+    override fun supportAddTrack(type: TrackType): Boolean = mVideoPlayer.supportAddTrack(type)
 
     override fun addTrack(track: VideoTrackBean): Boolean {
         // 如果视频播放器支持添加轨道，则直接添加
         // 否则由支持轨道的控制器添加
         val trackType = track.type
-        val added = if (mVideoPlayer.supportAddTrack(trackType)) {
-            mVideoPlayer.addTrack(track)
-        } else if (mSubtitleController.supportAddTrack(trackType)) {
-            mSubtitleController.addTrack(track)
-        } else if (mDanmuController.supportAddTrack(trackType)) {
-            mDanmuController.addTrack(track)
-        } else {
-            false
-        }
+        val added =
+            if (mVideoPlayer.supportAddTrack(trackType)) {
+                mVideoPlayer.addTrack(track)
+            } else if (mSubtitleController.supportAddTrack(trackType)) {
+                mSubtitleController.addTrack(track)
+            } else if (mDanmuController.supportAddTrack(trackType)) {
+                mDanmuController.addTrack(track)
+            } else {
+                false
+            }
 
         if (added) {
             // 添加轨道成功，设置轨道选中
@@ -185,7 +183,10 @@ class ControlWrapper(
 
     override fun isControllerShowing() = mController.isControllerShowing()
 
-    override fun showMessage(text: String, time: MessageTime) {
+    override fun showMessage(
+        text: String,
+        time: MessageTime
+    ) {
         mController.showMessage(text, time)
     }
 
@@ -285,23 +286,38 @@ class ControlWrapper(
         mDanmuController.toggleDanmuVisible()
     }
 
-    override fun allowSendDanmu(): Boolean {
-        return mDanmuController.allowSendDanmu()
+    override fun setUserDanmuVisible(visible: Boolean) {
+        mDanmuController.setUserDanmuVisible(visible)
     }
+
+    override fun isUserDanmuVisible(): Boolean {
+        return mDanmuController.isUserDanmuVisible()
+    }
+
+    override fun allowSendDanmu(): Boolean = mDanmuController.allowSendDanmu()
 
     override fun addDanmuToView(danmuBean: SendDanmuBean) {
         mDanmuController.addDanmuToView(danmuBean)
     }
 
-    override fun addBlackList(isRegex: Boolean, vararg keyword: String) {
+    override fun addBlackList(
+        isRegex: Boolean,
+        vararg keyword: String
+    ) {
         mDanmuController.addBlackList(isRegex, *keyword)
     }
 
-    override fun removeBlackList(isRegex: Boolean, keyword: String) {
+    override fun removeBlackList(
+        isRegex: Boolean,
+        keyword: String
+    ) {
         mDanmuController.removeBlackList(isRegex, keyword)
     }
 
-    override fun seekTo(timeMs: Long, isPlaying: Boolean) {
+    override fun seekTo(
+        timeMs: Long,
+        isPlaying: Boolean
+    ) {
         mDanmuController.seekTo(timeMs, isPlaying)
     }
 
@@ -360,11 +376,15 @@ class ControlWrapper(
         mSettingController.hideSettingView()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        return mSettingController.onKeyDown(keyCode, event)
-    }
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean = mSettingController.onKeyDown(keyCode, event)
 
-    override fun showSettingView(viewType: SettingViewType, extra: Any?) {
+    override fun showSettingView(
+        viewType: SettingViewType,
+        extra: Any?
+    ) {
         hideController()
         if (!isLocked()) {
             mSettingController.showSettingView(viewType, extra)
@@ -379,10 +399,11 @@ class ControlWrapper(
      * 切换播放状态
      */
     fun togglePlay() {
-        if (isPlaying())
+        if (isPlaying()) {
             pause()
-        else
+        } else {
             start()
+        }
     }
 
     /**
@@ -392,7 +413,7 @@ class ControlWrapper(
         /*
         startFadeOut()
         setLocked(!isLocked())
-        */
+         */
     }
 
     /**

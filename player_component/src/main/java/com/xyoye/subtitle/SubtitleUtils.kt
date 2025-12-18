@@ -13,7 +13,6 @@ import java.util.Locale
  */
 
 object SubtitleUtils {
-
     private const val TAG = "SubtitleUtils"
     private const val FRZ_BREAK_THRESHOLD = 3
     private const val SAMPLE_LIMIT = 5
@@ -29,8 +28,9 @@ object SubtitleUtils {
      * 文字转换显示需要字幕格式
      */
     fun caption2Subtitle(captionText: String?): MutableList<SubtitleText> {
-        if (captionText.isNullOrEmpty())
+        if (captionText.isNullOrEmpty()) {
             return mutableListOf()
+        }
 
         val newCaption = Caption()
         newCaption.content = captionText
@@ -45,10 +45,10 @@ object SubtitleUtils {
         playResX: Int? = null,
         playResY: Int? = null
     ): MutableList<SubtitleText> {
-        //字幕颜色
+        // 字幕颜色
         val subtitleColor = getCaptionColor(caption.style?.color)
 
-        //分割每行字幕
+        // 分割每行字幕
         val rawContent = caption.rawContent.orEmpty()
         val subtitle = caption.content.replace("<br />", "\n")
 
@@ -65,68 +65,70 @@ object SubtitleUtils {
         val effectivePlayResX = playResX?.takeIf { it > 0 }
         val effectivePlayResY = playResY?.takeIf { it > 0 }
 
-        val result = when {
-            shouldMergeVerticalLines(rawContent) -> {
-                val mergedLine = WHITESPACE_COLLAPSE_REGEX
-                    .replace(subtitle.replace("\n", " "), " ")
-                    .trim()
+        val result =
+            when {
+                shouldMergeVerticalLines(rawContent) -> {
+                    val mergedLine =
+                        WHITESPACE_COLLAPSE_REGEX
+                            .replace(subtitle.replace("\n", " "), " ")
+                            .trim()
 
-                if (mergedLine.isEmpty()) {
-                    mutableListOf()
-                } else {
-                    logFrzMerge(rawContent, mergedLine)
+                    if (mergedLine.isEmpty()) {
+                        mutableListOf()
+                    } else {
+                        logFrzMerge(rawContent, mergedLine)
+                        buildSubtitleList(
+                            subtitleColor,
+                            listOf(mergedLine),
+                            alignment,
+                            scriptX,
+                            scriptY,
+                            rotation,
+                            effectivePlayResX,
+                            effectivePlayResY,
+                        )
+                    }
+                }
+
+                subtitle.contains("\\N") -> {
                     buildSubtitleList(
                         subtitleColor,
-                        listOf(mergedLine),
+                        subtitle.split("\\N"),
                         alignment,
                         scriptX,
                         scriptY,
                         rotation,
                         effectivePlayResX,
-                        effectivePlayResY
+                        effectivePlayResY,
+                    )
+                }
+
+                subtitle.contains('\n') -> {
+                    buildSubtitleList(
+                        subtitleColor,
+                        subtitle.split('\n'),
+                        alignment,
+                        scriptX,
+                        scriptY,
+                        rotation,
+                        effectivePlayResX,
+                        effectivePlayResY,
+                    )
+                }
+
+                else -> {
+                    buildSubtitleList(
+                        subtitleColor,
+                        listOf(subtitle),
+                        alignment,
+                        scriptX,
+                        scriptY,
+                        rotation,
+                        effectivePlayResX,
+                        effectivePlayResY,
                     )
                 }
             }
-
-            subtitle.contains("\\N") -> {
-                buildSubtitleList(
-                    subtitleColor,
-                    subtitle.split("\\N"),
-                    alignment,
-                    scriptX,
-                    scriptY,
-                    rotation,
-                    effectivePlayResX,
-                    effectivePlayResY
-                )
-            }
-
-            subtitle.contains('\n') -> {
-                buildSubtitleList(
-                    subtitleColor,
-                    subtitle.split('\n'),
-                    alignment,
-                    scriptX,
-                    scriptY,
-                    rotation,
-                    effectivePlayResX,
-                    effectivePlayResY
-                )
-            }
-
-            else -> {
-                buildSubtitleList(
-                    subtitleColor,
-                    listOf(subtitle),
-                    alignment,
-                    scriptX,
-                    scriptY,
-                    rotation,
-                    effectivePlayResX,
-                    effectivePlayResY
-                )
-            }
-        }
 
         return logCaptionPerformance(startNs, result, rawContent, tagMap)
     }
@@ -139,17 +141,21 @@ object SubtitleUtils {
         return breakCount >= FRZ_BREAK_THRESHOLD
     }
 
-    private fun logFrzMerge(rawContent: String, mergedLine: String) {
+    private fun logFrzMerge(
+        rawContent: String,
+        mergedLine: String
+    ) {
         frzMergeCounter++
         if (frzMergeCounter <= SAMPLE_LIMIT || frzMergeCounter % SAMPLE_INTERVAL == 0) {
-            val preview = rawContent
-                .replace("\n", " ")
-                .replace("\r", " ")
-                .take(120)
+            val preview =
+                rawContent
+                    .replace("\n", " ")
+                    .replace("\r", " ")
+                    .take(120)
             LogFacade.d(
                 LogModule.PLAYER,
                 TAG,
-                "[FR-001] vertical merge #$frzMergeCounter merged=\"$mergedLine\" raw=\"$preview\""
+                "[FR-001] vertical merge #$frzMergeCounter merged=\"$mergedLine\" raw=\"$preview\"",
             )
         }
     }
@@ -175,11 +181,12 @@ object SubtitleUtils {
 
             if (subtitle.startsWith("{")) {
                 val endIndex = subtitle.lastIndexOf("}") + 1
-                val content = if (endIndex != 0 && endIndex <= subtitle.length) {
-                    subtitle.substring(endIndex)
-                } else {
-                    subtitle
-                }
+                val content =
+                    if (endIndex != 0 && endIndex <= subtitle.length) {
+                        subtitle.substring(endIndex)
+                    } else {
+                        subtitle
+                    }
                 subtitleList.add(
                     SubtitleText(
                         text = content,
@@ -192,8 +199,8 @@ object SubtitleUtils {
                         playResX = playResX,
                         playResY = playResY,
                         lineIndex = index,
-                        lineCount = totalLines
-                    )
+                        lineCount = totalLines,
+                    ),
                 )
             } else {
                 subtitleList.add(
@@ -208,8 +215,8 @@ object SubtitleUtils {
                         playResX = playResX,
                         playResY = playResY,
                         lineIndex = index,
-                        lineCount = totalLines
-                    )
+                        lineCount = totalLines,
+                    ),
                 )
             }
         }
@@ -237,17 +244,18 @@ object SubtitleUtils {
                     durationMs,
                     subtitleList.size,
                     tagSummary,
-                    rawContent.length
-                )
+                    rawContent.length,
+                ),
             )
         }
         return subtitleList
     }
 
-    private fun shouldSample(counter: Int, limit: Int, interval: Int): Boolean {
-        return counter <= limit || counter % interval == 0
-    }
-
+    private fun shouldSample(
+        counter: Int,
+        limit: Int,
+        interval: Int
+    ): Boolean = counter <= limit || counter % interval == 0
 
     /**
      * 获取字幕颜色
@@ -255,13 +263,15 @@ object SubtitleUtils {
     private fun getCaptionColor(colorStr: String?): Int {
         var rgbaText = colorStr
 
-        if (rgbaText.isNullOrEmpty())
+        if (rgbaText.isNullOrEmpty()) {
             return Color.WHITE
+        }
 
-        if (!rgbaText.startsWith("#"))
+        if (!rgbaText.startsWith("#")) {
             rgbaText = "#$colorStr"
+        }
 
-        //颜色字符串为rgba格式，要转换成argb
+        // 颜色字符串为rgba格式，要转换成argb
         return try {
             val rgba = Color.parseColor(rgbaText)
             rgba ushr 8 or (rgba shl 32 - 8)

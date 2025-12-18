@@ -47,11 +47,12 @@ class SegmentWordDialog(
                 }
                 return@setOnLabelClickListener
             }
-            val appendText = if (data === SPACE) {
-                " "
-            } else {
-                label.text
-            }
+            val appendText =
+                if (data === SPACE) {
+                    " "
+                } else {
+                    label.text
+                }
             binding.searchEt.text?.append(appendText)
             binding.searchEt.requestFocus()
         }
@@ -70,7 +71,11 @@ class SegmentWordDialog(
         binding.searchEt.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 hideKeyboard(binding.searchEt)
-                onSearch.invoke(binding.searchEt.text.toString().trim())
+                onSearch.invoke(
+                    binding.searchEt.text
+                        .toString()
+                        .trim(),
+                )
                 return@setOnEditorActionListener true
             }
             return@setOnEditorActionListener false
@@ -87,40 +92,52 @@ class SegmentWordDialog(
 
         setPositiveListener {
             hideKeyboard(binding.searchEt)
-            onSearch.invoke(binding.searchEt.text.toString().trim())
+            onSearch.invoke(
+                binding.searchEt.text
+                    .toString()
+                    .trim(),
+            )
             dismiss()
         }
     }
 
     private fun setLabels(binding: DialogSegmentWordBinding) {
-        val labelTexts = List(words.size + 2) {
-            when (it) {
-                0 -> {
-                    SPACE
-                }
-                1 -> {
-                    BACKSPACE
-                }
-                else -> {
-                    words[it - 2]
+        val labelTexts =
+            List(words.size + 2) {
+                when (it) {
+                    0 -> {
+                        SPACE
+                    }
+                    1 -> {
+                        BACKSPACE
+                    }
+                    else -> {
+                        words[it - 2]
+                    }
                 }
             }
-        }
 
-        binding.candidateLabelsView.setLabels(labelTexts, object : LabelTextProvider<Any> {
-            override fun getLabelText(label: TextView?, position: Int, data: Any?): CharSequence {
-                if (data === SPACE) {
-                    label?.setTextColor(R.color.text_white.toResColor(context))
-                    label?.setBackgroundResource(R.drawable.background_segment_labels_theme)
-                    return "空格"
+        binding.candidateLabelsView.setLabels(
+            labelTexts,
+            object : LabelTextProvider<Any> {
+                override fun getLabelText(
+                    label: TextView?,
+                    position: Int,
+                    data: Any?
+                ): CharSequence {
+                    if (data === SPACE) {
+                        label?.setTextColor(R.color.text_white.toResColor(context))
+                        label?.setBackgroundResource(R.drawable.background_segment_labels_theme)
+                        return "空格"
+                    }
+                    if (data === BACKSPACE) {
+                        label?.setTextColor(R.color.text_white.toResColor(context))
+                        label?.setBackgroundResource(R.drawable.background_segment_labels_theme)
+                        return "删除"
+                    }
+                    return data.toString()
                 }
-                if (data === BACKSPACE) {
-                    label?.setTextColor(R.color.text_white.toResColor(context))
-                    label?.setBackgroundResource(R.drawable.background_segment_labels_theme)
-                    return "删除"
-                }
-                return data.toString()
-            }
-        })
+            },
+        )
     }
 }

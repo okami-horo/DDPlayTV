@@ -15,72 +15,72 @@ enum class MediaType(
     LOCAL_STORAGE(
         "local_storage",
         "本地媒体库",
-        cover = R.drawable.ic_local_storage
+        cover = R.drawable.ic_local_storage,
     ),
 
     OTHER_STORAGE(
         "other_storage",
         "外部媒体库",
-        cover = R.drawable.ic_play_history
+        cover = R.drawable.ic_play_history,
     ),
 
     STREAM_LINK(
         "stream_link",
         "串流视频",
-        cover = R.drawable.ic_stream_link
+        cover = R.drawable.ic_stream_link,
     ),
 
     MAGNET_LINK(
         "magnet_link",
         "磁链视频",
-        cover = R.drawable.ic_magnet_link
+        cover = R.drawable.ic_magnet_link,
     ),
 
     FTP_SERVER(
         "ftp_server",
         "FTP媒体库",
-        cover = R.drawable.ic_ftp_storage
+        cover = R.drawable.ic_ftp_storage,
     ),
 
     WEBDAV_SERVER(
         "webdav_server",
         "WebDav媒体库",
-        cover = R.drawable.ic_webdav_storage
+        cover = R.drawable.ic_webdav_storage,
     ),
 
     SMB_SERVER(
         "smb_server",
         "SMB媒体库",
-        cover = R.drawable.ic_smb_storage
+        cover = R.drawable.ic_smb_storage,
     ),
 
     REMOTE_STORAGE(
         "remote_storage",
         "PC端媒体库",
-        cover = R.drawable.ic_remote_storage
+        cover = R.drawable.ic_remote_storage,
     ),
 
     SCREEN_CAST(
         "screen_cast",
         "远程投屏",
-        cover = R.drawable.ic_screencast
+        cover = R.drawable.ic_screencast,
     ),
 
     EXTERNAL_STORAGE(
         "external_storage",
         "设备存储库",
-        cover = R.drawable.ic_external_storage
+        cover = R.drawable.ic_external_storage,
     ),
 
     ALSIT_STORAGE(
         "alist_storage",
         "Alist存储库",
-        cover = R.drawable.ic_alist_storage
+        cover = R.drawable.ic_alist_storage,
     );
 
     companion object {
-        fun fromValue(value: String): MediaType {
-            return when (value) {
+        fun fromValue(value: String): MediaType =
+            when (value) {
                 "local_storage" -> LOCAL_STORAGE
                 "stream_link" -> STREAM_LINK
                 "magnet_link" -> MAGNET_LINK
@@ -93,7 +93,6 @@ enum class MediaType(
                 "alist_storage" -> ALSIT_STORAGE
                 else -> OTHER_STORAGE
             }
-        }
     }
 
     fun toAction() = SheetActionBean(this, storageName, cover)

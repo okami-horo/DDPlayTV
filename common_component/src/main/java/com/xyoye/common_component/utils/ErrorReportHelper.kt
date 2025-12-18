@@ -11,16 +11,19 @@ import retrofit2.HttpException
  * Created by Claude Code on 2025-08-30.
  */
 object ErrorReportHelper {
-
     /**
      * 上报捕获的异常
      * 使用 CrashReport.postCatchedException() 方法，符合约定
-     * 
+     *
      * @param throwable 捕获的异常
      * @param tag 错误标签，用于分类
      * @param extraInfo 额外信息
      */
-    fun postCatchedException(throwable: Throwable, tag: String = "", extraInfo: String = "") {
+    fun postCatchedException(
+        throwable: Throwable,
+        tag: String = "",
+        extraInfo: String = ""
+    ) {
         try {
             // 过滤掉 CancellationException，这是协程正常取消的标志，不应当作错误上报
             if (throwable is CancellationException) {
@@ -30,10 +33,10 @@ object ErrorReportHelper {
                 }
                 return
             }
-            
+
             // 遵循 CLAUDE.md 约定：统一使用 CrashReport.postCatchedException()
             CrashReport.postCatchedException(throwable)
-            
+
             // 在调试模式下仍然打印堆栈信息，便于本地调试
             if (com.xyoye.common_component.BuildConfig.DEBUG) {
                 println("[$tag] Exception reported: $extraInfo")
@@ -48,22 +51,27 @@ object ErrorReportHelper {
     /**
      * 上报自定义异常
      * 使用 CrashReport.postCatchedException() 方法，符合约定
-     * 
+     *
      * @param message 错误信息
      * @param tag 错误标签
      * @param cause 原因异常（可选）
      */
-    fun postException(message: String, tag: String = "", cause: Throwable? = null) {
+    fun postException(
+        message: String,
+        tag: String = "",
+        cause: Throwable? = null
+    ) {
         try {
-            val exception = if (cause != null) {
-                RuntimeException("[$tag] $message", cause)
-            } else {
-                RuntimeException("[$tag] $message")
-            }
-            
+            val exception =
+                if (cause != null) {
+                    RuntimeException("[$tag] $message", cause)
+                } else {
+                    RuntimeException("[$tag] $message")
+                }
+
             // 遵循 CLAUDE.md 约定：统一使用 CrashReport.postCatchedException()
             CrashReport.postCatchedException(exception)
-            
+
             // 在调试模式下打印信息
             if (com.xyoye.common_component.BuildConfig.DEBUG) {
                 println("[$tag] Custom exception reported: $message")
@@ -77,7 +85,7 @@ object ErrorReportHelper {
 
     /**
      * 带有完整上下文信息的异常上报
-     * 
+     *
      * @param throwable 异常对象
      * @param className 发生异常的类名
      * @param methodName 发生异常的方法名
@@ -96,14 +104,15 @@ object ErrorReportHelper {
             }
             return
         }
-        
+
         val contextInfo = "Class: $className, Method: $methodName"
-        val fullInfo = if (extraInfo.isNotEmpty()) {
-            "$contextInfo, Extra: $extraInfo"
-        } else {
-            contextInfo
-        }
-        
+        val fullInfo =
+            if (extraInfo.isNotEmpty()) {
+                "$contextInfo, Extra: $extraInfo"
+            } else {
+                contextInfo
+            }
+
         postCatchedException(throwable, "Context", fullInfo)
     }
 
@@ -122,19 +131,20 @@ object ErrorReportHelper {
         extraInfo: String = ""
     ) {
         val authDiagnosis = AuthenticationHelper.getAuthenticationDiagnosis()
-        val fullExtraInfo = buildString {
-            append(extraInfo)
-            if (extraInfo.isNotEmpty()) {
-                append("\n\n")
+        val fullExtraInfo =
+            buildString {
+                append(extraInfo)
+                if (extraInfo.isNotEmpty()) {
+                    append("\n\n")
+                }
+                append(authDiagnosis)
             }
-            append(authDiagnosis)
-        }
 
         postCatchedExceptionWithContext(
             httpException,
             className,
             methodName,
-            fullExtraInfo
+            fullExtraInfo,
         )
     }
 }

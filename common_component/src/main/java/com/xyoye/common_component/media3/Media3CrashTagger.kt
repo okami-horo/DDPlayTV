@@ -13,7 +13,6 @@ import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
  * can be segmented by cohort during the migration.
  */
 object Media3CrashTagger {
-
     private var reporter: CrashReporterBridge = BuglyCrashReporter()
 
     fun init() {
@@ -48,7 +47,11 @@ object Media3CrashTagger {
     }
 
     interface CrashReporterBridge {
-        fun putUserData(key: String, value: String)
+        fun putUserData(
+            key: String,
+            value: String
+        )
+
         fun setUserSceneTag(tagId: Int)
     }
 
@@ -56,7 +59,10 @@ object Media3CrashTagger {
         private val context: Context
             get() = BaseApplication.getAppContext()
 
-        override fun putUserData(key: String, value: String) {
+        override fun putUserData(
+            key: String,
+            value: String
+        ) {
             CrashReport.putUserData(context, key, value.take(MAX_VALUE_LENGTH))
         }
 

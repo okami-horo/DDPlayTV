@@ -11,8 +11,7 @@ import com.xyoye.player.wrapper.InterVideoTrack
  */
 
 abstract class AbstractVideoPlayer : InterVideoTrack {
-
-    //播放器事件回调
+    // 播放器事件回调
     protected lateinit var mPlayerEventListener: VideoPlayerEventListener
 
     /**
@@ -35,7 +34,10 @@ abstract class AbstractVideoPlayer : InterVideoTrack {
     /**
      *  设置播放资源
      */
-    abstract fun setDataSource(path: String, headers: Map<String, String>? = null)
+    abstract fun setDataSource(
+        path: String,
+        headers: Map<String, String>? = null
+    )
 
     /**
      *  设置视频载体
@@ -47,7 +49,7 @@ abstract class AbstractVideoPlayer : InterVideoTrack {
      */
     abstract fun prepareAsync()
 
-    /*-----------控制播放器-------------------*/
+    // -----------控制播放器-------------------
 
     /**
      * 播饭
@@ -87,7 +89,10 @@ abstract class AbstractVideoPlayer : InterVideoTrack {
     /**
      * 设置音量大小
      */
-    abstract fun setVolume(leftVolume: Float, rightVolume: Float)
+    abstract fun setVolume(
+        leftVolume: Float,
+        rightVolume: Float
+    )
 
     /**
      * 视频是否循环播放
@@ -99,7 +104,7 @@ abstract class AbstractVideoPlayer : InterVideoTrack {
      */
     abstract fun setSubtitleOffset(offsetMs: Long)
 
-    /*------------播放器状态-------------------*/
+    // ------------播放器状态-------------------
 
     /**
      * 是否正在播放
@@ -136,14 +141,9 @@ abstract class AbstractVideoPlayer : InterVideoTrack {
      */
     abstract fun getTcpSpeed(): Long
 
+    // ------------轨道信息-------------------
 
-    /*------------轨道信息-------------------*/
+    override fun supportAddTrack(type: TrackType): Boolean = false
 
-    override fun supportAddTrack(type: TrackType): Boolean {
-        return false
-    }
-
-    override fun addTrack(track: VideoTrackBean): Boolean {
-        return false
-    }
+    override fun addTrack(track: VideoTrackBean): Boolean = false
 }

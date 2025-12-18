@@ -7,17 +7,15 @@ import androidx.lifecycle.MutableLiveData
  */
 
 object PlayTaskBridge {
-
     val taskRemoveLiveData = MutableLiveData<Long>()
     var taskInfoQuery: ((id: Long) -> String)? = null
 
     fun sendTaskRemoveMsg(taskId: Long) {
-        if (taskId == -1L)
+        if (taskId == -1L) {
             return
+        }
         taskRemoveLiveData.postValue(taskId)
     }
 
-    fun getTaskLog(id: Long): String {
-        return taskInfoQuery?.invoke(id) ?: ""
-    }
+    fun getTaskLog(id: Long): String = taskInfoQuery?.invoke(id) ?: ""
 }

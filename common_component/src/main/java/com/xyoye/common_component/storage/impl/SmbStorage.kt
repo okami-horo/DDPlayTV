@@ -26,8 +26,9 @@ import java.io.InputStream
  * Created by xyoye on 2023/1/14.
  */
 
-class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
-
+class SmbStorage(
+    library: MediaLibraryEntity
+) : AbstractStorage(library) {
     private var mSmbClient = SMBClient()
     private var mSmbSession: Session? = null
     private var mDiskShare: DiskShare? = null
@@ -35,37 +36,37 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
     override var rootUri: Uri = Uri.parse("smb://${library.url}")
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> {
-        //检测SMB通讯是否正常
+        // 检测SMB通讯是否正常
         if (checkConnection().not()) {
             return emptyList()
         }
-        //要打开的是否为根目录
+        // 要打开的是否为根目录
         if (file.isRootFile()) {
             return getRootShares()
         }
-        //只处理SMB文件
+        // 只处理SMB文件
         if (file !is SmbStorageFile) {
             return emptyList()
         }
-        //切换共享目录
+        // 切换共享目录
         val switchSuccess = switchShareDisk(file.getShareName()!!, showToast = true)
         if (switchSuccess.not()) {
             return emptyList()
         }
-        //展开文件夹
+        // 展开文件夹
         return listDirectory(file.filePath())
     }
 
     override suspend fun getRootFile(): StorageFile? {
-        //媒体库未预设共享文件夹，则根目录为SMB共享库
+        // 媒体库未预设共享文件夹，则根目录为SMB共享库
         if (library.smbSharePath.isNullOrEmpty()) {
             return SmbStorageFile(this, null, "")
         }
-        //检测SMB通讯是否正常
+        // 检测SMB通讯是否正常
         if (checkConnection().not()) {
             return null
         }
-        //切换共享目录
+        // 切换共享目录
         val shareName = Uri.parse(library.smbSharePath).pathSegments.first()
         val switchSuccess = switchShareDisk(shareName)
         if (switchSuccess.not()) {
@@ -75,15 +76,16 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
     }
 
     override suspend fun openFile(file: StorageFile): InputStream? {
-        //检测SMB通讯是否正常
+        // 检测SMB通讯是否正常
         if (checkConnection().not()) {
             return null
         }
         if (mDiskShare?.isConnected != true) {
             return null
         }
-        val shareName = (file as SmbStorageFile).getShareName()
-            ?: return null
+        val shareName =
+            (file as SmbStorageFile).getShareName()
+                ?: return null
         if (switchShareDisk(shareName).not()) {
             return null
         }
@@ -97,13 +99,17 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         }
     }
 
-    override suspend fun pathFile(path: String, isDirectory: Boolean): StorageFile? {
+    override suspend fun pathFile(
+        path: String,
+        isDirectory: Boolean
+    ): StorageFile? {
         if (checkConnection().not()) {
             return null
         }
         val pathSegments = Uri.parse(path).pathSegments
-        val targetShare = pathSegments.firstOrNull()
-            ?: return null
+        val targetShare =
+            pathSegments.firstOrNull()
+                ?: return null
         val switchShare = switchShareDisk(targetShare)
         if (switchShare.not()) {
             return null
@@ -169,8 +175,10 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
 
         try {
             val port = if (library.port == 0) SMBClient.DEFAULT_PORT else library.port
-            val session = mSmbClient.connect(library.url, port)
-                ?.authenticate(getAuthenticationContext())
+            val session =
+                mSmbClient
+                    .connect(library.url, port)
+                    ?.authenticate(getAuthenticationContext())
             if (session?.connection?.isConnected == true) {
                 mSmbSession = session
                 return true
@@ -190,17 +198,18 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
     private fun getAuthenticationContext(): AuthenticationContext {
         val password = library.password ?: ""
 
-        return if (library.isAnonymous)
+        return if (library.isAnonymous) {
             AuthenticationContext.anonymous()
-        else
+        } else {
             AuthenticationContext(library.account, password.toCharArray(), null)
+        }
     }
 
     /**
      * 获取SMB共享目录列表
      */
-    private fun getRootShares(): List<SmbStorageFile> {
-        return try {
+    private fun getRootShares(): List<SmbStorageFile> =
+        try {
             val transport = SMBTransportFactories.SRVSVC.getTransport(mSmbSession)
             ServerService(transport).shares0.map {
                 SmbStorageFile(this, it.netName, "")
@@ -211,7 +220,6 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
             showErrorToast("获取共享目录列表失败", e)
             emptyList()
         }
-    }
 
     /**
      * 展示文件夹
@@ -221,7 +229,8 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         val shareName = diskShare.smbPath.shareName
 
         return try {
-            diskShare.openDirectory(filePath)
+            diskShare
+                .openDirectory(filePath)
                 .list()
                 .filter { it.fileName != "." && it.fileName != ".." }
                 .map {
@@ -236,8 +245,7 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
                         ErrorReportHelper.postCatchedException(e, "SMB", "列表目录文件信息获取失败: ${it.fileName}")
                         return@map SmbStorageFile(this, shareName, "")
                     }
-                }
-                .filter { it.filePath().isNotEmpty() }
+                }.filter { it.filePath().isNotEmpty() }
         } catch (e: Exception) {
             e.printStackTrace()
             ErrorReportHelper.postCatchedException(e, "SMB", "获取文件列表失败: $filePath")
@@ -249,15 +257,18 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
     /**
      * 切换共享目录
      */
-    private fun switchShareDisk(shareName: String, showToast: Boolean = false): Boolean {
+    private fun switchShareDisk(
+        shareName: String,
+        showToast: Boolean = false
+    ): Boolean {
         val currentShareName = mDiskShare?.smbPath?.shareName
         if (shareName == currentShareName) {
             return true
         }
-        //关闭现有共享目录
+        // 关闭现有共享目录
         closeDiskShare()
         try {
-            //连接至新的共享目录
+            // 连接至新的共享目录
             val diskShare = mSmbSession?.connectShare(shareName) as? DiskShare?
             if (diskShare?.isConnected == true) {
                 mDiskShare = diskShare
@@ -302,17 +313,23 @@ class SmbStorage(library: MediaLibraryEntity) : AbstractStorage(library) {
         }
     }
 
-    private fun generateChildPath(parent: String, child: String): String {
-        return Uri.parse(parent)
+    private fun generateChildPath(
+        parent: String,
+        child: String
+    ): String =
+        Uri
+            .parse(parent)
             .buildUpon()
             .appendPath(child)
             .build()
             .path
             ?.removePrefix("/")
             ?: ""
-    }
 
-    private fun showErrorToast(message: String, e: Exception) {
+    private fun showErrorToast(
+        message: String,
+        e: Exception
+    ) {
         ToastCenter.showError("$message: ${e.message}")
     }
 }

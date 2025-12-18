@@ -24,11 +24,11 @@ import java.util.*
 
 @Route(path = RouteTable.Anime.HomeFragment)
 class HomeFragment : BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>() {
-
-    override fun initViewModel() = ViewModelInit(
-        BR.viewModel,
-        HomeFragmentViewModel::class.java
-    )
+    override fun initViewModel() =
+        ViewModelInit(
+            BR.viewModel,
+            HomeFragmentViewModel::class.java,
+        )
 
     override fun getLayoutId() = R.layout.fragment_home
 
@@ -36,12 +36,14 @@ class HomeFragment : BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>() 
         dataBinding.tabLayout.setupWithViewPager(dataBinding.viewpager)
 
         dataBinding.searchLl.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Anime.Search)
                 .navigation()
         }
         dataBinding.seasonLl.setOnClickListener {
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Anime.AnimeSeason)
                 .navigation()
         }
@@ -59,8 +61,11 @@ class HomeFragment : BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>() 
                 setIndicatorGravity(IndicatorConfig.Direction.RIGHT)
                 setIndicatorMargins(
                     IndicatorConfig.Margins(
-                        0, 0, BannerConfig.INDICATOR_MARGIN, dp2px(12)
-                    )
+                        0,
+                        0,
+                        BannerConfig.INDICATOR_MARGIN,
+                        dp2px(12),
+                    ),
                 )
             }
         }
@@ -74,25 +79,24 @@ class HomeFragment : BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>() 
         }
     }
 
-    inner class HomePageAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(
-        fragmentManager,
-        BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT
-    ) {
-        override fun getItem(position: Int): Fragment {
-            return HomePageFragment.newInstance(
-                viewModel.weeklyAnimeLiveData.value!![position]
+    inner class HomePageAdapter(
+        fragmentManager: FragmentManager
+    ) : FragmentPagerAdapter(
+            fragmentManager,
+            BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT,
+        ) {
+        override fun getItem(position: Int): Fragment =
+            HomePageFragment.newInstance(
+                viewModel.weeklyAnimeLiveData.value!![position],
             )
-        }
 
-        override fun getCount(): Int {
-            return viewModel.weeklyAnimeLiveData.value?.size ?: 0
-        }
+        override fun getCount(): Int = viewModel.weeklyAnimeLiveData.value?.size ?: 0
 
-        override fun getPageTitle(position: Int): CharSequence {
-            return if (position < viewModel.tabTitles.size)
+        override fun getPageTitle(position: Int): CharSequence =
+            if (position < viewModel.tabTitles.size) {
                 viewModel.tabTitles[position]
-            else
+            } else {
                 ""
-        }
+            }
     }
 }

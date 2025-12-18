@@ -21,6 +21,7 @@ import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.file.impl.ScreencastStorageFile
 import com.xyoye.common_component.storage.helper.ScreencastConstants
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.common_component.utils.MediaUtils
 import com.xyoye.common_component.utils.PathHelper
@@ -34,7 +35,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import org.videolan.libvlc.util.VLCVideoLayout
 import java.io.File
 import java.util.Date
-import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2022/1/15.
@@ -43,7 +43,11 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 object PlayRecorder {
     private const val HEIGHT = 150f
 
-    fun recordProgress(source: BaseVideoSource, position: Long, duration: Long) {
+    fun recordProgress(
+        source: BaseVideoSource,
+        position: Long,
+        duration: Long
+    ) {
         SupervisorScope.IO.launch {
             var torrentPath: String? = null
             var torrentIndex = -1
@@ -53,35 +57,37 @@ object PlayRecorder {
                 torrentIndex = source.getTorrentIndex()
             }
 
-            val history = PlayHistoryEntity(
-                0,
-                source.getVideoTitle(),
-                source.getVideoUrl(),
-                source.getMediaType(),
-                position,
-                duration,
-                Date(),
-                source.getDanmu()?.danmuPath,
-                source.getDanmu()?.episodeId,
-                source.getSubtitlePath(),
-                torrentPath,
-                torrentIndex,
-                JsonHelper.toJson(source.getHttpHeader()),
-                source.getUniqueKey(),
-                source.getStoragePath(),
-                source.getStorageId(),
-                source.getAudioPath()
-            )
+            val history =
+                PlayHistoryEntity(
+                    0,
+                    source.getVideoTitle(),
+                    source.getVideoUrl(),
+                    source.getMediaType(),
+                    position,
+                    duration,
+                    Date(),
+                    source.getDanmu()?.danmuPath,
+                    source.getDanmu()?.episodeId,
+                    source.getSubtitlePath(),
+                    torrentPath,
+                    torrentIndex,
+                    JsonHelper.toJson(source.getHttpHeader()),
+                    source.getUniqueKey(),
+                    source.getStoragePath(),
+                    source.getStorageId(),
+                    source.getAudioPath(),
+                )
 
             // 保存播放历史到数据库
-            DatabaseManager.instance.getPlayHistoryDao()
+            DatabaseManager.instance
+                .getPlayHistoryDao()
                 .insert(history)
             // 上报剧集播放进度到投屏端
             recordToScreencastProvider(source, history)
             // 上报剧集播放到云端
             recordToCloud(source)
 
-            //部分视频无法获取到视频时长，播放后再更新时长
+            // 部分视频无法获取到视频时长，播放后再更新时长
             if (source.getMediaType() == MediaType.LOCAL_STORAGE) {
                 DatabaseManager.instance
                     .getVideoDao()
@@ -90,25 +96,30 @@ object PlayRecorder {
         }
     }
 
-    fun recordImage(key: String, renderView: InterSurfaceView?) {
-        val view = renderView?.getView()
-            ?: return
+    fun recordImage(
+        key: String,
+        renderView: InterSurfaceView?
+    ) {
+        val view =
+            renderView?.getView()
+                ?: return
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             return
         }
         SupervisorScope.IO.launch {
-            val bitmap = try {
-                generateRenderImage(view)
-            } catch (e: Exception) {
-                ErrorReportHelper.postCatchedExceptionWithContext(
-                    e,
-                    "PlayRecorder",
-                    "recordImage",
-                    "Failed to generate render image for key: $key"
-                )
-                e.printStackTrace()
-                null
-            } ?: return@launch
+            val bitmap =
+                try {
+                    generateRenderImage(view)
+                } catch (e: Exception) {
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        e,
+                        "PlayRecorder",
+                        "recordImage",
+                        "Failed to generate render image for key: $key",
+                    )
+                    e.printStackTrace()
+                    null
+                } ?: return@launch
 
             val bitmapFile = File(PathHelper.getVideoCoverDirectory(), key)
             MediaUtils.saveImage(bitmapFile, bitmap)
@@ -117,7 +128,10 @@ object PlayRecorder {
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    suspend fun generateRenderImage(view: View, imageSize: Point? = null): Bitmap? {
+    suspend fun generateRenderImage(
+        view: View,
+        imageSize: Point? = null
+    ): Bitmap? {
         when (view) {
             is SurfaceView -> {
                 return recordSurfaceView(view, imageSize)
@@ -185,7 +199,7 @@ object PlayRecorder {
                 e,
                 "PlayRecorder",
                 "recordSurfaceView",
-                "Surface became invalid during PixelCopy.request call"
+                "Surface became invalid during PixelCopy.request call",
             )
             it.resumeWhenAlive(null)
         } catch (e: Exception) {
@@ -193,7 +207,7 @@ object PlayRecorder {
                 e,
                 "PlayRecorder",
                 "recordSurfaceView",
-                "Unexpected error during surface recording"
+                "Unexpected error during surface recording",
             )
             it.resumeWhenAlive(null)
         }
@@ -247,7 +261,7 @@ object PlayRecorder {
                 e,
                 "PlayRecorder",
                 "recordTextureView",
-                "Surface became invalid during PixelCopy.request call"
+                "Surface became invalid during PixelCopy.request call",
             )
             it.resumeWhenAlive(null)
         } catch (e: Exception) {
@@ -255,18 +269,21 @@ object PlayRecorder {
                 e,
                 "PlayRecorder",
                 "recordTextureView",
-                "Unexpected error during texture view recording"
+                "Unexpected error during texture view recording",
             )
             it.resumeWhenAlive(null)
         }
     }
 
-    private fun createBitmap(view: View, imageSize: Point?): Bitmap? {
+    private fun createBitmap(
+        view: View,
+        imageSize: Point?
+    ): Bitmap? {
         if (imageSize != null && imageSize.x > 0 && imageSize.y > 0) {
             return Bitmap.createBitmap(
                 imageSize.x,
                 imageSize.y,
-                Bitmap.Config.ARGB_8888
+                Bitmap.Config.ARGB_8888,
             )
         }
 
@@ -287,7 +304,7 @@ object PlayRecorder {
         return Bitmap.createBitmap(
             width.toInt(),
             height.toInt(),
-            Bitmap.Config.RGB_565
+            Bitmap.Config.RGB_565,
         )
     }
 
@@ -327,11 +344,14 @@ object PlayRecorder {
 
         // 构建包含播放进度的回调地址
         val callbackUrl = storageFile.getCallbackUrl()
-        val completeUrl = Uri.parse(callbackUrl).buildUpon()
-            .appendQueryParameter(ScreencastConstants.Param.position, history.videoPosition.toString())
-            .appendQueryParameter(ScreencastConstants.Param.duration, history.videoDuration.toString())
-            .build()
-            .toString()
+        val completeUrl =
+            Uri
+                .parse(callbackUrl)
+                .buildUpon()
+                .appendQueryParameter(ScreencastConstants.Param.position, history.videoPosition.toString())
+                .appendQueryParameter(ScreencastConstants.Param.duration, history.videoDuration.toString())
+                .build()
+                .toString()
 
         // 发送请求，忽略结果
         ResourceRepository.getResourceResponseBody(completeUrl)

@@ -24,16 +24,17 @@ class SubtitleTelemetryRepository(
     private var lastFallback: FallbackEvent? = null
     private var latestState: SubtitlePipelineState? = null
 
-    suspend fun submit(sample: TelemetrySample, state: SubtitlePipelineState? = null) {
+    suspend fun submit(
+        sample: TelemetrySample,
+        state: SubtitlePipelineState? = null
+    ) {
         mutex.withLock {
             state?.let { latestState = it }
             appendSampleLocked(sample)
         }
     }
 
-    suspend fun latestSnapshot(): TelemetrySnapshot? {
-        return mutex.withLock { buildSnapshotLocked() }
-    }
+    suspend fun latestSnapshot(): TelemetrySnapshot? = mutex.withLock { buildSnapshotLocked() }
 
     suspend fun updateState(state: SubtitlePipelineState) {
         mutex.withLock { latestState = state }
@@ -75,7 +76,7 @@ class SubtitleTelemetryRepository(
             vsyncHitRate = vsyncHitRate,
             cpuPeakPct = cpuPeak,
             mode = latestState?.mode ?: SubtitlePipelineMode.GPU_GL,
-            lastFallback = lastFallback
+            lastFallback = lastFallback,
         )
     }
 

@@ -11,7 +11,6 @@ import com.xyoye.player.surface.InterSurfaceView
  */
 
 interface InterVideoPlayer : InterVideoTrack {
-
     /**
      * 开始
      */

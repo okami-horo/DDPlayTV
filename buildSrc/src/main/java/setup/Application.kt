@@ -16,6 +16,7 @@ fun Project.applicationSetup() {
             sourceCompatibility = JavaVersion.VERSION_1_8
             targetCompatibility = JavaVersion.VERSION_1_8
         }
+        ndkVersion = Versions.ndkVersion
 
         buildFeatures.apply {
             dataBinding.isEnabled = true

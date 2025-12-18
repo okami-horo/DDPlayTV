@@ -1,6 +1,6 @@
 package com.xyoye.common_component.network.helper
 
-import com.xyoye.common_component.config.DevelopConfig
+import com.xyoye.common_component.config.DeveloperCredentialStore
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -15,7 +15,6 @@ class DeveloperCertificateInterceptor : Interceptor {
         const val HEADER_APP_SECRET = "X-AppSecret"
     }
 
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val oldRequest = chain.request()
 
@@ -27,17 +26,19 @@ class DeveloperCertificateInterceptor : Interceptor {
         }
 
         // 未配置凭证，不做处理
-        val appId = DevelopConfig.getAppId()
-        val appSecret = DevelopConfig.getAppSecret()
+        val appId = DeveloperCredentialStore.getAppId()
+        val appSecret = DeveloperCredentialStore.getAppSecret()
         if (appId.isNullOrEmpty() || appSecret.isNullOrEmpty()) {
             return chain.proceed(oldRequest)
         }
 
         // 添加凭证
         return chain.proceed(
-            oldRequest.newBuilder()
+            oldRequest
+                .newBuilder()
                 .header(HEADER_APP_ID, appId)
-                .header(HEADER_APP_SECRET, appSecret).build()
+                .header(HEADER_APP_SECRET, appSecret)
+                .build(),
         )
     }
 }

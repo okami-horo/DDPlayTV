@@ -18,7 +18,6 @@ class UpdatePasswordDialog(
     activity: AppCompatActivity,
     private val callback: (old: String, new: String) -> Boolean
 ) : BaseBottomDialog<DialogUpdatePasswordBinding>(activity) {
-
     private lateinit var binding: DialogUpdatePasswordBinding
 
     override fun getChildLayoutId() = R.layout.dialog_update_password

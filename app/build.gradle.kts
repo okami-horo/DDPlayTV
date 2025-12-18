@@ -32,17 +32,17 @@ android {
         buildConfigField(
             "boolean",
             "MEDIA3_ENABLED_FALLBACK",
-            media3FallbackFlag.toString()
+            media3FallbackFlag.toString(),
         )
         buildConfigField(
             "boolean",
             "SUBTITLE_GPU_ENABLED_FALLBACK",
-            subtitleGpuFallbackFlag.toString()
+            subtitleGpuFallbackFlag.toString(),
         )
         buildConfigField(
             "boolean",
             "SUBTITLE_TELEMETRY_ENABLED_FALLBACK",
-            subtitleTelemetryFallbackFlag.toString()
+            subtitleTelemetryFallbackFlag.toString(),
         )
 
         ndk {

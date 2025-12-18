@@ -11,7 +11,6 @@ import com.xyoye.mmkv_annotation.MMKVKotlinClass
  */
 @MMKVKotlinClass(className = "LogConfig")
 object LogConfigTable {
-
     @MMKVFiled
     var policyName: String = DevelopLogConfigDefaults.DEFAULT_LOG_POLICY_NAME
 

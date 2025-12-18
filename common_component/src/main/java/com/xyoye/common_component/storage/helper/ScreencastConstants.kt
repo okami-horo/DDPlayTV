@@ -10,7 +10,6 @@ import com.xyoye.data_component.data.screeencast.ScreencastVideoData
  */
 
 object ScreencastConstants {
-
     // 投屏版本
     const val version = 1
 
@@ -36,7 +35,9 @@ object ScreencastConstants {
     }
 
     // 投屏资源提供端API
-    enum class ProviderApi(private val path: String) {
+    enum class ProviderApi(
+        private val path: String
+    ) {
         VIDEO("/video"),
         DANMU("/danmu"),
         SUBTITLE("/subtitle"),
@@ -46,11 +47,15 @@ object ScreencastConstants {
             fun fromPath(path: String) = values().firstOrNull { it.path == path }
         }
 
-        fun buildUrl(screencast: ScreencastData, video: ScreencastVideoData): String {
+        fun buildUrl(
+            screencast: ScreencastData,
+            video: ScreencastVideoData
+        ): String {
             val host = screencast.ip.orEmpty()
             val port = screencast.port
             val uniqueKey = video.uniqueKey
-            return Uri.Builder()
+            return Uri
+                .Builder()
                 .scheme("http")
                 .encodedAuthority("$host:$port")
                 .path(path)

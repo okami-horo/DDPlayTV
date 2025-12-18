@@ -1,7 +1,6 @@
 package com.xyoye.storage_component.ui.dialog
 
 import androidx.core.view.isVisible
-// import com.xyoye.common_component.application.DanDanPlay
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -9,8 +8,6 @@ import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.DialogRemoteLoginBinding
 import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivity
-// import com.xyoye.data_component.data.RemoteScanData
-// import com.xyoye.storage_component.utils.launcher.ScanActivityLauncher
 
 /**
  * Created by xyoye on 2021/3/25.
@@ -18,9 +15,8 @@ import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivit
 
 class RemoteStorageEditDialog(
     private val activity: StoragePlusActivity,
-    private val originalStorage: MediaLibraryEntity?,
+    private val originalStorage: MediaLibraryEntity?
 ) : StorageEditDialog<DialogRemoteLoginBinding>(activity) {
-
     private var remoteData: MediaLibraryEntity
     private var tokenRequired = false
 
@@ -28,7 +24,7 @@ class RemoteStorageEditDialog(
 
     /*
     private val scanActivityLauncher = ScanActivityLauncher(activity, onResult())
-    */
+     */
 
     init {
         remoteData = originalStorage ?: MediaLibraryEntity(
@@ -36,7 +32,7 @@ class RemoteStorageEditDialog(
             "",
             "",
             MediaType.REMOTE_STORAGE,
-            port = 80
+            port = 80,
         )
     }
 
@@ -66,7 +62,7 @@ class RemoteStorageEditDialog(
                 }
             }
         }
-        */
+         */
 
         binding.serverTestConnectTv.setOnClickListener {
             if (checkParams(remoteData)) {
@@ -135,12 +131,12 @@ class RemoteStorageEditDialog(
     private fun setGroupMode(isGroupByAnime: Boolean) {
         binding.tvGroupByAnime.isSelected = isGroupByAnime
         binding.tvGroupByAnime.setTextColorRes(
-            if (isGroupByAnime) R.color.text_white else R.color.text_black
+            if (isGroupByAnime) R.color.text_white else R.color.text_black,
         )
 
         binding.tvGroupByFile.isSelected = !isGroupByAnime
         binding.tvGroupByFile.setTextColorRes(
-            if (!isGroupByAnime) R.color.text_white else R.color.text_black
+            if (!isGroupByAnime) R.color.text_white else R.color.text_black,
         )
     }
 
@@ -154,5 +150,5 @@ class RemoteStorageEditDialog(
         tokenRequired = data.tokenRequired
         binding.remoteData = remoteData
     }
-    */
+     */
 }

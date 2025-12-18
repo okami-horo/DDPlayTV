@@ -20,7 +20,6 @@ class HttpServer(
     private val coroutineScope: CoroutineScope,
     private val listener: ScreencastProvideHandler
 ) : NanoHTTPD(port) {
-
     private val controller: ServerController by lazy {
         ServerController(videoSource, listener)
     }

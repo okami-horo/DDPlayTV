@@ -14,7 +14,6 @@ import retrofit2.http.QueryMap
  */
 
 interface MagnetService {
-
     @GET("/list")
     suspend fun searchMagnet(
         @Header(HeaderKey.BASE_URL) baseUrl: String,

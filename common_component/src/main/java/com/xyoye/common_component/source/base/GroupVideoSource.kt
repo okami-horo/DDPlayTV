@@ -9,21 +9,12 @@ import com.xyoye.common_component.source.inter.GroupSource
 abstract class GroupVideoSource(
     private val index: Int,
     private val videoSources: List<*>
-): GroupSource {
+) : GroupSource {
+    override fun getGroupIndex(): Int = index
 
-    override fun getGroupIndex(): Int {
-        return index
-    }
+    override fun getGroupSize(): Int = videoSources.size
 
-    override fun getGroupSize(): Int {
-        return videoSources.size
-    }
+    override fun hasNextSource(): Boolean = index + 1 in videoSources.indices
 
-    override fun hasNextSource(): Boolean {
-        return index + 1 in videoSources.indices
-    }
-
-    override fun hasPreviousSource(): Boolean {
-        return index - 1 in videoSources.indices
-    }
+    override fun hasPreviousSource(): Boolean = index - 1 in videoSources.indices
 }

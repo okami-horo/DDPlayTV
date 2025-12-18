@@ -47,7 +47,9 @@ interface ScreencastReceiveHandler {
     fun onReceiveVideo(screencastData: ScreencastData)
 }
 
-class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
+class ScreencastReceiveService :
+    Service(),
+    ScreencastReceiveHandler {
     private var httpServer: HttpServer? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -59,11 +61,13 @@ class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
         private const val KEY_SERVER_PORT = "key_server_port"
         private const val KEY_SERVER_PASSWORD = "key_server_password"
 
-        fun isRunning(context: Context): Boolean {
-            return context.isServiceRunning(ScreencastReceiveService::class.java)
-        }
+        fun isRunning(context: Context): Boolean = context.isServiceRunning(ScreencastReceiveService::class.java)
 
-        fun start(context: Context, httpPort: Int, password: String?) {
+        fun start(
+            context: Context,
+            httpPort: Int,
+            password: String?
+        ) {
             val intent = Intent(context, ScreencastReceiveService::class.java)
             intent.putExtra(KEY_SERVER_PORT, httpPort)
             intent.putExtra(KEY_SERVER_PASSWORD, password)
@@ -75,9 +79,7 @@ class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
         }
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
+    override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -91,28 +93,32 @@ class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
         startForeground(Notifications.Id.SCREENCAST_RECEIVE, notifier.notificationBuilder.build())
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int
+    ): Int {
         val httpPort: Int? = intent?.extras?.getInt(KEY_SERVER_PORT)
         val password: String? = intent?.extras?.getString(KEY_SERVER_PASSWORD)
-        //必须设置端口
+        // 必须设置端口
         if (httpPort == null || httpPort == 0) {
             return super.onStartCommand(intent, flags, startId)
         }
-        //已启动则不再启动
+        // 已启动则不再启动
         if (httpServer?.isAlive == true) {
             return super.onStartCommand(intent, flags, startId)
         }
-        //停止旧服务
+        // 停止旧服务
         stopHttpServer()
-        //创建新服务
+        // 创建新服务
         val newHttpServer = createHttpServer(httpPort, password)
         if (newHttpServer == null) {
             stopSelf()
             return START_STICKY
         }
-        //设置投屏接收处理回调
+        // 设置投屏接收处理回调
         newHttpServer.setScreenReceiveHandler(this)
-        //启动UDP组播
+        // 启动UDP组播
         startMulticast(newHttpServer.listeningPort, password)
 
         ToastCenter.showSuccess("投屏接收服务已启动")
@@ -135,28 +141,31 @@ class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
      */
     override fun onReceiveVideo(screencastData: ScreencastData) {
         serviceScope.launch {
-            val targetVideo = screencastData.relatedVideos.firstOrNull {
-                it.uniqueKey == screencastData.playUniqueKey
-            } ?: return@launch
+            val targetVideo =
+                screencastData.relatedVideos.firstOrNull {
+                    it.uniqueKey == screencastData.playUniqueKey
+                } ?: return@launch
 
-            //询问是否接收投屏
+            // 询问是否接收投屏
             if (considerAcceptScreencast(targetVideo).not()) {
                 return@launch
             }
 
-            //投屏源IP地址不能为空
+            // 投屏源IP地址不能为空
             if (TextUtils.isEmpty(screencastData.ip)) {
                 ToastCenter.showError("播放失败，未知的投屏源地址")
                 return@launch
             }
 
-            //创建投屏资源
-            val mediaSource = MediaLibraryEntity.HISTORY.copy(mediaType = MediaType.SCREEN_CAST)
-                .run { StorageFactory.createStorage(this) }
-                .run { this as? ScreencastStorage }
-                ?.apply { this.bindScreencastData(screencastData) }
-                ?.run { getRootFile() }
-                ?.run { StorageVideoSourceFactory.create(this) }
+            // 创建投屏资源
+            val mediaSource =
+                MediaLibraryEntity.HISTORY
+                    .copy(mediaType = MediaType.SCREEN_CAST)
+                    .run { StorageFactory.createStorage(this) }
+                    .run { this as? ScreencastStorage }
+                    ?.apply { this.bindScreencastData(screencastData) }
+                    ?.run { getRootFile() }
+                    ?.run { StorageVideoSourceFactory.create(this) }
             if (mediaSource == null) {
                 ToastCenter.showError("播放失败，无法打开播放资源")
                 return@launch
@@ -164,7 +173,7 @@ class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
 
             notifier.showReceivedVideo(targetVideo.title)
 
-            //正在播放器页面时，不打开新的播放器
+            // 正在播放器页面时，不打开新的播放器
             val topActivity = ActivityHelper.instance.getTopActivity()
             if (topActivity != null && topActivity is ScreencastHandler) {
                 topActivity.playScreencast(mediaSource)
@@ -172,7 +181,8 @@ class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
             }
 
             VideoSourceManager.getInstance().setSource(mediaSource)
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.Player.Player)
                 .navigation()
         }
@@ -181,47 +191,50 @@ class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
     /**
      * 启动UDP组播
      */
-    private fun startMulticast(port: Int, password: String?) {
+    private fun startMulticast(
+        port: Int,
+        password: String?
+    ) {
         multicastJob?.cancel()
-        multicastJob = serviceScope.launch {
-            UdpServer.startMulticastEmit(
-                port,
-                needPassword = password.isNullOrEmpty().not()
-            )
-        }
+        multicastJob =
+            serviceScope.launch {
+                UdpServer.startMulticastEmit(
+                    port,
+                    needPassword = password.isNullOrEmpty().not(),
+                )
+            }
     }
 
     /**
      * 弹窗确认接收投屏
      */
     private suspend fun considerAcceptScreencast(videoData: ScreencastVideoData): Boolean {
-        //设置了自动接收
+        // 设置了自动接收
         if (ScreencastConfig.isReceiveNeedConfirm().not()) {
             return true
         }
 
-        //获取当前正在展示的Activity
+        // 获取当前正在展示的Activity
         val topActivity = ActivityHelper.instance.getTopActivity()
         if (topActivity == null) {
             ToastCenter.showError("接收到投屏请求，应用处理失败")
             return false
         }
 
-        //展示弹窗询问是否接收投屏
+        // 展示弹窗询问是否接收投屏
         return withContext(Dispatchers.Main) {
             suspendCancellableCoroutine { continuation ->
-                AlertDialog.Builder(topActivity)
+                AlertDialog
+                    .Builder(topActivity)
                     .setTitle("接收到投屏请求，是否播放？")
                     .setMessage("投屏内容：${videoData.title}")
                     .setNegativeButton("忽略") { dialog, _ ->
                         dialog.dismiss()
                         continuation.resume(false)
-                    }
-                    .setPositiveButton("播放") { dialog, _ ->
+                    }.setPositiveButton("播放") { dialog, _ ->
                         dialog.dismiss()
                         continuation.resume(true)
-                    }
-                    .show()
+                    }.show()
                     .setOnDismissListener {
                         continuation.resumeWhenAlive(false)
                     }
@@ -234,8 +247,11 @@ class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
         httpServer?.stop()
     }
 
-    private fun createHttpServer(port: Int, password: String?): HttpServer? {
-        return try {
+    private fun createHttpServer(
+        port: Int,
+        password: String?
+    ): HttpServer? =
+        try {
             val httpServer = HttpServer(password, port)
             httpServer.start(2000)
             httpServer
@@ -245,10 +261,9 @@ class ScreencastReceiveService : Service(), ScreencastReceiveHandler {
                 e,
                 "ScreencastReceiveService",
                 "createHttpServer",
-                "创建投屏接收HTTP服务器失败，port=$port, hasPassword=${password != null}"
+                "创建投屏接收HTTP服务器失败，port=$port, hasPassword=${password != null}",
             )
             e.printStackTrace()
             null
         }
-    }
 }

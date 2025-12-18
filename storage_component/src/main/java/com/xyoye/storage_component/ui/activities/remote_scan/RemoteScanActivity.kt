@@ -1,29 +1,14 @@
 package com.xyoye.storage_component.ui.activities.remote_scan
 
-import android.content.Intent
-import android.graphics.Rect
-import android.os.Bundle
-import android.widget.FrameLayout
-import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.lifecycleScope
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.gyf.immersionbar.ImmersionBar
 import com.huawei.hms.hmsscankit.RemoteView
-import com.huawei.hms.ml.scan.HmsScan
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.utils.JsonHelper
-import com.xyoye.common_component.utils.getScreenHeight
-import com.xyoye.common_component.utils.getScreenWidth
 import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.data_component.data.RemoteScanData
 import com.xyoye.storage_component.BR
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ActivityRemoteScanBinding
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * TV端说明：
@@ -32,23 +17,23 @@ import kotlin.math.min
  */
 @Route(path = RouteTable.Stream.RemoteScan)
 class RemoteScanActivity : BaseActivity<RemoteScanViewModel, ActivityRemoteScanBinding>() {
-
     private lateinit var remoteView: RemoteView
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            RemoteScanViewModel::class.java
+            RemoteScanViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_remote_scan
 
     override fun initStatusBar() {
-        //do nothing
+        // do nothing
     }
 
     override fun initView() {
-        ImmersionBar.with(this)
+        ImmersionBar
+            .with(this)
             .titleBar(dataBinding.toolbar, false)
             .transparentBar()
             .statusBarDarkFont(false)
@@ -175,5 +160,5 @@ class RemoteScanActivity : BaseActivity<RemoteScanViewModel, ActivityRemoteScanB
 
         return Rect(right.toInt(), bottom.toInt(), left.toInt(), top.toInt())
     }
-    */
+     */
 }

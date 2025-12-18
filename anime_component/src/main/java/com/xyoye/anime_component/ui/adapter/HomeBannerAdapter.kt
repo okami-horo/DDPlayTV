@@ -17,22 +17,25 @@ import com.youth.banner.adapter.BannerAdapter
  * Created by xyoye on 2020/7/31.
  */
 
-class HomeBannerAdapter(bannerDetails: MutableList<BannerDetailData>) :
-    BannerAdapter<BannerDetailData, HomeBannerAdapter.BannerHolder>(bannerDetails) {
+class HomeBannerAdapter(
+    bannerDetails: MutableList<BannerDetailData>
+) : BannerAdapter<BannerDetailData, HomeBannerAdapter.BannerHolder>(bannerDetails) {
+    inner class BannerHolder(
+        @NonNull binding: ItemBannerBinding
+    ) : RecyclerView.ViewHolder(binding.root)
 
-    inner class BannerHolder(@NonNull binding: ItemBannerBinding) :
-        RecyclerView.ViewHolder(binding.root)
-
-    override fun onCreateHolder(parent: ViewGroup?, viewType: Int): BannerHolder {
-        return BannerHolder(
+    override fun onCreateHolder(
+        parent: ViewGroup?,
+        viewType: Int
+    ): BannerHolder =
+        BannerHolder(
             DataBindingUtil.inflate(
                 LayoutInflater.from(parent!!.context),
                 R.layout.item_banner,
                 parent,
-                false
-            )
+                false,
+            ),
         )
-    }
 
     override fun onBindView(
         holder: BannerHolder?,
@@ -45,7 +48,9 @@ class HomeBannerAdapter(bannerDetails: MutableList<BannerDetailData>) :
                 bannerIv.loadImage(data.imageUrl)
                 bannerTitleTv.text = data.title
                 itemLayout.setOnClickListener {
-                    ARouter.getInstance().build(RouteTable.User.WebView)
+                    ARouter
+                        .getInstance()
+                        .build(RouteTable.User.WebView)
                         .withString("titleText", data.title)
                         .withString("url", data.url)
                         .navigation()

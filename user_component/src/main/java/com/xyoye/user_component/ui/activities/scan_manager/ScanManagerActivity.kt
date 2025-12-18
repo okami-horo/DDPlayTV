@@ -18,20 +18,18 @@ import com.xyoye.user_component.ui.fragment.scan_filter.ScanFilterFragment
 
 @Route(path = RouteTable.User.ScanManager)
 class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManagerBinding>() {
-
     private var extensionSettingItem: MenuItem? = null
     private var extensionSettingDialog: VideoExtensionSupportSettingDialog? = null
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            ScanManagerViewModel::class.java
+            ScanManagerViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_scan_manager
 
     override fun initView() {
-
         title = "扫描目录管理"
 
         dataBinding.tabLayout.setupWithViewPager(dataBinding.viewpager)
@@ -41,11 +39,13 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
             currentItem = 0
         }
 
-        dataBinding.viewpager.addOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener() {
-            override fun onPageSelected(position: Int) {
-                extensionSettingItem?.isVisible = position == 0
-            }
-        })
+        dataBinding.viewpager.addOnPageChangeListener(
+            object : ViewPager.SimpleOnPageChangeListener() {
+                override fun onPageSelected(position: Int) {
+                    extensionSettingItem?.isVisible = position == 0
+                }
+            },
+        )
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -65,28 +65,26 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
 
     private fun showScanSettingDialog() {
         extensionSettingDialog?.dismiss()
-        extensionSettingDialog = VideoExtensionSupportSettingDialog(this).also {
-            it.show()
-        }
+        extensionSettingDialog =
+            VideoExtensionSupportSettingDialog(this).also {
+                it.show()
+            }
     }
 
-    inner class ScanManagerFragmentAdapter(fragmentManager: FragmentManager) :
-        FragmentPagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-
+    inner class ScanManagerFragmentAdapter(
+        fragmentManager: FragmentManager
+    ) : FragmentPagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
         private var titles = arrayOf("扫描", "屏蔽")
 
-        override fun getItem(position: Int): Fragment {
-            return when (position) {
+        override fun getItem(position: Int): Fragment =
+            when (position) {
                 0 -> ScanExtendFragment.newInstance()
                 1 -> ScanFilterFragment.newInstance()
                 else -> throw IllegalArgumentException()
             }
-        }
 
         override fun getCount() = titles.size
 
-        override fun getPageTitle(position: Int): CharSequence {
-            return titles[position]
-        }
+        override fun getPageTitle(position: Int): CharSequence = titles[position]
     }
 }

@@ -31,5 +31,5 @@ enum class SettingViewType {
 
     SUBTITLE_OFFSET_TIME,
 
-    TRACKS,
+    TRACKS
 }

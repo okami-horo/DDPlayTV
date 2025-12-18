@@ -20,9 +20,8 @@ import com.xyoye.storage_component.utils.launcher.DocumentTreeLauncher
 
 class ExternalStorageEditDialog(
     private val activity: StoragePlusActivity,
-    private val library: MediaLibraryEntity?,
+    private val library: MediaLibraryEntity?
 ) : StorageEditDialog<DialogExternalStorageEditBinding>(activity) {
-
     private lateinit var binding: DialogExternalStorageEditBinding
     private var mDocumentFile: DocumentFile? = null
 
@@ -49,13 +48,15 @@ class ExternalStorageEditDialog(
     }
 
     override fun onTestResult(result: Boolean) {
-
     }
 
     private fun setDocumentResult(documentFile: DocumentFile) {
         mDocumentFile = documentFile
         binding.pathTv.text = getDescribe(documentFile)
-        if (binding.displayNameEt.text?.toString().isNullOrEmpty()) {
+        if (binding.displayNameEt.text
+                ?.toString()
+                .isNullOrEmpty()
+        ) {
             binding.displayNameEt.setText(getDisplayName(documentFile))
         }
     }
@@ -74,8 +75,9 @@ class ExternalStorageEditDialog(
                 return@setPositiveListener
             }
 
-            val newLibrary = createLibrary()
-                ?: return@setPositiveListener
+            val newLibrary =
+                createLibrary()
+                    ?: return@setPositiveListener
             activity.addStorage(newLibrary)
         }
 
@@ -109,7 +111,7 @@ class ExternalStorageEditDialog(
             displayName = displayName,
             url = documentFile.uri.toString(),
             describe = getDescribe(documentFile),
-            mediaType = MediaType.EXTERNAL_STORAGE
+            mediaType = MediaType.EXTERNAL_STORAGE,
         )
     }
 
@@ -127,9 +129,10 @@ class ExternalStorageEditDialog(
 
     private fun getDisplayName(storage: MediaLibraryEntity): String {
         val uri = Uri.parse(storage.url)
-        val documentFile = DocumentFile.fromTreeUri(activity, uri)
-            ?: return uri.lastPathSegment
-                ?: return "未知存储库"
+        val documentFile =
+            DocumentFile.fromTreeUri(activity, uri)
+                ?: return uri.lastPathSegment
+                    ?: return "未知存储库"
         return getDisplayName(documentFile)
     }
 
@@ -141,9 +144,7 @@ class ExternalStorageEditDialog(
         return documentFile.name ?: documentFile.uri.path ?: documentFile.uri.toString()
     }
 
-    private fun getDescribe(documentFile: DocumentFile): String {
-        return documentFile.uri.path ?: documentFile.uri.toString()
-    }
+    private fun getDescribe(documentFile: DocumentFile): String = documentFile.uri.path ?: documentFile.uri.toString()
 
     private fun getTreeDocumentId(documentUri: Uri): String? {
         val paths = documentUri.pathSegments
@@ -153,23 +154,24 @@ class ExternalStorageEditDialog(
         return null
     }
 
-    private fun onResult() = block@{ uri: Uri? ->
-        if (uri == null) {
-            return@block
-        }
+    private fun onResult() =
+        block@{ uri: Uri? ->
+            if (uri == null) {
+                return@block
+            }
 
-        if (takePersistableUriPermission(uri).not()) {
-            ToastCenter.showError("获取文件夹访问权限失败")
-            return@block
-        }
+            if (takePersistableUriPermission(uri).not()) {
+                ToastCenter.showError("获取文件夹访问权限失败")
+                return@block
+            }
 
-        val documentFile = DocumentFile.fromTreeUri(activity, uri)
-        if (documentFile == null) {
-            ToastCenter.showError("无法访问文件夹")
-            return@block
+            val documentFile = DocumentFile.fromTreeUri(activity, uri)
+            if (documentFile == null) {
+                ToastCenter.showError("无法访问文件夹")
+                return@block
+            }
+            setDocumentResult(documentFile)
         }
-        setDocumentResult(documentFile)
-    }
 
     private fun takePersistableUriPermission(uri: Uri): Boolean {
         try {
@@ -182,7 +184,7 @@ class ExternalStorageEditDialog(
                 e,
                 "ExternalStorageEditDialog",
                 "takePersistableUriPermission",
-                "获取URI持久访问权限失败，uri=${uri}"
+                "获取URI持久访问权限失败，uri=$uri",
             )
             e.printStackTrace()
         }

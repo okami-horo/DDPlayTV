@@ -8,13 +8,11 @@ import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.util.Locale
 
-
 /**
  * Created by xyoye on 2020/11/30.
  */
 
 object SubtitleHashUtils {
-
     fun getThunderHash(videoPath: String): String? {
         var file: RandomAccessFile? = null
         try {
@@ -42,14 +40,14 @@ object SubtitleHashUtils {
             ErrorReportHelper.postCatchedException(
                 e,
                 "SubtitleHashUtils.getThunderHash",
-                "计算迅雷哈希时IO异常: $videoPath"
+                "计算迅雷哈希时IO异常: $videoPath",
             )
             e.printStackTrace()
         } catch (e: NoSuchAlgorithmException) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "SubtitleHashUtils.getThunderHash",
-                "计算迅雷哈希时算法异常: $videoPath"
+                "计算迅雷哈希时算法异常: $videoPath",
             )
             e.printStackTrace()
         } finally {
@@ -59,7 +57,7 @@ object SubtitleHashUtils {
                 ErrorReportHelper.postCatchedException(
                     e,
                     "SubtitleHashUtils.getThunderHash",
-                    "关闭文件时IO异常: $videoPath"
+                    "关闭文件时IO异常: $videoPath",
                 )
                 e.printStackTrace()
             }
@@ -95,14 +93,14 @@ object SubtitleHashUtils {
             ErrorReportHelper.postCatchedException(
                 e,
                 "SubtitleHashUtils.getShooterHash",
-                "计算Shooter哈希时IO异常: $videoPath"
+                "计算Shooter哈希时IO异常: $videoPath",
             )
             e.printStackTrace()
         } catch (e: NoSuchAlgorithmException) {
             ErrorReportHelper.postCatchedException(
                 e,
                 "SubtitleHashUtils.getShooterHash",
-                "计算Shooter哈希时算法异常: $videoPath"
+                "计算Shooter哈希时算法异常: $videoPath",
             )
             e.printStackTrace()
         }

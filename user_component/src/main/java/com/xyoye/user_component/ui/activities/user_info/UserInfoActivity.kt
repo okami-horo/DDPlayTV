@@ -18,13 +18,12 @@ import com.xyoye.user_component.ui.dialog.UpdatePasswordDialog
 
 @Route(path = RouteTable.User.UserInfo)
 class UserInfoActivity : BaseActivity<UserInfoViewModel, ActivityUserInfoBinding>() {
-
-    private lateinit var updatePasswordDialog : UpdatePasswordDialog
+    private lateinit var updatePasswordDialog: UpdatePasswordDialog
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            UserInfoViewModel::class.java
+            UserInfoViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.activity_user_info
@@ -39,10 +38,11 @@ class UserInfoActivity : BaseActivity<UserInfoViewModel, ActivityUserInfoBinding
         val coverResId = typedArray.getResourceId(coverIndex, 0)
         typedArray.recycle()
 
-        updatePasswordDialog = UpdatePasswordDialog(this) { old, new ->
-            viewModel.updatePassword(old, new)
-            return@UpdatePasswordDialog false
-        }
+        updatePasswordDialog =
+            UpdatePasswordDialog(this) { old, new ->
+                viewModel.updatePassword(old, new)
+                return@UpdatePasswordDialog false
+            }
 
         dataBinding.userCoverIv.setImageResource(coverResId)
 
@@ -52,8 +52,8 @@ class UserInfoActivity : BaseActivity<UserInfoViewModel, ActivityUserInfoBinding
                 EditBean(
                     "修改昵称",
                     "昵称不能为空",
-                    "昵称"
-                )
+                    "昵称",
+                ),
             ) {
                 viewModel.updateScreenName(it)
             }.show()
@@ -65,7 +65,8 @@ class UserInfoActivity : BaseActivity<UserInfoViewModel, ActivityUserInfoBinding
 
         viewModel.updatePasswordLiveData.observe(this) {
             updatePasswordDialog.dismiss()
-            ARouter.getInstance()
+            ARouter
+                .getInstance()
                 .build(RouteTable.User.UserLogin)
                 .withString("userAccount", it)
                 .navigation()
@@ -87,21 +88,24 @@ class UserInfoActivity : BaseActivity<UserInfoViewModel, ActivityUserInfoBinding
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_item_exit_login -> {
-                CommonDialog.Builder(this).apply {
-                    addPositive {
-                        it.dismiss()
-                        val userAccount: String? = UserInfoHelper.mLoginData?.userName
-                        UserInfoHelper.exitLogin()
-                        ARouter.getInstance()
-                            .build(RouteTable.User.UserLogin)
-                            .withString("userAccount", userAccount)
-                            .navigation()
-                        finish()
-                    }
-                    addNegative()
-                    content = "确定退出登录？"
-                }.build().show()
-
+                CommonDialog
+                    .Builder(this)
+                    .apply {
+                        addPositive {
+                            it.dismiss()
+                            val userAccount: String? = UserInfoHelper.mLoginData?.userName
+                            UserInfoHelper.exitLogin()
+                            ARouter
+                                .getInstance()
+                                .build(RouteTable.User.UserLogin)
+                                .withString("userAccount", userAccount)
+                                .navigation()
+                            finish()
+                        }
+                        addNegative()
+                        content = "确定退出登录？"
+                    }.build()
+                    .show()
             }
         }
         return super.onOptionsItemSelected(item)

@@ -15,41 +15,24 @@ class LinkStorageFile(
     storage: LinkStorage,
     private val url: String
 ) : AbstractStorageFile(storage) {
-    override fun getRealFile(): Any {
-        return url
-    }
+    override fun getRealFile(): Any = url
 
-    override fun filePath(): String {
-        return url
-    }
+    override fun filePath(): String = url
 
-    override fun fileUrl(): String {
-        return Uri.parse(url).toString()
-    }
+    override fun fileUrl(): String = Uri.parse(url).toString()
 
-    override fun isDirectory(): Boolean {
-        return false
-    }
+    override fun isDirectory(): Boolean = false
 
-    override fun fileName(): String {
-        return Uri.parse(url).lastPathSegment ?: getFileName(url)
-    }
+    override fun fileName(): String = Uri.parse(url).lastPathSegment ?: getFileName(url)
 
-    override fun fileLength(): Long {
-        return 0
-    }
+    override fun fileLength(): Long = 0
 
-    override fun clone(): StorageFile {
-        return LinkStorageFile(storage as LinkStorage, url).also {
+    override fun clone(): StorageFile =
+        LinkStorageFile(storage as LinkStorage, url).also {
             it.playHistory = playHistory
         }
-    }
 
-    override fun isVideoFile(): Boolean {
-        return true
-    }
+    override fun isVideoFile(): Boolean = true
 
-    override fun uniqueKey(): String {
-        return url.toMd5String()
-    }
+    override fun uniqueKey(): String = url.toMd5String()
 }

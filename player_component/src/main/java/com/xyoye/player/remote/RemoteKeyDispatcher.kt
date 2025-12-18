@@ -9,7 +9,6 @@ class RemoteKeyDispatcher(
     private val remoteAction: RemoteKeyAction,
     private val seekOffsetMs: Long = DEFAULT_SEEK_OFFSET_MS
 ) {
-
     data class UiState(
         val isLocked: Boolean,
         val isControllerShowing: Boolean,
@@ -26,13 +25,20 @@ class RemoteKeyDispatcher(
 
     interface RemoteKeyAction {
         fun togglePlay()
+
         fun seekBy(offsetMs: Long)
+
         fun showController()
+
         fun openPlayerSettings()
+
         fun openEpisodePanel(): Boolean
     }
 
-    fun onKeyDown(keyCode: Int, state: UiState): DispatchResult {
+    fun onKeyDown(
+        keyCode: Int,
+        state: UiState
+    ): DispatchResult {
         if (state.isPopupMode) {
             return DispatchResult.IGNORED
         }
@@ -62,7 +68,10 @@ class RemoteKeyDispatcher(
         return DispatchResult.CONSUMED
     }
 
-    private fun handleSeek(state: UiState, offsetMs: Long): DispatchResult {
+    private fun handleSeek(
+        state: UiState,
+        offsetMs: Long
+    ): DispatchResult {
         if (state.isSettingShowing) {
             return DispatchResult.PASS_TO_CONTROL
         }

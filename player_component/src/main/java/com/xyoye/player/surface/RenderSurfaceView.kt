@@ -11,26 +11,32 @@ import com.xyoye.player.utils.RenderMeasureHelper
  * Created by xyoye on 2020/11/3.
  */
 
-class RenderSurfaceView(context: Context) : SurfaceView(context), InterSurfaceView {
-
+class RenderSurfaceView(
+    context: Context
+) : SurfaceView(context),
+    InterSurfaceView {
     private val mMeasureHelper = RenderMeasureHelper()
     private lateinit var mVideoPlayer: AbstractVideoPlayer
 
-    private val mSurfaceCallback = object : SurfaceHolder.Callback {
-        override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+    private val mSurfaceCallback =
+        object : SurfaceHolder.Callback {
+            override fun surfaceChanged(
+                holder: SurfaceHolder,
+                format: Int,
+                width: Int,
+                height: Int
+            ) {
+            }
 
-        }
+            override fun surfaceDestroyed(holder: SurfaceHolder) {
+            }
 
-        override fun surfaceDestroyed(holder: SurfaceHolder) {
-
-        }
-
-        override fun surfaceCreated(holder: SurfaceHolder) {
-            if (this@RenderSurfaceView::mVideoPlayer.isInitialized) {
-                mVideoPlayer.setSurface(holder.surface)
+            override fun surfaceCreated(holder: SurfaceHolder) {
+                if (this@RenderSurfaceView::mVideoPlayer.isInitialized) {
+                    mVideoPlayer.setSurface(holder.surface)
+                }
             }
         }
-    }
 
     init {
         holder.addCallback(mSurfaceCallback)
@@ -40,7 +46,10 @@ class RenderSurfaceView(context: Context) : SurfaceView(context), InterSurfaceVi
         mVideoPlayer = player
     }
 
-    override fun setVideoSize(videoWidth: Int, videoHeight: Int) {
+    override fun setVideoSize(
+        videoWidth: Int,
+        videoHeight: Int
+    ) {
         if (videoWidth > 0 && videoHeight > 0) {
             mMeasureHelper.mVideoWidth = videoWidth
             mMeasureHelper.mVideoHeight = videoHeight
@@ -71,7 +80,10 @@ class RenderSurfaceView(context: Context) : SurfaceView(context), InterSurfaceVi
         holder.removeCallback(mSurfaceCallback)
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    override fun onMeasure(
+        widthMeasureSpec: Int,
+        heightMeasureSpec: Int
+    ) {
         val measuredSize = mMeasureHelper.doMeasure(widthMeasureSpec, heightMeasureSpec)
         setMeasuredDimension(measuredSize[0], measuredSize[1])
     }

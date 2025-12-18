@@ -7,7 +7,6 @@ package com.xyoye.common_component.config
  */
 
 object RouteTable {
-
     object Anime {
         const val Search = "/anime/search"
         const val HomeFragment = "/anime/home_fragment"

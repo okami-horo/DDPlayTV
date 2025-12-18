@@ -7,22 +7,23 @@ import com.xyoye.common_component.network.Retrofit
  */
 
 object MagnetRepository : BaseRepository() {
-
     /**
      * 获取磁链资源分类
      */
-    suspend fun getMagnetType(domain: String) = request()
-        .doGet {
-            Retrofit.magnetService.getMagnetType(domain)
-        }
+    suspend fun getMagnetType(domain: String) =
+        request()
+            .doGet {
+                Retrofit.magnetService.getMagnetType(domain)
+            }
 
     /**
      * 获取磁链资源字幕组
      */
-    suspend fun getMagnetSubgroup(domain: String) = request()
-        .doGet {
-            Retrofit.magnetService.getMagnetSubgroup(domain)
-        }
+    suspend fun getMagnetSubgroup(domain: String) =
+        request()
+            .doGet {
+                Retrofit.magnetService.getMagnetSubgroup(domain)
+            }
 
     /**
      * 搜索磁链资源

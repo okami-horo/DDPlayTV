@@ -15,9 +15,10 @@ import com.xyoye.common_component.databinding.DialogBaseLoadingBinding
  * Created by xyoye on 2020/4/15.
  */
 
-class BaseLoadingDialog(context: Context, msg: String = "加载中") :
-    Dialog(context, R.style.LoadingDialog) {
-
+class BaseLoadingDialog(
+    context: Context,
+    msg: String = "加载中"
+) : Dialog(context, R.style.LoadingDialog) {
     val dialogText: ObservableField<String> = ObservableField(msg)
 
     private var cycleAnimator: ObjectAnimator

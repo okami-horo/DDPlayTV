@@ -15,11 +15,10 @@ class DatePickerDialog(
     private val defaultYear: Int = -1,
     private val block: (Int) -> Unit
 ) : BaseBottomDialog<DialogDatePickerBinding>(activity) {
-
     override fun getChildLayoutId() = R.layout.dialog_date_picker
 
     override fun initView(binding: DialogDatePickerBinding) {
-        //初始化数据
+        // 初始化数据
         val nowYear = Calendar.getInstance().get(Calendar.YEAR)
         binding.pickerView.run {
             label = "年"

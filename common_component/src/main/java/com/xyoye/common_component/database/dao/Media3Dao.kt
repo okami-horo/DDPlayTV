@@ -9,7 +9,6 @@ import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
 
 @Dao
 interface Media3Dao {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSnapshot(snapshot: RolloutToggleSnapshot)
 

@@ -17,13 +17,12 @@ import com.xyoye.common_component.extension.setData
 import com.xyoye.data_component.data.TagData
 
 class AnimeIntroFragment : BaseFragment<AnimeIntroFragmentViewModel, FragmentAnimeIntroBinding>() {
-
     private val parentViewModel: AnimeDetailViewModel by viewModels(ownerProducer = { mAttachActivity })
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            AnimeIntroFragmentViewModel::class.java
+            AnimeIntroFragmentViewModel::class.java,
         )
 
     override fun getLayoutId() = R.layout.fragment_anime_intro
@@ -31,20 +30,22 @@ class AnimeIntroFragment : BaseFragment<AnimeIntroFragmentViewModel, FragmentAni
     override fun initView() {
         dataBinding.tagRv.apply {
             layoutManager = horizontal()
-            adapter = buildAdapter {
-                addItem<TagData, ItemAnimeTagBinding>(R.layout.item_anime_tag) {
-                    initView { data, _, _ ->
-                        itemBinding.tagTv.text = data.name
-                        itemBinding.tagTv.setOnClickListener {
-                            ARouter.getInstance()
-                                .build(RouteTable.Anime.AnimeTag)
-                                .withInt("tagId", data.id)
-                                .withString("tagName", data.name)
-                                .navigation()
+            adapter =
+                buildAdapter {
+                    addItem<TagData, ItemAnimeTagBinding>(R.layout.item_anime_tag) {
+                        initView { data, _, _ ->
+                            itemBinding.tagTv.text = data.name
+                            itemBinding.tagTv.setOnClickListener {
+                                ARouter
+                                    .getInstance()
+                                    .build(RouteTable.Anime.AnimeTag)
+                                    .withInt("tagId", data.id)
+                                    .withString("tagName", data.name)
+                                    .navigation()
+                            }
                         }
                     }
                 }
-            }
         }
 
         parentViewModel.animeDetailLiveData.observe(this) {

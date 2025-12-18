@@ -1,14 +1,13 @@
 package com.xyoye.common_component.storage.impl
 
-import java.io.File
 import okhttp3.Credentials
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okio.IOException
+import java.io.File
 
 /**
  * 轻量封装 WebDAV 上传能力，依赖 OkHttp。
@@ -24,7 +23,10 @@ class WebDavClient(
         endpoint = url.trimEnd('/')
     }
 
-    fun updateAccount(user: String, pass: String) {
+    fun updateAccount(
+        user: String,
+        pass: String
+    ) {
         username = user
         password = pass
     }
@@ -34,11 +36,13 @@ class WebDavClient(
             return
         }
         val url = "$endpoint/${path.trimStart('/')}"
-        val request = Request.Builder()
-            .url(url)
-            .method("MKCOL", EmptyRequestBody)
-            .apply { applyAuth(this) }
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                .method("MKCOL", EmptyRequestBody)
+                .apply { applyAuth(this) }
+                .build()
         try {
             httpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful && !response.isMethodNotAllowed()) {
@@ -49,13 +53,18 @@ class WebDavClient(
         }
     }
 
-    fun uploadFile(path: String, file: File) {
+    fun uploadFile(
+        path: String,
+        file: File
+    ) {
         val url = "$endpoint/${path.trimStart('/')}"
-        val request = Request.Builder()
-            .url(url)
-            .put(file.asRequestBody("application/octet-stream".toMediaType()))
-            .apply { applyAuth(this) }
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                .put(file.asRequestBody("application/octet-stream".toMediaType()))
+                .apply { applyAuth(this) }
+                .build()
         httpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 throw IOException("Upload failed: ${response.code}")
@@ -70,12 +79,11 @@ class WebDavClient(
         builder.addHeader("Authorization", credential)
     }
 
-    private fun Response.isMethodNotAllowed(): Boolean {
-        return code == 405
-    }
+    private fun Response.isMethodNotAllowed(): Boolean = code == 405
 
     private object EmptyRequestBody : okhttp3.RequestBody() {
         override fun contentType() = null
+
         override fun writeTo(sink: okio.BufferedSink) {}
     }
 }

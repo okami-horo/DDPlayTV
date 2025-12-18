@@ -24,17 +24,18 @@ class PlayerGestureView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), InterGestureView {
-
+) : FrameLayout(context, attrs, defStyleAttr),
+    InterGestureView {
     private lateinit var mControlWrapper: ControlWrapper
 
     private val mFadeGestureOut = Runnable { hideGestureView() }
-    private val viewBinding = DataBindingUtil.inflate<LayoutPlayerGestureBinding>(
-        LayoutInflater.from(context),
-        R.layout.layout_player_gesture,
-        this,
-        true
-    )
+    private val viewBinding =
+        DataBindingUtil.inflate<LayoutPlayerGestureBinding>(
+            LayoutInflater.from(context),
+            R.layout.layout_player_gesture,
+            this,
+            true,
+        )
 
     override fun attach(controlWrapper: ControlWrapper) {
         mControlWrapper = controlWrapper
@@ -43,27 +44,24 @@ class PlayerGestureView(
     override fun getView() = this
 
     override fun onVisibilityChanged(isVisible: Boolean) {
-
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
-
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
-
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
-
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
-
     }
 
     override fun onPopupModeChanged(isPopup: Boolean) {
-
     }
 
     override fun onStartSlide() {
@@ -78,7 +76,11 @@ class PlayerGestureView(
         postDelayed(mFadeGestureOut, 800)
     }
 
-    override fun onPositionChange(newPosition: Long, currentPosition: Long, duration: Long) {
+    override fun onPositionChange(
+        newPosition: Long,
+        currentPosition: Long,
+        duration: Long
+    ) {
         viewBinding.positionTv.isVisible = true
         viewBinding.volumeLl.isVisible = false
         viewBinding.batteryLl.isVisible = false
@@ -130,20 +132,22 @@ class PlayerGestureView(
         hideGestureView()
     }
 
-
     private fun hideGestureView() {
-        ViewCompat.animate(viewBinding.gestureContainer)
+        ViewCompat
+            .animate(viewBinding.gestureContainer)
             .alpha(0f)
             .setDuration(150)
-            .setListener(object : ViewPropertyAnimatorListenerAdapter() {
-                override fun onAnimationEnd(view: View) {
-                    super.onAnimationEnd(view)
-                    viewBinding.gestureContainer.isVisible = false
-                    viewBinding.positionTv.isVisible = false
-                    viewBinding.batteryLl.isVisible = false
-                    viewBinding.volumeLl.isVisible = false
-                    viewBinding.accelerateLl.isVisible = false
-                }
-            }).start()
+            .setListener(
+                object : ViewPropertyAnimatorListenerAdapter() {
+                    override fun onAnimationEnd(view: View) {
+                        super.onAnimationEnd(view)
+                        viewBinding.gestureContainer.isVisible = false
+                        viewBinding.positionTv.isVisible = false
+                        viewBinding.batteryLl.isVisible = false
+                        viewBinding.volumeLl.isVisible = false
+                        viewBinding.accelerateLl.isVisible = false
+                    }
+                },
+            ).start()
     }
 }

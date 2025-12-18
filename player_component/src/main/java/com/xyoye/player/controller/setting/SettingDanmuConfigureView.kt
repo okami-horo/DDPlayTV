@@ -23,7 +23,6 @@ class SettingDanmuConfigureView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingDanmuConfigureBinding>(context, attrs, defStyleAttr) {
-
     private var settingMode = BaseDanmaku.TYPE_SCROLL_RL
 
     init {
@@ -49,7 +48,10 @@ class SettingDanmuConfigureView(
         viewBinding.llScrollDanmu.requestFocus()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (isSettingShowing().not()) {
             return false
         }
@@ -111,10 +113,11 @@ class SettingDanmuConfigureView(
 
         viewBinding.etMaxLine.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                //输入为空或0，设置为无限制
+                // 输入为空或0，设置为无限制
                 val maxLineText = viewBinding.etMaxLine.text.toString()
-                var newMaxLine = maxLineText.toIntOrNull()
-                    ?: PlayerInitializer.Danmu.DEFAULT_MAX_LINE
+                var newMaxLine =
+                    maxLineText.toIntOrNull()
+                        ?: PlayerInitializer.Danmu.DEFAULT_MAX_LINE
                 newMaxLine =
                     if (newMaxLine <= 0) PlayerInitializer.Danmu.DEFAULT_MAX_LINE else newMaxLine
 
@@ -137,7 +140,7 @@ class SettingDanmuConfigureView(
 
         viewBinding.etScreenMaxNum.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                //输入为空，设置为无限制
+                // 输入为空，设置为无限制
                 val maxNumText = viewBinding.etScreenMaxNum.text.toString()
                 val newMaxNum = maxNumText.toIntOrNull() ?: PlayerInitializer.Danmu.DEFAULT_MAX_NUM
 

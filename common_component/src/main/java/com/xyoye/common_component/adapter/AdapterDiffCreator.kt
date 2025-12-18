@@ -8,14 +8,13 @@ import kotlin.reflect.full.instanceParameter
  */
 
 class AdapterDiffCreator {
-
-    //创建新数据
+    // 创建新数据
     private var newDataInstance: ((Any) -> Any)? = null
 
-    //是否为同一个数据
+    // 是否为同一个数据
     private var areItemsTheSame: ((Any, Any) -> Boolean)? = null
 
-    //数据内容是否相同
+    // 数据内容是否相同
     private var areContentsTheSame: ((Any, Any) -> Boolean)? = null
 
     fun newDataInstance(newDataInstance: (Any) -> Any) {
@@ -30,11 +29,12 @@ class AdapterDiffCreator {
         this.areContentsTheSame = areContentsTheSame
     }
 
-    fun createNewData(data: Any): Any {
-        return newDataInstance?.invoke(data) ?: generateNewData(data)
-    }
+    fun createNewData(data: Any): Any = newDataInstance?.invoke(data) ?: generateNewData(data)
 
-    fun isSameItem(oldData: Any, newData: Any): Boolean {
+    fun isSameItem(
+        oldData: Any,
+        newData: Any
+    ): Boolean {
         if (oldData === newData) {
             return true
         }
@@ -44,7 +44,10 @@ class AdapterDiffCreator {
         return areItemsTheSame!!.invoke(oldData, newData)
     }
 
-    fun isSameContent(oldData: Any, newData: Any): Boolean {
+    fun isSameContent(
+        oldData: Any,
+        newData: Any
+    ): Boolean {
         if (oldData === newData) {
             return true
         }
@@ -66,13 +69,16 @@ class AdapterDiffCreator {
 
     private fun newInstance(any: Any): Any {
         // copy方法
-        val copyFunc = any::class.declaredFunctions
-            .find { it.name == "copy" }
-            ?: return any
+        val copyFunc =
+            any::class
+                .declaredFunctions
+                .find { it.name == "copy" }
+                ?: return any
 
         // copy实例参数
-        val instanceParameter = copyFunc.instanceParameter
-            ?: return any
+        val instanceParameter =
+            copyFunc.instanceParameter
+                ?: return any
 
         // 调用data class copy方法，生成新实例
         // callBy方法只需传入实例参数，其它参数会使用默认值

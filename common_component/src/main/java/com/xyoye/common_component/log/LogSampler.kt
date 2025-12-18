@@ -16,9 +16,15 @@ class LogSampler(
     private val counterLock = Any()
     private val counters = mutableMapOf<String, WindowCounter>()
 
-    data class WindowCounter(var windowStartMs: Long, var count: Int)
+    data class WindowCounter(
+        var windowStartMs: Long,
+        var count: Int
+    )
 
-    fun shouldAllow(event: LogEvent, policy: LogPolicy): Boolean {
+    fun shouldAllow(
+        event: LogEvent,
+        policy: LogPolicy
+    ): Boolean {
         val rule = selectRule(event, policy) ?: return true
         if (rule.sampleRate <= 0.0) return false
         if (rule.sampleRate < 1.0 && randomProvider() > rule.sampleRate) {
@@ -26,39 +32,40 @@ class LogSampler(
         }
         val limit = rule.maxEventsPerMinute ?: return true
         val key = ruleKey(rule)
-        val allowed = synchronized(counterLock) {
-            val now = nowProvider()
-            val counter = counters.getOrPut(key) { WindowCounter(now, 0) }
-            if (now - counter.windowStartMs >= ONE_MINUTE_MS) {
-                counter.windowStartMs = now
-                counter.count = 0
+        val allowed =
+            synchronized(counterLock) {
+                val now = nowProvider()
+                val counter = counters.getOrPut(key) { WindowCounter(now, 0) }
+                if (now - counter.windowStartMs >= ONE_MINUTE_MS) {
+                    counter.windowStartMs = now
+                    counter.count = 0
+                }
+                if (counter.count >= limit) {
+                    return@synchronized false
+                }
+                counter.count++
+                return@synchronized true
             }
-            if (counter.count >= limit) {
-                return@synchronized false
-            }
-            counter.count++
-            return@synchronized true
-        }
         return allowed
     }
 
-    private fun selectRule(event: LogEvent, policy: LogPolicy): SamplingRule? {
-        return policy.samplingRules.firstOrNull { rule ->
+    private fun selectRule(
+        event: LogEvent,
+        policy: LogPolicy
+    ): SamplingRule? =
+        policy.samplingRules.firstOrNull { rule ->
             rule.targetModule == event.module && levelPriority(event.level) >= levelPriority(rule.minLevel)
         }
-    }
 
-    private fun ruleKey(rule: SamplingRule): String =
-        "${rule.targetModule.code}-${rule.minLevel.name}".lowercase()
+    private fun ruleKey(rule: SamplingRule): String = "${rule.targetModule.code}-${rule.minLevel.name}".lowercase()
 
-    private fun levelPriority(level: LogLevel): Int {
-        return when (level) {
+    private fun levelPriority(level: LogLevel): Int =
+        when (level) {
             LogLevel.DEBUG -> 0
             LogLevel.INFO -> 1
             LogLevel.WARN -> 2
             LogLevel.ERROR -> 3
         }
-    }
 
     companion object {
         private const val ONE_MINUTE_MS = 60_000L

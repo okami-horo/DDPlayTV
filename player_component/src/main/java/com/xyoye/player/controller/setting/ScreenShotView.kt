@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.MediaUtils
 import com.xyoye.common_component.utils.getScreenHeight
 import com.xyoye.common_component.weight.ToastCenter
@@ -27,7 +28,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.xyoye.common_component.utils.ErrorReportHelper
 
 /**
  * Created by xyoye on 2021/5/2.
@@ -37,17 +37,19 @@ class ScreenShotView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), InterSettingView {
+) : FrameLayout(context, attrs, defStyleAttr),
+    InterSettingView {
     private lateinit var controlWrapper: ControlWrapper
     private var bitmap: Bitmap? = null
     private val mAttachActivity = context as AppCompatActivity
 
-    private val viewBinding = DataBindingUtil.inflate<LayoutSceenShotBinding>(
-        LayoutInflater.from(context),
-        R.layout.layout_sceen_shot,
-        this,
-        true
-    )
+    private val viewBinding =
+        DataBindingUtil.inflate<LayoutSceenShotBinding>(
+            LayoutInflater.from(context),
+            R.layout.layout_sceen_shot,
+            this,
+            true,
+        )
 
     private var mGenerateImageJob: Job? = null
 
@@ -78,12 +80,18 @@ class ScreenShotView(
     override fun onSettingVisibilityChanged(isVisible: Boolean) {
         if (isVisible) {
             prepareScreenShot()
-            ViewCompat.animate(viewBinding.screenShotLayout).translationY(0f).setDuration(300)
+            ViewCompat
+                .animate(viewBinding.screenShotLayout)
+                .translationY(0f)
+                .setDuration(300)
                 .start()
         } else {
             mGenerateImageJob?.cancel()
             val hideY = -mAttachActivity.getScreenHeight().toFloat()
-            ViewCompat.animate(viewBinding.screenShotLayout).translationY(hideY).setDuration(300)
+            ViewCompat
+                .animate(viewBinding.screenShotLayout)
+                .translationY(hideY)
+                .setDuration(300)
                 .start()
         }
     }
@@ -97,48 +105,47 @@ class ScreenShotView(
     override fun getView() = this
 
     override fun onVisibilityChanged(isVisible: Boolean) {
-
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
-
     }
 
-    override fun onProgressChanged(duration: Long, position: Long) {
-
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long
+    ) {
     }
 
     override fun onLockStateChanged(isLocked: Boolean) {
-
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
-
     }
 
     override fun onPopupModeChanged(isPopup: Boolean) {
-
     }
 
     private fun prepareScreenShot() {
         mGenerateImageJob?.cancel()
-        mGenerateImageJob = mAttachActivity.lifecycleScope.launch(Dispatchers.Main) {
-            val videoSize = controlWrapper.getVideoSize()
-            fixVlcTextureSize(videoSize)
-            bitmap = withContext(Dispatchers.IO) {
-                generateVideoImage(videoSize)
-            }
-            if (bitmap == null) {
-                ToastCenter.showOriginalToast("获取截图失败")
-                onSettingVisibilityChanged(false)
-                return@launch
-            }
+        mGenerateImageJob =
+            mAttachActivity.lifecycleScope.launch(Dispatchers.Main) {
+                val videoSize = controlWrapper.getVideoSize()
+                fixVlcTextureSize(videoSize)
+                bitmap =
+                    withContext(Dispatchers.IO) {
+                        generateVideoImage(videoSize)
+                    }
+                if (bitmap == null) {
+                    ToastCenter.showOriginalToast("获取截图失败")
+                    onSettingVisibilityChanged(false)
+                    return@launch
+                }
 
-            controlWrapper.pause()
-            controlWrapper.hideController()
+                controlWrapper.pause()
+                controlWrapper.hideController()
 
-            viewBinding.shotIv.setImageBitmap(bitmap)
-        }
+                viewBinding.shotIv.setImageBitmap(bitmap)
+            }
     }
 
     /**
@@ -158,8 +165,9 @@ class ScreenShotView(
     }
 
     private suspend fun generateVideoImage(videoSize: Point): Bitmap? {
-        val renderView = controlWrapper.getRenderView()?.getView()
-            ?: return null
+        val renderView =
+            controlWrapper.getRenderView()?.getView()
+                ?: return null
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
             return null
         }
@@ -170,7 +178,7 @@ class ScreenShotView(
                 e,
                 "ScreenShotView",
                 "generateVideoImage",
-                "Failed to generate video screenshot"
+                "Failed to generate video screenshot",
             )
             e.printStackTrace()
             null

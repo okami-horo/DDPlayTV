@@ -6,8 +6,6 @@ package com.xyoye.data_component.bean
 
 data class VideoSpeedBean(
     val speedValue: Float,
-
     val speedName: String,
-
     var isChecked: Boolean = false
 )

@@ -14,7 +14,6 @@ import java.security.MessageDigest
  */
 
 object DanmuHashCalculator {
-
     // 匹配弹幕时，计算Hash需要的文件大小
     private const val HASH_CALCULATE_SIZE = 16 * 1024 * 1024
 
@@ -27,7 +26,10 @@ object DanmuHashCalculator {
     /**
      * 读取InputStream的前16M数据，生成hash值
      */
-    fun calculate(inputStream: InputStream, bufferSize: Int = HASH_BUFFER_SIZE): String? {
+    fun calculate(
+        inputStream: InputStream,
+        bufferSize: Int = HASH_BUFFER_SIZE
+    ): String? {
         val buffer = ByteArray(bufferSize)
 
         var total = 0
@@ -42,8 +44,8 @@ object DanmuHashCalculator {
 
             MD5.reset()
             while (
-                inputStream.read(buffer, 0, target).also { current = it } != -1
-                && total < HASH_CALCULATE_SIZE
+                inputStream.read(buffer, 0, target).also { current = it } != -1 &&
+                total < HASH_CALCULATE_SIZE
             ) {
                 MD5.update(buffer, 0, current)
 
@@ -64,7 +66,7 @@ object DanmuHashCalculator {
             ErrorReportHelper.postCatchedException(
                 e,
                 "DanmuHashCalculator.calculate",
-                "计算弹幕哈希值失败"
+                "计算弹幕哈希值失败",
             )
             null
         }

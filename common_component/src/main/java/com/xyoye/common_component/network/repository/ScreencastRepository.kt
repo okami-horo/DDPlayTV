@@ -11,11 +11,13 @@ import com.xyoye.data_component.data.screeencast.ScreencastData
  */
 
 object ScreencastRepository : BaseRepository() {
-
     /**
      * 投屏初始化
      */
-    suspend fun init(url: String, authorization: String?) = request()
+    suspend fun init(
+        url: String,
+        authorization: String?
+    ) = request()
         .doGet {
             Retrofit.screencastService.init(url, authorization, ScreencastConstants.version)
         }.run {
@@ -37,8 +39,9 @@ object ScreencastRepository : BaseRepository() {
             }
 
             // 版本不同，返回Response.Error
-            val message = "投屏版本不匹配，请更新双端至相同APP版本。" +
-                    "\n投屏端: ${localVersion}，接收端: $remoteVersion"
+            val message =
+                "投屏版本不匹配，请更新双端至相同APP版本。" +
+                    "\n投屏端: $localVersion，接收端: $remoteVersion"
             return@run Result.failure(NetworkException.formException(IllegalStateException(message)))
         }
 

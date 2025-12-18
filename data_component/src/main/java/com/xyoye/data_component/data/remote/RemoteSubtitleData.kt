@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
  */
 
 @JsonClass(generateAdapter = true)
-data class RemoteSubtitleData (
+data class RemoteSubtitleData(
     val subtitles: MutableList<RemoteSubtitle> = mutableListOf()
 )
 

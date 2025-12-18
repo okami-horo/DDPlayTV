@@ -6,6 +6,7 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SeekBarPreference
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.enums.PlayerType
@@ -18,44 +19,64 @@ import com.xyoye.user_component.R
  */
 
 class PlayerSettingFragment : PreferenceFragmentCompat() {
+    private var isNormalizingMpvRangeInterval = false
+
     companion object {
         fun newInstance() = PlayerSettingFragment()
 
-        val playerData = mapOf(
-            Pair("Media3 Player", PlayerType.TYPE_EXO_PLAYER.value.toString()),
-            Pair("VLC Player", PlayerType.TYPE_VLC_PLAYER.value.toString())
-        )
+        val playerData =
+            mapOf(
+                Pair("Media3 Player", PlayerType.TYPE_EXO_PLAYER.value.toString()),
+                Pair("VLC Player", PlayerType.TYPE_VLC_PLAYER.value.toString()),
+                Pair("mpv Player", PlayerType.TYPE_MPV_PLAYER.value.toString()),
+            )
 
-        val vlcHWDecode = mapOf(
-            Pair("自动", VLCHWDecode.HW_ACCELERATION_AUTO.value.toString()),
-            Pair("禁用", VLCHWDecode.HW_ACCELERATION_DISABLE.value.toString()),
-            Pair("解码加速", VLCHWDecode.HW_ACCELERATION_DECODING.value.toString()),
-            Pair("完全加速", VLCHWDecode.HW_ACCELERATION_FULL.value.toString())
-        )
+        val vlcHWDecode =
+            mapOf(
+                Pair("自动", VLCHWDecode.HW_ACCELERATION_AUTO.value.toString()),
+                Pair("禁用", VLCHWDecode.HW_ACCELERATION_DISABLE.value.toString()),
+                Pair("解码加速", VLCHWDecode.HW_ACCELERATION_DECODING.value.toString()),
+                Pair("完全加速", VLCHWDecode.HW_ACCELERATION_FULL.value.toString()),
+            )
 
-        val vlcAudioOutput = mapOf(
-            Pair("自动", VLCAudioOutput.AUTO.value),
-            Pair("OpenSL ES", VLCAudioOutput.OPEN_SL_ES.value),
-        )
+        val vlcAudioOutput =
+            mapOf(
+                Pair("自动", VLCAudioOutput.AUTO.value),
+                Pair("OpenSL ES", VLCAudioOutput.OPEN_SL_ES.value),
+            )
 
-        val vlcPreference = arrayOf(
-            "vlc_hardware_acceleration",
-            "vlc_audio_output"
-        )
+        val vlcPreference =
+            arrayOf(
+                "vlc_hardware_acceleration",
+                "vlc_audio_output",
+            )
+
+        val mpvPreference =
+            arrayOf(
+                "mpv_proxy_range_interval_ms",
+            )
     }
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?
+    ) {
         preferenceManager.preferenceDataStore = PlayerSettingDataStore()
         addPreferencesFromResource(R.xml.preference_player_setting)
+        setupMpvRangeIntervalPreference()
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        //播放器类型
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
+        // 播放器类型
         findPreference<ListPreference>("player_type")?.apply {
             entries = playerData.keys.toTypedArray()
             entryValues = playerData.values.toTypedArray()
-            val safeValue = value?.takeIf { playerData.containsValue(it) }
-                ?: PlayerType.TYPE_EXO_PLAYER.value.toString()
+            val safeValue =
+                value?.takeIf { playerData.containsValue(it) }
+                    ?: PlayerType.TYPE_EXO_PLAYER.value.toString()
             if (value != safeValue) {
                 value = safeValue
                 PlayerConfig.putUsePlayerType(safeValue.toInt())
@@ -74,13 +95,13 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             updateVisible(safeValue)
         }
 
-        //VLC硬件加速
+        // VLC硬件加速
         findPreference<ListPreference>("vlc_hardware_acceleration")?.apply {
             entries = vlcHWDecode.keys.toTypedArray()
             entryValues = vlcHWDecode.values.toTypedArray()
         }
 
-        //VLC音频输出
+        // VLC音频输出
         findPreference<ListPreference>("vlc_audio_output")?.apply {
             entries = vlcAudioOutput.keys.toTypedArray()
             entryValues = vlcAudioOutput.values.toTypedArray()
@@ -89,28 +110,68 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         super.onViewCreated(view, savedInstanceState)
     }
 
+    private fun setupMpvRangeIntervalPreference() {
+        val preference = findPreference<SeekBarPreference>("mpv_proxy_range_interval_ms") ?: return
+
+        preference.value = normalizeMpvRangeInterval(preference.value)
+
+        preference.onPreferenceChangeListener =
+            Preference.OnPreferenceChangeListener { changedPreference, newValue ->
+                if (isNormalizingMpvRangeInterval) {
+                    return@OnPreferenceChangeListener true
+                }
+
+                val rawValue = newValue as? Int ?: return@OnPreferenceChangeListener true
+                val normalized = normalizeMpvRangeInterval(rawValue)
+                if (normalized == rawValue) {
+                    return@OnPreferenceChangeListener true
+                }
+
+                isNormalizingMpvRangeInterval = true
+                (changedPreference as? SeekBarPreference)?.value = normalized
+                isNormalizingMpvRangeInterval = false
+                false
+            }
+    }
+
+    private fun normalizeMpvRangeInterval(value: Int): Int {
+        val stepMs = 100
+        val rounded = ((value + (stepMs / 2)) / stepMs) * stepMs
+        return rounded.coerceIn(0, 2000)
+    }
+
     private fun updateVisible(playerType: String) {
         when (playerType) {
             PlayerType.TYPE_VLC_PLAYER.value.toString() -> {
                 vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
+                mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
+            }
+            PlayerType.TYPE_MPV_PLAYER.value.toString() -> {
+                vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
+                mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
             }
             else -> {
                 vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
+                mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
             }
         }
     }
 
     inner class PlayerSettingDataStore : PreferenceDataStore() {
-
-        override fun getString(key: String?, defValue: String?): String? {
-            return try {
+        override fun getString(
+            key: String?,
+            defValue: String?
+        ): String? =
+            try {
                 when (key) {
                     "player_type" -> {
                         val currentType = PlayerConfig.getUsePlayerType()
-                        val safeType = when (PlayerType.valueOf(currentType)) {
-                            PlayerType.TYPE_VLC_PLAYER -> PlayerType.TYPE_VLC_PLAYER
-                            else -> PlayerType.TYPE_EXO_PLAYER
-                        }
+                        val safeType =
+                            when (PlayerType.valueOf(currentType)) {
+                                PlayerType.TYPE_VLC_PLAYER -> PlayerType.TYPE_VLC_PLAYER
+                                PlayerType.TYPE_MPV_PLAYER -> PlayerType.TYPE_MPV_PLAYER
+                                else -> PlayerType.TYPE_EXO_PLAYER
+                            }
                         if (safeType.value != currentType) {
                             PlayerConfig.putUsePlayerType(safeType.value)
                         }
@@ -125,21 +186,25 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                     e,
                     "PlayerSettingDataStore",
                     "getString",
-                    "Failed to get string value for key: $key"
+                    "Failed to get string value for key: $key",
                 )
                 defValue
             }
-        }
 
-        override fun putString(key: String?, value: String?) {
+        override fun putString(
+            key: String?,
+            value: String?
+        ) {
             try {
                 if (value != null) {
                     when (key) {
                         "player_type" -> {
-                            val safeType = when (PlayerType.valueOf(value.toInt())) {
-                                PlayerType.TYPE_VLC_PLAYER -> PlayerType.TYPE_VLC_PLAYER
-                                else -> PlayerType.TYPE_EXO_PLAYER
-                            }
+                            val safeType =
+                                when (PlayerType.valueOf(value.toInt())) {
+                                    PlayerType.TYPE_VLC_PLAYER -> PlayerType.TYPE_VLC_PLAYER
+                                    PlayerType.TYPE_MPV_PLAYER -> PlayerType.TYPE_MPV_PLAYER
+                                    else -> PlayerType.TYPE_EXO_PLAYER
+                                }
                             PlayerConfig.putUsePlayerType(safeType.value)
                         }
                         "vlc_hardware_acceleration" -> PlayerConfig.putUseVLCHWDecoder(value.toInt())
@@ -154,13 +219,57 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                     e,
                     "PlayerSettingDataStore",
                     "putString",
-                    "Failed to put string value for key: $key, value: $value"
+                    "Failed to put string value for key: $key, value: $value",
                 )
             }
         }
 
-        override fun getBoolean(key: String?, defValue: Boolean): Boolean {
-            return try {
+        override fun getInt(
+            key: String?,
+            defValue: Int
+        ): Int =
+            try {
+                when (key) {
+                    "mpv_proxy_range_interval_ms" ->
+                        normalizeMpvRangeInterval(PlayerConfig.getMpvProxyRangeMinIntervalMs())
+                    else -> super.getInt(key, defValue)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayerSettingDataStore",
+                    "getInt",
+                    "Failed to get int value for key: $key",
+                )
+                defValue
+            }
+
+        override fun putInt(
+            key: String?,
+            value: Int
+        ) {
+            try {
+                when (key) {
+                    "mpv_proxy_range_interval_ms" -> {
+                        PlayerConfig.putMpvProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
+                    }
+                    else -> super.putInt(key, value)
+                }
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayerSettingDataStore",
+                    "putInt",
+                    "Failed to put int value for key: $key, value: $value",
+                )
+            }
+        }
+
+        override fun getBoolean(
+            key: String?,
+            defValue: Boolean
+        ): Boolean =
+            try {
                 when (key) {
                     "surface_renders" -> PlayerConfig.isUseSurfaceView()
                     else -> super.getBoolean(key, defValue)
@@ -170,13 +279,15 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                     e,
                     "PlayerSettingDataStore",
                     "getBoolean",
-                    "Failed to get boolean value for key: $key"
+                    "Failed to get boolean value for key: $key",
                 )
                 defValue
             }
-        }
 
-        override fun putBoolean(key: String?, value: Boolean) {
+        override fun putBoolean(
+            key: String?,
+            value: Boolean
+        ) {
             try {
                 when (key) {
                     "surface_renders" -> PlayerConfig.putUseSurfaceView(value)
@@ -187,7 +298,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                     e,
                     "PlayerSettingDataStore",
                     "putBoolean",
-                    "Failed to put boolean value for key: $key, value: $value"
+                    "Failed to put boolean value for key: $key, value: $value",
                 )
             }
         }

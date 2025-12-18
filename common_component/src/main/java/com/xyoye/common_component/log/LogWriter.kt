@@ -21,15 +21,17 @@ class LogWriter(
         Log.e(LOG_TAG, "write log file failed", error)
     }
 ) {
-    private val stateRef = AtomicReference(
-        LogRuntimeState(
-            activePolicy = LogPolicy.defaultReleasePolicy()
+    private val stateRef =
+        AtomicReference(
+            LogRuntimeState(
+                activePolicy = LogPolicy.defaultReleasePolicy(),
+            ),
         )
-    )
     private var consecutiveFileErrors = 0
-    private val executor = Executors.newSingleThreadExecutor { runnable ->
-        Thread(runnable, "LogWriter").apply { isDaemon = true }
-    }
+    private val executor =
+        Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "LogWriter").apply { isDaemon = true }
+        }
 
     fun updateRuntimeState(state: LogRuntimeState) {
         stateRef.set(state)
@@ -58,9 +60,10 @@ class LogWriter(
         }
     }
 
-    private fun shouldEmit(level: LogLevel, threshold: LogLevel): Boolean {
-        return levelPriority(level) >= levelPriority(threshold)
-    }
+    private fun shouldEmit(
+        level: LogLevel,
+        threshold: LogLevel
+    ): Boolean = levelPriority(level) >= levelPriority(threshold)
 
     private fun shouldWriteFile(runtime: LogRuntimeState): Boolean {
         if (!runtime.activePolicy.enableDebugFile) return false
@@ -82,29 +85,29 @@ class LogWriter(
     private fun buildLogcatTag(event: LogEvent): String {
         val base = "DDLog-${event.module.code}"
         val tail = event.tag?.value?.takeIf { it.isNotBlank() }
-        val tag = if (tail.isNullOrBlank()) base else "$base-${tail}"
+        val tag = if (tail.isNullOrBlank()) base else "$base-$tail"
         // Android logcat tag 上限 23 字符，超长时截断
         return if (tag.length <= 23) tag else tag.take(23)
     }
 
-    private fun levelPriority(level: LogLevel): Int {
-        return when (level) {
+    private fun levelPriority(level: LogLevel): Int =
+        when (level) {
             LogLevel.DEBUG -> 0
             LogLevel.INFO -> 1
             LogLevel.WARN -> 2
             LogLevel.ERROR -> 3
         }
-    }
 
     private fun handleFileError(error: Throwable) {
         consecutiveFileErrors += 1
         if (consecutiveFileErrors == MAX_CONSECUTIVE_ERRORS_BEFORE_DISABLE) {
             val current = stateRef.get()
-            val disabled = current.copy(
-                debugToggleState = DebugToggleState.DISABLED_DUE_TO_ERROR,
-                debugSessionEnabled = false,
-                lastPolicyUpdateTime = System.currentTimeMillis()
-            )
+            val disabled =
+                current.copy(
+                    debugToggleState = DebugToggleState.DISABLED_DUE_TO_ERROR,
+                    debugSessionEnabled = false,
+                    lastPolicyUpdateTime = System.currentTimeMillis(),
+                )
             stateRef.set(disabled)
         }
         onFileError(error)

@@ -24,13 +24,16 @@ object VideoLog {
         log(LogLevel.INFO, message)
     }
 
-    private fun log(logLevel: LogLevel, message: String?) {
+    private fun log(
+        logLevel: LogLevel,
+        message: String?
+    ) {
         if (!PlayerInitializer.isPrintLog) return
         LogFacade.log(
             level = logLevel,
             module = LogModule.PLAYER,
             tag = TAG,
-            message = message ?: ""
+            message = message ?: "",
         )
     }
 }

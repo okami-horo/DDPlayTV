@@ -23,13 +23,12 @@ class SettingVideoSpeedView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingVideoSpeedBinding>(context, attrs, defStyleAttr) {
-
     private val focusableViews by lazy {
         arrayOf(
             viewBinding.resetTv,
             viewBinding.speedSlider,
             viewBinding.tvResetPressSpeed,
-            viewBinding.sliderPressSpeed
+            viewBinding.sliderPressSpeed,
         )
     }
 
@@ -61,7 +60,10 @@ class SettingVideoSpeedView(
         viewBinding.sliderPressSpeed.clearFocus()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
         if (isSettingShowing().not()) {
             return false
         }
@@ -106,8 +108,9 @@ class SettingVideoSpeedView(
     }
 
     private fun findNextFocus(): View {
-        val currentFocusView = focusableViews.firstOrNull { it.isFocused }
-            ?: return defaultFocusView
+        val currentFocusView =
+            focusableViews.firstOrNull { it.isFocused }
+                ?: return defaultFocusView
 
         val nextFocusAbleViews = focusableViews.filter { it.isVisible }
         val index = nextFocusAbleViews.indexOf(currentFocusView)
@@ -122,8 +125,9 @@ class SettingVideoSpeedView(
     }
 
     private fun findPreviousFocus(): View {
-        val currentFocusView = focusableViews.firstOrNull { it.isFocused }
-            ?: return defaultFocusView
+        val currentFocusView =
+            focusableViews.firstOrNull { it.isFocused }
+                ?: return defaultFocusView
 
         val previousFocusAbleViews = focusableViews.filter { it.isVisible }
         val index = previousFocusAbleViews.indexOf(currentFocusView)

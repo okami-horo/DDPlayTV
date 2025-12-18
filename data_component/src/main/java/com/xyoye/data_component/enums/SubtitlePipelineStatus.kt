@@ -10,8 +10,6 @@ enum class SubtitlePipelineStatus {
     Error;
 
     companion object {
-        fun fromName(value: String?): SubtitlePipelineStatus {
-            return values().firstOrNull { it.name.equals(value, true) } ?: Initializing
-        }
+        fun fromName(value: String?): SubtitlePipelineStatus = values().firstOrNull { it.name.equals(value, true) } ?: Initializing
     }
 }

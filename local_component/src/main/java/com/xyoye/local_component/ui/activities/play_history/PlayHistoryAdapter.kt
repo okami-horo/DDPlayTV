@@ -41,8 +41,10 @@ class PlayHistoryAdapter(
     private val activity: PlayHistoryActivity,
     private val viewModel: PlayHistoryViewModel
 ) {
-
-    private enum class EditHistory(val title: String, val icon: Int) {
+    private enum class EditHistory(
+        val title: String,
+        val icon: Int
+    ) {
         REMOVE_DANMU("移除弹幕绑定", R.drawable.ic_unbind_danmu),
         REMOVE_SUBTITLE("移除字幕绑定", R.drawable.ic_unbind_subtitle),
         COPY_URL("复制播放链接", R.drawable.ic_copy_url),
@@ -53,9 +55,8 @@ class PlayHistoryAdapter(
 
     private val tagDecoration = ItemDecorationOrientation(5.dp(), 0, RecyclerView.HORIZONTAL)
 
-    fun createAdapter(): BaseAdapter {
-        return buildAdapter {
-
+    fun createAdapter(): BaseAdapter =
+        buildAdapter {
             setupDiffUtil {
                 areItemsTheSame(isSameHistoryItem())
             }
@@ -70,13 +71,13 @@ class PlayHistoryAdapter(
                 initView(historyItem())
             }
         }
-    }
 
-    private fun isSameHistoryItem() = { old: Any, new: Any ->
-        val oldItem = old as? PlayHistoryEntity
-        val newItem = new as? PlayHistoryEntity
-        oldItem?.uniqueKey == newItem?.uniqueKey && oldItem?.storageId == newItem?.storageId
-    }
+    private fun isSameHistoryItem() =
+        { old: Any, new: Any ->
+            val oldItem = old as? PlayHistoryEntity
+            val newItem = new as? PlayHistoryEntity
+            oldItem?.uniqueKey == newItem?.uniqueKey && oldItem?.storageId == newItem?.storageId
+        }
 
     private fun BaseViewHolderCreator<ItemStorageVideoBinding>.historyItem() =
         { data: PlayHistoryEntity ->
@@ -88,10 +89,12 @@ class PlayHistoryAdapter(
             itemBinding.durationTv.isVisible = data.videoDuration > 0
 
             val isInvalid = isHistoryInvalid(data)
-            val titleTextColor = if (isInvalid)
-                R.color.text_gray
-            else
-                R.color.text_black
+            val titleTextColor =
+                if (isInvalid) {
+                    R.color.text_gray
+                } else {
+                    R.color.text_black
+                }
 
             itemBinding.titleTv.setTextColor(titleTextColor.toResColor(activity))
             itemBinding.titleTv.text = data.videoName
@@ -99,9 +102,10 @@ class PlayHistoryAdapter(
             setupVideoTag(itemBinding.tagRv, data)
 
             itemBinding.itemLayout.setOnClickListener {
-                //防止快速点击
-                if (FastClickFilter.isNeedFilter())
+                // 防止快速点击
+                if (FastClickFilter.isNeedFilter()) {
                     return@setOnClickListener
+                }
 
                 if (isInvalid) {
                     ToastCenter.showError("记录已失效，无法播放")
@@ -119,12 +123,16 @@ class PlayHistoryAdapter(
             }
         }
 
-    private fun setupVideoTag(tagRv: RecyclerView, data: PlayHistoryEntity) {
+    private fun setupVideoTag(
+        tagRv: RecyclerView,
+        data: PlayHistoryEntity
+    ) {
         tagRv.apply {
             layoutManager = horizontal()
-            adapter = buildAdapter {
-                addItem(R.layout.item_storage_video_tag) { initView(tagItem()) }
-            }
+            adapter =
+                buildAdapter {
+                    addItem(R.layout.item_storage_video_tag) { initView(tagItem()) }
+                }
             removeItemDecoration(tagDecoration)
             addItemDecoration(tagDecoration)
             setData(generateVideoTags(data))
@@ -160,7 +168,7 @@ class PlayHistoryAdapter(
         return when (entity.mediaType) {
             MediaType.MAGNET_LINK -> {
                 val torrentPath = entity.torrentPath
-                //磁链种子文件丢失
+                // 磁链种子文件丢失
                 if (torrentPath.isNullOrEmpty() || entity.torrentIndex == -1) {
                     return true
                 }
