@@ -14,7 +14,6 @@ import com.xyoye.common_component.network.service.AlistService
 import com.xyoye.common_component.network.service.DanDanService
 import com.xyoye.common_component.network.service.ExtendedService
 import com.xyoye.common_component.network.service.MagnetService
-import com.xyoye.common_component.network.service.Media3Service
 import com.xyoye.common_component.network.service.RemoteService
 import com.xyoye.common_component.network.service.ScreencastService
 import com.xyoye.common_component.utils.JsonHelper
@@ -35,7 +34,6 @@ class Retrofit private constructor() {
         val magnetService: MagnetService by lazy { Holder.instance.magnetService }
         val screencastService: ScreencastService by lazy { Holder.instance.screencastService }
         val alistService: AlistService by lazy { Holder.instance.alistService }
-        val media3Service: Media3Service by lazy { Holder.instance.media3Service }
     }
 
     private object Holder {
@@ -134,15 +132,5 @@ class Retrofit private constructor() {
             .baseUrl(Api.PLACEHOLDER)
             .build()
             .create(AlistService::class.java)
-    }
-
-    private val media3Service: Media3Service by lazy {
-        Retrofit
-            .Builder()
-            .addConverterFactory(moshiConverterFactory)
-            .client(commonClient)
-            .baseUrl(Api.MEDIA3)
-            .build()
-            .create(Media3Service::class.java)
     }
 }

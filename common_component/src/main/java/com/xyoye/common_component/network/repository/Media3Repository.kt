@@ -2,16 +2,14 @@ package com.xyoye.common_component.network.repository
 
 import androidx.annotation.VisibleForTesting
 import com.xyoye.common_component.config.Media3ToggleProvider
-import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.network.request.NetworkException
-import com.xyoye.common_component.network.service.Media3Service
 import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.data_component.data.media3.CapabilityCommandRequestData
 import com.xyoye.data_component.data.media3.CapabilityCommandResponseData
 import com.xyoye.data_component.data.media3.DownloadValidationRequestData
 import com.xyoye.data_component.data.media3.DownloadValidationResponseData
 import com.xyoye.data_component.data.media3.PlaybackSessionRequestData
 import com.xyoye.data_component.data.media3.PlaybackSessionResponseData
+import com.xyoye.data_component.entity.media3.DownloadRequiredAction
 import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.data_component.entity.media3.Media3SourceType
 import com.xyoye.data_component.entity.media3.PlaybackSession
@@ -24,18 +22,12 @@ import kotlin.jvm.JvmSuppressWildcards
 object Media3Repository : BaseRepository() {
     private const val TAG = "Media3Repository"
 
-    @Volatile
-    private var media3Service: Media3Service = Retrofit.media3Service
     private val sessionCache = ConcurrentHashMap<String, PlaybackSession>()
     private val capabilityCache = ConcurrentHashMap<String, PlayerCapabilityContract>()
     private val toggleCache = ConcurrentHashMap<String, RolloutToggleSnapshot>()
 
     suspend fun createSession(request: PlaybackSessionRequestData): Result<Media3SessionBundle> =
-        execute("createSession") {
-            media3Service.createSession(request)
-        }.map {
-            cacheBundle(it, request.mediaId, request.sourceType)
-        }
+        Result.failure(disabledException("createSession"))
 
     suspend fun fetchSession(
         sessionId: String,
@@ -44,15 +36,7 @@ object Media3Repository : BaseRepository() {
     ): Result<Media3SessionBundle> {
         cachedBundle(sessionId)?.let { return Result.success(it) }
 
-        return execute("fetchSession") {
-            media3Service.fetchSession(sessionId)
-        }.map {
-            val mediaId = it.mediaId ?: mediaIdHint ?: sessionCache[sessionId]?.mediaId ?: ""
-            val source =
-                it.sourceType ?: sourceTypeHint ?: sessionCache[sessionId]?.sourceType
-                    ?: Media3SourceType.STREAM
-            cacheBundle(it, mediaId, source)
-        }
+        return Result.failure(disabledException("fetchSession"))
     }
 
     suspend fun dispatchCapability(
@@ -60,28 +44,23 @@ object Media3Repository : BaseRepository() {
         capability: Media3Capability,
         payload: Map<String, @JvmSuppressWildcards Any?>? = null
     ): Result<CapabilityCommandResponseData> {
-        val request = CapabilityCommandRequestData(capability, payload)
-        return execute("dispatchCapability") {
-            media3Service.dispatchCommand(sessionId, request)
-        }.onSuccess {
-            val newState = it.resultingState
-            if (newState != null) {
-                sessionCache[sessionId]?.let { session ->
-                    sessionCache[sessionId] = session.copy(playbackState = newState)
-                }
-            }
-        }
+        return Result.failure(disabledException("dispatchCapability"))
     }
 
     suspend fun emitTelemetry(event: TelemetryEvent): Result<Unit> =
-        execute("emitTelemetry") {
-            media3Service.emitTelemetry(event)
-        }.map { }
+        // Media3 网关能力当前禁用：避免在公网环境触发 DNS 解析失败/网络异常上报。
+        Result.success(Unit)
 
     suspend fun validateDownload(request: DownloadValidationRequestData): Result<DownloadValidationResponseData> =
-        execute("validateDownload") {
-            media3Service.validateDownload(request)
-        }
+        // Media3 网关能力当前禁用：本地默认认为兼容，避免阻断离线播放/下载流程。
+        Result.success(
+            DownloadValidationResponseData(
+                downloadId = request.downloadId,
+                isCompatible = true,
+                requiredAction = DownloadRequiredAction.NONE,
+                verificationLogs = emptyList(),
+            ),
+        )
 
     fun cachedCapability(sessionId: String): PlayerCapabilityContract? = capabilityCache[sessionId]
 
@@ -93,16 +72,6 @@ object Media3Repository : BaseRepository() {
         sessionCache.remove(sessionId)
         capabilityCache.remove(sessionId)
         toggleCache.remove(sessionId)
-    }
-
-    @VisibleForTesting
-    internal fun replaceServiceForTest(service: Media3Service) {
-        media3Service = service
-    }
-
-    @VisibleForTesting
-    internal fun resetServiceForTest() {
-        media3Service = Retrofit.media3Service
     }
 
     @VisibleForTesting
@@ -156,6 +125,13 @@ object Media3Repository : BaseRepository() {
             )
             Result.failure(NetworkException.formException(e))
         }
+
+    private fun disabledException(operation: String): IllegalStateException {
+        val snapshot = Media3ToggleProvider.snapshot()
+        return IllegalStateException(
+            "Media3 gateway is disabled (op=$operation, enabled=${snapshot.value}, source=${snapshot.source})",
+        )
+    }
 }
 
 data class Media3SessionBundle(

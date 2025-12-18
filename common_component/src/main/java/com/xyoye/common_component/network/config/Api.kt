@@ -39,5 +39,9 @@ object Api {
     const val HAN_LP = "https://www.hanlp.com/"
 
     // Media3 internal gateway
-    const val MEDIA3 = "https://player-component.internal/api/"
+    //
+    // NOTE: 本项目当前不使用 Media3 网关能力，避免在公网环境触发 DNS 解析失败上报。
+    // 需要恢复时再引入对应的可访问网关地址与调用链路。
+    //
+    // const val MEDIA3 = "https://player-component.internal/api/"
 }
