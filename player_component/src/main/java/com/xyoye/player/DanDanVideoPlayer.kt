@@ -36,6 +36,7 @@ import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.player.surface.InterSurfaceView
 import com.xyoye.player.surface.SurfaceFactory
 import com.xyoye.player.utils.AudioFocusHelper
+import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.wrapper.InterVideoPlayer
 import com.xyoye.player.wrapper.InterVideoTrack
@@ -189,7 +190,12 @@ class DanDanVideoPlayer(
 
     override fun getTcpSpeed() = mVideoPlayer.getTcpSpeed()
 
-    override fun getDecodeType() = mVideoPlayer.getDecodeType()
+    override fun getDecodeType(): DecodeType =
+        if (this::mVideoPlayer.isInitialized) {
+            mVideoPlayer.getDecodeType()
+        } else {
+            DecodeType.HW
+        }
 
     override fun getRenderView(): InterSurfaceView? = mRenderView
 
