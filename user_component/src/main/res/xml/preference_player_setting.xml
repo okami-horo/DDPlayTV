@@ -15,6 +15,10 @@
         app:updatesContinuously="true"
         app:showSeekBarValue="true" />
     <ListPreference
+        android:key="mpv_video_output"
+        android:title="MPV 视频输出"
+        android:summary="gpu：兼容性更高；gpu-next：新渲染器（可能不兼容）" />
+    <ListPreference
         android:key="vlc_hardware_acceleration"
         android:summary="禁用：稳定性更高\n解码：可能提升性能\n完全：可能进一步提升性能"
         android:title="硬件加速"

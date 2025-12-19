@@ -1072,7 +1072,16 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetSurface(
         }
 
         // Keep mpv rendering enabled while the surface is alive.
-        mpv_set_property_string(session->handle, "vo", "gpu");
+        std::string target_vo = "gpu";
+        char* current_vo = mpv_get_property_string(session->handle, "vo");
+        if (current_vo != nullptr) {
+            std::string configured = current_vo;
+            if (!configured.empty() && configured != "null") {
+                target_vo = configured;
+            }
+            mpv_free(current_vo);
+        }
+        mpv_set_property_string(session->handle, "vo", target_vo.c_str());
         mpv_set_property_string(session->handle, "force-window", "yes");
 
         // Help mpv pick the correct output size.

@@ -22,6 +22,8 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
     private var isNormalizingMpvRangeInterval = false
 
     companion object {
+        private const val DEFAULT_MPV_VIDEO_OUTPUT = "gpu"
+
         fun newInstance() = PlayerSettingFragment()
 
         val playerData =
@@ -54,6 +56,13 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         val mpvPreference =
             arrayOf(
                 "mpv_proxy_range_interval_ms",
+                "mpv_video_output",
+            )
+
+        val mpvVideoOutput =
+            mapOf(
+                Pair("gpu（默认）", "gpu"),
+                Pair("gpu-next（实验）", "gpu-next"),
             )
     }
 
@@ -105,6 +114,20 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         findPreference<ListPreference>("vlc_audio_output")?.apply {
             entries = vlcAudioOutput.keys.toTypedArray()
             entryValues = vlcAudioOutput.values.toTypedArray()
+        }
+
+        // MPV视频输出
+        findPreference<ListPreference>("mpv_video_output")?.apply {
+            entries = mpvVideoOutput.keys.toTypedArray()
+            entryValues = mpvVideoOutput.values.toTypedArray()
+            val safeValue =
+                value?.takeIf { mpvVideoOutput.containsValue(it) }
+                    ?: DEFAULT_MPV_VIDEO_OUTPUT
+            if (value != safeValue) {
+                value = safeValue
+                PlayerConfig.putMpvVideoOutput(safeValue)
+            }
+            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         }
 
         super.onViewCreated(view, savedInstanceState)
@@ -179,6 +202,16 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                     }
                     "vlc_hardware_acceleration" -> PlayerConfig.getUseVLCHWDecoder().toString()
                     "vlc_audio_output" -> PlayerConfig.getUseVLCAudioOutput()
+                    "mpv_video_output" -> {
+                        val current = PlayerConfig.getMpvVideoOutput()
+                        val safeValue =
+                            current.takeIf { mpvVideoOutput.containsValue(it) }
+                                ?: DEFAULT_MPV_VIDEO_OUTPUT
+                        if (current != safeValue) {
+                            PlayerConfig.putMpvVideoOutput(safeValue)
+                        }
+                        safeValue
+                    }
                     else -> super.getString(key, defValue)
                 }
             } catch (e: Exception) {
@@ -209,6 +242,12 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                         }
                         "vlc_hardware_acceleration" -> PlayerConfig.putUseVLCHWDecoder(value.toInt())
                         "vlc_audio_output" -> PlayerConfig.putUseVLCAudioOutput(value)
+                        "mpv_video_output" -> {
+                            val safeValue =
+                                value.takeIf { mpvVideoOutput.containsValue(it) }
+                                    ?: DEFAULT_MPV_VIDEO_OUTPUT
+                            PlayerConfig.putMpvVideoOutput(safeValue)
+                        }
                         else -> super.putString(key, value)
                     }
                 } else {

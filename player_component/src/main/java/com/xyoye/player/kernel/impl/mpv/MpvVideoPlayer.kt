@@ -5,6 +5,7 @@ import android.graphics.Point
 import android.net.Uri
 import android.view.Surface
 import androidx.media3.common.util.Util
+import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.LogSystem
 import com.xyoye.common_component.log.model.LogModule
@@ -78,6 +79,7 @@ class MpvVideoPlayer(
         nativeBridge.setSubtitleFonts(fontsDir, SubtitleFontManager.DEFAULT_FONT_FAMILY)
         nativeBridge.setLooping(looping)
         nativeBridge.setSpeed(playbackSpeed)
+        applyVideoOutputPreference()
     }
 
     override fun setDataSource(
@@ -121,6 +123,7 @@ class MpvVideoPlayer(
 
     override fun setSurface(surface: Surface) {
         if (!nativeBridge.isAvailable) return
+        applyVideoOutputPreference()
         nativeBridge.setSurface(surface)
     }
 
@@ -454,6 +457,17 @@ class MpvVideoPlayer(
             } else {
                 DecodeType.HW
             }
+    }
+
+    private fun applyVideoOutputPreference() {
+        val configured = PlayerConfig.getMpvVideoOutput().orEmpty().trim()
+        val safeOutput =
+            if (configured.equals("gpu-next", ignoreCase = true)) {
+                "gpu-next"
+            } else {
+                "gpu"
+            }
+        nativeBridge.setVideoOutput(safeOutput)
     }
 
     private fun sanitizeMpvLog(message: String): String {

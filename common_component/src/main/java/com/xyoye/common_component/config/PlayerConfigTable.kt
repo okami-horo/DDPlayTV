@@ -55,4 +55,8 @@ object PlayerConfigTable {
     // MPV 本地 HTTP 代理：Range 请求最小间隔（毫秒），用于降低上游风控触发概率
     @MMKVFiled
     val mpvProxyRangeMinIntervalMs = 1000
+
+    // MPV 视频输出（vo）：gpu / gpu-next
+    @MMKVFiled
+    val mpvVideoOutput = "gpu"
 }

@@ -187,6 +187,12 @@ class MpvNativeBridge {
         setOption("force-seekable", if (enabled) "yes" else "no")
     }
 
+    fun setVideoOutput(output: String) {
+        if (nativeHandle == 0L) return
+        if (output.isBlank()) return
+        setOption("vo", output)
+    }
+
     fun setSubtitleFonts(
         fontsDir: String,
         defaultFontFamily: String
