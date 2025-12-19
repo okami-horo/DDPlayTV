@@ -18,6 +18,7 @@ import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.PlayerConstant
+import java.io.File
 
 class MpvVideoPlayer(
     private val context: Context
@@ -133,6 +134,46 @@ class MpvVideoPlayer(
     ) {
         if (!nativeBridge.isAvailable) return
         nativeBridge.setSurfaceSize(width, height)
+    }
+
+    /**
+     * Append a custom shader to mpv's `glsl-shaders` list.
+     *
+     * If [stage] is provided:
+     * - When the shader file already contains `//!HOOK`, it must include the same hook.
+     * - Otherwise the shader source is wrapped with `//!HOOK <stage>` and `//!BIND HOOKED`
+     *   and written to app cache before being appended.
+     *
+     * Supported hook stages (case-insensitive, libplacebo/mpv):
+     * - RGB: input plane with RGB values
+     * - LUMA: input plane with luma (Y)
+     * - CHROMA: input chroma plane(s)
+     * - ALPHA: input alpha plane
+     * - XYZ: input plane with XYZ values
+     * - CHROMA_SCALED: chroma upscaled to luma size
+     * - ALPHA_SCALED: alpha upscaled to luma size
+     * - NATIVE: merged input planes before color conversion
+     * - MAIN: after RGB conversion, before linearization/scaling
+     * - MAINPRESUB: mpv compatibility hook, treated as MAIN by libplacebo
+     * - LINEAR: after conversion to linear light
+     * - SIGMOID: after conversion to sigmoidized light (for upscaling)
+     * - PREKERNEL: right before main scaling kernel
+     * - POSTKERNEL: right after main scaling kernel
+     * - SCALED: after scaling (linear or nonlinear light)
+     * - PREOUTPUT: after conversion to output colorspace, before blending
+     * - OUTPUT: after blending, before dithering/final output
+     *
+     * Note: some hooks may never fire depending on input (e.g. RGB input skips LUMA/CHROMA).
+     *
+     * Example: addShader("/sdcard/shaders/filmgrain.hook", "LUMA")
+     */
+    fun addShader(
+        shaderPath: String,
+        stage: String? = null
+    ): Boolean {
+        if (!nativeBridge.isAvailable) return false
+        val resolvedPath = resolveShaderPath(shaderPath, stage) ?: return false
+        return nativeBridge.addShader(resolvedPath)
     }
 
     override fun prepareAsync() {
@@ -468,6 +509,74 @@ class MpvVideoPlayer(
                 "gpu"
             }
         nativeBridge.setVideoOutput(safeOutput)
+    }
+
+    private fun resolveShaderPath(
+        shaderPath: String,
+        stage: String?
+    ): String? {
+        if (shaderPath.isBlank()) return null
+        val requestedStage = stage?.trim().orEmpty()
+        if (requestedStage.isEmpty()) return shaderPath
+
+        val stageToken = requestedStage.uppercase()
+        val shaderFile = File(shaderPath)
+        if (!shaderFile.isFile) {
+            LogFacade.w(LogModule.PLAYER, "MpvVideoPlayer", "shader file missing: $shaderPath")
+            return null
+        }
+        val content =
+            runCatching { shaderFile.readText() }.getOrElse { error ->
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    "MpvVideoPlayer",
+                    "shader read failed: $shaderPath, reason=${error.message}"
+                )
+                return null
+            }
+
+        val hookRegex = Regex("^\\s*//!HOOK\\s+(\\S+)", RegexOption.IGNORE_CASE)
+        val hooks =
+            content.lineSequence()
+                .mapNotNull { line -> hookRegex.find(line)?.groupValues?.getOrNull(1) }
+                .toList()
+        if (hooks.isNotEmpty()) {
+            val matched = hooks.any { it.equals(stageToken, ignoreCase = true) }
+            if (!matched) {
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    "MpvVideoPlayer",
+                    "shader hook mismatch: requested=$stageToken, found=${hooks.joinToString(",")}"
+                )
+                return null
+            }
+            return shaderFile.absolutePath
+        }
+
+        val cacheDir = File(appContext.cacheDir, "mpv-shaders")
+        if (!cacheDir.exists() && !cacheDir.mkdirs()) {
+            LogFacade.w(LogModule.PLAYER, "MpvVideoPlayer", "shader cache dir create failed: ${cacheDir.path}")
+            return null
+        }
+        val stageTag = stageToken.replace(Regex("[^A-Z0-9_-]"), "_").lowercase()
+        val cacheKey = "${shaderFile.absolutePath}:${shaderFile.lastModified()}:$stageToken"
+        val cacheHash = Integer.toHexString(cacheKey.hashCode())
+        val wrapperFile = File(cacheDir, "hook_${stageTag}_$cacheHash.hook")
+        val header =
+            buildString {
+                append("//!HOOK ").append(stageToken).append('\n')
+                append("//!BIND HOOKED").append('\n')
+            }
+        val output = header + content
+        runCatching { wrapperFile.writeText(output) }.getOrElse { error ->
+            LogFacade.w(
+                LogModule.PLAYER,
+                "MpvVideoPlayer",
+                "shader write failed: ${wrapperFile.path}, reason=${error.message}"
+            )
+            return null
+        }
+        return wrapperFile.absolutePath
     }
 
     private fun sanitizeMpvLog(message: String): String {

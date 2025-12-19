@@ -926,6 +926,14 @@ bool addExternalTrack(MpvSession* session, jint trackType, const std::string& pa
     }
     return false;
 }
+
+bool addShader(MpvSession* session, const std::string& path) {
+    if (session == nullptr || session->handle == nullptr || path.empty()) {
+        return false;
+    }
+    const char* cmd[] = {"change-list", "glsl-shaders", "append", path.c_str(), nullptr};
+    return mpv_command(session->handle, cmd) >= 0;
+}
 #else
 std::vector<std::string> fetchTrackList(MpvSession*) {
     return {};
@@ -940,6 +948,10 @@ bool deselectTrack(MpvSession*, jint) {
 }
 
 bool addExternalTrack(MpvSession*, jint, const std::string&) {
+    return true;
+}
+
+bool addShader(MpvSession*, const std::string&) {
     return true;
 }
 
@@ -1267,6 +1279,31 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeAddExternalTrack(
         return JNI_FALSE;
     }
     return addExternalTrack(session, trackType, pathString) ? JNI_TRUE : JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeAddShader(
+    JNIEnv* env, jclass, jlong handle, jstring path) {
+    auto* session = fromHandle(handle);
+    if (session == nullptr || path == nullptr) return JNI_FALSE;
+#if MPV_PREBUILT_AVAILABLE
+    const char* pathChars = env->GetStringUTFChars(path, nullptr);
+    if (pathChars == nullptr) {
+        set_last_error("Failed to decode shader path for mpv");
+        return JNI_FALSE;
+    }
+    const std::string pathString = pathChars;
+    env->ReleaseStringUTFChars(path, pathChars);
+    if (pathString.empty()) {
+        return JNI_FALSE;
+    }
+    return addShader(session, pathString) ? JNI_TRUE : JNI_FALSE;
+#else
+    (void)env;
+    (void)handle;
+    set_last_error("libmpv.so not linked; addShader is unavailable");
+    return JNI_FALSE;
+#endif
 }
 
 extern "C" JNIEXPORT jlong JNICALL

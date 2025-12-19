@@ -292,6 +292,11 @@ class MpvNativeBridge {
         return nativeAddExternalTrack(nativeHandle, nativeType, path)
     }
 
+    fun addShader(path: String): Boolean {
+        if (nativeHandle == 0L || path.isBlank()) return false
+        return nativeAddShader(nativeHandle, path)
+    }
+
     fun currentPosition(): Long {
         if (nativeHandle == 0L) return 0
         return nativeGetPosition(nativeHandle)
@@ -455,6 +460,12 @@ class MpvNativeBridge {
         private external fun nativeAddExternalTrack(
             handle: Long,
             trackType: Int,
+            path: String
+        ): Boolean
+
+        @JvmStatic
+        private external fun nativeAddShader(
+            handle: Long,
             path: String
         ): Boolean
 
