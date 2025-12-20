@@ -205,11 +205,21 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         if (isRangeRequest) {
             val upstreamBodyLength = body.contentLength()
             val suspiciousUpstream = response.code() != 206 && upstreamContentRangeHeader == null
+            val sampleLimitBytes = 256L
+            val shouldSampleUpstreamBody =
+                response.code() == 200 &&
+                    upstreamContentRangeHeader == null &&
+                    upstreamBodyLength in 0..sampleLimitBytes
+            val upstreamBodySample =
+                if (shouldSampleUpstreamBody) {
+                    peekUpstreamBodySample(response, sampleLimitBytes)
+                } else {
+                    null
+                }
             val nowMs = nowMs()
             if (suspiciousUpstream || shouldLogRange(nowMs)) {
                 val logFn = if (suspiciousUpstream) LogFacade::w else LogFacade::d
-                val context =
-                    mapOf(
+                val context = mutableMapOf(
                         "urlHash" to urlHash,
                         "rangeHeader" to (rangeHeader ?: "null"),
                         "requestedRange" to formatRange(requestedRange),
@@ -224,6 +234,7 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
                         "contentLength" to contentLength.toString(),
                         "seekEnabled" to seekEnabled.toString(),
                     )
+                upstreamBodySample?.let { context["upstreamBodySample"] = it }
                 logFn.invoke(
                     LogModule.STORAGE,
                     logTag,
@@ -274,6 +285,28 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
 
     private fun formatRange(range: Pair<Long, Long>?): String {
         return range?.let { "${it.first}-${it.second}" } ?: "null"
+    }
+
+    private fun peekUpstreamBodySample(
+        response: retrofit2.Response<okhttp3.ResponseBody>,
+        maxBytes: Long
+    ): String? {
+        return runCatching {
+            val peeked = response.raw().peekBody(maxBytes)
+            sanitizeBodySample(peeked.string())
+        }.getOrNull()?.takeIf { it.isNotBlank() }
+    }
+
+    private fun sanitizeBodySample(sample: String): String {
+        if (sample.isBlank()) return sample
+        val builder = StringBuilder(sample.length)
+        for (ch in sample) {
+            when (ch) {
+                '\r', '\n', '\t' -> builder.append(' ')
+                else -> builder.append(if (ch.code < 0x20) '?' else ch)
+            }
+        }
+        return builder.toString().trim()
     }
 
     private fun shouldLogRange(nowMs: Long): Boolean {
