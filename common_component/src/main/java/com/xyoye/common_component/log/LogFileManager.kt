@@ -32,6 +32,8 @@ open class LogFileManager(
     private val useMediaStore = shouldUseMediaStore()
     private val contentResolver = context.contentResolver
     private val mediaRelativePath = LogPaths.logRelativePath(context)
+    private var currentLogUri: Uri? = null
+    private var previousLogUri: Uri? = null
 
     fun prepare() {
         if (prepared.get()) return
@@ -278,8 +280,10 @@ open class LogFileManager(
     }
 
     private fun ensureMediaStoreEntry(displayName: String): Uri {
+        cachedUri(displayName)?.let { return it }
         val existing = queryMediaStoreEntry(displayName)
         if (existing != null) {
+            cacheUri(displayName, existing.uri)
             return existing.uri
         }
         val values =
@@ -289,8 +293,11 @@ open class LogFileManager(
                 put(MediaStore.MediaColumns.RELATIVE_PATH, mediaRelativePath)
             }
         val collection = mediaCollectionUri()
-        return contentResolver.insert(collection, values)
-            ?: throw IOException("insert log file failed: $displayName")
+        val uri =
+            contentResolver.insert(collection, values)
+                ?: throw IOException("insert log file failed: $displayName")
+        cacheUri(displayName, uri)
+        return uri
     }
 
     private fun buildMediaStoreMeta(
@@ -346,23 +353,43 @@ open class LogFileManager(
                 MediaStore.MediaColumns._ID,
                 MediaStore.MediaColumns.SIZE,
                 MediaStore.MediaColumns.DATE_MODIFIED,
+                MediaStore.MediaColumns.RELATIVE_PATH,
             )
-        val selection =
-            "${MediaStore.MediaColumns.DISPLAY_NAME}=? AND ${MediaStore.MediaColumns.RELATIVE_PATH}=?"
-        val selectionArgs = arrayOf(displayName, mediaRelativePath)
+        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME}=?"
+        val selectionArgs = arrayOf(displayName)
+        val expectedPath = normalizeRelativePath(mediaRelativePath)
         return contentResolver.query(collection, projection, selection, selectionArgs, null)?.use { cursor ->
-            if (!cursor.moveToFirst()) return@use null
-            val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
-            val size = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE))
-            val dateModified =
-                cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
-            val uri = ContentUris.withAppendedId(collection, id)
-            MediaStoreEntry(
-                uri = uri,
-                displayName = displayName,
-                sizeBytes = size,
-                lastModified = dateModified * 1000,
-            )
+            val idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
+            val sizeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)
+            val dateIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED)
+            val pathIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH)
+            var best: MediaStoreEntry? = null
+            var fallback: MediaStoreEntry? = null
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idIndex)
+                val size = cursor.getLong(sizeIndex)
+                val dateModified = cursor.getLong(dateIndex)
+                val uri = ContentUris.withAppendedId(collection, id)
+                val entry =
+                    MediaStoreEntry(
+                        uri = uri,
+                        displayName = displayName,
+                        sizeBytes = size,
+                        lastModified = dateModified * 1000,
+                    )
+                val relativePath = cursor.getString(pathIndex)
+                if (relativePath.isNullOrBlank()) {
+                    if (fallback == null || entry.lastModified > fallback.lastModified) {
+                        fallback = entry
+                    }
+                    continue
+                }
+                if (normalizeRelativePath(relativePath) != expectedPath) continue
+                if (best == null || entry.lastModified > best.lastModified) {
+                    best = entry
+                }
+            }
+            best ?: fallback
         }
     }
 
@@ -375,6 +402,26 @@ open class LogFileManager(
 
     private fun shouldUseMediaStore(): Boolean =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && LogPaths.downloadRootOverride == null
+
+    private fun cachedUri(displayName: String): Uri? =
+        when (displayName) {
+            LogPaths.CURRENT_LOG_FILE_NAME -> currentLogUri
+            LogPaths.PREVIOUS_LOG_FILE_NAME -> previousLogUri
+            else -> null
+        }
+
+    private fun cacheUri(
+        displayName: String,
+        uri: Uri
+    ) {
+        when (displayName) {
+            LogPaths.CURRENT_LOG_FILE_NAME -> currentLogUri = uri
+            LogPaths.PREVIOUS_LOG_FILE_NAME -> previousLogUri = uri
+        }
+    }
+
+    private fun normalizeRelativePath(path: String): String =
+        path.trimEnd('/').trimEnd('\\')
 
     private data class MediaStoreEntry(
         val uri: Uri,
