@@ -32,7 +32,7 @@ object PlaybackSessionStatusProvider {
         AtomicReference(
             PlaybackSessionStatus(
                 sessionId = "",
-                resolvedBackend = SubtitleRendererBackend.LEGACY_CANVAS,
+                resolvedBackend = SubtitleRendererBackend.LIBASS,
                 videoSizePx = VideoSizePx(0, 0),
                 surfaceType = SurfaceType.VIEW_TEXTURE,
                 fallbackTriggered = false,

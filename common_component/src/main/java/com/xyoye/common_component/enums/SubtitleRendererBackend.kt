@@ -8,6 +8,10 @@ enum class SubtitleRendererBackend {
     LIBASS;
 
     companion object {
-        fun fromName(value: String?): SubtitleRendererBackend = values().firstOrNull { it.name == value } ?: LEGACY_CANVAS
+        fun fromName(value: String?): SubtitleRendererBackend {
+            val backend = values().firstOrNull { it.name == value } ?: LIBASS
+            // Legacy backend is disabled; always normalize to libass.
+            return if (backend == LEGACY_CANVAS) LIBASS else backend
+        }
     }
 }

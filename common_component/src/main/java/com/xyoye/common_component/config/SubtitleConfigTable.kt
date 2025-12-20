@@ -58,7 +58,7 @@ object SubtitleConfigTable {
 
     // 字幕渲染后端
     @MMKVFiled
-    const val subtitleRendererBackend = "LEGACY_CANVAS"
+    const val subtitleRendererBackend = "LIBASS"
 
     // 字幕渲染后端来源（DEFAULT / LOCAL_SETTINGS）
     @MMKVFiled

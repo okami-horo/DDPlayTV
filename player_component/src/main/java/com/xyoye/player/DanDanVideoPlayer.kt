@@ -22,12 +22,10 @@ import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.player.controller.VideoController
-import com.xyoye.player.controller.subtitle.SubtitleController
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.facoty.PlayerFactory
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.inter.VideoPlayerEventListener
-import com.xyoye.player.subtitle.backend.CanvasTextRendererBackend
 import com.xyoye.player.subtitle.backend.LibassRendererBackend
 import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
 import com.xyoye.player.subtitle.backend.SubtitleRenderEnvironment
@@ -304,7 +302,6 @@ class DanDanVideoPlayer(
             return
         }
         val controller = mVideoController ?: return
-        val backend = PlayerInitializer.Subtitle.backend
         val environment =
             SubtitleRenderEnvironment(
                 context,
@@ -312,11 +309,10 @@ class DanDanVideoPlayer(
                 this,
                 subtitleFallbackDispatcher,
             )
+        PlayerInitializer.Subtitle.backend = SubtitleRendererBackend.LIBASS
         val renderer =
-            when (backend) {
-                SubtitleRendererBackend.LEGACY_CANVAS -> CanvasTextRendererBackend()
-                SubtitleRendererBackend.LIBASS -> LibassRendererBackend()
-            }
+            // Legacy canvas pipeline disabled.
+            LibassRendererBackend()
         renderer.bind(environment)
         renderer.onSurfaceTypeChanged(PlayerInitializer.surfaceType)
         subtitleRenderer = renderer
@@ -472,21 +468,18 @@ class DanDanVideoPlayer(
 
     override fun deselectTrack(type: TrackType) = mVideoPlayer.deselectTrack(type)
 
-    fun switchSubtitleBackend(target: SubtitleRendererBackend) {
+    fun switchSubtitleBackend(@Suppress("UNUSED_PARAMETER") target: SubtitleRendererBackend) {
         if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
             return
         }
-        if (PlayerInitializer.Subtitle.backend == target &&
-            subtitleRenderer?.backend == target
+        if (PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS &&
+            subtitleRenderer?.backend == SubtitleRendererBackend.LIBASS
         ) {
             return
         }
-        PlayerInitializer.Subtitle.backend = target
+        PlayerInitializer.Subtitle.backend = SubtitleRendererBackend.LIBASS
         destroySubtitleRenderer()
         configureSubtitleRenderer()
-        if (target == SubtitleRendererBackend.LEGACY_CANVAS) {
-            (mVideoController?.getSubtitleController() as? SubtitleController)?.reloadExternalTrack()
-        }
     }
 
     private fun destroySubtitleRenderer() {

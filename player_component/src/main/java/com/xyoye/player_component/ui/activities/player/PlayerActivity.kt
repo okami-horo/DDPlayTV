@@ -22,8 +22,6 @@ import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.SubtitleConfig
-import com.xyoye.common_component.config.SubtitlePreferenceUpdater
-import com.xyoye.common_component.enums.RendererPreferenceSource
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
@@ -53,9 +51,6 @@ import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.impl.vlc.VlcAudioPolicy
 import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
-import com.xyoye.player.subtitle.debug.PlaybackSessionStatusProvider
-import com.xyoye.player.subtitle.ui.SubtitleFallbackDialog
-import com.xyoye.player.subtitle.ui.SubtitleFallbackDialog.SubtitleFallbackAction
 import com.xyoye.player_component.BR
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ActivityPlayerBinding
@@ -127,7 +122,6 @@ class PlayerActivity :
     private var media3BackgroundJob: Job? = null
     private var latestMedia3Session: PlaybackSession? = null
     private var latestMedia3Capability: PlayerCapabilityContract? = null
-    private var subtitleFallbackDialog: SubtitleFallbackDialog? = null
 
     private val media3ServiceConnection =
         object : ServiceConnection {
@@ -260,8 +254,6 @@ class PlayerActivity :
         LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "onDestroy")
         beforePlayExit()
         unregisterReceiver()
-        subtitleFallbackDialog?.dismiss()
-        subtitleFallbackDialog = null
         danDanPlayer.release()
         /*
         batteryHelper.release()
@@ -294,42 +286,11 @@ class PlayerActivity :
         reason: SubtitleFallbackReason,
         error: Throwable?
     ) {
-        runOnUiThread {
-            if (subtitleFallbackDialog == null) {
-                subtitleFallbackDialog =
-                    SubtitleFallbackDialog(this) { action ->
-                        when (action) {
-                            SubtitleFallbackAction.SWITCH_TO_LEGACY -> handleSubtitleFallbackSwitch(reason)
-                            SubtitleFallbackAction.CONTINUE_CURRENT -> {
-                                LogFacade.w(
-                                    LogModule.PLAYER,
-                                    TAG_SUBTITLE,
-                                    "User chose to continue with libass despite $reason",
-                                )
-                            }
-                        }
-                    }.also { dialog ->
-                        dialog.setOnDismissListener { subtitleFallbackDialog = null }
-                    }
-            }
-            subtitleFallbackDialog?.show()
-        }
-    }
-
-    private fun handleSubtitleFallbackSwitch(reason: SubtitleFallbackReason) {
-        if (PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LEGACY_CANVAS) {
-            return
-        }
-        SubtitlePreferenceUpdater.persistBackend(
-            SubtitleRendererBackend.LEGACY_CANVAS,
-            RendererPreferenceSource.LOCAL_SETTINGS,
-        )
-        PlayerInitializer.Subtitle.backend = SubtitleRendererBackend.LEGACY_CANVAS
-        PlaybackSessionStatusProvider.updateBackend(SubtitleRendererBackend.LEGACY_CANVAS)
-        PlaybackSessionStatusProvider.markFallback(reason, null)
-        danDanPlayer.switchSubtitleBackend(SubtitleRendererBackend.LEGACY_CANVAS)
-        ToastCenter.showOriginalToast(getString(R.string.subtitle_backend_fallback_result))
-        LogFacade.w(LogModule.PLAYER, TAG_SUBTITLE, "fallback applied due to $reason")
+        // Legacy backend switching is disabled; keep libass active.
+        val message =
+            error?.message?.let { detail -> "libass fallback ignored: $reason ($detail)" }
+                ?: "libass fallback ignored: $reason"
+        LogFacade.w(LogModule.PLAYER, TAG_SUBTITLE, message)
     }
 
     override fun playScreencast(videoSource: BaseVideoSource) {
@@ -647,18 +608,8 @@ class PlayerActivity :
         PlayerInitializer.Subtitle.strokeColor = SubtitleConfig.getStrokeColor()
         PlayerInitializer.Subtitle.alpha = SubtitleConfig.getAlpha()
         PlayerInitializer.Subtitle.verticalOffset = SubtitleConfig.getVerticalOffset()
-        val backend = SubtitleRendererBackend.fromName(SubtitleConfig.getSubtitleRendererBackend())
-        PlayerInitializer.Subtitle.backend =
-            if (PlayerInitializer.playerType == PlayerType.TYPE_EXO_PLAYER) {
-                backend
-            } else {
-                LogFacade.w(
-                    LogModule.PLAYER,
-                    TAG_CONFIG,
-                    "libass backend requires ExoPlayer, fallback to legacy for playerType=${PlayerInitializer.playerType}",
-                )
-                SubtitleRendererBackend.LEGACY_CANVAS
-            }
+        val backend = SubtitleRendererBackend.LIBASS
+        PlayerInitializer.Subtitle.backend = backend
         LogFacade.d(
             LogModule.PLAYER,
             TAG_CONFIG,

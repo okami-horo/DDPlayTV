@@ -8,10 +8,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
-import com.xyoye.common_component.config.SubtitlePreferenceUpdater
-import com.xyoye.common_component.enums.RendererPreferenceSource
-import com.xyoye.common_component.enums.SubtitleRendererBackend
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.player.controller.video.InterControllerView
@@ -182,15 +178,7 @@ class ExternalSubtitleView(
                 .setTitle(R.string.subtitle_backend_unsupported_title)
                 .setMessage(
                     context.getString(R.string.subtitle_backend_unsupported_message, label),
-                ).setPositiveButton(R.string.subtitle_backend_switch_action) { _, _ ->
-                    SubtitlePreferenceUpdater.persistBackend(
-                        SubtitleRendererBackend.LEGACY_CANVAS,
-                        RendererPreferenceSource.LOCAL_SETTINGS,
-                    )
-                    ToastCenter.showOriginalToast(
-                        context.getString(R.string.subtitle_backend_switch_result),
-                    )
-                }.setNegativeButton(R.string.subtitle_backend_keep_action, null)
+                ).setPositiveButton(R.string.subtitle_backend_keep_action, null)
                 .setOnDismissListener { unsupportedFormatDialog = null }
                 .show()
     }
