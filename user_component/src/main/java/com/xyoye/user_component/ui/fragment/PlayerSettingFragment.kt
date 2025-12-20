@@ -65,6 +65,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             mapOf(
                 Pair("gpu（默认）", "gpu"),
                 Pair("gpu-next（实验）", "gpu-next"),
+                Pair("mediacodec_embed（系统硬件渲染）", "mediacodec_embed"),
             )
 
         val mpvHwdecPriority =

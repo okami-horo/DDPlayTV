@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Point
 import android.net.Uri
 import android.view.Surface
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.log.LogFacade
@@ -16,9 +17,12 @@ import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
+import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
+import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSinkRegistry
 import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.PlayerConstant
 import java.io.File
+import java.util.Locale
 
 class MpvVideoPlayer(
     private val context: Context
@@ -38,6 +42,12 @@ class MpvVideoPlayer(
     private var playbackSpeed = PlayerInitializer.Player.videoSpeed
     private var looping = PlayerInitializer.isLooping
     private var initializationError: Exception? = null
+    private var useEmbeddedSubtitlePipeline = false
+    private var embeddedSubtitleHeader: ByteArray? = null
+    private var embeddedSubtitleHeaderSize: Point? = null
+    private var lastSubtitlePayload: String? = null
+    private var lastSubtitleAss = false
+    private var lastSubtitleStartMs: Long? = null
 
     private fun failInitialization(
         message: String,
@@ -256,10 +266,12 @@ class MpvVideoPlayer(
         decodeType = DecodeType.SW
         videoSize = Point(0, 0)
         initializationError = null
+        resetEmbeddedSubtitlePipeline()
     }
 
     override fun release() {
         stop()
+        resetEmbeddedSubtitlePipeline()
         nativeBridge.clearEventListener()
         nativeBridge.destroy()
         isPrepared = false
@@ -484,6 +496,9 @@ class MpvVideoPlayer(
                 videoSize = Point(event.width, event.height)
                 mPlayerEventListener.onVideoSizeChange(event.width, event.height)
             }
+            is MpvNativeBridge.Event.Subtitle -> {
+                handleSubtitleEvent(event)
+            }
         }
     }
 
@@ -504,12 +519,13 @@ class MpvVideoPlayer(
     private fun applyVideoOutputPreference() {
         val configured = PlayerConfig.getMpvVideoOutput().orEmpty().trim()
         val safeOutput =
-            if (configured.equals("gpu-next", ignoreCase = true)) {
-                "gpu-next"
-            } else {
-                "gpu"
+            when {
+                configured.equals("gpu-next", ignoreCase = true) -> "gpu-next"
+                configured.equals("mediacodec_embed", ignoreCase = true) -> "mediacodec_embed"
+                else -> "gpu"
             }
         nativeBridge.setVideoOutput(safeOutput)
+        updateEmbeddedSubtitlePreference(safeOutput)
     }
 
     private fun applyHwdecPriority() {
@@ -522,6 +538,149 @@ class MpvVideoPlayer(
                 "mediacodec,mediacodec-copy"
             }
         nativeBridge.setHwdecPriority(hwdec)
+    }
+
+    private fun updateEmbeddedSubtitlePreference(output: String) {
+        val enable = output.equals("mediacodec_embed", ignoreCase = true)
+        if (useEmbeddedSubtitlePipeline == enable) return
+        useEmbeddedSubtitlePipeline = enable
+        resetEmbeddedSubtitlePipeline()
+    }
+
+    @androidx.annotation.OptIn(UnstableApi::class)
+    private fun handleSubtitleEvent(event: MpvNativeBridge.Event.Subtitle) {
+        if (!useEmbeddedSubtitlePipeline) return
+        val sink = EmbeddedSubtitleSinkRegistry.current() ?: return
+        if (event.text.isBlank()) {
+            if (lastSubtitlePayload == null) {
+                return
+            }
+            sink.onFlush()
+            lastSubtitlePayload = null
+            lastSubtitleStartMs = null
+            return
+        }
+        ensureEmbeddedSubtitleHeader(sink)
+        val startMs = event.startMs.coerceAtLeast(0L)
+        if (!event.isAss && lastSubtitleAss && lastSubtitleStartMs == startMs) {
+            return
+        }
+        val durationMs = event.durationMs?.takeIf { it > 0L } ?: DEFAULT_ASS_DURATION_MS
+        val payload = buildAssDialogue(startMs, durationMs, event.text, event.isAss)
+        if (payload == lastSubtitlePayload && event.isAss == lastSubtitleAss) {
+            return
+        }
+        lastSubtitlePayload = payload
+        lastSubtitleAss = event.isAss
+        lastSubtitleStartMs = startMs
+        val timeUs = startMs * 1000L
+        val durationUs = event.durationMs?.takeIf { it > 0L }?.times(1000L)
+        sink.onSample(payload.toByteArray(Charsets.UTF_8), timeUs, durationUs)
+    }
+
+    @androidx.annotation.OptIn(UnstableApi::class)
+    private fun ensureEmbeddedSubtitleHeader(sink: EmbeddedSubtitleSink) {
+        val targetWidth =
+            if (videoSize.x > 0) {
+                videoSize.x
+            } else {
+                DEFAULT_ASS_PLAY_RES_X
+            }
+        val targetHeight =
+            if (videoSize.y > 0) {
+                videoSize.y
+            } else {
+                DEFAULT_ASS_PLAY_RES_Y
+            }
+        val cachedSize = embeddedSubtitleHeaderSize
+        if (embeddedSubtitleHeader == null ||
+            cachedSize == null ||
+            cachedSize.x != targetWidth ||
+            cachedSize.y != targetHeight
+        ) {
+            embeddedSubtitleHeaderSize = Point(targetWidth, targetHeight)
+            embeddedSubtitleHeader = buildAssHeader(targetWidth, targetHeight)
+            sink.onFormat(embeddedSubtitleHeader)
+        }
+    }
+
+    private fun buildAssHeader(
+        width: Int,
+        height: Int
+    ): ByteArray {
+        val fontSize = PlayerInitializer.Subtitle.textSize.coerceAtLeast(MIN_ASS_FONT_SIZE)
+        val header =
+            """
+            [Script Info]
+            ScriptType: v4.00+
+            PlayResX: $width
+            PlayResY: $height
+            WrapStyle: 0
+            ScaledBorderAndShadow: yes
+
+            [V4+ Styles]
+            Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+            Style: Default,${SubtitleFontManager.DEFAULT_FONT_FAMILY},$fontSize,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,20,20,20,1
+
+            [Events]
+            Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+            """.trimIndent()
+        return header.toByteArray(Charsets.UTF_8)
+    }
+
+    private fun buildAssDialogue(
+        startMs: Long,
+        durationMs: Long,
+        text: String,
+        isAss: Boolean
+    ): String {
+        val trimmed = text.trimStart()
+        if (isAss && (trimmed.startsWith("Dialogue:", ignoreCase = true) ||
+                trimmed.startsWith("Comment:", ignoreCase = true))
+        ) {
+            return text
+        }
+        val payload =
+            if (isAss) {
+                text
+            } else {
+                escapeAssText(text)
+            }
+        val start = formatAssTime(startMs)
+        val end = formatAssTime(startMs + durationMs)
+        return "Dialogue: 0,$start,$end,Default,,0,0,0,,$payload"
+    }
+
+    private fun escapeAssText(text: String): String {
+        return text
+            .replace("\\", "\\\\")
+            .replace("{", "\\{")
+            .replace("}", "\\}")
+            .replace("\r\n", "\n")
+            .replace("\r", "\n")
+            .replace("\n", "\\N")
+    }
+
+    private fun formatAssTime(timeMs: Long): String {
+        val safeMs = timeMs.coerceAtLeast(0L)
+        val totalCs = safeMs / 10
+        val cs = totalCs % 100
+        val totalSec = totalCs / 100
+        val sec = totalSec % 60
+        val totalMin = totalSec / 60
+        val min = totalMin % 60
+        val hr = totalMin / 60
+        return String.format(Locale.US, "%d:%02d:%02d.%02d", hr, min, sec, cs)
+    }
+
+    @androidx.annotation.OptIn(UnstableApi::class)
+    private fun resetEmbeddedSubtitlePipeline() {
+        EmbeddedSubtitleSinkRegistry.current()?.onFlush()
+        embeddedSubtitleHeader = null
+        embeddedSubtitleHeaderSize = null
+        lastSubtitlePayload = null
+        lastSubtitleAss = false
+        lastSubtitleStartMs = null
     }
 
     private fun resolveShaderPath(
@@ -625,8 +784,15 @@ class MpvVideoPlayer(
                 } else if (reason != null) {
                     add("reason=$reason")
                 }
-            }
+        }
         return details.joinToString(" | ").ifEmpty { "mpv playback error" }
+    }
+
+    companion object {
+        private const val DEFAULT_ASS_PLAY_RES_X = 1920
+        private const val DEFAULT_ASS_PLAY_RES_Y = 1080
+        private const val DEFAULT_ASS_DURATION_MS = 5000L
+        private const val MIN_ASS_FONT_SIZE = 10
     }
 }
 

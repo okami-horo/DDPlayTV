@@ -46,7 +46,7 @@
 | `opengl-es` | `yes` | 仅允许 GLES 上下文 | Android 设备通常使用 GLES |
 | `hwdec` | `mediacodec,mediacodec-copy`（默认）/`mediacodec-copy,mediacodec` | 指定硬解 API 优先级列表；不可用则回退软解 | 由“播放器设置-视频- MPV 硬解优先级”控制；仍作为判断硬解状态的基础（读取 `hwdec-current`） |
 | `ao` | `audiotrack,opensles` | 指定音频输出驱动优先级列表 | 优先 `audiotrack`，回退 `opensles` |
-| `vo` | `null` | 指定视频输出后端 | 项目启动时先禁用视频输出，等 Surface 可用后再切到 `gpu/gpu-next` |
+| `vo` | `null` | 指定视频输出后端 | 项目启动时先禁用视频输出，等 Surface 可用后再切到 `gpu/gpu-next/mediacodec_embed` |
 | `force-window` | `no` | 无视频时是否强制创建窗口 | Surface 绑定后会临时设为 `yes` 以保持渲染启用 |
 | `wid` | `android.view.Surface` 指针值（`int64`） | 为 `gpu-context=android` 绑定渲染目标 | 项目在 Surface 变化时动态设置/清空 |
 
@@ -56,7 +56,7 @@
 
 | 选项 | 本项目设置值/来源 | 含义 | 备注（项目语义） |
 | --- | --- | --- | --- |
-| `vo` | `gpu` 或 `gpu-next`（播放器设置 `mpv_video_output`） | 选择视频输出后端 | UI：`gpu（默认）`/`gpu-next（实验）` |
+| `vo` | `gpu` / `gpu-next` / `mediacodec_embed`（播放器设置 `mpv_video_output`） | 选择视频输出后端 | UI：`gpu（默认）`/`gpu-next（实验）`/`mediacodec_embed（系统硬件渲染）`；当选择 `mediacodec_embed` 时，mpv 自带字幕/OSD 不可用，项目改用自研 libass 管线渲染软字幕 |
 | `android-surface-size` | `${width}x${height}` | 设置 Android `gpu-context` 渲染 surface 的尺寸 | 旋转/尺寸变化时需要更新 |
 | `user-agent` | 来自请求头或默认 `"libmpv-android"` | HTTP 流媒体请求使用的 UA | 仅对 `http/https` 注入 |
 | `http-header-fields` | 来自 `setDataSource()` 的 header map | 为 HTTP 请求追加自定义 Header 字段 | 用于鉴权/Referer/Cookie 等（按需传入） |

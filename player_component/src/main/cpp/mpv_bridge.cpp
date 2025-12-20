@@ -35,6 +35,8 @@ constexpr jint kEventError = 5;
 constexpr jint kEventBufferingStart = 6;
 constexpr jint kEventBufferingEnd = 7;
 constexpr jint kEventLogMessage = 8;
+constexpr jint kEventSubtitleText = 9;
+constexpr jint kEventSubtitleAss = 10;
 constexpr jint kTrackVideo = 0;
 constexpr jint kTrackAudio = 1;
 constexpr jint kTrackSubtitle = 2;
@@ -325,6 +327,18 @@ double getDoubleProperty(mpv_handle* handle, const char* property) {
     return value;
 }
 
+bool tryGetDoubleProperty(mpv_handle* handle, const char* property, double* out_value) {
+    if (handle == nullptr || property == nullptr || out_value == nullptr) {
+        return false;
+    }
+    double value = 0.0;
+    if (mpv_get_property(handle, property, MPV_FORMAT_DOUBLE, &value) < 0) {
+        return false;
+    }
+    *out_value = value;
+    return true;
+}
+
 #else
 struct MpvSession {
     std::string path;
@@ -402,6 +416,8 @@ void observeProperties(mpv_handle* handle) {
     mpv_observe_property(handle, 0, "paused-for-cache", MPV_FORMAT_FLAG);
     mpv_observe_property(handle, 0, "width", MPV_FORMAT_INT64);
     mpv_observe_property(handle, 0, "height", MPV_FORMAT_INT64);
+    mpv_observe_property(handle, 0, "sub-text-ass", MPV_FORMAT_STRING);
+    mpv_observe_property(handle, 0, "sub-text", MPV_FORMAT_STRING);
 }
 
 void destroyRenderContext(MpvSession* session) {
@@ -738,8 +754,10 @@ void eventLoop(MpvSession* session) {
             }
             case MPV_EVENT_PROPERTY_CHANGE: {
                 auto* prop = static_cast<mpv_event_property*>(event->data);
-                if (prop != nullptr && prop->name != nullptr && prop->format == MPV_FORMAT_FLAG &&
-                    strcmp(prop->name, "paused-for-cache") == 0) {
+                if (prop == nullptr || prop->name == nullptr) {
+                    break;
+                }
+                if (prop->format == MPV_FORMAT_FLAG && strcmp(prop->name, "paused-for-cache") == 0) {
                     const bool isCaching = *static_cast<int*>(prop->data) != 0;
                     dispatchEvent(
                         env,
@@ -748,6 +766,40 @@ void eventLoop(MpvSession* session) {
                         0,
                         0,
                         nullptr
+                    );
+                    break;
+                }
+                if (strcmp(prop->name, "sub-text-ass") == 0 || strcmp(prop->name, "sub-text") == 0) {
+                    const bool isAss = strcmp(prop->name, "sub-text-ass") == 0;
+                    const char* text = nullptr;
+                    if (prop->format == MPV_FORMAT_STRING && prop->data != nullptr) {
+                        text = static_cast<char*>(prop->data);
+                    }
+                    std::string payload = text == nullptr ? "" : text;
+                    double start = 0.0;
+                    double end = 0.0;
+                    bool hasStart = tryGetDoubleProperty(session->handle, "sub-start", &start);
+                    bool hasEnd = tryGetDoubleProperty(session->handle, "sub-end", &end);
+                    if (!hasStart) {
+                        double pos = 0.0;
+                        if (tryGetDoubleProperty(session->handle, "time-pos", &pos)) {
+                            start = pos;
+                            hasStart = true;
+                        }
+                    }
+                    const long long startMs =
+                        hasStart ? static_cast<long long>(start * 1000.0) : 0;
+                    const long long durationMs =
+                        (hasStart && hasEnd && end >= start)
+                            ? static_cast<long long>((end - start) * 1000.0)
+                            : 0;
+                    dispatchEvent(
+                        env,
+                        session->event_callback,
+                        isAss ? kEventSubtitleAss : kEventSubtitleText,
+                        startMs,
+                        durationMs,
+                        payload.c_str()
                     );
                 }
                 break;

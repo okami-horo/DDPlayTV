@@ -53,6 +53,13 @@ class MpvNativeBridge {
             val level: Int,
             val message: String?
         ) : Event
+
+        data class Subtitle(
+            val text: String,
+            val isAss: Boolean,
+            val startMs: Long,
+            val durationMs: Long?
+        ) : Event
     }
 
     private var nativeHandle: Long = 0
@@ -330,6 +337,8 @@ class MpvNativeBridge {
                 EVENT_BUFFERING_END -> Event.Buffering(false)
                 EVENT_ERROR -> Event.Error(arg1.toInt(), arg2.toInt(), message)
                 EVENT_LOG_MESSAGE -> Event.LogMessage(arg1.toInt(), message)
+                EVENT_SUBTITLE_TEXT -> Event.Subtitle(message.orEmpty(), false, arg1, arg2.takeIf { it > 0L })
+                EVENT_SUBTITLE_ASS -> Event.Subtitle(message.orEmpty(), true, arg1, arg2.takeIf { it > 0L })
                 else -> null
             }
         if (event != null) {
@@ -354,6 +363,8 @@ class MpvNativeBridge {
         private const val EVENT_BUFFERING_START = 6
         private const val EVENT_BUFFERING_END = 7
         private const val EVENT_LOG_MESSAGE = 8
+        private const val EVENT_SUBTITLE_TEXT = 9
+        private const val EVENT_SUBTITLE_ASS = 10
 
         const val TRACK_TYPE_AUDIO = 1
         const val TRACK_TYPE_SUBTITLE = 2

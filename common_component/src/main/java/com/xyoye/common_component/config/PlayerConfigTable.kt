@@ -56,7 +56,7 @@ object PlayerConfigTable {
     @MMKVFiled
     val mpvProxyRangeMinIntervalMs = 1000
 
-    // MPV 视频输出（vo）：gpu / gpu-next
+    // MPV 视频输出（vo）：gpu / gpu-next / mediacodec_embed
     @MMKVFiled
     val mpvVideoOutput = "gpu"
 

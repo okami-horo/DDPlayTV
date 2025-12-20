@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.xyoye.cache.CacheManager
+import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.source.base.BaseVideoSource
@@ -299,7 +300,10 @@ class DanDanVideoPlayer(
 
     private fun configureSubtitleRenderer() {
         if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
-            return
+            val output = PlayerConfig.getMpvVideoOutput().orEmpty().trim()
+            if (!output.equals("mediacodec_embed", ignoreCase = true)) {
+                return
+            }
         }
         val controller = mVideoController ?: return
         val environment =
@@ -470,7 +474,10 @@ class DanDanVideoPlayer(
 
     fun switchSubtitleBackend(@Suppress("UNUSED_PARAMETER") target: SubtitleRendererBackend) {
         if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
-            return
+            val output = PlayerConfig.getMpvVideoOutput().orEmpty().trim()
+            if (!output.equals("mediacodec_embed", ignoreCase = true)) {
+                return
+            }
         }
         if (PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS &&
             subtitleRenderer?.backend == SubtitleRendererBackend.LIBASS
