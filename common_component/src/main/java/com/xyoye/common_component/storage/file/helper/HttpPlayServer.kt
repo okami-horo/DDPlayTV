@@ -1,6 +1,8 @@
 package com.xyoye.common_component.storage.file.helper
 
 import com.xyoye.common_component.config.PlayerConfig
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.RangeUtils
@@ -8,6 +10,7 @@ import fi.iki.elonen.NanoHTTPD
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import java.io.InputStream
 import java.net.URLEncoder
 import kotlin.random.Random
 
@@ -16,6 +19,8 @@ import kotlin.random.Random
  * It forwards requests to an upstream URL and provides stable Range responses.
  */
 class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
+    private val logTag = "HttpPlayServer"
+
     private var upstreamUrl: String? = null
     private var upstreamHeaders: Map<String, String> = emptyMap()
     private var contentType: String = "application/octet-stream"
@@ -31,6 +36,13 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
 
     private val maxRangeBytesBeforePlay: Long = 1L * 1024 * 1024
     private val maxRangeBytesAfterPlay: Long = 4L * 1024 * 1024
+    private val rangeLogIntervalMs: Long = 1000L
+
+    @Volatile
+    private var lastRangeLogAtMs: Long = 0L
+
+    @Volatile
+    private var loggedNoRangeRequest: Boolean = false
 
     companion object {
         private fun randomPort() = Random.nextInt(20000, 30000)
@@ -64,16 +76,32 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         if (supportsRange && hasRange && requestedRange == null) {
             return newFixedLengthResponse(Response.Status.RANGE_NOT_SATISFIABLE, "text/plain", "")
         }
+        val isRangeRequest = supportsRange && hasRange && requestedRange != null
         val cappedRange =
-            if (supportsRange && hasRange && requestedRange != null) {
+            requestedRange?.let { range ->
                 val maxBytes = if (seekEnabled) maxRangeBytesAfterPlay else maxRangeBytesBeforePlay
-                val start = requestedRange.first
-                val end = minOf(requestedRange.second, start + maxBytes - 1)
+                val start = range.first
+                val end = minOf(range.second, start + maxBytes - 1)
                 start to end
-            } else {
-                null
             }
         val upstreamRangeHeader = cappedRange?.let { (start, end) -> "bytes=$start-$end" }
+        val urlHash = url.hashCode().toString()
+
+        if (supportsRange && !hasRange && !loggedNoRangeRequest) {
+            loggedNoRangeRequest = true
+            LogFacade.w(
+                LogModule.STORAGE,
+                logTag,
+                "proxy request without range header",
+                context =
+                    mapOf(
+                        "urlHash" to urlHash,
+                        "contentLength" to contentLength.toString(),
+                        "seekEnabled" to seekEnabled.toString(),
+                        "clientUa" to (session.headers["user-agent"] ?: "null"),
+                    ),
+            )
+        }
 
         val response =
             if (supportsRange && hasRange) {
@@ -125,15 +153,23 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
 
         val upstreamContentRangeHeader = response.headers()["Content-Range"]
         val upstreamContentRange = upstreamContentRangeHeader?.let { parseContentRange(it) }
-        val isPartial = response.code() == 206 || upstreamContentRangeHeader != null
+        val isPartial = isRangeRequest || response.code() == 206 || upstreamContentRangeHeader != null
+
+        val responseRange =
+            when {
+                cappedRange != null && upstreamContentRange != null -> {
+                    val start = maxOf(cappedRange.first, upstreamContentRange.first)
+                    val end = minOf(cappedRange.second, upstreamContentRange.second)
+                    if (start <= end) start to end else upstreamContentRange
+                }
+                upstreamContentRange != null -> upstreamContentRange
+                else -> cappedRange
+            }
 
         val status = if (isPartial) Response.Status.PARTIAL_CONTENT else Response.Status.OK
-        val responseRange = upstreamContentRange ?: cappedRange
         val contentRange =
-            if (isPartial) {
-                upstreamContentRangeHeader ?: responseRange?.let { (start, end) ->
-                    "bytes $start-$end/$contentLength"
-                }
+            if (isPartial && responseRange != null) {
+                "bytes ${responseRange.first}-${responseRange.second}/$contentLength"
             } else {
                 null
             }
@@ -146,17 +182,55 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
                 else -> body.contentLength()
             }.takeIf { it > 0 } ?: -1L
 
+        val bodyStream =
+            if (isPartial && responseLength > 0) {
+                limitStream(body.byteStream(), responseLength)
+            } else {
+                body.byteStream()
+            }
         val nanoResponse =
             if (responseLength > 0) {
-                newFixedLengthResponse(status, contentType, body.byteStream(), responseLength)
+                newFixedLengthResponse(status, contentType, bodyStream, responseLength)
             } else {
-                newChunkedResponse(status, contentType, body.byteStream())
+                newChunkedResponse(status, contentType, bodyStream)
             }
 
         if (supportsRange) {
             nanoResponse.addHeader("Accept-Ranges", "bytes")
             if (isPartial) {
                 contentRange?.let { nanoResponse.addHeader("Content-Range", it) }
+            }
+        }
+
+        if (isRangeRequest) {
+            val upstreamBodyLength = body.contentLength()
+            val suspiciousUpstream = response.code() != 206 && upstreamContentRangeHeader == null
+            val nowMs = nowMs()
+            if (suspiciousUpstream || shouldLogRange(nowMs)) {
+                val logFn = if (suspiciousUpstream) LogFacade::w else LogFacade::d
+                val context =
+                    mapOf(
+                        "urlHash" to urlHash,
+                        "rangeHeader" to (rangeHeader ?: "null"),
+                        "requestedRange" to formatRange(requestedRange),
+                        "cappedRange" to formatRange(cappedRange),
+                        "upstreamRange" to (upstreamRangeHeader ?: "null"),
+                        "upstreamCode" to response.code().toString(),
+                        "upstreamContentRange" to (upstreamContentRangeHeader ?: "null"),
+                        "upstreamBodyLength" to upstreamBodyLength.toString(),
+                        "responseRange" to formatRange(responseRange),
+                        "responseLength" to responseLength.toString(),
+                        "status" to status.toString(),
+                        "contentLength" to contentLength.toString(),
+                        "seekEnabled" to seekEnabled.toString(),
+                    )
+                logFn.invoke(
+                    LogModule.STORAGE,
+                    logTag,
+                    "proxy range response",
+                    context,
+                    null,
+                )
             }
         }
         return nanoResponse
@@ -196,6 +270,60 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         val end = rangeValue.substring(dashIndex + 1).toLongOrNull() ?: return null
         if (start < 0 || end < start) return null
         return start to end
+    }
+
+    private fun formatRange(range: Pair<Long, Long>?): String {
+        return range?.let { "${it.first}-${it.second}" } ?: "null"
+    }
+
+    private fun shouldLogRange(nowMs: Long): Boolean {
+        val elapsed = nowMs - lastRangeLogAtMs
+        if (elapsed < rangeLogIntervalMs) return false
+        lastRangeLogAtMs = nowMs
+        return true
+    }
+
+    private fun limitStream(
+        stream: InputStream,
+        maxBytes: Long
+    ): InputStream {
+        if (maxBytes <= 0) return stream
+        return object : InputStream() {
+            private var remaining = maxBytes
+            private var closed = false
+
+            override fun read(): Int {
+                if (remaining <= 0) return -1
+                val value = stream.read()
+                if (value == -1) return -1
+                remaining -= 1
+                return value
+            }
+
+            override fun read(
+                buffer: ByteArray,
+                offset: Int,
+                length: Int
+            ): Int {
+                if (remaining <= 0) return -1
+                val allowed = minOf(remaining.toInt(), length)
+                val count = stream.read(buffer, offset, allowed)
+                if (count == -1) return -1
+                remaining -= count.toLong()
+                return count
+            }
+
+            override fun available(): Int {
+                val available = stream.available()
+                return if (remaining < available) remaining.toInt() else available
+            }
+
+            override fun close() {
+                if (closed) return
+                closed = true
+                stream.close()
+            }
+        }
     }
 
     private fun buildUpstreamHeaders(
