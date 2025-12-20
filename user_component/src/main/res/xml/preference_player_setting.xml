@@ -15,6 +15,10 @@
         app:updatesContinuously="true"
         app:showSeekBarValue="true" />
     <ListPreference
+        android:key="mpv_hwdec_priority"
+        android:title="MPV 硬解优先级"
+        android:summary="mediacodec：性能优先（画面调节无效）\nmediacodec-copy：画面调节生效" />
+    <ListPreference
         android:key="mpv_video_output"
         android:title="MPV 视频输出"
         android:summary="gpu：兼容性更高；gpu-next：新渲染器（可能不兼容）" />

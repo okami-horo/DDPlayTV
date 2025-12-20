@@ -80,6 +80,7 @@ class MpvVideoPlayer(
         nativeBridge.setSubtitleFonts(fontsDir, SubtitleFontManager.DEFAULT_FONT_FAMILY)
         nativeBridge.setLooping(looping)
         nativeBridge.setSpeed(playbackSpeed)
+        applyHwdecPriority()
         applyVideoOutputPreference()
     }
 
@@ -509,6 +510,18 @@ class MpvVideoPlayer(
                 "gpu"
             }
         nativeBridge.setVideoOutput(safeOutput)
+    }
+
+    private fun applyHwdecPriority() {
+        val configured = PlayerConfig.getMpvHwdecPriority().orEmpty().trim()
+        val preferCopy = configured.equals("mediacodec-copy", ignoreCase = true)
+        val hwdec =
+            if (preferCopy) {
+                "mediacodec-copy,mediacodec"
+            } else {
+                "mediacodec,mediacodec-copy"
+            }
+        nativeBridge.setHwdecPriority(hwdec)
     }
 
     private fun resolveShaderPath(

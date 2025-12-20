@@ -187,6 +187,12 @@ class MpvNativeBridge {
         setOption("force-seekable", if (enabled) "yes" else "no")
     }
 
+    fun setHwdecPriority(value: String) {
+        if (nativeHandle == 0L) return
+        if (value.isBlank()) return
+        setOption("hwdec", value)
+    }
+
     fun setVideoOutput(output: String) {
         if (nativeHandle == 0L) return
         if (output.isBlank()) return

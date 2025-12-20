@@ -59,4 +59,8 @@ object PlayerConfigTable {
     // MPV 视频输出（vo）：gpu / gpu-next
     @MMKVFiled
     val mpvVideoOutput = "gpu"
+
+    // MPV 硬解优先级：mediacodec / mediacodec-copy
+    @MMKVFiled
+    val mpvHwdecPriority = "mediacodec"
 }

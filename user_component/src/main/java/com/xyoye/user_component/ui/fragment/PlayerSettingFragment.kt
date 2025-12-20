@@ -23,6 +23,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
 
     companion object {
         private const val DEFAULT_MPV_VIDEO_OUTPUT = "gpu"
+        private const val DEFAULT_MPV_HWDEC_PRIORITY = "mediacodec"
 
         fun newInstance() = PlayerSettingFragment()
 
@@ -56,6 +57,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         val mpvPreference =
             arrayOf(
                 "mpv_proxy_range_interval_ms",
+                "mpv_hwdec_priority",
                 "mpv_video_output",
             )
 
@@ -63,6 +65,12 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             mapOf(
                 Pair("gpu（默认）", "gpu"),
                 Pair("gpu-next（实验）", "gpu-next"),
+            )
+
+        val mpvHwdecPriority =
+            mapOf(
+                Pair("mediacodec（性能优先）", "mediacodec"),
+                Pair("mediacodec-copy（画面调节）", "mediacodec-copy"),
             )
     }
 
@@ -126,6 +134,20 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             if (value != safeValue) {
                 value = safeValue
                 PlayerConfig.putMpvVideoOutput(safeValue)
+            }
+            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+        }
+
+        // MPV硬解优先级
+        findPreference<ListPreference>("mpv_hwdec_priority")?.apply {
+            entries = mpvHwdecPriority.keys.toTypedArray()
+            entryValues = mpvHwdecPriority.values.toTypedArray()
+            val safeValue =
+                value?.takeIf { mpvHwdecPriority.containsValue(it) }
+                    ?: DEFAULT_MPV_HWDEC_PRIORITY
+            if (value != safeValue) {
+                value = safeValue
+                PlayerConfig.putMpvHwdecPriority(safeValue)
             }
             summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         }
@@ -212,6 +234,16 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                         }
                         safeValue
                     }
+                    "mpv_hwdec_priority" -> {
+                        val current = PlayerConfig.getMpvHwdecPriority()
+                        val safeValue =
+                            current.takeIf { mpvHwdecPriority.containsValue(it) }
+                                ?: DEFAULT_MPV_HWDEC_PRIORITY
+                        if (current != safeValue) {
+                            PlayerConfig.putMpvHwdecPriority(safeValue)
+                        }
+                        safeValue
+                    }
                     else -> super.getString(key, defValue)
                 }
             } catch (e: Exception) {
@@ -247,6 +279,12 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                                 value.takeIf { mpvVideoOutput.containsValue(it) }
                                     ?: DEFAULT_MPV_VIDEO_OUTPUT
                             PlayerConfig.putMpvVideoOutput(safeValue)
+                        }
+                        "mpv_hwdec_priority" -> {
+                            val safeValue =
+                                value.takeIf { mpvHwdecPriority.containsValue(it) }
+                                    ?: DEFAULT_MPV_HWDEC_PRIORITY
+                            PlayerConfig.putMpvHwdecPriority(safeValue)
                         }
                         else -> super.putString(key, value)
                     }
