@@ -13,6 +13,7 @@ import com.xyoye.data_component.data.alist.AlistFileData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
+import kotlinx.coroutines.runBlocking
 import java.io.InputStream
 
 /**
@@ -106,6 +107,21 @@ class AlistStorage(
                 // Provide file length so the proxy can expose a seekable HTTP stream to mpv (Range support).
                 contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L,
                 fileName = fileName,
+                onRangeUnsupported = {
+                    runCatching {
+                        runBlocking {
+                            val refreshed =
+                                getStorageFileProxyUrl(file, forceRefresh = true)
+                                    ?: getStorageFileUrl(file, forceRefresh = true)
+                            refreshed?.let { url ->
+                                HttpPlayServer.UpstreamSource(
+                                    url = url,
+                                    contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L,
+                                )
+                            }
+                        }
+                    }.getOrNull()
+                },
             )
         } else {
             getStorageFileUrl(file)
@@ -125,8 +141,16 @@ class AlistStorage(
             ?.token
     }
 
-    private suspend fun getStorageFileUrl(file: StorageFile): String? {
+    private suspend fun getStorageFileUrl(
+        file: StorageFile,
+        forceRefresh: Boolean = false
+    ): String? {
         val cachedRawUrl = file.getFile<AlistFileData>()?.rawUrl?.takeIf { it.isNotEmpty() }
+
+        if (forceRefresh) {
+            fetchRawUrl(file, forceRefreshToken = true)?.let { return it }
+            return cachedRawUrl
+        }
 
         // 优先尝试获取最新直链；若失败再强制刷新 token 重试，最后回退到旧直链
         fetchRawUrl(file, forceRefreshToken = false)?.let { return it }
@@ -135,8 +159,17 @@ class AlistStorage(
         return cachedRawUrl
     }
 
-    private suspend fun getStorageFileProxyUrl(file: StorageFile): String? {
+    private suspend fun getStorageFileProxyUrl(
+        file: StorageFile,
+        forceRefresh: Boolean = false
+    ): String? {
         val cachedSign = file.getFile<AlistFileData>()?.sign?.takeIf { it.isNotEmpty() }
+
+        if (forceRefresh) {
+            fetchSign(file, forceRefreshToken = true)
+                ?.let { return buildProxyUrl(file.filePath(), it) }
+            return cachedSign?.let { buildProxyUrl(file.filePath(), it) }
+        }
 
         fetchSign(file, forceRefreshToken = false)
             ?.let { return buildProxyUrl(file.filePath(), it) }

@@ -25,6 +25,9 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
     private var upstreamHeaders: Map<String, String> = emptyMap()
     private var contentType: String = "application/octet-stream"
     private var contentLength: Long = -1L
+    @Volatile
+    private var rangeRetryDone: Boolean = false
+    private var rangeRetrySupplier: (() -> UpstreamSource?)? = null
 
     @Volatile
     private var seekEnabled: Boolean = false
@@ -55,7 +58,19 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         val instance: HttpPlayServer by lazy { HttpPlayServer() }
     }
 
-    override fun serve(session: IHTTPSession): Response {
+    data class UpstreamSource(
+        val url: String,
+        val headers: Map<String, String> = emptyMap(),
+        val contentType: String = "application/octet-stream",
+        val contentLength: Long = -1L
+    )
+
+    override fun serve(session: IHTTPSession): Response = serveInternal(session, allowRetry = true)
+
+    private fun serveInternal(
+        session: IHTTPSession,
+        allowRetry: Boolean
+    ): Response {
         val url =
             upstreamUrl
                 ?: return newFixedLengthResponse(
@@ -156,6 +171,17 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         val isPartial = isRangeRequest || response.code() == 206 || upstreamContentRangeHeader != null
 
         if (isRangeRequest && (response.code() != 206 || upstreamContentRangeHeader == null)) {
+            if (allowRetry && !rangeRetryDone) {
+                val refreshed = runCatching { rangeRetrySupplier?.invoke() }.getOrNull()
+                if (refreshed != null) {
+                    rangeRetryDone = true
+                    upstreamUrl = refreshed.url
+                    upstreamHeaders = refreshed.headers
+                    contentType = refreshed.contentType
+                    contentLength = refreshed.contentLength
+                    return serveInternal(session, allowRetry = false)
+                }
+            }
             val upstreamBodyLength = body.contentLength()
             LogFacade.w(
                 LogModule.STORAGE,
@@ -480,12 +506,15 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         upstreamHeaders: Map<String, String> = emptyMap(),
         contentType: String = "application/octet-stream",
         contentLength: Long = -1L,
-        fileName: String = "video"
+        fileName: String = "video",
+        onRangeUnsupported: (() -> UpstreamSource?)? = null
     ): String {
         this.upstreamUrl = upstreamUrl
         this.upstreamHeaders = upstreamHeaders
         this.contentType = contentType
         this.contentLength = contentLength
+        this.rangeRetryDone = false
+        this.rangeRetrySupplier = onRangeUnsupported
         this.seekEnabled = false
         this.lastUpstreamRangeAtMs = 0L
         val encodedFileName = URLEncoder.encode(fileName, "utf-8")
