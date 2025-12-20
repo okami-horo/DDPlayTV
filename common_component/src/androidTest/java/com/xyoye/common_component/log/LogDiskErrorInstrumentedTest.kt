@@ -24,16 +24,20 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class LogDiskErrorInstrumentedTest {
     private lateinit var context: Context
+    private lateinit var testRoot: File
 
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
+        testRoot = File(context.cacheDir, "log_test")
+        LogPaths.overrideDownloadRootForTests(testRoot)
         cleanup()
     }
 
     @After
     fun tearDown() {
         cleanup()
+        LogPaths.overrideDownloadRootForTests(null)
     }
 
     @Test

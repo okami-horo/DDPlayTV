@@ -32,10 +32,13 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class LoggingPerformanceInstrumentedTest {
     private lateinit var context: Context
+    private lateinit var testRoot: File
 
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
+        testRoot = File(context.cacheDir, "log_perf_test")
+        LogPaths.overrideDownloadRootForTests(testRoot)
         resetLogs()
         if (!LogSystem.isInitialized()) {
             LogSystem.init(context)
@@ -47,6 +50,7 @@ class LoggingPerformanceInstrumentedTest {
     fun tearDown() {
         restoreDefaultPolicy()
         resetLogs()
+        LogPaths.overrideDownloadRootForTests(null)
     }
 
     @Test

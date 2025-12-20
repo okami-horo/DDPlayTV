@@ -42,7 +42,16 @@ object AppLogger {
     }
 
     @Deprecated("请改用 LogFileManager(context).listLogFiles() 或 LogSystem API")
-    fun listLocalLogs(context: Context): List<File> = LogFileManager(context.applicationContext).listLogFiles().map { File(it.path) }
+    fun listLocalLogs(context: Context): List<File> =
+        LogFileManager(context.applicationContext)
+            .listLogFiles()
+            .mapNotNull { meta ->
+                if (meta.path.startsWith("content://")) {
+                    null
+                } else {
+                    File(meta.path)
+                }
+            }
 
     private fun resolveModule(tag: String?): LogModule {
         val caller =

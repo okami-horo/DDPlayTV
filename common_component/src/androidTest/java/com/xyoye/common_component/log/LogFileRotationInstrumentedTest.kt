@@ -13,16 +13,20 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class LogFileRotationInstrumentedTest {
     private lateinit var context: Context
+    private lateinit var testRoot: File
 
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
+        testRoot = File(context.cacheDir, "log_rotation_test")
+        LogPaths.overrideDownloadRootForTests(testRoot)
         cleanup()
     }
 
     @After
     fun tearDown() {
         cleanup()
+        LogPaths.overrideDownloadRootForTests(null)
     }
 
     @Test

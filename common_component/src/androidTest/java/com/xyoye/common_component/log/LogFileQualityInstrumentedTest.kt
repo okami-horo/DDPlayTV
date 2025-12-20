@@ -20,16 +20,20 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class LogFileQualityInstrumentedTest {
     private lateinit var context: Context
+    private lateinit var testRoot: File
 
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
+        testRoot = File(context.cacheDir, "log_quality_test")
+        LogPaths.overrideDownloadRootForTests(testRoot)
         cleanup()
     }
 
     @After
     fun tearDown() {
         cleanup()
+        LogPaths.overrideDownloadRootForTests(null)
     }
 
     @Test
