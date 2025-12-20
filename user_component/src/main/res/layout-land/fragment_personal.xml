@@ -277,7 +277,7 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <LinearLayout
-                android:id="@+id/bilibili_danmu_ll"
+                android:id="@+id/shooter_subtitle_ll"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:background="@drawable/background_item_press_corner"
@@ -286,37 +286,6 @@
                 app:layout_constraintBottom_toBottomOf="@id/user_follow_cl"
                 app:layout_constraintEnd_toEndOf="@+id/player_setting_ll"
                 app:layout_constraintStart_toStartOf="@id/player_setting_ll"
-                app:layout_constraintTop_toTopOf="@id/user_follow_cl">
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_bilibili_danmu_download" />
-
-                <com.xyoye.common_component.weight.MarqueeTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="10dp"
-                    android:layout_marginTop="10dp"
-                    android:ellipsize="marquee"
-                    android:singleLine="true"
-                    android:text="@string/action_bilibili_danmu_download"
-                    android:textColor="@color/text_black"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/shooter_subtitle_ll"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:background="@drawable/background_item_press_corner"
-                android:gravity="center"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toBottomOf="@id/user_follow_cl"
-                app:layout_constraintEnd_toEndOf="@+id/scan_manager_ll"
-                app:layout_constraintStart_toStartOf="@id/scan_manager_ll"
                 app:layout_constraintTop_toTopOf="@id/user_follow_cl">
 
                 <ImageView
@@ -345,8 +314,8 @@
                 android:background="@drawable/background_item_press_corner"
                 android:gravity="center"
                 app:layout_constraintBottom_toBottomOf="@id/user_follow_cl"
-                app:layout_constraintEnd_toEndOf="@+id/cache_manager_ll"
-                app:layout_constraintStart_toStartOf="@id/cache_manager_ll"
+                app:layout_constraintEnd_toEndOf="@+id/scan_manager_ll"
+                app:layout_constraintStart_toStartOf="@id/scan_manager_ll"
                 app:layout_constraintTop_toTopOf="@id/user_follow_cl">
 
                 <ImageView
@@ -405,8 +374,8 @@
                 android:gravity="center"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="@id/user_follow_cl"
-                app:layout_constraintEnd_toEndOf="@+id/commonly_manager_ll"
-                app:layout_constraintStart_toStartOf="@id/commonly_manager_ll"
+                app:layout_constraintEnd_toEndOf="@+id/cache_manager_ll"
+                app:layout_constraintStart_toStartOf="@id/cache_manager_ll"
                 app:layout_constraintTop_toTopOf="@id/user_follow_cl">
 
                 <ImageView
@@ -428,14 +397,14 @@
             <LinearLayout
                 android:id="@+id/developer_setting_ll"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_height="0dp"
                 android:background="@drawable/background_item_press_corner"
                 android:gravity="center"
                 android:orientation="vertical"
-                app:layout_constraintEnd_toEndOf="@id/app_setting_ll"
-                app:layout_constraintStart_toStartOf="@id/app_setting_ll"
-                app:layout_constraintTop_toBottomOf="@id/app_setting_ll">
+                app:layout_constraintBottom_toBottomOf="@id/user_follow_cl"
+                app:layout_constraintEnd_toEndOf="@id/commonly_manager_ll"
+                app:layout_constraintStart_toStartOf="@id/commonly_manager_ll"
+                app:layout_constraintTop_toTopOf="@id/user_follow_cl">
 
                 <ImageView
                     android:layout_width="40dp"
