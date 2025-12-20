@@ -12,7 +12,7 @@
 2. 日志 I/O 与低存储空间行为主要通过哪一类测试覆盖（纯 JVM 模拟还是设备端集成测试）。  
    - Task: 「Research 针对日志文件写入、轮转与磁盘不足等行为，如何在 JUnit / Robolectric / Instrumentation 各层划分测试职责。」  
    - Status: 已在 Decision 2 中明确分层测试方案。
-3. 单次调试会话日志文件大小控制目标（例如 `debug.log` + `debug_old.log` 总大小上限）。  
+3. 单次调试会话日志文件大小控制目标（例如 `log.txt` + `log_old.txt` 总大小上限）。  
    - Task: 「Research Android 本地调试日志常见的文件大小上限配置（对比 MXLogger、jlog 等实践），并结合本项目使用场景给出推荐上限。」  
    - Status: 已在 Decision 3 中确定「双文件各约 5MB」方案。
 4. 是否需要为第三方库或 native 层日志提供统一透传能力。  
@@ -39,7 +39,7 @@
   - Task: 「Find patterns for migrating from an existing logging facade to a new configuration-driven logger in a multi-module Android app without breaking call sites。」
 
 - 与日志文件获取 / 分享方式的集成  
-  - Task: 「Research patterns for packaging log files (当前仅 `debug.log` / `debug_old.log`) into a shareable bundle and exposing it via a settings/debug screen。」
+  - Task: 「Research patterns for packaging log files (当前仅 `log.txt` / `log_old.txt`) into a shareable bundle and exposing it via a settings/debug screen。」
 
 - 与潜在第三方 / native 日志的透传  
   - Task: 「Find patterns for exposing a lightweight bridge API that third-party/native code can call into, while keeping the core logger independent of those dependencies。」
@@ -52,12 +52,12 @@
 - Rationale:  
   - 项目已存在 `DDLog` + `AppLogger` 封装，大量调用点依赖该接口，引入新库将增加迁移成本和心智负担。  
   - 典型第三方库（如 Timber / tinylog / MXLogger）提供的远程上传、多通道聚合等特性并非本特性需求，且可能与「不交付线上日志能力」的约束冲突。  
-  - 自研门面可以更精细地贴合 FR-011~FR-016，如只允许 `debug.log` / `debug_old.log` 双文件轮转、在未开启 DEBUG 时完全禁止本地写入等，这些约束在通用库中往往需要额外适配。  
+  - 自研门面可以更精细地贴合 FR-011~FR-016，如只允许 `log.txt` / `log_old.txt` 双文件轮转、在未开启 DEBUG 时完全禁止本地写入等，这些约束在通用库中往往需要额外适配。  
   - 通过自研门面依旧可以借鉴社区最佳实践（如统一 Tag、格式化、抽象接口便于测试），在控制复杂度的同时保证可维护性。  
 - Alternatives considered:  
   - **直接引入 Timber 作为主日志门面**：优点是 API 简洁、社区成熟；缺点是无法直接满足双文件轮转与「默认不写本地文件」等刚性需求，需要二次封装，实际上与自研门面复杂度接近。  
   - **引入 tinylog / MXLogger 等文件日志库**：优点是内置异步写入和轮转策略；缺点是配置模型与本规范差异较大（例如多文件、多级别碎片化），且通常默认启用文件写入，与 FR-014 的默认策略相悖。  
-  - **继续使用当前 `AppLogger` 设计，仅做小幅调整**：当前实现基于时间戳命名多文件并做 N 份备份，难以收敛为只有 `debug.log` / `debug_old.log` 的双文件模型，同时默认始终写入文件，不满足默认不写入的要求，因此被否决。
+  - **继续使用当前 `AppLogger` 设计，仅做小幅调整**：当前实现基于时间戳命名多文件并做 N 份备份，难以收敛为只有 `log.txt` / `log_old.txt` 的双文件模型，同时默认始终写入文件，不满足默认不写入的要求，因此被否决。
 
 ### 2. 日志 I/O 与低存储空间行为的测试策略
 
@@ -74,9 +74,9 @@
   - **仅使用 JVM 单元测试，通过模拟文件系统与异常覆盖 I/O 行为**：可以覆盖部分逻辑，但难以准确模拟 Android 在磁盘不足、权限变化等场景下的行为，风险较高。  
   - **仅依赖人工手动验证日志文件**：无法形成可回归的测试网，违背项目测试守则，已明确否决。
 
-### 3. 调试日志文件大小上限（`debug.log` / `debug_old.log`）
+### 3. 调试日志文件大小上限（`log.txt` / `log_old.txt`）
 
-- Decision: 采用 **双文件各 5MB、总计约 10MB** 的默认上限策略，即单个 `debug.log` 或 `debug_old.log` 超过约 5MB 时触发裁剪或轮转，总体控制在 ~10MB 级别；并在实现中为未来通过配置调整该上限预留扩展点。  
+- Decision: 采用 **双文件各 5MB、总计约 10MB** 的默认上限策略，即单个 `log.txt` 或 `log_old.txt` 超过约 5MB 时触发裁剪或轮转，总体控制在 ~10MB 级别；并在实现中为未来通过配置调整该上限预留扩展点。  
 - Rationale:  
   - 参考 MXLogger 等日志库的默认配置（通常为 5MB~10MB 级别）以及手机端典型存储情况，该级别的日志体量足以覆盖一次调试会话或多数问题链路，同时对普通用户的存储压力可控。  
   - 结合本项目假设：默认情况下不会生成本地持久化日志文件（仅在显式开启调试日志时写入），且启用调试的多为开发/测试场景，将日志体量控制在 10MB 左右可以在「可诊断性」与「不占用过多空间」之间取得平衡。  
@@ -103,7 +103,7 @@
 - 场景选择：至少覆盖「播放失败」与「下载重试」两类可复现场景，确保包含 INFO/WARN/ERROR 混合输出。  
 - 实验步骤：  
   1. 使用旧日志路径（关闭调试日志或使用原始 AppLogger 输出）复现问题，保存 logcat 摘要与时间轴。  
-  2. 切换到新日志体系，开启调试日志（默认级别 INFO/ERROR，再按需升到 DEBUG），从固定日志目录拉取 `debug.log` / `debug_old.log`。  
+  2. 切换到新日志体系，开启调试日志（默认级别 INFO/ERROR，再按需升到 DEBUG），从固定日志目录拉取 `log.txt` / `log_old.txt`。  
   3. 对比同一时间窗口的日志行数、`ctx_dropped` 出现次数、关键字段覆盖率（scene/errorCode/sessionId/requestId）。  
   4. 记录从收到日志到定位根因的耗时与需要阅读的日志行数，观察是否减少重复/无意义 DEBUG 行。  
 - 评估指标：  

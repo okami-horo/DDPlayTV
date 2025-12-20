@@ -64,15 +64,16 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         if (supportsRange && hasRange && requestedRange == null) {
             return newFixedLengthResponse(Response.Status.RANGE_NOT_SATISFIABLE, "text/plain", "")
         }
-        val upstreamRangeHeader =
+        val cappedRange =
             if (supportsRange && hasRange && requestedRange != null) {
                 val maxBytes = if (seekEnabled) maxRangeBytesAfterPlay else maxRangeBytesBeforePlay
                 val start = requestedRange.first
                 val end = minOf(requestedRange.second, start + maxBytes - 1)
-                "bytes=$start-$end"
+                start to end
             } else {
                 null
             }
+        val upstreamRangeHeader = cappedRange?.let { (start, end) -> "bytes=$start-$end" }
 
         val response =
             if (supportsRange && hasRange) {
@@ -122,19 +123,25 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
                     "empty upstream body",
                 )
 
-        val upstreamContentRange = response.headers()["Content-Range"]
-        val isPartial = response.code() == 206 || upstreamContentRange != null
+        val upstreamContentRangeHeader = response.headers()["Content-Range"]
+        val upstreamContentRange = upstreamContentRangeHeader?.let { parseContentRange(it) }
+        val isPartial = response.code() == 206 || upstreamContentRangeHeader != null
 
         val status = if (isPartial) Response.Status.PARTIAL_CONTENT else Response.Status.OK
+        val responseRange = upstreamContentRange ?: cappedRange
         val contentRange =
-            upstreamContentRange ?: requestedRange?.let { (start, end) ->
-                "bytes $start-$end/$contentLength"
+            if (isPartial) {
+                upstreamContentRangeHeader ?: responseRange?.let { (start, end) ->
+                    "bytes $start-$end/$contentLength"
+                }
+            } else {
+                null
             }
 
         val responseLength =
             when {
-                supportsRange && isPartial && requestedRange != null ->
-                    (requestedRange.second - requestedRange.first + 1).coerceAtLeast(0)
+                supportsRange && isPartial && responseRange != null ->
+                    (responseRange.second - responseRange.first + 1).coerceAtLeast(0)
                 supportsRange && !isPartial -> contentLength
                 else -> body.contentLength()
             }.takeIf { it > 0 } ?: -1L
@@ -148,7 +155,9 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
 
         if (supportsRange) {
             nanoResponse.addHeader("Accept-Ranges", "bytes")
-            contentRange?.let { nanoResponse.addHeader("Content-Range", it) }
+            if (isPartial) {
+                contentRange?.let { nanoResponse.addHeader("Content-Range", it) }
+            }
         }
         return nanoResponse
     }
@@ -172,6 +181,22 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
             503 -> Response.Status.SERVICE_UNAVAILABLE
             else -> Response.Status.INTERNAL_ERROR
         }
+
+    private fun parseContentRange(contentRange: String): Pair<Long, Long>? {
+        val trimmed = contentRange.trim()
+        if (!trimmed.startsWith("bytes", ignoreCase = true)) return null
+        val afterUnit = trimmed.substring(5).trimStart()
+        val rangePart = afterUnit.removePrefix("=").trimStart()
+        val slashIndex = rangePart.indexOf('/')
+        val rangeValue = if (slashIndex >= 0) rangePart.substring(0, slashIndex).trim() else rangePart
+        if (rangeValue == "*" || rangeValue.isEmpty()) return null
+        val dashIndex = rangeValue.indexOf('-')
+        if (dashIndex <= 0 || dashIndex == rangeValue.length - 1) return null
+        val start = rangeValue.substring(0, dashIndex).toLongOrNull() ?: return null
+        val end = rangeValue.substring(dashIndex + 1).toLongOrNull() ?: return null
+        if (start < 0 || end < start) return null
+        return start to end
+    }
 
     private fun buildUpstreamHeaders(
         clientHeaders: Map<String, String>,

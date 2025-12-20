@@ -16,10 +16,10 @@ import java.io.OutputStreamWriter
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 管理本地 debug.log / debug_old.log 双文件。
+ * 管理本地 log.txt / log_old.txt 双文件。
  * - 优先写入 Download/<应用名>/logs（Android 10+ 使用 MediaStore，示例：/sdcard/Download/<app-name>/logs）
  * - 外部目录不可用时回退到内部 files/logs
- * - 冷启动时将上一会话的 debug.log 合并到 debug_old.log（按上限裁剪）
+ * - 冷启动时将上一会话的 log.txt 合并到 log_old.txt（按上限裁剪）
  * - 仅在需要写入时创建目录和文件
  */
 open class LogFileManager(

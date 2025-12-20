@@ -94,7 +94,7 @@
 
 - `name: String`：策略名称，如 `default-release`, `debug-session`。  
 - `defaultLevel: LogLevel`：全局最小输出级别（例如默认 `INFO`），所有模块共享该级别。  
-- `enableDebugFile: Boolean`：是否启用本地调试日志写入（影响是否生成/追加 `debug.log`）。  
+- `enableDebugFile: Boolean`：是否启用本地调试日志写入（影响是否生成/追加 `log.txt`）。  
 - `samplingRules: List<SamplingRule>`：每个模块或事件类别的采样/限流配置（内部策略，不通过用户配置单独设置模块级别）。  
 - `exportable: Boolean`：是否允许将该策略下生成的日志导出为日志包。
 
@@ -134,11 +134,11 @@
 
 ### 3.1 `LogFileMeta`
 
-表示单个本地日志文件的元信息（`debug.log` / `debug_old.log`）。
+表示单个本地日志文件的元信息（`log.txt` / `log_old.txt`）。
 
 字段：
 
-- `fileName: String`：文件名，仅允许 `debug.log` 或 `debug_old.log`。  
+- `fileName: String`：文件名，仅允许 `log.txt` 或 `log_old.txt`。  
 - `path: String`：绝对路径。  
 - `sizeBytes: Long`：文件大小。  
 - `lastModified: Long`：最近修改时间。  
@@ -147,10 +147,10 @@
 
 约束（对应 FR-015~FR-016）：
 
-- 仅允许存在 `debug.log` 与 `debug_old.log` 两个文件；任何其他日志文件应视为历史遗留，需在迁移逻辑中清理或忽略。  
+- 仅允许存在 `log.txt` 与 `log_old.txt` 两个文件；任何其他日志文件应视为历史遗留，需在迁移逻辑中清理或忽略。  
 - 在新会话冷启动时：  
-  - 如 `debug.log` 存在，应根据策略将其内容合并到 `debug_old.log`（必要时裁剪到上限）。  
-  - 随后创建/清空新的 `debug.log` 作为当前会话文件。  
+  - 如 `log.txt` 存在，应根据策略将其内容合并到 `log_old.txt`（必要时裁剪到上限）。  
+  - 随后创建/清空新的 `log.txt` 作为当前会话文件。  
 - 在检测到磁盘空间不足或连续写入失败时，应将对应标记写入运行时状态并停止后续写入。
 
 ### 3.2 `LogPackage`
@@ -161,7 +161,7 @@
 
 - `id: String`：日志包 ID（如基于时间戳与随机数生成）。  
 - `createdAt: Long`：创建时间。  
-- `files: List<LogFileMeta>`：包含的日志文件（通常是 `debug.log` 与 `debug_old.log` 的一个子集或完整集合）。  
+- `files: List<LogFileMeta>`：包含的日志文件（通常是 `log.txt` 与 `log_old.txt` 的一个子集或完整集合）。  
 - `appVersion: String`：应用版本号。  
 - `buildType: String`：构建类型（debug/release）。  
 - `deviceInfo: Map<String, String>`：设备信息（机型、系统版本等）。  
@@ -179,7 +179,7 @@
 
 `LogExportRequest` 字段：
 
-- `includeOldLog: Boolean`：是否包含 `debug_old.log`。  
+- `includeOldLog: Boolean`：是否包含 `log_old.txt`。  
 - `compress: Boolean`：是否压缩为单一压缩文件（例如 zip）。  
 - `stripDebugLinesBelowLevel: LogLevel?`：导出时可选的级别过滤（例如只导出 `WARN` 及以上）。
 
@@ -196,7 +196,7 @@
 状态：
 
 - `OFF`：默认状态，仅输出到 logcat，不写本地文件。  
-- `ON_CURRENT_SESSION`：当前会话开启调试日志，写入 `debug.log`，并根据策略决定是否使用 `debug_old.log`。  
+- `ON_CURRENT_SESSION`：当前会话开启调试日志，写入 `log.txt`，并根据策略决定是否使用 `log_old.txt`。  
 - `DISABLED_DUE_TO_ERROR`：由于磁盘不足或连续写入错误，自动熔断本地写入。
 
 状态迁移规则（简化）：
@@ -211,7 +211,7 @@
 1. 用户在统一配置入口选择目标模块与级别，并选择是否开启调试日志写入。  
 2. UI 层构造新的 `LogPolicy`，写入 MMKV。  
 3. 日志门面监听到策略变更事件，更新 `LogRuntimeState.activePolicy`。  
-4. 对后续产生的 `LogEvent`，策略引擎根据新的 `LogPolicy` 决定是否输出到 logcat / 写入 `debug.log` / 丢弃。  
+4. 对后续产生的 `LogEvent`，策略引擎根据新的 `LogPolicy` 决定是否输出到 logcat / 写入 `log.txt` / 丢弃。  
 5. 在导出时根据当前或指定策略对文件内容进行过滤与打包。
 
 ## 5. 与实现的映射建议

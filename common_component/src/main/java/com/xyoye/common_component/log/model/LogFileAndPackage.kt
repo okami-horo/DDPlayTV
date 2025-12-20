@@ -1,7 +1,7 @@
 package com.xyoye.common_component.log.model
 
 /**
- * 本地日志文件元信息，仅允许 debug.log / debug_old.log。
+ * 本地日志文件元信息，仅允许 log.txt / log_old.txt。
  */
 data class LogFileMeta(
     val fileName: String,
@@ -18,7 +18,7 @@ data class LogFileMeta(
     }
 
     companion object {
-        val ALLOWED_FILE_NAMES = setOf("debug.log", "debug_old.log")
+        val ALLOWED_FILE_NAMES = setOf("log.txt", "log_old.txt")
     }
 }
 

@@ -5,7 +5,7 @@ info:
   description: >
     本 OpenAPI 文档描述的是 Android 客户端内部的「日志配置与本地日志读取/诊断」契约模型，
     用于指导本地接口设计与测试数据结构，并不意味着需要实际暴露 HTTP 服务。
-    当前特性实现只要求将日志写入固定目录并由开发者直接获取 `debug.log` / `debug_old.log` 等文件，
+    当前特性实现只要求将日志写入固定目录并由开发者直接获取 `log.txt` / `log_old.txt` 等文件，
     /logging/packages* 相关接口仅作为未来本地工具或离线脚本的参考契约，本次实现可以不提供对应 API；
     所有能力仅在本地进程内实现，不涉及任何线上日志或远程上传。
 
@@ -45,7 +45,7 @@ paths:
 
   /logging/debug-session:
     post:
-      summary: 开启或更新调试日志会话（决定是否写入 debug.log）
+      summary: 开启或更新调试日志会话（决定是否写入 log.txt）
       operationId: startDebugSession
       requestBody:
         required: true
@@ -62,7 +62,7 @@ paths:
                 $ref: "#/components/schemas/DebugSessionState"
 
     delete:
-      summary: 结束当前调试日志会话（停止写入 debug.log）
+      summary: 结束当前调试日志会话（停止写入 log.txt）
       operationId: stopDebugSession
       responses:
         "204":
@@ -198,7 +198,7 @@ components:
           $ref: "#/components/schemas/LogLevel"
         enableDebugFile:
           type: boolean
-          description: 是否写入本地 debug.log / debug_old.log
+          description: 是否写入本地 log.txt / log_old.txt
         samplingRules:
           type: array
           items:
@@ -233,7 +233,7 @@ components:
 
     LogFileMeta:
       type: object
-      description: 本地日志文件元信息，仅允许 debug.log / debug_old.log
+      description: 本地日志文件元信息，仅允许 log.txt / log_old.txt
       properties:
         fileName:
           type: string

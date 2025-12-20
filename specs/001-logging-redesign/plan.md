@@ -10,19 +10,19 @@
 本特性针对当前基于 `DDLog` + `AppLogger` 的日志方案进行系统性重构，目标是：
 
 - 提供统一的日志门面与策略模型（如 `LogEvent` / `LogPolicy`），通过全局日志级别与调试日志开关可配置地控制日志输出，满足 FR-001~FR-006 所描述的可控性与可观测性要求。
-- 将日志采集与查看解耦，默认仅通过 logcat 输出有限信息；只有在统一入口显式开启“调试日志”时，才异步写入本地 `debug.log` / `debug_old.log`，并通过简单轮转与固定日志目录支持问题排查（开发者直接从日志目录获取文件，满足 FR-007、FR-014~FR-016）。
+- 将日志采集与查看解耦，默认仅通过 logcat 输出有限信息；只有在统一入口显式开启“调试日志”时，才异步写入本地 `log.txt` / `log_old.txt`，并通过简单轮转与固定日志目录支持问题排查（开发者直接从日志目录获取文件，满足 FR-007、FR-014~FR-016）。
 - 在 Android 端引入结构化日志格式与噪声治理（采样 / 限流）能力，在保证默认体验无感（SC-002、SC-003）的前提下，为典型调试场景提供高信噪比诊断能力（SC-001、SC-004）。
 
 ## Technical Context
 
 **Language/Version**: Kotlin 1.9.25 + Java 8（Android）  
 **Primary Dependencies**: Android `Log` / logcat 管道、`common_component` 中的 `DDLog` 与重构后的日志门面 / 写入实现、MMKV 配置存储；Phase 1 不再引入新的第三方日志库，相关实践仅作为设计参考  
-**Storage**: 应用内部存储目录下的日志文件（仅 `debug.log` / `debug_old.log`，双文件轮转，每个文件默认上限约 5MB，总体约 10MB），以及 MMKV 中持久化的日志策略配置  
+**Storage**: 应用内部存储目录下的日志文件（仅 `log.txt` / `log_old.txt`，双文件轮转，每个文件默认上限约 5MB，总体约 10MB），以及 MMKV 中持久化的日志策略配置  
 **Testing**: JUnit JVM 单元测试（策略与格式化）、可选 Robolectric 测试（目录解析与基础文件操作）、Android Instrumentation 测试（真实设备上的写入、轮转、磁盘不足行为）  
 **Target Platform**: Android 移动端应用，minSdk 21、targetSdk 35  
 **Project Type**: mobile（多模块 Android 应用：`app` + 各 `*_component` 功能模块）  
-**Performance Goals**: 默认日志策略下，对冷启动耗时的增量 < 5%，关键交互卡顿率与关闭日志基线无统计学显著差异；开启调试日志时，`debug.log` / `debug_old.log` 总大小默认控制在约 10MB 以内，并可通过配置扩展  
-**Constraints**: 不引入任何线上日志或远程上传能力（FR-011）；默认未开启 DEBUG 时不写入本地持久化日志，仅使用 logcat（FR-013~FR-014）；仅允许 `debug.log` / `debug_old.log` 双文件轮转且在存储不足时必须立即停止写入（FR-015~FR-016）  
+**Performance Goals**: 默认日志策略下，对冷启动耗时的增量 < 5%，关键交互卡顿率与关闭日志基线无统计学显著差异；开启调试日志时，`log.txt` / `log_old.txt` 总大小默认控制在约 10MB 以内，并可通过配置扩展  
+**Constraints**: 不引入任何线上日志或远程上传能力（FR-011）；默认未开启 DEBUG 时不写入本地持久化日志，仅使用 logcat（FR-013~FR-014）；仅允许 `log.txt` / `log_old.txt` 双文件轮转且在存储不足时必须立即停止写入（FR-015~FR-016）  
 **Scale/Scope**: 影响全局日志调用（当前 `DDLog` 使用点约 500+ 处）、`common_component` 日志实现、日志配置 UI，以及日志文件生成与获取方式；Phase 1 仅保证项目内 Kotlin/Java 调用统一门面，同时在门面层预留针对第三方库 / native 日志的可选桥接接口
 
 ## Constitution Check
@@ -69,7 +69,7 @@
     - 重要操作：开始播放/停止播放、添加/删除下载任务、账号登录/退出等。  
     - 重要配置变更：切换媒体内核、开启/关闭字幕 GPU 渲染、打开/关闭调试日志等。  
   - INFO 应尽量少且有“里程碑”性质，不记录高频细节，不用于异常/错误。  
-  - 默认策略下会输出到 logcat，并在开启调试日志时写入 `debug.log`。
+  - 默认策略下会输出到 logcat，并在开启调试日志时写入 `log.txt`。
 
 - **WARN（异常但可恢复）**  
   - 发生了异常或不期望情况，但系统可通过降级/重试继续工作：  
@@ -135,7 +135,7 @@ common_component/src/androidTest/java/       # 日志写入与空间不足行为
 app/src/androidTest/java/                    # 日志配置界面的 UI 测试
 ```
 
-**Structure Decision**: 本特性作为全局基础能力，核心实现集中在 `common_component` 的 `log` 包中，通过 `DDLog` 兼容现有调用点；日志配置能力位于 `app` 模块的设置 / 调试页面，日志“导出”依赖开发者从固定日志目录直接获取 `debug.log` / `debug_old.log` 等文件，各业务模块只依赖统一日志门面，不再直接访问 `android.util.Log`。
+**Structure Decision**: 本特性作为全局基础能力，核心实现集中在 `common_component` 的 `log` 包中，通过 `DDLog` 兼容现有调用点；日志配置能力位于 `app` 模块的设置 / 调试页面，日志“导出”依赖开发者从固定日志目录直接获取 `log.txt` / `log_old.txt` 等文件，各业务模块只依赖统一日志门面，不再直接访问 `android.util.Log`。
 
 ## Complexity Tracking
 
@@ -158,7 +158,7 @@ app/src/androidTest/java/                    # 日志配置界面的 UI 测试
   - 提供最小可用的 `LogFacade` 接口，将现有 `DDLog` 内部重定向到新门面。  
   - 保留现有行为（默认 enable 状态）不变，以避免在基础设施完成前引入行为回归。
 - 在 `common_component.log` 中实现双文件管理与 I/O 基础设施：  
-  - 提供 `LogFileMeta` 与文件管理器接口，约束只生成 `debug.log` / `debug_old.log` 两个文件。  
+  - 提供 `LogFileMeta` 与文件管理器接口，约束只生成 `log.txt` / `log_old.txt` 两个文件。  
   - 使用单线程执行器完成异步写入与简单轮转逻辑，但暂不启用调试开关控制。  
   - 预留磁盘不足与写入失败的错误上报路径，后续由策略层决定如何熔断。
 - 在 `app` 模块中创建日志配置入口的初始骨架：  
@@ -172,6 +172,6 @@ app/src/androidTest/java/                    # 日志配置界面的 UI 测试
 **Checkpoint（Phase 2 完成条件）**
 
 - 新的日志数据模型与门面可在不改变既有行为的前提下通过单元测试。  
-- 双文件日志写入与轮转骨架可在受控场景下创建并更新 `debug.log` / `debug_old.log`，并将文件写入到统一的本地日志目录。  
+- 双文件日志写入与轮转骨架可在受控场景下创建并更新 `log.txt` / `log_old.txt`，并将文件写入到统一的本地日志目录。  
 - 应用内存在可访问的「日志配置」入口，虽交互简化但可贯通基础配置流程；日志文件可通过 adb / 文件管理器在固定目录中直接获取。  
 - 之后即可按用户故事（统一开关、高信噪比诊断、低开销采集）拆分独立实现任务，并写入 `tasks.md`。

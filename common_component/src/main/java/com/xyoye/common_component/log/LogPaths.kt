@@ -13,8 +13,8 @@ import java.io.File
  */
 object LogPaths {
     const val LOG_DIR_NAME = "logs"
-    const val CURRENT_LOG_FILE_NAME = "debug.log"
-    const val PREVIOUS_LOG_FILE_NAME = "debug_old.log"
+    const val CURRENT_LOG_FILE_NAME = "log.txt"
+    const val PREVIOUS_LOG_FILE_NAME = "log_old.txt"
     internal var downloadRootOverride: File? = null
 
     /**
