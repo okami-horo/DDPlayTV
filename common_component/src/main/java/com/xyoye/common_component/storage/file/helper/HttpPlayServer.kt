@@ -155,6 +155,32 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         val upstreamContentRange = upstreamContentRangeHeader?.let { parseContentRange(it) }
         val isPartial = isRangeRequest || response.code() == 206 || upstreamContentRangeHeader != null
 
+        if (isRangeRequest && (response.code() != 206 || upstreamContentRangeHeader == null)) {
+            val upstreamBodyLength = body.contentLength()
+            LogFacade.w(
+                LogModule.STORAGE,
+                logTag,
+                "upstream range unsupported",
+                context =
+                    mapOf(
+                        "urlHash" to urlHash,
+                        "rangeHeader" to (rangeHeader ?: "null"),
+                        "requestedRange" to formatRange(requestedRange),
+                        "upstreamRange" to (upstreamRangeHeader ?: "null"),
+                        "upstreamCode" to response.code().toString(),
+                        "upstreamContentRange" to (upstreamContentRangeHeader ?: "null"),
+                        "upstreamBodyLength" to upstreamBodyLength.toString(),
+                        "contentLength" to contentLength.toString(),
+                        "seekEnabled" to seekEnabled.toString(),
+                    ),
+            )
+            return newFixedLengthResponse(
+                Response.Status.INTERNAL_ERROR,
+                "text/plain",
+                "upstream range unsupported",
+            )
+        }
+
         val responseRange =
             when {
                 cappedRange != null && upstreamContentRange != null -> {
