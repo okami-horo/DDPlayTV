@@ -778,7 +778,7 @@ void eventLoop(MpvSession* session) {
                     const bool isAss = strcmp(prop->name, "sub-text") != 0;
                     const char* text = nullptr;
                     if (prop->format == MPV_FORMAT_STRING && prop->data != nullptr) {
-                        text = static_cast<char*>(prop->data);
+                        text = *static_cast<char**>(prop->data);
                     }
                     std::string payload = text == nullptr ? "" : text;
                     double start = 0.0;
