@@ -30,7 +30,7 @@ android {
             project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
         buildConfigField("boolean", "MEDIA3_ENABLED_FALLBACK", media3FallbackFlag.toString())
 
-        val media3Version = project.findProperty("media3Version")?.toString() ?: "1.8.0"
+        val media3Version = project.findProperty("media3Version")?.toString() ?: "1.9.0"
         buildConfigField("String", "MEDIA3_VERSION", "\"$media3Version\"")
 
         val localProperties =
@@ -131,6 +131,6 @@ dependencies {
     implementation(kotlin("reflect"))
 
     testImplementation(Dependencies.Kotlin.coroutines_test)
-    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("androidx.test:core:1.7.0")
     testImplementation("org.robolectric:robolectric:4.12.2")
 }

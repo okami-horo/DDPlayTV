@@ -161,8 +161,8 @@ class SettingDanmuConfigureView(
     }
 
     private fun applyScrollDanmuConfigure() {
-        viewBinding.tvLineLimitTips.text = "滚动弹幕行数限制"
-        viewBinding.tvDanmuEnableTips.text = "启用滚动弹幕"
+        viewBinding.tvLineLimitTips.text = context.getString(R.string.tips_scroll_danmu_line_limit)
+        viewBinding.tvDanmuEnableTips.text = context.getString(R.string.tips_enable_scroll_danmu)
         viewBinding.groupScreenLimit.isVisible = true
         viewBinding.switchDanmuEnable.isChecked = PlayerInitializer.Danmu.mobileDanmu
         if (PlayerInitializer.Danmu.maxScrollLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
@@ -193,8 +193,8 @@ class SettingDanmuConfigureView(
     }
 
     private fun applyTopDanmuConfigure() {
-        viewBinding.tvLineLimitTips.text = "顶部弹幕行数限制"
-        viewBinding.tvDanmuEnableTips.text = "启用顶部弹幕"
+        viewBinding.tvLineLimitTips.text = context.getString(R.string.tips_top_danmu_line_limit)
+        viewBinding.tvDanmuEnableTips.text = context.getString(R.string.tips_enable_top_danmu)
         viewBinding.groupScreenLimit.isVisible = false
         viewBinding.switchDanmuEnable.isChecked = PlayerInitializer.Danmu.topDanmu
         if (PlayerInitializer.Danmu.maxTopLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
@@ -207,8 +207,8 @@ class SettingDanmuConfigureView(
     }
 
     private fun applyBottomDanmuConfigure() {
-        viewBinding.tvLineLimitTips.text = "底部弹幕行数限制"
-        viewBinding.tvDanmuEnableTips.text = "启用底部弹幕"
+        viewBinding.tvLineLimitTips.text = context.getString(R.string.tips_bottom_danmu_line_limit)
+        viewBinding.tvDanmuEnableTips.text = context.getString(R.string.tips_enable_bottom_danmu)
         viewBinding.groupScreenLimit.isVisible = false
         viewBinding.switchDanmuEnable.isChecked = PlayerInitializer.Danmu.bottomDanmu
         if (PlayerInitializer.Danmu.maxBottomLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {

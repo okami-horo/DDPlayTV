@@ -152,6 +152,7 @@
                 android:layout_height="48dp"
                 android:layout_gravity="end"
                 android:layout_marginEnd="10dp"
+                android:contentDescription="@null"
                 android:padding="15dp"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_input_visible" />

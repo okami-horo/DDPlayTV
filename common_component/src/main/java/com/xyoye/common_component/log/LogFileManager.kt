@@ -146,11 +146,8 @@ open class LogFileManager(
         if (useMediaStore) {
             val root = LogPaths.downloadRootDirectory()
             if (root != null && root.exists()) {
-                val available =
-                    runCatching { StatFs(root.path).availableBytes }
-                        .getOrNull()
-                        ?: root.usableSpace
-                if (available < minFreeSpaceBytes) {
+                val available = runCatching { StatFs(root.path).availableBytes }.getOrNull()
+                if (available != null && available < minFreeSpaceBytes) {
                     throw IOException("insufficient space for log files, available=$available")
                 }
             }
@@ -160,8 +157,9 @@ open class LogFileManager(
         if (!dir.exists()) {
             dir.mkdirs()
         }
-        if (dir.usableSpace < minFreeSpaceBytes) {
-            throw IOException("insufficient space for log files, available=${dir.usableSpace}")
+        val available = runCatching { StatFs(dir.path).availableBytes }.getOrNull()
+        if (available != null && available < minFreeSpaceBytes) {
+            throw IOException("insufficient space for log files, available=$available")
         }
     }
 

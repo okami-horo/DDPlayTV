@@ -21,7 +21,7 @@ class HomeBannerAdapter(
     bannerDetails: MutableList<BannerDetailData>
 ) : BannerAdapter<BannerDetailData, HomeBannerAdapter.BannerHolder>(bannerDetails) {
     inner class BannerHolder(
-        @NonNull binding: ItemBannerBinding
+        binding: ItemBannerBinding
     ) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateHolder(

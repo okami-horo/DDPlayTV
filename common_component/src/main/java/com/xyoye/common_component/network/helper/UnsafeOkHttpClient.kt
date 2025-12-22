@@ -16,7 +16,7 @@ import javax.net.ssl.X509TrustManager
  *
  * 忽略证书验证的OkHttpClient
  */
-
+@SuppressLint("CustomX509TrustManager")
 object UnsafeOkHttpClient {
     private val unSafeTrustManager =
         object : X509TrustManager {

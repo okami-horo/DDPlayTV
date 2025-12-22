@@ -1,4 +1,5 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="PrivateResource">
     <string name="app_name">player_component</string>
     <string name="cant_parse_url">无法解析播放地址</string>
     <string name="video_record">记忆上次播放到</string>
@@ -38,6 +39,12 @@
     <string name="hit_danmu_screen_count">数量</string>
     <string name="text_danmu_cloud_block">弹幕云屏蔽</string>
     <string name="text_danmu_keyword_block">关键字屏蔽</string>
+    <string name="tips_scroll_danmu_line_limit">滚动弹幕行数限制</string>
+    <string name="tips_enable_scroll_danmu">启用滚动弹幕</string>
+    <string name="tips_top_danmu_line_limit">顶部弹幕行数限制</string>
+    <string name="tips_enable_top_danmu">启用顶部弹幕</string>
+    <string name="tips_bottom_danmu_line_limit">底部弹幕行数限制</string>
+    <string name="tips_enable_bottom_danmu">启用底部弹幕</string>
 
     <string name="text_danmu_language_origin">原始</string>
     <string name="text_danmu_language_sc">简体</string>
@@ -146,4 +153,5 @@
     <string name="subtitle_fallback_message">libass 渲染后端初始化或渲染失败，可切回旧实现继续观看，或继续尝试当前后端（播放不中断）。</string>
     <string name="subtitle_fallback_switch_action">切回旧后端</string>
     <string name="subtitle_fallback_retry_action">继续尝试</string>
+    <string name="subtitle_telemetry_title">Subtitle Telemetry</string>
 </resources>

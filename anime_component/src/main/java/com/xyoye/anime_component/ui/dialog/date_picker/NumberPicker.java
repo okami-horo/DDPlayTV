@@ -1923,10 +1923,11 @@ public class NumberPicker extends LinearLayout {
                 // Ignore as if it's not a number we don't care
             }
         } else {
+            final Locale locale = Locale.getDefault();
             for (int i = 0; i < mDisplayedValues.length; i++) {
                 // Don't force the user to type in jan when ja will do
-                value = value.toLowerCase();
-                if (value.toLowerCase().startsWith(mDisplayedValues[i])) {
+                value = value.toLowerCase(locale);
+                if (value.startsWith(mDisplayedValues[i].toLowerCase(locale))) {
                     return mMinValue + i;
                 }
             }
@@ -2025,9 +2026,10 @@ public class NumberPicker extends LinearLayout {
                 }
                 String result = String.valueOf(dest.subSequence(0, dstart)) + filtered
                         + dest.subSequence(dend, dest.length());
-                String str = result.toLowerCase();
+                final Locale locale = Locale.getDefault();
+                String str = result.toLowerCase(locale);
                 for (String val : mDisplayedValues) {
-                    String valLowerCase = val.toLowerCase();
+                    String valLowerCase = val.toLowerCase(locale);
                     if (valLowerCase.startsWith(str)) {
                         postSetSelectionCommand(result.length(), val.length());
                         return val.subSequence(dstart, val.length());
@@ -2269,7 +2271,7 @@ public class NumberPicker extends LinearLayout {
             if (TextUtils.isEmpty(searched)) {
                 return Collections.emptyList();
             }
-            String searchedLowerCase = searched.toLowerCase();
+            String searchedLowerCase = searched.toLowerCase(Locale.getDefault());
             List<AccessibilityNodeInfo> result = new ArrayList<>();
             switch (virtualViewId) {
                 case View.NO_ID: {
@@ -2293,6 +2295,7 @@ public class NumberPicker extends LinearLayout {
         }
 
         @Override
+        @SuppressLint("AccessibilityFocus")
         public boolean performAction(int virtualViewId, int action, Bundle arguments) {
             switch (virtualViewId) {
                 case View.NO_ID: {
@@ -2511,7 +2514,7 @@ public class NumberPicker extends LinearLayout {
                 case VIRTUAL_VIEW_ID_DECREMENT: {
                     String text = getVirtualDecrementButtonText();
                     if (!TextUtils.isEmpty(text)
-                            && text.toLowerCase().contains(searchedLowerCase)) {
+                            && text.toLowerCase(Locale.getDefault()).contains(searchedLowerCase)) {
                         outResult.add(createAccessibilityNodeInfo(VIRTUAL_VIEW_ID_DECREMENT));
                     }
                 }
@@ -2519,13 +2522,13 @@ public class NumberPicker extends LinearLayout {
                 case VIRTUAL_VIEW_ID_INPUT: {
                     CharSequence text = mInputText.getText();
                     if (!TextUtils.isEmpty(text) &&
-                            text.toString().toLowerCase().contains(searchedLowerCase)) {
+                            text.toString().toLowerCase(Locale.getDefault()).contains(searchedLowerCase)) {
                         outResult.add(createAccessibilityNodeInfo(VIRTUAL_VIEW_ID_INPUT));
                         return;
                     }
                     CharSequence contentDesc = mInputText.getText();
                     if (!TextUtils.isEmpty(contentDesc) &&
-                            contentDesc.toString().toLowerCase().contains(searchedLowerCase)) {
+                            contentDesc.toString().toLowerCase(Locale.getDefault()).contains(searchedLowerCase)) {
                         outResult.add(createAccessibilityNodeInfo(VIRTUAL_VIEW_ID_INPUT));
                         return;
                     }
@@ -2534,7 +2537,7 @@ public class NumberPicker extends LinearLayout {
                 case VIRTUAL_VIEW_ID_INCREMENT: {
                     String text = getVirtualIncrementButtonText();
                     if (!TextUtils.isEmpty(text)
-                            && text.toLowerCase().contains(searchedLowerCase)) {
+                            && text.toLowerCase(Locale.getDefault()).contains(searchedLowerCase)) {
                         outResult.add(createAccessibilityNodeInfo(VIRTUAL_VIEW_ID_INCREMENT));
                     }
                 }

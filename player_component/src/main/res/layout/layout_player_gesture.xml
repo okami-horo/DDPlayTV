@@ -22,6 +22,7 @@
             <ImageView
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:contentDescription="@null"
                 android:src="@drawable/ic_volume" />
 
             <TextView
@@ -50,6 +51,7 @@
             <ImageView
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:contentDescription="@null"
                 android:src="@drawable/ic_brightness" />
 
             <TextView
@@ -92,6 +94,7 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:contentDescription="@null"
                 android:src="@drawable/ic_speed_accelerate" />
 
             <TextView

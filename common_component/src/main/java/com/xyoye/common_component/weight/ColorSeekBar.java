@@ -212,9 +212,16 @@ public class ColorSeekBar extends View {
                 break;
             case MotionEvent.ACTION_UP:
                 mMovingColorBar = false;
+                performClick();
                 break;
             default:
         }
+        return true;
+    }
+
+    @Override
+    public boolean performClick() {
+        super.performClick();
         return true;
     }
 

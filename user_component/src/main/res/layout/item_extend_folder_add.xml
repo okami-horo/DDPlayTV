@@ -13,6 +13,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginEnd="5dp"
+            android:contentDescription="@null"
             android:src="@drawable/ic_add_blue"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/tips_add_extend_folder_tv"

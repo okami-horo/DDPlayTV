@@ -18,6 +18,10 @@ fun Project.moduleSetup() {
         }
         ndkVersion = Versions.ndkVersion
 
+        lintOptions {
+            lintConfig = rootProject.file("lint.xml")
+        }
+
         buildTypes {
             getByName("release") {
                 isMinifyEnabled = false

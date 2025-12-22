@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.TextView
+import com.xyoye.player_component.R
 import com.xyoye.common_component.log.SubtitleTelemetryLogger
 import com.xyoye.data_component.bean.subtitle.TelemetrySample
 import com.xyoye.data_component.bean.subtitle.TelemetrySnapshot
@@ -28,7 +29,7 @@ class SubtitleTelemetryOverlay
                 setTextColor(Color.WHITE)
                 setTypeface(typeface, Typeface.BOLD)
                 textSize = 12f
-                text = "Subtitle Telemetry"
+                text = context.getString(R.string.subtitle_telemetry_title)
                 layoutParams =
                     LayoutParams(
                         LayoutParams.WRAP_CONTENT,

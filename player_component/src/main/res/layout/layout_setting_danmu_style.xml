@@ -59,6 +59,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_toStartOf="@id/danmu_size_tv"
                     android:text="@string/text_danmu_size_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
@@ -95,6 +96,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_toStartOf="@id/danmu_speed_tv"
                     android:text="@string/text_danmu_speed_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
@@ -131,6 +133,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_toStartOf="@id/danmu_alpha_tv"
                     android:text="@string/text_danmu_alpha_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
@@ -167,6 +170,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_toStartOf="@id/danmu_stoke_tv"
                     android:text="@string/text_danmu_project_alpha_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />

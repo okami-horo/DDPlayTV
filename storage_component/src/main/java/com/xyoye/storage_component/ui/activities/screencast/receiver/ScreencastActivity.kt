@@ -109,7 +109,7 @@ class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastB
                     addPositive {
                         httpPort = Random.nextInt(20000, 30000)
                         ScreencastConfig.putReceiverPort(httpPort)
-                        dataBinding.portTv.text = httpPort.toString()
+                        dataBinding.portTv.text = getString(R.string.format_int, httpPort)
                         it.dismiss()
                     }
                     addNegative { it.dismiss() }
@@ -137,7 +137,7 @@ class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastB
             httpPort = Random.nextInt(20000, 30000)
             ScreencastConfig.putReceiverPort(httpPort)
         }
-        dataBinding.portTv.text = httpPort.toString()
+        dataBinding.portTv.text = getString(R.string.format_int, httpPort)
     }
 
     private fun initPassword() {

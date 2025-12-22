@@ -26,16 +26,17 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_scrollFlags="scroll|enterAlways">
 
-            <ImageView
-                android:id="@+id/back_iv"
-                android:layout_width="45dp"
-                android:layout_height="match_parent"
-                android:layout_centerVertical="true"
-                android:paddingStart="10dp"
-                android:paddingTop="5dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="5dp"
-                android:src="@drawable/ic_arrow_left_blue"
+	            <ImageView
+	                android:id="@+id/back_iv"
+	                android:layout_width="45dp"
+	                android:layout_height="match_parent"
+	                android:layout_centerVertical="true"
+	                android:contentDescription="@null"
+	                android:paddingStart="10dp"
+	                android:paddingTop="5dp"
+	                android:paddingEnd="10dp"
+	                android:paddingBottom="5dp"
+	                android:src="@drawable/ic_arrow_left_blue"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -53,17 +54,18 @@
                 app:layout_constraintStart_toEndOf="@id/back_iv"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <ImageView
-                    android:id="@+id/search_iv"
-                    android:layout_width="36dp"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_search"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+	                <ImageView
+	                    android:id="@+id/search_iv"
+	                    android:layout_width="36dp"
+	                    android:layout_height="match_parent"
+	                    android:layout_alignParentEnd="true"
+	                    android:layout_centerVertical="true"
+	                    android:contentDescription="@null"
+	                    android:padding="8dp"
+	                    android:src="@drawable/ic_search"
+	                    app:layout_constraintBottom_toBottomOf="parent"
+	                    app:layout_constraintStart_toStartOf="parent"
+	                    app:layout_constraintTop_toTopOf="parent" />
 
                 <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/search_et"
@@ -83,17 +85,18 @@
                     app:layout_constraintEnd_toStartOf="@+id/clear_text_iv"
                     app:layout_constraintStart_toEndOf="@+id/search_iv" />
 
-                <ImageView
-                    android:id="@+id/clear_text_iv"
-                    android:layout_width="36dp"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:padding="9dp"
-                    android:src="@drawable/ic_edit_clear"
-                    android:visibility="gone"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
+	                <ImageView
+	                    android:id="@+id/clear_text_iv"
+	                    android:layout_width="36dp"
+	                    android:layout_height="match_parent"
+	                    android:layout_alignParentEnd="true"
+	                    android:layout_centerVertical="true"
+	                    android:contentDescription="@null"
+	                    android:padding="9dp"
+	                    android:src="@drawable/ic_edit_clear"
+	                    android:visibility="gone"
+	                    app:layout_constraintBottom_toBottomOf="parent"
+	                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 

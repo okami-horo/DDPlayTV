@@ -135,6 +135,7 @@
                     android:id="@+id/mobile_danmu_iv"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
+                    android:contentDescription="@null"
                     android:src="@drawable/ic_danmu_mobile" />
 
                 <TextView
@@ -165,6 +166,7 @@
                     android:id="@+id/bottom_danmu_iv"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
+                    android:contentDescription="@null"
                     android:src="@drawable/ic_danmu_bottom" />
 
                 <TextView
@@ -196,6 +198,7 @@
                     android:id="@+id/top_danmu_iv"
                     android:layout_width="24dp"
                     android:layout_height="wrap_content"
+                    android:contentDescription="@null"
                     android:src="@drawable/ic_danmu_top" />
 
                 <TextView
@@ -268,6 +271,7 @@
                 android:hint="@string/hint_danmu_line_limit"
                 android:imeOptions="actionDone"
                 android:inputType="number"
+                android:importantForAutofill="no"
                 android:maxLength="50"
                 android:maxLines="1"
                 android:text=""
@@ -332,6 +336,7 @@
                 android:hint="@string/hit_danmu_screen_count"
                 android:imeOptions="actionDone"
                 android:inputType="number"
+                android:importantForAutofill="no"
                 android:maxLength="50"
                 android:maxLines="1"
                 android:text=""

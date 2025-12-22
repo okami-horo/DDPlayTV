@@ -21,6 +21,7 @@
             android:id="@+id/background_cover_iv"
             android:layout_width="match_parent"
             android:layout_height="320dp"
+            android:contentDescription="@null"
             android:scaleType="centerCrop"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -68,6 +69,7 @@
                             android:layout_height="0dp"
                             android:layout_marginStart="30dp"
                             android:layout_marginBottom="25dp"
+                            android:contentDescription="@null"
                             android:background="@color/anime_cover_placeholder"
                             android:scaleType="centerCrop"
                             android:transitionName="cover_image"

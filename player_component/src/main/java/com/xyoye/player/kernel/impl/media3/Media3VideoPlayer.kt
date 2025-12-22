@@ -1,5 +1,6 @@
 package com.xyoye.player.kernel.impl.media3
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Point
 import android.view.Display
@@ -498,6 +499,7 @@ class Media3VideoPlayer(
         }
     }
 
+    @SuppressLint("InlinedApi")
     private data class DisplayHdrSupport(
         val supportsDv: Boolean,
         val supportsHdr10Plus: Boolean,

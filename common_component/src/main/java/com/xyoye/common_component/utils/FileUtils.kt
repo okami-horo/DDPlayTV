@@ -9,6 +9,7 @@ import com.xyoye.common_component.storage.file.StorageFile
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.util.Locale
 
 /**
  * Created by xyoye on 2020/9/7.
@@ -152,17 +153,17 @@ fun formatFileSize(size: Long): String {
     val gb = mb * 1024
     return when {
         size >= gb -> {
-            String.format("%.1f GB", size.toFloat() / gb)
+            String.format(Locale.getDefault(), "%.1f GB", size.toFloat() / gb)
         }
         size >= mb -> {
             val f = size.toFloat() / mb
-            String.format(if (f > 100) "%.0f M" else "%.1f M", f)
+            String.format(Locale.getDefault(), if (f > 100) "%.0f M" else "%.1f M", f)
         }
         size >= kb -> {
             val f = size.toFloat() / kb
-            String.format(if (f > 100) "%.0f K" else "%.1f K", f)
+            String.format(Locale.getDefault(), if (f > 100) "%.0f K" else "%.1f K", f)
         }
-        else -> String.format("%d B", size)
+        else -> String.format(Locale.getDefault(), "%d B", size)
     }
 }
 

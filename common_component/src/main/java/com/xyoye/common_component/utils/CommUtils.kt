@@ -34,7 +34,7 @@ fun formatDuration(millis: Long): String {
     val milliseconds = millis.toDuration(DurationUnit.MILLISECONDS)
     val minute = milliseconds.toInt(DurationUnit.MINUTES)
     val second = milliseconds.minus(milliseconds.inWholeMinutes.minutes).toInt(DurationUnit.SECONDS)
-    return String.format("%02d:%02d", minute, second)
+    return String.format(Locale.getDefault(), "%02d:%02d", minute, second)
 }
 
 /**

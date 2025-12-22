@@ -217,7 +217,7 @@ class ScreencastStorageEditDialog(
         switchStyle(editMode = true, needPassword = device.needPassword)
 
         binding.ipEt.setText(device.ipAddress)
-        binding.portEt.setText(device.httpPort.toString())
+        binding.portEt.setText(binding.root.context.getString(R.string.format_int, device.httpPort))
         binding.displayNameEt.setText(device.deviceName)
     }
 

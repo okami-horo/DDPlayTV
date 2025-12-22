@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="TrustAllX509TrustManager">
+        <!-- Third-party library: commons-net contains an unused insecure TrustManager implementation. -->
+        <ignore path="**/commons-net-*.jar" />
+    </issue>
+</lint>

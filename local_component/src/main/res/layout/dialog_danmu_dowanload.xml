@@ -12,7 +12,7 @@
             android:id="@+id/download_path_tips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="路径: "
+            android:text="@string/tips_download_path"
             android:textColor="@color/text_black"
             android:textSize="16sp"
             app:layout_constraintStart_toStartOf="parent"
@@ -48,7 +48,7 @@
                 android:id="@+id/source_tips"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="弹幕源："
+                android:text="@string/tips_danmu_source"
                 android:textColor="@color/text_black"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -60,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:checked="true"
-                android:text="所有"
+                android:text="@string/text_all"
                 android:theme="@style/Theme.DanDanPlay.CheckBox" />
 
             <RadioButton
@@ -68,7 +68,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="50dp"
-                android:text="自选"
+                android:text="@string/text_pick"
                 android:theme="@style/Theme.DanDanPlay.CheckBox" />
 
         </RadioGroup>

@@ -48,6 +48,7 @@
             android:layout_width="26dp"
             android:layout_height="0dp"
             android:background="@drawable/background_item_press"
+            android:contentDescription="@null"
             android:paddingHorizontal="3dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_more_video_action"

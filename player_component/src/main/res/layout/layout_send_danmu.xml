@@ -29,6 +29,7 @@
                     android:id="@+id/font_edit_iv"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
+                    android:contentDescription="@null"
                     android:padding="14dp"
                     android:src="@drawable/ic_font_edit" />
 
@@ -40,6 +41,8 @@
                     android:layout_weight="1"
                     android:background="@drawable/background_danmu_input"
                     android:hint="@string/hint_send_danmu"
+                    android:importantForAutofill="no"
+                    android:inputType="text"
                     android:maxLength="50"
                     android:maxLines="1"
                     android:paddingStart="10dp"
@@ -51,6 +54,7 @@
                     android:id="@+id/send_danmu_iv"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
+                    android:contentDescription="@null"
                     android:padding="14dp"
                     android:src="@drawable/ic_send_danmu" />
             </LinearLayout>

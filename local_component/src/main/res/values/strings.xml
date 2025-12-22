@@ -38,6 +38,14 @@
     <string name="tips_danmu_history_keyword">上次搜索</string>
     <string name="tips_danmu_search_keyword">关键字</string>
     <string name="tips_danmu_search_file_name">文件名（长按可复制）</string>
+    <string name="hint_bilibili_danmu_download_message">请输入下载信息</string>
+    <string name="tips_download_path">路径：</string>
+    <string name="tips_danmu_source">弹幕源：</string>
+    <string name="text_all">所有</string>
+    <string name="text_pick">自选</string>
+    <string name="hint_search_word">搜索词</string>
+    <string name="subtitle_search_position">%1$d</string>
+    <string name="subtitle_search_language">语言: %1$s</string>
 
     <string name="text_search_file">搜索文件</string>
     <string name="action_clear_history">清空播放记录</string>

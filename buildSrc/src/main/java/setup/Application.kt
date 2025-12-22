@@ -18,6 +18,10 @@ fun Project.applicationSetup() {
         }
         ndkVersion = Versions.ndkVersion
 
+        lintOptions {
+            lintConfig = rootProject.file("lint.xml")
+        }
+
         buildFeatures.apply {
             dataBinding.isEnabled = true
             buildConfig = true

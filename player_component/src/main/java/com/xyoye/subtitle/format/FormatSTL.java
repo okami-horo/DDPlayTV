@@ -517,14 +517,14 @@ public class FormatSTL implements TimedTextFileFormat {
                                     else if ((diacritical_mark == -56) && (textField[i] == 117)) raw_string = "ü";
                                     diacritical_mark = 0;
                                 }
-				text+=raw_string;
-			}
-			
-		}	
-		
-	}
-	
-	private void createSTLStyles(TimedTextObject tto) {
+                                text += raw_string;
+                        }
+
+                }
+
+        }
+
+        private void createSTLStyles(TimedTextObject tto) {
 		Style style;
 		
 		style = new Style("white");

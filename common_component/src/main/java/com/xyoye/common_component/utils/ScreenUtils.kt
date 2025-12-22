@@ -28,9 +28,9 @@ fun Context.isScreenEdge(e: MotionEvent?): Boolean {
  */
 fun Context.getScreenWidth(isIncludeNav: Boolean = true): Int =
     if (isIncludeNav) {
-        resources.displayMetrics.widthPixels + getNavigationBarHeight()
+        getRealDisplaySize().x
     } else {
-        resources.displayMetrics.widthPixels
+        getAppDisplaySize().x
     }
 
 /**
@@ -38,36 +38,23 @@ fun Context.getScreenWidth(isIncludeNav: Boolean = true): Int =
  */
 fun Context.getScreenHeight(isIncludeNav: Boolean = true): Int =
     if (isIncludeNav) {
-        resources.displayMetrics.heightPixels + getNavigationBarHeight()
+        getRealDisplaySize().y
     } else {
-        resources.displayMetrics.heightPixels
+        getAppDisplaySize().y
     }
 
 /**
- * 获取NavigationBar的高度
+ * Display size excluding system UI (app-usable).
  */
-private fun Context.getNavigationBarHeight(): Int {
-    if (!hasNavigationBar()) {
-        return 0
-    }
-    val resourceId =
-        resources.getIdentifier(
-            "navigation_bar_height",
-            "dimen",
-            "android",
-        )
-    // 获取NavigationBar的高度
-    return resources.getDimensionPixelSize(resourceId)
+private fun Context.getAppDisplaySize(): Point {
+    val display = (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+    return Point().also(display::getSize)
 }
 
 /**
- * 是否存在NavigationBar
+ * Real display size including system UI.
  */
-private fun Context.hasNavigationBar(): Boolean {
+private fun Context.getRealDisplaySize(): Point {
     val display = (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
-    val size = Point()
-    val realSize = Point()
-    display.getSize(size)
-    display.getRealSize(realSize)
-    return realSize.x != size.x || realSize.y != size.y
+    return Point().also(display::getRealSize)
 }

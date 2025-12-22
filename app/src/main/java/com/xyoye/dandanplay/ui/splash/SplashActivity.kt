@@ -1,5 +1,6 @@
 package com.xyoye.dandanplay.ui.splash
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
@@ -22,6 +23,7 @@ import com.xyoye.dandanplay.utils.image_anim.path.TextPathAnimView
  * Created by xyoye on 2020/7/27.
  */
 
+@SuppressLint("CustomSplashScreen")
 class SplashActivity : BaseAppCompatActivity<ActivitySplashBinding>() {
     override fun getLayoutId() = R.layout.activity_splash
 

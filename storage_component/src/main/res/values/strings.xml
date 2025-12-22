@@ -78,4 +78,6 @@
     <string name="text_font_cache_prompt">检测到字体文件夹，是否加载字幕字体？</string>
     <string name="text_font_cache_empty">字体目录为空，跳过缓存</string>
     <string name="text_font_cache_dir_error">字体缓存目录不可用</string>
+
+    <string name="format_int">%1$d</string>
 </resources>

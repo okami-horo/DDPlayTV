@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.core.content.res.ResourcesCompat;
+
 import com.xyoye.common_component.R;
 
 import java.util.ArrayList;
@@ -138,7 +140,8 @@ public class LabelsView extends ViewGroup implements View.OnClickListener, View.
             mWordMargin = mTypedArray.getDimensionPixelOffset(R.styleable.LabelsView_wordMargin, 0);
             int labelBgResId = mTypedArray.getResourceId(R.styleable.LabelsView_labelBackground, 0);
             if (labelBgResId != 0) {
-                mLabelBg = getResources().getDrawable(labelBgResId);
+                Drawable drawable = ResourcesCompat.getDrawable(getResources(), labelBgResId, getContext().getTheme());
+                mLabelBg = drawable != null ? drawable : new ColorDrawable(Color.TRANSPARENT);
             } else {
                 int labelBgColor = mTypedArray.getColor(R.styleable.LabelsView_labelBackground, Color.TRANSPARENT);
                 mLabelBg = new ColorDrawable(labelBgColor);
@@ -685,7 +688,10 @@ public class LabelsView extends ViewGroup implements View.OnClickListener, View.
      * 设置标签背景
      */
     public void setLabelBackgroundResource(int resId) {
-        setLabelBackgroundDrawable(getResources().getDrawable(resId));
+        Drawable drawable = ResourcesCompat.getDrawable(getResources(), resId, getContext().getTheme());
+        if (drawable != null) {
+            setLabelBackgroundDrawable(drawable);
+        }
     }
 
     /**

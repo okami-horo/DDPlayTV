@@ -1,9 +1,7 @@
 package com.xyoye.common_component.weight
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.graphics.*
-import android.os.Build
 import android.text.TextPaint
 import android.text.TextUtils
 import android.util.AttributeSet
@@ -33,7 +31,6 @@ class SlantedTextView : View {
         init(attrs)
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     constructor(
         context: Context?,
         attrs: AttributeSet?,

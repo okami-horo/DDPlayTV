@@ -17,6 +17,7 @@
             android:id="@+id/action_iv"
             android:layout_width="24dp"
             android:layout_height="24dp"
+            android:contentDescription="@null"
             android:padding="1dp"
             app:layout_constraintBottom_toBottomOf="@id/action_name_tv"
             app:layout_constraintStart_toStartOf="parent"

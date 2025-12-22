@@ -9,7 +9,7 @@ plugins {
 
 moduleSetup()
 
-val media3Version = project.findProperty("media3Version")?.toString() ?: "1.8.0"
+val media3Version = project.findProperty("media3Version")?.toString() ?: "1.9.0"
 val unstrippedJniLibsDir = layout.projectDirectory.dir("libs")
 val strippedJniLibsDir = layout.buildDirectory.dir("strippedJniLibs")
 
@@ -81,6 +81,9 @@ android {
         }
     }
     namespace = "com.xyoye.player_component"
+    lint {
+        disable += setOf("ChromeOsAbiSupport", "GradleDependency")
+    }
 }
 
 kapt {

@@ -35,6 +35,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_marginBottom="10dp"
+                android:contentDescription="@null"
                 android:background="@drawable/ic_loading"
                 android:layout_gravity="center_horizontal" />
 

@@ -10,10 +10,11 @@
     <string name="text_root_path">根目录</string>
     <string name="text_empty_data">暂无数据</string>
     <string name="check_not_show_again">不再显示</string>
-    <string name="tips_loading">加载中...</string>
+    <string name="tips_loading">加载中…</string>
 
     <string name="tips_bound_danmu">弹幕</string>
     <string name="tips_bound_subtitle">字幕</string>
+    <string name="content_desc_more_actions">更多操作</string>
 
     <item name="labels_key_data" type="id" />
     <item name="labels_key_position" type="id" />

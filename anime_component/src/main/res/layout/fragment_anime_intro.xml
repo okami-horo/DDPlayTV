@@ -201,6 +201,7 @@
                         android:id="@+id/anime_info_expend_iv"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
+                        android:contentDescription="@null"
                         android:rotation="@{viewModel.expandInfoFiled ? 180 : 0}"
                         android:src="@drawable/ic_arrow_down" />
 

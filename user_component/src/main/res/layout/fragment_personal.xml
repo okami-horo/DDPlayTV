@@ -156,12 +156,13 @@
                     android:orientation="horizontal"
                     android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="2dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_video_player_setting" />
+	                    <ImageView
+	                        android:layout_width="40dp"
+	                        android:layout_height="40dp"
+	                        android:contentDescription="@null"
+	                        android:padding="2dp"
+	                        android:scaleType="centerCrop"
+	                        android:src="@drawable/ic_video_player_setting" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -182,12 +183,13 @@
                     android:orientation="horizontal"
                     android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="2dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_scan_manager" />
+	                    <ImageView
+	                        android:layout_width="40dp"
+	                        android:layout_height="40dp"
+	                        android:contentDescription="@null"
+	                        android:padding="2dp"
+	                        android:scaleType="centerCrop"
+	                        android:src="@drawable/ic_scan_manager" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -208,12 +210,13 @@
                     android:orientation="horizontal"
                     android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="2dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_cache_manager" />
+	                    <ImageView
+	                        android:layout_width="40dp"
+	                        android:layout_height="40dp"
+	                        android:contentDescription="@null"
+	                        android:padding="2dp"
+	                        android:scaleType="centerCrop"
+	                        android:src="@drawable/ic_cache_manager" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -234,12 +237,13 @@
                     android:orientation="horizontal"
                     android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="2dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_commonly_manager" />
+	                    <ImageView
+	                        android:layout_width="40dp"
+	                        android:layout_height="40dp"
+	                        android:contentDescription="@null"
+	                        android:padding="2dp"
+	                        android:scaleType="centerCrop"
+	                        android:src="@drawable/ic_commonly_manager" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -271,12 +275,13 @@
                     android:orientation="horizontal"
                     android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="2dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_bilibili_danmu_download" />
+	                    <ImageView
+	                        android:layout_width="40dp"
+	                        android:layout_height="40dp"
+	                        android:contentDescription="@null"
+	                        android:padding="2dp"
+	                        android:scaleType="centerCrop"
+	                        android:src="@drawable/ic_bilibili_danmu_download" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -297,12 +302,13 @@
                     android:orientation="horizontal"
                     android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="2dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_shooter_subtitle_download" />
+	                    <ImageView
+	                        android:layout_width="40dp"
+	                        android:layout_height="40dp"
+	                        android:contentDescription="@null"
+	                        android:padding="2dp"
+	                        android:scaleType="centerCrop"
+	                        android:src="@drawable/ic_shooter_subtitle_download" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -323,12 +329,13 @@
                     android:orientation="horizontal"
                     android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="2dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_screencast_receiver" />
+	                    <ImageView
+	                        android:layout_width="40dp"
+	                        android:layout_height="40dp"
+	                        android:contentDescription="@null"
+	                        android:padding="2dp"
+	                        android:scaleType="centerCrop"
+	                        android:src="@drawable/ic_screencast_receiver" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -378,12 +385,13 @@
                     android:orientation="horizontal"
                     android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="2dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_app_setting" />
+	                    <ImageView
+	                        android:layout_width="40dp"
+	                        android:layout_height="40dp"
+	                        android:contentDescription="@null"
+	                        android:padding="2dp"
+	                        android:scaleType="centerCrop"
+	                        android:src="@drawable/ic_app_setting" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -404,12 +412,13 @@
                     android:orientation="horizontal"
                     android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:padding="2dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/ic_developer_authenticated" />
+	                    <ImageView
+	                        android:layout_width="40dp"
+	                        android:layout_height="40dp"
+	                        android:contentDescription="@null"
+	                        android:padding="2dp"
+	                        android:scaleType="centerCrop"
+	                        android:src="@drawable/ic_developer_authenticated" />
 
                     <TextView
                         android:layout_width="wrap_content"
