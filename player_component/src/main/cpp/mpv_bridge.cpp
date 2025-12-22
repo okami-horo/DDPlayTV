@@ -37,6 +37,7 @@ constexpr jint kEventBufferingEnd = 7;
 constexpr jint kEventLogMessage = 8;
 constexpr jint kEventSubtitleText = 9;
 constexpr jint kEventSubtitleAss = 10;
+constexpr jint kEventSubtitleHeader = 11;
 constexpr jint kTrackVideo = 0;
 constexpr jint kTrackAudio = 1;
 constexpr jint kTrackSubtitle = 2;
@@ -416,11 +417,16 @@ void observeProperties(mpv_handle* handle) {
     mpv_observe_property(handle, 0, "paused-for-cache", MPV_FORMAT_FLAG);
     mpv_observe_property(handle, 0, "width", MPV_FORMAT_INT64);
     mpv_observe_property(handle, 0, "height", MPV_FORMAT_INT64);
-    // Prefer the new property name to avoid deprecation warnings, fall back for older mpv builds.
-    if (mpv_observe_property(handle, 0, "sub-text/ass", MPV_FORMAT_STRING) < 0) {
-        mpv_observe_property(handle, 0, "sub-text-ass", MPV_FORMAT_STRING);
+    // Prefer full ASS events (with style and timing fields) when available.
+    if (mpv_observe_property(handle, 0, "sub-text/ass-full", MPV_FORMAT_STRING) < 0) {
+        // Prefer the new property name to avoid deprecation warnings, fall back for older mpv builds.
+        if (mpv_observe_property(handle, 0, "sub-text/ass", MPV_FORMAT_STRING) < 0) {
+            mpv_observe_property(handle, 0, "sub-text-ass", MPV_FORMAT_STRING);
+        }
     }
     mpv_observe_property(handle, 0, "sub-text", MPV_FORMAT_STRING);
+    // ASS track codec private (headers/styles). This is empty for non-ASS tracks.
+    mpv_observe_property(handle, 0, "sub-ass-extradata", MPV_FORMAT_STRING);
 }
 
 void destroyRenderContext(MpvSession* session) {
@@ -772,7 +778,23 @@ void eventLoop(MpvSession* session) {
                     );
                     break;
                 }
-                if (strcmp(prop->name, "sub-text/ass") == 0 ||
+                if (strcmp(prop->name, "sub-ass-extradata") == 0) {
+                    const char* extradata = nullptr;
+                    if (prop->format == MPV_FORMAT_STRING && prop->data != nullptr) {
+                        extradata = *static_cast<char**>(prop->data);
+                    }
+                    dispatchEvent(
+                        env,
+                        session->event_callback,
+                        kEventSubtitleHeader,
+                        0,
+                        0,
+                        extradata == nullptr ? "" : extradata
+                    );
+                    break;
+                }
+                if (strcmp(prop->name, "sub-text/ass-full") == 0 ||
+                    strcmp(prop->name, "sub-text/ass") == 0 ||
                     strcmp(prop->name, "sub-text-ass") == 0 ||
                     strcmp(prop->name, "sub-text") == 0) {
                     const bool isAss = strcmp(prop->name, "sub-text") != 0;
