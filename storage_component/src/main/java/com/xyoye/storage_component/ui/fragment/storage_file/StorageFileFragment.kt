@@ -1,5 +1,6 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
+import android.graphics.Rect
 import android.view.KeyEvent
 import android.view.View
 import androidx.core.view.children
@@ -53,8 +54,16 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             ownerActivity.onDirectoryOpened(it)
             dataBinding.storageFileRv.setData(it)
             // ownerActivity.onDirectoryDataLoaded(this, it)
-            // 延迟500毫秒，等待列表加载完成后，再请求焦点
-            dataBinding.storageFileRv.postDelayed({ requestFocus() }, 500)
+            // 仅在需要恢复上次焦点时，才请求焦点（与媒体库首页保持一致：首次进入不默认高亮首项）
+            if (pendingFocusIndex != RecyclerView.NO_POSITION) {
+                // 触控模式下不恢复列表焦点，避免出现“默认高亮/焦点框”
+                if (dataBinding.storageFileRv.isInTouchMode) {
+                    pendingFocusIndex = RecyclerView.NO_POSITION
+                    return@observe
+                }
+                // 等待下一次消息循环后再请求焦点，避免因子 View 未就绪导致的滚动跳变
+                dataBinding.storageFileRv.post { requestFocus() }
+            }
         }
 
         viewModel.listFile(directory)
@@ -78,6 +87,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
     private fun setRecyclerViewItemFocusAble(focusAble: Boolean) {
         val focusTag = R.string.focusable_item.toResString()
         val binding = bindingOrNull ?: return
+        val inTouchMode = binding.storageFileRv.isInTouchMode
         LogFacade.d(
             LogModule.STORAGE,
             TAG,
@@ -86,7 +96,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
         binding.storageFileRv.children.forEach { child ->
             val target = child.findViewWithTag<View>(focusTag) ?: child
             target.isFocusable = focusAble
-            target.isFocusableInTouchMode = focusAble
+            target.isFocusableInTouchMode = focusAble && !inTouchMode
         }
     }
 
@@ -179,7 +189,12 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
 
     fun requestFocus(reversed: Boolean = false) {
         val binding = bindingOrNull ?: return
-        val adapter = binding.storageFileRv.adapter ?: return
+        val recyclerView = binding.storageFileRv
+        if (recyclerView.isInTouchMode) {
+            LogFacade.d(LogModule.STORAGE, TAG, "requestFocus skipped (touch mode)")
+            return
+        }
+        val adapter = recyclerView.adapter ?: return
         if (adapter.itemCount == 0) {
             LogFacade.d(LogModule.STORAGE, TAG, "requestFocus skip empty adapter")
             return
@@ -198,20 +213,54 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             TAG,
             "requestFocus start reversed=$reversed count=${adapter.itemCount} target=$targetIndex",
         )
-        if (binding.storageFileRv.requestIndexChildFocus(targetIndex)) {
-            LogFacade.d(LogModule.STORAGE, TAG, "requestFocus direct success target=$targetIndex")
-            lastFocusedIndex = targetIndex
+        requestIndexFocusWhenReady(targetIndex)
+    }
+
+    private fun requestIndexFocusWhenReady(
+        targetIndex: Int,
+        attempt: Int = 0
+    ) {
+        val binding = bindingOrNull ?: return
+        val recyclerView = binding.storageFileRv
+        if (recyclerView.isInTouchMode) {
+            LogFacade.d(LogModule.STORAGE, TAG, "requestIndexFocusWhenReady skipped (touch mode)")
             return
         }
-        binding.storageFileRv.post {
-            bindingOrNull?.storageFileRv?.let {
-                val postResult = it.requestIndexChildFocus(targetIndex)
-                if (postResult) {
-                    lastFocusedIndex = targetIndex
-                }
-                LogFacade.d(LogModule.STORAGE, TAG, "requestFocus post result=$postResult target=$targetIndex")
-            }
+
+        if (tryRequestIndexFocus(targetIndex)) {
+            lastFocusedIndex = targetIndex
+            LogFacade.d(LogModule.STORAGE, TAG, "requestIndexFocusWhenReady success attempt=$attempt target=$targetIndex")
+            return
         }
+
+        if (attempt < 3) {
+            recyclerView.post { requestIndexFocusWhenReady(targetIndex, attempt + 1) }
+            return
+        }
+
+        // 最后兜底：滚动到目标位置，再请求焦点（用于目标项不在可见区域的场景）
+        val moved = recyclerView.requestIndexChildFocus(targetIndex)
+        LogFacade.d(LogModule.STORAGE, TAG, "requestIndexFocusWhenReady fallback moved=$moved target=$targetIndex")
+        if (moved) {
+            lastFocusedIndex = targetIndex
+        }
+    }
+
+    private fun tryRequestIndexFocus(targetIndex: Int): Boolean {
+        val binding = bindingOrNull ?: return false
+        val recyclerView = binding.storageFileRv
+        val layoutManager = recyclerView.layoutManager ?: return false
+        val target = layoutManager.findViewByPosition(targetIndex) ?: return false
+
+        // 保证目标项完整可见，避免只露出一部分导致的视效跳动
+        val rect = Rect()
+        target.getDrawingRect(rect)
+        recyclerView.offsetDescendantRectToMyCoords(target, rect)
+        recyclerView.requestChildRectangleOnScreen(target, rect, true)
+
+        val targetTag = R.string.focusable_item.toResString()
+        val focusView = target.findViewWithTag<View>(targetTag) ?: target.takeIf { it.isFocusable }
+        return focusView?.requestFocus() == true
     }
 
     fun focusFile(uniqueKey: String) {

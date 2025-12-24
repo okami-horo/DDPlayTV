@@ -15,6 +15,7 @@ import com.xyoye.player.subtitle.ui.SubtitleSurfaceOverlay
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSinkRegistry
 import com.xyoye.player.subtitle.backend.LibassEmbeddedSubtitleSink
+import com.xyoye.player_component.media3.render.SubtitleRenderScheduler
 import com.xyoye.player_component.subtitle.gpu.AssGpuRenderer
 import com.xyoye.player_component.subtitle.gpu.LocalSubtitlePipelineApi
 import com.xyoye.player_component.subtitle.gpu.SubtitleFallbackController
@@ -40,6 +41,7 @@ class LibassRendererBackend : SubtitleRenderer {
     private var lifecycleHandler: SubtitleSurfaceLifecycleHandler? = null
     private var recoveryCoordinator: SubtitleRecoveryCoordinator? = null
     private var overlay: SubtitleSurfaceOverlay? = null
+    private var renderScheduler: SubtitleRenderScheduler? = null
     private var choreographer: Choreographer? = null
     private var renderLoopRunning = false
     private var embeddedSink: EmbeddedSubtitleSink? = null
@@ -60,7 +62,7 @@ class LibassRendererBackend : SubtitleRenderer {
         attachOverlay(environment)
         renderer?.updateOpacity(PlayerInitializer.Subtitle.alpha)
         registerEmbeddedSink(gpuRenderer, environment)
-        startRenderLoop()
+        startRenderDriver(environment, gpuRenderer)
     }
 
     override fun release() {
@@ -69,7 +71,7 @@ class LibassRendererBackend : SubtitleRenderer {
             EmbeddedSubtitleSinkRegistry.unregister(sink)
         }
         embeddedSink = null
-        stopRenderLoop()
+        stopRenderDriver()
         overlay?.let { ov ->
             environment?.playerView?.detachSubtitleOverlay(ov)
         }
@@ -85,7 +87,7 @@ class LibassRendererBackend : SubtitleRenderer {
     }
 
     override fun render(subtitle: MixedSubtitle): Boolean {
-        // GPU pipeline drives rendering via the frame loop; subtitle events are ignored here.
+        // GPU pipeline drives rendering via the Media3 callback scheduler or choreographer fallback.
         return true
     }
 
@@ -186,6 +188,26 @@ class LibassRendererBackend : SubtitleRenderer {
             }
         env.playerView.attachSubtitleOverlay(overlay)
         this.overlay = overlay
+    }
+
+    private fun startRenderDriver(env: SubtitleRenderEnvironment, gpuRenderer: AssGpuRenderer) {
+        val exoPlayer = env.playerView.exoPlayerOrNull()
+        if (exoPlayer != null) {
+            renderScheduler =
+                SubtitleRenderScheduler(
+                    player = exoPlayer,
+                    renderer = gpuRenderer,
+                    shouldRender = { tracker?.currentTarget != null }
+                ).also { it.start() }
+            return
+        }
+        startRenderLoop()
+    }
+
+    private fun stopRenderDriver() {
+        renderScheduler?.stop()
+        renderScheduler = null
+        stopRenderLoop()
     }
 
     private fun startRenderLoop() {

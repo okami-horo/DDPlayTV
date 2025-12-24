@@ -12,6 +12,7 @@ import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
 import com.xyoye.cache.CacheManager
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
@@ -25,6 +26,7 @@ import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.facoty.PlayerFactory
+import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.inter.VideoPlayerEventListener
 import com.xyoye.player.subtitle.backend.LibassRendererBackend
@@ -197,6 +199,13 @@ class DanDanVideoPlayer(
         }
 
     override fun getRenderView(): InterSurfaceView? = mRenderView
+
+    internal fun exoPlayerOrNull(): ExoPlayer? {
+        if (!this::mVideoPlayer.isInitialized) {
+            return null
+        }
+        return (mVideoPlayer as? Media3VideoPlayer)?.exoPlayerOrNull()
+    }
 
     override fun getVideoSize() = mVideoPlayer.getVideoSize()
 

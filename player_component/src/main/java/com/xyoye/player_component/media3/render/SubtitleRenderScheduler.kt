@@ -1,5 +1,6 @@
 package com.xyoye.player_component.media3.render
 
+import android.os.SystemClock
 import androidx.media3.common.Format
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
@@ -20,11 +21,11 @@ import com.xyoye.player_component.subtitle.gpu.SubtitleFrameCleaner
 class SubtitleRenderScheduler(
     private val player: ExoPlayer,
     private val renderer: AssGpuRenderer,
-    private val frameCleaner: SubtitleFrameCleaner = renderer.frameCleaner
+    private val frameCleaner: SubtitleFrameCleaner = renderer.frameCleaner,
+    private val shouldRender: () -> Boolean = { true }
 ) : AnalyticsListener,
     VideoFrameMetadataListener {
     private var started = false
-    private var offsetMs: Long = SubtitlePreferenceUpdater.currentOffset()
 
     fun start() {
         if (started) return
@@ -46,7 +47,9 @@ class SubtitleRenderScheduler(
         format: Format,
         mediaFormat: android.media.MediaFormat?
     ) {
-        val ptsMs = (presentationTimeUs / 1_000L) + offsetMs
+        if (!shouldRender()) return
+        val ptsMs =
+            ((presentationTimeUs / 1_000L) + SubtitlePreferenceUpdater.currentOffset()).coerceAtLeast(0L)
         val vsyncId = releaseTimeNs / 1_000_000L
         renderer.renderFrame(ptsMs, vsyncId)
     }
@@ -56,10 +59,16 @@ class SubtitleRenderScheduler(
         reason: Int
     ) {
         frameCleaner.onSeek()
+        if (!player.playWhenReady) {
+            renderOnce(player.contentPosition)
+        }
     }
 
     override fun onSeekStarted(eventTime: AnalyticsListener.EventTime) {
         frameCleaner.onSeek()
+        if (!player.playWhenReady) {
+            renderOnce(player.contentPosition)
+        }
     }
 
     override fun onTracksChanged(
@@ -67,6 +76,9 @@ class SubtitleRenderScheduler(
         tracks: Tracks
     ) {
         frameCleaner.onTrackChanged()
+        if (!player.playWhenReady) {
+            renderOnce(player.contentPosition)
+        }
     }
 
     override fun onPlaybackStateChanged(
@@ -79,12 +91,21 @@ class SubtitleRenderScheduler(
     }
 
     fun updateOffset(newOffsetMs: Long) {
-        offsetMs = newOffsetMs
         SubtitlePreferenceUpdater.persistOffset(newOffsetMs)
         LogFacade.i(LogModule.PLAYER, TAG, "subtitle offset updated: $newOffsetMs ms")
+        if (!player.playWhenReady) {
+            renderOnce(player.contentPosition)
+        }
     }
 
-    fun currentOffset(): Long = offsetMs
+    fun currentOffset(): Long = SubtitlePreferenceUpdater.currentOffset()
+
+    private fun renderOnce(positionMs: Long) {
+        if (!shouldRender()) return
+        val ptsMs = (positionMs + SubtitlePreferenceUpdater.currentOffset()).coerceAtLeast(0L)
+        val vsyncId = SystemClock.elapsedRealtimeNanos() / 1_000_000L
+        renderer.renderFrame(ptsMs, vsyncId)
+    }
 
     companion object {
         private const val TAG = "SubtitleRenderSched"

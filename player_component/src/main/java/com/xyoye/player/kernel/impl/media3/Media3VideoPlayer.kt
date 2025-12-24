@@ -242,6 +242,13 @@ class Media3VideoPlayer(
 
     override fun getTcpSpeed(): Long = 0L
 
+    internal fun exoPlayerOrNull(): ExoPlayer? =
+        if (this::player.isInitialized) {
+            player
+        } else {
+            null
+        }
+
     override fun supportAddTrack(type: TrackType): Boolean =
         when (type) {
             TrackType.AUDIO -> true
