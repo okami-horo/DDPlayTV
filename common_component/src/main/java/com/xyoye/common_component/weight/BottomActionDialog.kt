@@ -1,7 +1,7 @@
 package com.xyoye.common_component.weight
 
-import android.app.Activity
 import androidx.core.view.isGone
+import androidx.fragment.app.FragmentActivity
 import com.xyoye.common_component.R
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
@@ -17,7 +17,7 @@ import com.xyoye.data_component.bean.SheetActionBean
  */
 
 class BottomActionDialog(
-    activity: Activity,
+    activity: FragmentActivity,
     private val actionData: List<SheetActionBean>,
     private val title: String? = null,
     private val callback: (SheetActionBean) -> Boolean

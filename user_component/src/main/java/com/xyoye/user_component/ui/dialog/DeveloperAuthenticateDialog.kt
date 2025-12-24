@@ -1,6 +1,6 @@
 package com.xyoye.user_component.ui.dialog
 
-import android.app.Activity
+import androidx.fragment.app.FragmentActivity
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.DeveloperCredentialStore
 import com.xyoye.common_component.extension.startUrlActivity
@@ -21,9 +21,9 @@ import kotlinx.coroutines.withContext
  */
 
 class DeveloperAuthenticateDialog(
-    private val activity: Activity,
+    hostActivity: FragmentActivity,
     private val onAuthenticate: () -> Unit
-) : BaseBottomDialog<DialogDeveloperAuthenticateBinding>(activity) {
+) : BaseBottomDialog<DialogDeveloperAuthenticateBinding>(hostActivity) {
     private lateinit var binding: DialogDeveloperAuthenticateBinding
 
     override fun getChildLayoutId(): Int = R.layout.dialog_developer_authenticate
@@ -83,12 +83,13 @@ class DeveloperAuthenticateDialog(
      * 显示/隐藏加载框
      */
     private suspend fun loading(show: Boolean) {
-        if (activity is BaseActivity<*, *>) {
+        val baseActivity = activity as? BaseActivity<*, *>
+        if (baseActivity != null) {
             withContext(Dispatchers.Main) {
                 if (show) {
-                    activity.showLoading()
+                    baseActivity.showLoading()
                 } else {
-                    activity.hideLoading()
+                    baseActivity.hideLoading()
                 }
             }
         }

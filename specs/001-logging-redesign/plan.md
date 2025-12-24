@@ -15,7 +15,7 @@
 
 ## Technical Context
 
-**Language/Version**: Kotlin 1.9.25 + Java 8（Android）  
+**Language/Version**: Kotlin 2.0.21 + Java 8（Android）  
 **Primary Dependencies**: Android `Log` / logcat 管道、`common_component` 中的 `DDLog` 与重构后的日志门面 / 写入实现、MMKV 配置存储；Phase 1 不再引入新的第三方日志库，相关实践仅作为设计参考  
 **Storage**: 应用内部存储目录下的日志文件（仅 `log.txt` / `log_old.txt`，双文件轮转，每个文件默认上限约 5MB，总体约 10MB），以及 MMKV 中持久化的日志策略配置  
 **Testing**: JUnit JVM 单元测试（策略与格式化）、可选 Robolectric 测试（目录解析与基础文件操作）、Android Instrumentation 测试（真实设备上的写入、轮转、磁盘不足行为）  

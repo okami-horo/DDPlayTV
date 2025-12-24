@@ -1,7 +1,7 @@
 package com.xyoye.common_component.weight.dialog
 
-import android.app.Activity
 import android.os.Environment
+import androidx.fragment.app.FragmentActivity
 import com.xyoye.common_component.R
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
@@ -37,7 +37,7 @@ import java.io.File
  */
 
 class FileManagerDialog(
-    activity: Activity,
+    activity: FragmentActivity,
     private val action: FileManagerAction,
     private var defaultFolderPath: String? = null,
     private val dismissWhenClickPositive: Boolean = true,

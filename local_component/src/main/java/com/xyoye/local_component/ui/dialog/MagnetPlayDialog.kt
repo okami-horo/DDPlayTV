@@ -15,8 +15,8 @@ import com.xyoye.local_component.R
 import com.xyoye.local_component.databinding.DialogMagnetPlayBinding
 
 class MagnetPlayDialog(
-    private val activity: AppCompatActivity
-) : BaseBottomDialog<DialogMagnetPlayBinding>(activity) {
+    hostActivity: AppCompatActivity
+) : BaseBottomDialog<DialogMagnetPlayBinding>(hostActivity) {
     private lateinit var binding: DialogMagnetPlayBinding
 
     override fun getChildLayoutId() = R.layout.dialog_magnet_play

@@ -1,6 +1,6 @@
 package com.xyoye.local_component.ui.dialog
 
-import android.app.Activity
+import androidx.fragment.app.FragmentActivity
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.extension.setData
@@ -16,7 +16,7 @@ import com.xyoye.local_component.databinding.ItemSubtitleFileBinding
  */
 
 class SubtitleFileListDialog(
-    activity: Activity,
+    activity: FragmentActivity,
     private val subtitleList: MutableList<SubFileData>,
     private val callback: (fileName: String, url: String) -> Unit
 ) : BaseBottomDialog<DialogSubtitleFileListBinding>(activity) {

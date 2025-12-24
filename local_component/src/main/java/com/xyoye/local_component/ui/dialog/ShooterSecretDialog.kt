@@ -1,6 +1,6 @@
 package com.xyoye.local_component.ui.dialog
 
-import android.app.Activity
+import androidx.fragment.app.FragmentActivity
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.extension.startUrlActivity
 import com.xyoye.common_component.weight.dialog.BaseBottomDialog
@@ -12,8 +12,8 @@ import com.xyoye.local_component.databinding.DialogShooterSecretBinding
  */
 
 class ShooterSecretDialog(
-    private val activity: Activity
-) : BaseBottomDialog<DialogShooterSecretBinding>(activity) {
+    hostActivity: FragmentActivity
+) : BaseBottomDialog<DialogShooterSecretBinding>(hostActivity) {
     override fun getChildLayoutId() = R.layout.dialog_shooter_secret
 
     override fun initView(binding: DialogShooterSecretBinding) {

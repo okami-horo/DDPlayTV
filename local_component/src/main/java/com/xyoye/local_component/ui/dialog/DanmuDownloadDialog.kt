@@ -1,6 +1,6 @@
 package com.xyoye.local_component.ui.dialog
 
-import android.app.Activity
+import androidx.fragment.app.FragmentActivity
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
@@ -21,7 +21,7 @@ import com.xyoye.local_component.databinding.ItemDanmuSourceSelectBinding
  */
 
 class DanmuDownloadDialog(
-    activity: Activity,
+    activity: FragmentActivity,
     private val episode: DanmuEpisodeData,
     private val relatedData: List<DanmuRelatedUrlData>,
     private val downloadRelated: (List<DanmuRelatedUrlData>) -> Unit,

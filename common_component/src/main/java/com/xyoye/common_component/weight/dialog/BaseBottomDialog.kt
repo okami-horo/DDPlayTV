@@ -1,6 +1,5 @@
 package com.xyoye.common_component.weight.dialog
 
-import android.app.Activity
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.RippleDrawable
@@ -15,6 +14,9 @@ import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.xyoye.common_component.R
@@ -27,9 +29,10 @@ import com.xyoye.common_component.utils.dp2px
  */
 
 abstract class BaseBottomDialog<T : ViewDataBinding>(
-    activity: Activity
-) : BottomSheetDialog(activity, R.style.Bottom_Sheet_Dialog) {
+    protected val activity: FragmentActivity
+) : BottomSheetDialog(activity, R.style.Bottom_Sheet_Dialog), LifecycleOwner {
     protected lateinit var rootViewBinding: DialogBaseBottomDialogBinding
+    private val hostLifecycle: Lifecycle = activity.lifecycle
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +72,9 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
 
         initView(childViewBinding)
     }
+
+    override val lifecycle: Lifecycle
+        get() = hostLifecycle
 
     protected fun setTitle(text: String) {
         rootViewBinding.titleTv.text = text

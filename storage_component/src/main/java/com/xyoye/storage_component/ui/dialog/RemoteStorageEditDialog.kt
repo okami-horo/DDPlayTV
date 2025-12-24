@@ -14,16 +14,16 @@ import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivit
  */
 
 class RemoteStorageEditDialog(
-    private val activity: StoragePlusActivity,
+    hostActivity: StoragePlusActivity,
     private val originalStorage: MediaLibraryEntity?
-) : StorageEditDialog<DialogRemoteLoginBinding>(activity) {
+) : StorageEditDialog<DialogRemoteLoginBinding>(hostActivity) {
     private var remoteData: MediaLibraryEntity
     private var tokenRequired = false
 
     private lateinit var binding: DialogRemoteLoginBinding
 
     /*
-    private val scanActivityLauncher = ScanActivityLauncher(activity, onResult())
+    private val scanActivityLauncher = ScanActivityLauncher(storageActivity, onResult())
      */
 
     init {
@@ -53,7 +53,7 @@ class RemoteStorageEditDialog(
 
         /*
         binding.scanLl.setOnClickListener {
-            DanDanPlay.permission.camera.request(activity) {
+            DanDanPlay.permission.camera.request(storageActivity) {
                 onGranted {
                     scanActivityLauncher.launch()
                 }
@@ -66,7 +66,7 @@ class RemoteStorageEditDialog(
 
         binding.serverTestConnectTv.setOnClickListener {
             if (checkParams(remoteData)) {
-                activity.testStorage(remoteData)
+                storageActivity.testStorage(remoteData)
             }
         }
 
@@ -86,12 +86,12 @@ class RemoteStorageEditDialog(
                     remoteData.displayName = "PC端媒体库"
                 }
                 remoteData.describe = remoteData.url
-                activity.addStorage(remoteData)
+                storageActivity.addStorage(remoteData)
             }
         }
 
         setNegativeListener {
-            activity.finish()
+            storageActivity.finish()
         }
     }
 

@@ -10,8 +10,8 @@ import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivit
  */
 
 abstract class StorageEditDialog<T : ViewDataBinding>(
-    private val activity: StoragePlusActivity
-) : BaseBottomDialog<T>(activity) {
+    protected val storageActivity: StoragePlusActivity
+) : BaseBottomDialog<T>(storageActivity) {
     abstract fun onTestResult(result: Boolean)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,9 +23,9 @@ abstract class StorageEditDialog<T : ViewDataBinding>(
     }
 
     open fun doBeforeDismiss() {
-        if (activity.isFinishing || activity.isDestroyed) {
+        if (storageActivity.isFinishing || storageActivity.isDestroyed) {
             return
         }
-        activity.finish()
+        storageActivity.finish()
     }
 }

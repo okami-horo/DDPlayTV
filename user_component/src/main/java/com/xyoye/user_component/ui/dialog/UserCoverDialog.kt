@@ -1,6 +1,6 @@
 package com.xyoye.user_component.ui.dialog
 
-import android.app.Activity
+import androidx.fragment.app.FragmentActivity
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.extension.grid
@@ -15,9 +15,9 @@ import com.xyoye.user_component.databinding.ItemUserCoverBinding
  */
 
 class UserCoverDialog(
-    private val activity: Activity,
+    hostActivity: FragmentActivity,
     private val callback: (Int) -> Unit
-) : BaseBottomDialog<DialogUserCoverBinding>(activity) {
+) : BaseBottomDialog<DialogUserCoverBinding>(hostActivity) {
     override fun getChildLayoutId() = R.layout.dialog_user_cover
 
     override fun initView(binding: DialogUserCoverBinding) {

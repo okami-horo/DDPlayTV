@@ -1,6 +1,6 @@
 package com.xyoye.user_component.ui.dialog
 
-import android.app.Activity
+import androidx.fragment.app.FragmentActivity
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.meida.VideoExtension
 import com.xyoye.common_component.weight.ToastCenter
@@ -13,8 +13,8 @@ import com.xyoye.user_component.databinding.DialogVideoExtensionSupportSettingBi
  */
 
 class VideoExtensionSupportSettingDialog(
-    activity: Activity
-) : BaseBottomDialog<DialogVideoExtensionSupportSettingBinding>(activity) {
+    hostActivity: FragmentActivity
+) : BaseBottomDialog<DialogVideoExtensionSupportSettingBinding>(hostActivity) {
     override fun getChildLayoutId() = R.layout.dialog_video_extension_support_setting
 
     override fun initView(binding: DialogVideoExtensionSupportSettingBinding) {

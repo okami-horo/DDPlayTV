@@ -28,9 +28,9 @@ import kotlinx.coroutines.withContext
  */
 
 class ScreencastStorageEditDialog(
-    private val activity: StoragePlusActivity,
+    hostActivity: StoragePlusActivity,
     private val originalStorage: MediaLibraryEntity?
-) : StorageEditDialog<DialogScreencastConnectBinding>(activity) {
+) : StorageEditDialog<DialogScreencastConnectBinding>(hostActivity) {
     private lateinit var binding: DialogScreencastConnectBinding
     private var isEditStorage: Boolean = false
 
@@ -38,7 +38,7 @@ class ScreencastStorageEditDialog(
     private var scanDeviceJob: Job? = null
 
     /*
-    private val scanActivityLauncher = ScanActivityLauncher(activity, onScanResult())
+    private val scanActivityLauncher = ScanActivityLauncher(storageActivity, onScanResult())
      */
     private var testLibrary: MediaLibraryEntity? = null
 
@@ -83,7 +83,7 @@ class ScreencastStorageEditDialog(
         }
 
         setNegativeListener {
-            activity.finish()
+            storageActivity.finish()
         }
 
         binding.tvAutoConnect.setOnClickListener {
@@ -100,7 +100,7 @@ class ScreencastStorageEditDialog(
 
         /*
         binding.tvScanConnect.setOnClickListener {
-            DanDanPlay.permission.camera.request(activity) {
+            DanDanPlay.permission.camera.request(storageActivity) {
                 onGranted {
                     scanActivityLauncher.launch()
                 }
@@ -137,7 +137,7 @@ class ScreencastStorageEditDialog(
             return
         }
         if (result) {
-            activity.addStorage(testLibrary!!)
+            storageActivity.addStorage(testLibrary!!)
         }
     }
 
@@ -272,13 +272,13 @@ class ScreencastStorageEditDialog(
                 mediaType = MediaType.SCREEN_CAST,
             )
         testLibrary = library
-        activity.testStorage(library)
+        storageActivity.testStorage(library)
     }
 
     private fun startDeviceScan() {
         scanDeviceJob?.cancel()
         scanDeviceJob =
-            activity.lifecycleScope.launch(Dispatchers.IO) {
+            storageActivity.lifecycleScope.launch(Dispatchers.IO) {
                 UdpClient.startMulticastReceive {
                     withContext(Dispatchers.Main) {
                         onDeviceFound(it)
@@ -293,7 +293,7 @@ class ScreencastStorageEditDialog(
     }
 
     private fun onDeviceFound(device: UDPDeviceBean) {
-        if (isShowing.not() || activity.isFinishing || activity.isDestroyed) {
+        if (isShowing.not() || storageActivity.isFinishing || storageActivity.isDestroyed) {
             return
         }
         if (device.ipAddress.isNullOrEmpty() || device.httpPort == 0) {
