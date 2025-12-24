@@ -13,8 +13,6 @@ import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutSettingDanmuConfigureBinding
 import master.flame.danmaku.danmaku.model.BaseDanmaku
-import java.text.NumberFormat
-import java.text.ParsePosition
 
 /**
  * Created by xyoye on 2022/10/18
@@ -26,9 +24,6 @@ class SettingDanmuConfigureView(
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingDanmuConfigureBinding>(context, attrs, defStyleAttr) {
     private var settingMode = BaseDanmaku.TYPE_SCROLL_RL
-    private val integerFormat = NumberFormat.getIntegerInstance().apply {
-        isGroupingUsed = false
-    }
 
     init {
         initView()
@@ -120,10 +115,9 @@ class SettingDanmuConfigureView(
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 // 输入为空或0，设置为无限制
                 val maxLineText = viewBinding.etMaxLine.text.toString()
-                var newMaxLine = parseIntegerOrDefault(
-                    maxLineText,
-                    PlayerInitializer.Danmu.DEFAULT_MAX_LINE
-                )
+                var newMaxLine =
+                    maxLineText.toIntOrNull()
+                        ?: PlayerInitializer.Danmu.DEFAULT_MAX_LINE
                 newMaxLine =
                     if (newMaxLine <= 0) PlayerInitializer.Danmu.DEFAULT_MAX_LINE else newMaxLine
 
@@ -148,10 +142,7 @@ class SettingDanmuConfigureView(
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 // 输入为空，设置为无限制
                 val maxNumText = viewBinding.etScreenMaxNum.text.toString()
-                val newMaxNum = parseIntegerOrDefault(
-                    maxNumText,
-                    PlayerInitializer.Danmu.DEFAULT_MAX_NUM
-                )
+                val newMaxNum = maxNumText.toIntOrNull() ?: PlayerInitializer.Danmu.DEFAULT_MAX_NUM
 
                 updateScreenLimit(newMaxNum)
                 hideKeyboard(viewBinding.etScreenMaxNum)
@@ -179,7 +170,7 @@ class SettingDanmuConfigureView(
             viewBinding.etMaxLine.setText("")
         } else {
             viewBinding.tvLineNoLimit.isSelected = false
-            viewBinding.etMaxLine.setText(formatInteger(PlayerInitializer.Danmu.maxScrollLine))
+            viewBinding.etMaxLine.setText(PlayerInitializer.Danmu.maxScrollLine.toString())
         }
 
         when (PlayerInitializer.Danmu.maxNum) {
@@ -196,7 +187,7 @@ class SettingDanmuConfigureView(
             else -> {
                 viewBinding.tvScreenNoLimit.isSelected = false
                 viewBinding.tvScreenAutoLimit.isSelected = false
-                viewBinding.etScreenMaxNum.setText(formatInteger(PlayerInitializer.Danmu.maxNum))
+                viewBinding.etScreenMaxNum.setText(PlayerInitializer.Danmu.maxNum.toString())
             }
         }
     }
@@ -211,7 +202,7 @@ class SettingDanmuConfigureView(
             viewBinding.etMaxLine.setText("")
         } else {
             viewBinding.tvLineNoLimit.isSelected = false
-            viewBinding.etMaxLine.setText(formatInteger(PlayerInitializer.Danmu.maxTopLine))
+            viewBinding.etMaxLine.setText(PlayerInitializer.Danmu.maxTopLine.toString())
         }
     }
 
@@ -225,30 +216,8 @@ class SettingDanmuConfigureView(
             viewBinding.etMaxLine.setText("")
         } else {
             viewBinding.tvLineNoLimit.isSelected = false
-            viewBinding.etMaxLine.setText(formatInteger(PlayerInitializer.Danmu.maxBottomLine))
+            viewBinding.etMaxLine.setText(PlayerInitializer.Danmu.maxBottomLine.toString())
         }
-    }
-
-    private fun formatInteger(value: Int): String {
-        return integerFormat.format(value)
-    }
-
-    private fun parseIntegerOrDefault(
-        text: String,
-        defaultValue: Int
-    ): Int {
-        val trimmed = text.trim()
-        if (trimmed.isEmpty()) {
-            return defaultValue
-        }
-
-        val parsePosition = ParsePosition(0)
-        val parsed = integerFormat.parse(trimmed, parsePosition) ?: return defaultValue
-        if (parsePosition.index != trimmed.length) {
-            return defaultValue
-        }
-
-        return parsed.toInt()
     }
 
     private fun updateDanmuEnable(enable: Boolean) {

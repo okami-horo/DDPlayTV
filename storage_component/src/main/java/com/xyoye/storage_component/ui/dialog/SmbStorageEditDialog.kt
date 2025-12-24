@@ -17,9 +17,9 @@ import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivit
  */
 
 class SmbStorageEditDialog(
-    hostActivity: StoragePlusActivity,
+    private val activity: StoragePlusActivity,
     private var originalStorage: MediaLibraryEntity?
-) : StorageEditDialog<DialogSmbLoginBinding>(hostActivity) {
+) : StorageEditDialog<DialogSmbLoginBinding>(activity) {
     private lateinit var binding: DialogSmbLoginBinding
 
     override fun getChildLayoutId() = R.layout.dialog_smb_login
@@ -47,7 +47,7 @@ class SmbStorageEditDialog(
 
         binding.serverTestConnectTv.setOnClickListener {
             if (checkParams(serverData)) {
-                storageActivity.testStorage(serverData)
+                activity.testStorage(serverData)
             }
         }
 
@@ -89,12 +89,12 @@ class SmbStorageEditDialog(
                     serverData.displayName = "SMB媒体库"
                 }
                 serverData.describe = "smb://${serverData.url}"
-                storageActivity.addStorage(serverData)
+                activity.addStorage(serverData)
             }
         }
 
         setNegativeListener {
-            storageActivity.finish()
+            activity.finish()
         }
     }
 

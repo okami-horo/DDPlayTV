@@ -19,13 +19,13 @@ import com.xyoye.storage_component.utils.launcher.DocumentTreeLauncher
  */
 
 class ExternalStorageEditDialog(
-    hostActivity: StoragePlusActivity,
+    private val activity: StoragePlusActivity,
     private val library: MediaLibraryEntity?
-) : StorageEditDialog<DialogExternalStorageEditBinding>(hostActivity) {
+) : StorageEditDialog<DialogExternalStorageEditBinding>(activity) {
     private lateinit var binding: DialogExternalStorageEditBinding
     private var mDocumentFile: DocumentFile? = null
 
-    private val documentTreeLauncher = DocumentTreeLauncher(storageActivity, onResult())
+    private val documentTreeLauncher = DocumentTreeLauncher(activity, onResult())
 
     override fun getChildLayoutId() = R.layout.dialog_external_storage_edit
 
@@ -39,9 +39,9 @@ class ExternalStorageEditDialog(
             binding.displayNameEt.setText(library.displayName)
             binding.pathTv.text = library.describe
             binding.selectRootTv.isEnabled = false
-            binding.selectRootTv.setTextColor(R.color.text_gray.toResColor(storageActivity))
+            binding.selectRootTv.setTextColor(R.color.text_gray.toResColor(activity))
             binding.selectRootTv.background =
-                R.drawable.background_button_corner_disable.toResDrawable(storageActivity)
+                R.drawable.background_button_corner_disable.toResDrawable(activity)
         }
 
         initListener()
@@ -70,7 +70,7 @@ class ExternalStorageEditDialog(
             if (library != null) {
                 val newLibrary = updateLibrary(library)
                 if (newLibrary != null) {
-                    storageActivity.addStorage(newLibrary)
+                    activity.addStorage(newLibrary)
                 }
                 return@setPositiveListener
             }
@@ -78,11 +78,11 @@ class ExternalStorageEditDialog(
             val newLibrary =
                 createLibrary()
                     ?: return@setPositiveListener
-            storageActivity.addStorage(newLibrary)
+            activity.addStorage(newLibrary)
         }
 
         setNegativeListener {
-            storageActivity.finish()
+            activity.finish()
         }
     }
 
@@ -130,7 +130,7 @@ class ExternalStorageEditDialog(
     private fun getDisplayName(storage: MediaLibraryEntity): String {
         val uri = Uri.parse(storage.url)
         val documentFile =
-            DocumentFile.fromTreeUri(storageActivity, uri)
+            DocumentFile.fromTreeUri(activity, uri)
                 ?: return uri.lastPathSegment
                     ?: return "未知存储库"
         return getDisplayName(documentFile)
@@ -165,7 +165,7 @@ class ExternalStorageEditDialog(
                 return@block
             }
 
-            val documentFile = DocumentFile.fromTreeUri(storageActivity, uri)
+            val documentFile = DocumentFile.fromTreeUri(activity, uri)
             if (documentFile == null) {
                 ToastCenter.showError("无法访问文件夹")
                 return@block
@@ -176,7 +176,7 @@ class ExternalStorageEditDialog(
     private fun takePersistableUriPermission(uri: Uri): Boolean {
         try {
             val modeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-        storageActivity.contentResolver.takePersistableUriPermission(uri, modeFlags)
+            activity.contentResolver.takePersistableUriPermission(uri, modeFlags)
             return true
         } catch (e: Exception) {
             // 上报URI权限获取异常

@@ -17,9 +17,9 @@ import java.nio.charset.Charset
  */
 
 class FTPStorageEditDialog(
-    hostActivity: StoragePlusActivity,
+    private val activity: StoragePlusActivity,
     private val originalStorage: MediaLibraryEntity?
-) : StorageEditDialog<DialogFtpLoginBinding>(hostActivity) {
+) : StorageEditDialog<DialogFtpLoginBinding>(activity) {
     private lateinit var binding: DialogFtpLoginBinding
 
     override fun getChildLayoutId() = R.layout.dialog_ftp_login
@@ -53,7 +53,7 @@ class FTPStorageEditDialog(
 
         binding.serverTestConnectTv.setOnClickListener {
             if (checkParams(serverData)) {
-                storageActivity.testStorage(serverData)
+                activity.testStorage(serverData)
             }
         }
 
@@ -101,12 +101,12 @@ class FTPStorageEditDialog(
                         "ftp://${serverData.ftpAddress}:${serverData.port}"
                     }
 
-                storageActivity.addStorage(serverData)
+                activity.addStorage(serverData)
             }
         }
 
         setNegativeListener {
-            storageActivity.finish()
+            activity.finish()
         }
     }
 

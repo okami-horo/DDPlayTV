@@ -15,9 +15,9 @@ import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivit
  */
 
 class AlistStorageEditDialog(
-    hostActivity: StoragePlusActivity,
+    private val activity: StoragePlusActivity,
     private val library: MediaLibraryEntity?
-) : StorageEditDialog<DialogAlistLoginBinding>(hostActivity) {
+) : StorageEditDialog<DialogAlistLoginBinding>(activity) {
     private lateinit var binding: DialogAlistLoginBinding
 
     override fun getChildLayoutId() = R.layout.dialog_alist_login
@@ -39,7 +39,7 @@ class AlistStorageEditDialog(
 
         binding.serverTestConnectTv.setOnClickListener {
             if (checkParams(editLibrary)) {
-                storageActivity.testStorage(editLibrary)
+                activity.testStorage(editLibrary)
             }
         }
 
@@ -61,12 +61,12 @@ class AlistStorageEditDialog(
                     editLibrary.displayName = "Alist媒体库"
                 }
                 editLibrary.describe = editLibrary.url
-                storageActivity.addStorage(editLibrary)
+                activity.addStorage(editLibrary)
             }
         }
 
         setNegativeListener {
-            storageActivity.finish()
+            activity.finish()
         }
     }
 

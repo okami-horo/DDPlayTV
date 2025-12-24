@@ -1,6 +1,6 @@
 package com.xyoye.anime_component.ui.dialog
 
-import androidx.fragment.app.FragmentActivity
+import android.app.Activity
 import com.xyoye.anime_component.R
 import com.xyoye.anime_component.databinding.DialogSearchDomainBinding
 import com.xyoye.common_component.config.AppConfig
@@ -13,9 +13,9 @@ import com.xyoye.common_component.weight.dialog.BaseBottomDialog
  */
 
 class SearchDomainDialog(
-    hostActivity: FragmentActivity,
+    private val activity: Activity,
     private val callback: (String) -> Unit
-) : BaseBottomDialog<DialogSearchDomainBinding>(hostActivity) {
+) : BaseBottomDialog<DialogSearchDomainBinding>(activity) {
     override fun getChildLayoutId() = R.layout.dialog_search_domain
 
     override fun initView(binding: DialogSearchDomainBinding) {

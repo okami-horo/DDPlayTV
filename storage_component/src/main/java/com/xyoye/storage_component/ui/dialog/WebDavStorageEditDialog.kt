@@ -16,9 +16,9 @@ import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivit
  */
 
 class WebDavStorageEditDialog(
-    hostActivity: StoragePlusActivity,
+    private val activity: StoragePlusActivity,
     private val originalStorage: MediaLibraryEntity?
-) : StorageEditDialog<DialogWebDavLoginBinding>(hostActivity) {
+) : StorageEditDialog<DialogWebDavLoginBinding>(activity) {
     private lateinit var binding: DialogWebDavLoginBinding
 
     override fun getChildLayoutId() = R.layout.dialog_web_dav_login
@@ -42,7 +42,7 @@ class WebDavStorageEditDialog(
 
         binding.serverTestConnectTv.setOnClickListener {
             if (checkParams(serverData)) {
-                storageActivity.testStorage(serverData)
+                activity.testStorage(serverData)
             }
         }
 
@@ -84,12 +84,12 @@ class WebDavStorageEditDialog(
                     serverData.displayName = "WebDav媒体库"
                 }
                 serverData.describe = serverData.url
-                storageActivity.addStorage(serverData)
+                activity.addStorage(serverData)
             }
         }
 
         setNegativeListener {
-            storageActivity.finish()
+            activity.finish()
         }
     }
 

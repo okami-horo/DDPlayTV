@@ -1,8 +1,8 @@
 package com.xyoye.common_component.weight.dialog
 
+import android.app.Activity
 import android.os.CountDownTimer
 import androidx.core.view.isVisible
-import androidx.fragment.app.FragmentActivity
 import com.xyoye.common_component.R
 import com.xyoye.common_component.databinding.DialogCommonBinding
 import com.xyoye.common_component.extension.setTextColorRes
@@ -13,7 +13,7 @@ import com.xyoye.common_component.extension.toResString
  */
 
 open class CommonDialog private constructor(
-    activity: FragmentActivity,
+    activity: Activity,
     private val builder: Builder
 ) : BaseBottomDialog<DialogCommonBinding>(activity) {
     private val delayTimer =
@@ -34,7 +34,7 @@ open class CommonDialog private constructor(
         }
 
     open class Builder(
-        private val activity: FragmentActivity
+        private val activity: Activity
     ) {
         var tips: String? = null
         var content: String = ""

@@ -1,6 +1,6 @@
 package com.xyoye.local_component.ui.dialog
 
-import androidx.fragment.app.FragmentActivity
+import android.app.Activity
 import androidx.core.view.isVisible
 import com.xyoye.common_component.utils.formatFileSize
 import com.xyoye.common_component.utils.getFileExtension
@@ -16,7 +16,7 @@ import com.xyoye.local_component.databinding.DialogSubtitleDetailBinding
  */
 
 class SubtitleDetailDialog(
-    activity: FragmentActivity,
+    activity: Activity,
     private val subDetailData: SubDetailData,
     private val downloadOne: () -> Unit,
     private val downloadZip: (fileName: String, url: String) -> Unit
