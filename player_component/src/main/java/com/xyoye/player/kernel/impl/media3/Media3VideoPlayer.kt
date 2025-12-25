@@ -73,6 +73,8 @@ class Media3VideoPlayer(
     private var lastReportedPlayWhenReady = false
     private var lastReportedPlaybackState = Player.STATE_IDLE
 
+    private val subtitleFrameDrivers = mutableSetOf<SubtitleFrameDriver>()
+
     // 将解码器回退的重试配额按轨道类型分别计数，避免音频失败占用视频回退配额
     private val maxVideoDecoderRecoveries = 3 // 三个候选解码器：常规/低时延/软件，各自最多尝试一次
     private val maxAudioDecoderRecoveries = 2
@@ -182,6 +184,7 @@ class Media3VideoPlayer(
     }
 
     override fun release() {
+        releaseSubtitleFrameDrivers()
         player.apply {
             removeListener(this@Media3VideoPlayer)
             SupervisorScope.IO.launch(Dispatchers.Main) {
@@ -265,7 +268,16 @@ class Media3VideoPlayer(
 
     override fun createFrameDriver(callback: SubtitleFrameDriver.Callback): SubtitleFrameDriver? {
         val exoPlayer = exoPlayerOrNull() ?: return null
-        return Media3SubtitleFrameDriver(exoPlayer, callback)
+        return Media3SubtitleFrameDriver(exoPlayer, callback).also { driver ->
+            subtitleFrameDrivers.add(driver)
+        }
+    }
+
+    private fun releaseSubtitleFrameDrivers() {
+        subtitleFrameDrivers.forEach { driver ->
+            runCatching { driver.stop() }
+        }
+        subtitleFrameDrivers.clear()
     }
 
     override fun supportAddTrack(type: TrackType): Boolean =
