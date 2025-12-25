@@ -16,17 +16,21 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
+import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
-import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSinkRegistry
 import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.PlayerConstant
 import java.io.File
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicReference
 
+@androidx.annotation.OptIn(UnstableApi::class)
 class MpvVideoPlayer(
     private val context: Context
-) : AbstractVideoPlayer() {
+) : AbstractVideoPlayer(),
+    SubtitleKernelBridge {
     private val appContext: Context = context.applicationContext
     private val nativeBridge = MpvNativeBridge()
     private var dataSource: String? = null
@@ -43,6 +47,7 @@ class MpvVideoPlayer(
     private var looping = PlayerInitializer.isLooping
     private var initializationError: Exception? = null
     private var useEmbeddedSubtitlePipeline = false
+    private val embeddedSubtitleSink = AtomicReference<EmbeddedSubtitleSink?>()
     private var embeddedSubtitleHeader: ByteArray? = null
     private var embeddedSubtitleHeaderSize: Point? = null
     private var mpvAssExtradata: ByteArray? = null
@@ -564,7 +569,7 @@ class MpvVideoPlayer(
             }
             mpvAssExtradata = null
             if (useEmbeddedSubtitlePipeline) {
-                EmbeddedSubtitleSinkRegistry.current()?.onFlush()
+                embeddedSubtitleSink.get()?.onFlush()
                 embeddedSubtitleHeader = null
                 embeddedSubtitleHeaderSize = null
             }
@@ -584,7 +589,7 @@ class MpvVideoPlayer(
         lastSubtitlePayload = null
         lastSubtitleAss = false
         lastSubtitleStartMs = null
-        val sink = EmbeddedSubtitleSinkRegistry.current() ?: return
+        val sink = embeddedSubtitleSink.get() ?: return
         sink.onFlush()
         sink.onFormat(bytes)
         embeddedSubtitleHeader = bytes
@@ -599,7 +604,7 @@ class MpvVideoPlayer(
     @androidx.annotation.OptIn(UnstableApi::class)
     private fun handleSubtitleEvent(event: MpvNativeBridge.Event.Subtitle) {
         if (!useEmbeddedSubtitlePipeline) return
-        val sink = EmbeddedSubtitleSinkRegistry.current() ?: return
+        val sink = embeddedSubtitleSink.get() ?: return
         if (event.text.isBlank()) {
             if (lastSubtitlePayload == null) {
                 return
@@ -837,7 +842,7 @@ class MpvVideoPlayer(
 
     @androidx.annotation.OptIn(UnstableApi::class)
     private fun resetEmbeddedSubtitlePipeline() {
-        EmbeddedSubtitleSinkRegistry.current()?.onFlush()
+        embeddedSubtitleSink.get()?.onFlush()
         embeddedSubtitleHeader = null
         embeddedSubtitleHeaderSize = null
         pendingAssFullPayload = null
@@ -951,6 +956,18 @@ class MpvVideoPlayer(
         }
         return details.joinToString(" | ").ifEmpty { "mpv playback error" }
     }
+
+    override fun canStartGpuSubtitlePipeline(): Boolean = useEmbeddedSubtitlePipeline
+
+    override fun setEmbeddedSubtitleSink(sink: EmbeddedSubtitleSink?) {
+        val previous = embeddedSubtitleSink.getAndSet(sink)
+        if (previous === sink) {
+            return
+        }
+        resetEmbeddedSubtitlePipeline()
+    }
+
+    override fun createFrameDriver(callback: SubtitleFrameDriver.Callback): SubtitleFrameDriver? = null
 
     companion object {
         private const val DEFAULT_ASS_PLAY_RES_X = 1920

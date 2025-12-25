@@ -34,26 +34,33 @@ import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
+import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper.getMediaSource
 import com.xyoye.player.kernel.impl.media3.AggressiveMediaCodecSelector
 import com.xyoye.player.kernel.impl.media3.LibassAwareRenderersFactory
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.PlayerConstant
+import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import com.xyoye.subtitle.MixedSubtitle
 import com.xyoye.subtitle.SubtitleType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.roundToInt
 
 @UnstableApi
 class Media3VideoPlayer(
     context: Context
 ) : AbstractVideoPlayer(),
-    Player.Listener {
+    Player.Listener,
+    SubtitleKernelBridge {
     private val appContext: Context = context.applicationContext
 
     private lateinit var player: ExoPlayer
     private lateinit var mediaSource: MediaSource
+
+    private val embeddedSubtitleSink = AtomicReference<EmbeddedSubtitleSink?>()
 
     private val trackSelector: TrackSelector by lazy { DefaultTrackSelector(appContext) }
     private val loadControl: LoadControl by lazy { DefaultLoadControl() }
@@ -91,6 +98,7 @@ class Media3VideoPlayer(
             LibassAwareRenderersFactory(
                 appContext,
                 AggressiveMediaCodecSelector(),
+                embeddedSinkProvider = { embeddedSubtitleSink.get() }
             ).apply {
                 setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             }
@@ -248,6 +256,17 @@ class Media3VideoPlayer(
         } else {
             null
         }
+
+    override fun canStartGpuSubtitlePipeline(): Boolean = true
+
+    override fun setEmbeddedSubtitleSink(sink: EmbeddedSubtitleSink?) {
+        embeddedSubtitleSink.set(sink)
+    }
+
+    override fun createFrameDriver(callback: SubtitleFrameDriver.Callback): SubtitleFrameDriver? {
+        val exoPlayer = exoPlayerOrNull() ?: return null
+        return Media3SubtitleFrameDriver(exoPlayer, callback)
+    }
 
     override fun supportAddTrack(type: TrackType): Boolean =
         when (type) {

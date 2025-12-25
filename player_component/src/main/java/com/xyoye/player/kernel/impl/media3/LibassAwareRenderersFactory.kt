@@ -7,14 +7,13 @@ import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.text.TextRenderer
-import com.xyoye.common_component.enums.SubtitleRendererBackend
-import com.xyoye.player.info.PlayerInitializer
-import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSinkRegistry
+import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 
 @UnstableApi
 class LibassAwareRenderersFactory(
     context: Context,
-    selector: MediaCodecSelector = AggressiveMediaCodecSelector()
+    selector: MediaCodecSelector = AggressiveMediaCodecSelector(),
+    private val embeddedSinkProvider: () -> EmbeddedSubtitleSink?
 ) : AggressiveRenderersFactory(context, selector) {
 
     override fun buildTextRenderers(
@@ -24,11 +23,11 @@ class LibassAwareRenderersFactory(
         extensionRendererMode: Int,
         out: ArrayList<Renderer>
     ) {
-        if (PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS) {
-            val decoderFactory = LibassSubtitleDecoderFactory { EmbeddedSubtitleSinkRegistry.current() }
-            out.add(TextRenderer(output, outputLooper, decoderFactory))
-            return
-        }
         super.buildTextRenderers(context, output, outputLooper, extensionRendererMode, out)
+
+        val decoderFactory = LibassSubtitleDecoderFactory(embeddedSinkProvider)
+        val insertIndex = out.indexOfFirst { it is TextRenderer }.takeIf { it >= 0 } ?: out.size
+        out.removeAll { it is TextRenderer }
+        out.add(insertIndex, TextRenderer(output, outputLooper, decoderFactory))
     }
 }

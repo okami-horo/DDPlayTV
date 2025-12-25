@@ -15,11 +15,15 @@ class LibassSubtitleDecoderFactory(
     private val defaultFactory = SubtitleDecoderFactory.DEFAULT
 
     override fun supportsFormat(format: Format): Boolean {
-        return isSsaMime(format.sampleMimeType) || defaultFactory.supportsFormat(format)
+        val sink = sinkProvider()
+        if (sink != null && isSsaMime(format.sampleMimeType)) {
+            return true
+        }
+        return defaultFactory.supportsFormat(format)
     }
 
     override fun createDecoder(format: Format): SubtitleDecoder {
-        return if (isSsaMime(format.sampleMimeType)) {
+        return if (sinkProvider() != null && isSsaMime(format.sampleMimeType)) {
             LibassSsaStreamDecoder(format, sinkProvider)
         } else {
             defaultFactory.createDecoder(format)

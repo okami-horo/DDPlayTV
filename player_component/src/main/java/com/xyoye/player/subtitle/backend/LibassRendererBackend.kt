@@ -1,250 +1,78 @@
 package com.xyoye.player.subtitle.backend
 
-import android.view.Choreographer
-import android.view.Surface
 import androidx.media3.common.util.UnstableApi
-import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.subtitle.SubtitleFontManager
-import com.xyoye.data_component.enums.SubtitleViewType
 import com.xyoye.data_component.enums.SurfaceType
-import com.xyoye.player.info.PlayerInitializer
-import com.xyoye.player.subtitle.ui.SubtitleSurfaceOverlay
-import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
-import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSinkRegistry
-import com.xyoye.player.subtitle.backend.LibassEmbeddedSubtitleSink
-import com.xyoye.player_component.media3.render.SubtitleRenderScheduler
-import com.xyoye.player_component.subtitle.gpu.AssGpuRenderer
-import com.xyoye.player_component.subtitle.gpu.LocalSubtitlePipelineApi
-import com.xyoye.player_component.subtitle.gpu.SubtitleFallbackController
-import com.xyoye.player_component.subtitle.gpu.SubtitleOutputTargetTracker
-import com.xyoye.player_component.subtitle.gpu.SubtitlePipelineController
-import com.xyoye.player_component.subtitle.gpu.SubtitleRecoveryCoordinator
-import com.xyoye.player_component.subtitle.gpu.SubtitleSurfaceLifecycleHandler
+import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.subtitle.MixedSubtitle
 
 /**
- * GPU libass backend: routes rendering to the native GPU pipeline and discards
- * the old CPU bitmap overlay path.
+ * GPU libass backend.
+ *
+ * - Embedded ASS/SSA is fed through the kernel bridge via [EmbeddedSubtitleSink].
+ * - External ASS/SSA is loaded directly into the GPU renderer.
+ * - Text/bitmap subtitles are still rendered by the legacy controller pipeline.
  */
 @UnstableApi
-class LibassRendererBackend : SubtitleRenderer {
+class LibassRendererBackend(
+    private val kernelBridge: SubtitleKernelBridge?
+) : SubtitleRenderer {
     override val backend: SubtitleRendererBackend = SubtitleRendererBackend.LIBASS
 
-    private var environment: SubtitleRenderEnvironment? = null
-    private var tracker: SubtitleOutputTargetTracker? = null
-    private var pipelineController: SubtitlePipelineController? = null
-    private var fallbackController: SubtitleFallbackController? = null
-    private var renderer: AssGpuRenderer? = null
-    private var lifecycleHandler: SubtitleSurfaceLifecycleHandler? = null
-    private var recoveryCoordinator: SubtitleRecoveryCoordinator? = null
-    private var overlay: SubtitleSurfaceOverlay? = null
-    private var renderScheduler: SubtitleRenderScheduler? = null
-    private var choreographer: Choreographer? = null
-    private var renderLoopRunning = false
-    private var embeddedSink: EmbeddedSubtitleSink? = null
+    private var session: LibassGpuSubtitleSession? = null
 
     override fun bind(environment: SubtitleRenderEnvironment) {
-        this.environment = environment
-        val api = LocalSubtitlePipelineApi()
-        val controller = SubtitlePipelineController(api)
-        val gpuRenderer = AssGpuRenderer(controller)
-        val fallback = SubtitleFallbackController(controller)
-        val targetTracker = SubtitleOutputTargetTracker()
-        tracker = targetTracker
-        pipelineController = controller
-        fallbackController = fallback
-        renderer = gpuRenderer
-        lifecycleHandler = SubtitleSurfaceLifecycleHandler(gpuRenderer, targetTracker, fallback)
-        recoveryCoordinator = SubtitleRecoveryCoordinator(gpuRenderer, targetTracker, fallback, controller)
-        attachOverlay(environment)
-        renderer?.updateOpacity(PlayerInitializer.Subtitle.alpha)
-        registerEmbeddedSink(gpuRenderer, environment)
-        startRenderDriver(environment, gpuRenderer)
+        if (kernelBridge?.canStartGpuSubtitlePipeline() == false) {
+            LogFacade.w(LogModule.PLAYER, TAG, "GPU subtitle pipeline not supported by kernel, skip bind")
+            session = null
+            return
+        }
+        session = LibassGpuSubtitleSession(environment, kernelBridge).also { it.start() }
     }
 
     override fun release() {
-        embeddedSink?.let { sink ->
-            sink.onRelease()
-            EmbeddedSubtitleSinkRegistry.unregister(sink)
-        }
-        embeddedSink = null
-        stopRenderDriver()
-        overlay?.let { ov ->
-            environment?.playerView?.detachSubtitleOverlay(ov)
-        }
-        overlay = null
-        renderer?.release()
-        renderer = null
-        lifecycleHandler = null
-        recoveryCoordinator = null
-        fallbackController = null
-        tracker = null
-        pipelineController = null
-        environment = null
+        session?.release()
+        session = null
     }
 
     override fun render(subtitle: MixedSubtitle): Boolean {
-        // GPU pipeline drives rendering via the Media3 callback scheduler or choreographer fallback.
-        return true
+        // libass pipeline does not consume MixedSubtitle events; keep legacy controller active.
+        return false
     }
 
     override fun onSurfaceTypeChanged(surfaceType: SurfaceType) {
-        // No-op: GPU pipeline handles output via dedicated overlay surface.
+        // No-op: GPU pipeline manages its own overlay surface.
     }
 
     override fun supportsExternalTrack(extension: String): Boolean =
-        when (extension.lowercase()) {
-            "ass", "ssa" -> true
-            else -> false
-        }
+        session != null &&
+            when (extension.lowercase()) {
+                "ass", "ssa" -> true
+                else -> false
+            }
 
     override fun loadExternalSubtitle(path: String): Boolean {
-        LogFacade.i(LogModule.PLAYER, TAG, "GPU libass backend loaded: $path")
-        val env = environment ?: return false
-        val fonts = buildFontDirectories(env.context)
-        val defaultFont = SubtitleFontManager.getDefaultFontPath(env.context)
-        renderer?.loadTrack(path, fonts, defaultFont)
+        val current = session ?: return false
+        LogFacade.i(LogModule.PLAYER, TAG, "GPU libass track loaded: $path")
+        current.loadExternalTrack(path)
         return true
     }
 
     override fun updateOpacity(alphaPercent: Int) {
-        renderer?.updateOpacity(alphaPercent)
+        session?.updateOpacity(alphaPercent)
     }
 
-    private fun registerEmbeddedSink(gpuRenderer: AssGpuRenderer, env: SubtitleRenderEnvironment) {
-        val fonts = buildFontDirectories(env.context)
-        val defaultFont = SubtitleFontManager.getDefaultFontPath(env.context)
-        val sink = LibassEmbeddedSubtitleSink(gpuRenderer, fonts, defaultFont)
-        embeddedSink = sink
-        EmbeddedSubtitleSinkRegistry.register(sink)
+    override fun onSeek(positionMs: Long) {
+        session?.onSeek(positionMs)
     }
 
-    private fun buildFontDirectories(context: android.content.Context): List<String> {
-        SubtitleFontManager.ensureDefaultFont(context)
-        return SubtitleFontManager.getFontsDirectoryPath(context)?.let { listOf(it) } ?: emptyList()
+    override fun onOffsetChanged(positionMs: Long) {
+        session?.onOffsetChanged(positionMs)
     }
-
-    private fun attachOverlay(env: SubtitleRenderEnvironment) {
-        val overlay =
-            SubtitleSurfaceOverlay(env.context).apply {
-                bindPlayerView(env.playerView)
-                setOnFrameSizeChanged { width, height ->
-                    val surface = holder.surface
-                    if (surface != null && surface.isValid) {
-                        lifecycleHandler?.onSurfaceSizeChanged(
-                            surface = surface,
-                            viewType = SubtitleViewType.SurfaceView,
-                            width = width,
-                            height = height,
-                            rotation = 0,
-                            telemetryEnabled = true,
-                        )
-                    }
-                }
-                setSurfaceStateListener(
-                    object : SubtitleSurfaceOverlay.SurfaceStateListener {
-                        override fun onSurfaceDestroyed() {
-                            lifecycleHandler?.onSurfaceDestroyed()
-                        }
-
-                        override fun onSurfaceCreated(
-                            surface: Surface?,
-                            width: Int,
-                            height: Int
-                        ) {
-                            if (surface != null && surface.isValid) {
-                                lifecycleHandler?.onSurfaceAvailable(
-                                    surface = surface,
-                                    viewType = SubtitleViewType.SurfaceView,
-                                    width = width,
-                                    height = height,
-                                    rotation = 0,
-                                    telemetryEnabled = true,
-                                )
-                            }
-                        }
-
-                        override fun onSurfaceChanged(
-                            surface: Surface?,
-                            width: Int,
-                            height: Int
-                        ) {
-                            if (surface != null && surface.isValid) {
-                                lifecycleHandler?.onSurfaceSizeChanged(
-                                    surface = surface,
-                                    viewType = SubtitleViewType.SurfaceView,
-                                    width = width,
-                                    height = height,
-                                    rotation = 0,
-                                    telemetryEnabled = true,
-                                )
-                            }
-                        }
-                    },
-                )
-            }
-        env.playerView.attachSubtitleOverlay(overlay)
-        this.overlay = overlay
-    }
-
-    private fun startRenderDriver(env: SubtitleRenderEnvironment, gpuRenderer: AssGpuRenderer) {
-        val exoPlayer = env.playerView.exoPlayerOrNull()
-        if (exoPlayer != null) {
-            renderScheduler =
-                SubtitleRenderScheduler(
-                    player = exoPlayer,
-                    renderer = gpuRenderer,
-                    shouldRender = { tracker?.currentTarget != null }
-                ).also { it.start() }
-            return
-        }
-        startRenderLoop()
-    }
-
-    private fun stopRenderDriver() {
-        renderScheduler?.stop()
-        renderScheduler = null
-        stopRenderLoop()
-    }
-
-    private fun startRenderLoop() {
-        if (renderLoopRunning) return
-        renderLoopRunning = true
-        if (choreographer == null) {
-            choreographer = Choreographer.getInstance()
-        }
-        choreographer?.postFrameCallback(frameCallback)
-    }
-
-    private fun stopRenderLoop() {
-        if (!renderLoopRunning) return
-        renderLoopRunning = false
-        choreographer?.removeFrameCallback(frameCallback)
-    }
-
-    private val frameCallback =
-        object : Choreographer.FrameCallback {
-            override fun doFrame(frameTimeNanos: Long) {
-                if (!renderLoopRunning) return
-                val gpuRenderer = renderer
-                val env = environment
-                val targetTracker = tracker
-                if (gpuRenderer != null && env != null && targetTracker?.currentTarget != null) {
-                    val pts =
-                        env.playerView.getCurrentPosition().let { current ->
-                            (current + SubtitlePreferenceUpdater.currentOffset()).coerceAtLeast(0L)
-                        }
-                    val vsyncId = frameTimeNanos / 1_000_000L
-                    gpuRenderer.renderFrame(pts, vsyncId)
-                }
-                choreographer?.postFrameCallback(this)
-            }
-        }
 
     companion object {
-        private const val TAG = "LibassRendererGPU"
+        private const val TAG = "LibassRendererBackend"
     }
 }

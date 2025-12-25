@@ -16,6 +16,7 @@ import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.data_component.enums.VLCHWDecode
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
+import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.utils.VideoLog
 import kotlinx.coroutines.launch
@@ -34,7 +35,8 @@ import java.util.Locale
 
 class VlcVideoPlayer(
     private val mContext: Context
-) : AbstractVideoPlayer() {
+) : AbstractVideoPlayer(),
+    SubtitleKernelBridge {
     companion object {
         private val TAG = VlcVideoPlayer::class.java.simpleName
 

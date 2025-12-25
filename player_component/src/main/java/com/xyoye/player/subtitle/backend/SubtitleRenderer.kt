@@ -31,4 +31,18 @@ interface SubtitleRenderer {
     fun updateOpacity(alphaPercent: Int) {
         // default no-op
     }
+
+    /**
+     * Notifies the renderer that the playback position has jumped (seek/discontinuity).
+     */
+    fun onSeek(positionMs: Long) {
+        // default no-op
+    }
+
+    /**
+     * Notifies the renderer that the subtitle clock offset changed while playback is active.
+     */
+    fun onOffsetChanged(positionMs: Long) {
+        // default no-op
+    }
 }
