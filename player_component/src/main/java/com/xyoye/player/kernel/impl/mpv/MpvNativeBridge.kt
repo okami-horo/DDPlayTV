@@ -53,22 +53,15 @@ class MpvNativeBridge {
             val level: Int,
             val message: String?
         ) : Event
-
-        data class Subtitle(
-            val text: String,
-            val isAss: Boolean,
-            val startMs: Long,
-            val durationMs: Long?
-        ) : Event
-
-        data class SubtitleHeader(
-            val extradata: String
-        ) : Event
     }
 
     private var nativeHandle: Long = 0
     private val mainHandler = Handler(Looper.getMainLooper())
-    private var eventListener: ((Event) -> Unit)? = null
+
+    private val listenerLock = Any()
+    private val eventListeners = LinkedHashSet<(Event) -> Unit>()
+
+    @Volatile
     private var eventLoopStarted = false
 
     val availabilityReason: String?
@@ -92,7 +85,11 @@ class MpvNativeBridge {
             Log.w(TAG, "nativeCreate returned null handle")
             return false
         }
-        if (eventListener != null) {
+        val hasListeners =
+            synchronized(listenerLock) {
+                eventListeners.isNotEmpty()
+            }
+        if (hasListeners) {
             startEventLoop()
         }
         return true
@@ -107,7 +104,9 @@ class MpvNativeBridge {
             nativeHandle = 0
         }
         eventLoopStarted = false
-        eventListener = null
+        synchronized(listenerLock) {
+            eventListeners.clear()
+        }
     }
 
     fun setSurface(surface: Surface?) {
@@ -235,18 +234,44 @@ class MpvNativeBridge {
     }
 
     fun setEventListener(listener: (Event) -> Unit) {
-        eventListener = listener
+        synchronized(listenerLock) {
+            eventListeners.clear()
+            eventListeners.add(listener)
+        }
         if (nativeHandle != 0L) {
             startEventLoop()
         }
     }
 
+    fun addEventListener(listener: (Event) -> Unit) {
+        synchronized(listenerLock) {
+            eventListeners.add(listener)
+        }
+        if (nativeHandle != 0L) {
+            startEventLoop()
+        }
+    }
+
+    fun removeEventListener(listener: (Event) -> Unit) {
+        val shouldStop =
+            synchronized(listenerLock) {
+                eventListeners.remove(listener)
+                eventListeners.isEmpty()
+            }
+        if (shouldStop && nativeHandle != 0L && eventLoopStarted) {
+            nativeStopEventLoop(nativeHandle)
+            eventLoopStarted = false
+        }
+    }
+
     fun clearEventListener() {
+        synchronized(listenerLock) {
+            eventListeners.clear()
+        }
         if (nativeHandle != 0L && eventLoopStarted) {
             nativeStopEventLoop(nativeHandle)
         }
         eventLoopStarted = false
-        eventListener = null
     }
 
     fun videoSize(): Pair<Int, Int> {
@@ -341,14 +366,24 @@ class MpvNativeBridge {
                 EVENT_BUFFERING_END -> Event.Buffering(false)
                 EVENT_ERROR -> Event.Error(arg1.toInt(), arg2.toInt(), message)
                 EVENT_LOG_MESSAGE -> Event.LogMessage(arg1.toInt(), message)
-                EVENT_SUBTITLE_TEXT -> Event.Subtitle(message.orEmpty(), false, arg1, arg2.takeIf { it > 0L })
-                EVENT_SUBTITLE_ASS -> Event.Subtitle(message.orEmpty(), true, arg1, arg2.takeIf { it > 0L })
-                EVENT_SUBTITLE_HEADER -> Event.SubtitleHeader(message.orEmpty())
                 else -> null
             }
-        if (event != null) {
-            mainHandler.post {
-                eventListener?.invoke(event)
+
+        if (event == null) {
+            return
+        }
+
+        val listeners =
+            synchronized(listenerLock) {
+                eventListeners.toList()
+            }
+        if (listeners.isEmpty()) {
+            return
+        }
+
+        mainHandler.post {
+            listeners.forEach { listener ->
+                runCatching { listener(event) }
             }
         }
     }
@@ -368,9 +403,6 @@ class MpvNativeBridge {
         private const val EVENT_BUFFERING_START = 6
         private const val EVENT_BUFFERING_END = 7
         private const val EVENT_LOG_MESSAGE = 8
-        private const val EVENT_SUBTITLE_TEXT = 9
-        private const val EVENT_SUBTITLE_ASS = 10
-        private const val EVENT_SUBTITLE_HEADER = 11
 
         const val TRACK_TYPE_AUDIO = 1
         const val TRACK_TYPE_SUBTITLE = 2

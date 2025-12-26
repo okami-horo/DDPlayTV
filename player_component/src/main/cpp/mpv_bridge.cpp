@@ -35,9 +35,6 @@ constexpr jint kEventError = 5;
 constexpr jint kEventBufferingStart = 6;
 constexpr jint kEventBufferingEnd = 7;
 constexpr jint kEventLogMessage = 8;
-constexpr jint kEventSubtitleText = 9;
-constexpr jint kEventSubtitleAss = 10;
-constexpr jint kEventSubtitleHeader = 11;
 constexpr jint kTrackVideo = 0;
 constexpr jint kTrackAudio = 1;
 constexpr jint kTrackSubtitle = 2;
@@ -150,16 +147,18 @@ struct MpvSession {
     int video_width = 0;
     int video_height = 0;
     std::atomic<bool> running = false;
-    std::thread event_thread;
-    EventCallbackRef event_callback;
     std::mutex mutex;
     jobject surface_ref = nullptr;
     ANativeWindow* native_window = nullptr;
     std::atomic<bool> surface_changed = false;
+    std::thread event_thread;
+    EventCallbackRef event_callback;
+
     std::atomic<bool> render_requested = false;
     int surface_width = 0;
     int surface_height = 0;
     // Rendering state (lives on event thread)
+
     EGLDisplay egl_display = EGL_NO_DISPLAY;
     EGLContext egl_context = EGL_NO_CONTEXT;
     EGLSurface egl_surface = EGL_NO_SURFACE;
@@ -415,18 +414,6 @@ void observeProperties(mpv_handle* handle) {
         return;
     }
     mpv_observe_property(handle, 0, "paused-for-cache", MPV_FORMAT_FLAG);
-    mpv_observe_property(handle, 0, "width", MPV_FORMAT_INT64);
-    mpv_observe_property(handle, 0, "height", MPV_FORMAT_INT64);
-    // Prefer full ASS events (with style and timing fields) when available.
-    if (mpv_observe_property(handle, 0, "sub-text/ass-full", MPV_FORMAT_STRING) < 0) {
-        // Prefer the new property name to avoid deprecation warnings, fall back for older mpv builds.
-        if (mpv_observe_property(handle, 0, "sub-text/ass", MPV_FORMAT_STRING) < 0) {
-            mpv_observe_property(handle, 0, "sub-text-ass", MPV_FORMAT_STRING);
-        }
-    }
-    mpv_observe_property(handle, 0, "sub-text", MPV_FORMAT_STRING);
-    // ASS track codec private (headers/styles). This is empty for non-ASS tracks.
-    mpv_observe_property(handle, 0, "sub-ass-extradata", MPV_FORMAT_STRING);
 }
 
 void destroyRenderContext(MpvSession* session) {
@@ -778,57 +765,6 @@ void eventLoop(MpvSession* session) {
                     );
                     break;
                 }
-                if (strcmp(prop->name, "sub-ass-extradata") == 0) {
-                    const char* extradata = nullptr;
-                    if (prop->format == MPV_FORMAT_STRING && prop->data != nullptr) {
-                        extradata = *static_cast<char**>(prop->data);
-                    }
-                    dispatchEvent(
-                        env,
-                        session->event_callback,
-                        kEventSubtitleHeader,
-                        0,
-                        0,
-                        extradata == nullptr ? "" : extradata
-                    );
-                    break;
-                }
-                if (strcmp(prop->name, "sub-text/ass-full") == 0 ||
-                    strcmp(prop->name, "sub-text/ass") == 0 ||
-                    strcmp(prop->name, "sub-text-ass") == 0 ||
-                    strcmp(prop->name, "sub-text") == 0) {
-                    const bool isAss = strcmp(prop->name, "sub-text") != 0;
-                    const char* text = nullptr;
-                    if (prop->format == MPV_FORMAT_STRING && prop->data != nullptr) {
-                        text = *static_cast<char**>(prop->data);
-                    }
-                    std::string payload = text == nullptr ? "" : text;
-                    double start = 0.0;
-                    double end = 0.0;
-                    bool hasStart = tryGetDoubleProperty(session->handle, "sub-start", &start);
-                    bool hasEnd = tryGetDoubleProperty(session->handle, "sub-end", &end);
-                    if (!hasStart) {
-                        double pos = 0.0;
-                        if (tryGetDoubleProperty(session->handle, "time-pos", &pos)) {
-                            start = pos;
-                            hasStart = true;
-                        }
-                    }
-                    const long long startMs =
-                        hasStart ? static_cast<long long>(start * 1000.0) : 0;
-                    const long long durationMs =
-                        (hasStart && hasEnd && end >= start)
-                            ? static_cast<long long>((end - start) * 1000.0)
-                            : 0;
-                    dispatchEvent(
-                        env,
-                        session->event_callback,
-                        isAss ? kEventSubtitleAss : kEventSubtitleText,
-                        startMs,
-                        durationMs,
-                        payload.c_str()
-                    );
-                }
                 break;
             }
             default:
@@ -995,14 +931,32 @@ bool addExternalTrack(MpvSession* session, jint trackType, const std::string& pa
     if (session == nullptr || session->handle == nullptr || path.empty()) {
         return false;
     }
-    if (trackType == kTrackAudio) {
-        const char* cmd[] = {"audio-add", path.c_str(), "select", nullptr};
-        return mpv_command(session->handle, cmd) >= 0;
-    }
-    if (trackType == kTrackSubtitle) {
-        const char* cmd[] = {"sub-add", path.c_str(), "select", nullptr};
-        return mpv_command(session->handle, cmd) >= 0;
-    }
+	    if (trackType == kTrackAudio) {
+	        const char* cmd[] = {"audio-add", path.c_str(), "select", nullptr};
+	        const int result = mpv_command(session->handle, cmd);
+	        if (result < 0) {
+	            const std::string message =
+	                "mpv audio-add failed: " + std::to_string(result) + " (" + mpv_error_string(result) +
+	                ") path=" + path;
+	            set_last_error(message);
+	            return false;
+	        }
+	        set_last_error("");
+	        return true;
+	    }
+	    if (trackType == kTrackSubtitle) {
+	        const char* cmd[] = {"sub-add", path.c_str(), "select", nullptr};
+	        const int result = mpv_command(session->handle, cmd);
+	        if (result < 0) {
+	            const std::string message =
+	                "mpv sub-add failed: " + std::to_string(result) + " (" + mpv_error_string(result) +
+	                ") path=" + path;
+	            set_last_error(message);
+	            return false;
+	        }
+	        set_last_error("");
+	        return true;
+	    }
     return false;
 }
 

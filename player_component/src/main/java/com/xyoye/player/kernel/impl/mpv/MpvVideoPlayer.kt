@@ -16,15 +16,11 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
-import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
-import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.PlayerConstant
 import java.io.File
-import java.util.Locale
-import java.util.concurrent.atomic.AtomicReference
 
 @androidx.annotation.OptIn(UnstableApi::class)
 class MpvVideoPlayer(
@@ -46,16 +42,6 @@ class MpvVideoPlayer(
     private var playbackSpeed = PlayerInitializer.Player.videoSpeed
     private var looping = PlayerInitializer.isLooping
     private var initializationError: Exception? = null
-    private var useEmbeddedSubtitlePipeline = false
-    private val embeddedSubtitleSink = AtomicReference<EmbeddedSubtitleSink?>()
-    private var embeddedSubtitleHeader: ByteArray? = null
-    private var embeddedSubtitleHeaderSize: Point? = null
-    private var mpvAssExtradata: ByteArray? = null
-    private var pendingAssFullPayload: String? = null
-    private var embeddedSubtitleReadOrder: Long = 0L
-    private var lastSubtitlePayload: String? = null
-    private var lastSubtitleAss = false
-    private var lastSubtitleStartMs: Long? = null
 
     private fun failInitialization(
         message: String,
@@ -274,14 +260,10 @@ class MpvVideoPlayer(
         decodeType = DecodeType.SW
         videoSize = Point(0, 0)
         initializationError = null
-        resetEmbeddedSubtitlePipeline()
-        mpvAssExtradata = null
     }
 
     override fun release() {
         stop()
-        resetEmbeddedSubtitlePipeline()
-        mpvAssExtradata = null
         nativeBridge.clearEventListener()
         nativeBridge.destroy()
         isPrepared = false
@@ -506,12 +488,6 @@ class MpvVideoPlayer(
                 videoSize = Point(event.width, event.height)
                 mPlayerEventListener.onVideoSizeChange(event.width, event.height)
             }
-            is MpvNativeBridge.Event.SubtitleHeader -> {
-                handleSubtitleHeaderEvent(event)
-            }
-            is MpvNativeBridge.Event.Subtitle -> {
-                handleSubtitleEvent(event)
-            }
         }
     }
 
@@ -538,7 +514,6 @@ class MpvVideoPlayer(
                 else -> "gpu"
             }
         nativeBridge.setVideoOutput(safeOutput)
-        updateEmbeddedSubtitlePreference(safeOutput)
     }
 
     private fun applyHwdecPriority() {
@@ -551,305 +526,6 @@ class MpvVideoPlayer(
                 "mediacodec,mediacodec-copy"
             }
         nativeBridge.setHwdecPriority(hwdec)
-    }
-
-    private fun updateEmbeddedSubtitlePreference(output: String) {
-        val enable = output.equals("mediacodec_embed", ignoreCase = true)
-        if (useEmbeddedSubtitlePipeline == enable) return
-        useEmbeddedSubtitlePipeline = enable
-        resetEmbeddedSubtitlePipeline()
-    }
-
-    @androidx.annotation.OptIn(UnstableApi::class)
-    private fun handleSubtitleHeaderEvent(event: MpvNativeBridge.Event.SubtitleHeader) {
-        val raw = event.extradata
-        if (raw.isBlank()) {
-            if (mpvAssExtradata == null) {
-                return
-            }
-            mpvAssExtradata = null
-            if (useEmbeddedSubtitlePipeline) {
-                embeddedSubtitleSink.get()?.onFlush()
-                embeddedSubtitleHeader = null
-                embeddedSubtitleHeaderSize = null
-            }
-            return
-        }
-        val bytes = raw.toByteArray(Charsets.UTF_8)
-        if (mpvAssExtradata?.contentEquals(bytes) == true) {
-            return
-        }
-        mpvAssExtradata = bytes
-        if (!useEmbeddedSubtitlePipeline) {
-            return
-        }
-        embeddedSubtitleReadOrder = 0L
-        embeddedSubtitleHeader = null
-        embeddedSubtitleHeaderSize = null
-        lastSubtitlePayload = null
-        lastSubtitleAss = false
-        lastSubtitleStartMs = null
-        val sink = embeddedSubtitleSink.get() ?: return
-        sink.onFlush()
-        sink.onFormat(bytes)
-        embeddedSubtitleHeader = bytes
-        pendingAssFullPayload?.let { pending ->
-            if (pending.isNotBlank()) {
-                pendingAssFullPayload = null
-                appendAssFullPayload(sink, pending)
-            }
-        }
-    }
-
-    @androidx.annotation.OptIn(UnstableApi::class)
-    private fun handleSubtitleEvent(event: MpvNativeBridge.Event.Subtitle) {
-        if (!useEmbeddedSubtitlePipeline) return
-        val sink = embeddedSubtitleSink.get() ?: return
-        if (event.text.isBlank()) {
-            if (lastSubtitlePayload == null) {
-                return
-            }
-            sink.onFlush()
-            lastSubtitlePayload = null
-            lastSubtitleStartMs = null
-            pendingAssFullPayload = null
-            return
-        }
-        val startMs = event.startMs.coerceAtLeast(0L)
-        if (!event.isAss && lastSubtitleAss && lastSubtitleStartMs == startMs) {
-            return
-        }
-        val signature = buildSubtitleSignature(event, startMs)
-        if (signature == lastSubtitlePayload && event.isAss == lastSubtitleAss) {
-            return
-        }
-        val isAssFull = event.isAss && looksLikeAssFullEvent(event.text)
-        if (isAssFull && mpvAssExtradata == null) {
-            pendingAssFullPayload = event.text
-            lastSubtitlePayload = signature
-            lastSubtitleAss = true
-            lastSubtitleStartMs = startMs
-            return
-        }
-        ensureEmbeddedSubtitleHeader(sink)
-        if (isAssFull) {
-            pendingAssFullPayload = null
-            appendAssFullPayload(sink, event.text)
-        } else {
-            val payload = buildAssChunk(event.text, event.isAss)
-            val timeUs = startMs * 1000L
-            val durationUs = event.durationMs?.takeIf { it > 0L }?.times(1000L)
-            sink.onSample(payload.toByteArray(Charsets.UTF_8), timeUs, durationUs)
-        }
-        lastSubtitlePayload = signature
-        lastSubtitleAss = event.isAss
-        lastSubtitleStartMs = startMs
-    }
-
-    @androidx.annotation.OptIn(UnstableApi::class)
-    private fun ensureEmbeddedSubtitleHeader(sink: EmbeddedSubtitleSink) {
-        val mpvHeader = mpvAssExtradata
-        if (mpvHeader != null) {
-            if (embeddedSubtitleHeader == null || embeddedSubtitleHeader?.contentEquals(mpvHeader) != true) {
-                embeddedSubtitleHeader = mpvHeader
-                embeddedSubtitleHeaderSize = null
-                sink.onFormat(mpvHeader)
-            }
-            pendingAssFullPayload?.let { pending ->
-                if (pending.isNotBlank()) {
-                    pendingAssFullPayload = null
-                    appendAssFullPayload(sink, pending)
-                }
-            }
-            return
-        }
-        val targetWidth =
-            if (videoSize.x > 0) {
-                videoSize.x
-            } else {
-                DEFAULT_ASS_PLAY_RES_X
-            }
-        val targetHeight =
-            if (videoSize.y > 0) {
-                videoSize.y
-            } else {
-                DEFAULT_ASS_PLAY_RES_Y
-            }
-        val cachedSize = embeddedSubtitleHeaderSize
-        if (embeddedSubtitleHeader == null ||
-            cachedSize == null ||
-            cachedSize.x != targetWidth ||
-            cachedSize.y != targetHeight
-        ) {
-            embeddedSubtitleHeaderSize = Point(targetWidth, targetHeight)
-            embeddedSubtitleHeader = buildAssHeader(targetWidth, targetHeight)
-            sink.onFormat(embeddedSubtitleHeader)
-        }
-    }
-
-    private fun buildAssHeader(
-        width: Int,
-        height: Int
-    ): ByteArray {
-        val fontSize = PlayerInitializer.Subtitle.textSize.coerceAtLeast(MIN_ASS_FONT_SIZE)
-        val header =
-            """
-            [Script Info]
-            ScriptType: v4.00+
-            PlayResX: $width
-            PlayResY: $height
-            WrapStyle: 0
-            ScaledBorderAndShadow: yes
-
-            [V4+ Styles]
-            Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-            Style: Default,${SubtitleFontManager.DEFAULT_FONT_FAMILY},$fontSize,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,0,2,20,20,20,1
-
-            [Events]
-            Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-            """.trimIndent()
-        return header.toByteArray(Charsets.UTF_8)
-    }
-
-    private fun looksLikeAssFullEvent(text: String): Boolean {
-        val trimmed = text.trimStart()
-        return trimmed.startsWith("Dialogue:", ignoreCase = true) || trimmed.startsWith("Comment:", ignoreCase = true)
-    }
-
-    @androidx.annotation.OptIn(UnstableApi::class)
-    private fun appendAssFullPayload(
-        sink: EmbeddedSubtitleSink,
-        payload: String
-    ) {
-        payload
-            .lineSequence()
-            .map { it.trimEnd() }
-            .filter { it.isNotBlank() }
-            .forEach { line ->
-                val chunk = parseAssFullDialogueLine(line) ?: return@forEach
-                val timeUs = chunk.startMs * 1000L
-                val durationUs = chunk.durationMs.takeIf { it > 0L }?.times(1000L)
-                sink.onSample(chunk.payload.toByteArray(Charsets.UTF_8), timeUs, durationUs)
-            }
-    }
-
-    private data class ParsedAssChunk(
-        val payload: String,
-        val startMs: Long,
-        val durationMs: Long
-    )
-
-    private fun parseAssFullDialogueLine(line: String): ParsedAssChunk? {
-        val trimmed = line.trim()
-        if (trimmed.isEmpty()) return null
-        val colon = trimmed.indexOf(':')
-        if (colon <= 0) return null
-        val kind = trimmed.substring(0, colon).trim()
-        if (!kind.equals("Dialogue", ignoreCase = true)) {
-            return null
-        }
-        val body = trimmed.substring(colon + 1).trimStart()
-        val parts = body.split(",", limit = 10)
-        if (parts.size < 10) return null
-        val layer = parts[0].trim()
-        val startMs = parseAssTimeMs(parts[1]) ?: return null
-        val endMs = parseAssTimeMs(parts[2]) ?: return null
-        val durationMs = (endMs - startMs).takeIf { it > 0L } ?: DEFAULT_ASS_DURATION_MS
-        val style = parts[3].trim()
-        val name = parts[4].trim()
-        val marginL = parts[5].trim()
-        val marginR = parts[6].trim()
-        val marginV = parts[7].trim()
-        val effect = parts[8].trim()
-        val text = parts[9]
-        val readOrder = embeddedSubtitleReadOrder++
-        val payload =
-            buildString {
-                append(readOrder)
-                append(',').append(layer)
-                append(',').append(style)
-                append(',').append(name)
-                append(',').append(marginL)
-                append(',').append(marginR)
-                append(',').append(marginV)
-                append(',').append(effect)
-                append(',').append(text)
-            }
-        return ParsedAssChunk(payload, startMs, durationMs)
-    }
-
-    private fun parseAssTimeMs(value: String): Long? {
-        val raw = value.trim()
-        val parts = raw.split(":", limit = 3)
-        if (parts.size != 3) return null
-        val hours = parts[0].toLongOrNull() ?: return null
-        val minutes = parts[1].toLongOrNull() ?: return null
-        val secParts = parts[2].split(".", limit = 2)
-        if (secParts.size != 2) return null
-        val seconds = secParts[0].toLongOrNull() ?: return null
-        val csRaw = secParts[1].trim()
-        if (csRaw.isEmpty()) return null
-        val centiseconds = csRaw.padEnd(2, '0').take(2).toLongOrNull() ?: return null
-        val totalSeconds = (hours * 3600L) + (minutes * 60L) + seconds
-        return (totalSeconds * 1000L) + (centiseconds * 10L)
-    }
-
-    private fun buildSubtitleSignature(event: MpvNativeBridge.Event.Subtitle, startMs: Long): String {
-        val durationMs = event.durationMs?.takeIf { it > 0L } ?: 0L
-        return buildString {
-            append(if (event.isAss) "A" else "T")
-            append('\u0000').append(startMs)
-            append('\u0000').append(durationMs)
-            append('\u0000').append(event.text)
-        }
-    }
-
-    private fun buildAssChunk(
-        text: String,
-        isAss: Boolean
-    ): String {
-        val safeText =
-            if (isAss) {
-                text
-            } else {
-                escapeAssText(text)
-            }
-        val readOrder = embeddedSubtitleReadOrder++
-        return "$readOrder,0,Default,,0,0,0,,$safeText"
-    }
-
-    private fun escapeAssText(text: String): String {
-        return text
-            .replace("\\", "\\\\")
-            .replace("{", "\\{")
-            .replace("}", "\\}")
-            .replace("\r\n", "\n")
-            .replace("\r", "\n")
-            .replace("\n", "\\N")
-    }
-
-    private fun formatAssTime(timeMs: Long): String {
-        val safeMs = timeMs.coerceAtLeast(0L)
-        val totalCs = safeMs / 10
-        val cs = totalCs % 100
-        val totalSec = totalCs / 100
-        val sec = totalSec % 60
-        val totalMin = totalSec / 60
-        val min = totalMin % 60
-        val hr = totalMin / 60
-        return String.format(Locale.US, "%d:%02d:%02d.%02d", hr, min, sec, cs)
-    }
-
-    @androidx.annotation.OptIn(UnstableApi::class)
-    private fun resetEmbeddedSubtitlePipeline() {
-        embeddedSubtitleSink.get()?.onFlush()
-        embeddedSubtitleHeader = null
-        embeddedSubtitleHeaderSize = null
-        pendingAssFullPayload = null
-        embeddedSubtitleReadOrder = 0L
-        lastSubtitlePayload = null
-        lastSubtitleAss = false
-        lastSubtitleStartMs = null
     }
 
     private fun resolveShaderPath(
@@ -957,24 +633,7 @@ class MpvVideoPlayer(
         return details.joinToString(" | ").ifEmpty { "mpv playback error" }
     }
 
-    override fun canStartGpuSubtitlePipeline(): Boolean = useEmbeddedSubtitlePipeline
-
-    override fun setEmbeddedSubtitleSink(sink: EmbeddedSubtitleSink?) {
-        val previous = embeddedSubtitleSink.getAndSet(sink)
-        if (previous === sink) {
-            return
-        }
-        resetEmbeddedSubtitlePipeline()
-    }
-
-    override fun createFrameDriver(callback: SubtitleFrameDriver.Callback): SubtitleFrameDriver? = null
-
-    companion object {
-        private const val DEFAULT_ASS_PLAY_RES_X = 1920
-        private const val DEFAULT_ASS_PLAY_RES_Y = 1080
-        private const val DEFAULT_ASS_DURATION_MS = 5000L
-        private const val MIN_ASS_FONT_SIZE = 10
-    }
+    override fun canStartGpuSubtitlePipeline(): Boolean = false
 }
 
 private class MpvPlaybackException(
