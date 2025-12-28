@@ -2,13 +2,18 @@ package com.xyoye.player_component.ui.activities.player
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.xyoye.common_component.bilibili.BilibiliKeys
+import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
+import com.xyoye.common_component.bilibili.danmaku.BilibiliDanmakuDownloader
 import com.xyoye.common_component.base.BaseViewModel
+import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.utils.danmu.DanmuFinder
 import com.xyoye.common_component.utils.danmu.source.DanmuSourceFactory
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuEpisodeData
+import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -23,6 +28,22 @@ class PlayerDanmuViewModel : BaseViewModel() {
 
     fun matchDanmu(videoSource: BaseVideoSource) {
         viewModelScope.launch(Dispatchers.IO) {
+            if (videoSource.getMediaType() == MediaType.BILIBILI_STORAGE) {
+                val parsed = BilibiliKeys.parse(videoSource.getUniqueKey())
+                val cid = parsed?.cid
+                if (cid != null) {
+                    val library = DatabaseManager.instance.getMediaLibraryDao().getById(videoSource.getStorageId())
+                    if (library != null) {
+                        val storageKey = BilibiliPlaybackPreferencesStore.storageKey(library)
+                        val danmu = BilibiliDanmakuDownloader.getOrDownload(storageKey, cid)
+                        if (danmu != null) {
+                            loadDanmuLiveData.postValue(videoSource.getVideoUrl() to danmu)
+                        }
+                    }
+                }
+                return@launch
+            }
+
             DanmuSourceFactory
                 .build(videoSource)
                 ?.let {

@@ -5,15 +5,22 @@ import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliPlayMode
 import com.xyoye.common_component.bilibili.BilibiliQuality
 import com.xyoye.common_component.bilibili.BilibiliVideoCodec
+import com.xyoye.common_component.bilibili.cleanup.BilibiliCleanup
+import com.xyoye.common_component.config.PlayerActions
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.network.config.Api
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.BottomActionDialog
+import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.DialogBilibiliStorageBinding
 import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivity
+import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class BilibiliStorageEditDialog(
     private val activity: StoragePlusActivity,
@@ -51,6 +58,30 @@ class BilibiliStorageEditDialog(
         binding.codecActionTv.setOnClickListener { showCodecDialog() }
         binding.allow4kOnTv.setOnClickListener { updateAllow4k(true) }
         binding.allow4kOffTv.setOnClickListener { updateAllow4k(false) }
+
+        binding.disconnectTv.isVisible = isEditMode && editLibrary.id > 0
+        binding.disconnectTv.setOnClickListener {
+            val libraryId = editLibrary.id
+            if (libraryId <= 0) return@setOnClickListener
+            CommonDialog
+                .Builder(activity)
+                .apply {
+                    tips = "提示"
+                    content = "确认断开连接并清除该媒体库的隐私数据？\n\n将清除：Cookie/登录态、播放偏好、播放历史/进度、Bilibili 弹幕缓存文件。"
+                    positiveText = "确认清除"
+                    addPositive { dialog ->
+                        dialog.dismiss()
+                        activity.lifecycleScope.launch {
+                            BilibiliCleanup.cleanup(editLibrary)
+                            PlayerActions.sendExitPlayer(activity, libraryId)
+                            ToastCenter.showOriginalToast("已断开并清除数据")
+                            dismiss()
+                        }
+                    }
+                    addNegative()
+                }.build()
+                .show()
+        }
 
         addNeutralButton("恢复默认") {
             preferences = BilibiliPlaybackPreferences()
@@ -169,4 +200,3 @@ class BilibiliStorageEditDialog(
         }.show()
     }
 }
-

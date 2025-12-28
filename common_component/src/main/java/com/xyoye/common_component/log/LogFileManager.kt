@@ -29,7 +29,7 @@ open class LogFileManager(
 ) {
     private val prepared = AtomicBoolean(false)
     private val ioLock = Any()
-    private val useMediaStore = shouldUseMediaStore()
+    private val useMediaStore: Boolean by lazy { shouldUseMediaStore() }
     private val contentResolver = context.contentResolver
     private val mediaRelativePath = LogPaths.logRelativePath(context)
     private var currentLogUri: Uri? = null
@@ -147,7 +147,7 @@ open class LogFileManager(
             val root = LogPaths.downloadRootDirectory()
             if (root != null && root.exists()) {
                 val available = runCatching { StatFs(root.path).availableBytes }.getOrNull()
-                if (available != null && available < minFreeSpaceBytes) {
+                if (available != null && available > 0 && available < minFreeSpaceBytes) {
                     throw IOException("insufficient space for log files, available=$available")
                 }
             }
@@ -158,7 +158,7 @@ open class LogFileManager(
             dir.mkdirs()
         }
         val available = runCatching { StatFs(dir.path).availableBytes }.getOrNull()
-        if (available != null && available < minFreeSpaceBytes) {
+        if (available != null && available > 0 && available < minFreeSpaceBytes) {
             throw IOException("insufficient space for log files, available=$available")
         }
     }

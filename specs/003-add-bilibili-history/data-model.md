@@ -85,6 +85,59 @@
   - `videos: Int`（分 P 数；用于决定是否为目录）
   - `pageTitle: String?`（如 `show_title`/`history.part`，用于多 P 展示）
 
+### 3.1.1 字段映射表（OpenAPI → Kotlin Model）
+
+> 目标：在实现 `data_component/data/bilibili/*` 时统一字段命名与 JSON 映射，避免后续 Repository/Storage 二次猜字段。
+
+#### A) 历史记录 cursor
+
+| API JSON Path | Kotlin 属性 | 类型 | 说明 |
+|---|---|---|---|
+| `data.cursor.max` | `max` | `Long` | 下一页游标 |
+| `data.cursor.view_at` | `viewAt` | `Long` | 秒级时间戳 |
+| `data.cursor.business` | `business` | `String` | 业务类型（archive/…） |
+| `data.cursor.ps` | `ps` | `Int` | page size |
+| `data.list[].title` | `title` | `String` | 标题 |
+| `data.list[].cover` | `cover` | `String?` | 封面 URL |
+| `data.list[].author_name` | `authorName` | `String?` | 作者名 |
+| `data.list[].view_at` | `viewAt` | `Long` | 秒级时间戳（观看时间） |
+| `data.list[].progress` | `progressSec` | `Long` | 秒（播放进度） |
+| `data.list[].duration` | `durationSec` | `Long` | 秒（总时长） |
+| `data.list[].videos` | `videos` | `Int` | 分 P 数 |
+| `data.list[].history.bvid` | `bvid` | `String` | BV 号 |
+| `data.list[].history.cid` | `cid` | `Long` | 分 P cid |
+| `data.list[].history.business` | `business` | `String` | 二次过滤用 |
+| `data.list[].history.part` | `pageTitle` | `String?` | 分 P 标题（多 P 展示） |
+| `data.list[].history.page` | `page` | `Int` | 分 P 序号（从 1 起） |
+
+#### B) 分 P 列表（pagelist）
+
+| API JSON Path | Kotlin 属性 | 类型 | 说明 |
+|---|---|---|---|
+| `data[].cid` | `cid` | `Long` | 分 P cid |
+| `data[].page` | `page` | `Int` | 分 P 序号 |
+| `data[].part` | `part` | `String?` | 分 P 标题 |
+| `data[].duration` | `durationSec` | `Long` | 秒 |
+
+#### C) 二维码登录（generate/poll）
+
+| API JSON Path | Kotlin 属性 | 类型 | 说明 |
+|---|---|---|---|
+| `data.url` | `url` | `String` | 用于生成二维码 |
+| `data.qrcode_key` | `qrcodeKey` | `String` | 轮询用 key |
+| `data.refresh_token` | `refreshToken` | `String?` | 登录成功返回（用于后续刷新） |
+| `data.timestamp` | `timestamp` | `Long` | 毫秒时间戳 |
+| `data.code` | `statusCode` | `Int` | 0 成功；86101 未扫码；86090 已扫码未确认；86038 已失效 |
+| `data.message` | `statusMessage` | `String?` | 状态描述 |
+
+#### D) 导航（nav / wbi_img）
+
+| API JSON Path | Kotlin 属性 | 类型 | 说明 |
+|---|---|---|---|
+| `data.isLogin` | `isLogin` | `Boolean` | 登录态 |
+| `data.wbi_img.img_url` | `imgUrl` | `String?` | 提取 img_key |
+| `data.wbi_img.sub_url` | `subUrl` | `String?` | 提取 sub_key |
+
 ### 3.2 分页游标（运行态，可选持久化缓存）
 
 - 实体：`BilibiliHistoryCursor`

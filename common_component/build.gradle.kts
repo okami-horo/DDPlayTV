@@ -125,6 +125,8 @@ dependencies {
     api(Dependencies.Github.smbj)
     api(Dependencies.Github.dcerpc)
 
+    api(Dependencies.Huawei.scan)
+
     kapt(files("libs/mmkv-compiler.jar"))
     kapt(Dependencies.AndroidX.room_compiler)
     kapt(Dependencies.Alibaba.arouter_compiler)

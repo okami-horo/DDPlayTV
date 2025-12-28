@@ -5,6 +5,7 @@ import android.view.KeyEvent
 import android.view.View
 import androidx.core.view.children
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.base.BaseFragment
@@ -19,6 +20,7 @@ import com.xyoye.storage_component.BR
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.FragmentStorageFileBinding
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
+import com.xyoye.storage_component.ui.dialog.BilibiliLoginDialog
 
 class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>() {
     private val directory: StorageFile? by lazy { ownerActivity.directory }
@@ -48,10 +50,15 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
 
         viewModel.storage = ownerActivity.storage
 
+        dataBinding.refreshLayout.setOnRefreshListener {
+            reloadDirectory(refresh = true)
+        }
+
         viewModel.fileLiveData.observe(this) {
             dataBinding.loading.isVisible = false
-            dataBinding.storageFileRv.isVisible = true
-            ownerActivity.onDirectoryOpened(it)
+            dataBinding.refreshLayout.isVisible = true
+            dataBinding.refreshLayout.isRefreshing = false
+            ownerActivity.onDirectoryOpened(it.filterIsInstance<StorageFile>())
             dataBinding.storageFileRv.setData(it)
             // ownerActivity.onDirectoryDataLoaded(this, it)
             // 仅在需要恢复上次焦点时，才请求焦点（与媒体库首页保持一致：首次进入不默认高亮首项）
@@ -64,6 +71,19 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                 // 等待下一次消息循环后再请求焦点，避免因子 View 未就绪导致的滚动跳变
                 dataBinding.storageFileRv.post { requestFocus() }
             }
+        }
+
+        viewModel.bilibiliLoginRequiredLiveData.observe(this) { library ->
+            if (library.mediaType != com.xyoye.data_component.enums.MediaType.BILIBILI_STORAGE) {
+                return@observe
+            }
+            BilibiliLoginDialog(
+                activity = ownerActivity,
+                library = library,
+                onLoginSuccess = {
+                    reloadDirectory(refresh = true)
+                },
+            ).show()
         }
 
         viewModel.listFile(directory)
@@ -105,6 +125,29 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             layoutManager = vertical()
 
             adapter = StorageFileAdapter(ownerActivity, viewModel).create()
+
+            addOnScrollListener(
+                object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(
+                        recyclerView: RecyclerView,
+                        dx: Int,
+                        dy: Int
+                    ) {
+                        if (dy <= 0) return
+                        if (!recyclerView.isInTouchMode) return
+                        val paged = viewModel.storage as? com.xyoye.common_component.storage.PagedStorage ?: return
+                        if (paged.state != com.xyoye.common_component.storage.PagedStorage.State.IDLE) return
+                        if (!paged.hasMore()) return
+                        val lm = recyclerView.layoutManager as? LinearLayoutManager ?: return
+                        val itemCount = recyclerView.adapter?.itemCount ?: return
+                        if (itemCount <= 0) return
+                        val lastVisible = lm.findLastVisibleItemPosition()
+                        if (lastVisible >= itemCount - 2) {
+                            viewModel.loadMore()
+                        }
+                    }
+                },
+            )
 
             setOnKeyListener { _, keyCode, event ->
                 if (event?.action != KeyEvent.ACTION_DOWN) {
@@ -184,6 +227,9 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
     }
 
     fun reloadDirectory(refresh: Boolean = false) {
+        if (refresh) {
+            dataBinding.refreshLayout.isRefreshing = true
+        }
         viewModel.listFile(directory, refresh)
     }
 

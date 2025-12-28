@@ -16,8 +16,8 @@ import kotlin.coroutines.cancellation.CancellationException
 class NetworkException(
     val code: Int,
     msg: String,
-    cause: Exception?
-) : Throwable("x$code $msg", cause) {
+    cause: Throwable?
+) : Exception("x$code $msg", cause) {
     companion object {
         fun formJsonData(data: CommonJsonData) =
             NetworkException(

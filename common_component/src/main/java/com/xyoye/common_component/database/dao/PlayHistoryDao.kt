@@ -57,6 +57,12 @@ interface PlayHistoryDao {
     @TypeConverters(MediaTypeConverter::class)
     suspend fun deleteTypeAll(mediaType: List<MediaType>)
 
+    @Query("DELETE FROM play_history WHERE storage_id = (:storageId)")
+    suspend fun deleteByStorageId(storageId: Int)
+
+    @Query("SELECT danmu_path FROM play_history WHERE storage_id = (:storageId) AND danmu_path IS NOT NULL AND danmu_path != ''")
+    suspend fun getDanmuPathsByStorageId(storageId: Int): List<String>
+
     @Query("DELETE FROM play_history")
     suspend fun deleteAll()
 

@@ -1,5 +1,6 @@
 package com.xyoye.player_component.ui.activities.player
 
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.media.AudioManager
 import android.os.IBinder
 import android.view.KeyEvent
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
@@ -19,6 +21,7 @@ import com.gyf.immersionbar.ImmersionBar
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.bridge.PlayTaskBridge
 import com.xyoye.common_component.config.DanmuConfig
+import com.xyoye.common_component.config.PlayerActions
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.SubtitleConfig
@@ -109,6 +112,9 @@ class PlayerActivity :
 
     // 耳机广播
     private lateinit var headsetReceiver: HeadsetBroadcastReceiver
+
+    // 外部请求退出播放器（例如媒体库断开/清理隐私时）
+    private var exitPlayerReceiver: BroadcastReceiver? = null
 
     private var videoSource: BaseVideoSource? = null
 
@@ -526,6 +532,37 @@ class PlayerActivity :
         headsetReceiver = HeadsetBroadcastReceiver(this)
         registerReceiver(screenLockReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
         registerReceiver(headsetReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+
+        if (exitPlayerReceiver == null) {
+            exitPlayerReceiver =
+                object : BroadcastReceiver() {
+                    override fun onReceive(
+                        context: Context?,
+                        intent: Intent?
+                    ) {
+                        val payload = intent ?: return
+                        if (payload.action != PlayerActions.ACTION_EXIT_PLAYER) return
+
+                        val storageId = payload.getIntExtra(PlayerActions.EXTRA_STORAGE_ID, -1)
+                        if (storageId <= 0) return
+
+                        val source = danDanPlayer.getVideoSource()
+                        if (source.getMediaType() != MediaType.BILIBILI_STORAGE) return
+                        if (source.getStorageId() != storageId) return
+
+                        danDanPlayer.recordPlayInfo()
+                        danDanPlayer.pause()
+                        finish()
+                    }
+                }
+            val receiver = exitPlayerReceiver ?: return
+            ContextCompat.registerReceiver(
+                this,
+                receiver,
+                IntentFilter(PlayerActions.ACTION_EXIT_PLAYER),
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+        }
         /*
         batteryHelper.registerReceiver(this)
          */
@@ -540,6 +577,11 @@ class PlayerActivity :
             unregisterReceiver(headsetReceiver)
             LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister headset receiver")
         }
+        exitPlayerReceiver?.let {
+            unregisterReceiver(it)
+            LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister exit player receiver")
+        }
+        exitPlayerReceiver = null
         /*
         batteryHelper.unregisterReceiver(this)
         LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister battery receiver")

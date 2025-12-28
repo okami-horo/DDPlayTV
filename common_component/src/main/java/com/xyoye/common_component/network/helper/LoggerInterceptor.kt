@@ -103,7 +103,7 @@ class LoggerInterceptor(
                             ignoreCase = true,
                         )
                     ) {
-                        log("\t" + name + ": " + headers.value(i))
+                        log("\t" + name + ": " + sanitizeHeader(name, headers.value(i)))
                     }
                     ++i
                 }
@@ -151,7 +151,7 @@ class LoggerInterceptor(
                 var bytes = 0
                 val contentType = e.size
                 while (bytes < contentType) {
-                    log("\t" + e.name(bytes) + ": " + e.value(bytes))
+                    log("\t" + e.name(bytes) + ": " + sanitizeHeader(e.name(bytes), e.value(bytes)))
                     ++bytes
                 }
                 log(" ")
@@ -175,7 +175,7 @@ class LoggerInterceptor(
                                     mediaType,
                                 ),
                             )
-                        log("\tbody:$body")
+                        log("\tbody:${sanitizeBody(body)}")
                         responseBody = byteArray.toResponseBody(responseBody.contentType())
                         return response.newBuilder().body(responseBody).build()
                     }
@@ -205,7 +205,7 @@ class LoggerInterceptor(
                 getCharset(
                     body.contentType(),
                 )
-            log("\tbody:" + buffer.readString(charset))
+            log("\tbody:" + sanitizeBody(buffer.readString(charset)))
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedException(
                 e,
@@ -214,6 +214,41 @@ class LoggerInterceptor(
             )
             e.printStackTrace()
         }
+    }
+
+    private fun sanitizeHeader(
+        name: String,
+        value: String
+    ): String =
+        when {
+            name.equals("Cookie", ignoreCase = true) -> "<redacted>"
+            name.equals("Set-Cookie", ignoreCase = true) -> "<redacted>"
+            name.equals("Authorization", ignoreCase = true) -> "<redacted>"
+            name.equals("Proxy-Authorization", ignoreCase = true) -> "<redacted>"
+            else -> value
+        }
+
+    private fun sanitizeBody(body: String): String {
+        if (body.isEmpty()) return body
+        var sanitized = body
+
+        // Cookie-style tokens
+        sanitized =
+            sanitized.replace("(?i)(SESSDATA=)[^;\\s\"]+".toRegex(), "$1<redacted>")
+        sanitized =
+            sanitized.replace("(?i)(bili_jct=)[^;\\s\"]+".toRegex(), "$1<redacted>")
+        sanitized =
+            sanitized.replace("(?i)(DedeUserID=)[^;\\s\"]+".toRegex(), "$1<redacted>")
+
+        // JSON-style tokens
+        sanitized =
+            sanitized.replace("(?i)(\"refresh_token\"\\s*:\\s*\")([^\"]+)(\")".toRegex(), "$1<redacted>$3")
+
+        // Query / form-style tokens
+        sanitized =
+            sanitized.replace("(?i)(refresh_token=)([^&\\s]+)".toRegex(), "$1<redacted>")
+
+        return sanitized
     }
 
     fun retrofit(tag: String = "Retrofit"): LoggerInterceptor {

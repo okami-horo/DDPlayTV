@@ -60,6 +60,52 @@
 
 **Structure Decision**: 维持现有“多模块 MVVM + StoragePlus 统一管理媒体库”的架构：Bilibili 作为一种新的 `MediaType` 进入 StoragePlus 管理体系；播放偏好作为“媒体库级别配置”落在 `common_component`（模型+MMKV Store），UI 放在 `storage_component`。
 
+## 关键命名与唯一键规范（强约束）
+
+> 本节用于把“命名/唯一键/路径结构”在实现前固定下来，避免后续在 Storage、播放器、历史记录与清理逻辑之间出现语义不一致。
+
+### 1) MediaType
+
+- 枚举：`MediaType.BILIBILI_STORAGE`
+- `value`：`bilibili_storage`
+- UI 展示名：`Bilibili媒体库`
+
+### 2) 媒体库隔离 Key（storageKey）
+
+用于隔离 Cookie、登录态、播放偏好等本地数据，建议统一为：
+
+```text
+storageKey = "${mediaType.value}:${url.trim().removeSuffix("/")}"
+```
+
+说明：
+
+- `url` 对 Bilibili 媒体库默认取 `https://api.bilibili.com/`（实现中可自动补齐）。
+- 该 Key 不依赖自增 `libraryId`，可避免“新建媒体库未落库前 id 不可用”的问题。
+
+### 3) StorageFile.uniqueKey()
+
+用于播放器侧“仅凭 uniqueKey 即可解析 cid”，并作为播放历史的稳定 key：
+
+- 多 P/单 P 可播放条目：`bilibili://archive/{bvid}?cid={cid}`
+- 多 P 的视频目录：`bilibili://archive/{bvid}`
+
+约束：
+
+- `bvid` 必须为非空字符串
+- `cid` 必须为 `> 0` 的 Long
+
+### 4) StorageFile.filePath()/storagePath()（目录结构）
+
+用于列表路由、面包屑、lastPlay 父目录判断等（建议与 `storagePath()` 保持一致）：
+
+```text
+/
+  history/                  # 历史记录目录
+  history/{bvid}/           # 多 P 视频目录（videos > 1）
+  history/{bvid}/{cid}      # 分 P / 单 P 的可播放文件项
+```
+
 ## Complexity Tracking
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
