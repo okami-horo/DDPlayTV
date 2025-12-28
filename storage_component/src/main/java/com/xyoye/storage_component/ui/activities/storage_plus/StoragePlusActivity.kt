@@ -11,6 +11,7 @@ import com.xyoye.storage_component.BR
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ActivityStoragePlusBinding
 import com.xyoye.storage_component.ui.dialog.AlistStorageEditDialog
+import com.xyoye.storage_component.ui.dialog.BilibiliStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.ExternalStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.FTPStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.RemoteStorageEditDialog
@@ -84,6 +85,7 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
                 MediaType.SMB_SERVER -> SmbStorageEditDialog(this, editData)
                 MediaType.SCREEN_CAST -> ScreencastStorageEditDialog(this, editData)
                 MediaType.ALSIT_STORAGE -> AlistStorageEditDialog(this, editData)
+                MediaType.BILIBILI_STORAGE -> BilibiliStorageEditDialog(this, editData)
                 else -> {
                     finish()
                     null

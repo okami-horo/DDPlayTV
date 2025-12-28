@@ -1,0 +1,172 @@
+package com.xyoye.storage_component.ui.dialog
+
+import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferences
+import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
+import com.xyoye.common_component.bilibili.BilibiliPlayMode
+import com.xyoye.common_component.bilibili.BilibiliQuality
+import com.xyoye.common_component.bilibili.BilibiliVideoCodec
+import com.xyoye.common_component.extension.setTextColorRes
+import com.xyoye.common_component.network.config.Api
+import com.xyoye.common_component.weight.BottomActionDialog
+import com.xyoye.data_component.bean.SheetActionBean
+import com.xyoye.data_component.entity.MediaLibraryEntity
+import com.xyoye.data_component.enums.MediaType
+import com.xyoye.storage_component.R
+import com.xyoye.storage_component.databinding.DialogBilibiliStorageBinding
+import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivity
+
+class BilibiliStorageEditDialog(
+    private val activity: StoragePlusActivity,
+    private val originalLibrary: MediaLibraryEntity?
+) : StorageEditDialog<DialogBilibiliStorageBinding>(activity) {
+    private lateinit var binding: DialogBilibiliStorageBinding
+
+    private lateinit var editLibrary: MediaLibraryEntity
+    private var preferences = BilibiliPlaybackPreferences()
+
+    override fun getChildLayoutId() = R.layout.dialog_bilibili_storage
+
+    override fun initView(binding: DialogBilibiliStorageBinding) {
+        this.binding = binding
+        val isEditMode = originalLibrary != null
+        setTitle(if (isEditMode) "编辑Bilibili媒体库" else "添加Bilibili媒体库")
+
+        editLibrary =
+            originalLibrary ?: MediaLibraryEntity(
+                0,
+                "",
+                Api.BILI_BILI_API,
+                MediaType.BILIBILI_STORAGE,
+            )
+        if (editLibrary.url.isBlank()) {
+            editLibrary.url = Api.BILI_BILI_API
+        }
+        binding.library = editLibrary
+
+        preferences = BilibiliPlaybackPreferencesStore.read(editLibrary)
+        refreshPreferenceViews()
+
+        binding.playModeActionTv.setOnClickListener { showPlayModeDialog() }
+        binding.qualityActionTv.setOnClickListener { showQualityDialog() }
+        binding.codecActionTv.setOnClickListener { showCodecDialog() }
+        binding.allow4kOnTv.setOnClickListener { updateAllow4k(true) }
+        binding.allow4kOffTv.setOnClickListener { updateAllow4k(false) }
+
+        addNeutralButton("恢复默认") {
+            preferences = BilibiliPlaybackPreferences()
+            refreshPreferenceViews()
+        }
+
+        setPositiveListener {
+            if (editLibrary.displayName.isBlank()) {
+                editLibrary.displayName = "Bilibili媒体库"
+            }
+            if (editLibrary.url.isBlank()) {
+                editLibrary.url = Api.BILI_BILI_API
+            }
+            if (preferences.preferredQualityQn == BilibiliQuality.QN_4K.qn && !preferences.allow4k) {
+                preferences = preferences.copy(allow4k = true)
+                refreshPreferenceViews()
+            }
+            BilibiliPlaybackPreferencesStore.write(editLibrary, preferences)
+            activity.addStorage(editLibrary)
+        }
+
+        setNegativeListener {
+            activity.finish()
+        }
+    }
+
+    override fun onTestResult(result: Boolean) {
+        // Bilibili 媒体库当前不走通用 testStorage 测试流程，保持空实现
+    }
+
+    private fun updateAllow4k(enabled: Boolean) {
+        preferences = preferences.copy(allow4k = enabled)
+        refreshPreferenceViews()
+    }
+
+    private fun refreshPreferenceViews() {
+        binding.playModeValueTv.text = preferences.playMode.label
+        binding.qualityValueTv.text = BilibiliQuality.fromQn(preferences.preferredQualityQn).label
+        binding.codecValueTv.text = preferences.preferredVideoCodec.label
+        setAllow4kSelected(preferences.allow4k)
+    }
+
+    private fun setAllow4kSelected(allow: Boolean) {
+        binding.allow4kOnTv.isSelected = allow
+        binding.allow4kOnTv.setTextColorRes(if (allow) R.color.text_white else R.color.text_black)
+
+        binding.allow4kOffTv.isSelected = !allow
+        binding.allow4kOffTv.setTextColorRes(if (!allow) R.color.text_white else R.color.text_black)
+    }
+
+    private fun showPlayModeDialog() {
+        val actions =
+            BilibiliPlayMode.entries.map {
+                SheetActionBean(
+                    actionId = it,
+                    actionName = it.label,
+                )
+            }
+        BottomActionDialog(activity, actions, "取流模式") {
+            val selected = it.actionId as? BilibiliPlayMode ?: return@BottomActionDialog false
+            preferences = preferences.copy(playMode = selected)
+            refreshPreferenceViews()
+            true
+        }.show()
+    }
+
+    private fun showQualityDialog() {
+        val actions =
+            BilibiliQuality.entries.map {
+                val describe =
+                    when (it) {
+                        BilibiliQuality.AUTO -> "不强制画质，按服务端默认/可用性选择"
+                        BilibiliQuality.QN_4K -> "需要 allow4k=开启，且可能需要大会员"
+                        BilibiliQuality.QN_1080P_PLUS -> "可能需要大会员"
+                        else -> null
+                    }
+                SheetActionBean(
+                    actionId = it,
+                    actionName = it.label,
+                    describe = describe,
+                )
+            }
+        BottomActionDialog(activity, actions, "画质优先") {
+            val selected = it.actionId as? BilibiliQuality ?: return@BottomActionDialog false
+            var next = preferences.copy(preferredQualityQn = selected.qn)
+            if (selected == BilibiliQuality.QN_4K) {
+                next = next.copy(allow4k = true)
+            }
+            preferences = next
+            refreshPreferenceViews()
+            true
+        }.show()
+    }
+
+    private fun showCodecDialog() {
+        val actions =
+            BilibiliVideoCodec.entries.map {
+                val describe =
+                    when (it) {
+                        BilibiliVideoCodec.AVC -> "兼容性最好（推荐默认）"
+                        BilibiliVideoCodec.HEVC -> "更省带宽，但设备需支持 H.265"
+                        BilibiliVideoCodec.AV1 -> "更省带宽，但设备需支持 AV1"
+                        else -> null
+                    }
+                SheetActionBean(
+                    actionId = it,
+                    actionName = it.label,
+                    describe = describe,
+                )
+            }
+        BottomActionDialog(activity, actions, "视频编码") {
+            val selected = it.actionId as? BilibiliVideoCodec ?: return@BottomActionDialog false
+            preferences = preferences.copy(preferredVideoCodec = selected)
+            refreshPreferenceViews()
+            true
+        }.show()
+    }
+}
+

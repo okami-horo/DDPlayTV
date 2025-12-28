@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="com.xyoye.data_component.entity.MediaLibraryEntity" />
+
+        <variable
+            name="library"
+            type="MediaLibraryEntity" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/display_name_et"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/background_dialog_edit"
+            android:gravity="center_vertical"
+            android:hint="@string/hint_display_name"
+            android:maxLines="1"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:singleLine="true"
+            android:text="@={library.displayName}"
+            android:textColor="@color/text_black"
+            android:textColorHint="@color/text_gray"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="6dp"
+            android:text="播放偏好"
+            android:textColor="@color/text_gray"
+            android:textSize="13sp" />
+
+        <FrameLayout
+            android:id="@+id/play_mode_container"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/background_border_gray">
+
+            <TextView
+                android:layout_width="110dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/background_border_gray"
+                android:gravity="center"
+                android:text="取流模式"
+                android:textColor="@color/text_gray"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/play_mode_value_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@color/text_theme"
+                android:textSize="14sp"
+                tools:text="自动（DASH 优先）" />
+
+            <TextView
+                android:id="@+id/play_mode_action_tv"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:background="@drawable/background_button_corner_gray"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="设置"
+                android:textColor="@color/text_black"
+                android:textSize="14sp" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/quality_container"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/background_border_gray">
+
+            <TextView
+                android:layout_width="110dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/background_border_gray"
+                android:gravity="center"
+                android:text="画质优先"
+                android:textColor="@color/text_gray"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/quality_value_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@color/text_theme"
+                android:textSize="14sp"
+                tools:text="720P" />
+
+            <TextView
+                android:id="@+id/quality_action_tv"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:background="@drawable/background_button_corner_gray"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="设置"
+                android:textColor="@color/text_black"
+                android:textSize="14sp" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/codec_container"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/background_border_gray">
+
+            <TextView
+                android:layout_width="110dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/background_border_gray"
+                android:gravity="center"
+                android:text="视频编码"
+                android:textColor="@color/text_gray"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/codec_value_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@color/text_theme"
+                android:textSize="14sp"
+                tools:text="AVC/H.264" />
+
+            <TextView
+                android:id="@+id/codec_action_tv"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:background="@drawable/background_button_corner_gray"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="设置"
+                android:textColor="@color/text_black"
+                android:textSize="14sp" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/allow_4k_container"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/background_border_gray">
+
+            <TextView
+                android:layout_width="110dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/background_border_gray"
+                android:gravity="center"
+                android:text="允许4K"
+                android:textColor="@color/text_gray"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/allow_4k_on_tv"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:background="@drawable/background_button_corner_state"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="开启"
+                android:textColor="@color/text_black"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/allow_4k_off_tv"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:background="@drawable/background_button_corner_state"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="关闭"
+                android:textColor="@color/text_black"
+                android:textSize="14sp" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="提示：高画质/4K 等能力受账号与设备支持影响，若播放失败可回退更低画质或改用 MP4。"
+            android:textColor="@color/text_gray"
+            android:textSize="12sp" />
+    </LinearLayout>
+</layout>
+
