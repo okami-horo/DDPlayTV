@@ -69,25 +69,37 @@ class BilibiliCookieJarStore(
         synchronized(lock) {
             val now = System.currentTimeMillis()
             val all = readAll().toMutableMap()
-            val current = all[url.host].orEmpty()
-            if (current.isEmpty()) {
+            if (all.isEmpty()) {
                 return@synchronized emptyList()
             }
 
-            val valid =
-                current
-                    .filterNot { it.expiresAt < now }
-                    .mapNotNull { it.toCookie() }
-                    .filter { cookie ->
-                        cookie.matches(url)
-                    }
-
-            if (valid.size != current.size) {
-                all[url.host] = current.filterNot { it.expiresAt < now }
-                writeAll(all)
+            // Clear expired items globally to avoid leaking cookies across different host buckets.
+            var changed = false
+            val cleanedAll =
+                all.mapValues { (_, list) ->
+                    val filtered = list.filterNot { it.expiresAt < now }
+                    if (filtered.size != list.size) changed = true
+                    filtered
+                }
+            if (changed) {
+                writeAll(cleanedAll)
             }
 
-            valid
+            // Do not restrict by host: match cookies by domain/path for current request.
+            data class CookieKey(
+                val name: String,
+                val domain: String,
+                val path: String,
+                val hostOnly: Boolean,
+            )
+
+            cleanedAll
+                .values
+                .flatten()
+                .groupBy { CookieKey(it.name, it.domain, it.path, it.hostOnly) }
+                .values
+                .mapNotNull { candidates -> candidates.maxByOrNull { it.expiresAt }?.toCookie() }
+                .filter { cookie -> cookie.matches(url) }
         }
 
     fun clear() {
@@ -187,4 +199,3 @@ class BilibiliCookieJarStore(
         private const val KEY_ALL = "cookies_all"
     }
 }
-
