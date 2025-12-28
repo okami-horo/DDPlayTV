@@ -1,10 +1,10 @@
 package com.xyoye.common_component.bilibili.auth
 
-import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Types
 import com.tencent.mmkv.MMKV
 import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.utils.JsonHelper
+import com.xyoye.data_component.data.bilibili.BilibiliPersistedCookie
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
@@ -30,9 +30,9 @@ class BilibiliCookieJarStore(
             Types.newParameterizedType(
                 Map::class.java,
                 String::class.java,
-                Types.newParameterizedType(List::class.java, PersistedCookie::class.java),
+                Types.newParameterizedType(List::class.java, BilibiliPersistedCookie::class.java),
             )
-        JsonHelper.MO_SHI.adapter<Map<String, List<PersistedCookie>>>(mapType)
+        JsonHelper.MO_SHI.adapter<Map<String, List<BilibiliPersistedCookie>>>(mapType)
     }
 
     override fun saveFromResponse(
@@ -47,7 +47,7 @@ class BilibiliCookieJarStore(
 
             cookies
                 .filterNot { it.expiresAt < now }
-                .map { PersistedCookie.from(it) }
+                .map { it.toPersistedCookie() }
                 .forEach { incoming ->
                     val index =
                         existing.indexOfFirst {
@@ -148,67 +148,52 @@ class BilibiliCookieJarStore(
                 }
         }
 
-    private fun readAll(): Map<String, List<PersistedCookie>> {
+    private fun readAll(): Map<String, List<BilibiliPersistedCookie>> {
         val raw = kv.decodeString(KEY_ALL).orEmpty()
         if (raw.isEmpty()) return emptyMap()
         return runCatching { adapter.fromJson(raw) }.getOrNull().orEmpty()
     }
 
-    private fun writeAll(all: Map<String, List<PersistedCookie>>) {
+    private fun writeAll(all: Map<String, List<BilibiliPersistedCookie>>) {
         val raw = adapter.toJson(all)
         kv.encode(KEY_ALL, raw)
     }
 
-    @JsonClass(generateAdapter = true)
-    data class PersistedCookie(
-        val name: String,
-        val value: String,
-        val expiresAt: Long,
-        val domain: String,
-        val path: String,
-        val secure: Boolean,
-        val httpOnly: Boolean,
-        val hostOnly: Boolean,
-        val persistent: Boolean,
-    ) {
-        companion object {
-            fun from(cookie: Cookie): PersistedCookie =
-                PersistedCookie(
-                    name = cookie.name,
-                    value = cookie.value,
-                    expiresAt = cookie.expiresAt,
-                    domain = cookie.domain,
-                    path = cookie.path,
-                    secure = cookie.secure,
-                    httpOnly = cookie.httpOnly,
-                    hostOnly = cookie.hostOnly,
-                    persistent = cookie.persistent,
-                )
-        }
+    private fun Cookie.toPersistedCookie(): BilibiliPersistedCookie =
+        BilibiliPersistedCookie(
+            name = name,
+            value = value,
+            expiresAt = expiresAt,
+            domain = domain,
+            path = path,
+            secure = secure,
+            httpOnly = httpOnly,
+            hostOnly = hostOnly,
+            persistent = persistent,
+        )
 
-        fun toCookie(): Cookie? =
-            runCatching {
-                Cookie
-                    .Builder()
-                    .name(name)
-                    .value(value)
-                    .expiresAt(expiresAt)
-                    .path(path)
-                    .apply {
-                        if (hostOnly) {
-                            hostOnlyDomain(domain)
-                        } else {
-                            domain(domain)
-                        }
-                        if (secure) {
-                            secure()
-                        }
-                        if (httpOnly) {
-                            httpOnly()
-                        }
-                    }.build()
-            }.getOrNull()
-    }
+    private fun BilibiliPersistedCookie.toCookie(): Cookie? =
+        runCatching {
+            Cookie
+                .Builder()
+                .name(name)
+                .value(value)
+                .expiresAt(expiresAt)
+                .path(path)
+                .apply {
+                    if (hostOnly) {
+                        hostOnlyDomain(domain)
+                    } else {
+                        domain(domain)
+                    }
+                    if (secure) {
+                        secure()
+                    }
+                    if (httpOnly) {
+                        httpOnly()
+                    }
+                }.build()
+        }.getOrNull()
 
     private companion object {
         private const val KEY_ALL = "cookies_all"
