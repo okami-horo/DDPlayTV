@@ -7,15 +7,12 @@ import com.xyoye.common_component.bilibili.auth.BilibiliAuthStore
 import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
 import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.bilibili.history.BilibiliHistoryCacheStore
-import com.xyoye.common_component.bilibili.net.BilibiliAppSign
 import com.xyoye.common_component.bilibili.wbi.BilibiliWbiSigner
 import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.network.request.RequestParams
 import com.xyoye.common_component.network.repository.BaseRepository
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SupervisorScope
-import com.xyoye.data_component.data.bilibili.BilibiliAppQrcodePollData
-import com.xyoye.data_component.data.bilibili.BilibiliStatusModel
 import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
@@ -26,12 +23,8 @@ import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import okhttp3.Cookie
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.ResponseBody
 import java.net.SocketTimeoutException
 import java.security.KeyFactory
@@ -67,62 +60,21 @@ class BilibiliRepository(
 
     suspend fun qrcodeGenerate(): Result<BilibiliQrcodeGenerateData> =
         requestBilibili {
-            val params: RequestParams =
-                BilibiliAppSign.signForm(
-                    mapOf(
-                        "local_id" to TV_QR_LOCAL_ID,
-                        "ts" to (System.currentTimeMillis() / 1000),
-                        "mobi_app" to TV_QR_MOBI_APP,
-                    ),
-                )
-            service.tvQrcodeAuthCode(BASE_PASSPORT, params)
-        }.map { data ->
-            // 复用现有 UI/模型字段：qrcodeKey 用于轮询，TV 登录这里对应 auth_code
-            BilibiliQrcodeGenerateData(
-                url = data.url,
-                qrcodeKey = data.authCode,
-            )
+            service.qrcodeGenerate(BASE_PASSPORT)
         }
 
-    suspend fun qrcodePoll(qrcodeKey: String): Result<BilibiliQrcodePollData> {
-        val model: BilibiliStatusModel<BilibiliAppQrcodePollData> =
-            request().doGet {
-                val params: RequestParams =
-                    BilibiliAppSign.signForm(
-                        mapOf(
-                            "auth_code" to qrcodeKey,
-                            "local_id" to TV_QR_LOCAL_ID,
-                            "ts" to (System.currentTimeMillis() / 1000),
-                        ),
-                    )
-                service.tvQrcodePoll(BASE_PASSPORT, params)
-            }.getOrElse { throwable ->
-                return Result.failure(throwable)
-            }
-
-        val statusCode = model.code
-        val data = model.data
-
-        if (statusCode == 0 && data != null) {
-            withContext(Dispatchers.IO) {
-                cookieJarStore.clear()
-                saveLoginCookiesFromAppQr(data)
+    suspend fun qrcodePoll(qrcodeKey: String): Result<BilibiliQrcodePollData> =
+        requestBilibili {
+            service.qrcodePoll(BASE_PASSPORT, qrcodeKey)
+        }.onSuccess { data ->
+            if (data.statusCode == 0 && !data.refreshToken.isNullOrEmpty()) {
                 BilibiliAuthStore.updateFromCookies(
                     storageKey = storageKey,
                     cookieJarStore = cookieJarStore,
-                    refreshToken = data.refreshToken?.takeIf { it.isNotBlank() },
+                    refreshToken = data.refreshToken,
                 )
             }
         }
-
-        return Result.success(
-            BilibiliQrcodePollData(
-                statusCode = statusCode,
-                statusMessage = model.message,
-                refreshToken = data?.refreshToken,
-            ),
-        )
-    }
 
     suspend fun historyCursor(
         max: Long? = null,
@@ -468,9 +420,6 @@ class BilibiliRepository(
         private const val BASE_COMMENT = "https://comment.bilibili.com/"
         private const val BASE_WWW = "https://www.bilibili.com/"
 
-        private const val TV_QR_LOCAL_ID = "0"
-        private const val TV_QR_MOBI_APP = "android_hd"
-
         private const val COOKIE_INFO_CHECK_INTERVAL_MS = 20 * 60 * 60 * 1000L
         private const val COOKIE_REFRESH_MIN_INTERVAL_MS = 2 * 60 * 1000L
         private const val HISTORY_FIRST_PAGE_CACHE_MAX_AGE_MS = 12 * 60 * 60 * 1000L
@@ -484,45 +433,5 @@ nzPjfdTcqMz7djHum0qSZA0AyCBDABUqCrfNgCiJ00Ra7GmRj+YCK1NJEuewlb40
 JNrRuoEUXpabUzGB8QIDAQAB
 -----END PUBLIC KEY-----
             """
-    }
-
-    private fun saveLoginCookiesFromAppQr(data: BilibiliAppQrcodePollData) {
-        val cookieInfo = data.cookieInfo ?: return
-        if (cookieInfo.cookies.isEmpty()) return
-
-        val now = System.currentTimeMillis()
-        val domains = cookieInfo.domains.ifEmpty { listOf("bilibili.com") }
-
-        val cookies =
-            domains
-                .mapNotNull { raw ->
-                    raw.trim().removePrefix(".").ifBlank { null }
-                }
-                .flatMap { domain ->
-                    cookieInfo.cookies.mapNotNull { item ->
-                        val name = item.name.ifBlank { return@mapNotNull null }
-                        val expiresAt = item.expires * 1000L
-                        if (expiresAt <= now) return@mapNotNull null
-
-                        runCatching {
-                            Cookie.Builder()
-                                .name(name)
-                                .value(item.value)
-                                .domain(domain)
-                                .path("/")
-                                .expiresAt(expiresAt)
-                                .apply {
-                                    if (item.secure == 1) secure()
-                                    if (item.httpOnly == 1) httpOnly()
-                                }
-                                .build()
-                        }.getOrNull()
-                    }
-                }
-
-        if (cookies.isNotEmpty()) {
-            // 使用固定 host 触发存储即可；读取时按 domain/path 匹配，不再受 host 维度限制
-            cookieJarStore.saveFromResponse("https://www.bilibili.com/".toHttpUrl(), cookies)
-        }
     }
 }

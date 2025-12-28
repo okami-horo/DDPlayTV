@@ -4,13 +4,10 @@ import com.xyoye.common_component.network.config.HeaderKey
 import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
-import com.xyoye.data_component.data.bilibili.BilibiliStatusModel
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
 import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
 import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
-import com.xyoye.data_component.data.bilibili.BilibiliAppQrcodeAuthCodeData
-import com.xyoye.data_component.data.bilibili.BilibiliAppQrcodePollData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
 import okhttp3.ResponseBody
@@ -39,20 +36,6 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @Query("qrcode_key") qrcodeKey: String,
     ): BilibiliJsonModel<BilibiliQrcodePollData>
-
-    @FormUrlEncoded
-    @POST("/x/passport-tv-login/qrcode/auth_code")
-    suspend fun tvQrcodeAuthCode(
-        @Header(HeaderKey.BASE_URL) baseUrl: String,
-        @FieldMap params: Map<String, @JvmSuppressWildcards Any>,
-    ): BilibiliJsonModel<BilibiliAppQrcodeAuthCodeData>
-
-    @FormUrlEncoded
-    @POST("/x/passport-tv-login/qrcode/poll")
-    suspend fun tvQrcodePoll(
-        @Header(HeaderKey.BASE_URL) baseUrl: String,
-        @FieldMap params: Map<String, @JvmSuppressWildcards Any>,
-    ): BilibiliStatusModel<BilibiliAppQrcodePollData>
 
     @GET("/x/passport-login/web/cookie/info")
     suspend fun cookieInfo(

@@ -69,37 +69,25 @@ class BilibiliCookieJarStore(
         synchronized(lock) {
             val now = System.currentTimeMillis()
             val all = readAll().toMutableMap()
-            if (all.isEmpty()) {
+            val current = all[url.host].orEmpty()
+            if (current.isEmpty()) {
                 return@synchronized emptyList()
             }
 
-            // 清理过期项（全量），避免 Cookie 被分散存储在不同 host 下时无法统一回收
-            var changed = false
-            val cleanedAll =
-                all.mapValues { (_, list) ->
-                    val filtered = list.filterNot { it.expiresAt < now }
-                    if (filtered.size != list.size) changed = true
-                    filtered
-                }
-            if (changed) {
-                writeAll(cleanedAll)
+            val valid =
+                current
+                    .filterNot { it.expiresAt < now }
+                    .mapNotNull { it.toCookie() }
+                    .filter { cookie ->
+                        cookie.matches(url)
+                    }
+
+            if (valid.size != current.size) {
+                all[url.host] = current.filterNot { it.expiresAt < now }
+                writeAll(all)
             }
 
-            // 读取时不再限制 host 维度：按 Cookie domain/path 规则匹配当前请求。
-            data class CookieKey(
-                val name: String,
-                val domain: String,
-                val path: String,
-                val hostOnly: Boolean,
-            )
-
-            cleanedAll
-                .values
-                .flatten()
-                .groupBy { CookieKey(it.name, it.domain, it.path, it.hostOnly) }
-                .values
-                .mapNotNull { candidates -> candidates.maxByOrNull { it.expiresAt }?.toCookie() }
-                .filter { cookie -> cookie.matches(url) }
+            valid
         }
 
     fun clear() {
@@ -199,3 +187,4 @@ class BilibiliCookieJarStore(
         private const val KEY_ALL = "cookies_all"
     }
 }
+
