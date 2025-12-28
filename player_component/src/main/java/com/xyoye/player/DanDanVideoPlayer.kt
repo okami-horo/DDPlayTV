@@ -16,6 +16,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.xyoye.cache.CacheManager
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.PlayState
@@ -38,6 +40,7 @@ import com.xyoye.player.surface.InterSurfaceView
 import com.xyoye.player.surface.SurfaceFactory
 import com.xyoye.player.utils.AudioFocusHelper
 import com.xyoye.player.utils.DecodeType
+import com.xyoye.player.utils.PlaybackErrorFormatter
 import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.wrapper.InterVideoPlayer
 import com.xyoye.player.wrapper.InterVideoTrack
@@ -81,6 +84,8 @@ class DanDanVideoPlayer(
 
     // 播放资源
     private lateinit var videoSource: BaseVideoSource
+
+    private var lastPlaybackError: Exception? = null
 
     // 当前音量
     private var mCurrentVolume = PointF(0f, 0f)
@@ -224,6 +229,20 @@ class DanDanVideoPlayer(
     }
 
     override fun onError(e: Exception?) {
+        lastPlaybackError = e
+        val title =
+            if (this::videoSource.isInitialized) {
+                videoSource.getVideoTitle()
+            } else {
+                "<unknown>"
+            }
+        val position = getCurrentPosition()
+        LogFacade.e(
+            LogModule.PLAYER,
+            TAG_PLAYBACK,
+            "play error title=$title position=$position ${PlaybackErrorFormatter.format(e)}",
+            throwable = e,
+        )
         setPlayState(PlayState.STATE_ERROR)
         keepScreenOn = false
     }
@@ -431,7 +450,10 @@ class DanDanVideoPlayer(
 
     fun setVideoSource(source: BaseVideoSource) {
         videoSource = source
+        lastPlaybackError = null
     }
+
+    internal fun lastPlaybackErrorOrNull(): Exception? = lastPlaybackError
 
     fun setController(controller: VideoController?) {
         destroySubtitleRenderer()
@@ -515,5 +537,9 @@ class DanDanVideoPlayer(
             SubtitleRendererRegistry.unregister(it)
         }
         subtitleRenderer = null
+    }
+
+    private companion object {
+        private const val TAG_PLAYBACK = "PlayerPlayback"
     }
 }

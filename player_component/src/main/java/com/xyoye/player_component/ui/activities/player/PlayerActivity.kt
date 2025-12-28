@@ -12,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
+import com.xyoye.player.utils.PlaybackErrorFormatter
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.gyf.immersionbar.BarHide
@@ -366,10 +367,13 @@ class PlayerActivity :
 
             // 播放错误
             observerPlayError {
+                val playbackError =
+                    danDanPlayer.lastPlaybackErrorOrNull() ?: danDanPlayer.exoPlayerOrNull()?.playerError
                 LogFacade.e(
                     LogModule.PLAYER,
                     TAG_PLAYBACK,
-                    "play error title=${danDanPlayer.getVideoSource().getVideoTitle()} position=${danDanPlayer.getCurrentPosition()}",
+                    "play error title=${danDanPlayer.getVideoSource().getVideoTitle()} position=${danDanPlayer.getCurrentPosition()} ${PlaybackErrorFormatter.format(playbackError)}",
+                    throwable = playbackError,
                 )
                 showPlayErrorDialog()
             }
