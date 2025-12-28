@@ -1,16 +1,18 @@
 package com.xyoye.common_component.storage.impl
 
 import android.net.Uri
+import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.config.HeaderKey
 import com.xyoye.common_component.network.helper.UnsafeOkHttpClient
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.file.helper.MpvLocalProxy
+import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.WebDavStorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
+import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.sardine.DavResource
 import com.xyoye.sardine.impl.OkHttpSardine
 import com.xyoye.sardine.util.SardineConfig
@@ -78,15 +80,36 @@ class WebDavStorage(
     }
 
     override suspend fun createPlayUrl(file: StorageFile): String {
+        val playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
         val upstream = file.fileUrl()
         val contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
         val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
-        return MpvLocalProxy.wrapIfNeeded(
+        val (mode, interval, autoEnabled) =
+            when (playerType) {
+                PlayerType.TYPE_MPV_PLAYER ->
+                    Triple(
+                        PlayerConfig.getMpvLocalProxyMode(),
+                        PlayerConfig.getMpvProxyRangeMinIntervalMs().toLong(),
+                        false,
+                    )
+                PlayerType.TYPE_VLC_PLAYER ->
+                    Triple(
+                        PlayerConfig.getVlcLocalProxyMode(),
+                        PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong(),
+                        false,
+                    )
+                else -> return upstream
+            }
+
+        return LocalProxy.wrapIfNeeded(
+            playerType = playerType,
+            modeValue = mode,
             upstreamUrl = upstream,
             upstreamHeaders = getNetworkHeaders(),
             contentLength = contentLength,
+            prePlayRangeMinIntervalMs = interval,
             fileName = fileName,
-            autoEnabled = false,
+            autoEnabled = autoEnabled,
         )
     }
 

@@ -9,7 +9,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SeekBarPreference
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.data_component.enums.MpvLocalProxyMode
+import com.xyoye.data_component.enums.LocalProxyMode
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.data_component.enums.VLCHWDecode
@@ -20,12 +20,12 @@ import com.xyoye.user_component.R
  */
 
 class PlayerSettingFragment : PreferenceFragmentCompat() {
-    private var isNormalizingMpvRangeInterval = false
+    private var isNormalizingRangeInterval = false
 
     companion object {
         private const val DEFAULT_MPV_VIDEO_OUTPUT = "gpu"
         private const val DEFAULT_MPV_HWDEC_PRIORITY = "mediacodec"
-        private const val DEFAULT_MPV_LOCAL_PROXY_MODE = "1"
+        private const val DEFAULT_LOCAL_PROXY_MODE = "1"
 
         fun newInstance() = PlayerSettingFragment()
 
@@ -54,6 +54,8 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             arrayOf(
                 "vlc_hardware_acceleration",
                 "vlc_audio_output",
+                "vlc_proxy_range_interval_ms",
+                "vlc_local_proxy_mode",
             )
 
         val mpvPreference =
@@ -77,11 +79,11 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                 Pair("mediacodec-copy（画面调节）", "mediacodec-copy"),
             )
 
-        val mpvLocalProxyMode =
+        val localProxyMode =
             mapOf(
-                Pair("关闭", MpvLocalProxyMode.OFF.value.toString()),
-                Pair("自动（推荐）", MpvLocalProxyMode.AUTO.value.toString()),
-                Pair("强制开启", MpvLocalProxyMode.FORCE.value.toString()),
+                Pair("关闭", LocalProxyMode.OFF.value.toString()),
+                Pair("自动（推荐）", LocalProxyMode.AUTO.value.toString()),
+                Pair("强制开启", LocalProxyMode.FORCE.value.toString()),
             )
     }
 
@@ -91,7 +93,8 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
     ) {
         preferenceManager.preferenceDataStore = PlayerSettingDataStore()
         addPreferencesFromResource(R.xml.preference_player_setting)
-        setupMpvRangeIntervalPreference()
+        setupRangeIntervalPreference("mpv_proxy_range_interval_ms")
+        setupRangeIntervalPreference("vlc_proxy_range_interval_ms")
     }
 
     override fun onViewCreated(
@@ -165,14 +168,14 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
 
         // MPV 本地防风控代理（HttpPlayServer）
         findPreference<ListPreference>("mpv_local_proxy_mode")?.apply {
-            entries = mpvLocalProxyMode.keys.toTypedArray()
-            entryValues = mpvLocalProxyMode.values.toTypedArray()
+            entries = localProxyMode.keys.toTypedArray()
+            entryValues = localProxyMode.values.toTypedArray()
             val stored = PlayerConfig.getMpvLocalProxyMode()
-            val safeValue = MpvLocalProxyMode.from(stored).value.toString()
+            val safeValue = LocalProxyMode.from(stored).value.toString()
             val resolved =
-                value?.takeIf { mpvLocalProxyMode.containsValue(it) }
-                    ?: safeValue.takeIf { mpvLocalProxyMode.containsValue(it) }
-                    ?: DEFAULT_MPV_LOCAL_PROXY_MODE
+                value?.takeIf { localProxyMode.containsValue(it) }
+                    ?: safeValue.takeIf { localProxyMode.containsValue(it) }
+                    ?: DEFAULT_LOCAL_PROXY_MODE
             if (value != resolved) {
                 value = resolved
                 PlayerConfig.putMpvLocalProxyMode(resolved.toInt())
@@ -180,17 +183,34 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         }
 
+        // VLC 本地防风控代理（HttpPlayServer）
+        findPreference<ListPreference>("vlc_local_proxy_mode")?.apply {
+            entries = localProxyMode.keys.toTypedArray()
+            entryValues = localProxyMode.values.toTypedArray()
+            val stored = PlayerConfig.getVlcLocalProxyMode()
+            val safeValue = LocalProxyMode.from(stored).value.toString()
+            val resolved =
+                value?.takeIf { localProxyMode.containsValue(it) }
+                    ?: safeValue.takeIf { localProxyMode.containsValue(it) }
+                    ?: DEFAULT_LOCAL_PROXY_MODE
+            if (value != resolved) {
+                value = resolved
+                PlayerConfig.putVlcLocalProxyMode(resolved.toInt())
+            }
+            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+        }
+
         super.onViewCreated(view, savedInstanceState)
     }
 
-    private fun setupMpvRangeIntervalPreference() {
-        val preference = findPreference<SeekBarPreference>("mpv_proxy_range_interval_ms") ?: return
+    private fun setupRangeIntervalPreference(key: String) {
+        val preference = findPreference<SeekBarPreference>(key) ?: return
 
         preference.value = normalizeMpvRangeInterval(preference.value)
 
         preference.onPreferenceChangeListener =
             Preference.OnPreferenceChangeListener { changedPreference, newValue ->
-                if (isNormalizingMpvRangeInterval) {
+                if (isNormalizingRangeInterval) {
                     return@OnPreferenceChangeListener true
                 }
 
@@ -200,9 +220,9 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                     return@OnPreferenceChangeListener true
                 }
 
-                isNormalizingMpvRangeInterval = true
+                isNormalizingRangeInterval = true
                 (changedPreference as? SeekBarPreference)?.value = normalized
-                isNormalizingMpvRangeInterval = false
+                isNormalizingRangeInterval = false
                 false
             }
     }
@@ -274,9 +294,17 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                     }
                     "mpv_local_proxy_mode" -> {
                         val current = PlayerConfig.getMpvLocalProxyMode()
-                        val safeValue = MpvLocalProxyMode.from(current).value.toString()
+                        val safeValue = LocalProxyMode.from(current).value.toString()
                         if (current.toString() != safeValue) {
                             PlayerConfig.putMpvLocalProxyMode(safeValue.toInt())
+                        }
+                        safeValue
+                    }
+                    "vlc_local_proxy_mode" -> {
+                        val current = PlayerConfig.getVlcLocalProxyMode()
+                        val safeValue = LocalProxyMode.from(current).value.toString()
+                        if (current.toString() != safeValue) {
+                            PlayerConfig.putVlcLocalProxyMode(safeValue.toInt())
                         }
                         safeValue
                     }
@@ -323,8 +351,12 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                             PlayerConfig.putMpvHwdecPriority(safeValue)
                         }
                         "mpv_local_proxy_mode" -> {
-                            val safeValue = MpvLocalProxyMode.from(value.toIntOrNull()).value
+                            val safeValue = LocalProxyMode.from(value.toIntOrNull()).value
                             PlayerConfig.putMpvLocalProxyMode(safeValue)
+                        }
+                        "vlc_local_proxy_mode" -> {
+                            val safeValue = LocalProxyMode.from(value.toIntOrNull()).value
+                            PlayerConfig.putVlcLocalProxyMode(safeValue)
                         }
                         else -> super.putString(key, value)
                     }
@@ -349,6 +381,8 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                 when (key) {
                     "mpv_proxy_range_interval_ms" ->
                         normalizeMpvRangeInterval(PlayerConfig.getMpvProxyRangeMinIntervalMs())
+                    "vlc_proxy_range_interval_ms" ->
+                        normalizeMpvRangeInterval(PlayerConfig.getVlcProxyRangeMinIntervalMs())
                     else -> super.getInt(key, defValue)
                 }
             } catch (e: Exception) {
@@ -369,6 +403,9 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                 when (key) {
                     "mpv_proxy_range_interval_ms" -> {
                         PlayerConfig.putMpvProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
+                    }
+                    "vlc_proxy_range_interval_ms" -> {
+                        PlayerConfig.putVlcProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
                     }
                     else -> super.putInt(key, value)
                 }

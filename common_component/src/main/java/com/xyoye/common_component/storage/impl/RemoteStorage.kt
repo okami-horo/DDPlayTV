@@ -1,11 +1,12 @@
 package com.xyoye.common_component.storage.impl
 
 import android.net.Uri
+import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.repository.RemoteRepository
 import com.xyoye.common_component.network.request.NetworkException
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.file.helper.MpvLocalProxy
+import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.helper.RemoteFileHelper
 import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
 import com.xyoye.common_component.utils.danmu.DanmuFinder
@@ -16,6 +17,7 @@ import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.data.remote.RemoteVideoData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
+import com.xyoye.data_component.enums.PlayerType
 import java.io.InputStream
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -58,6 +60,7 @@ class RemoteStorage(
     }
 
     override suspend fun createPlayUrl(file: StorageFile): String {
+        val playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
         val fileUrl = (file as RemoteStorageFile).fileUrl()
         val token = library.remoteSecret ?: return fileUrl
 
@@ -71,12 +74,32 @@ class RemoteStorage(
 
         val contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
         val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
-        return MpvLocalProxy.wrapIfNeeded(
+        val (mode, interval, autoEnabled) =
+            when (playerType) {
+                PlayerType.TYPE_MPV_PLAYER ->
+                    Triple(
+                        PlayerConfig.getMpvLocalProxyMode(),
+                        PlayerConfig.getMpvProxyRangeMinIntervalMs().toLong(),
+                        false,
+                    )
+                PlayerType.TYPE_VLC_PLAYER ->
+                    Triple(
+                        PlayerConfig.getVlcLocalProxyMode(),
+                        PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong(),
+                        false,
+                    )
+                else -> return upstream
+            }
+
+        return LocalProxy.wrapIfNeeded(
+            playerType = playerType,
+            modeValue = mode,
             upstreamUrl = upstream,
             upstreamHeaders = getNetworkHeaders(),
             contentLength = contentLength,
+            prePlayRangeMinIntervalMs = interval,
             fileName = fileName,
-            autoEnabled = false,
+            autoEnabled = autoEnabled,
         )
     }
 

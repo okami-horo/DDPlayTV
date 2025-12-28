@@ -7,7 +7,7 @@ import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.HttpPlayServer
-import com.xyoye.common_component.storage.file.helper.MpvLocalProxy
+import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.AlistStorageFile
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.alist.AlistFileData
@@ -95,7 +95,8 @@ class AlistStorage(
             ?.also { it.playHistory = history }
 
     override suspend fun createPlayUrl(file: StorageFile): String? {
-        if (PlayerConfig.getUsePlayerType() != PlayerType.TYPE_MPV_PLAYER.value) {
+        val playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
+        if (playerType != PlayerType.TYPE_MPV_PLAYER && playerType != PlayerType.TYPE_VLC_PLAYER) {
             return getStorageFileUrl(file)
         }
 
@@ -103,10 +104,22 @@ class AlistStorage(
         val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
         val contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
 
-        return MpvLocalProxy.wrapIfNeeded(
+        val (mode, interval) =
+            when (playerType) {
+                PlayerType.TYPE_MPV_PLAYER ->
+                    PlayerConfig.getMpvLocalProxyMode() to PlayerConfig.getMpvProxyRangeMinIntervalMs().toLong()
+                PlayerType.TYPE_VLC_PLAYER ->
+                    PlayerConfig.getVlcLocalProxyMode() to PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong()
+                else -> return upstream
+            }
+
+        return LocalProxy.wrapIfNeeded(
+            playerType = playerType,
+            modeValue = mode,
             upstreamUrl = upstream,
             upstreamHeaders = null,
             contentLength = contentLength,
+            prePlayRangeMinIntervalMs = interval,
             fileName = fileName,
             autoEnabled = true,
             onRangeUnsupported = {

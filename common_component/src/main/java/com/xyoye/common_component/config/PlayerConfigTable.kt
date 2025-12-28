@@ -1,6 +1,6 @@
 package com.xyoye.common_component.config
 
-import com.xyoye.data_component.enums.MpvLocalProxyMode
+import com.xyoye.data_component.enums.LocalProxyMode
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.data_component.enums.VLCHWDecode
@@ -59,7 +59,15 @@ object PlayerConfigTable {
 
     // MPV 本地 HTTP 代理：开关策略（关闭 / 自动 / 强制）
     @MMKVFiled
-    val mpvLocalProxyMode = MpvLocalProxyMode.AUTO.value
+    val mpvLocalProxyMode = LocalProxyMode.AUTO.value
+
+    // VLC 本地 HTTP 代理：Range 请求最小间隔（毫秒），用于降低上游风控触发概率
+    @MMKVFiled
+    val vlcProxyRangeMinIntervalMs = 1000
+
+    // VLC 本地 HTTP 代理：开关策略（关闭 / 自动 / 强制）
+    @MMKVFiled
+    val vlcLocalProxyMode = LocalProxyMode.AUTO.value
 
     // MPV 视频输出（vo）：gpu / gpu-next / mediacodec_embed
     @MMKVFiled

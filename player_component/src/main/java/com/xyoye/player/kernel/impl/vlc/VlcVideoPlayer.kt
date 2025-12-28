@@ -7,6 +7,7 @@ import android.graphics.Point
 import android.net.Uri
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.Surface
+import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
 import com.xyoye.common_component.utils.SupervisorScope
@@ -54,6 +55,8 @@ class VlcVideoPlayer(
     private var mCurrentDuration = 0L
     private var seekable = true
     private var isBufferEnd = false
+    private var dataSource: String? = null
+    private var proxySeekEnabled: Boolean = false
     private val mVideoSize = Point(0, 0)
 
     override fun initPlayer() {
@@ -68,6 +71,15 @@ class VlcVideoPlayer(
         path: String,
         headers: Map<String, String>?
     ) {
+        dataSource = path
+        runCatching {
+            val playServer = HttpPlayServer.getInstance()
+            if (playServer.isServingUrl(path)) {
+                playServer.setSeekEnabled(false)
+                proxySeekEnabled = false
+            }
+        }
+
         val vlcMedia = createVlcMedia(path, headers)
         if (vlcMedia == null) {
             mPlayerEventListener.onInfo(PlayerConstant.MEDIA_INFO_URL_EMPTY, 0)
@@ -295,6 +307,16 @@ class VlcVideoPlayer(
                 MediaPlayer.Event.Vout -> {
                     if (it.voutCount > 0) {
                         mMediaPlayer.updateVideoSurfaces()
+                        val path = dataSource
+                        if (!proxySeekEnabled && !path.isNullOrEmpty()) {
+                            runCatching {
+                                val playServer = HttpPlayServer.getInstance()
+                                if (playServer.isServingUrl(path)) {
+                                    playServer.setSeekEnabled(true)
+                                    proxySeekEnabled = true
+                                }
+                            }
+                        }
 
                         mPlayerEventListener.onInfo(
                             PlayerConstant.MEDIA_INFO_VIDEO_RENDERING_START,

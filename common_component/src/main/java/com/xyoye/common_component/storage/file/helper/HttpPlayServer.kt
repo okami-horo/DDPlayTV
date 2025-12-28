@@ -26,6 +26,8 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
     private var contentType: String = "application/octet-stream"
     private var contentLength: Long = -1L
     @Volatile
+    private var prePlayRangeMinIntervalMs: Long = 1000L
+    @Volatile
     private var rangeRetryDone: Boolean = false
     private var rangeRetrySupplier: (() -> UpstreamSource?)? = null
 
@@ -460,12 +462,12 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
 
     private fun throttleUpstreamRange() {
         val now = nowMs()
-        val prePlayIntervalMs =
-            runCatching { PlayerConfig.getMpvProxyRangeMinIntervalMs() }
-                .getOrDefault(1000)
-                .coerceIn(0, 2000)
-                .toLong()
-        val minIntervalMs = if (seekEnabled) 20L else prePlayIntervalMs
+        val minIntervalMs =
+            if (seekEnabled) {
+                20L
+            } else {
+                prePlayRangeMinIntervalMs.coerceIn(0, 2000)
+            }
         val elapsed = now - lastUpstreamRangeAtMs
         val waitMs = minIntervalMs - elapsed
         if (waitMs > 0) {
@@ -506,6 +508,7 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         upstreamHeaders: Map<String, String> = emptyMap(),
         contentType: String = "application/octet-stream",
         contentLength: Long = -1L,
+        prePlayRangeMinIntervalMs: Long = runCatching { PlayerConfig.getMpvProxyRangeMinIntervalMs() }.getOrDefault(1000).toLong(),
         fileName: String = "video",
         onRangeUnsupported: (() -> UpstreamSource?)? = null
     ): String {
@@ -513,6 +516,7 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         this.upstreamHeaders = upstreamHeaders
         this.contentType = contentType
         this.contentLength = contentLength
+        this.prePlayRangeMinIntervalMs = prePlayRangeMinIntervalMs
         this.rangeRetryDone = false
         this.rangeRetrySupplier = onRangeUnsupported
         this.seekEnabled = false

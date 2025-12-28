@@ -1,6 +1,6 @@
 package com.xyoye.data_component.enums
 
-enum class MpvLocalProxyMode(
+enum class LocalProxyMode(
     val value: Int
 ) {
     OFF(0),
@@ -8,7 +8,7 @@ enum class MpvLocalProxyMode(
     FORCE(2);
 
     companion object {
-        fun from(value: Int?): MpvLocalProxyMode {
+        fun from(value: Int?): LocalProxyMode {
             return when (value) {
                 OFF.value -> OFF
                 FORCE.value -> FORCE
