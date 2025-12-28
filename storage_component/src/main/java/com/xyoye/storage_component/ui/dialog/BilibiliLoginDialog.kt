@@ -58,6 +58,10 @@ class BilibiliLoginDialog(
         pollingJob?.cancel()
         pollingJob =
             scope.launch {
+                if (forceRefresh) {
+                    repository.clear()
+                }
+
                 binding.loadingPb.isVisible = true
                 binding.statusTv.text = "正在获取二维码…"
 
@@ -97,6 +101,7 @@ class BilibiliLoginDialog(
             }
 
             when (data.statusCode) {
+                86039 -> binding.statusTv.text = "等待扫码…"
                 86101 -> binding.statusTv.text = "等待扫码…"
                 86090 -> binding.statusTv.text = "已扫码，请在 App 上确认登录"
                 86038 -> {
@@ -124,4 +129,3 @@ class BilibiliLoginDialog(
         }
     }
 }
-
