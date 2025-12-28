@@ -16,6 +16,8 @@ import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.BR
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.FragmentStorageFileBinding
@@ -26,6 +28,8 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
     private val directory: StorageFile? by lazy { ownerActivity.directory }
     private var lastFocusedIndex = RecyclerView.NO_POSITION
     private var pendingFocusIndex = RecyclerView.NO_POSITION
+    private var tvHistoryHintShown = false
+    private var lastPagingHintState: com.xyoye.common_component.storage.PagedStorage.State? = null
 
     companion object {
         private const val TAG = "StorageFileFocus"
@@ -60,6 +64,26 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             dataBinding.refreshLayout.isRefreshing = false
             ownerActivity.onDirectoryOpened(it.filterIsInstance<StorageFile>())
             dataBinding.storageFileRv.setData(it)
+
+            if (!dataBinding.storageFileRv.isInTouchMode) {
+                val pagingItem = it.lastOrNull() as? StoragePagingItem
+                if (pagingItem != null) {
+                    if (!tvHistoryHintShown &&
+                        ownerActivity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
+                        ownerActivity.directory?.filePath() == "/history/"
+                    ) {
+                        ToastCenter.showInfo("提示：按菜单键可刷新，列表底部可选择“加载更多/重试”")
+                        tvHistoryHintShown = true
+                    }
+
+                    if (pagingItem.state != lastPagingHintState) {
+                        lastPagingHintState = pagingItem.state
+                        if (pagingItem.state == com.xyoye.common_component.storage.PagedStorage.State.ERROR) {
+                            ToastCenter.showError("加载失败，按确认键重试")
+                        }
+                    }
+                }
+            }
             // ownerActivity.onDirectoryDataLoaded(this, it)
             // 仅在需要恢复上次焦点时，才请求焦点（与媒体库首页保持一致：首次进入不默认高亮首项）
             if (pendingFocusIndex != RecyclerView.NO_POSITION) {
@@ -172,6 +196,13 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                 }
 
                 return@setOnKeyListener when (keyCode) {
+                    KeyEvent.KEYCODE_MENU -> {
+                        // TV/遥控器：提供可达的刷新入口（替代下拉刷新）
+                        ToastCenter.showInfo("刷新中…")
+                        reloadDirectory(refresh = true)
+                        true
+                    }
+
                     KeyEvent.KEYCODE_DPAD_DOWN -> {
                         val nextIndex = currentIndex + 1
                         if (nextIndex < rvAdapter.itemCount) {

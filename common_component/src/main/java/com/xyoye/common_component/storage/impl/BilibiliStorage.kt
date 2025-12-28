@@ -94,6 +94,7 @@ class BilibiliStorage(
                 business = cursor?.business?.takeIf { it.isNotBlank() },
                 ps = 30,
                 type = "archive",
+                preferCache = !refresh,
             ).getOrThrow()
 
         val nextCursor = data.cursor

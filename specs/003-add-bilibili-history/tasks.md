@@ -84,7 +84,7 @@ description: "任务清单：接入 Bilibili 历史记录媒体库（含播放�
 - [X] T025 [US1] 在 BilibiliStorage 中实现 `getNetworkHeaders()`：注入 Cookie/Referer/User-Agent，并确保日志不输出敏感 Cookie 到 `/home/tzw/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/storage/impl/BilibiliStorage.kt`
 - [X] T026 [P] [US1] 新增 Bilibili 官方弹幕下载与稳定落盘（`bilibili_{cid}.xml`）到 `/home/tzw/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/bilibili/danmaku/BilibiliDanmakuDownloader.kt`
 - [X] T027 [US1] 在播放器自动匹配弹幕时对 `MediaType.BILIBILI_STORAGE` 分流：解析 cid → 下载/缓存 → 自动加载（失败不影响播放）到 `/home/tzw/workspace/DanDanPlayForAndroid/player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerDanmuViewModel.kt`
-- [ ] T028 [US1] 校验播放失败提示可理解且可恢复（下架/权限/区域限制等），并确保可返回列表继续选择到 `/home/tzw/workspace/DanDanPlayForAndroid/storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_file/StorageFileViewModel.kt`
+- [X] T028 [US1] 校验播放失败提示可理解且可恢复（下架/权限/区域限制等），并确保可返回列表继续选择到 `/home/tzw/workspace/DanDanPlayForAndroid/storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_file/StorageFileViewModel.kt`
 
 **Checkpoint**: US1 MVP 闭环完成——“连接→历史→播放→弹幕”可独立验收
 
@@ -130,11 +130,11 @@ description: "任务清单：接入 Bilibili 历史记录媒体库（含播放�
 
 **目的**: 跨故事的体验/稳定性/性能/可维护性补齐
 
-- [ ] T041 [P] 文案与可达性优化：TV 焦点可达、操作提示清晰（登录/加载更多/失败）到 `/home/tzw/workspace/DanDanPlayForAndroid/storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragment.kt`
+- [X] T041 [P] 文案与可达性优化：TV 焦点可达、操作提示清晰（登录/加载更多/失败）到 `/home/tzw/workspace/DanDanPlayForAndroid/storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragment.kt`
 - [X] T042 [P] 日志脱敏：确保 Bilibili Cookie/refresh_token 不会被 LoggerInterceptor 打印到 `/home/tzw/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/network/helper/LoggerInterceptor.kt`
-- [ ] T043 [P] 可选：实现 Cookie 刷新链路（info → correspond → refresh → confirm/refresh），并在 -101 或即将过期时触发到 `/home/tzw/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/bilibili/repository/BilibiliRepository.kt`
-- [ ] T044 [P] 可选：历史记录首屏缓存（内存/本地）以提高 SC-001 命中率，并在刷新时展示旧数据到 `/home/tzw/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/bilibili/repository/BilibiliRepository.kt`
-- [ ] T045 逐条跑通 quickstart 验收清单并补充差异说明到 `/home/tzw/workspace/DanDanPlayForAndroid/specs/003-add-bilibili-history/quickstart.md`
+- [X] T043 [P] 可选：实现 Cookie 刷新链路（info → correspond → refresh → confirm/refresh），并在 -101 或即将过期时触发到 `/home/tzw/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/bilibili/repository/BilibiliRepository.kt`
+- [X] T044 [P] 可选：历史记录首屏缓存（内存/本地）以提高 SC-001 命中率，并在刷新时展示旧数据到 `/home/tzw/workspace/DanDanPlayForAndroid/common_component/src/main/java/com/xyoye/common_component/bilibili/repository/BilibiliRepository.kt`
+- [X] T045 逐条跑通 quickstart 验收清单并补充差异说明到 `/home/tzw/workspace/DanDanPlayForAndroid/specs/003-add-bilibili-history/quickstart.md`
 
 ---
 

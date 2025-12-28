@@ -1,6 +1,8 @@
 package com.xyoye.common_component.network.service
 
 import com.xyoye.common_component.network.config.HeaderKey
+import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
+import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
@@ -9,8 +11,11 @@ import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
 import okhttp3.ResponseBody
+import retrofit2.http.FieldMap
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.QueryMap
@@ -31,6 +36,32 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @Query("qrcode_key") qrcodeKey: String,
     ): BilibiliJsonModel<BilibiliQrcodePollData>
+
+    @GET("/x/passport-login/web/cookie/info")
+    suspend fun cookieInfo(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @Query("csrf") csrf: String? = null,
+    ): BilibiliJsonModel<BilibiliCookieInfoData>
+
+    @GET("/correspond/1/{path}")
+    suspend fun correspond(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @Path("path") correspondPath: String,
+    ): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/x/passport-login/web/cookie/refresh")
+    suspend fun cookieRefresh(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @FieldMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliJsonModel<BilibiliCookieRefreshData>
+
+    @FormUrlEncoded
+    @POST("/x/passport-login/web/confirm/refresh")
+    suspend fun confirmRefresh(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @FieldMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliJsonModel<Any>
 
     @GET("/x/web-interface/history/cursor")
     suspend fun historyCursor(
@@ -62,4 +93,3 @@ interface BilibiliService {
         @Query("oid") oid: Long,
     ): ResponseBody
 }
-

@@ -115,7 +115,12 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                 }
 
                 ToastCenter.showError("加载文件列表失败: ${e.message}")
-                _fileLiveData.postValue(emptyList())
+                // 刷新失败时保留旧数据，避免列表突然清空导致不可操作（尤其是 TV 场景）
+                if (refresh && filesSnapshot.isNotEmpty()) {
+                    _fileLiveData.postValue(filesSnapshot)
+                } else {
+                    _fileLiveData.postValue(emptyList())
+                }
             }
         }
     }
