@@ -9,6 +9,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SeekBarPreference
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.data_component.enums.MpvLocalProxyMode
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.data_component.enums.VLCHWDecode
@@ -24,6 +25,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
     companion object {
         private const val DEFAULT_MPV_VIDEO_OUTPUT = "gpu"
         private const val DEFAULT_MPV_HWDEC_PRIORITY = "mediacodec"
+        private const val DEFAULT_MPV_LOCAL_PROXY_MODE = "1"
 
         fun newInstance() = PlayerSettingFragment()
 
@@ -57,6 +59,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
         val mpvPreference =
             arrayOf(
                 "mpv_proxy_range_interval_ms",
+                "mpv_local_proxy_mode",
                 "mpv_hwdec_priority",
                 "mpv_video_output",
             )
@@ -72,6 +75,13 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             mapOf(
                 Pair("mediacodec（性能优先）", "mediacodec"),
                 Pair("mediacodec-copy（画面调节）", "mediacodec-copy"),
+            )
+
+        val mpvLocalProxyMode =
+            mapOf(
+                Pair("关闭", MpvLocalProxyMode.OFF.value.toString()),
+                Pair("自动（推荐）", MpvLocalProxyMode.AUTO.value.toString()),
+                Pair("强制开启", MpvLocalProxyMode.FORCE.value.toString()),
             )
     }
 
@@ -149,6 +159,23 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             if (value != safeValue) {
                 value = safeValue
                 PlayerConfig.putMpvHwdecPriority(safeValue)
+            }
+            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+        }
+
+        // MPV 本地防风控代理（HttpPlayServer）
+        findPreference<ListPreference>("mpv_local_proxy_mode")?.apply {
+            entries = mpvLocalProxyMode.keys.toTypedArray()
+            entryValues = mpvLocalProxyMode.values.toTypedArray()
+            val stored = PlayerConfig.getMpvLocalProxyMode()
+            val safeValue = MpvLocalProxyMode.from(stored).value.toString()
+            val resolved =
+                value?.takeIf { mpvLocalProxyMode.containsValue(it) }
+                    ?: safeValue.takeIf { mpvLocalProxyMode.containsValue(it) }
+                    ?: DEFAULT_MPV_LOCAL_PROXY_MODE
+            if (value != resolved) {
+                value = resolved
+                PlayerConfig.putMpvLocalProxyMode(resolved.toInt())
             }
             summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         }
@@ -245,6 +272,14 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                         }
                         safeValue
                     }
+                    "mpv_local_proxy_mode" -> {
+                        val current = PlayerConfig.getMpvLocalProxyMode()
+                        val safeValue = MpvLocalProxyMode.from(current).value.toString()
+                        if (current.toString() != safeValue) {
+                            PlayerConfig.putMpvLocalProxyMode(safeValue.toInt())
+                        }
+                        safeValue
+                    }
                     else -> super.getString(key, defValue)
                 }
             } catch (e: Exception) {
@@ -286,6 +321,10 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                                 value.takeIf { mpvHwdecPriority.containsValue(it) }
                                     ?: DEFAULT_MPV_HWDEC_PRIORITY
                             PlayerConfig.putMpvHwdecPriority(safeValue)
+                        }
+                        "mpv_local_proxy_mode" -> {
+                            val safeValue = MpvLocalProxyMode.from(value.toIntOrNull()).value
+                            PlayerConfig.putMpvLocalProxyMode(safeValue)
                         }
                         else -> super.putString(key, value)
                     }

@@ -5,6 +5,7 @@ import com.xyoye.common_component.network.config.HeaderKey
 import com.xyoye.common_component.network.helper.UnsafeOkHttpClient
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.storage.file.helper.MpvLocalProxy
 import com.xyoye.common_component.storage.file.impl.WebDavStorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
@@ -76,7 +77,18 @@ class WebDavStorage(
         }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String = file.fileUrl()
+    override suspend fun createPlayUrl(file: StorageFile): String {
+        val upstream = file.fileUrl()
+        val contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
+        val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
+        return MpvLocalProxy.wrapIfNeeded(
+            upstreamUrl = upstream,
+            upstreamHeaders = getNetworkHeaders(),
+            contentLength = contentLength,
+            fileName = fileName,
+            autoEnabled = false,
+        )
+    }
 
     override fun getNetworkHeaders(): Map<String, String>? {
         val accountInfo =

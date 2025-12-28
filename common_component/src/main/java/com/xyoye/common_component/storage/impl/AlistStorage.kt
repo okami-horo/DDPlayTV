@@ -7,6 +7,7 @@ import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.HttpPlayServer
+import com.xyoye.common_component.storage.file.helper.MpvLocalProxy
 import com.xyoye.common_component.storage.file.impl.AlistStorageFile
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.alist.AlistFileData
@@ -94,38 +95,36 @@ class AlistStorage(
             ?.also { it.playHistory = history }
 
     override suspend fun createPlayUrl(file: StorageFile): String? {
-        return if (PlayerConfig.getUsePlayerType() == PlayerType.TYPE_MPV_PLAYER.value) {
-            val upstream = getStorageFileProxyUrl(file) ?: getStorageFileUrl(file) ?: return null
-            val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
-            val playServer = HttpPlayServer.getInstance()
-            val started = playServer.startSync()
-            if (started.not()) {
-                return null
-            }
-            playServer.generatePlayUrl(
-                upstreamUrl = upstream,
-                // Provide file length so the proxy can expose a seekable HTTP stream to mpv (Range support).
-                contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L,
-                fileName = fileName,
-                onRangeUnsupported = {
-                    runCatching {
-                        runBlocking {
-                            val refreshed =
-                                getStorageFileProxyUrl(file, forceRefresh = true)
-                                    ?: getStorageFileUrl(file, forceRefresh = true)
-                            refreshed?.let { url ->
-                                HttpPlayServer.UpstreamSource(
-                                    url = url,
-                                    contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L,
-                                )
-                            }
-                        }
-                    }.getOrNull()
-                },
-            )
-        } else {
-            getStorageFileUrl(file)
+        if (PlayerConfig.getUsePlayerType() != PlayerType.TYPE_MPV_PLAYER.value) {
+            return getStorageFileUrl(file)
         }
+
+        val upstream = getStorageFileProxyUrl(file) ?: getStorageFileUrl(file) ?: return null
+        val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
+        val contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
+
+        return MpvLocalProxy.wrapIfNeeded(
+            upstreamUrl = upstream,
+            upstreamHeaders = null,
+            contentLength = contentLength,
+            fileName = fileName,
+            autoEnabled = true,
+            onRangeUnsupported = {
+                runCatching {
+                    runBlocking {
+                        val refreshed =
+                            getStorageFileProxyUrl(file, forceRefresh = true)
+                                ?: getStorageFileUrl(file, forceRefresh = true)
+                        refreshed?.let { url ->
+                            HttpPlayServer.UpstreamSource(
+                                url = url,
+                                contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L,
+                            )
+                        }
+                    }
+                }.getOrNull()
+            },
+        )
     }
 
     override suspend fun test(): Boolean = refreshToken()?.isNotEmpty() == true

@@ -15,6 +15,10 @@
         app:updatesContinuously="true"
         app:showSeekBarValue="true" />
     <ListPreference
+        android:key="mpv_local_proxy_mode"
+        android:title="MPV 本地防风控代理"
+        android:summary="关闭：不使用本地代理；自动：仅对部分上游启用；强制：尽量对可寻址的 HTTP(S) 直链启用（可能带来额外开销）" />
+    <ListPreference
         android:key="mpv_hwdec_priority"
         android:title="MPV 硬解优先级"
         android:summary="mediacodec：性能优先（画面调节无效）\nmediacodec-copy：画面调节生效" />

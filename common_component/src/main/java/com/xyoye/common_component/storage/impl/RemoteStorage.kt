@@ -5,6 +5,7 @@ import com.xyoye.common_component.network.repository.RemoteRepository
 import com.xyoye.common_component.network.request.NetworkException
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.storage.file.helper.MpvLocalProxy
 import com.xyoye.common_component.storage.file.helper.RemoteFileHelper
 import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
 import com.xyoye.common_component.utils.danmu.DanmuFinder
@@ -60,12 +61,23 @@ class RemoteStorage(
         val fileUrl = (file as RemoteStorageFile).fileUrl()
         val token = library.remoteSecret ?: return fileUrl
 
-        return Uri
-            .parse(fileUrl)
-            .buildUpon()
-            .appendQueryParameter("token", token)
-            .build()
-            .toString()
+        val upstream =
+            Uri
+                .parse(fileUrl)
+                .buildUpon()
+                .appendQueryParameter("token", token)
+                .build()
+                .toString()
+
+        val contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
+        val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
+        return MpvLocalProxy.wrapIfNeeded(
+            upstreamUrl = upstream,
+            upstreamHeaders = getNetworkHeaders(),
+            contentLength = contentLength,
+            fileName = fileName,
+            autoEnabled = false,
+        )
     }
 
     override suspend fun cacheDanmu(file: StorageFile): LocalDanmuBean? {
