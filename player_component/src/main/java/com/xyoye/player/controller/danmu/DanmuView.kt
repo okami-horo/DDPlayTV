@@ -62,6 +62,10 @@ class DanmuView(
         private const val DANMU_MAX_TEXT_SPEED = 2.5f
         private const val DANMU_MAX_TEXT_STOKE = 20f
 
+        private const val DANMU_TEXT_SIZE_MEDIUM = 25f
+        private const val DANMU_TEXT_SIZE_SMALL = 18f
+        private const val DANMU_TEXT_SIZE_DENSITY_OFFSET = 0.6f
+
         private const val INVALID_VALUE = -1L
     }
 
@@ -652,13 +656,17 @@ class DanmuView(
                 else -> BaseDanmaku.TYPE_FIX_BOTTOM
             }
 
-        val danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(type)
+        val danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(type, mDanmakuContext) ?: return
+        val baseTextSize = if (danmuBean.isSmallSize) DANMU_TEXT_SIZE_SMALL else DANMU_TEXT_SIZE_MEDIUM
+        val densityScale = max(0.1f, mDanmakuContext.displayer.density - DANMU_TEXT_SIZE_DENSITY_OFFSET)
         danmaku.apply {
             text = danmuBean.text
+            textSize = baseTextSize * densityScale
             padding = 5
             isLive = false
             priority = 0
             textColor = danmuBean.color
+            textShadowColor = if (textColor <= Color.BLACK) Color.WHITE else Color.BLACK
             underlineColor = Color.GREEN
             time = this@DanmuView.currentTime + 500
         }
