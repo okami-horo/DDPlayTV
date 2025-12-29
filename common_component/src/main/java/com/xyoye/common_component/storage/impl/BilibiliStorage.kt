@@ -24,6 +24,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
 import java.util.Date
+import java.util.UUID
 
 class BilibiliStorage(
     library: MediaLibraryEntity
@@ -367,6 +368,13 @@ class BilibiliStorage(
 
         val preferences = BilibiliPlaybackPreferencesStore.read(library)
 
+        val pgcSession =
+            if (parsed is BilibiliKeys.PgcEpisodeKey) {
+                UUID.randomUUID().toString().replace("-", "")
+            } else {
+                null
+            }
+
         val primary =
             when (parsed) {
                 is BilibiliKeys.ArchiveKey -> {
@@ -380,6 +388,7 @@ class BilibiliStorage(
                         cid = parsed.cid,
                         avid = parsed.avid,
                         preferences = preferences,
+                        session = pgcSession,
                     )
                 }
 
@@ -424,6 +433,7 @@ class BilibiliStorage(
                         cid = parsed.cid,
                         avid = parsed.avid,
                         preferences = preferences,
+                        session = pgcSession,
                     )
                 }
 

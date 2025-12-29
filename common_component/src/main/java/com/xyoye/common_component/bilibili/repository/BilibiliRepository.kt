@@ -29,15 +29,18 @@ import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
 import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import okhttp3.Cookie
 import okhttp3.ResponseBody
+import java.util.UUID
 import java.net.SocketTimeoutException
 import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.spec.MGF1ParameterSpec
 import java.security.spec.X509EncodedKeySpec
+import kotlin.random.Random
 import javax.crypto.Cipher
 import javax.crypto.spec.OAEPParameterSpec
 import javax.crypto.spec.PSource
@@ -227,6 +230,7 @@ class BilibiliRepository(
         cid: Long,
         avid: Long? = null,
         preferences: BilibiliPlaybackPreferences,
+        session: String? = null,
     ): Result<BilibiliPlayurlData> {
         val params: RequestParams = hashMapOf()
         params["ep_id"] = epId
@@ -235,11 +239,21 @@ class BilibiliRepository(
             params["avid"] = it
         }
 
+        params["session"] = session?.takeIf { it.isNotBlank() } ?: newPgcSession()
+        params["from_client"] = PGC_FROM_CLIENT
+        params["drm_tech_type"] = PGC_DRM_TECH_TYPE
+
         params.putAll(BilibiliPlayurlPreferencesMapper.pgcPrimaryParams(preferences))
 
-        return requestBilibiliResultAuthed(reason = "pgcPlayurl") {
-            service.pgcPlayurl(BASE_API, params)
-        }.recoverTimeout("取流超时，请检查网络后重试")
+        return retryBilibiliRiskControl(
+            maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+            initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+            maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+        ) {
+            requestBilibiliResultAuthed(reason = "pgcPlayurl") {
+                service.pgcPlayurl(BASE_API, params)
+            }.recoverTimeout("取流超时，请检查网络后重试")
+        }
     }
 
     suspend fun pgcPlayurlFallbackOrNull(
@@ -247,6 +261,7 @@ class BilibiliRepository(
         cid: Long,
         avid: Long? = null,
         preferences: BilibiliPlaybackPreferences,
+        session: String? = null,
     ): Result<BilibiliPlayurlData>? {
         val fallback = BilibiliPlayurlPreferencesMapper.pgcFallbackParamsOrNull(preferences) ?: return null
         val params: RequestParams = hashMapOf()
@@ -255,11 +270,22 @@ class BilibiliRepository(
         avid?.takeIf { it > 0 }?.let {
             params["avid"] = it
         }
+
+        params["session"] = session?.takeIf { it.isNotBlank() } ?: newPgcSession()
+        params["from_client"] = PGC_FROM_CLIENT
+        params["drm_tech_type"] = PGC_DRM_TECH_TYPE
+
         params.putAll(fallback)
 
-        return requestBilibiliResultAuthed(reason = "pgcPlayurlFallback") {
-            service.pgcPlayurl(BASE_API, params)
-        }.recoverTimeout("取流超时，请检查网络后重试")
+        return retryBilibiliRiskControl(
+            maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+            initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+            maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+        ) {
+            requestBilibiliResultAuthed(reason = "pgcPlayurlFallback") {
+                service.pgcPlayurl(BASE_API, params)
+            }.recoverTimeout("取流超时，请检查网络后重试")
+        }
     }
 
     suspend fun danmakuXml(cid: Long): Result<ResponseBody> =
@@ -328,11 +354,12 @@ class BilibiliRepository(
     private suspend fun <T> requestBilibiliResult(
         block: suspend () -> BilibiliResultJsonModel<T>
     ): Result<T> =
-        request().doGet {
-            val model = block()
-            ensureSuccess(model)
-            model.successData ?: throw BilibiliException.from(0, "响应数据为空")
-        }
+        request()
+            .doGet {
+                block()
+            }.mapCatching { model ->
+                model.successData ?: throw BilibiliException.from(0, "响应数据为空")
+            }
 
     private suspend fun <T> requestBilibiliResultAuthed(
         reason: String,
@@ -604,9 +631,36 @@ class BilibiliRepository(
         }
     }
 
-    private fun ensureSuccess(model: BilibiliResultJsonModel<*>) {
-        if (!model.isSuccess) {
-            throw BilibiliException.from(code = model.code, message = model.message)
+    private fun newPgcSession(): String = UUID.randomUUID().toString().replace("-", "")
+
+    private fun isRiskControlError(error: BilibiliException): Boolean =
+        error.code in RISK_CONTROL_CODES
+
+    private suspend fun <T> retryBilibiliRiskControl(
+        maxAttempts: Int,
+        initialDelayMs: Long,
+        maxDelayMs: Long,
+        block: suspend () -> Result<T>,
+    ): Result<T> {
+        var attempt = 1
+        var delayMs = initialDelayMs
+
+        while (true) {
+            val result = block()
+            val error = result.exceptionOrNull() as? BilibiliException
+                ?: return result
+            if (!isRiskControlError(error)) {
+                return result
+            }
+
+            if (attempt >= maxAttempts) {
+                return result
+            }
+
+            val jitter = Random.nextLong(0, (delayMs / 3).coerceAtLeast(1) + 1)
+            delay(delayMs + jitter)
+            delayMs = (delayMs * 2).coerceAtMost(maxDelayMs)
+            attempt++
         }
     }
 
@@ -645,6 +699,15 @@ class BilibiliRepository(
         private const val BILI_TICKET_DEFAULT_TTL_SEC = 259200L
         private const val BILI_TICKET_REFRESH_AHEAD_MS = 12 * 60 * 60 * 1000L
         private const val BILI_TICKET_MIN_RETRY_INTERVAL_MS = 60 * 1000L
+
+        private const val PGC_FROM_CLIENT = "BROWSER"
+        private const val PGC_DRM_TECH_TYPE = 2
+
+        private const val PGC_PLAYURL_RISK_MAX_ATTEMPTS = 4
+        private const val PGC_PLAYURL_RISK_INITIAL_DELAY_MS = 500L
+        private const val PGC_PLAYURL_RISK_MAX_DELAY_MS = 4000L
+
+        private val RISK_CONTROL_CODES = setOf(-351, -412, -509)
 
         private const val CORRESPOND_PUBLIC_KEY_PEM =
             """

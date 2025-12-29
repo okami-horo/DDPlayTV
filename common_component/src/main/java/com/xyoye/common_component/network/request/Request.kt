@@ -5,6 +5,7 @@ import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.data_component.data.CommonJsonData
 import com.xyoye.data_component.data.CommonJsonModel
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -57,6 +58,10 @@ class Request {
                     return@withContext Result.failure(BilibiliException.from(result))
                 }
 
+                if (result is BilibiliResultJsonModel<*> && result.isSuccess.not()) {
+                    return@withContext Result.failure(BilibiliException.from(code = result.code, message = result.message))
+                }
+
                 return@withContext Result.success(result)
             } catch (e: Exception) {
                 ErrorReportHelper.postCatchedExceptionWithContext(
@@ -88,6 +93,10 @@ class Request {
 
                 if (result is BilibiliJsonModel<*> && result.isSuccess.not()) {
                     return@withContext Result.failure(BilibiliException.from(result))
+                }
+
+                if (result is BilibiliResultJsonModel<*> && result.isSuccess.not()) {
+                    return@withContext Result.failure(BilibiliException.from(code = result.code, message = result.message))
                 }
 
                 return@withContext Result.success(result)
