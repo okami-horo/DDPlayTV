@@ -41,7 +41,7 @@ class Media3PlaybackSmokeTest {
             clock.advance(1_500)
             delegate.markFirstFrame()
 
-            assertEquals(1_500, delegate.startupLatencyMs())
+            assertEquals(1_500L, delegate.startupLatencyMs())
             assertTrue(delegate.isStartupWithinTarget(Media3PlayerDelegate.STARTUP_BUDGET_MS))
         }
 
