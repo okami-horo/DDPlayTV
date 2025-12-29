@@ -29,7 +29,8 @@ open class LogFileManager(
 ) {
     private val prepared = AtomicBoolean(false)
     private val ioLock = Any()
-    private val useMediaStore: Boolean by lazy { shouldUseMediaStore() }
+    private val useMediaStore: Boolean
+        get() = shouldUseMediaStore()
     private val contentResolver = context.contentResolver
     private val mediaRelativePath = LogPaths.logRelativePath(context)
     private var currentLogUri: Uri? = null

@@ -8,7 +8,6 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.xyoye.common_component.log.LogSystem
 import com.xyoye.common_component.log.model.DebugToggleState
 import com.xyoye.common_component.log.model.LogLevel
@@ -72,7 +71,6 @@ class DeveloperLoggingPreferenceTest {
 
     private fun openLogLevelDialog() {
         onView(withText(R.string.developer_log_level_title)).perform(click())
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
     }
 
     private fun selectLogLevel(
@@ -80,17 +78,14 @@ class DeveloperLoggingPreferenceTest {
     ) {
         val label = context.getString(entryRes)
         onView(withText(label)).perform(click())
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
     }
 
     private fun toggleDebugLogging() {
         onView(withText(R.string.developer_app_log_enable_title)).perform(click())
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
     }
 
     private fun resetLoggingState() {
         LogSystem.updateLoggingPolicy(LogPolicy.defaultReleasePolicy(), PolicySource.DEFAULT)
         LogSystem.stopDebugSession()
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
     }
 }

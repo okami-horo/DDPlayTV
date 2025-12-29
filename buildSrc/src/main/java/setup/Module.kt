@@ -15,6 +15,7 @@ fun Project.moduleSetup() {
         defaultConfig {
             minSdk = Versions.minSdkVersion
             targetSdk = Versions.targetSdkVersion
+            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
         ndkVersion = Versions.ndkVersion
 
