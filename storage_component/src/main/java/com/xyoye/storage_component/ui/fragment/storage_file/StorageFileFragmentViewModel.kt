@@ -11,6 +11,7 @@ import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.StorageSortOption
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
@@ -357,7 +358,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         }
 
         if (history == null && storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
-            val remote = file.getFile<BilibiliHistoryItem>() ?: return null
+            val remote = file.payloadAs<BilibiliHistoryItem>() ?: return null
             val positionMs = normalizeRemoteProgress(remote.progressSec, remote.durationSec) * 1000
             val durationMs = remote.durationSec.coerceAtLeast(0) * 1000
             val viewAtMs = remote.viewAt.coerceAtLeast(0) * 1000
