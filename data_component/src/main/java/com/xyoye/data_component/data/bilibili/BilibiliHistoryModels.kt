@@ -21,6 +21,8 @@ data class BilibiliHistoryCursor(
 @JsonClass(generateAdapter = true)
 data class BilibiliHistoryItem(
     val title: String = "",
+    @Json(name = "long_title")
+    val longTitle: String? = null,
     val cover: String? = null,
     /**
      * 重定向 URL
@@ -37,6 +39,18 @@ data class BilibiliHistoryItem(
     @Json(name = "duration")
     val durationSec: Long = 0,
     val videos: Int = 0,
+    val badge: String? = null,
+    @Json(name = "show_title")
+    val showTitle: String? = null,
+    val total: Int = 0,
+    /**
+     * 目标 id（不同 business 下含义不同）
+     *
+     * - archive: avid
+     * - live: roomId（直播间号）
+     * - pgc: ssid（season id）
+     */
+    val kid: Long = 0,
     @Json(name = "tag_name")
     val tagName: String? = null,
     @Json(name = "live_status")
@@ -53,6 +67,10 @@ data class BilibiliHistoryItemHistory(
      * - live: roomId（直播间号）
      */
     val oid: Long = 0,
+    /**
+     * PGC 剧集 epid（仅 business=pgc 有效）
+     */
+    val epid: Long = 0,
     val bvid: String = "",
     val cid: Long = 0,
     val business: String? = null,

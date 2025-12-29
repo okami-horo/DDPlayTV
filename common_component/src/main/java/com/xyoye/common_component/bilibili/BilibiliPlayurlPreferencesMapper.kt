@@ -14,24 +14,48 @@ object BilibiliPlayurlPreferencesMapper {
     private const val FNVAL_DASH = 16
     private const val FNVAL_ALLOW_4K = 128
 
-    fun primaryParams(preferences: BilibiliPlaybackPreferences): RequestParams =
+    fun archivePrimaryParams(preferences: BilibiliPlaybackPreferences): RequestParams =
         when (preferences.playMode) {
-            BilibiliPlayMode.MP4 -> mp4Params(preferences)
+            BilibiliPlayMode.MP4 -> buildMp4Params(preferences, platform = "pc")
             BilibiliPlayMode.DASH,
-            BilibiliPlayMode.AUTO -> dashParams(preferences)
+            BilibiliPlayMode.AUTO -> buildDashParams(preferences, platform = "pc", includeCodecid = true)
         }
 
-    fun fallbackParamsOrNull(preferences: BilibiliPlaybackPreferences): RequestParams? =
+    fun archiveFallbackParamsOrNull(preferences: BilibiliPlaybackPreferences): RequestParams? =
         if (preferences.playMode == BilibiliPlayMode.AUTO) {
-            mp4Params(preferences)
+            buildMp4Params(preferences, platform = "pc")
         } else {
             null
         }
 
-    private fun dashParams(preferences: BilibiliPlaybackPreferences): RequestParams {
+    fun pgcPrimaryParams(preferences: BilibiliPlaybackPreferences): RequestParams =
+        when (preferences.playMode) {
+            BilibiliPlayMode.MP4 -> buildMp4Params(preferences, platform = null)
+            BilibiliPlayMode.DASH,
+            BilibiliPlayMode.AUTO -> buildDashParams(preferences, platform = null, includeCodecid = false)
+        }
+
+    fun pgcFallbackParamsOrNull(preferences: BilibiliPlaybackPreferences): RequestParams? =
+        if (preferences.playMode == BilibiliPlayMode.AUTO) {
+            buildMp4Params(preferences, platform = null)
+        } else {
+            null
+        }
+
+    fun primaryParams(preferences: BilibiliPlaybackPreferences): RequestParams =
+        archivePrimaryParams(preferences)
+
+    fun fallbackParamsOrNull(preferences: BilibiliPlaybackPreferences): RequestParams? =
+        archiveFallbackParamsOrNull(preferences)
+
+    private fun buildDashParams(
+        preferences: BilibiliPlaybackPreferences,
+        platform: String?,
+        includeCodecid: Boolean,
+    ): RequestParams {
         val params: RequestParams = hashMapOf()
         params["fnver"] = 0
-        params["platform"] = "pc"
+        platform?.let { params["platform"] = it }
         params["fnval"] = dashFnval(preferences)
 
         if (preferences.allow4k) {
@@ -42,17 +66,22 @@ object BilibiliPlayurlPreferencesMapper {
             params["qn"] = preferences.preferredQualityQn
         }
 
-        preferences.preferredVideoCodec.codecid?.let {
-            params["codecid"] = it
+        if (includeCodecid) {
+            preferences.preferredVideoCodec.codecid?.let {
+                params["codecid"] = it
+            }
         }
 
         return params
     }
 
-    private fun mp4Params(preferences: BilibiliPlaybackPreferences): RequestParams {
+    private fun buildMp4Params(
+        preferences: BilibiliPlaybackPreferences,
+        platform: String?,
+    ): RequestParams {
         val params: RequestParams = hashMapOf()
         params["fnver"] = 0
-        params["platform"] = "pc"
+        platform?.let { params["platform"] = it }
         params["fnval"] = FNVAL_MP4
 
         if (preferences.allow4k) {
@@ -74,4 +103,3 @@ object BilibiliPlayurlPreferencesMapper {
         return fnval
     }
 }
-

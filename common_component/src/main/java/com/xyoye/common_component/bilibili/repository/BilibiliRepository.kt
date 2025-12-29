@@ -26,6 +26,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
 import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
+import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -216,6 +217,46 @@ class BilibiliRepository(
         }.recoverTimeout("取流超时，请检查网络后重试")
     }
 
+    suspend fun pgcPlayurl(
+        epId: Long,
+        cid: Long,
+        avid: Long? = null,
+        preferences: BilibiliPlaybackPreferences,
+    ): Result<BilibiliPlayurlData> {
+        val params: RequestParams = hashMapOf()
+        params["ep_id"] = epId
+        params["cid"] = cid
+        avid?.takeIf { it > 0 }?.let {
+            params["avid"] = it
+        }
+
+        params.putAll(BilibiliPlayurlPreferencesMapper.pgcPrimaryParams(preferences))
+
+        return requestBilibiliResultAuthed(reason = "pgcPlayurl") {
+            service.pgcPlayurl(BASE_API, params)
+        }.recoverTimeout("取流超时，请检查网络后重试")
+    }
+
+    suspend fun pgcPlayurlFallbackOrNull(
+        epId: Long,
+        cid: Long,
+        avid: Long? = null,
+        preferences: BilibiliPlaybackPreferences,
+    ): Result<BilibiliPlayurlData>? {
+        val fallback = BilibiliPlayurlPreferencesMapper.pgcFallbackParamsOrNull(preferences) ?: return null
+        val params: RequestParams = hashMapOf()
+        params["ep_id"] = epId
+        params["cid"] = cid
+        avid?.takeIf { it > 0 }?.let {
+            params["avid"] = it
+        }
+        params.putAll(fallback)
+
+        return requestBilibiliResultAuthed(reason = "pgcPlayurlFallback") {
+            service.pgcPlayurl(BASE_API, params)
+        }.recoverTimeout("取流超时，请检查网络后重试")
+    }
+
     suspend fun danmakuXml(cid: Long): Result<ResponseBody> =
         runCatching {
             service.danmakuXml(BASE_COMMENT, cid)
@@ -276,6 +317,30 @@ class BilibiliRepository(
         if (refreshed.isFailure) return first
 
         return requestBilibili(block)
+    }
+
+    private suspend fun <T> requestBilibiliResult(
+        block: suspend () -> BilibiliResultJsonModel<T>
+    ): Result<T> =
+        request().doGet {
+            val model = block()
+            ensureSuccess(model)
+            model.successData ?: throw BilibiliException.from(0, "响应数据为空")
+        }
+
+    private suspend fun <T> requestBilibiliResultAuthed(
+        reason: String,
+        block: suspend () -> BilibiliResultJsonModel<T>,
+    ): Result<T> {
+        refreshCookieIfNeeded(forceCheck = false, reason = reason)
+        val first = requestBilibiliResult(block)
+        val error = first.exceptionOrNull() as? BilibiliException ?: return first
+        if (error.code != -101) return first
+
+        val refreshed = refreshCookieIfNeeded(forceCheck = true, reason = "$reason(-101)")
+        if (refreshed.isFailure) return first
+
+        return requestBilibiliResult(block)
     }
 
     private suspend fun requestBilibiliUnit(
@@ -457,6 +522,12 @@ class BilibiliRepository(
     private fun ensureSuccess(model: BilibiliJsonModel<*>) {
         if (!model.isSuccess) {
             throw BilibiliException.from(model)
+        }
+    }
+
+    private fun ensureSuccess(model: BilibiliResultJsonModel<*>) {
+        if (!model.isSuccess) {
+            throw BilibiliException.from(code = model.code, message = model.message)
         }
     }
 

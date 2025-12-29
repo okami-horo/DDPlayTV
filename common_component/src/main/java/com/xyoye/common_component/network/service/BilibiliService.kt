@@ -13,6 +13,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
 import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
+import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
 import okhttp3.ResponseBody
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -106,6 +107,12 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
     ): BilibiliJsonModel<BilibiliPlayurlData>
+
+    @GET("/pgc/player/web/playurl")
+    suspend fun pgcPlayurl(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliResultJsonModel<BilibiliPlayurlData>
 
     @GET("/{cid}.xml")
     suspend fun danmakuXml(

@@ -5,6 +5,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.file.impl.DocumentStorageFile
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
@@ -31,14 +32,14 @@ class DocumentFileStorage(
             return null
         }
         val documentFile =
-            file.getFile<DocumentFile>()
+            file.payloadAs<DocumentFile>()
                 ?: return null
         return context.contentResolver.openInputStream(documentFile.uri)
     }
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> {
         val documentFile =
-            file.getFile<DocumentFile>()
+            file.payloadAs<DocumentFile>()
                 ?: return emptyList()
 
         return documentFile

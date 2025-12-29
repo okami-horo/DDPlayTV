@@ -31,7 +31,12 @@ class PlayerDanmuViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             if (videoSource.getMediaType() == MediaType.BILIBILI_STORAGE) {
                 val parsed = BilibiliKeys.parse(videoSource.getUniqueKey())
-                val cid = (parsed as? BilibiliKeys.ArchiveKey)?.cid
+                val cid =
+                    when (parsed) {
+                        is BilibiliKeys.ArchiveKey -> parsed.cid
+                        is BilibiliKeys.PgcEpisodeKey -> parsed.cid
+                        else -> null
+                    }
                 if (cid != null) {
                     val library = DatabaseManager.instance.getMediaLibraryDao().getById(videoSource.getStorageId())
                     if (library != null) {

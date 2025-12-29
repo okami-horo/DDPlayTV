@@ -148,5 +148,36 @@ class BilibiliStorageFile(
                 payload = payload,
                 playable = true,
             )
+
+        fun pgcEpisodeFile(
+            storage: Storage,
+            seasonId: Long?,
+            epId: Long,
+            cid: Long,
+            avid: Long?,
+            title: String,
+            coverUrl: String?,
+            durationMs: Long,
+            payload: Any?,
+        ): BilibiliStorageFile {
+            val resolvedSeasonId = seasonId?.takeIf { it > 0 } ?: 0
+            return BilibiliStorageFile(
+                storage = storage,
+                path = "/history/pgc/$resolvedSeasonId/$epId",
+                name = title,
+                isDir = false,
+                uniqueKey =
+                    BilibiliKeys.pgcEpisodeKey(
+                        epId = epId,
+                        cid = cid,
+                        seasonId = seasonId,
+                        avid = avid,
+                    ),
+                coverUrl = coverUrl,
+                durationMs = durationMs,
+                payload = payload,
+                playable = true,
+            )
+        }
     }
 }

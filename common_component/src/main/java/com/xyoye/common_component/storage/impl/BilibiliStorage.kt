@@ -12,6 +12,7 @@ import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.file.impl.BilibiliStorageFile
 import com.xyoye.common_component.utils.PathHelper
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursor
@@ -121,57 +122,94 @@ class BilibiliStorage(
     private fun mapHistoryItem(item: BilibiliHistoryItem): StorageFile? {
         val history = item.history ?: return null
 
-        val business = history.business?.takeIf { it.isNotBlank() }
-
-        if (business == "live") {
-            val roomId = history.oid.takeIf { it > 0 } ?: return null
-            return BilibiliStorageFile.liveRoomFile(
-                storage = this,
-                roomId = roomId,
-                title = item.title.ifBlank { roomId.toString() },
-                coverUrl = item.cover,
-                payload = item,
-            )
-        }
-
-        if (business != null && business != "archive") return null
-
-        val bvid = history.bvid
-        val cid = history.cid
-        if (bvid.isBlank() || cid <= 0) return null
-
+        val business = history.business?.takeIf { it.isNotBlank() } ?: "archive"
         val cover = item.cover
         val durationMs = item.durationSec.coerceAtLeast(0) * 1000
 
-        return if (item.videos > 1) {
-            BilibiliStorageFile.archiveDirectory(
-                storage = this,
-                bvid = bvid,
-                title = item.title.ifBlank { bvid },
-                coverUrl = cover,
-                childCount = item.videos,
-                payload = item,
-            )
-        } else {
-            val title =
-                buildString {
-                    append(item.title.ifBlank { bvid })
-                    history.part?.takeIf { it.isNotBlank() }?.let {
-                        if (it != item.title) {
-                            append(" - ")
-                            append(it)
+        when (business) {
+            "live" -> {
+                val roomId = history.oid.takeIf { it > 0 } ?: return null
+                return BilibiliStorageFile.liveRoomFile(
+                    storage = this,
+                    roomId = roomId,
+                    title = item.title.ifBlank { roomId.toString() },
+                    coverUrl = cover,
+                    payload = item,
+                )
+            }
+
+            "pgc" -> {
+                val epId = history.epid.takeIf { it > 0 } ?: return null
+                val cid = history.cid.takeIf { it > 0 } ?: return null
+                val avid = history.oid.takeIf { it > 0 }
+                val seasonId = item.kid.takeIf { it > 0 }
+
+                val episodeTitle =
+                    item.showTitle?.takeIf { it.isNotBlank() }
+                        ?: item.longTitle?.takeIf { it.isNotBlank() }
+
+                val title =
+                    buildString {
+                        append(item.title.ifBlank { epId.toString() })
+                        episodeTitle?.let {
+                            if (it != item.title) {
+                                append(" - ")
+                                append(it)
+                            }
                         }
                     }
+
+                return BilibiliStorageFile.pgcEpisodeFile(
+                    storage = this,
+                    seasonId = seasonId,
+                    epId = epId,
+                    cid = cid,
+                    avid = avid,
+                    title = title,
+                    coverUrl = cover,
+                    durationMs = durationMs,
+                    payload = item,
+                )
+            }
+
+            "archive" -> {
+                val bvid = history.bvid
+                val cid = history.cid
+                if (bvid.isBlank() || cid <= 0) return null
+
+                return if (item.videos > 1) {
+                    BilibiliStorageFile.archiveDirectory(
+                        storage = this,
+                        bvid = bvid,
+                        title = item.title.ifBlank { bvid },
+                        coverUrl = cover,
+                        childCount = item.videos,
+                        payload = item,
+                    )
+                } else {
+                    val title =
+                        buildString {
+                            append(item.title.ifBlank { bvid })
+                            history.part?.takeIf { it.isNotBlank() }?.let {
+                                if (it != item.title) {
+                                    append(" - ")
+                                    append(it)
+                                }
+                            }
+                        }
+                    BilibiliStorageFile.archivePartFile(
+                        storage = this,
+                        bvid = bvid,
+                        cid = cid,
+                        title = title,
+                        coverUrl = cover,
+                        durationMs = durationMs,
+                        payload = item,
+                    )
                 }
-            BilibiliStorageFile.archivePartFile(
-                storage = this,
-                bvid = bvid,
-                cid = cid,
-                title = title,
-                coverUrl = cover,
-                durationMs = durationMs,
-                payload = item,
-            )
+            }
+
+            else -> return null
         }
     }
 
@@ -180,7 +218,7 @@ class BilibiliStorage(
         bvid: String
     ): List<StorageFile> {
         val coverUrl = directory.fileCover()
-        val historyItem = directory.getFile<BilibiliHistoryItem>()
+        val historyItem = directory.payloadAs<BilibiliHistoryItem>()
         val baseTitle = historyItem?.title?.ifBlank { bvid } ?: directory.fileName().ifBlank { bvid }
 
         val pages =
@@ -295,6 +333,25 @@ class BilibiliStorage(
                     it.playHistory = history.copy(storagePath = path, playTime = history.playTime.takeIf { it.time > 0 } ?: Date())
                 }
             }
+
+            is BilibiliKeys.PgcEpisodeKey -> {
+                val path = history.storagePath ?: "/history/pgc/${parsed.seasonId ?: 0}/${parsed.epId}"
+                BilibiliStorageFile.pgcEpisodeFile(
+                    storage = this,
+                    seasonId = parsed.seasonId,
+                    epId = parsed.epId,
+                    cid = parsed.cid,
+                    avid = parsed.avid,
+                    title = history.videoName,
+                    coverUrl = null,
+                    durationMs = history.videoDuration,
+                    payload = null,
+                ).also {
+                    it.playHistory = history.copy(storagePath = path, playTime = history.playTime.takeIf { it.time > 0 } ?: Date())
+                }
+            }
+
+            is BilibiliKeys.PgcSeasonKey -> null
         }
     }
 
@@ -308,13 +365,26 @@ class BilibiliStorage(
             throw BilibiliException.from(-1, "取流失败")
         }
 
-        if (parsed !is BilibiliKeys.ArchiveKey) return null
-        val cid = parsed.cid ?: return null
-        val bvid = parsed.bvid
-
         val preferences = BilibiliPlaybackPreferencesStore.read(library)
 
-        val primary = repository.playurl(bvid, cid, preferences)
+        val primary =
+            when (parsed) {
+                is BilibiliKeys.ArchiveKey -> {
+                    val cid = parsed.cid ?: return null
+                    repository.playurl(parsed.bvid, cid, preferences)
+                }
+
+                is BilibiliKeys.PgcEpisodeKey -> {
+                    repository.pgcPlayurl(
+                        epId = parsed.epId,
+                        cid = parsed.cid,
+                        avid = parsed.avid,
+                        preferences = preferences,
+                    )
+                }
+
+                else -> return null
+            }
         val primaryData = primary.getOrNull()
         val dash = primaryData?.dash
 
@@ -341,7 +411,24 @@ class BilibiliStorage(
 
         primaryData?.durl?.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
 
-        val fallback = repository.playurlFallbackOrNull(bvid, cid, preferences)
+        val fallback =
+            when (parsed) {
+                is BilibiliKeys.ArchiveKey -> {
+                    val cid = parsed.cid ?: return null
+                    repository.playurlFallbackOrNull(parsed.bvid, cid, preferences)
+                }
+
+                is BilibiliKeys.PgcEpisodeKey -> {
+                    repository.pgcPlayurlFallbackOrNull(
+                        epId = parsed.epId,
+                        cid = parsed.cid,
+                        avid = parsed.avid,
+                        preferences = preferences,
+                    )
+                }
+
+                else -> null
+            }
         fallback?.getOrNull()?.durl?.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
 
         throw primary.exceptionOrNull() ?: BilibiliException.from(-1, "取流失败")
