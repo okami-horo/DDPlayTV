@@ -199,6 +199,16 @@ class DanDanVideoPlayer(
             DecodeType.HW
         }
 
+    override fun isSeekable(): Boolean {
+        val exoPlayer = exoPlayerOrNull()
+        return exoPlayer?.isCurrentMediaItemSeekable ?: (getDuration() > 0)
+    }
+
+    override fun isLive(): Boolean {
+        val exoPlayer = exoPlayerOrNull()
+        return exoPlayer?.isCurrentMediaItemLive ?: false
+    }
+
     override fun getRenderView(): InterSurfaceView? = mRenderView
 
     internal fun exoPlayerOrNull(): ExoPlayer? {

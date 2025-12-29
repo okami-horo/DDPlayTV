@@ -304,9 +304,17 @@ class VideoController(
         if (lastPlayPosition <= 0) {
             return
         }
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            lastPlayPosition = 0
+            return
+        }
 
         // 上次进度大于90%时，不执行自动定位进度
         val duration = mControlWrapper.getDuration()
+        if (duration <= 0) {
+            lastPlayPosition = 0
+            return
+        }
         if (1.0 * lastPlayPosition / duration >= 0.9) {
             return
         }

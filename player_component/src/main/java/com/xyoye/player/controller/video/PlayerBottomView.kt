@@ -228,17 +228,24 @@ class PlayerBottomView(
         duration: Long,
         position: Long
     ) {
-        if (mIsDragging) {
+        if (mControlWrapper.isLive()) {
+            mIsDragging = false
+            viewBinding.playSeekBar.isEnabled = false
+            viewBinding.playSeekBar.progress = viewBinding.playSeekBar.max
+            viewBinding.playSeekBar.secondaryProgress = viewBinding.playSeekBar.max
+            viewBinding.currentPositionTv.text = context.getString(R.string.text_live)
+            viewBinding.durationTv.text = ""
             return
         }
 
+        if (mIsDragging) return
+
         if (duration > 0) {
-            viewBinding.playSeekBar.isEnabled = true
             viewBinding.playSeekBar.progress =
                 (position.toFloat() / duration * viewBinding.playSeekBar.max).toInt()
-        } else {
-            viewBinding.playSeekBar.isEnabled = false
         }
+
+        viewBinding.playSeekBar.isEnabled = duration > 0 && mControlWrapper.isUserSeekAllowed()
 
         var bufferedPercent = mControlWrapper.getBufferedPercentage()
         if (bufferedPercent > 95) {
@@ -276,6 +283,9 @@ class PlayerBottomView(
         if (!fromUser) {
             return
         }
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            return
+        }
         val duration = mControlWrapper.getDuration()
         val newPosition = (duration * progress) / viewBinding.playSeekBar.max
         viewBinding.currentPositionTv.text =
@@ -283,12 +293,19 @@ class PlayerBottomView(
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            return
+        }
         mIsDragging = true
         mControlWrapper.stopProgress()
         mControlWrapper.stopFadeOut()
     }
 
     override fun onStopTrackingTouch(seekBar: SeekBar?) {
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            mIsDragging = false
+            return
+        }
         mIsDragging = false
         val duration = mControlWrapper.getDuration()
         val newPosition =

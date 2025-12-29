@@ -116,4 +116,16 @@ interface InterVideoPlayer : InterVideoTrack {
      * 当前解码方式（UI 提示用）
      */
     fun getDecodeType(): DecodeType = DecodeType.HW
+
+    /**
+     * 当前内容是否可拖动进度（用于 UI/交互判断）
+     *
+     * 注：直播流可能存在 DVR 时间窗，此时底层播放器可能仍然支持 seek。
+     */
+    fun isSeekable(): Boolean = getDuration() > 0
+
+    /**
+     * 当前内容是否为直播
+     */
+    fun isLive(): Boolean = false
 }

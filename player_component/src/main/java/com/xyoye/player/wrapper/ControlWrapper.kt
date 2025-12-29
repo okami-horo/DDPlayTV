@@ -48,6 +48,10 @@ class ControlWrapper(
 
     override fun getCurrentPosition() = mVideoPlayer.getCurrentPosition()
 
+    override fun isSeekable() = mVideoPlayer.isSeekable()
+
+    override fun isLive() = mVideoPlayer.isLive()
+
     override fun seekTo(timeMs: Long) {
         // 播放器
         mVideoPlayer.seekTo(timeMs)
@@ -432,4 +436,6 @@ class ControlWrapper(
             showController()
         }
     }
+
+    fun isUserSeekAllowed(): Boolean = isSeekable() && !isLive()
 }

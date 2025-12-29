@@ -100,7 +100,9 @@ abstract class GestureVideoController(
                     longPressAccelerator.disable()
                     stopSlide()
                     if (mSeekPosition >= 0) {
-                        mControlWrapper.seekTo(mSeekPosition)
+                        if (mControlWrapper.isUserSeekAllowed()) {
+                            mControlWrapper.seekTo(mSeekPosition)
+                        }
                         mSeekPosition = -1L
                     }
                 }
@@ -231,6 +233,9 @@ abstract class GestureVideoController(
 
     protected fun slideToChangePosition(deltaX: Float) {
         if (disableTouchGestures) {
+            return
+        }
+        if (!mControlWrapper.isUserSeekAllowed()) {
             return
         }
         // 滑动距离与实际进度缩放比例
