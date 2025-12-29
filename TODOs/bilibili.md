@@ -127,6 +127,7 @@
 - `uniqueKey()`：建议使用稳定、可重建的键，例如：
   - `bilibili://video/{bvid}?cid={cid}`（或 `aid+cid`）
   - 对番剧/影视可使用 `epid/cid` 组合（后续再扩展）
+  - 番剧/影视（PGC）历史播放适配设计：`TODOs/bilibili_pgc_playback.md`
 
 - `filePath()`：用于“路径栏/路由”，不必是真实路径，但应具备层级与可解析性，例如：
   - `/fav/{mlid}/`、`/toview/`、`/video/{bvid}/`、`/video/{bvid}/{cid}`

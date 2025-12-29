@@ -1,5 +1,7 @@
 package com.xyoye.storage_component.ui.dialog
 
+import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferences
+import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferences
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliPlayMode
@@ -30,6 +32,7 @@ class BilibiliStorageEditDialog(
 
     private lateinit var editLibrary: MediaLibraryEntity
     private var preferences = BilibiliPlaybackPreferences()
+    private var danmakuBlockPreferences = BilibiliDanmakuBlockPreferences()
 
     override fun getChildLayoutId() = R.layout.dialog_bilibili_storage
 
@@ -51,6 +54,7 @@ class BilibiliStorageEditDialog(
         binding.library = editLibrary
 
         preferences = BilibiliPlaybackPreferencesStore.read(editLibrary)
+        danmakuBlockPreferences = BilibiliDanmakuBlockPreferencesStore.read(editLibrary)
         refreshPreferenceViews()
 
         binding.playModeActionTv.setOnClickListener { showPlayModeDialog() }
@@ -58,6 +62,9 @@ class BilibiliStorageEditDialog(
         binding.codecActionTv.setOnClickListener { showCodecDialog() }
         binding.allow4kOnTv.setOnClickListener { updateAllow4k(true) }
         binding.allow4kOffTv.setOnClickListener { updateAllow4k(false) }
+        binding.aiBlockOnTv.setOnClickListener { updateAiBlock(true) }
+        binding.aiBlockOffTv.setOnClickListener { updateAiBlock(false) }
+        binding.aiLevelActionTv.setOnClickListener { showAiLevelDialog() }
 
         binding.disconnectTv.isVisible = isEditMode && editLibrary.id > 0
         binding.disconnectTv.setOnClickListener {
@@ -67,7 +74,7 @@ class BilibiliStorageEditDialog(
                 .Builder(activity)
                 .apply {
                     tips = "提示"
-                    content = "确认断开连接并清除该媒体库的隐私数据？\n\n将清除：Cookie/登录态、播放偏好、播放历史/进度、Bilibili 弹幕缓存文件。"
+                    content = "确认断开连接并清除该媒体库的隐私数据？\n\n将清除：Cookie/登录态、播放偏好、弹幕屏蔽偏好、播放历史/进度、Bilibili 弹幕缓存文件。"
                     positiveText = "确认清除"
                     addPositive { dialog ->
                         dialog.dismiss()
@@ -85,6 +92,7 @@ class BilibiliStorageEditDialog(
 
         addNeutralButton("恢复默认") {
             preferences = BilibiliPlaybackPreferences()
+            danmakuBlockPreferences = BilibiliDanmakuBlockPreferences()
             refreshPreferenceViews()
         }
 
@@ -100,6 +108,7 @@ class BilibiliStorageEditDialog(
                 refreshPreferenceViews()
             }
             BilibiliPlaybackPreferencesStore.write(editLibrary, preferences)
+            BilibiliDanmakuBlockPreferencesStore.write(editLibrary, danmakuBlockPreferences)
             activity.addStorage(editLibrary)
         }
 
@@ -122,6 +131,9 @@ class BilibiliStorageEditDialog(
         binding.qualityValueTv.text = BilibiliQuality.fromQn(preferences.preferredQualityQn).label
         binding.codecValueTv.text = preferences.preferredVideoCodec.label
         setAllow4kSelected(preferences.allow4k)
+
+        binding.aiLevelValueTv.text = formatAiLevel(danmakuBlockPreferences.aiLevel)
+        setAiBlockSelected(danmakuBlockPreferences.aiSwitch)
     }
 
     private fun setAllow4kSelected(allow: Boolean) {
@@ -131,6 +143,42 @@ class BilibiliStorageEditDialog(
         binding.allow4kOffTv.isSelected = !allow
         binding.allow4kOffTv.setTextColorRes(if (!allow) R.color.text_white else R.color.text_black)
     }
+
+    private fun updateAiBlock(enabled: Boolean) {
+        danmakuBlockPreferences = danmakuBlockPreferences.copy(aiSwitch = enabled)
+        refreshPreferenceViews()
+    }
+
+    private fun setAiBlockSelected(enabled: Boolean) {
+        binding.aiBlockOnTv.isSelected = enabled
+        binding.aiBlockOnTv.setTextColorRes(if (enabled) R.color.text_white else R.color.text_black)
+
+        binding.aiBlockOffTv.isSelected = !enabled
+        binding.aiBlockOffTv.setTextColorRes(if (!enabled) R.color.text_white else R.color.text_black)
+    }
+
+    private fun showAiLevelDialog() {
+        val actions =
+            (0..10).map { level ->
+                SheetActionBean(
+                    actionId = level,
+                    actionName = formatAiLevel(level),
+                )
+            }
+        BottomActionDialog(activity, actions, "屏蔽等级") {
+            val selected = it.actionId as? Int ?: return@BottomActionDialog false
+            danmakuBlockPreferences = danmakuBlockPreferences.copy(aiLevel = selected.coerceIn(0, 10))
+            refreshPreferenceViews()
+            true
+        }.show()
+    }
+
+    private fun formatAiLevel(level: Int): String =
+        if (level == 0) {
+            "默认（3）"
+        } else {
+            level.coerceIn(0, 10).toString()
+        }
 
     private fun showPlayModeDialog() {
         val actions =

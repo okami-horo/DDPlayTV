@@ -37,8 +37,16 @@ data class VideoTrackBean(
         }
 
         fun danmu(danmu: LocalDanmuBean): VideoTrackBean {
-            val name = Uri.parse(danmu.danmuPath).lastPathSegment.orEmpty()
-            return VideoTrackBean(name = name, type = TrackType.DANMU, trackResource = danmu)
+            return danmu(DanmuTrackResource.LocalFile(danmu))
+        }
+
+        fun danmu(resource: DanmuTrackResource): VideoTrackBean {
+            val name =
+                when (resource) {
+                    is DanmuTrackResource.LocalFile -> Uri.parse(resource.danmu.danmuPath).lastPathSegment.orEmpty()
+                    is DanmuTrackResource.BilibiliLive -> "直播实时弹幕"
+                }
+            return VideoTrackBean(name = name, type = TrackType.DANMU, trackResource = resource)
         }
 
         fun audio(audioPath: String): VideoTrackBean {

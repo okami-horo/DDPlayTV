@@ -114,6 +114,21 @@ class BilibiliCookieJarStore(
             domainSuffix = "bilibili.com",
         )
 
+    fun isBuvid3CookiePresent(): Boolean =
+        hasCookieName(
+            name = "buvid3",
+            domainSuffix = "bilibili.com",
+        )
+
+    fun isCookiePresent(
+        name: String,
+        domainSuffix: String = "bilibili.com",
+    ): Boolean =
+        hasCookieName(
+            name = name,
+            domainSuffix = domainSuffix,
+        )
+
     fun exportCookieHeader(
         domainSuffix: String = "bilibili.com"
     ): String? =

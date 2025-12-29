@@ -11,6 +11,7 @@ import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.utils.danmu.DanmuFinder
 import com.xyoye.common_component.utils.danmu.source.DanmuSourceFactory
 import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.data_component.bean.DanmuTrackResource
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.enums.MediaType
@@ -22,9 +23,9 @@ import kotlinx.coroutines.launch
  */
 
 class PlayerDanmuViewModel : BaseViewModel() {
-    val loadDanmuLiveData = MutableLiveData<Pair<String, LocalDanmuBean>>()
+    val loadDanmuLiveData = MutableLiveData<Pair<String, DanmuTrackResource>>()
     val danmuSearchLiveData = MutableLiveData<List<DanmuEpisodeData>>()
-    val downloadDanmuLiveData = MutableLiveData<LocalDanmuBean>()
+    val downloadDanmuLiveData = MutableLiveData<DanmuTrackResource>()
 
     fun matchDanmu(videoSource: BaseVideoSource) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -37,8 +38,22 @@ class PlayerDanmuViewModel : BaseViewModel() {
                         val storageKey = BilibiliPlaybackPreferencesStore.storageKey(library)
                         val danmu = BilibiliDanmakuDownloader.getOrDownload(storageKey, cid)
                         if (danmu != null) {
-                            loadDanmuLiveData.postValue(videoSource.getVideoUrl() to danmu)
+                            loadDanmuLiveData.postValue(videoSource.getVideoUrl() to DanmuTrackResource.LocalFile(danmu))
                         }
+                    }
+                }
+
+                val roomId = (parsed as? BilibiliKeys.LiveKey)?.roomId
+                if (roomId != null) {
+                    val library = DatabaseManager.instance.getMediaLibraryDao().getById(videoSource.getStorageId())
+                    if (library != null) {
+                        val storageKey = BilibiliPlaybackPreferencesStore.storageKey(library)
+                        loadDanmuLiveData.postValue(
+                            videoSource.getVideoUrl() to DanmuTrackResource.BilibiliLive(
+                                storageKey = storageKey,
+                                roomId = roomId,
+                            ),
+                        )
                     }
                 }
                 return@launch
@@ -49,7 +64,7 @@ class PlayerDanmuViewModel : BaseViewModel() {
                 ?.let {
                     DanmuFinder.instance.downloadMatched(it)
                 }?.let {
-                    loadDanmuLiveData.postValue(videoSource.getVideoUrl() to it)
+                    loadDanmuLiveData.postValue(videoSource.getVideoUrl() to DanmuTrackResource.LocalFile(it))
                 }
         }
     }
@@ -75,7 +90,7 @@ class PlayerDanmuViewModel : BaseViewModel() {
                 }
             hideLoading()
 
-            downloadDanmuLiveData.postValue(result)
+            downloadDanmuLiveData.postValue(DanmuTrackResource.LocalFile(result))
         }
     }
 }

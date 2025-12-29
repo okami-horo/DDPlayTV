@@ -17,11 +17,9 @@ import com.xyoye.common_component.network.service.ExtendedService
 import com.xyoye.common_component.network.service.MagnetService
 import com.xyoye.common_component.network.service.RemoteService
 import com.xyoye.common_component.network.service.ScreencastService
-import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
-import com.xyoye.common_component.bilibili.net.BilibiliHeaders
+import com.xyoye.common_component.bilibili.net.BilibiliOkHttpClientFactory
 import com.xyoye.common_component.utils.JsonHelper
 import okhttp3.OkHttpClient
-import okhttp3.Interceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.ConcurrentHashMap
@@ -148,43 +146,9 @@ class Retrofit private constructor() {
             Retrofit
                 .Builder()
                 .addConverterFactory(moshiConverterFactory)
-                .client(buildBilibiliClient(storageKey))
+                .client(BilibiliOkHttpClientFactory.create(storageKey))
                 .baseUrl(Api.PLACEHOLDER)
                 .build()
                 .create(BilibiliService::class.java)
         }
-
-    private fun buildBilibiliClient(storageKey: String): OkHttpClient =
-        OkHttpClient
-            .Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
-            .callTimeout(30, TimeUnit.SECONDS)
-            .hostnameVerifier { _, _ -> true }
-            .cookieJar(BilibiliCookieJarStore(storageKey))
-            .addInterceptor(BilibiliHeaderInterceptor())
-            .addInterceptor(DecompressInterceptor())
-            .addInterceptor(DynamicBaseUrlInterceptor())
-            .addInterceptor(LoggerInterceptor().retrofit())
-            .build()
-
-    private class BilibiliHeaderInterceptor : Interceptor {
-        override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
-            val original = chain.request()
-            val builder = original.newBuilder()
-
-            if (original.header(BilibiliHeaders.HEADER_USER_AGENT).isNullOrEmpty()) {
-                builder.header(BilibiliHeaders.HEADER_USER_AGENT, BilibiliHeaders.USER_AGENT)
-            }
-            if (original.header(BilibiliHeaders.HEADER_REFERER).isNullOrEmpty()) {
-                builder.header(BilibiliHeaders.HEADER_REFERER, BilibiliHeaders.REFERER)
-            }
-            if (original.header(BilibiliHeaders.HEADER_ACCEPT_ENCODING).isNullOrEmpty()) {
-                builder.header(BilibiliHeaders.HEADER_ACCEPT_ENCODING, BilibiliHeaders.ACCEPT_ENCODING)
-            }
-
-            return chain.proceed(builder.build())
-        }
-    }
 }

@@ -18,6 +18,7 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.gyf.immersionbar.BarHide
 import com.gyf.immersionbar.ImmersionBar
+import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.bridge.PlayTaskBridge
 import com.xyoye.common_component.config.DanmuConfig
@@ -342,11 +343,12 @@ class PlayerActivity :
                 return@observe
             }
 
-            LogFacade.i(
-                LogModule.PLAYER,
-                TAG_DANMAKU,
-                "match success cid=${matchDanmu?.episodeId} title=${curVideoSource.getVideoTitle()}",
-            )
+            val trackHint =
+                when (matchDanmu) {
+                    is com.xyoye.data_component.bean.DanmuTrackResource.LocalFile -> "cid=${matchDanmu.danmu.episodeId}"
+                    is com.xyoye.data_component.bean.DanmuTrackResource.BilibiliLive -> "live roomId=${matchDanmu.roomId}"
+                }
+            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "match success $trackHint title=${curVideoSource.getVideoTitle()}")
             videoController.showMessage("匹配弹幕成功")
             videoController.addExtendTrack(VideoTrackBean.danmu(matchDanmu))
         }
@@ -358,7 +360,9 @@ class PlayerActivity :
                 return@observe
             }
 
-            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "download success id=${searchDanmu.episodeId}")
+            val episodeId =
+                (searchDanmu as? com.xyoye.data_component.bean.DanmuTrackResource.LocalFile)?.danmu?.episodeId
+            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "download success id=$episodeId")
             videoController.showMessage("下载弹幕成功")
             videoController.addExtendTrack(VideoTrackBean.danmu(searchDanmu))
         }
@@ -502,13 +506,26 @@ class PlayerActivity :
         if (historyDanmu != null) {
             LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "load history cid=${historyDanmu.episodeId}")
             videoController.addExtendTrack(VideoTrackBean.danmu(historyDanmu))
-        } else if (
-            DanmuConfig.isAutoMatchDanmu() &&
-            source.getMediaType() != MediaType.FTP_SERVER &&
-            popupManager.isShowing().not()
-        ) {
-            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto match start title=${source.getVideoTitle()}")
-            danmuViewModel.matchDanmu(source)
+        } else {
+            val isBilibiliLive =
+                source.getMediaType() == MediaType.BILIBILI_STORAGE &&
+                    (BilibiliKeys.parse(source.getUniqueKey()) is BilibiliKeys.LiveKey)
+
+            if (
+                isBilibiliLive &&
+                DanmuConfig.isAutoEnableBilibiliLiveDanmaku() &&
+                popupManager.isShowing().not()
+            ) {
+                LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto live danmaku start title=${source.getVideoTitle()}")
+                danmuViewModel.matchDanmu(source)
+            } else if (
+                DanmuConfig.isAutoMatchDanmu() &&
+                source.getMediaType() != MediaType.FTP_SERVER &&
+                popupManager.isShowing().not()
+            ) {
+                LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto match start title=${source.getVideoTitle()}")
+                danmuViewModel.matchDanmu(source)
+            }
         }
 
         // 视频已绑定字幕，直接加载

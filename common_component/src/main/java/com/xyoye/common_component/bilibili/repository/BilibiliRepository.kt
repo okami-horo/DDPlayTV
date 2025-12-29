@@ -17,6 +17,8 @@ import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuConnectInfo
+import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
 import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
@@ -129,6 +131,44 @@ class BilibiliRepository(
         return requestBilibiliAuthed(reason = "livePlayUrl") {
             service.livePlayUrl(BASE_LIVE, params)
         }.recoverTimeout("取流超时，请检查网络后重试")
+    }
+
+    suspend fun liveDanmuInfo(roomId: Long): Result<BilibiliLiveDanmuConnectInfo> {
+        val resolvedRoomId =
+            liveRoomInfo(roomId)
+                .getOrNull()
+                ?.roomId
+                ?.takeIf { it > 0 }
+                ?: roomId
+
+        if (!cookieJarStore.isBuvid3CookiePresent()) {
+            // B 站近期要求 buvid3 不为空，预热 www 域名以获取必要 Cookie
+            runCatching {
+                service.preheat(BASE_WWW).close()
+            }
+        }
+
+        val params: RequestParams =
+            hashMapOf(
+                "id" to resolvedRoomId,
+                "type" to 0,
+                "web_location" to "444.8",
+            )
+
+        val signed =
+            BilibiliWbiSigner.sign(params) {
+                fetchWbiKeys()
+            }
+
+        return requestBilibiliAuthed(reason = "liveDanmuInfo") {
+            service.liveDanmuInfo(BASE_LIVE, signed)
+        }.map { data ->
+            BilibiliLiveDanmuConnectInfo(
+                roomId = resolvedRoomId,
+                token = data.token,
+                hostList = data.hostList,
+            )
+        }
     }
 
     suspend fun pagelist(bvid: String): Result<List<BilibiliPagelistItem>> =

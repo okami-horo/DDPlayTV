@@ -1,5 +1,6 @@
 package com.xyoye.common_component.bilibili.cleanup
 
+import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.bilibili.auth.BilibiliAuthStore
 import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
@@ -29,6 +30,7 @@ object BilibiliCleanup {
                 playHistoryDao.deleteByStorageId(storageId)
 
                 BilibiliPlaybackPreferencesStore.clear(library)
+                BilibiliDanmakuBlockPreferencesStore.clear(library)
                 BilibiliAuthStore.clear(storageKey)
                 BilibiliCookieJarStore(storageKey).clear()
             }.onFailure { e ->
@@ -56,4 +58,3 @@ object BilibiliCleanup {
         }
     }
 }
-

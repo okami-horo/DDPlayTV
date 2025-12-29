@@ -5,6 +5,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
 import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
@@ -23,6 +24,11 @@ import retrofit2.http.Query
 import retrofit2.http.QueryMap
 
 interface BilibiliService {
+    @GET("/")
+    suspend fun preheat(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+    ): ResponseBody
+
     @GET("/x/web-interface/nav")
     suspend fun nav(
         @Header(HeaderKey.BASE_URL) baseUrl: String,
@@ -82,6 +88,12 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
     ): BilibiliJsonModel<BilibiliLivePlayUrlData>
+
+    @GET("/xlive/web-room/v1/index/getDanmuInfo")
+    suspend fun liveDanmuInfo(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliJsonModel<BilibiliLiveDanmuInfoData>
 
     @GET("/x/player/pagelist")
     suspend fun pagelist(

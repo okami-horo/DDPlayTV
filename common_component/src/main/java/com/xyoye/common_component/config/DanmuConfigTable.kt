@@ -77,6 +77,10 @@ object DanmuConfigTable {
     @MMKVFiled
     const val autoMatchDanmu = true
 
+    // 自动启用 Bilibili 直播实时弹幕
+    @MMKVFiled
+    const val autoEnableBilibiliLiveDanmaku = true
+
     // 根据屏幕刷新率绘制弹幕
     @MMKVFiled
     const val danmuUpdateInChoreographer = true

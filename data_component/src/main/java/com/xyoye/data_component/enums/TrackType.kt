@@ -1,5 +1,6 @@
 package com.xyoye.data_component.enums
 
+import com.xyoye.data_component.bean.DanmuTrackResource
 import com.xyoye.data_component.bean.LocalDanmuBean
 
 /**
@@ -28,9 +29,15 @@ enum class TrackType {
     }
 
     fun getDanmu(value: Any?): LocalDanmuBean? {
-        if (value != null && value is LocalDanmuBean && this == DANMU) {
-            return value
+        return getDanmuResource(value)?.let { (it as? DanmuTrackResource.LocalFile)?.danmu }
+    }
+
+    fun getDanmuResource(value: Any?): DanmuTrackResource? {
+        if (this != DANMU || value == null) return null
+        return when (value) {
+            is DanmuTrackResource -> value
+            is LocalDanmuBean -> DanmuTrackResource.LocalFile(value)
+            else -> null
         }
-        return null
     }
 }
