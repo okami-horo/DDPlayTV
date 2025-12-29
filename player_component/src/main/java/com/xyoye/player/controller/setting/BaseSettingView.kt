@@ -36,8 +36,8 @@ abstract class BaseSettingView<V : ViewDataBinding>
 
         private val defaultSettingWidth: Float =
             when (settingGravity) {
-                Gravity.END -> dp2px(300).toFloat()
-                Gravity.START -> -dp2px(300).toFloat()
+                Gravity.END -> dp2px(320).toFloat()
+                Gravity.START -> -dp2px(320).toFloat()
                 else -> throw IllegalArgumentException("Illegal setting view gravity: ${javaClass.simpleName}")
             }
 
