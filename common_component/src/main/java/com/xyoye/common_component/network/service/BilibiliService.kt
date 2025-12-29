@@ -14,6 +14,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
 import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliWebTicketData
 import okhttp3.ResponseBody
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -113,6 +114,12 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
     ): BilibiliResultJsonModel<BilibiliPlayurlData>
+
+    @POST("/bapis/bilibili.api.ticket.v1.Ticket/GenWebTicket")
+    suspend fun genWebTicket(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliJsonModel<BilibiliWebTicketData>
 
     @GET("/{cid}.xml")
     suspend fun danmakuXml(

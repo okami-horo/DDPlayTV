@@ -7,6 +7,7 @@ import com.xyoye.common_component.bilibili.auth.BilibiliAuthStore
 import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
 import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.bilibili.history.BilibiliHistoryCacheStore
+import com.xyoye.common_component.bilibili.ticket.BilibiliTicketSigner
 import com.xyoye.common_component.bilibili.wbi.BilibiliWbiSigner
 import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.network.request.RequestParams
@@ -30,6 +31,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import okhttp3.Cookie
 import okhttp3.ResponseBody
 import java.net.SocketTimeoutException
 import java.security.KeyFactory
@@ -50,6 +52,9 @@ class BilibiliRepository(
     private val cookieRefreshMutex = Mutex()
     private var lastCookieInfoCheckAt: Long = 0L
     private var lastCookieRefreshAttemptAt: Long = 0L
+
+    private val biliTicketMutex = Mutex()
+    private var lastBiliTicketAttemptAt: Long = 0L
 
     private val historyFirstPageMemoryCache: MutableMap<String, BilibiliHistoryCursorData> = hashMapOf()
     private val historyFirstPageMemoryAt: MutableMap<String, Long> = hashMapOf()
@@ -309,6 +314,7 @@ class BilibiliRepository(
         block: suspend () -> BilibiliJsonModel<T>,
     ): Result<T> {
         refreshCookieIfNeeded(forceCheck = false, reason = reason)
+        refreshBiliTicketIfNeeded(reason = reason)
         val first = requestBilibili(block)
         val error = first.exceptionOrNull() as? BilibiliException ?: return first
         if (error.code != -101) return first
@@ -333,6 +339,7 @@ class BilibiliRepository(
         block: suspend () -> BilibiliResultJsonModel<T>,
     ): Result<T> {
         refreshCookieIfNeeded(forceCheck = false, reason = reason)
+        refreshBiliTicketIfNeeded(reason = reason)
         val first = requestBilibiliResult(block)
         val error = first.exceptionOrNull() as? BilibiliException ?: return first
         if (error.code != -101) return first
@@ -342,6 +349,78 @@ class BilibiliRepository(
 
         return requestBilibiliResult(block)
     }
+
+    private suspend fun refreshBiliTicketIfNeeded(reason: String): Result<Boolean> =
+        biliTicketMutex.withLock {
+            runCatching {
+                val now = System.currentTimeMillis()
+                val existing = cookieJarStore.getCookieOrNull(name = COOKIE_BILI_TICKET)
+                val needsRefresh =
+                    existing == null ||
+                        existing.expiresAt <= now + BILI_TICKET_REFRESH_AHEAD_MS
+
+                if (!needsRefresh) {
+                    return@runCatching false
+                }
+
+                if (now - lastBiliTicketAttemptAt < BILI_TICKET_MIN_RETRY_INTERVAL_MS) {
+                    return@runCatching false
+                }
+                lastBiliTicketAttemptAt = now
+
+                if (!cookieJarStore.isBuvid3CookiePresent()) {
+                    // 预热 www 域名以获取必要 Cookie，降低风控概率
+                    runCatching {
+                        service.preheat(BASE_WWW).close()
+                    }
+                }
+
+                val signed = BilibiliTicketSigner.sign()
+                val csrf = BilibiliAuthStore.read(storageKey).csrf
+
+                val params: RequestParams = hashMapOf()
+                params["key_id"] = signed.keyId
+                params["hexsign"] = signed.hexsign
+                params["context[ts]"] = signed.timestampSec
+                csrf?.takeIf { it.isNotBlank() }?.let {
+                    params["csrf"] = it
+                }
+
+                val data =
+                    requestBilibili {
+                        service.genWebTicket(BASE_API, params)
+                    }.getOrThrow()
+
+                val ticket = data.ticket.takeIf { it.isNotBlank() }
+                    ?: throw BilibiliException.from(code = -1, message = "获取 bili_ticket 失败：响应为空")
+
+                val createdAtSec = data.createdAt.takeIf { it > 0 } ?: signed.timestampSec
+                val ttlSec = data.ttl.takeIf { it > 0 } ?: BILI_TICKET_DEFAULT_TTL_SEC
+                val expiresAtMs = (createdAtSec + ttlSec) * 1000L
+
+                val cookie =
+                    Cookie
+                        .Builder()
+                        .name(COOKIE_BILI_TICKET)
+                        .value(ticket)
+                        .domain("bilibili.com")
+                        .path("/")
+                        .expiresAt(expiresAtMs)
+                        .secure()
+                        .httpOnly()
+                        .build()
+
+                cookieJarStore.upsertCookie(cookie, bucketHost = "bilibili.com")
+                true
+            }
+        }.onFailure { t ->
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                t,
+                "BilibiliRepository",
+                "refreshBiliTicketIfNeeded",
+                "storageKey=$storageKey reason=$reason",
+            )
+        }
 
     private suspend fun requestBilibiliUnit(
         block: suspend () -> BilibiliJsonModel<Any>,
@@ -561,6 +640,11 @@ class BilibiliRepository(
         private const val COOKIE_INFO_CHECK_INTERVAL_MS = 20 * 60 * 60 * 1000L
         private const val COOKIE_REFRESH_MIN_INTERVAL_MS = 2 * 60 * 1000L
         private const val HISTORY_FIRST_PAGE_CACHE_MAX_AGE_MS = 12 * 60 * 60 * 1000L
+
+        private const val COOKIE_BILI_TICKET = "bili_ticket"
+        private const val BILI_TICKET_DEFAULT_TTL_SEC = 259200L
+        private const val BILI_TICKET_REFRESH_AHEAD_MS = 12 * 60 * 60 * 1000L
+        private const val BILI_TICKET_MIN_RETRY_INTERVAL_MS = 60 * 1000L
 
         private const val CORRESPOND_PUBLIC_KEY_PEM =
             """

@@ -129,6 +129,38 @@ class BilibiliCookieJarStore(
             domainSuffix = domainSuffix,
         )
 
+    fun getCookieOrNull(
+        name: String,
+        domainSuffix: String = "bilibili.com",
+    ): Cookie? =
+        synchronized(lock) {
+            val now = System.currentTimeMillis()
+            val all = readAll().toMutableMap()
+            if (all.isEmpty()) {
+                return@synchronized null
+            }
+
+            // Clear expired items globally to avoid leaking cookies across different host buckets.
+            var changed = false
+            val cleanedAll =
+                all.mapValues { (_, list) ->
+                    val filtered = list.filterNot { it.expiresAt < now }
+                    if (filtered.size != list.size) changed = true
+                    filtered
+                }
+            if (changed) {
+                writeAll(cleanedAll)
+            }
+
+            cleanedAll
+                .values
+                .flatten()
+                .filter { it.name == name }
+                .filter { it.domain.endsWith(domainSuffix, ignoreCase = true) }
+                .maxByOrNull { it.expiresAt }
+                ?.toCookie()
+        }
+
     fun exportCookieHeader(
         domainSuffix: String = "bilibili.com"
     ): String? =
@@ -146,6 +178,33 @@ class BilibiliCookieJarStore(
             if (cookies.isEmpty()) return@synchronized null
             cookies.joinToString(separator = "; ") { "${it.name}=${it.value}" }
         }
+
+    fun upsertCookie(
+        cookie: Cookie,
+        bucketHost: String = cookie.domain,
+    ) {
+        synchronized(lock) {
+            val now = System.currentTimeMillis()
+            if (cookie.expiresAt < now) return
+
+            val all = readAll().toMutableMap()
+            val existing = all[bucketHost].orEmpty().toMutableList()
+            val incoming = cookie.toPersistedCookie()
+
+            val index =
+                existing.indexOfFirst {
+                    it.name == incoming.name && it.domain == incoming.domain && it.path == incoming.path
+                }
+            if (index >= 0) {
+                existing[index] = incoming
+            } else {
+                existing.add(incoming)
+            }
+
+            all[bucketHost] = existing
+            writeAll(all)
+        }
+    }
 
     private fun hasCookieName(
         name: String,
