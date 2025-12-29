@@ -18,34 +18,42 @@ class BilibiliHistoryCacheStore(
     private val kv: MMKV = MMKV.mmkvWithID("bilibili_history_cache_${storageKey.toMd5String()}")
 
     fun readFirstPageOrNull(
+        type: String,
         maxAgeMs: Long,
         nowMs: Long = System.currentTimeMillis(),
     ): BilibiliHistoryCursorData? {
-        val savedAt = kv.decodeLong(KEY_FIRST_PAGE_AT, 0L)
+        val key = normalizeType(type)
+        val savedAt = kv.decodeLong(keyFirstPageAt(key), 0L)
         if (savedAt <= 0L || nowMs - savedAt > maxAgeMs) {
             return null
         }
-        val raw = kv.decodeString(KEY_FIRST_PAGE).orEmpty()
+        val raw = kv.decodeString(keyFirstPage(key)).orEmpty()
         return JsonHelper.parseJson<BilibiliHistoryCursorData>(raw)
     }
 
     fun writeFirstPage(
+        type: String,
         data: BilibiliHistoryCursorData,
         nowMs: Long = System.currentTimeMillis(),
     ) {
         val raw = JsonHelper.toJson(data) ?: return
-        kv.encode(KEY_FIRST_PAGE, raw)
-        kv.encode(KEY_FIRST_PAGE_AT, nowMs)
+        val key = normalizeType(type)
+        kv.encode(keyFirstPage(key), raw)
+        kv.encode(keyFirstPageAt(key), nowMs)
     }
 
     fun clear() {
-        kv.removeValueForKey(KEY_FIRST_PAGE)
-        kv.removeValueForKey(KEY_FIRST_PAGE_AT)
+        kv.clearAll()
     }
 
     private companion object {
-        private const val KEY_FIRST_PAGE = "first_page"
-        private const val KEY_FIRST_PAGE_AT = "first_page_at"
+        private const val KEY_FIRST_PAGE_PREFIX = "first_page"
+        private const val KEY_FIRST_PAGE_AT_PREFIX = "first_page_at"
+
+        private fun normalizeType(type: String): String = type.trim().ifBlank { "archive" }
+
+        private fun keyFirstPage(type: String): String = "$KEY_FIRST_PAGE_PREFIX.$type"
+
+        private fun keyFirstPageAt(type: String): String = "$KEY_FIRST_PAGE_AT_PREFIX.$type"
     }
 }
-

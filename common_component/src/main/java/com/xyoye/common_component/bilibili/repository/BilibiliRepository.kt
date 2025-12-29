@@ -17,6 +17,8 @@ import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
+import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
 import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
 import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
@@ -46,8 +48,8 @@ class BilibiliRepository(
     private var lastCookieInfoCheckAt: Long = 0L
     private var lastCookieRefreshAttemptAt: Long = 0L
 
-    private var historyFirstPageMemoryCache: BilibiliHistoryCursorData? = null
-    private var historyFirstPageMemoryAt: Long = 0L
+    private val historyFirstPageMemoryCache: MutableMap<String, BilibiliHistoryCursorData> = hashMapOf()
+    private val historyFirstPageMemoryAt: MutableMap<String, Long> = hashMapOf()
 
     fun isLoggedIn(): Boolean = cookieJarStore.isLoginCookiePresent()
 
@@ -86,7 +88,7 @@ class BilibiliRepository(
     ): Result<BilibiliHistoryCursorData> {
         val isFirstPage = max == null && viewAt == null && business == null
         if (preferCache && isFirstPage) {
-            readCachedHistoryFirstPageOrNull()?.let { cached ->
+            readCachedHistoryFirstPageOrNull(type)?.let { cached ->
                 // 异步触发“每日检查/需要刷新再刷新”，避免首屏被网络阻塞
                 SupervisorScope.IO.launch {
                     refreshCookieIfNeeded(forceCheck = false, reason = "historyCursor(cache)")
@@ -106,9 +108,27 @@ class BilibiliRepository(
             service.historyCursor(BASE_API, params)
         }.onSuccess { data ->
             if (isFirstPage) {
-                writeCachedHistoryFirstPage(data)
+                writeCachedHistoryFirstPage(type, data)
             }
         }
+    }
+
+    suspend fun liveRoomInfo(roomId: Long): Result<BilibiliLiveRoomInfoData> =
+        requestBilibiliAuthed(reason = "liveRoomInfo") {
+            service.liveRoomInfo(BASE_LIVE, roomId)
+        }
+
+    suspend fun livePlayUrl(
+        roomId: Long,
+        platform: String = "h5",
+    ): Result<BilibiliLivePlayUrlData> {
+        val params: RequestParams = hashMapOf()
+        params["cid"] = roomId
+        params["platform"] = platform
+
+        return requestBilibiliAuthed(reason = "livePlayUrl") {
+            service.livePlayUrl(BASE_LIVE, params)
+        }.recoverTimeout("取流超时，请检查网络后重试")
     }
 
     suspend fun pagelist(bvid: String): Result<List<BilibiliPagelistItem>> =
@@ -228,22 +248,28 @@ class BilibiliRepository(
         }
 
     private fun readCachedHistoryFirstPageOrNull(): BilibiliHistoryCursorData? {
+        return readCachedHistoryFirstPageOrNull(type = "archive")
+    }
+
+    private fun readCachedHistoryFirstPageOrNull(type: String): BilibiliHistoryCursorData? {
         val now = System.currentTimeMillis()
-        if (historyFirstPageMemoryCache != null && now - historyFirstPageMemoryAt <= HISTORY_FIRST_PAGE_CACHE_MAX_AGE_MS) {
-            return historyFirstPageMemoryCache
+        val mem = historyFirstPageMemoryCache[type]
+        val memAt = historyFirstPageMemoryAt[type] ?: 0L
+        if (mem != null && now - memAt <= HISTORY_FIRST_PAGE_CACHE_MAX_AGE_MS) {
+            return mem
         }
-        val cached = historyCacheStore.readFirstPageOrNull(HISTORY_FIRST_PAGE_CACHE_MAX_AGE_MS, now)
+        val cached = historyCacheStore.readFirstPageOrNull(type, HISTORY_FIRST_PAGE_CACHE_MAX_AGE_MS, now)
         if (cached != null) {
-            historyFirstPageMemoryCache = cached
-            historyFirstPageMemoryAt = now
+            historyFirstPageMemoryCache[type] = cached
+            historyFirstPageMemoryAt[type] = now
         }
         return cached
     }
 
-    private fun writeCachedHistoryFirstPage(data: BilibiliHistoryCursorData) {
-        historyFirstPageMemoryCache = data
-        historyFirstPageMemoryAt = System.currentTimeMillis()
-        historyCacheStore.writeFirstPage(data)
+    private fun writeCachedHistoryFirstPage(type: String, data: BilibiliHistoryCursorData) {
+        historyFirstPageMemoryCache[type] = data
+        historyFirstPageMemoryAt[type] = System.currentTimeMillis()
+        historyCacheStore.writeFirstPage(type, data)
     }
 
     private suspend fun refreshCookieIfNeeded(
@@ -416,6 +442,7 @@ class BilibiliRepository(
 
     private companion object {
         private const val BASE_API = "https://api.bilibili.com/"
+        private const val BASE_LIVE = "https://api.live.bilibili.com/"
         private const val BASE_PASSPORT = "https://passport.bilibili.com/"
         private const val BASE_COMMENT = "https://comment.bilibili.com/"
         private const val BASE_WWW = "https://www.bilibili.com/"

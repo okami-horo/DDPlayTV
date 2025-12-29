@@ -129,6 +129,24 @@ class BilibiliStorageFile(
                 payload = payload,
                 playable = true,
             )
+
+        fun liveRoomFile(
+            storage: Storage,
+            roomId: Long,
+            title: String,
+            coverUrl: String?,
+            payload: Any?,
+        ): BilibiliStorageFile =
+            BilibiliStorageFile(
+                storage = storage,
+                path = "/history/live/$roomId",
+                name = title,
+                isDir = false,
+                uniqueKey = BilibiliKeys.liveRoomKey(roomId),
+                coverUrl = coverUrl,
+                durationMs = 0L,
+                payload = payload,
+                playable = true,
+            )
     }
 }
-

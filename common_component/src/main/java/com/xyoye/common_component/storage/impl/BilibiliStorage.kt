@@ -86,34 +86,56 @@ class BilibiliStorage(
             resetHistoryCursor()
         }
 
-        val cursor = historyCursor
-        val data =
-            repository.historyCursor(
-                max = cursor?.max?.takeIf { it > 0 },
-                viewAt = cursor?.viewAt?.takeIf { it > 0 },
-                business = cursor?.business?.takeIf { it.isNotBlank() },
-                ps = 30,
-                type = "archive",
-                preferCache = !refresh,
-            ).getOrThrow()
+        val mapped = mutableListOf<StorageFile>()
+        var attempts = 0
 
-        val nextCursor = data.cursor
-        val rawList = data.list
+        while (mapped.isEmpty() && historyHasMore && attempts < 5) {
+            val cursor = historyCursor
+            val data =
+                repository.historyCursor(
+                    max = cursor?.max?.takeIf { it > 0 },
+                    viewAt = cursor?.viewAt?.takeIf { it > 0 },
+                    business = cursor?.business?.takeIf { it.isNotBlank() },
+                    ps = 30,
+                    type = "all",
+                    preferCache = !refresh,
+                ).getOrThrow()
 
-        historyHasMore =
-            rawList.isNotEmpty() &&
-                nextCursor != null &&
-                (cursor == null || nextCursor.max != cursor.max || nextCursor.viewAt != cursor.viewAt)
+            val nextCursor = data.cursor
+            val rawList = data.list
 
-        historyCursor = nextCursor
+            historyHasMore =
+                rawList.isNotEmpty() &&
+                    nextCursor != null &&
+                    (cursor == null || nextCursor.max != cursor.max || nextCursor.viewAt != cursor.viewAt)
 
-        return rawList
-            .mapNotNull { item -> mapHistoryItem(item) }
+            historyCursor = nextCursor
+
+            mapped.addAll(rawList.mapNotNull { item -> mapHistoryItem(item) })
+            attempts++
+        }
+
+        return mapped
     }
 
     private fun mapHistoryItem(item: BilibiliHistoryItem): StorageFile? {
         val history = item.history ?: return null
-        if (history.business != null && history.business != "archive") return null
+
+        val business = history.business?.takeIf { it.isNotBlank() }
+
+        if (business == "live") {
+            val roomId = history.oid.takeIf { it > 0 } ?: return null
+            return BilibiliStorageFile.liveRoomFile(
+                storage = this,
+                roomId = roomId,
+                title = item.title.ifBlank { roomId.toString() },
+                coverUrl = item.cover,
+                payload = item,
+            )
+        }
+
+        if (business != null && business != "archive") return null
+
         val bvid = history.bvid
         val cid = history.cid
         if (bvid.isBlank() || cid <= 0) return null
@@ -196,6 +218,18 @@ class BilibiliStorage(
         return when {
             normalized == "/" -> BilibiliStorageFile.root(this)
             normalized == "/history/" -> BilibiliStorageFile.historyDirectory(this)
+            normalized.startsWith("/history/live/") && !isDirectory -> {
+                val roomId = normalized.removePrefix("/history/live/").trim('/').toLongOrNull() ?: return null
+                if (roomId <= 0) return null
+                BilibiliStorageFile.liveRoomFile(
+                    storage = this,
+                    roomId = roomId,
+                    title = roomId.toString(),
+                    coverUrl = null,
+                    payload = null,
+                )
+            }
+
             normalized.startsWith("/history/") && isDirectory -> {
                 val bvid = normalized.removePrefix("/history/").removeSuffix("/").substringBefore("/")
                 if (bvid.isBlank()) return null
@@ -231,23 +265,50 @@ class BilibiliStorage(
 
     override suspend fun historyFile(history: PlayHistoryEntity): StorageFile? {
         val parsed = BilibiliKeys.parse(history.uniqueKey) ?: return null
-        val cid = parsed.cid ?: return null
-        val path = history.storagePath ?: "/history/${parsed.bvid}/$cid"
-        return BilibiliStorageFile.archivePartFile(
-            storage = this,
-            bvid = parsed.bvid,
-            cid = cid,
-            title = history.videoName,
-            coverUrl = null,
-            durationMs = history.videoDuration,
-            payload = null,
-        ).also {
-            it.playHistory = history.copy(storagePath = path, playTime = history.playTime.takeIf { it.time > 0 } ?: Date())
+        return when (parsed) {
+            is BilibiliKeys.ArchiveKey -> {
+                val cid = parsed.cid ?: return null
+                val path = history.storagePath ?: "/history/${parsed.bvid}/$cid"
+                BilibiliStorageFile.archivePartFile(
+                    storage = this,
+                    bvid = parsed.bvid,
+                    cid = cid,
+                    title = history.videoName,
+                    coverUrl = null,
+                    durationMs = history.videoDuration,
+                    payload = null,
+                ).also {
+                    it.playHistory = history.copy(storagePath = path, playTime = history.playTime.takeIf { it.time > 0 } ?: Date())
+                }
+            }
+
+            is BilibiliKeys.LiveKey -> {
+                val roomId = parsed.roomId
+                val path = history.storagePath ?: "/history/live/$roomId"
+                BilibiliStorageFile.liveRoomFile(
+                    storage = this,
+                    roomId = roomId,
+                    title = history.videoName,
+                    coverUrl = null,
+                    payload = null,
+                ).also {
+                    it.playHistory = history.copy(storagePath = path, playTime = history.playTime.takeIf { it.time > 0 } ?: Date())
+                }
+            }
         }
     }
 
     override suspend fun createPlayUrl(file: StorageFile): String? {
         val parsed = BilibiliKeys.parse(file.uniqueKey()) ?: return null
+        if (parsed is BilibiliKeys.LiveKey) {
+            val info = repository.liveRoomInfo(parsed.roomId).getOrThrow()
+            val roomId = info.roomId.takeIf { it > 0 } ?: parsed.roomId
+            val playUrl = repository.livePlayUrl(roomId).getOrThrow()
+            playUrl.durl.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
+            throw BilibiliException.from(-1, "取流失败")
+        }
+
+        if (parsed !is BilibiliKeys.ArchiveKey) return null
         val cid = parsed.cid ?: return null
         val bvid = parsed.bvid
 

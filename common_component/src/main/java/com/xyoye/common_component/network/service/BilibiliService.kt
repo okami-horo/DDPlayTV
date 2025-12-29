@@ -5,6 +5,8 @@ import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
+import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
 import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
 import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
@@ -68,6 +70,18 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
     ): BilibiliJsonModel<BilibiliHistoryCursorData>
+
+    @GET("/room/v1/Room/get_info")
+    suspend fun liveRoomInfo(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @Query("room_id") roomId: Long,
+    ): BilibiliJsonModel<BilibiliLiveRoomInfoData>
+
+    @GET("/room/v1/Room/playUrl")
+    suspend fun livePlayUrl(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliJsonModel<BilibiliLivePlayUrlData>
 
     @GET("/x/player/pagelist")
     suspend fun pagelist(
