@@ -667,7 +667,6 @@ class DanmuView(
             priority = 0
             textColor = danmuBean.color
             textShadowColor = if (textColor <= Color.BLACK) Color.WHITE else Color.BLACK
-            underlineColor = Color.GREEN
             time = this@DanmuView.currentTime + 500
         }
         addDanmaku(danmaku)
