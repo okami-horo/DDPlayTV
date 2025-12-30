@@ -7,6 +7,10 @@ package com.xyoye.common_component.config
  */
 
 object RouteTable {
+    object App {
+        const val DeveloperMenuService = "/app/developer_menu_service"
+    }
+
     object Anime {
         const val Search = "/anime/search"
         const val HomeFragment = "/anime/home_fragment"

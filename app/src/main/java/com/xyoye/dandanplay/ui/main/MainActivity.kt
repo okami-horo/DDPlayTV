@@ -18,6 +18,7 @@ import com.xyoye.common_component.extension.hideFragment
 import com.xyoye.common_component.extension.showFragment
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.services.DeveloperMenuService
 import com.xyoye.common_component.services.ScreencastReceiveService
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
@@ -25,7 +26,6 @@ import com.xyoye.dandanplay.BR
 import com.xyoye.dandanplay.R
 import com.xyoye.dandanplay.databinding.ActivityMainBinding
 import com.xyoye.data_component.data.LoginData
-import com.xyoye.user_component.ui.weight.DeveloperMenus
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
@@ -47,11 +47,14 @@ class MainActivity :
     @Autowired
     lateinit var receiveService: ScreencastReceiveService
 
+    @Autowired
+    lateinit var developerMenuService: DeveloperMenuService
+
     private var fragmentTag = ""
     private var touchTime = 0L
 
     // 标题栏菜单管理器
-    private lateinit var mMenus: DeveloperMenus
+    private var developerMenus: DeveloperMenuService.Delegate? = null
 
     override fun initViewModel() =
         ViewModelInit(
@@ -139,13 +142,13 @@ class MainActivity :
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        mMenus = DeveloperMenus.inflater(this, menu)
+        developerMenus = developerMenuService.create(this, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        mMenus.onOptionsItemSelected(item)
-        return super.onOptionsItemSelected(item)
+        val handled = developerMenus?.onOptionsItemSelected(item) == true
+        return handled || super.onOptionsItemSelected(item)
     }
 
     override fun getLoginLiveData(): MutableLiveData<LoginData> = viewModel.reLoginLiveData

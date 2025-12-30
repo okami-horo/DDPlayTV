@@ -8,6 +8,7 @@ import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.config.DeveloperCredentialStore
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.toResDrawable
+import com.xyoye.common_component.services.DeveloperMenuService
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.user_component.R
 import com.xyoye.user_component.ui.dialog.DeveloperAuthenticateDialog
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 class DeveloperMenus private constructor(
     private val activity: AppCompatActivity,
     menu: Menu
-) {
+) : DeveloperMenuService.Delegate {
     companion object {
         fun inflater(
             activity: AppCompatActivity,
@@ -51,21 +52,23 @@ class DeveloperMenus private constructor(
         SupervisorScope.Main.launch { considerShowAuthenticateDialog() }
     }
 
-    fun onOptionsItemSelected(item: MenuItem) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean =
         when (item.itemId) {
             R.id.item_source_authenticate -> {
                 showAuthenticateDialog()
-                return
+                true
             }
+
             R.id.item_developer_setting -> {
                 ARouter
                     .getInstance()
                     .build(RouteTable.User.SettingDeveloper)
                     .navigation(activity)
-                return
+                true
             }
+
+            else -> false
         }
-    }
 
     /**
      * 显示认证弹窗
