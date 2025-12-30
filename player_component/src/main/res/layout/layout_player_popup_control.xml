@@ -67,6 +67,7 @@
             android:src="@drawable/ic_seek_back"
             app:layout_constraintBottom_toBottomOf="@id/iv_play"
             app:layout_constraintEnd_toStartOf="@id/iv_play"
+            app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/iv_play" />
 

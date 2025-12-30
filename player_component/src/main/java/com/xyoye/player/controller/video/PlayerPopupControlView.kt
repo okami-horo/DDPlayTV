@@ -40,6 +40,7 @@ class PlayerPopupControlView(
         )
 
     private lateinit var mControlWrapper: ControlWrapper
+    private var lastSeekAllowed: Boolean? = null
 
     init {
         viewBinding.ivClose.setOnClickListener {
@@ -60,6 +61,9 @@ class PlayerPopupControlView(
         }
 
         viewBinding.ivSeekForward.setOnClickListener {
+            if (!mControlWrapper.isUserSeekAllowed()) {
+                return@setOnClickListener
+            }
             val currentPosition = mControlWrapper.getCurrentPosition()
             val duration = mControlWrapper.getDuration()
             val newPosition = currentPosition + (15 * 1000)
@@ -69,6 +73,9 @@ class PlayerPopupControlView(
         }
 
         viewBinding.ivSeekBack.setOnClickListener {
+            if (!mControlWrapper.isUserSeekAllowed()) {
+                return@setOnClickListener
+            }
             val currentPosition = mControlWrapper.getCurrentPosition()
             val newPosition = currentPosition - (15 * 1000)
             if (newPosition > 0) {
@@ -82,6 +89,7 @@ class PlayerPopupControlView(
     override fun attach(controlWrapper: ControlWrapper) {
         mControlWrapper = controlWrapper
         syncDanmuToggleState()
+        syncSeekActions()
     }
 
     override fun getView(): View = this
@@ -140,6 +148,12 @@ class PlayerPopupControlView(
         duration: Long,
         position: Long
     ) {
+        syncSeekActions()
+        if (mControlWrapper.isLive()) {
+            viewBinding.playProgress.progress = viewBinding.playProgress.max
+            viewBinding.playProgress.secondaryProgress = viewBinding.playProgress.max
+            return
+        }
         if (duration > 0) {
             viewBinding.playProgress.progress =
                 (position.toFloat() / duration * viewBinding.playProgress.max).toInt()
@@ -169,6 +183,16 @@ class PlayerPopupControlView(
 
     fun setExitPlayerObserver(block: () -> Unit) {
         mExitPlayerBlock = block
+    }
+
+    private fun syncSeekActions() {
+        val seekAllowed = mControlWrapper.isUserSeekAllowed()
+        if (lastSeekAllowed == seekAllowed) {
+            return
+        }
+        lastSeekAllowed = seekAllowed
+        viewBinding.ivSeekBack.isVisible = seekAllowed
+        viewBinding.ivSeekForward.isVisible = seekAllowed
     }
 
     fun setExitPopupModeObserver(block: () -> Unit) {

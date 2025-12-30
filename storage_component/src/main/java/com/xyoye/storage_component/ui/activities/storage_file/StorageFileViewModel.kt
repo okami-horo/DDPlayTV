@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.toMedia3SourceType
+import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media3.Media3LaunchParams
@@ -24,6 +25,7 @@ class StorageFileViewModel : BaseViewModel() {
     // val locateLastPlayLiveData = MutableLiveData<PlayHistoryEntity>()
 
     val selectDeviceLiveData = MutableLiveData<Pair<StorageFile, List<MediaLibraryEntity>>>()
+    val bilibiliRiskVerifyLiveData = MutableLiveData<BilibiliRiskVerifyPayload>()
     private val downloadValidator = DownloadValidator()
 
     fun playItem(file: StorageFile) {
@@ -33,13 +35,16 @@ class StorageFileViewModel : BaseViewModel() {
                     playLiveData.postValue(Any())
                 }
             } catch (e: Exception) {
+                if (tryEmitBilibiliRiskVerify(file, e)) {
+                    return@launch
+                }
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "StorageFileViewModel",
                     "playItem",
                     "播放文件失败: ${file.fileName()}",
                 )
-                ToastCenter.showError("播放失败: ${e.message}")
+                ToastCenter.showError(buildPlaybackFailureMessage(file, e))
             }
         }
     }
@@ -94,6 +99,58 @@ class StorageFileViewModel : BaseViewModel() {
                 ToastCenter.showError("投屏失败: ${e.message}")
             }
         }
+    }
+
+    private fun buildPlaybackFailureMessage(
+        file: StorageFile,
+        throwable: Throwable,
+    ): String {
+        if (file.storage.library.mediaType != MediaType.BILIBILI_STORAGE) {
+            return "播放失败: ${throwable.message}"
+        }
+
+        val e = throwable as? BilibiliException ?: return "播放失败: ${throwable.message}"
+        val serverMessage = e.bilibiliMessage.orEmpty()
+        val hint =
+            when {
+                e.code == -101 -> "登录已失效，请重新扫码登录"
+                e.code == -404 -> "资源不存在或已下架，可返回列表选择其他条目"
+                e.code == -403 && (serverMessage.contains("地区") || serverMessage.contains("区域")) ->
+                    "该视频可能有地区限制，无法播放，可返回列表选择其他条目"
+                e.code == -403 -> "权限不足或访问受限，可返回列表选择其他条目"
+                else -> e.hint?.takeIf { it.isNotBlank() } ?: "无法播放，可返回列表选择其他条目"
+            }
+
+        return if (serverMessage.isBlank()) {
+            hint
+        } else {
+            "$hint（$serverMessage）"
+        }
+    }
+
+    private fun tryEmitBilibiliRiskVerify(
+        file: StorageFile,
+        throwable: Throwable,
+    ): Boolean {
+        if (file.storage.library.mediaType != MediaType.BILIBILI_STORAGE) {
+            return false
+        }
+
+        val e = throwable as? BilibiliException ?: return false
+        if (e.code != -352) {
+            return false
+        }
+
+        val text = sequenceOf(e.bilibiliMessage, e.message).filterNotNull().joinToString(separator = " ")
+        val voucher = VOUCHER_REGEX.find(text)?.value ?: return false
+
+        bilibiliRiskVerifyLiveData.postValue(
+            BilibiliRiskVerifyPayload(
+                file = file,
+                vVoucher = voucher,
+            ),
+        )
+        return true
     }
 
 //    fun locateLastPlay(storage: Storage) {
@@ -177,5 +234,17 @@ class StorageFileViewModel : BaseViewModel() {
             return ThunderManager.media3DownloadId(source, index)
         }
         return file.uniqueKey()
+    }
+
+    data class BilibiliRiskVerifyPayload(
+        val file: StorageFile,
+        val vVoucher: String,
+    )
+
+    private companion object {
+        private val VOUCHER_REGEX =
+            Regex(
+                "voucher_[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+            )
     }
 }

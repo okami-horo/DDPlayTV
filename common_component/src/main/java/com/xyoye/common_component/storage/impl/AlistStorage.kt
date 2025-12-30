@@ -6,6 +6,7 @@ import com.xyoye.common_component.network.repository.AlistRepository
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.AlistStorageFile
@@ -157,7 +158,7 @@ class AlistStorage(
         file: StorageFile,
         forceRefresh: Boolean = false
     ): String? {
-        val cachedRawUrl = file.getFile<AlistFileData>()?.rawUrl?.takeIf { it.isNotEmpty() }
+        val cachedRawUrl = file.payloadAs<AlistFileData>()?.rawUrl?.takeIf { it.isNotEmpty() }
 
         if (forceRefresh) {
             fetchRawUrl(file, forceRefreshToken = true)?.let { return it }
@@ -175,7 +176,7 @@ class AlistStorage(
         file: StorageFile,
         forceRefresh: Boolean = false
     ): String? {
-        val cachedSign = file.getFile<AlistFileData>()?.sign?.takeIf { it.isNotEmpty() }
+        val cachedSign = file.payloadAs<AlistFileData>()?.sign?.takeIf { it.isNotEmpty() }
 
         if (forceRefresh) {
             fetchSign(file, forceRefreshToken = true)

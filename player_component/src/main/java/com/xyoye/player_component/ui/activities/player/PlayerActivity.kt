@@ -1,5 +1,6 @@
 package com.xyoye.player_component.ui.activities.player
 
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.media.AudioManager
 import android.os.IBinder
 import android.view.KeyEvent
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
@@ -17,9 +19,11 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.gyf.immersionbar.BarHide
 import com.gyf.immersionbar.ImmersionBar
+import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.bridge.PlayTaskBridge
 import com.xyoye.common_component.config.DanmuConfig
+import com.xyoye.common_component.config.PlayerActions
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.SubtitleConfig
@@ -110,6 +114,9 @@ class PlayerActivity :
 
     // 耳机广播
     private lateinit var headsetReceiver: HeadsetBroadcastReceiver
+
+    // 外部请求退出播放器（例如媒体库断开/清理隐私时）
+    private var exitPlayerReceiver: BroadcastReceiver? = null
 
     private var videoSource: BaseVideoSource? = null
 
@@ -337,11 +344,12 @@ class PlayerActivity :
                 return@observe
             }
 
-            LogFacade.i(
-                LogModule.PLAYER,
-                TAG_DANMAKU,
-                "match success cid=${matchDanmu?.episodeId} title=${curVideoSource.getVideoTitle()}",
-            )
+            val trackHint =
+                when (matchDanmu) {
+                    is com.xyoye.data_component.bean.DanmuTrackResource.LocalFile -> "cid=${matchDanmu.danmu.episodeId}"
+                    is com.xyoye.data_component.bean.DanmuTrackResource.BilibiliLive -> "live roomId=${matchDanmu.roomId}"
+                }
+            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "match success $trackHint title=${curVideoSource.getVideoTitle()}")
             videoController.showMessage("匹配弹幕成功")
             videoController.addExtendTrack(VideoTrackBean.danmu(matchDanmu))
         }
@@ -353,7 +361,9 @@ class PlayerActivity :
                 return@observe
             }
 
-            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "download success id=${searchDanmu.episodeId}")
+            val episodeId =
+                (searchDanmu as? com.xyoye.data_component.bean.DanmuTrackResource.LocalFile)?.danmu?.episodeId
+            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "download success id=$episodeId")
             videoController.showMessage("下载弹幕成功")
             videoController.addExtendTrack(VideoTrackBean.danmu(searchDanmu))
         }
@@ -500,13 +510,26 @@ class PlayerActivity :
         if (historyDanmu != null) {
             LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "load history cid=${historyDanmu.episodeId}")
             videoController.addExtendTrack(VideoTrackBean.danmu(historyDanmu))
-        } else if (
-            DanmuConfig.isAutoMatchDanmu() &&
-            source.getMediaType() != MediaType.FTP_SERVER &&
-            popupManager.isShowing().not()
-        ) {
-            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto match start title=${source.getVideoTitle()}")
-            danmuViewModel.matchDanmu(source)
+        } else {
+            val isBilibiliLive =
+                source.getMediaType() == MediaType.BILIBILI_STORAGE &&
+                    (BilibiliKeys.parse(source.getUniqueKey()) is BilibiliKeys.LiveKey)
+
+            if (
+                isBilibiliLive &&
+                DanmuConfig.isAutoEnableBilibiliLiveDanmaku() &&
+                popupManager.isShowing().not()
+            ) {
+                LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto live danmaku start title=${source.getVideoTitle()}")
+                danmuViewModel.matchDanmu(source)
+            } else if (
+                DanmuConfig.isAutoMatchDanmu() &&
+                source.getMediaType() != MediaType.FTP_SERVER &&
+                popupManager.isShowing().not()
+            ) {
+                LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto match start title=${source.getVideoTitle()}")
+                danmuViewModel.matchDanmu(source)
+            }
         }
 
         // 视频已绑定字幕，直接加载
@@ -530,6 +553,37 @@ class PlayerActivity :
         headsetReceiver = HeadsetBroadcastReceiver(this)
         registerReceiver(screenLockReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
         registerReceiver(headsetReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+
+        if (exitPlayerReceiver == null) {
+            exitPlayerReceiver =
+                object : BroadcastReceiver() {
+                    override fun onReceive(
+                        context: Context?,
+                        intent: Intent?
+                    ) {
+                        val payload = intent ?: return
+                        if (payload.action != PlayerActions.ACTION_EXIT_PLAYER) return
+
+                        val storageId = payload.getIntExtra(PlayerActions.EXTRA_STORAGE_ID, -1)
+                        if (storageId <= 0) return
+
+                        val source = danDanPlayer.getVideoSource()
+                        if (source.getMediaType() != MediaType.BILIBILI_STORAGE) return
+                        if (source.getStorageId() != storageId) return
+
+                        danDanPlayer.recordPlayInfo()
+                        danDanPlayer.pause()
+                        finish()
+                    }
+                }
+            val receiver = exitPlayerReceiver ?: return
+            ContextCompat.registerReceiver(
+                this,
+                receiver,
+                IntentFilter(PlayerActions.ACTION_EXIT_PLAYER),
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+        }
         /*
         batteryHelper.registerReceiver(this)
          */
@@ -544,6 +598,11 @@ class PlayerActivity :
             unregisterReceiver(headsetReceiver)
             LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister headset receiver")
         }
+        exitPlayerReceiver?.let {
+            unregisterReceiver(it)
+            LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister exit player receiver")
+        }
+        exitPlayerReceiver = null
         /*
         batteryHelper.unregisterReceiver(this)
         LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister battery receiver")

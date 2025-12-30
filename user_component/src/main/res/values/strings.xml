@@ -174,4 +174,10 @@
         <item>紫薇</item>
         <item>紫萱</item>
     </string-array>
+
+    <string name="bilibili_risk_verify_title">B站风控验证</string>
+    <string name="bilibili_risk_verify_tip">检测到B站风控，需要完成验证码验证后才能继续播放。</string>
+    <string name="bilibili_risk_verify_success">验证成功</string>
+    <string name="bilibili_risk_verify_page_failed">加载验证页面失败</string>
+    <string name="bilibili_risk_verify_result_failed">验证码结果无效</string>
 </resources>

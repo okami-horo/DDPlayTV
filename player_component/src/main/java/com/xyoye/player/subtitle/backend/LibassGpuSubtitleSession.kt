@@ -48,15 +48,15 @@ internal class LibassGpuSubtitleSession(
     }
 
     fun release() {
-        stopFrameDriver()
-        embeddedSink?.onRelease()
+        runCatching { stopFrameDriver() }
+        runCatching { embeddedSink?.onRelease() }
         embeddedSink = null
-        kernelBridge?.setEmbeddedSubtitleSink(null)
+        runCatching { kernelBridge?.setEmbeddedSubtitleSink(null) }
         overlay?.let { view ->
-            environment.playerView.detachSubtitleOverlay(view)
+            runCatching { environment.playerView.detachSubtitleOverlay(view) }
         }
         overlay = null
-        gpuRenderer.release()
+        runCatching { gpuRenderer.release() }
     }
 
     fun loadExternalTrack(path: String) {
@@ -247,4 +247,3 @@ internal class LibassGpuSubtitleSession(
         gpuRenderer.renderFrame(pts, vsyncId)
     }
 }
-

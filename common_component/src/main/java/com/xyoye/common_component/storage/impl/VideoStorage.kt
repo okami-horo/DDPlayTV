@@ -5,6 +5,7 @@ import com.xyoye.common_component.extension.toFile
 import com.xyoye.common_component.resolver.MediaResolver
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.file.impl.VideoStorageFile
 import com.xyoye.common_component.utils.getFileName
 import com.xyoye.common_component.utils.getFileNameNoExtension
@@ -84,7 +85,7 @@ class VideoStorage(
     override suspend fun cacheDanmu(file: StorageFile): LocalDanmuBean? {
         val danmuFileName = getFileNameNoExtension(file.fileName()) + ".xml"
         return file
-            .getFile<VideoEntity>()
+            .payloadAs<VideoEntity>()
             ?.folderPath
             .toFile()
             ?.listFiles()
@@ -96,7 +97,7 @@ class VideoStorage(
 
     override suspend fun cacheSubtitle(file: StorageFile): String? =
         file
-            .getFile<VideoEntity>()
+            .payloadAs<VideoEntity>()
             ?.folderPath
             .toFile()
             ?.listFiles()

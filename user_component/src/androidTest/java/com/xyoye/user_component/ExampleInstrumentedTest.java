@@ -22,6 +22,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("com.xyoye.user_component", appContext.getPackageName());
+        assertEquals(BuildConfig.LIBRARY_PACKAGE_NAME + ".test", appContext.getPackageName());
     }
 }

@@ -32,6 +32,7 @@ object RouteTable {
         const val SettingPlayer = "/user/setting_player"
         const val SettingApp = "/user/setting_app"
         const val WebView = "/user/web_view"
+        const val BilibiliRiskVerify = "/user/bilibili_risk_verify"
         const val ScanManager = "/user/scan_manager"
         const val CacheManager = "/user/cache_manager"
         const val CommonManager = "/user/common_manager"

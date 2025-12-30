@@ -1,6 +1,7 @@
 package com.xyoye.common_component.storage
 
 import com.xyoye.common_component.storage.impl.AlistStorage
+import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.impl.DocumentFileStorage
 import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.storage.impl.LinkStorage
@@ -31,6 +32,7 @@ object StorageFactory {
             MediaType.OTHER_STORAGE -> LinkStorage(library)
             MediaType.SCREEN_CAST -> ScreencastStorage(library)
             MediaType.ALSIT_STORAGE -> AlistStorage(library)
+            MediaType.BILIBILI_STORAGE -> BilibiliStorage(library)
             else -> null
         }
 }

@@ -204,6 +204,16 @@ class DanDanVideoPlayer(
             DecodeType.HW
         }
 
+    override fun isSeekable(): Boolean {
+        val exoPlayer = exoPlayerOrNull()
+        return exoPlayer?.isCurrentMediaItemSeekable ?: (getDuration() > 0)
+    }
+
+    override fun isLive(): Boolean {
+        val exoPlayer = exoPlayerOrNull()
+        return exoPlayer?.isCurrentMediaItemLive ?: false
+    }
+
     override fun getRenderView(): InterSurfaceView? = mRenderView
 
     internal fun exoPlayerOrNull(): ExoPlayer? {
@@ -532,11 +542,13 @@ class DanDanVideoPlayer(
     }
 
     private fun destroySubtitleRenderer() {
-        subtitleRenderer?.let {
-            it.release()
-            SubtitleRendererRegistry.unregister(it)
+        val renderer = subtitleRenderer ?: return
+        try {
+            renderer.release()
+        } finally {
+            SubtitleRendererRegistry.unregister(renderer)
+            subtitleRenderer = null
         }
-        subtitleRenderer = null
     }
 
     private companion object {

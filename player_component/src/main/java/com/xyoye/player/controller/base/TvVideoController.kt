@@ -152,6 +152,9 @@ abstract class TvVideoController(
     }
 
     protected fun changePosition(offset: Long) {
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            return
+        }
         val duration = mControlWrapper.getDuration()
         if (duration <= 0) {
             return
@@ -174,6 +177,10 @@ abstract class TvVideoController(
 
     private fun commitPendingSeek() {
         if (pendingSeekStartPosition == null) {
+            return
+        }
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            resetPendingSeek()
             return
         }
         val duration = mControlWrapper.getDuration()

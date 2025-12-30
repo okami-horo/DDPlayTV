@@ -44,6 +44,7 @@ import com.xyoye.data_component.bean.VideoTagBean
 import com.xyoye.data_component.enums.FileManagerAction
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.storage_component.R
+import com.xyoye.storage_component.databinding.ItemStoragePagingBinding
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
 
 /**
@@ -96,22 +97,38 @@ class StorageFileAdapter(
                 checkType { data -> isVideoItem(data) }
                 initView(videoItem())
             }
+            addItem(R.layout.item_storage_paging) {
+                checkType { data -> data is StoragePagingItem }
+                initView(pagingItem())
+            }
         }
 
     private fun isSameStorageFileItem() =
         { old: Any, new: Any ->
-            (old as? StorageFile)?.uniqueKey() == (new as? StorageFile)?.uniqueKey()
+            when {
+                old is StorageFile && new is StorageFile -> old.uniqueKey() == new.uniqueKey()
+                old is StoragePagingItem && new is StoragePagingItem -> true
+                else -> false
+            }
         }
 
     private fun isSameStorageFileContent() =
         { old: Any, new: Any ->
-            val oldItem = old as? StorageFile?
-            val newItem = new as? StorageFile?
-            oldItem?.fileUrl() == newItem?.fileUrl() &&
-                oldItem?.fileName() == newItem?.fileName() &&
-                oldItem?.childFileCount() == newItem?.childFileCount() &&
-                oldItem?.playHistory == newItem?.playHistory &&
-                oldItem?.playHistory?.isLastPlay == newItem?.playHistory?.isLastPlay
+            when {
+                old is StorageFile && new is StorageFile -> {
+                    old.fileUrl() == new.fileUrl() &&
+                        old.fileName() == new.fileName() &&
+                        old.childFileCount() == new.childFileCount() &&
+                        old.playHistory == new.playHistory &&
+                        old.playHistory?.isLastPlay == new.playHistory?.isLastPlay
+                }
+
+                old is StoragePagingItem && new is StoragePagingItem -> {
+                    old.state == new.state && old.hasMore == new.hasMore
+                }
+
+                else -> false
+            }
         }
 
     private fun isDirectoryItem(data: Any) = data is StorageFile && data.isDirectory()
@@ -160,6 +177,36 @@ class StorageFileAdapter(
 
                 moreActionIv.setOnClickListener {
                     showMoreAction(data, createShareOptions(itemLayout))
+                }
+            }
+        }
+
+    private fun BaseViewHolderCreator<ItemStoragePagingBinding>.pagingItem() =
+        { data: StoragePagingItem ->
+            val title =
+                when (data.state) {
+                    com.xyoye.common_component.storage.PagedStorage.State.LOADING -> "加载中…"
+                    com.xyoye.common_component.storage.PagedStorage.State.ERROR -> "加载失败，点击重试"
+                    com.xyoye.common_component.storage.PagedStorage.State.NO_MORE -> "没有更多了"
+                    com.xyoye.common_component.storage.PagedStorage.State.IDLE ->
+                        if (data.hasMore) "加载更多" else "没有更多了"
+                }
+
+            itemBinding.titleTv.text = title
+            itemBinding.subtitleTv.text =
+                when (data.state) {
+                    com.xyoye.common_component.storage.PagedStorage.State.ERROR -> "弱网/断网时可稍后重试"
+                    else -> ""
+                }
+            itemBinding.loadingPb.isVisible = data.state == com.xyoye.common_component.storage.PagedStorage.State.LOADING
+
+            itemBinding.itemLayout.setOnClickListener {
+                if (!data.hasMore) return@setOnClickListener
+                if (
+                    data.state == com.xyoye.common_component.storage.PagedStorage.State.IDLE ||
+                    data.state == com.xyoye.common_component.storage.PagedStorage.State.ERROR
+                ) {
+                    viewModel.loadMore()
                 }
             }
         }

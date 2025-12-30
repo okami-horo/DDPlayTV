@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>B站风控验证</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: #ffffff; }
+    .container { padding: 16px; }
+    .status { margin-bottom: 12px; color: #333; font-size: 14px; line-height: 20px; }
+    .hint { color: #666; font-size: 12px; line-height: 18px; margin-top: 10px; }
+    #captcha { min-height: 120px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="status" class="status">正在加载验证码…</div>
+    <div id="captcha"></div>
+    <div class="hint">完成验证后将自动返回并重试播放。</div>
+  </div>
+
+  <script src="https://static.geetest.com/static/tools/gt.js"></script>
+  <script>
+    (function () {
+      var initialized = false;
+      var pending = null;
+
+      function setStatus(text) {
+        var el = document.getElementById("status");
+        if (el) el.innerText = text;
+      }
+
+      function tryInit() {
+        if (!pending || initialized) return;
+        if (typeof initGeetest !== "function") {
+          setStatus("正在加载验证码…");
+          setTimeout(tryInit, 120);
+          return;
+        }
+
+        initialized = true;
+        setStatus("请完成验证码验证");
+
+        initGeetest({
+          gt: pending.gt,
+          challenge: pending.challenge,
+          new_captcha: true,
+          offline: false,
+          product: "bind",
+          width: "100%",
+        }, function (captchaObj) {
+          captchaObj.appendTo("#captcha");
+          captchaObj.onReady(function () {
+            setStatus("请完成验证码验证");
+          });
+          captchaObj.onSuccess(function () {
+            var result = captchaObj.getValidate();
+            if (!result) {
+              if (window.Android && window.Android.onError) window.Android.onError("验证码结果为空");
+              return;
+            }
+            var challenge = result.geetest_challenge || result.challenge || "";
+            var validate = result.geetest_validate || result.validate || "";
+            var seccode = result.geetest_seccode || result.seccode || "";
+            if (window.Android && window.Android.onSuccess) window.Android.onSuccess(challenge, validate, seccode);
+          });
+          captchaObj.onError(function (err) {
+            if (window.Android && window.Android.onError) window.Android.onError(JSON.stringify(err || {}));
+          });
+        });
+      }
+
+      window.setupGeetest = function (gt, challenge) {
+        pending = { gt: gt, challenge: challenge };
+        tryInit();
+      };
+
+      setTimeout(tryInit, 0);
+    })();
+  </script>
+</body>
+</html>
+

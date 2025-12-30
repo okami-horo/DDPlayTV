@@ -118,6 +118,7 @@ dependencies {
 
     api(Dependencies.Square.retrofit)
     implementation(Dependencies.Square.retrofit_moshi)
+    implementation(Dependencies.Square.moshi_kotlin)
 
     api(Dependencies.Github.coil)
     api(Dependencies.Github.coil_video)
@@ -125,8 +126,11 @@ dependencies {
     api(Dependencies.Github.smbj)
     api(Dependencies.Github.dcerpc)
 
+    api(Dependencies.Huawei.scan)
+
     kapt(files("libs/mmkv-compiler.jar"))
     kapt(Dependencies.AndroidX.room_compiler)
+    kapt(Dependencies.Square.moshi_codegen)
     kapt(Dependencies.Alibaba.arouter_compiler)
     implementation(kotlin("reflect"))
 

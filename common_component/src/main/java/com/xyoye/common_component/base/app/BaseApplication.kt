@@ -27,12 +27,54 @@ open class BaseApplication :
     Application(),
     ImageLoaderFactory {
     companion object {
+        @Volatile
         private var APPLICATION_CONTEXT: Application? = null
+
+        @Volatile
         private var mMainHandler: Handler? = null
 
-        fun getAppContext(): Context = APPLICATION_CONTEXT!!
+        fun getAppContext(): Context =
+            (APPLICATION_CONTEXT ?: resolveApplicationContext()).applicationContext
 
-        fun getMainHandler(): Handler = mMainHandler!!
+        fun getMainHandler(): Handler =
+            mMainHandler ?: synchronized(this) {
+                mMainHandler ?: Handler(Looper.getMainLooper()).also { handler ->
+                    mMainHandler = handler
+                }
+            }
+
+        private fun resolveApplicationContext(): Application =
+            synchronized(this) {
+                APPLICATION_CONTEXT ?: runCatching { lookupCurrentApplication() }
+                    .getOrNull()
+                    ?.also { app ->
+                        APPLICATION_CONTEXT = app
+                        if (mMainHandler == null) {
+                            mMainHandler = Handler(Looper.getMainLooper())
+                        }
+                    }
+                    ?: error("Application context is not ready yet.")
+            }
+
+        private fun lookupCurrentApplication(): Application? {
+            val activityThread =
+                runCatching { Class.forName("android.app.ActivityThread") }.getOrNull()
+            val currentApp =
+                runCatching {
+                    activityThread
+                        ?.getMethod("currentApplication")
+                        ?.invoke(null) as? Application
+                }.getOrNull()
+            if (currentApp != null) return currentApp
+
+            val appGlobals =
+                runCatching { Class.forName("android.app.AppGlobals") }.getOrNull()
+            return runCatching {
+                appGlobals
+                    ?.getMethod("getInitialApplication")
+                    ?.invoke(null) as? Application
+            }.getOrNull()
+        }
     }
 
     override fun attachBaseContext(base: Context?) {

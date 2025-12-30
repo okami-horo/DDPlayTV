@@ -5,32 +5,35 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cl_root"
-        android:layout_width="300dp"
+        android:layout_width="320dp"
         android:layout_height="match_parent"
-        android:background="@color/player_item_bg_color"
+        android:background="#E6121212"
         android:clickable="true"
         android:focusable="true"
-        android:padding="10dp"
-        android:translationX="-300dp"
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        android:translationX="-320dp"
         tools:translationX="0dp">
 
         <TextView
             android:id="@+id/switch_video_source_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="8dp"
             android:text="@string/select_video_source"
             android:textColor="@color/text_white_immutable"
-            android:textSize="16sp"
+            android:textSize="20sp"
+            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/source_rv"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="16dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/switch_video_source_tv" />
     </androidx.constraintlayout.widget.ConstraintLayout>

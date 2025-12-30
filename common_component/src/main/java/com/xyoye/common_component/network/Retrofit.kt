@@ -11,15 +11,18 @@ import com.xyoye.common_component.network.helper.ForbiddenErrorInterceptor
 import com.xyoye.common_component.network.helper.LoggerInterceptor
 import com.xyoye.common_component.network.helper.SignatureInterceptor
 import com.xyoye.common_component.network.service.AlistService
+import com.xyoye.common_component.network.service.BilibiliService
 import com.xyoye.common_component.network.service.DanDanService
 import com.xyoye.common_component.network.service.ExtendedService
 import com.xyoye.common_component.network.service.MagnetService
 import com.xyoye.common_component.network.service.RemoteService
 import com.xyoye.common_component.network.service.ScreencastService
+import com.xyoye.common_component.bilibili.net.BilibiliOkHttpClientFactory
 import com.xyoye.common_component.utils.JsonHelper
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
@@ -34,6 +37,8 @@ class Retrofit private constructor() {
         val magnetService: MagnetService by lazy { Holder.instance.magnetService }
         val screencastService: ScreencastService by lazy { Holder.instance.screencastService }
         val alistService: AlistService by lazy { Holder.instance.alistService }
+
+        fun bilibiliService(storageKey: String): BilibiliService = Holder.instance.bilibiliService(storageKey)
     }
 
     private object Holder {
@@ -71,6 +76,8 @@ class Retrofit private constructor() {
             .addInterceptor(LoggerInterceptor().retrofit())
             .build()
     }
+
+    private val bilibiliServices = ConcurrentHashMap<String, BilibiliService>()
 
     private val moshiConverterFactory = MoshiConverterFactory.create(JsonHelper.MO_SHI)
 
@@ -133,4 +140,15 @@ class Retrofit private constructor() {
             .build()
             .create(AlistService::class.java)
     }
+
+    private fun bilibiliService(storageKey: String): BilibiliService =
+        bilibiliServices.getOrPut(storageKey) {
+            Retrofit
+                .Builder()
+                .addConverterFactory(moshiConverterFactory)
+                .client(BilibiliOkHttpClientFactory.create(storageKey))
+                .baseUrl(Api.PLACEHOLDER)
+                .build()
+                .create(BilibiliService::class.java)
+        }
 }

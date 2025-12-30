@@ -3,6 +3,7 @@ package com.xyoye.local_component.ui.fragment.media
 import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
+import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.aesEncode
 import com.xyoye.common_component.extension.authorizationValue
@@ -82,6 +83,9 @@ class MediaViewModel : BaseViewModel() {
     fun deleteStorage(data: MediaLibraryEntity) {
         viewModelScope.launch(context = Dispatchers.IO) {
             try {
+                if (data.mediaType == MediaType.BILIBILI_STORAGE) {
+                    BilibiliPlaybackPreferencesStore.clear(data)
+                }
                 DatabaseManager.instance
                     .getMediaLibraryDao()
                     .delete(data.url, data.mediaType)

@@ -1,8 +1,11 @@
 package com.xyoye.common_component.network.request
 
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.data_component.data.CommonJsonData
 import com.xyoye.data_component.data.CommonJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -51,6 +54,14 @@ class Request {
                     return@withContext Result.failure(NetworkException.formJsonModel(result))
                 }
 
+                if (result is BilibiliJsonModel<*> && result.isSuccess.not()) {
+                    return@withContext Result.failure(BilibiliException.from(result))
+                }
+
+                if (result is BilibiliResultJsonModel<*> && result.isSuccess.not()) {
+                    return@withContext Result.failure(BilibiliException.from(code = result.code, message = result.message))
+                }
+
                 return@withContext Result.success(result)
             } catch (e: Exception) {
                 ErrorReportHelper.postCatchedExceptionWithContext(
@@ -59,7 +70,11 @@ class Request {
                     "doGet",
                     "请求参数: $requestParams",
                 )
-                return@withContext Result.failure(NetworkException.formException(e))
+                return@withContext when (e) {
+                    is BilibiliException -> Result.failure(e)
+                    is NetworkException -> Result.failure(e)
+                    else -> Result.failure(NetworkException.formException(e))
+                }
             }
         }
     }
@@ -76,6 +91,14 @@ class Request {
                     return@withContext Result.failure(NetworkException.formJsonModel(result))
                 }
 
+                if (result is BilibiliJsonModel<*> && result.isSuccess.not()) {
+                    return@withContext Result.failure(BilibiliException.from(result))
+                }
+
+                if (result is BilibiliResultJsonModel<*> && result.isSuccess.not()) {
+                    return@withContext Result.failure(BilibiliException.from(code = result.code, message = result.message))
+                }
+
                 return@withContext Result.success(result)
             } catch (e: Exception) {
                 ErrorReportHelper.postCatchedExceptionWithContext(
@@ -84,7 +107,11 @@ class Request {
                     "doPost",
                     "请求参数: $requestParams, JSON: $requestJson",
                 )
-                return@withContext Result.failure(NetworkException.formException(e))
+                return@withContext when (e) {
+                    is BilibiliException -> Result.failure(e)
+                    is NetworkException -> Result.failure(e)
+                    else -> Result.failure(NetworkException.formException(e))
+                }
             }
         }
     }

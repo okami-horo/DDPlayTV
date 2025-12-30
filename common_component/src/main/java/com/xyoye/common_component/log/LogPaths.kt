@@ -2,6 +2,7 @@ package com.xyoye.common_component.log
 
 import android.content.Context
 import android.os.Environment
+import androidx.annotation.VisibleForTesting
 import java.io.File
 
 /**
@@ -15,6 +16,7 @@ object LogPaths {
     const val LOG_DIR_NAME = "logs"
     const val CURRENT_LOG_FILE_NAME = "log.txt"
     const val PREVIOUS_LOG_FILE_NAME = "log_old.txt"
+    @Volatile
     internal var downloadRootOverride: File? = null
 
     /**
@@ -44,7 +46,8 @@ object LogPaths {
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         }.getOrNull()
 
-    internal fun overrideDownloadRootForTests(root: File?) {
+    @VisibleForTesting
+    fun overrideDownloadRootForTests(root: File?) {
         downloadRootOverride = root
     }
 
