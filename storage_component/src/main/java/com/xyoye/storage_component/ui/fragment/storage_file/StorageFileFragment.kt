@@ -72,7 +72,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                         ownerActivity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
                         ownerActivity.directory?.filePath() == "/history/"
                     ) {
-                        ToastCenter.showInfo("提示：按菜单键可刷新，列表底部可选择“加载更多/重试”")
+                        ToastCenter.showInfo("提示：按菜单键/设置键可刷新，列表底部可选择“加载更多/重试”")
                         tvHistoryHintShown = true
                     }
 
@@ -196,7 +196,8 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                 }
 
                 return@setOnKeyListener when (keyCode) {
-                    KeyEvent.KEYCODE_MENU -> {
+                    KeyEvent.KEYCODE_MENU,
+                    KeyEvent.KEYCODE_SETTINGS -> {
                         // TV/遥控器：提供可达的刷新入口（替代下拉刷新）
                         ToastCenter.showInfo("刷新中…")
                         reloadDirectory(refresh = true)

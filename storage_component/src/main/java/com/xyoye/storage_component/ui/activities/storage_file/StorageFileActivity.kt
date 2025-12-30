@@ -263,6 +263,13 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         return super.onKeyDown(keyCode, event)
     }
 
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (handleTvHistoryRefreshKey(event)) {
+            return true
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onDestroy() {
         shareStorageFile = null
         if (this::storage.isInitialized) {
@@ -305,6 +312,35 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         }
 
         onDisplayFragmentChanged()
+    }
+
+    private fun handleTvHistoryRefreshKey(event: KeyEvent): Boolean {
+        if (event.action != KeyEvent.ACTION_DOWN) return false
+        if (event.repeatCount != 0) return false
+
+        val library = storage.library
+        val directory = directory
+        if (library.mediaType != MediaType.BILIBILI_STORAGE) return false
+        if (directory?.filePath() != "/history/") return false
+
+        val isRefreshKey =
+            when (event.keyCode) {
+                KeyEvent.KEYCODE_MENU -> true
+                // 部分 TV 遥控器“菜单”键会被映射为 Settings
+                KeyEvent.KEYCODE_SETTINGS -> true
+                else -> false
+            }
+        if (!isRefreshKey) return false
+
+        val fragment = mRouteFragmentMap.values.lastOrNull()
+        if (fragment == null) {
+            LogFacade.w(LogModule.STORAGE, TAG, "history refresh ignored, fragment null keyCode=${event.keyCode}")
+            return false
+        }
+
+        ToastCenter.showInfo("刷新中…")
+        fragment.reloadDirectory(refresh = true)
+        return true
     }
 
     private fun popFragment(): Boolean {
