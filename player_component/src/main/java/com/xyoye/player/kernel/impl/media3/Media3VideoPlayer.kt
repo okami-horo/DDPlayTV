@@ -3,6 +3,8 @@ package com.xyoye.player.kernel.impl.media3
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Point
+import android.os.Handler
+import android.os.Looper
 import android.view.Display
 import android.view.Surface
 import androidx.media3.common.C
@@ -30,7 +32,6 @@ import androidx.media3.exoplayer.util.EventLogger
 import androidx.media3.ui.DefaultTrackNameProvider
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.extension.mapByLength
-import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
@@ -44,8 +45,6 @@ import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import com.xyoye.subtitle.MixedSubtitle
 import com.xyoye.subtitle.SubtitleType
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.roundToInt
 
@@ -184,13 +183,25 @@ class Media3VideoPlayer(
     }
 
     override fun release() {
-        releaseSubtitleFrameDrivers()
-        player.apply {
-            removeListener(this@Media3VideoPlayer)
-            SupervisorScope.IO.launch(Dispatchers.Main) {
-                release()
+        if (!this::player.isInitialized) {
+            return
+        }
+
+        val releaseAction = {
+            releaseSubtitleFrameDrivers()
+            player.run {
+                runCatching { removeListener(this@Media3VideoPlayer) }
+                runCatching { setVideoSurface(null) }
+                runCatching { release() }
             }
         }
+
+        if (Looper.myLooper() == player.applicationLooper) {
+            releaseAction()
+        } else {
+            Handler(player.applicationLooper).post { releaseAction() }
+        }
+
         isPreparing = false
         isBuffering = false
         lastReportedPlaybackState = Player.STATE_IDLE

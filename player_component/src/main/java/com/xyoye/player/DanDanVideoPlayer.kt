@@ -520,10 +520,12 @@ class DanDanVideoPlayer(
     }
 
     private fun destroySubtitleRenderer() {
-        subtitleRenderer?.let {
-            it.release()
-            SubtitleRendererRegistry.unregister(it)
+        val renderer = subtitleRenderer ?: return
+        try {
+            renderer.release()
+        } finally {
+            SubtitleRendererRegistry.unregister(renderer)
+            subtitleRenderer = null
         }
-        subtitleRenderer = null
     }
 }

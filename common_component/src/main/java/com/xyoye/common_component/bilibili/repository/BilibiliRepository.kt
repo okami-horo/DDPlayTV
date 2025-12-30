@@ -289,6 +289,24 @@ class BilibiliRepository(
         }
     }
 
+    private suspend fun fetchWebVVoucherOrNull(
+        baseParams: Map<String, Any?>,
+        allowTryLook: Boolean,
+    ): String? {
+        val attemptParams = baseParams.toMutableMap()
+        attemptParams["fnval"] = 1
+        attemptParams["fnver"] = 0
+        applyWebPlayurlRiskParams(attemptParams, allowTryLook)
+        val signed =
+            BilibiliWbiSigner.sign(attemptParams) {
+                fetchWbiKeys()
+            } ?: return null
+
+        return requestBilibiliAuthed(reason = "fetchWebVVoucher") {
+            service.playurl(BASE_API, signed)
+        }.getOrNull()?.vVoucher?.takeIf { it.isNotBlank() }
+    }
+
     private fun applyPgcPlayurlRiskParams(params: MutableMap<String, Any?>) {
         params["gaia_source"] = PLAYURL_GAIA_SOURCE
         params["isGaiaAvoided"] = true
@@ -552,10 +570,10 @@ class BilibiliRepository(
         baseParams["bvid"] = bvid
         baseParams["cid"] = cid
         baseParams.putAll(BilibiliPlayurlPreferencesMapper.primaryParams(preferences, apiType))
+        val allowTryLook = !isLoggedIn()
 
         return when (apiType) {
             BilibiliApiType.WEB -> run {
-                val allowTryLook = !isLoggedIn()
                 prepareRiskControl(reason = "playurl", force = false)
 
                 val pcResult =
@@ -601,13 +619,13 @@ class BilibiliRepository(
                             maxDelayMs = PLAYURL_RISK_MAX_DELAY_MS,
                         ) {
                             val attemptParams = baseParams.toMutableMap()
-                            attemptParams["platform"] = "html5"
-                            attemptParams["high_quality"] = 1
-                            applyWebPlayurlRiskParams(attemptParams, allowTryLook)
-                            val signed =
-                                BilibiliWbiSigner.sign(attemptParams) {
-                                    fetchWbiKeys()
-                                }
+                        attemptParams["platform"] = "html5"
+                        attemptParams["high_quality"] = 1
+                        applyWebPlayurlRiskParams(attemptParams, allowTryLook = allowTryLook)
+                        val signed =
+                            BilibiliWbiSigner.sign(attemptParams) {
+                                fetchWbiKeys()
+                            }
 
                             requestBilibiliAuthed(reason = "playurl(html5)") {
                                 service.playurl(BASE_API, signed)
@@ -700,6 +718,20 @@ class BilibiliRepository(
                         } else {
                             throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
                         }
+                    }
+                }.let { tvResult ->
+                    tvResult.recoverCatching { throwable ->
+                        val error = throwable as? BilibiliException ?: throw throwable
+                        if (isRiskControlError(error)) {
+                            val vVoucher = fetchWebVVoucherOrNull(baseParams, allowTryLook = allowTryLook)
+                            if (!vVoucher.isNullOrBlank()) {
+                                throw BilibiliException.from(
+                                    code = -352,
+                                    message = "风控校验失败（v_voucher=$vVoucher）",
+                                )
+                            }
+                        }
+                        throw throwable
                     }
                 }
             }
