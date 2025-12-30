@@ -4,6 +4,8 @@ import com.xyoye.common_component.network.config.HeaderKey
 import com.xyoye.common_component.bilibili.risk.BilibiliGaiaActivateRequest
 import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
+import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateRegisterData
+import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateValidateData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
 import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuInfoData
@@ -151,6 +153,20 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @Body body: BilibiliGaiaActivateRequest,
     ): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/x/gaia-vgate/v1/register")
+    suspend fun gaiaVgateRegister(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @FieldMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliJsonModel<BilibiliGaiaVgateRegisterData>
+
+    @FormUrlEncoded
+    @POST("/x/gaia-vgate/v1/validate")
+    suspend fun gaiaVgateValidate(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @FieldMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliJsonModel<BilibiliGaiaVgateValidateData>
 
     @POST("/bapis/bilibili.api.ticket.v1.Ticket/GenWebTicket")
     suspend fun genWebTicket(

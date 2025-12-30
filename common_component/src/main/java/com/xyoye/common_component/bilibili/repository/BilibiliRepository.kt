@@ -25,6 +25,8 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
+import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateRegisterData
+import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateValidateData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
 import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuConnectInfo
@@ -50,6 +52,7 @@ import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.spec.MGF1ParameterSpec
 import java.security.spec.X509EncodedKeySpec
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import javax.crypto.Cipher
 import javax.crypto.spec.OAEPParameterSpec
@@ -82,6 +85,62 @@ class BilibiliRepository(
     fun isLoggedIn(): Boolean = cookieJarStore.isLoginCookiePresent()
 
     fun cookieHeaderOrNull(): String? = cookieJarStore.exportCookieHeader()
+
+    suspend fun gaiaVgateRegister(vVoucher: String): Result<BilibiliGaiaVgateRegisterData> {
+        val params: RequestParams = hashMapOf()
+        params["v_voucher"] = vVoucher
+
+        BilibiliAuthStore.read(storageKey).csrf?.takeIf { it.isNotBlank() }?.let {
+            params["csrf"] = it
+        }
+
+        return requestBilibiliAuthed(reason = "gaiaVgateRegister") {
+            service.gaiaVgateRegister(BASE_API, params)
+        }
+    }
+
+    suspend fun gaiaVgateValidate(
+        challenge: String,
+        token: String,
+        validate: String,
+        seccode: String,
+    ): Result<String> =
+        requestBilibiliAuthed(reason = "gaiaVgateValidate") {
+            val params: RequestParams = hashMapOf()
+            params["challenge"] = challenge
+            params["token"] = token
+            params["validate"] = validate
+            params["seccode"] = seccode
+
+            BilibiliAuthStore.read(storageKey).csrf?.takeIf { it.isNotBlank() }?.let {
+                params["csrf"] = it
+            }
+
+            service.gaiaVgateValidate(BASE_API, params)
+        }.mapCatching { data: BilibiliGaiaVgateValidateData ->
+            if (data.isValid != 1) {
+                throw BilibiliException.from(code = -352, message = "验证码校验失败，请重试")
+            }
+
+            val griskId =
+                data.griskId?.takeIf { it.isNotBlank() }
+                    ?: throw BilibiliException.from(code = -352, message = "验证码校验失败：grisk_id 为空")
+
+            cookieJarStore.upsertCookie(
+                Cookie
+                    .Builder()
+                    .name("x-bili-gaia-vtoken")
+                    .value(griskId)
+                    .expiresAt(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(7))
+                    .domain("bilibili.com")
+                    .path("/")
+                    .secure()
+                    .httpOnly()
+                    .build(),
+            )
+
+            griskId
+        }
 
     private fun isPreheatCookieReady(): Boolean =
         cookieJarStore.isBuvid3CookiePresent() &&
@@ -1251,6 +1310,12 @@ class BilibiliRepository(
 
     private fun ensureSuccess(model: BilibiliJsonModel<*>) {
         if (!model.isSuccess) {
+            if (model.code == -352) {
+                val vVoucher = (model.data as? BilibiliPlayurlData)?.vVoucher
+                if (!vVoucher.isNullOrBlank()) {
+                    throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=$vVoucher）")
+                }
+            }
             throw BilibiliException.from(model)
         }
     }

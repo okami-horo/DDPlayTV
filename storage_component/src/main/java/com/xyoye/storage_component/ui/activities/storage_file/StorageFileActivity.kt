@@ -1,5 +1,6 @@
 package com.xyoye.storage_component.ui.activities.storage_file
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Menu
@@ -15,6 +16,7 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.base.app.BaseApplication
+import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.requestIndexChildFocus
@@ -72,9 +74,13 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     companion object {
         private const val TAG = "StorageFileActivity"
+        private const val REQUEST_CODE_BILIBILI_RISK_VERIFY = 3301
     }
 
     var shareStorageFile: StorageFile? = null
+
+    private var pendingRiskVerifyFile: StorageFile? = null
+    private var riskVerifyInProgress: Boolean = false
 
     // private var locatingLastPlay = false
     // private var lastPlayHistory: PlayHistoryEntity? = null
@@ -178,6 +184,15 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                 .build(RouteTable.Player.Player)
                 .navigation()
         }
+
+        viewModel.bilibiliRiskVerifyLiveData.observe(this) { payload ->
+            if (riskVerifyInProgress) {
+                return@observe
+            }
+            riskVerifyInProgress = true
+            pendingRiskVerifyFile = payload.file
+            showBilibiliRiskVerifyDialog(payload.vVoucher)
+        }
         // viewModel.locateLastPlayLiveData.observe(this) {
         //     startLocateToHistory(it)
         // }
@@ -216,6 +231,23 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         mMenus?.onOptionsItemSelected(item)
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        if (requestCode == REQUEST_CODE_BILIBILI_RISK_VERIFY) {
+            riskVerifyInProgress = false
+            val file = pendingRiskVerifyFile
+            pendingRiskVerifyFile = null
+
+            if (resultCode == RESULT_OK && file != null) {
+                openFile(file)
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onKeyDown(
@@ -383,6 +415,32 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                     "${videoCount}视频  ${directoryCount}文件夹"
                 }
             }
+    }
+
+    private fun showBilibiliRiskVerifyDialog(vVoucher: String) {
+        val storageKey = BilibiliPlaybackPreferencesStore.storageKey(storage.library)
+
+        CommonDialog
+            .Builder(this)
+            .apply {
+                tips = "B站风控验证"
+                content = "检测到B站风控，需要完成验证码验证后才能继续播放。\n\nv_voucher：$vVoucher"
+                addNegative("取消") { dialog ->
+                    dialog.dismiss()
+                    riskVerifyInProgress = false
+                    pendingRiskVerifyFile = null
+                }
+                addPositive("去验证") { dialog ->
+                    dialog.dismiss()
+                    ARouter
+                        .getInstance()
+                        .build(RouteTable.User.BilibiliRiskVerify)
+                        .withString("storageKey", storageKey)
+                        .withString("vVoucher", vVoucher)
+                        .navigation(this@StorageFileActivity, REQUEST_CODE_BILIBILI_RISK_VERIFY)
+                }
+            }.build()
+            .show()
     }
 
     /**

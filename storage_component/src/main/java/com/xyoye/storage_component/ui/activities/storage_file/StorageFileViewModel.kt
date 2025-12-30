@@ -25,6 +25,7 @@ class StorageFileViewModel : BaseViewModel() {
     // val locateLastPlayLiveData = MutableLiveData<PlayHistoryEntity>()
 
     val selectDeviceLiveData = MutableLiveData<Pair<StorageFile, List<MediaLibraryEntity>>>()
+    val bilibiliRiskVerifyLiveData = MutableLiveData<BilibiliRiskVerifyPayload>()
     private val downloadValidator = DownloadValidator()
 
     fun playItem(file: StorageFile) {
@@ -34,6 +35,9 @@ class StorageFileViewModel : BaseViewModel() {
                     playLiveData.postValue(Any())
                 }
             } catch (e: Exception) {
+                if (tryEmitBilibiliRiskVerify(file, e)) {
+                    return@launch
+                }
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "StorageFileViewModel",
@@ -124,6 +128,31 @@ class StorageFileViewModel : BaseViewModel() {
         }
     }
 
+    private fun tryEmitBilibiliRiskVerify(
+        file: StorageFile,
+        throwable: Throwable,
+    ): Boolean {
+        if (file.storage.library.mediaType != MediaType.BILIBILI_STORAGE) {
+            return false
+        }
+
+        val e = throwable as? BilibiliException ?: return false
+        if (e.code != -352) {
+            return false
+        }
+
+        val text = sequenceOf(e.bilibiliMessage, e.message).filterNotNull().joinToString(separator = " ")
+        val voucher = VOUCHER_REGEX.find(text)?.value ?: return false
+
+        bilibiliRiskVerifyLiveData.postValue(
+            BilibiliRiskVerifyPayload(
+                file = file,
+                vVoucher = voucher,
+            ),
+        )
+        return true
+    }
+
 //    fun locateLastPlay(storage: Storage) {
 //        viewModelScope.launch(Dispatchers.IO) {
 //            try {
@@ -205,5 +234,17 @@ class StorageFileViewModel : BaseViewModel() {
             return ThunderManager.media3DownloadId(source, index)
         }
         return file.uniqueKey()
+    }
+
+    data class BilibiliRiskVerifyPayload(
+        val file: StorageFile,
+        val vVoucher: String,
+    )
+
+    private companion object {
+        private val VOUCHER_REGEX =
+            Regex(
+                "voucher_[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+            )
     }
 }
