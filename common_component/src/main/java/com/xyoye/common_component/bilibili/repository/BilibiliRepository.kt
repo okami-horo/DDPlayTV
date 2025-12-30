@@ -213,10 +213,26 @@ class BilibiliRepository(
         params["gaia_source"] = PLAYURL_GAIA_SOURCE
         params["isGaiaAvoided"] = true
         params["web_location"] = PLAYURL_WEB_LOCATION
-        buildPlayurlSessionOrNull()?.let { params["session"] = it }
+
+        val fnval = (params["fnval"] as? Number)?.toInt()
+        // session 在部分场景可辅助取流，但对 MP4/HTML5 通常不是必需参数；避免传入不一致导致异常。
+        if (fnval != null && fnval != 1) {
+            buildPlayurlSessionOrNull()?.let { params["session"] = it }
+        }
+
+        // 若已存在 GAIA vtoken（Cookie），同时追加到 URL 参数以恢复部分被风控接口的正常访问。
+        cookieJarStore.getCookieOrNull(COOKIE_X_BILI_GAIA_VTOKEN)?.value?.takeIf { it.isNotBlank() }?.let {
+            params["gaia_vtoken"] = it
+        }
         if (allowTryLook) {
             params["try_look"] = 1
         }
+    }
+
+    private fun hasPlayableStream(data: BilibiliPlayurlData): Boolean {
+        val dashVideoOk = data.dash?.video?.isNotEmpty() == true
+        val durlOk = data.durl.any { it.url.isNotBlank() }
+        return dashVideoOk || durlOk
     }
 
     private suspend fun <T> retryBilibiliRiskControlWithRemedy(
@@ -467,26 +483,117 @@ class BilibiliRepository(
         baseParams.putAll(BilibiliPlayurlPreferencesMapper.primaryParams(preferences, apiType))
 
         return when (apiType) {
-            BilibiliApiType.WEB -> {
+            BilibiliApiType.WEB -> run {
                 val allowTryLook = !isLoggedIn()
                 prepareRiskControl(reason = "playurl", force = false)
 
-                retryBilibiliRiskControlWithRemedy(
-                    reason = "playurl",
-                    maxAttempts = PLAYURL_RISK_MAX_ATTEMPTS,
-                    initialDelayMs = PLAYURL_RISK_INITIAL_DELAY_MS,
-                    maxDelayMs = PLAYURL_RISK_MAX_DELAY_MS,
-                ) {
-                    val attemptParams = baseParams.toMutableMap()
-                    applyWebPlayurlRiskParams(attemptParams, allowTryLook)
-                    val signed =
-                        BilibiliWbiSigner.sign(attemptParams) {
-                            fetchWbiKeys()
-                        }
+                val pcResult =
+                    retryBilibiliRiskControlWithRemedy(
+                        reason = "playurl",
+                        maxAttempts = PLAYURL_RISK_MAX_ATTEMPTS,
+                        initialDelayMs = PLAYURL_RISK_INITIAL_DELAY_MS,
+                        maxDelayMs = PLAYURL_RISK_MAX_DELAY_MS,
+                    ) {
+                        val attemptParams = baseParams.toMutableMap()
+                        applyWebPlayurlRiskParams(attemptParams, allowTryLook)
+                        val signed =
+                            BilibiliWbiSigner.sign(attemptParams) {
+                                fetchWbiKeys()
+                            }
 
-                    requestBilibiliAuthed(reason = "playurl") {
-                        service.playurl(BASE_API, signed)
-                    }.recoverTimeout("取流超时，请检查网络后重试")
+                        requestBilibiliAuthed(reason = "playurl") {
+                            service.playurl(BASE_API, signed)
+                        }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
+                            if (hasPlayableStream(data)) {
+                                data
+                            } else if (!data.vVoucher.isNullOrBlank()) {
+                                throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                            } else {
+                                throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                            }
+                        }
+                    }
+                if (pcResult.isSuccess) {
+                    return@run pcResult
+                }
+
+                val pcError = pcResult.exceptionOrNull() as? BilibiliException
+                val fnval = (baseParams["fnval"] as? Number)?.toInt()
+                val shouldTryHtml5 = fnval == 1 && pcError?.code in RISK_CONTROL_CODES
+
+                val html5Result =
+                    if (shouldTryHtml5) {
+                        retryBilibiliRiskControlWithRemedy(
+                            reason = "playurl(html5)",
+                            maxAttempts = PLAYURL_RISK_MAX_ATTEMPTS,
+                            initialDelayMs = PLAYURL_RISK_INITIAL_DELAY_MS,
+                            maxDelayMs = PLAYURL_RISK_MAX_DELAY_MS,
+                        ) {
+                            val attemptParams = baseParams.toMutableMap()
+                            attemptParams["platform"] = "html5"
+                            attemptParams["high_quality"] = 1
+                            applyWebPlayurlRiskParams(attemptParams, allowTryLook)
+                            val signed =
+                                BilibiliWbiSigner.sign(attemptParams) {
+                                    fetchWbiKeys()
+                                }
+
+                            requestBilibiliAuthed(reason = "playurl(html5)") {
+                                service.playurl(BASE_API, signed)
+                            }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
+                                if (hasPlayableStream(data)) {
+                                    data
+                                } else if (!data.vVoucher.isNullOrBlank()) {
+                                    throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                                } else {
+                                    throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                                }
+                            }
+                        }
+                    } else {
+                        null
+                    }
+                if (html5Result?.isSuccess == true) {
+                    return@run html5Result
+                }
+
+                // Web 无法取流时，尝试使用 TV/API 签名链路作为兜底（不改变用户偏好）。
+                val tvResult =
+                    retryBilibiliRiskControlWithRemedy(
+                        reason = "playurl(tvFallback)",
+                        maxAttempts = PLAYURL_RISK_MAX_ATTEMPTS,
+                        initialDelayMs = PLAYURL_RISK_INITIAL_DELAY_MS,
+                        maxDelayMs = PLAYURL_RISK_MAX_DELAY_MS,
+                    ) {
+                        val attemptParams = baseParams.toMutableMap()
+                        val auth = BilibiliAuthStore.read(storageKey)
+                        auth.appAccessToken?.takeIf { it.isNotBlank() }?.let { attemptParams["access_key"] = it }
+                        attemptParams["mobi_app"] = BilibiliTvClient.MOBI_APP
+                        attemptParams["platform"] = BilibiliTvClient.PLATFORM
+
+                        val signed =
+                            BilibiliAppSigner.sign(
+                                params = attemptParams,
+                                appKey = BilibiliTvClient.APP_KEY,
+                                appSec = BilibiliTvClient.APP_SEC,
+                            )
+
+                        requestBilibili {
+                            service.playurlOld(BASE_API, signed)
+                        }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
+                            if (hasPlayableStream(data)) {
+                                data
+                            } else if (!data.vVoucher.isNullOrBlank()) {
+                                throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                            } else {
+                                throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                            }
+                        }
+                    }
+                if (tvResult.isSuccess) {
+                    tvResult
+                } else {
+                    html5Result ?: pcResult
                 }
             }
 
@@ -514,7 +621,15 @@ class BilibiliRepository(
 
                     requestBilibili {
                         service.playurlOld(BASE_API, signed)
-                    }.recoverTimeout("取流超时，请检查网络后重试")
+                    }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
+                        if (hasPlayableStream(data)) {
+                            data
+                        } else if (!data.vVoucher.isNullOrBlank()) {
+                            throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                        } else {
+                            throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                        }
+                    }
                 }
             }
         }
@@ -552,7 +667,15 @@ class BilibiliRepository(
                         }
                     requestBilibiliAuthed(reason = "playurlFallback") {
                         service.playurl(BASE_API, signed)
-                    }.recoverTimeout("取流超时，请检查网络后重试")
+                    }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
+                        if (hasPlayableStream(data)) {
+                            data
+                        } else if (!data.vVoucher.isNullOrBlank()) {
+                            throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                        } else {
+                            throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                        }
+                    }
                 }
             }
 
@@ -580,7 +703,15 @@ class BilibiliRepository(
 
                     requestBilibili {
                         service.playurlOld(BASE_API, signed)
-                    }.recoverTimeout("取流超时，请检查网络后重试")
+                    }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
+                        if (hasPlayableStream(data)) {
+                            data
+                        } else if (!data.vVoucher.isNullOrBlank()) {
+                            throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                        } else {
+                            throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                        }
+                    }
                 }
             }
         }
@@ -1187,6 +1318,7 @@ class BilibiliRepository(
         private const val COOKIE_BUVID3 = "buvid3"
         private const val COOKIE_BUVID4 = "buvid4"
         private const val COOKIE_B_NUT = "b_nut"
+        private const val COOKIE_X_BILI_GAIA_VTOKEN = "x-bili-gaia-vtoken"
 
         private const val COOKIE_INFO_CHECK_INTERVAL_MS = 20 * 60 * 60 * 1000L
         private const val COOKIE_REFRESH_MIN_INTERVAL_MS = 2 * 60 * 1000L
@@ -1218,7 +1350,7 @@ class BilibiliRepository(
         private const val PGC_PLAYURL_RISK_INITIAL_DELAY_MS = 500L
         private const val PGC_PLAYURL_RISK_MAX_DELAY_MS = 4000L
 
-        private val RISK_CONTROL_CODES = setOf(-351, -412, -509)
+        private val RISK_CONTROL_CODES = setOf(-351, -352, -412, -509)
 
         private const val CORRESPOND_PUBLIC_KEY_PEM =
             """

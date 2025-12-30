@@ -7,6 +7,8 @@ import com.squareup.moshi.JsonClass
 data class BilibiliPlayurlData(
     val dash: BilibiliDashData? = null,
     val durl: List<BilibiliDurlData> = emptyList(),
+    @Json(name = "v_voucher")
+    val vVoucher: String? = null,
 )
 
 @JsonClass(generateAdapter = true)
