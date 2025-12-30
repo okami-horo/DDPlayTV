@@ -23,15 +23,20 @@ object BilibiliHeaders {
 
     const val ACCEPT_ENCODING = "gzip,deflate"
 
-    fun defaultHeaders(): Map<String, String> =
+    fun defaultHeaders(): Map<String, String> = defaultHeaders(REFERER)
+
+    fun defaultHeaders(referer: String): Map<String, String> =
         mapOf(
             HEADER_USER_AGENT to USER_AGENT,
-            HEADER_REFERER to REFERER,
+            HEADER_REFERER to referer,
             HEADER_ACCEPT_ENCODING to ACCEPT_ENCODING,
         )
 
-    fun withCookie(cookieHeader: String?): Map<String, String> {
-        val headers = defaultHeaders().toMutableMap()
+    fun withCookie(
+        cookieHeader: String?,
+        referer: String = REFERER,
+    ): Map<String, String> {
+        val headers = defaultHeaders(referer).toMutableMap()
         cookieHeader?.takeIf { it.isNotBlank() }?.let {
             headers[HEADER_COOKIE] = it
         }
@@ -53,4 +58,3 @@ object BilibiliHeaders {
             }
         }
 }
-

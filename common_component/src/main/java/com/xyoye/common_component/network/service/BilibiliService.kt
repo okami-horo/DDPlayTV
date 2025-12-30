@@ -1,6 +1,7 @@
 package com.xyoye.common_component.network.service
 
 import com.xyoye.common_component.network.config.HeaderKey
+import com.xyoye.common_component.bilibili.risk.BilibiliGaiaActivateRequest
 import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
@@ -19,6 +20,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliTvQrcodeAuthCodeData
 import com.xyoye.data_component.data.bilibili.BilibiliTvQrcodePollModel
 import com.xyoye.data_component.data.bilibili.BilibiliWebTicketData
 import okhttp3.ResponseBody
+import retrofit2.http.Body
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -143,6 +145,12 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
     ): BilibiliPgcPlayurlApiModel
+
+    @POST("/x/internal/gaia-gateway/ExClimbWuzhi")
+    suspend fun gaiaActivateBuvid(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @Body body: BilibiliGaiaActivateRequest,
+    ): ResponseBody
 
     @POST("/bapis/bilibili.api.ticket.v1.Ticket/GenWebTicket")
     suspend fun genWebTicket(
