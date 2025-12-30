@@ -118,6 +118,7 @@ dependencies {
 
     api(Dependencies.Square.retrofit)
     implementation(Dependencies.Square.retrofit_moshi)
+    implementation(Dependencies.Square.moshi_kotlin)
 
     api(Dependencies.Github.coil)
     api(Dependencies.Github.coil_video)
