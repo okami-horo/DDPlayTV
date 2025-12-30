@@ -1502,7 +1502,7 @@ class BilibiliRepository(
 
         private const val COOKIE_INFO_CHECK_INTERVAL_MS = 20 * 60 * 60 * 1000L
         private const val COOKIE_REFRESH_MIN_INTERVAL_MS = 2 * 60 * 1000L
-        private const val HISTORY_FIRST_PAGE_CACHE_MAX_AGE_MS = 12 * 60 * 60 * 1000L
+        private const val HISTORY_FIRST_PAGE_CACHE_MAX_AGE_MS = 5 * 60 * 1000L
 
         private const val COOKIE_BILI_TICKET = "bili_ticket"
         private const val BILI_TICKET_DEFAULT_TTL_SEC = 259200L
