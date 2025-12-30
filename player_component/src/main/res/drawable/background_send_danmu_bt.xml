@@ -3,6 +3,13 @@
 
     <item android:drawable="@drawable/background_video_action_item_focused_color" android:state_focused="true" />
 
+    <item android:state_pressed="true">
+        <shape>
+            <solid android:color="#55FFFFFF" />
+            <corners android:radius="5dp" />
+        </shape>
+    </item>
+
     <item>
         <shape>
 

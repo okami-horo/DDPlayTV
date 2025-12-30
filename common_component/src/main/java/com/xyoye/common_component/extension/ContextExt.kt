@@ -2,9 +2,11 @@ package com.xyoye.common_component.extension
 
 import android.app.ActivityManager
 import android.app.NotificationManager
+import android.app.UiModeManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.content.res.Configuration
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
@@ -49,4 +51,12 @@ fun Context.isServiceRunning(serviceClass: Class<*>): Boolean {
     val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     val runningServices = manager.getRunningServices(Integer.MAX_VALUE)
     return runningServices.any { it.service.className == className }
+}
+
+fun Context.isTelevisionUiMode(): Boolean {
+    val uiModeManager = getSystemService<UiModeManager>()
+    val currentModeType =
+        uiModeManager?.currentModeType
+            ?: (resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)
+    return currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
 }

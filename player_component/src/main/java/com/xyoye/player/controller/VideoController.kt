@@ -1,11 +1,10 @@
 package com.xyoye.player.controller
 
-import android.app.UiModeManager
 import android.content.Context
-import android.content.res.Configuration
 import android.util.AttributeSet
 import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
@@ -359,13 +358,5 @@ class VideoController(
             }
             PlayerAction.ToggleDanmu -> mControlWrapper.toggleDanmuVisible()
         }
-    }
-
-    private fun Context.isTelevisionUiMode(): Boolean {
-        val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
-        val currentModeType =
-            uiModeManager?.currentModeType
-                ?: (resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)
-        return currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
     }
 }

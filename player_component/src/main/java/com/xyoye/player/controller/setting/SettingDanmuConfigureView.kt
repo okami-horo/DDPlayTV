@@ -45,7 +45,14 @@ class SettingDanmuConfigureView(
     }
 
     override fun onViewShowed() {
-        viewBinding.llScrollDanmu.requestFocus()
+        val target =
+            when (settingMode) {
+                BaseDanmaku.TYPE_SCROLL_RL -> viewBinding.llScrollDanmu
+                BaseDanmaku.TYPE_FIX_TOP -> viewBinding.llTopDanmu
+                BaseDanmaku.TYPE_FIX_BOTTOM -> viewBinding.llBottomDanmu
+                else -> viewBinding.llScrollDanmu
+            }
+        target.requestFocus()
     }
 
     override fun onKeyDown(
@@ -81,24 +88,31 @@ class SettingDanmuConfigureView(
             mControlWrapper.showSettingView(SettingViewType.KEYWORD_BLOCK)
         }
 
+        viewBinding.llScrollDanmu.setOnClickListener {
+            selectSettingMode(BaseDanmaku.TYPE_SCROLL_RL)
+        }
+        viewBinding.llTopDanmu.setOnClickListener {
+            selectSettingMode(BaseDanmaku.TYPE_FIX_TOP)
+        }
+        viewBinding.llBottomDanmu.setOnClickListener {
+            selectSettingMode(BaseDanmaku.TYPE_FIX_BOTTOM)
+        }
+
         viewBinding.llScrollDanmu.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                settingMode = BaseDanmaku.TYPE_SCROLL_RL
-                applyDanmuConfigureStatus()
+                selectSettingMode(BaseDanmaku.TYPE_SCROLL_RL)
             }
         }
 
         viewBinding.llTopDanmu.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                settingMode = BaseDanmaku.TYPE_FIX_TOP
-                applyDanmuConfigureStatus()
+                selectSettingMode(BaseDanmaku.TYPE_FIX_TOP)
             }
         }
 
         viewBinding.llBottomDanmu.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                settingMode = BaseDanmaku.TYPE_FIX_BOTTOM
-                applyDanmuConfigureStatus()
+                selectSettingMode(BaseDanmaku.TYPE_FIX_BOTTOM)
             }
         }
 
@@ -153,11 +167,26 @@ class SettingDanmuConfigureView(
     }
 
     private fun applyDanmuConfigureStatus() {
+        applySettingModeSelectedState()
         when (settingMode) {
             BaseDanmaku.TYPE_SCROLL_RL -> applyScrollDanmuConfigure()
             BaseDanmaku.TYPE_FIX_TOP -> applyTopDanmuConfigure()
             BaseDanmaku.TYPE_FIX_BOTTOM -> applyBottomDanmuConfigure()
         }
+    }
+
+    private fun selectSettingMode(mode: Int) {
+        if (settingMode == mode) {
+            return
+        }
+        settingMode = mode
+        applyDanmuConfigureStatus()
+    }
+
+    private fun applySettingModeSelectedState() {
+        viewBinding.llScrollDanmu.isSelected = settingMode == BaseDanmaku.TYPE_SCROLL_RL
+        viewBinding.llTopDanmu.isSelected = settingMode == BaseDanmaku.TYPE_FIX_TOP
+        viewBinding.llBottomDanmu.isSelected = settingMode == BaseDanmaku.TYPE_FIX_BOTTOM
     }
 
     private fun applyScrollDanmuConfigure() {

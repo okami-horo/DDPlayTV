@@ -55,7 +55,6 @@
             android:layout_marginBottom="20dp"
             android:background="@drawable/background_player_setting_text"
             android:focusable="true"
-            android:focusableInTouchMode="true"
             android:gravity="center"
             android:paddingHorizontal="20dp"
             android:textColor="@color/text_white_immutable"
