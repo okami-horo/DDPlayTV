@@ -2,7 +2,10 @@ package com.xyoye.storage_component.ui.dialog
 
 import android.os.SystemClock
 import androidx.core.view.isVisible
+import com.xyoye.common_component.bilibili.BilibiliApiPreferencesStore
+import com.xyoye.common_component.bilibili.BilibiliApiType
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
+import com.xyoye.common_component.bilibili.login.BilibiliLoginPollResult
 import com.xyoye.common_component.bilibili.repository.BilibiliRepository
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.utils.QrCodeHelper
@@ -32,18 +35,19 @@ class BilibiliLoginDialog(
 
     private val storageKey = BilibiliPlaybackPreferencesStore.storageKey(library)
     private val repository = BilibiliRepository(storageKey)
+    private val apiType = BilibiliApiPreferencesStore.read(library).apiType
 
     override fun getChildLayoutId(): Int = R.layout.dialog_bilibili_login
 
     override fun initView(binding: DialogBilibiliLoginBinding) {
         this.binding = binding
 
-        setTitle("Bilibili 扫码登录")
+        setTitle(if (apiType == BilibiliApiType.TV) "Bilibili TV 扫码登录" else "Bilibili 扫码登录")
         setPositiveText("重试")
         setNegativeText("取消")
         setDialogCancelable(touchCancel = false, backPressedCancel = true)
 
-        setPositiveListener { startLoginFlow(forceRefresh = true) }
+        setPositiveListener { startLoginFlow() }
         setNegativeListener { dismiss() }
 
         setOnDismissListener {
@@ -51,17 +55,17 @@ class BilibiliLoginDialog(
             scope.cancel()
         }
 
-        startLoginFlow(forceRefresh = false)
+        startLoginFlow()
     }
 
-    private fun startLoginFlow(forceRefresh: Boolean) {
+    private fun startLoginFlow() {
         pollingJob?.cancel()
         pollingJob =
             scope.launch {
                 binding.loadingPb.isVisible = true
                 binding.statusTv.text = "正在获取二维码…"
 
-                val generate = repository.qrcodeGenerate()
+                val generate = repository.loginQrCodeGenerate()
                 val data = generate.getOrNull()
                 if (data == null || data.url.isBlank() || data.qrcodeKey.isBlank()) {
                     binding.loadingPb.isVisible = false
@@ -89,22 +93,22 @@ class BilibiliLoginDialog(
     private suspend fun pollUntilDone(qrcodeKey: String) {
         val start = SystemClock.elapsedRealtime()
         while (scope.coroutineContext[Job]?.isActive == true) {
-            val poll = repository.qrcodePoll(qrcodeKey)
-            val data = poll.getOrNull()
-            if (data == null) {
+            val poll = repository.loginQrCodePoll(qrcodeKey)
+            val result = poll.getOrNull()
+            if (result == null) {
                 binding.statusTv.text = "登录状态获取失败，请检查网络后重试"
                 return
             }
 
-            when (data.statusCode) {
-                86101 -> binding.statusTv.text = "等待扫码…"
-                86090 -> binding.statusTv.text = "已扫码，请在 App 上确认登录"
-                86038 -> {
+            when (result) {
+                BilibiliLoginPollResult.WaitingScan -> binding.statusTv.text = "等待扫码…"
+                BilibiliLoginPollResult.WaitingConfirm -> binding.statusTv.text = "已扫码，请在 App 上确认登录"
+                BilibiliLoginPollResult.Expired -> {
                     binding.statusTv.text = "二维码已失效，请点击重试"
                     return
                 }
 
-                0 -> {
+                BilibiliLoginPollResult.Success -> {
                     binding.statusTv.text = "登录成功"
                     delay(300)
                     dismiss()
@@ -112,7 +116,7 @@ class BilibiliLoginDialog(
                     return
                 }
 
-                else -> binding.statusTv.text = data.statusMessage ?: "登录中…"
+                is BilibiliLoginPollResult.Error -> binding.statusTv.text = result.message
             }
 
             if (SystemClock.elapsedRealtime() - start > 2 * 60 * 1000) {
@@ -124,4 +128,3 @@ class BilibiliLoginDialog(
         }
     }
 }
-

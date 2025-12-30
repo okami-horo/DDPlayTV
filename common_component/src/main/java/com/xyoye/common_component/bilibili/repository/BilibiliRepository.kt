@@ -3,10 +3,16 @@ package com.xyoye.common_component.bilibili.repository
 import android.util.Base64
 import com.xyoye.common_component.bilibili.BilibiliPlayurlPreferencesMapper
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferences
+import com.xyoye.common_component.bilibili.BilibiliApiPreferencesStore
+import com.xyoye.common_component.bilibili.BilibiliApiType
+import com.xyoye.common_component.bilibili.app.BilibiliAppSigner
+import com.xyoye.common_component.bilibili.app.BilibiliTvClient
 import com.xyoye.common_component.bilibili.auth.BilibiliAuthStore
 import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
 import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.bilibili.history.BilibiliHistoryCacheStore
+import com.xyoye.common_component.bilibili.login.BilibiliLoginQrCode
+import com.xyoye.common_component.bilibili.login.BilibiliLoginPollResult
 import com.xyoye.common_component.bilibili.ticket.BilibiliTicketSigner
 import com.xyoye.common_component.bilibili.wbi.BilibiliWbiSigner
 import com.xyoye.common_component.network.Retrofit
@@ -28,6 +34,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
 import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliTvCookieInfo
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
@@ -84,8 +91,106 @@ class BilibiliRepository(
                 BilibiliAuthStore.updateFromCookies(
                     storageKey = storageKey,
                     cookieJarStore = cookieJarStore,
-                    refreshToken = data.refreshToken,
+                    webRefreshToken = data.refreshToken,
                 )
+            }
+        }
+
+    suspend fun loginQrCodeGenerate(): Result<BilibiliLoginQrCode> =
+        when (currentApiType()) {
+            BilibiliApiType.WEB -> {
+                qrcodeGenerate().mapCatching { data ->
+                    if (data.url.isBlank() || data.qrcodeKey.isBlank()) {
+                        throw BilibiliException.from(-1, "获取二维码失败")
+                    }
+                    BilibiliLoginQrCode(
+                        url = data.url,
+                        qrcodeKey = data.qrcodeKey,
+                    )
+                }
+            }
+
+            BilibiliApiType.TV -> {
+                val params: RequestParams =
+                    hashMapOf(
+                        "local_id" to BilibiliTvClient.LOCAL_ID,
+                    )
+                val signed =
+                    BilibiliAppSigner.sign(
+                        params = params,
+                        appKey = BilibiliTvClient.APP_KEY,
+                        appSec = BilibiliTvClient.APP_SEC,
+                    )
+                requestBilibili {
+                    service.tvQrcodeAuthCode(BASE_PASSPORT, signed)
+                }.mapCatching { data ->
+                    if (data.url.isBlank() || data.authCode.isBlank()) {
+                        throw BilibiliException.from(-1, "获取二维码失败")
+                    }
+                    BilibiliLoginQrCode(
+                        url = data.url,
+                        qrcodeKey = data.authCode,
+                    )
+                }
+            }
+        }
+
+    suspend fun loginQrCodePoll(qrcodeKey: String): Result<BilibiliLoginPollResult> =
+        when (currentApiType()) {
+            BilibiliApiType.WEB -> {
+                qrcodePoll(qrcodeKey).mapCatching { data ->
+                    when (data.statusCode) {
+                        86101 -> BilibiliLoginPollResult.WaitingScan
+                        86090 -> BilibiliLoginPollResult.WaitingConfirm
+                        86038 -> BilibiliLoginPollResult.Expired
+                        0 -> BilibiliLoginPollResult.Success
+                        else -> BilibiliLoginPollResult.Error(data.statusMessage ?: "登录中…")
+                    }
+                }
+            }
+
+            BilibiliApiType.TV -> {
+                val params: RequestParams =
+                    hashMapOf(
+                        "auth_code" to qrcodeKey,
+                        "local_id" to BilibiliTvClient.LOCAL_ID,
+                    )
+                val signed =
+                    BilibiliAppSigner.sign(
+                        params = params,
+                        appKey = BilibiliTvClient.APP_KEY,
+                        appSec = BilibiliTvClient.APP_SEC,
+                    )
+
+                request()
+                    .doGet {
+                        service.tvQrcodePoll(BASE_PASSPORT, signed)
+                    }.mapCatching { model ->
+                        when (model.code) {
+                            0 -> {
+                                val data = model.data ?: throw BilibiliException.from(-1, "登录成功但未返回数据")
+                                // 保存 access_token/refresh_token（用于 TV/API 鉴权）
+                                BilibiliAuthStore.updateAppTokens(
+                                    storageKey = storageKey,
+                                    accessToken = data.accessToken,
+                                    refreshToken = data.refreshToken,
+                                )
+                                // 写入 cookie_info.cookes（部分接口仍依赖 Cookie）
+                                upsertTvCookiesOrThrow(data.cookieInfo)
+                                // 从 Cookie 中提取 csrf/mid 等
+                                BilibiliAuthStore.updateFromCookies(
+                                    storageKey = storageKey,
+                                    cookieJarStore = cookieJarStore,
+                                )
+                                BilibiliLoginPollResult.Success
+                            }
+
+                            86039 -> BilibiliLoginPollResult.WaitingScan
+                            86090 -> BilibiliLoginPollResult.WaitingConfirm
+                            86038 -> BilibiliLoginPollResult.Expired
+                            else -> BilibiliLoginPollResult.Error(model.message.ifBlank { "登录中…" })
+                        }
+                    }
             }
         }
 
@@ -190,20 +295,43 @@ class BilibiliRepository(
         cid: Long,
         preferences: BilibiliPlaybackPreferences,
     ): Result<BilibiliPlayurlData> {
-        val params: RequestParams = hashMapOf()
+        val apiType = currentApiType()
+        val params = hashMapOf<String, Any?>()
         params["bvid"] = bvid
         params["cid"] = cid
 
-        params.putAll(BilibiliPlayurlPreferencesMapper.primaryParams(preferences))
+        params.putAll(BilibiliPlayurlPreferencesMapper.primaryParams(preferences, apiType))
 
-        val signed =
-            BilibiliWbiSigner.sign(params) {
-                fetchWbiKeys()
+        return when (apiType) {
+            BilibiliApiType.WEB -> {
+                val signed =
+                    BilibiliWbiSigner.sign(params) {
+                        fetchWbiKeys()
+                    }
+
+                requestBilibiliAuthed(reason = "playurl") {
+                    service.playurl(BASE_API, signed)
+                }.recoverTimeout("取流超时，请检查网络后重试")
             }
 
-        return requestBilibiliAuthed(reason = "playurl") {
-            service.playurl(BASE_API, signed)
-        }.recoverTimeout("取流超时，请检查网络后重试")
+            BilibiliApiType.TV -> {
+                val auth = BilibiliAuthStore.read(storageKey)
+                auth.appAccessToken?.takeIf { it.isNotBlank() }?.let { params["access_key"] = it }
+                params["mobi_app"] = BilibiliTvClient.MOBI_APP
+                params["platform"] = BilibiliTvClient.PLATFORM
+
+                val signed =
+                    BilibiliAppSigner.sign(
+                        params = params,
+                        appKey = BilibiliTvClient.APP_KEY,
+                        appSec = BilibiliTvClient.APP_SEC,
+                    )
+
+                requestBilibili {
+                    service.playurlOld(BASE_API, signed)
+                }.recoverTimeout("取流超时，请检查网络后重试")
+            }
+        }
     }
 
     suspend fun playurlFallbackOrNull(
@@ -211,18 +339,43 @@ class BilibiliRepository(
         cid: Long,
         preferences: BilibiliPlaybackPreferences,
     ): Result<BilibiliPlayurlData>? {
-        val fallback = BilibiliPlayurlPreferencesMapper.fallbackParamsOrNull(preferences) ?: return null
-        val params: RequestParams = hashMapOf()
+        val apiType = currentApiType()
+        val fallback = BilibiliPlayurlPreferencesMapper.fallbackParamsOrNull(preferences, apiType) ?: return null
+
+        val params = hashMapOf<String, Any?>()
         params["bvid"] = bvid
         params["cid"] = cid
         params.putAll(fallback)
-        val signed =
-            BilibiliWbiSigner.sign(params) {
-                fetchWbiKeys()
+
+        return when (apiType) {
+            BilibiliApiType.WEB -> {
+                val signed =
+                    BilibiliWbiSigner.sign(params) {
+                        fetchWbiKeys()
+                    }
+                requestBilibiliAuthed(reason = "playurlFallback") {
+                    service.playurl(BASE_API, signed)
+                }.recoverTimeout("取流超时，请检查网络后重试")
             }
-        return requestBilibiliAuthed(reason = "playurlFallback") {
-            service.playurl(BASE_API, signed)
-        }.recoverTimeout("取流超时，请检查网络后重试")
+
+            BilibiliApiType.TV -> {
+                val auth = BilibiliAuthStore.read(storageKey)
+                auth.appAccessToken?.takeIf { it.isNotBlank() }?.let { params["access_key"] = it }
+                params["mobi_app"] = BilibiliTvClient.MOBI_APP
+                params["platform"] = BilibiliTvClient.PLATFORM
+
+                val signed =
+                    BilibiliAppSigner.sign(
+                        params = params,
+                        appKey = BilibiliTvClient.APP_KEY,
+                        appSec = BilibiliTvClient.APP_SEC,
+                    )
+
+                requestBilibili {
+                    service.playurlOld(BASE_API, signed)
+                }.recoverTimeout("取流超时，请检查网络后重试")
+            }
+        }
     }
 
     suspend fun pgcPlayurl(
@@ -243,16 +396,58 @@ class BilibiliRepository(
         params["from_client"] = PGC_FROM_CLIENT
         params["drm_tech_type"] = PGC_DRM_TECH_TYPE
 
-        params.putAll(BilibiliPlayurlPreferencesMapper.pgcPrimaryParams(preferences))
+        val apiType = currentApiType()
+        params.putAll(BilibiliPlayurlPreferencesMapper.pgcPrimaryParams(preferences, apiType))
 
-        return retryBilibiliRiskControl(
-            maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
-            initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
-            maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
-        ) {
-            requestBilibiliResultAuthed(reason = "pgcPlayurl") {
-                service.pgcPlayurl(BASE_API, params)
-            }.recoverTimeout("取流超时，请检查网络后重试")
+        return when (apiType) {
+            BilibiliApiType.WEB ->
+                retryBilibiliRiskControl(
+                    maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+                    initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+                    maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+                ) {
+                    requestBilibiliResultAuthed(reason = "pgcPlayurl") {
+                        service.pgcPlayurl(BASE_API, params)
+                    }.recoverTimeout("取流超时，请检查网络后重试")
+                }
+
+            BilibiliApiType.TV -> {
+                val tvParams = params.toMutableMap<String, Any?>()
+                // TV/API 接口不依赖 web session/from_client/drm_tech_type
+                tvParams.remove("session")
+                tvParams.remove("from_client")
+                tvParams.remove("drm_tech_type")
+
+                val auth = BilibiliAuthStore.read(storageKey)
+                auth.appAccessToken?.takeIf { it.isNotBlank() }?.let { tvParams["access_key"] = it }
+                tvParams["mobi_app"] = BilibiliTvClient.MOBI_APP
+                tvParams["platform"] = BilibiliTvClient.PLATFORM
+
+                val signed =
+                    BilibiliAppSigner.sign(
+                        params = tvParams,
+                        appKey = BilibiliTvClient.APP_KEY,
+                        appSec = BilibiliTvClient.APP_SEC,
+                    )
+
+                retryBilibiliRiskControl(
+                    maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+                    initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+                    maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+                ) {
+                    request()
+                        .doGet { service.pgcPlayurlApi(BASE_API, signed) }
+                        .mapCatching { model ->
+                            if (model.code != 0) {
+                                throw BilibiliException.from(code = model.code, message = model.message)
+                            }
+                            BilibiliPlayurlData(
+                                dash = model.dash,
+                                durl = model.durl,
+                            )
+                        }.recoverTimeout("取流超时，请检查网络后重试")
+                }
+            }
         }
     }
 
@@ -263,7 +458,8 @@ class BilibiliRepository(
         preferences: BilibiliPlaybackPreferences,
         session: String? = null,
     ): Result<BilibiliPlayurlData>? {
-        val fallback = BilibiliPlayurlPreferencesMapper.pgcFallbackParamsOrNull(preferences) ?: return null
+        val apiType = currentApiType()
+        val fallback = BilibiliPlayurlPreferencesMapper.pgcFallbackParamsOrNull(preferences, apiType) ?: return null
         val params: RequestParams = hashMapOf()
         params["ep_id"] = epId
         params["cid"] = cid
@@ -277,14 +473,54 @@ class BilibiliRepository(
 
         params.putAll(fallback)
 
-        return retryBilibiliRiskControl(
-            maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
-            initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
-            maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
-        ) {
-            requestBilibiliResultAuthed(reason = "pgcPlayurlFallback") {
-                service.pgcPlayurl(BASE_API, params)
-            }.recoverTimeout("取流超时，请检查网络后重试")
+        return when (apiType) {
+            BilibiliApiType.WEB ->
+                retryBilibiliRiskControl(
+                    maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+                    initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+                    maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+                ) {
+                    requestBilibiliResultAuthed(reason = "pgcPlayurlFallback") {
+                        service.pgcPlayurl(BASE_API, params)
+                    }.recoverTimeout("取流超时，请检查网络后重试")
+                }
+
+            BilibiliApiType.TV -> {
+                val tvParams = params.toMutableMap<String, Any?>()
+                tvParams.remove("session")
+                tvParams.remove("from_client")
+                tvParams.remove("drm_tech_type")
+
+                val auth = BilibiliAuthStore.read(storageKey)
+                auth.appAccessToken?.takeIf { it.isNotBlank() }?.let { tvParams["access_key"] = it }
+                tvParams["mobi_app"] = BilibiliTvClient.MOBI_APP
+                tvParams["platform"] = BilibiliTvClient.PLATFORM
+
+                val signed =
+                    BilibiliAppSigner.sign(
+                        params = tvParams,
+                        appKey = BilibiliTvClient.APP_KEY,
+                        appSec = BilibiliTvClient.APP_SEC,
+                    )
+
+                retryBilibiliRiskControl(
+                    maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+                    initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+                    maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+                ) {
+                    request()
+                        .doGet { service.pgcPlayurlApi(BASE_API, signed) }
+                        .mapCatching { model ->
+                            if (model.code != 0) {
+                                throw BilibiliException.from(code = model.code, message = model.message)
+                            }
+                            BilibiliPlayurlData(
+                                dash = model.dash,
+                                durl = model.durl,
+                            )
+                        }.recoverTimeout("取流超时，请检查网络后重试")
+                }
+            }
         }
     }
 
@@ -308,6 +544,49 @@ class BilibiliRepository(
         cookieJarStore.clear()
         BilibiliAuthStore.clear(storageKey)
         historyCacheStore.clear()
+    }
+
+    private fun currentApiType(): BilibiliApiType =
+        BilibiliApiPreferencesStore.read(storageKey).apiType
+
+    private fun normalizeCookieDomain(domain: String): String =
+        domain.trim().removePrefix(".").ifBlank { domain }
+
+    private fun upsertTvCookiesOrThrow(cookieInfo: BilibiliTvCookieInfo?) {
+        if (cookieInfo == null || cookieInfo.cookies.isEmpty()) return
+
+        val now = System.currentTimeMillis()
+        val domains =
+            cookieInfo.domains
+                .map { normalizeCookieDomain(it) }
+                .filter { it.endsWith("bilibili.com", ignoreCase = true) }
+                .ifEmpty { listOf("bilibili.com") }
+
+        cookieInfo.cookies.forEach { item ->
+            if (item.name.isBlank() || item.value.isBlank()) return@forEach
+
+            val expiresAt =
+                item.expires
+                    ?.takeIf { it > 0 }
+                    ?.let { it * 1000L }
+                    ?: (now + 7L * 24L * 60L * 60L * 1000L)
+
+            domains.forEach { domain ->
+                val cookie =
+                    Cookie
+                        .Builder()
+                        .name(item.name)
+                        .value(item.value)
+                        .domain(domain)
+                        .path("/")
+                        .expiresAt(expiresAt)
+                        .apply {
+                            if (item.secure == 1) secure()
+                            if (item.httpOnly == 1) httpOnly()
+                        }.build()
+                cookieJarStore.upsertCookie(cookie, bucketHost = domain)
+            }
+        }
     }
 
     private suspend fun fetchWbiKeys(): BilibiliWbiSigner.WbiKeys? {
@@ -489,7 +768,7 @@ class BilibiliRepository(
     ): Result<Boolean> =
         cookieRefreshMutex.withLock {
             val auth = BilibiliAuthStore.read(storageKey)
-            val refreshToken = auth.refreshToken?.takeIf { it.isNotBlank() } ?: return@withLock Result.success(false)
+            val refreshToken = auth.webRefreshToken?.takeIf { it.isNotBlank() } ?: return@withLock Result.success(false)
 
             val now = System.currentTimeMillis()
             if (!forceCheck && now - lastCookieInfoCheckAt < COOKIE_INFO_CHECK_INTERVAL_MS) {
@@ -560,7 +839,7 @@ class BilibiliRepository(
             BilibiliAuthStore.updateFromCookies(
                 storageKey = storageKey,
                 cookieJarStore = cookieJarStore,
-                refreshToken = refreshTokenNew,
+                webRefreshToken = refreshTokenNew,
             )
 
             val csrfNew =

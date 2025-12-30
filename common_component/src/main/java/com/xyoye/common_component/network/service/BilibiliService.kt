@@ -10,10 +10,13 @@ import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
 import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
 import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
+import com.xyoye.data_component.data.bilibili.BilibiliPgcPlayurlApiModel
 import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
 import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliTvQrcodeAuthCodeData
+import com.xyoye.data_component.data.bilibili.BilibiliTvQrcodePollModel
 import com.xyoye.data_component.data.bilibili.BilibiliWebTicketData
 import okhttp3.ResponseBody
 import retrofit2.http.FieldMap
@@ -46,6 +49,20 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @Query("qrcode_key") qrcodeKey: String,
     ): BilibiliJsonModel<BilibiliQrcodePollData>
+
+    @FormUrlEncoded
+    @POST("/x/passport-tv-login/qrcode/auth_code")
+    suspend fun tvQrcodeAuthCode(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @FieldMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliJsonModel<BilibiliTvQrcodeAuthCodeData>
+
+    @FormUrlEncoded
+    @POST("/x/passport-tv-login/qrcode/poll")
+    suspend fun tvQrcodePoll(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @FieldMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliTvQrcodePollModel
 
     @GET("/x/passport-login/web/cookie/info")
     suspend fun cookieInfo(
@@ -109,11 +126,23 @@ interface BilibiliService {
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
     ): BilibiliJsonModel<BilibiliPlayurlData>
 
+    @GET("/x/player/playurl")
+    suspend fun playurlOld(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliJsonModel<BilibiliPlayurlData>
+
     @GET("/pgc/player/web/playurl")
     suspend fun pgcPlayurl(
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
     ): BilibiliResultJsonModel<BilibiliPlayurlData>
+
+    @GET("/pgc/player/api/playurl")
+    suspend fun pgcPlayurlApi(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliPgcPlayurlApiModel
 
     @POST("/bapis/bilibili.api.ticket.v1.Ticket/GenWebTicket")
     suspend fun genWebTicket(

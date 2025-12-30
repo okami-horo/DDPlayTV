@@ -1,5 +1,8 @@
 package com.xyoye.storage_component.ui.dialog
 
+import com.xyoye.common_component.bilibili.BilibiliApiPreferences
+import com.xyoye.common_component.bilibili.BilibiliApiPreferencesStore
+import com.xyoye.common_component.bilibili.BilibiliApiType
 import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferences
 import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferences
@@ -31,6 +34,7 @@ class BilibiliStorageEditDialog(
     private lateinit var binding: DialogBilibiliStorageBinding
 
     private lateinit var editLibrary: MediaLibraryEntity
+    private var apiPreferences = BilibiliApiPreferences()
     private var preferences = BilibiliPlaybackPreferences()
     private var danmakuBlockPreferences = BilibiliDanmakuBlockPreferences()
 
@@ -53,10 +57,12 @@ class BilibiliStorageEditDialog(
         }
         binding.library = editLibrary
 
+        apiPreferences = BilibiliApiPreferencesStore.read(editLibrary)
         preferences = BilibiliPlaybackPreferencesStore.read(editLibrary)
         danmakuBlockPreferences = BilibiliDanmakuBlockPreferencesStore.read(editLibrary)
         refreshPreferenceViews()
 
+        binding.apiTypeActionTv.setOnClickListener { showApiTypeDialog() }
         binding.playModeActionTv.setOnClickListener { showPlayModeDialog() }
         binding.qualityActionTv.setOnClickListener { showQualityDialog() }
         binding.codecActionTv.setOnClickListener { showCodecDialog() }
@@ -74,7 +80,7 @@ class BilibiliStorageEditDialog(
                 .Builder(activity)
                 .apply {
                     tips = "提示"
-                    content = "确认断开连接并清除该媒体库的隐私数据？\n\n将清除：Cookie/登录态、播放偏好、弹幕屏蔽偏好、播放历史/进度、Bilibili 弹幕缓存文件。"
+                    content = "确认断开连接并清除该媒体库的隐私数据？\n\n将清除：Cookie/登录态、API类型偏好、播放偏好、弹幕屏蔽偏好、播放历史/进度、Bilibili 弹幕缓存文件。"
                     positiveText = "确认清除"
                     addPositive { dialog ->
                         dialog.dismiss()
@@ -91,6 +97,7 @@ class BilibiliStorageEditDialog(
         }
 
         addNeutralButton("恢复默认") {
+            apiPreferences = BilibiliApiPreferences()
             preferences = BilibiliPlaybackPreferences()
             danmakuBlockPreferences = BilibiliDanmakuBlockPreferences()
             refreshPreferenceViews()
@@ -107,6 +114,7 @@ class BilibiliStorageEditDialog(
                 preferences = preferences.copy(allow4k = true)
                 refreshPreferenceViews()
             }
+            BilibiliApiPreferencesStore.write(editLibrary, apiPreferences)
             BilibiliPlaybackPreferencesStore.write(editLibrary, preferences)
             BilibiliDanmakuBlockPreferencesStore.write(editLibrary, danmakuBlockPreferences)
             activity.addStorage(editLibrary)
@@ -127,6 +135,7 @@ class BilibiliStorageEditDialog(
     }
 
     private fun refreshPreferenceViews() {
+        binding.apiTypeValueTv.text = apiPreferences.apiType.label
         binding.playModeValueTv.text = preferences.playMode.label
         binding.qualityValueTv.text = BilibiliQuality.fromQn(preferences.preferredQualityQn).label
         binding.codecValueTv.text = preferences.preferredVideoCodec.label
@@ -134,6 +143,28 @@ class BilibiliStorageEditDialog(
 
         binding.aiLevelValueTv.text = formatAiLevel(danmakuBlockPreferences.aiLevel)
         setAiBlockSelected(danmakuBlockPreferences.aiSwitch)
+    }
+
+    private fun showApiTypeDialog() {
+        val actions =
+            BilibiliApiType.entries.map {
+                val describe =
+                    when (it) {
+                        BilibiliApiType.WEB -> "默认：网页接口（Cookie + WBI）"
+                        BilibiliApiType.TV -> "TV 客户端接口（AppKey 签名），部分场景可能需要重新扫码登录"
+                    }
+                SheetActionBean(
+                    actionId = it,
+                    actionName = it.label,
+                    describe = describe,
+                )
+            }
+        BottomActionDialog(activity, actions, "API类型") {
+            val selected = it.actionId as? BilibiliApiType ?: return@BottomActionDialog false
+            apiPreferences = apiPreferences.copy(apiType = selected)
+            refreshPreferenceViews()
+            true
+        }.show()
     }
 
     private fun setAllow4kSelected(allow: Boolean) {
