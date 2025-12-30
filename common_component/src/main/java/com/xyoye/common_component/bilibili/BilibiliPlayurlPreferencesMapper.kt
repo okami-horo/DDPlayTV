@@ -63,7 +63,13 @@ object BilibiliPlayurlPreferencesMapper {
                 when (preferences.playMode) {
                     BilibiliPlayMode.MP4 -> buildMp4Params(preferences, platform = null)
                     BilibiliPlayMode.DASH,
-                    BilibiliPlayMode.AUTO -> buildDashParams(preferences, platform = null, includeCodecid = false)
+                    BilibiliPlayMode.AUTO ->
+                        buildDashParams(
+                            preferences,
+                            platform = null,
+                            includeCodecid = false,
+                            fnvalOverride = FNVAL_DASH_ALL,
+                        )
                 }
 
             BilibiliApiType.TV ->

@@ -36,6 +36,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
 import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
 import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
+import com.xyoye.data_component.data.bilibili.BilibiliPgcPlayurlV2Result
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
 import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
@@ -285,6 +286,17 @@ class BilibiliRepository(
         }
         if (allowTryLook) {
             params["try_look"] = 1
+        }
+    }
+
+    private fun applyPgcPlayurlRiskParams(params: MutableMap<String, Any?>) {
+        params["gaia_source"] = PLAYURL_GAIA_SOURCE
+        params["isGaiaAvoided"] = true
+        params["web_location"] = PLAYURL_WEB_LOCATION
+
+        // 若已存在 GAIA vtoken（Cookie），同时追加到 URL 参数以恢复部分被风控接口的正常访问。
+        cookieJarStore.getCookieOrNull(COOKIE_X_BILI_GAIA_VTOKEN)?.value?.takeIf { it.isNotBlank() }?.let {
+            params["gaia_vtoken"] = it
         }
     }
 
@@ -790,65 +802,80 @@ class BilibiliRepository(
             params["avid"] = it
         }
 
-        params["session"] = session?.takeIf { it.isNotBlank() } ?: newPgcSession()
-        params["from_client"] = PGC_FROM_CLIENT
-        params["drm_tech_type"] = PGC_DRM_TECH_TYPE
-
         val apiType = currentApiType()
         params.putAll(BilibiliPlayurlPreferencesMapper.pgcPrimaryParams(preferences, apiType))
 
         return when (apiType) {
-            BilibiliApiType.WEB ->
-                prepareRiskControl(reason = "pgcPlayurl", force = false).let {
+            BilibiliApiType.WEB -> run {
+                prepareRiskControl(reason = "pgcPlayurl", force = false)
+
+                val baseParams = params.toMutableMap<String, Any?>()
+                applyPgcPlayurlRiskParams(baseParams)
+
+                val webResult =
                     retryBilibiliRiskControlWithRemedy(
-                        reason = "pgcPlayurl",
+                        reason = "pgcPlayurl(v2)",
                         maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
                         initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
                         maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
                     ) {
-                    requestBilibiliResultAuthed(reason = "pgcPlayurl") {
-                        service.pgcPlayurl(BASE_API, params)
-                    }.recoverTimeout("取流超时，请检查网络后重试")
+                        val attemptParams = baseParams.toMutableMap()
+                        val signed =
+                            BilibiliWbiSigner.sign(attemptParams) {
+                                fetchWbiKeys()
+                            }
+
+                        requestBilibiliResultAuthed(reason = "pgcPlayurl(v2)") {
+                            service.pgcPlayurlV2(BASE_API, signed)
+                        }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { result: BilibiliPgcPlayurlV2Result ->
+                            val data =
+                                result.videoInfo
+                                    ?: throw BilibiliException.from(code = -1, message = "取流失败：响应数据为空")
+
+                            if (hasPlayableStream(data)) {
+                                data
+                            } else if (!data.vVoucher.isNullOrBlank()) {
+                                throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                            } else {
+                                throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                            }
+                        }
+                    }
+                if (webResult.isSuccess) {
+                    return@run webResult
                 }
+
+                val webError = webResult.exceptionOrNull() as? BilibiliException
+                if (webError?.code !in RISK_CONTROL_CODES) {
+                    return@run webResult
                 }
+
+                // Web 番剧接口触发风控时，尝试使用 TV/API 签名链路兜底（不改变用户偏好）。
+                val tvResult =
+                    retryBilibiliRiskControlWithRemedy(
+                        reason = "pgcPlayurl(tvFallback)",
+                        maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+                        initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+                        maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+                    ) {
+                        pgcPlayurlByTvApi(params, reason = "pgcPlayurl(tvFallback)")
+                    }
+                if (tvResult.isSuccess) {
+                    tvResult
+                } else {
+                    webResult
+                }
+            }
 
             BilibiliApiType.TV -> {
                 prepareRiskControl(reason = "pgcPlayurl(tv)", force = false)
-
-                val baseTvParams = params.toMutableMap<String, Any?>()
-                // TV/API 接口不依赖 web session/from_client/drm_tech_type
-                baseTvParams.remove("session")
-                baseTvParams.remove("from_client")
-                baseTvParams.remove("drm_tech_type")
-
-                val auth = BilibiliAuthStore.read(storageKey)
-                auth.appAccessToken?.takeIf { it.isNotBlank() }?.let { baseTvParams["access_key"] = it }
-                baseTvParams["mobi_app"] = BilibiliTvClient.MOBI_APP
-                baseTvParams["platform"] = BilibiliTvClient.PLATFORM
-
                 retryBilibiliRiskControlWithRemedy(
                     reason = "pgcPlayurl(tv)",
                     maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
                     initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
                     maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
                 ) {
-                    val signed =
-                        BilibiliAppSigner.sign(
-                            params = baseTvParams,
-                            appKey = BilibiliTvClient.APP_KEY,
-                            appSec = BilibiliTvClient.APP_SEC,
-                        )
-                    request()
-                        .doGet { service.pgcPlayurlApi(BASE_API, signed) }
-                        .mapCatching { model ->
-                            if (model.code != 0) {
-                                throw BilibiliException.from(code = model.code, message = model.message)
-                            }
-                            BilibiliPlayurlData(
-                                dash = model.dash,
-                                durl = model.durl,
-                            )
-                        }.recoverTimeout("取流超时，请检查网络后重试")
+                    pgcPlayurlByTvApi(params, reason = "pgcPlayurl(tv)")
                 }
             }
         }
@@ -870,66 +897,122 @@ class BilibiliRepository(
             params["avid"] = it
         }
 
-        params["session"] = session?.takeIf { it.isNotBlank() } ?: newPgcSession()
-        params["from_client"] = PGC_FROM_CLIENT
-        params["drm_tech_type"] = PGC_DRM_TECH_TYPE
-
         params.putAll(fallback)
 
         return when (apiType) {
-            BilibiliApiType.WEB ->
-                prepareRiskControl(reason = "pgcPlayurlFallback", force = false).let {
+            BilibiliApiType.WEB -> run {
+                prepareRiskControl(reason = "pgcPlayurlFallback", force = false)
+
+                val baseParams = params.toMutableMap<String, Any?>()
+                applyPgcPlayurlRiskParams(baseParams)
+
+                val webResult =
                     retryBilibiliRiskControlWithRemedy(
-                        reason = "pgcPlayurlFallback",
+                        reason = "pgcPlayurlFallback(v2)",
                         maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
                         initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
                         maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
                     ) {
-                    requestBilibiliResultAuthed(reason = "pgcPlayurlFallback") {
-                        service.pgcPlayurl(BASE_API, params)
-                    }.recoverTimeout("取流超时，请检查网络后重试")
+                        val attemptParams = baseParams.toMutableMap()
+                        val signed =
+                            BilibiliWbiSigner.sign(attemptParams) {
+                                fetchWbiKeys()
+                            }
+
+                        requestBilibiliResultAuthed(reason = "pgcPlayurlFallback(v2)") {
+                            service.pgcPlayurlV2(BASE_API, signed)
+                        }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { result: BilibiliPgcPlayurlV2Result ->
+                            val data =
+                                result.videoInfo
+                                    ?: throw BilibiliException.from(code = -1, message = "取流失败：响应数据为空")
+
+                            if (hasPlayableStream(data)) {
+                                data
+                            } else if (!data.vVoucher.isNullOrBlank()) {
+                                throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                            } else {
+                                throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                            }
+                        }
+                    }
+                if (webResult.isSuccess) {
+                    return@run webResult
                 }
+
+                val webError = webResult.exceptionOrNull() as? BilibiliException
+                if (webError?.code !in RISK_CONTROL_CODES) {
+                    return@run webResult
                 }
+
+                retryBilibiliRiskControlWithRemedy(
+                    reason = "pgcPlayurlFallback(tvFallback)",
+                    maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+                    initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+                    maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+                ) {
+                    pgcPlayurlByTvApi(params, reason = "pgcPlayurlFallback(tvFallback)")
+                }
+            }
 
             BilibiliApiType.TV -> {
                 prepareRiskControl(reason = "pgcPlayurlFallback(tv)", force = false)
-
-                val baseTvParams = params.toMutableMap<String, Any?>()
-                baseTvParams.remove("session")
-                baseTvParams.remove("from_client")
-                baseTvParams.remove("drm_tech_type")
-
-                val auth = BilibiliAuthStore.read(storageKey)
-                auth.appAccessToken?.takeIf { it.isNotBlank() }?.let { baseTvParams["access_key"] = it }
-                baseTvParams["mobi_app"] = BilibiliTvClient.MOBI_APP
-                baseTvParams["platform"] = BilibiliTvClient.PLATFORM
-
                 retryBilibiliRiskControlWithRemedy(
                     reason = "pgcPlayurlFallback(tv)",
                     maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
                     initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
                     maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
                 ) {
-                    val signed =
-                        BilibiliAppSigner.sign(
-                            params = baseTvParams,
-                            appKey = BilibiliTvClient.APP_KEY,
-                            appSec = BilibiliTvClient.APP_SEC,
-                        )
-                    request()
-                        .doGet { service.pgcPlayurlApi(BASE_API, signed) }
-                        .mapCatching { model ->
-                            if (model.code != 0) {
-                                throw BilibiliException.from(code = model.code, message = model.message)
-                            }
-                            BilibiliPlayurlData(
-                                dash = model.dash,
-                                durl = model.durl,
-                            )
-                        }.recoverTimeout("取流超时，请检查网络后重试")
+                    pgcPlayurlByTvApi(params, reason = "pgcPlayurlFallback(tv)")
                 }
             }
         }
+    }
+
+    private suspend fun pgcPlayurlByTvApi(
+        params: Map<String, Any?>,
+        reason: String,
+    ): Result<BilibiliPlayurlData> {
+        val baseTvParams = params.toMutableMap()
+
+        val auth = BilibiliAuthStore.read(storageKey)
+        auth.appAccessToken?.takeIf { it.isNotBlank() }?.let { baseTvParams["access_key"] = it }
+        baseTvParams["mobi_app"] = BilibiliTvClient.MOBI_APP
+        baseTvParams["platform"] = BilibiliTvClient.PLATFORM
+
+        return request()
+            .doGet {
+                val signed =
+                    BilibiliAppSigner.sign(
+                        params = baseTvParams,
+                        appKey = BilibiliTvClient.APP_KEY,
+                        appSec = BilibiliTvClient.APP_SEC,
+                    )
+                service.pgcPlayurlApi(BASE_API, signed)
+            }.mapCatching { model ->
+                if (model.code != 0) {
+                    throw BilibiliException.from(code = model.code, message = model.message)
+                }
+
+                val data =
+                    BilibiliPlayurlData(
+                        dash = model.dash,
+                        durl = model.durl,
+                    )
+
+                if (hasPlayableStream(data)) {
+                    data
+                } else {
+                    throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                }
+            }.recoverTimeout("取流超时，请检查网络后重试")
+            .onFailure { t ->
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    t,
+                    "BilibiliRepository",
+                    "pgcPlayurlByTvApi",
+                    "storageKey=$storageKey reason=$reason",
+                )
+            }
     }
 
     suspend fun danmakuXml(cid: Long): Result<ResponseBody> =

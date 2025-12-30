@@ -14,6 +14,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
 import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
 import com.xyoye.data_component.data.bilibili.BilibiliPgcPlayurlApiModel
+import com.xyoye.data_component.data.bilibili.BilibiliPgcPlayurlV2Result
 import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
@@ -141,6 +142,12 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
     ): BilibiliResultJsonModel<BilibiliPlayurlData>
+
+    @GET("/pgc/player/web/v2/playurl")
+    suspend fun pgcPlayurlV2(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliResultJsonModel<BilibiliPgcPlayurlV2Result>
 
     @GET("/pgc/player/api/playurl")
     suspend fun pgcPlayurlApi(

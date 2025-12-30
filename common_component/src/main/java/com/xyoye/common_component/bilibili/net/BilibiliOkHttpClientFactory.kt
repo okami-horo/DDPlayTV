@@ -33,7 +33,17 @@ object BilibiliOkHttpClientFactory {
                 builder.header(BilibiliHeaders.HEADER_USER_AGENT, BilibiliHeaders.USER_AGENT)
             }
             if (original.header(BilibiliHeaders.HEADER_REFERER).isNullOrEmpty()) {
-                builder.header(BilibiliHeaders.HEADER_REFERER, BilibiliHeaders.REFERER)
+                val path = original.url.encodedPath
+                val referer =
+                    when (path) {
+                        "/pgc/player/web/v2/playurl",
+                        "/pgc/player/web/playurl" -> {
+                            val epId = original.url.queryParameter("ep_id")
+                            epId?.takeIf { it.isNotBlank() }?.let { "https://www.bilibili.com/bangumi/play/ep$it" }
+                        }
+                        else -> null
+                    } ?: BilibiliHeaders.REFERER
+                builder.header(BilibiliHeaders.HEADER_REFERER, referer)
             }
             if (original.header(BilibiliHeaders.HEADER_ACCEPT_ENCODING).isNullOrEmpty()) {
                 builder.header(BilibiliHeaders.HEADER_ACCEPT_ENCODING, BilibiliHeaders.ACCEPT_ENCODING)
@@ -43,4 +53,3 @@ object BilibiliOkHttpClientFactory {
         }
     }
 }
-
