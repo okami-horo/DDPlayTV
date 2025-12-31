@@ -103,8 +103,8 @@ class PlayerSettingView(
                             (data as SettingItem).apply {
                                 itemBinding.tvSetting.text = display
                                 itemBinding.ivSetting.setImageResource(icon)
-                                itemBinding.ivSetting.isSelected = selected
-                                itemBinding.ivSetting.setOnClickListener {
+                                itemBinding.clCard.isSelected = selected
+                                itemBinding.clCard.setOnClickListener {
                                     onItemClick(this)
                                 }
                             }
