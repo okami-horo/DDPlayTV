@@ -34,12 +34,16 @@ abstract class BaseSettingView<V : ViewDataBinding>
         private val settingLayoutId by lazy { getLayoutId() }
         private val parentView by lazy { this }
 
-        private val defaultSettingWidth: Float =
+        private var settingShowing = false
+
+        private val defaultSettingWidth: Float by lazy {
             when (settingGravity) {
                 Gravity.END -> dp2px(320).toFloat()
                 Gravity.START -> -dp2px(320).toFloat()
+                Gravity.CENTER -> 0f
                 else -> throw IllegalArgumentException("Illegal setting view gravity: ${javaClass.simpleName}")
             }
+        }
 
         protected val viewBinding =
             DataBindingUtil.inflate<V>(
@@ -56,6 +60,63 @@ abstract class BaseSettingView<V : ViewDataBinding>
         override fun getView(): View = this
 
         override fun onSettingVisibilityChanged(isVisible: Boolean) {
+            settingShowing = isVisible
+            if (settingGravity == Gravity.CENTER) {
+                handleCenterVisibilityChanged(isVisible)
+            } else {
+                handleSideVisibilityChanged(isVisible)
+            }
+        }
+
+        override fun isSettingShowing(): Boolean {
+            return settingShowing
+        }
+
+        private fun handleCenterVisibilityChanged(isVisible: Boolean) {
+            if (isVisible) {
+                viewBinding.root.visibility = View.VISIBLE
+                ViewCompat
+                    .animate(viewBinding.root)
+                    .alpha(1f)
+                    .setDuration(500)
+                    .setListener(
+                        object : ViewPropertyAnimatorListener {
+                            override fun onAnimationStart(view: View) {
+                                onViewShow()
+                            }
+
+                            override fun onAnimationEnd(view: View) {
+                                onViewShowed()
+                            }
+
+                            override fun onAnimationCancel(view: View) {
+                                onViewHide()
+                            }
+                        },
+                    ).start()
+            } else {
+                ViewCompat
+                    .animate(viewBinding.root)
+                    .alpha(0f)
+                    .setDuration(500)
+                    .setListener(
+                        object : ViewPropertyAnimatorListener {
+                            override fun onAnimationStart(view: View) {
+                                onViewHide()
+                            }
+
+                            override fun onAnimationEnd(view: View) {
+                                view.visibility = View.GONE
+                            }
+
+                            override fun onAnimationCancel(view: View) {
+                            }
+                        },
+                    ).start()
+            }
+        }
+
+        private fun handleSideVisibilityChanged(isVisible: Boolean) {
             if (isVisible) {
                 ViewCompat
                     .animate(viewBinding.root)
@@ -96,8 +157,6 @@ abstract class BaseSettingView<V : ViewDataBinding>
                     ).start()
             }
         }
-
-        override fun isSettingShowing(): Boolean = viewBinding.root.translationX == 0f
 
         override fun onVisibilityChanged(isVisible: Boolean) {
         }

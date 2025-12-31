@@ -461,6 +461,8 @@ public class LabelsView extends ViewGroup implements View.OnClickListener, View.
         label.setTag(KEY_DATA, data);
         label.setTag(KEY_POSITION, position);
         label.setTag(KEY_FOCUSABLE);
+        label.setFocusable(true);
+        label.setFocusableInTouchMode(true);
         label.setOnClickListener(this);
         label.setOnLongClickListener(this);
         addView(label);

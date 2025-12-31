@@ -54,8 +54,10 @@ class SettingController(
         }
 
         val settingView = getSettingView(viewType, extra)
-        if (settingView.isSettingShowing().not()) {
+        if (showingSettingViews.contains(settingView).not()) {
             showingSettingViews.add(settingView)
+        }
+        if (settingView.isSettingShowing().not()) {
             settingView.onSettingVisibilityChanged(true)
         }
     }

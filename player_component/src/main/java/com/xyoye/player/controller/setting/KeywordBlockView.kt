@@ -2,9 +2,12 @@ package com.xyoye.player.controller.setting
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.FocusFinder
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.view.View
+import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import com.xyoye.common_component.utils.hideKeyboard
@@ -35,7 +38,11 @@ class KeywordBlockView(
 
     override fun getSettingViewType() = SettingViewType.KEYWORD_BLOCK
 
-    override fun getGravity() = Gravity.START
+    override fun getGravity() = Gravity.CENTER
+
+    override fun onViewShowed() {
+        viewBinding.ivClose.requestFocus()
+    }
 
     override fun onKeyDown(
         keyCode: Int,
@@ -45,16 +52,33 @@ class KeywordBlockView(
             return false
         }
 
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            closeSettingView()
+            return true
+        }
+
         val handled = handleKeyCode(keyCode)
         if (handled) {
             return true
         }
 
-        viewBinding.keywordBlockAddEt.requestFocus()
+        // 拦截所有按键，防止误触底层播放器
+        // 如果焦点丢失，重置焦点到输入框
+        if (viewBinding.root.findFocus() == null) {
+            viewBinding.keywordBlockAddEt.requestFocus()
+        }
         return true
     }
 
     private fun initSettingListener() {
+        viewBinding.ivClose.setOnClickListener {
+            closeSettingView()
+        }
+
+        viewBinding.keywordBlockLl.setOnClickListener {
+            closeSettingView()
+        }
+
         viewBinding.keywordLabelsView.setOnLabelClickListener { _, data, _ ->
             if (data is DanmuBlockEntity) {
                 mControlWrapper.removeBlackList(data.isRegex, data.keyword)
@@ -136,14 +160,29 @@ class KeywordBlockView(
     }
 
     private fun handleKeyCode(keyCode: Int): Boolean {
+        if (viewBinding.keywordLabelsView.focusedChild != null) {
+            val handled = handleKeyLabelsView(keyCode)
+            if (handled) {
+                return true
+            }
+        }
+
+        if (viewBinding.ivClose.hasFocus()) {
+            if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                viewBinding.keywordBlockAddEt.requestFocus()
+                return true
+            } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                return true
+            }
+        }
+        
         if (viewBinding.keywordBlockAddEt.hasFocus()) {
             if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-                viewBinding.keywordBlockAddTv.requestFocus()
+                viewBinding.keywordLabelsView.getChildAt(0)?.requestFocus()
             } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-                val childCount = viewBinding.keywordLabelsView.childCount
-                if (childCount > 0) {
-                    viewBinding.keywordLabelsView.getChildAt(childCount - 1).requestFocus()
-                }
+                viewBinding.ivClose.requestFocus()
+            } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                viewBinding.keywordBlockAddTv.requestFocus()
             }
             return true
         }
@@ -155,41 +194,60 @@ class KeywordBlockView(
                     viewBinding.keywordLabelsView
                         .getChildAt(0)
                         ?.requestFocus()
+                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.ivClose.requestFocus()
             }
             return true
         }
 
-        return handleKeyLabelsView(keyCode)
+        return handleFocusSearch(keyCode)
     }
 
     private fun handleKeyLabelsView(keyCode: Int): Boolean {
         val focusedChild =
             viewBinding.keywordLabelsView.focusedChild
                 ?: return false
-        val position = viewBinding.keywordLabelsView.indexOfChild(focusedChild)
-        if (position == -1) {
-            return false
-        }
-        if (position == 0 && (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_UP)) {
-            viewBinding.keywordBlockAddTv.requestFocus()
-            return true
-        }
-        if (position == viewBinding.keywordLabelsView.childCount - 1 &&
-            (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_DOWN)
-        ) {
-            viewBinding.keywordBlockAddEt.requestFocus()
+        val direction = keyCodeToDirection(keyCode) ?: return false
+        val next =
+            FocusFinder.getInstance()
+                .findNextFocus(viewBinding.keywordLabelsView, focusedChild, direction)
+
+        if (next != null) {
+            next.requestFocus()
             return true
         }
 
-        val targetIndex =
-            when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_LEFT -> position - 1
-                KeyEvent.KEYCODE_DPAD_RIGHT -> position + 1
-                KeyEvent.KEYCODE_DPAD_UP -> position - 1
-                KeyEvent.KEYCODE_DPAD_DOWN -> position + 1
-                else -> position
-            }
-        viewBinding.keywordLabelsView.getChildAt(targetIndex)?.requestFocus()
+        if (direction == View.FOCUS_UP) {
+            viewBinding.keywordBlockAddEt.requestFocus()
+        }
         return true
+    }
+
+    private fun handleFocusSearch(keyCode: Int): Boolean {
+        val direction = keyCodeToDirection(keyCode) ?: return false
+        val root = viewBinding.root as? ViewGroup ?: return false
+        val focused = root.findFocus() ?: return false
+        val next = FocusFinder.getInstance().findNextFocus(root, focused, direction)
+        if (next == null) {
+            return false
+        }
+        if (next === viewBinding.keywordBlockLl) {
+            return false
+        }
+        next.requestFocus()
+        return true
+    }
+
+    private fun keyCodeToDirection(keyCode: Int): Int? {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_LEFT -> View.FOCUS_LEFT
+            KeyEvent.KEYCODE_DPAD_RIGHT -> View.FOCUS_RIGHT
+            KeyEvent.KEYCODE_DPAD_UP -> View.FOCUS_UP
+            KeyEvent.KEYCODE_DPAD_DOWN -> View.FOCUS_DOWN
+            else -> null
+        }
+    }
+
+    private fun closeSettingView() {
+        mControlWrapper.hideSettingView()
     }
 }

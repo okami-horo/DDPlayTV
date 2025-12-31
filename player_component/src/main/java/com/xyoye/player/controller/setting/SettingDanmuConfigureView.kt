@@ -296,15 +296,30 @@ class SettingDanmuConfigureView(
     }
 
     private fun handleKeyCode(keyCode: Int) {
+        if (viewBinding.tvLanguageOrigin.hasFocus()) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.tvLanguageSc.requestFocus()
+                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
+            }
+            return
+        } else if (viewBinding.tvLanguageSc.hasFocus()) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.tvLanguageOrigin.requestFocus()
+                KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.tvLanguageTc.requestFocus()
+                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
+            }
+            return
+        } else if (viewBinding.tvLanguageTc.hasFocus()) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.tvLanguageSc.requestFocus()
+                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
+            }
+            return
+        }
+
         if (viewBinding.tvKeywordBlock.hasFocus()) {
             when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> {
-                    if (settingMode == BaseDanmaku.TYPE_SCROLL_RL) {
-                        viewBinding.tvScreenNoLimit.requestFocus()
-                    } else {
-                        viewBinding.tvLineNoLimit.requestFocus()
-                    }
-                }
+                KeyEvent.KEYCODE_DPAD_UP -> selectedLanguageView().requestFocus()
                 KeyEvent.KEYCODE_DPAD_DOWN -> {
                     when (settingMode) {
                         BaseDanmaku.TYPE_SCROLL_RL -> viewBinding.llScrollDanmu.requestFocus()
@@ -352,8 +367,6 @@ class SettingDanmuConfigureView(
                 KeyEvent.KEYCODE_DPAD_DOWN -> {
                     if (settingMode == BaseDanmaku.TYPE_SCROLL_RL) {
                         viewBinding.tvScreenNoLimit.requestFocus()
-                    } else {
-                        viewBinding.tvKeywordBlock.requestFocus()
                     }
                 }
             }
@@ -363,28 +376,23 @@ class SettingDanmuConfigureView(
                 KeyEvent.KEYCODE_DPAD_DOWN -> {
                     if (settingMode == BaseDanmaku.TYPE_SCROLL_RL) {
                         viewBinding.tvScreenNoLimit.requestFocus()
-                    } else {
-                        viewBinding.tvKeywordBlock.requestFocus()
                     }
                 }
             }
         } else if (viewBinding.tvScreenNoLimit.hasFocus()) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.tvLineNoLimit.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
                 KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.tvScreenAutoLimit.requestFocus()
             }
         } else if (viewBinding.tvScreenAutoLimit.hasFocus()) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.tvLineNoLimit.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
                 KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.tvScreenNoLimit.requestFocus()
                 KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.etScreenMaxNum.requestFocus()
             }
         } else if (viewBinding.etScreenMaxNum.hasFocus()) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.tvScreenAutoLimit.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
             }
         } else {
             viewBinding.llScrollDanmu.requestFocus()
@@ -399,4 +407,11 @@ class SettingDanmuConfigureView(
         viewBinding.tvLanguageSc.isSelected = language == DanmakuLanguage.SC
         viewBinding.tvLanguageTc.isSelected = language == DanmakuLanguage.TC
     }
+
+    private fun selectedLanguageView() =
+        when (PlayerInitializer.Danmu.language) {
+            DanmakuLanguage.ORIGINAL -> viewBinding.tvLanguageOrigin
+            DanmakuLanguage.SC -> viewBinding.tvLanguageSc
+            DanmakuLanguage.TC -> viewBinding.tvLanguageTc
+        }
 }
