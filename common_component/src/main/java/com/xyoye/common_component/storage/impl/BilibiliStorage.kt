@@ -15,6 +15,7 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.file.impl.BilibiliStorageFile
 import com.xyoye.common_component.utils.PathHelper
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursor
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -358,90 +359,102 @@ class BilibiliStorage(
 
     override suspend fun createPlayUrl(file: StorageFile): String? {
         val parsed = BilibiliKeys.parse(file.uniqueKey()) ?: return null
-        if (parsed is BilibiliKeys.LiveKey) {
-            val info = repository.liveRoomInfo(parsed.roomId).getOrThrow()
-            val roomId = info.roomId.takeIf { it > 0 } ?: parsed.roomId
-            val playUrl = repository.livePlayUrl(roomId).getOrThrow()
-            playUrl.durl.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
-            throw BilibiliException.from(-1, "取流失败")
-        }
-
-        val preferences = BilibiliPlaybackPreferencesStore.read(library)
-
-        val pgcSession =
-            if (parsed is BilibiliKeys.PgcEpisodeKey) {
-                UUID.randomUUID().toString().replace("-", "")
-            } else {
-                null
+        try {
+            if (parsed is BilibiliKeys.LiveKey) {
+                val info = repository.liveRoomInfo(parsed.roomId).getOrThrow()
+                val roomId = info.roomId.takeIf { it > 0 } ?: parsed.roomId
+                val playUrl = repository.livePlayUrl(roomId).getOrThrow()
+                playUrl.durl.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
+                throw BilibiliException.from(-1, "取流失败")
             }
 
-        val primary =
-            when (parsed) {
-                is BilibiliKeys.ArchiveKey -> {
-                    val cid = parsed.cid ?: return null
-                    repository.playurl(parsed.bvid, cid, preferences)
+            val preferences = BilibiliPlaybackPreferencesStore.read(library)
+
+            val pgcSession =
+                if (parsed is BilibiliKeys.PgcEpisodeKey) {
+                    UUID.randomUUID().toString().replace("-", "")
+                } else {
+                    null
                 }
 
-                is BilibiliKeys.PgcEpisodeKey -> {
-                    repository.pgcPlayurl(
-                        epId = parsed.epId,
-                        cid = parsed.cid,
-                        avid = parsed.avid,
-                        preferences = preferences,
-                        session = pgcSession,
+            val primary =
+                when (parsed) {
+                    is BilibiliKeys.ArchiveKey -> {
+                        val cid = parsed.cid ?: return null
+                        repository.playurl(parsed.bvid, cid, preferences)
+                    }
+
+                    is BilibiliKeys.PgcEpisodeKey -> {
+                        repository.pgcPlayurl(
+                            epId = parsed.epId,
+                            cid = parsed.cid,
+                            avid = parsed.avid,
+                            preferences = preferences,
+                            session = pgcSession,
+                        )
+                    }
+
+                    else -> return null
+                }
+            val primaryData = primary.getOrNull()
+            val dash = primaryData?.dash
+
+            if (dash != null && dash.video.isNotEmpty()) {
+                val selectedVideo = selectVideo(dash.video, preferences.preferredQualityQn, preferences.preferredVideoCodec)
+                    ?: dash.video.first()
+                val selectedAudio = dash.audio.maxByOrNull { it.bandwidth }
+
+                val mpdFile =
+                    File(
+                        PathHelper.getPlayCacheDirectory(),
+                        "bilibili_${file.uniqueKey().toMd5String()}.mpd",
                     )
+                return withContext(Dispatchers.IO) {
+                    BilibiliMpdGenerator
+                        .writeDashMpd(
+                            outputFile = mpdFile,
+                            dash = dash,
+                            video = selectedVideo,
+                            audio = selectedAudio,
+                        ).absolutePath
                 }
-
-                else -> return null
             }
-        val primaryData = primary.getOrNull()
-        val dash = primaryData?.dash
 
-        if (dash != null && dash.video.isNotEmpty()) {
-            val selectedVideo = selectVideo(dash.video, preferences.preferredQualityQn, preferences.preferredVideoCodec)
-                ?: dash.video.first()
-            val selectedAudio = dash.audio.maxByOrNull { it.bandwidth }
+            primaryData?.durl?.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
 
-            val mpdFile =
-                File(
-                    PathHelper.getPlayCacheDirectory(),
-                    "bilibili_${file.uniqueKey().toMd5String()}.mpd",
-                )
-            return withContext(Dispatchers.IO) {
-                BilibiliMpdGenerator
-                    .writeDashMpd(
-                        outputFile = mpdFile,
-                        dash = dash,
-                        video = selectedVideo,
-                        audio = selectedAudio,
-                    ).absolutePath
-            }
+            val fallback =
+                when (parsed) {
+                    is BilibiliKeys.ArchiveKey -> {
+                        val cid = parsed.cid ?: return null
+                        repository.playurlFallbackOrNull(parsed.bvid, cid, preferences)
+                    }
+
+                    is BilibiliKeys.PgcEpisodeKey -> {
+                        repository.pgcPlayurlFallbackOrNull(
+                            epId = parsed.epId,
+                            cid = parsed.cid,
+                            avid = parsed.avid,
+                            preferences = preferences,
+                            session = pgcSession,
+                        )
+                    }
+
+                    else -> null
+                }
+            fallback?.getOrNull()?.durl?.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
+
+            throw primary.exceptionOrNull() ?: BilibiliException.from(-1, "取流失败")
+        } catch (t: Throwable) {
+            val extraInfo =
+                "storageId=${library.id}, uniqueKey=${file.uniqueKey()}, filePath=${file.filePath()}, parsedType=${parsed::class.java.simpleName}"
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                t,
+                "BilibiliStorage",
+                "createPlayUrl",
+                extraInfo,
+            )
+            throw t
         }
-
-        primaryData?.durl?.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
-
-        val fallback =
-            when (parsed) {
-                is BilibiliKeys.ArchiveKey -> {
-                    val cid = parsed.cid ?: return null
-                    repository.playurlFallbackOrNull(parsed.bvid, cid, preferences)
-                }
-
-                is BilibiliKeys.PgcEpisodeKey -> {
-                    repository.pgcPlayurlFallbackOrNull(
-                        epId = parsed.epId,
-                        cid = parsed.cid,
-                        avid = parsed.avid,
-                        preferences = preferences,
-                        session = pgcSession,
-                    )
-                }
-
-                else -> null
-            }
-        fallback?.getOrNull()?.durl?.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
-
-        throw primary.exceptionOrNull() ?: BilibiliException.from(-1, "取流失败")
     }
 
     override fun getNetworkHeaders(): Map<String, String>? =

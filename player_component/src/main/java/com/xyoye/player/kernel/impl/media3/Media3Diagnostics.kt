@@ -11,6 +11,13 @@ object Media3Diagnostics {
     private const val TAG = "Media3Diag"
     private val MODULE = LogModule.PLAYER
 
+    data class HttpOpenSnapshot(
+        val url: String?,
+        val code: Int?,
+        val contentType: String?,
+        val timestampMs: Long,
+    )
+
     /** 外部可控制是否输出详细日志，必要时可关闭减少噪音。 */
     @JvmStatic
     var loggingEnabled: Boolean = true
@@ -18,6 +25,15 @@ object Media3Diagnostics {
     /** 预留遥测回调，后续可挂到日志/埋点管线。 */
     @JvmStatic
     var telemetryListener: ((event: String, data: Map<String, String>) -> Unit)? = null
+
+    @Volatile
+    private var lastHttpOpenSnapshot: HttpOpenSnapshot? = null
+
+    fun snapshotLastHttpOpen(): HttpOpenSnapshot? = lastHttpOpenSnapshot
+
+    fun clearLastHttpOpen() {
+        lastHttpOpenSnapshot = null
+    }
 
     private inline fun log(block: () -> Unit) {
         if (loggingEnabled) {
@@ -166,6 +182,13 @@ object Media3Diagnostics {
         code: Int?,
         contentType: String?
     ) {
+        lastHttpOpenSnapshot =
+            HttpOpenSnapshot(
+                url = url,
+                code = code,
+                contentType = contentType,
+                timestampMs = System.currentTimeMillis(),
+            )
         log {
             val message = "HTTP open: url=${url ?: "<null>"} code=${code ?: -1} contentType=${contentType ?: ""}"
             if (code != null && code >= 400) {

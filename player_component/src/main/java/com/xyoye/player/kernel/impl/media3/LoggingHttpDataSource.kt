@@ -39,16 +39,35 @@ private class LoggingHttpDataSource(
     private val upstream: HttpDataSource
 ) : HttpDataSource by upstream {
     override fun open(dataSpec: DataSpec): Long {
-        val length = upstream.open(dataSpec)
-        logOpen(dataSpec.uri)
-        return length
+        return try {
+            val length = upstream.open(dataSpec)
+            logOpen(
+                uri = dataSpec.uri,
+                responseCode = runCatching { upstream.responseCode }.getOrNull(),
+                headers = runCatching { upstream.responseHeaders }.getOrNull(),
+            )
+            length
+        } catch (e: HttpDataSource.InvalidResponseCodeException) {
+            logOpen(
+                uri = dataSpec.uri,
+                responseCode = e.responseCode,
+                headers = e.headerFields,
+            )
+            throw e
+        } catch (e: Exception) {
+            Media3Diagnostics.logHttpOpen(dataSpec.uri?.toString(), null, null)
+            throw e
+        }
     }
 
-    private fun logOpen(uri: Uri?) {
-        val responseCode = runCatching { upstream.responseCode }.getOrNull()
-        val headers = runCatching { upstream.responseHeaders }.getOrNull().orEmpty()
+    private fun logOpen(
+        uri: Uri?,
+        responseCode: Int?,
+        headers: Map<String, List<String>>?,
+    ) {
+        val resolvedHeaders = headers.orEmpty()
         val contentType =
-            headers.entries
+            resolvedHeaders.entries
                 .firstOrNull { it.key.equals("Content-Type", ignoreCase = true) }
                 ?.value
                 ?.firstOrNull()

@@ -35,9 +35,4 @@ Sensitive tokens belong in `local.properties` or Gradle properties; never hard-c
 
 ## Active Technologies
 - Kotlin 1.9.25（JVM target 1.8），Android Gradle Plugin 8.7.2 + AndroidX（Lifecycle/ViewModel/Room 等）、Kotlin Coroutines、Retrofit/OkHttp、Moshi、Media3、ARouter、MMKV (003-add-bilibili-history)
-- Room（SQLite）+ MMKV（Key-Value）+ 本地缓存文件（用于临时 mpd/二维码图片等） (003-add-bilibili-history) 
-
-## 相关项目
-- .tmp目录下是所有功能参考项目，有需要可以查阅
-- .tmp/bilibili-API-collect 为bilibili官方接口收集项目
-- .tmp/mpv-android 为mpv集成so的编译源项目
+- Room（SQLite）+ MMKV（Key-Value）+ 本地缓存文件（用于临时 mpd/二维码图片等） (003-add-bilibili-history)
