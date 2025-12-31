@@ -375,22 +375,21 @@ class PlayerBottomView(
 
     private fun updateFocusNavigation() {
         val focusables = mutableListOf<View>()
-        focusables.add(viewBinding.playIv)
-        if (viewBinding.ivPreviousSource.isVisible) {
-            focusables.add(viewBinding.ivPreviousSource)
-        }
-        if (viewBinding.ivNextSource.isVisible) {
-            focusables.add(viewBinding.ivNextSource)
-        }
         if (viewBinding.videoListIv.isVisible) {
             focusables.add(viewBinding.videoListIv)
         }
+        if (viewBinding.ivPreviousSource.isVisible) {
+            focusables.add(viewBinding.ivPreviousSource)
+        }
+        focusables.add(viewBinding.playIv)
+        if (viewBinding.ivNextSource.isVisible) {
+            focusables.add(viewBinding.ivNextSource)
+        }
         focusables.add(viewBinding.danmuControlIv)
 
-        val size = focusables.size
         focusables.forEachIndexed { index, view ->
-            val left = focusables[(index - 1 + size) % size]
-            val right = focusables[(index + 1) % size]
+            val left = focusables.getOrNull(index - 1) ?: view
+            val right = focusables.getOrNull(index + 1) ?: view
             view.nextFocusLeftId = left.id
             view.nextFocusRightId = right.id
             view.nextFocusUpId = R.id.video_title_tv
