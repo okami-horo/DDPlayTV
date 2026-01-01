@@ -2,11 +2,11 @@ package com.xyoye.common_component.database.migration
 
 import com.xyoye.common_component.config.DatabaseConfig
 import com.xyoye.common_component.database.DatabaseManager
-import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.security.MessageDigest
 
 /**
  * Created by xyoye on 2022/1/24
@@ -44,7 +44,7 @@ object ManualMigration {
                             danmuPath = it.danmuPath,
                             episodeId = it.danmuId.toString(),
                             subtitlePath = it.subtitlePath,
-                            uniqueKey = it.filePath.toMd5String(),
+                            uniqueKey = md5Hex(it.filePath),
                         )
                     }
                 }
@@ -54,5 +54,19 @@ object ManualMigration {
             }
             DatabaseConfig.putIsMigrated_6_7(true)
         }
+    }
+
+    private fun md5Hex(input: String): String {
+        val digest = MessageDigest.getInstance("MD5").digest(input.toByteArray())
+        val result = StringBuilder(digest.size * 2)
+        for (byte in digest) {
+            val hexInt = byte.toInt() and 0xff
+            var hexStr = Integer.toHexString(hexInt)
+            if (hexStr.length < 2) {
+                hexStr = "0$hexStr"
+            }
+            result.append(hexStr)
+        }
+        return result.toString()
     }
 }

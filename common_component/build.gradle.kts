@@ -43,6 +43,7 @@ dependencies {
     api(project(":core_log_component"))
     api(project(":core_system_component"))
     api(project(":core_network_component"))
+    api(project(":core_database_component"))
     api(project(":data_component"))
     api(project(":repository:seven_zip"))
     api(project(":repository:immersion_bar"))
@@ -59,7 +60,6 @@ dependencies {
     api(Dependencies.AndroidX.core)
     api(Dependencies.AndroidX.lifecycle_viewmodel)
     api(Dependencies.AndroidX.lifecycle_runtime)
-    api(Dependencies.AndroidX.room_ktx)
     api(Dependencies.AndroidX.constraintlayout)
     api(Dependencies.AndroidX.recyclerview)
     api(Dependencies.AndroidX.swiperefreshlayout)
@@ -87,7 +87,6 @@ dependencies {
     api(Dependencies.Huawei.scan)
 
     kapt(files("libs/mmkv-compiler.jar"))
-    kapt(Dependencies.AndroidX.room_compiler)
     kapt(Dependencies.Alibaba.arouter_compiler)
     implementation(kotlin("reflect"))
 
