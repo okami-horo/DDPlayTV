@@ -8,9 +8,9 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.VideoFrameDecoder
 import com.alibaba.android.arouter.launcher.ARouter
-import com.tencent.bugly.crashreport.CrashReport
 import com.tencent.mmkv.MMKV
 import com.xyoye.common_component.BuildConfig
+import com.xyoye.common_component.log.BuglyReporter
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.notification.Notifications
@@ -83,8 +83,8 @@ open class BaseApplication :
         APPLICATION_CONTEXT = this
         mMainHandler = Handler(Looper.getMainLooper())
         // 尽早初始化 Bugly，保证 Application onCreate 之前的崩溃也能被捕获
-        CrashReport.initCrashReport(
-            this,
+        BuglyReporter.init(
+            context = this,
             SecurityHelperConfig.BUGLY_APP_ID,
             BuildConfig.DEBUG,
         )

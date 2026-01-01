@@ -3,6 +3,7 @@ package com.xyoye.common_component.network.helper
 import com.xyoye.common_component.config.UserConfig
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SecurityHelper
+import com.xyoye.common_component.utils.AuthenticationHelper
 import okhttp3.Interceptor
 import okhttp3.Response
 import retrofit2.HttpException
@@ -136,6 +137,7 @@ class ForbiddenErrorInterceptor : Interceptor {
             "ForbiddenErrorInterceptor",
             "intercept",
             errorInfo,
+            AuthenticationHelper.getAuthenticationDiagnosis(),
         )
     }
 

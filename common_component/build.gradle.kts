@@ -83,6 +83,7 @@ dependencies {
     debugImplementation(Dependencies.Square.leakcanary)
 
     api(project(":core_contract_component"))
+    api(project(":core_log_component"))
     api(project(":data_component"))
     api(project(":repository:seven_zip"))
     api(project(":repository:immersion_bar"))
@@ -115,7 +116,7 @@ dependencies {
     api(Dependencies.Apache.commons_net)
 
     api(Dependencies.Tencent.mmkv)
-    implementation(Dependencies.Tencent.bugly)
+    // Bugly & crash 上报已收敛到 core_log_component
 
     api(Dependencies.Square.retrofit)
     implementation(Dependencies.Square.retrofit_moshi)

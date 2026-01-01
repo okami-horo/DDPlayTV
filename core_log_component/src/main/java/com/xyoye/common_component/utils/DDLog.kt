@@ -1,6 +1,5 @@
 package com.xyoye.common_component.utils
 
-import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogLevel
 import com.xyoye.common_component.log.model.LogModule
@@ -10,14 +9,25 @@ import com.xyoye.common_component.log.model.LogModule
  */
 
 object DDLog {
+    fun interface EnableProvider {
+        fun isEnabled(): Boolean
+    }
+
     @Volatile
-    var enable: Boolean = loadDefaultState()
+    private var enableProvider: EnableProvider? = null
+
+    @Volatile
+    var enable: Boolean = false
         private set
 
-    private fun loadDefaultState(): Boolean = runCatching { DevelopConfig.isDdLogEnable() }.getOrDefault(false)
+    fun installEnableProvider(provider: EnableProvider?) {
+        enableProvider = provider
+        refreshEnableFromConfig()
+    }
 
     fun refreshEnableFromConfig() {
-        enable = loadDefaultState()
+        val provider = enableProvider ?: return
+        enable = runCatching { provider.isEnabled() }.getOrDefault(enable)
     }
 
     fun setEnable(enable: Boolean) {
