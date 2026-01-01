@@ -13,14 +13,17 @@ import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.bilibili.history.BilibiliHistoryCacheStore
 import com.xyoye.common_component.bilibili.login.BilibiliLoginQrCode
 import com.xyoye.common_component.bilibili.login.BilibiliLoginPollResult
+import com.xyoye.common_component.bilibili.net.BilibiliOkHttpClientFactory
 import com.xyoye.common_component.bilibili.risk.BilibiliGaiaActivateRequest
 import com.xyoye.common_component.bilibili.risk.BilibiliRiskStateStore
 import com.xyoye.common_component.bilibili.ticket.BilibiliTicketSigner
 import com.xyoye.common_component.bilibili.wbi.BilibiliWbiSigner
 import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.network.Retrofit
+import com.xyoye.common_component.network.config.Api
 import com.xyoye.common_component.network.request.RequestParams
 import com.xyoye.common_component.network.repository.BaseRepository
+import com.xyoye.common_component.network.service.BilibiliService
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
@@ -62,7 +65,13 @@ import javax.crypto.spec.PSource
 class BilibiliRepository(
     private val storageKey: String,
 ) : BaseRepository() {
-    private val service by lazy { Retrofit.bilibiliService(storageKey) }
+    private val service: BilibiliService by lazy {
+        Retrofit.createService(
+            baseUrl = Api.PLACEHOLDER,
+            client = BilibiliOkHttpClientFactory.create(storageKey),
+            service = BilibiliService::class.java,
+        )
+    }
     private val cookieJarStore by lazy { BilibiliCookieJarStore(storageKey) }
     private val historyCacheStore by lazy { BilibiliHistoryCacheStore(storageKey) }
     private val riskStateStore by lazy { BilibiliRiskStateStore(storageKey) }
@@ -1160,6 +1169,9 @@ class BilibiliRepository(
             .doGet {
                 block()
             }.mapCatching { model ->
+                if (!model.isSuccess) {
+                    throw BilibiliException.from(code = model.code, message = model.message)
+                }
                 model.successData ?: throw BilibiliException.from(0, "响应数据为空")
             }
 

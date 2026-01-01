@@ -1,7 +1,7 @@
 package com.xyoye.common_component.network.helper
 
 import android.annotation.SuppressLint
-import com.xyoye.common_component.BuildConfig
+import com.xyoye.core_network_component.BuildConfig
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl

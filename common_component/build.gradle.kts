@@ -42,6 +42,7 @@ dependencies {
     api(project(":core_contract_component"))
     api(project(":core_log_component"))
     api(project(":core_system_component"))
+    api(project(":core_network_component"))
     api(project(":data_component"))
     api(project(":repository:seven_zip"))
     api(project(":repository:immersion_bar"))
@@ -75,9 +76,7 @@ dependencies {
     api(Dependencies.Tencent.mmkv)
     // Bugly & crash 上报已收敛到 core_log_component
 
-    api(Dependencies.Square.retrofit)
-    implementation(Dependencies.Square.retrofit_moshi)
-    implementation(Dependencies.Square.moshi_kotlin)
+    // Network stack has been extracted to core_network_component.
 
     api(Dependencies.Github.coil)
     api(Dependencies.Github.coil_video)
@@ -89,7 +88,6 @@ dependencies {
 
     kapt(files("libs/mmkv-compiler.jar"))
     kapt(Dependencies.AndroidX.room_compiler)
-    kapt(Dependencies.Square.moshi_codegen)
     kapt(Dependencies.Alibaba.arouter_compiler)
     implementation(kotlin("reflect"))
 

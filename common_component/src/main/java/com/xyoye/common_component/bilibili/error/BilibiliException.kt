@@ -1,12 +1,13 @@
 package com.xyoye.common_component.bilibili.error
 
+import com.xyoye.common_component.network.request.PassThroughException
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
 
 class BilibiliException(
     val code: Int,
     val bilibiliMessage: String? = null,
     val hint: String? = null,
-) : RuntimeException(buildMessage(code, bilibiliMessage, hint)) {
+) : RuntimeException(buildMessage(code, bilibiliMessage, hint)), PassThroughException {
     companion object {
         fun from(model: BilibiliJsonModel<*>): BilibiliException =
             from(

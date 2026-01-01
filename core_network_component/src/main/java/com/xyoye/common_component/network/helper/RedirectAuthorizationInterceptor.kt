@@ -1,6 +1,5 @@
 package com.xyoye.common_component.network.helper
 
-import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.network.config.HeaderKey
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -30,7 +29,7 @@ class RedirectAuthorizationInterceptor : Interceptor {
      * 在当前请求加上已缓存的Authorization请求头，并移除此缓存
      */
     private fun considerUseCacheHeader(request: Request): Request {
-        val requestUrl = request.url.toString().toMd5String()
+        val requestUrl = request.url.toString()
         val requestAuthorization = request.header(HeaderKey.AUTHORIZATION)
         if (authorizationCache.containsKey(requestUrl) && requestAuthorization == null) {
             val authorization =
@@ -55,7 +54,7 @@ class RedirectAuthorizationInterceptor : Interceptor {
         val authorization = response.request.header(HeaderKey.AUTHORIZATION)
         val redirectAuth = response.header(HeaderKey.AUTH_REDIRECT) == "redirect"
         if (redirectUrl != null && authorization != null && redirectAuth) {
-            authorizationCache[redirectUrl.toMd5String()] = authorization
+            authorizationCache[redirectUrl] = authorization
         }
     }
 
