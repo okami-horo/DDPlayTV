@@ -8,6 +8,7 @@ include(":storage_component")
 include(":player_component")
 include(":common_component")
 include(":data_component")
+include(":core_contract_component")
 
 include(":repository:danmaku")
 include(":repository:immersion_bar")

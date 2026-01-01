@@ -25,6 +25,8 @@ object Dependencies {
             "androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.lifecycle}"
         const val lifecycle_runtime =
             "androidx.lifecycle:lifecycle-runtime-ktx:${Versions.lifecycle}"
+        const val lifecycle_livedata =
+            "androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifecycle}"
 
         const val activity_ktx = "androidx.activity:activity-ktx:1.6.1"
 

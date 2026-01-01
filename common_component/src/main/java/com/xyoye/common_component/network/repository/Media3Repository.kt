@@ -11,6 +11,7 @@ import com.xyoye.data_component.data.media3.PlaybackSessionRequestData
 import com.xyoye.data_component.data.media3.PlaybackSessionResponseData
 import com.xyoye.data_component.entity.media3.DownloadRequiredAction
 import com.xyoye.data_component.entity.media3.Media3Capability
+import com.xyoye.data_component.entity.media3.Media3SessionBundle
 import com.xyoye.data_component.entity.media3.Media3SourceType
 import com.xyoye.data_component.entity.media3.PlaybackSession
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
@@ -133,9 +134,3 @@ object Media3Repository : BaseRepository() {
         )
     }
 }
-
-data class Media3SessionBundle(
-    val session: PlaybackSession,
-    val capabilityContract: PlayerCapabilityContract,
-    val toggleSnapshot: RolloutToggleSnapshot
-)

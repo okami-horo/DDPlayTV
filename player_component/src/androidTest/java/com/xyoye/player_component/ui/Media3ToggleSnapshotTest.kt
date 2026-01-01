@@ -2,10 +2,10 @@ package com.xyoye.player_component.ui
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.xyoye.common_component.media3.testing.Media3Dependent
-import com.xyoye.common_component.network.repository.Media3SessionBundle
 import com.xyoye.data_component.entity.media3.Media3Capability
 import com.xyoye.data_component.entity.media3.Media3PlayerEngine
 import com.xyoye.data_component.entity.media3.Media3RolloutSource
+import com.xyoye.data_component.entity.media3.Media3SessionBundle
 import com.xyoye.data_component.entity.media3.Media3SourceType
 import com.xyoye.data_component.entity.media3.PlaybackSession
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
