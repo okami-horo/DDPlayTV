@@ -62,6 +62,9 @@ class DanDanVideoPlayer(
     // 播放状态
     private var mCurrentPlayState = PlayState.STATE_IDLE
 
+    @Volatile
+    private var lastPlaybackError: Exception? = null
+
     // 默认组件参数
     private val mDefaultLayoutParams =
         LayoutParams(
@@ -84,8 +87,6 @@ class DanDanVideoPlayer(
 
     // 播放资源
     private lateinit var videoSource: BaseVideoSource
-
-    private var lastPlaybackError: Exception? = null
 
     // 当前音量
     private var mCurrentVolume = PointF(0f, 0f)
@@ -459,11 +460,13 @@ class DanDanVideoPlayer(
     ): Boolean = mVideoController?.onKeyDown(keyCode, event) ?: false
 
     fun setVideoSource(source: BaseVideoSource) {
-        videoSource = source
         lastPlaybackError = null
+        videoSource = source
     }
 
-    internal fun lastPlaybackErrorOrNull(): Exception? = lastPlaybackError
+    fun getPlayState(): PlayState = mCurrentPlayState
+
+    fun getLastPlaybackErrorOrNull(): Exception? = lastPlaybackError
 
     fun setController(controller: VideoController?) {
         destroySubtitleRenderer()

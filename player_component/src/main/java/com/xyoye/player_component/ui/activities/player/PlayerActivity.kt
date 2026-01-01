@@ -8,18 +8,22 @@ import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.media.AudioManager
 import android.os.IBinder
+import android.os.SystemClock
 import android.view.KeyEvent
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.HttpDataSource
 import com.xyoye.player.utils.PlaybackErrorFormatter
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.gyf.immersionbar.BarHide
 import com.gyf.immersionbar.ImmersionBar
 import com.xyoye.common_component.bilibili.BilibiliKeys
+import com.xyoye.common_component.bilibili.error.BilibiliPlaybackErrorReporter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.bridge.PlayTaskBridge
 import com.xyoye.common_component.config.DanmuConfig
@@ -46,6 +50,7 @@ import com.xyoye.data_component.entity.media3.PlaybackSession
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.MediaType
+import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.data_component.enums.SurfaceType
@@ -54,6 +59,7 @@ import com.xyoye.data_component.enums.VLCHWDecode
 import com.xyoye.player.DanDanVideoPlayer
 import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.kernel.impl.media3.Media3Diagnostics
 import com.xyoye.player.kernel.impl.vlc.VlcAudioPolicy
 import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
 import com.xyoye.player_component.BR
@@ -85,6 +91,8 @@ class PlayerActivity :
         private const val TAG_CONFIG = "PlayerConfig"
         private const val TAG_CAST = "PlayerCast"
         private const val TAG_MEDIA3 = "Media3Session"
+
+        private const val BILIBILI_LIVE_COMPLETION_REPORT_MIN_WATCH_MS = 5 * 60_000L
     }
 
     private val danmuViewModel: PlayerDanmuViewModel by lazy {
@@ -130,6 +138,11 @@ class PlayerActivity :
     private var media3BackgroundJob: Job? = null
     private var latestMedia3Session: PlaybackSession? = null
     private var latestMedia3Capability: PlayerCapabilityContract? = null
+
+    private var bilibiliLiveSessionKey: String? = null
+    private var bilibiliLiveSessionStartElapsedMs: Long? = null
+    private var bilibiliLiveCompletionReported: Boolean = false
+    private var bilibiliLiveErrorReported: Boolean = false
 
     private val media3ServiceConnection =
         object : ServiceConnection {
@@ -377,18 +390,33 @@ class PlayerActivity :
 
             // 播放错误
             observerPlayError {
+                val source = danDanPlayer.getVideoSource()
                 val playbackError =
-                    danDanPlayer.lastPlaybackErrorOrNull() ?: danDanPlayer.exoPlayerOrNull()?.playerError
-                LogFacade.e(
-                    LogModule.PLAYER,
-                    TAG_PLAYBACK,
-                    "play error title=${danDanPlayer.getVideoSource().getVideoTitle()} position=${danDanPlayer.getCurrentPosition()} ${PlaybackErrorFormatter.format(playbackError)}",
+                    danDanPlayer.getLastPlaybackErrorOrNull() ?: danDanPlayer.exoPlayerOrNull()?.playerError
+                reportBilibiliPlaybackErrorIfNeeded(
+                    source = source,
                     throwable = playbackError,
+                    scene = "play_error",
                 )
+
+                val isBilibiliSource = BilibiliPlaybackErrorReporter.isBilibiliSource(source)
+                val baseMessage = "play error title=${source.getVideoTitle()} position=${danDanPlayer.getCurrentPosition()}"
+                if (isBilibiliSource) {
+                    LogFacade.e(LogModule.PLAYER, TAG_PLAYBACK, baseMessage)
+                } else {
+                    LogFacade.e(
+                        LogModule.PLAYER,
+                        TAG_PLAYBACK,
+                        "$baseMessage ${PlaybackErrorFormatter.format(playbackError)}",
+                        throwable = playbackError,
+                    )
+                }
                 showPlayErrorDialog()
             }
             // 退出播放
             observerExitPlayer {
+                val source = danDanPlayer.getVideoSource()
+                reportBilibiliLiveCompletionIfNeeded(source)
                 if (popupManager.isShowing()) {
                     LogFacade.d(LogModule.PLAYER, TAG_PLAYBACK, "exit from popup mode")
                     danDanPlayer.recordPlayInfo()
@@ -397,7 +425,7 @@ class PlayerActivity :
                 LogFacade.i(
                     LogModule.PLAYER,
                     TAG_PLAYBACK,
-                    "exit player title=${danDanPlayer.getVideoSource().getVideoTitle()}",
+                    "exit player title=${source.getVideoTitle()}",
                 )
                 finish()
             }
@@ -466,6 +494,8 @@ class PlayerActivity :
             setLastPosition(source.getCurrentPosition())
             setLastPlaySpeed(PlayerConfig.getNewVideoSpeed())
         }
+
+        updateBilibiliLiveSession(source)
 
         danDanPlayer.apply {
             setVideoSource(source)
@@ -678,6 +708,142 @@ class PlayerActivity :
             TAG_CONFIG,
             "subtitle size=${PlayerInitializer.Subtitle.textSize} stroke=${PlayerInitializer.Subtitle.strokeWidth} backend=${PlayerInitializer.Subtitle.backend}",
         )
+    }
+
+    private fun updateBilibiliLiveSession(source: BaseVideoSource) {
+        if (!BilibiliPlaybackErrorReporter.isBilibiliLive(source)) {
+            bilibiliLiveSessionKey = null
+            bilibiliLiveSessionStartElapsedMs = null
+            bilibiliLiveCompletionReported = false
+            bilibiliLiveErrorReported = false
+            return
+        }
+
+        bilibiliLiveSessionKey = source.getUniqueKey()
+        bilibiliLiveSessionStartElapsedMs = SystemClock.elapsedRealtime()
+        bilibiliLiveCompletionReported = false
+        bilibiliLiveErrorReported = false
+        Media3Diagnostics.clearLastHttpOpen()
+    }
+
+    private fun reportBilibiliPlaybackErrorIfNeeded(
+        source: BaseVideoSource,
+        throwable: Throwable?,
+        scene: String,
+    ) {
+        if (!BilibiliPlaybackErrorReporter.isBilibiliSource(source)) {
+            return
+        }
+
+        val isLive = BilibiliPlaybackErrorReporter.isBilibiliLive(source)
+        if (isLive && bilibiliLiveErrorReported) {
+            return
+        }
+        if (isLive) {
+            bilibiliLiveErrorReported = true
+        }
+
+        val extra = buildBilibiliPlaybackExtra(source, throwable)
+        BilibiliPlaybackErrorReporter.reportPlaybackError(
+            source = source,
+            throwable = throwable,
+            scene = scene,
+            extra = extra,
+        )
+    }
+
+    private fun reportBilibiliLiveCompletionIfNeeded(source: BaseVideoSource) {
+        if (!BilibiliPlaybackErrorReporter.isBilibiliLive(source)) {
+            return
+        }
+        if (bilibiliLiveCompletionReported) {
+            return
+        }
+
+        val playState = danDanPlayer.getPlayState()
+        if (playState != PlayState.STATE_COMPLETED) {
+            return
+        }
+
+        val nowElapsed = SystemClock.elapsedRealtime()
+        val watchElapsedMs =
+            bilibiliLiveSessionStartElapsedMs
+                ?.takeIf { bilibiliLiveSessionKey == source.getUniqueKey() }
+                ?.let { nowElapsed - it }
+        val isLiveFlag = danDanPlayer.isLive()
+        val shouldReport =
+            isLiveFlag || (watchElapsedMs != null && watchElapsedMs >= BILIBILI_LIVE_COMPLETION_REPORT_MIN_WATCH_MS)
+
+        if (!shouldReport) {
+            return
+        }
+
+        bilibiliLiveCompletionReported = true
+        val extra =
+            buildBilibiliPlaybackExtra(source, throwable = null).toMutableMap().apply {
+                put("watchElapsedMs", watchElapsedMs?.toString().orEmpty())
+                put("isLiveFlag", isLiveFlag.toString())
+                put("playState", playState.name)
+            }
+
+        BilibiliPlaybackErrorReporter.reportUnexpectedCompletion(
+            source = source,
+            scene = "live_completed",
+            extra = extra,
+        )
+    }
+
+    private fun buildBilibiliPlaybackExtra(
+        source: BaseVideoSource,
+        throwable: Throwable?,
+    ): Map<String, String> {
+        val extra = linkedMapOf<String, String>()
+        extra["playerType"] = PlayerInitializer.playerType.name
+        extra["playState"] = danDanPlayer.getPlayState().name
+        extra["positionMs"] = danDanPlayer.getCurrentPosition().toString()
+        extra["durationMs"] = danDanPlayer.getDuration().toString()
+        extra["bufferedPct"] = danDanPlayer.getBufferedPercentage().toString()
+        extra["isLiveFlag"] = danDanPlayer.isLive().toString()
+        extra["videoTitle"] = source.getVideoTitle()
+
+        latestMedia3Session?.let {
+            extra["media3.sessionId"] = it.sessionId
+            extra["media3.mediaId"] = it.mediaId
+            extra["media3.playerEngine"] = it.playerEngine.name
+            extra["media3.sourceType"] = it.sourceType.name
+            extra["media3.toggleCohort"] = it.toggleCohort?.name ?: "UNKNOWN"
+        }
+
+        Media3Diagnostics.snapshotLastHttpOpen()?.let {
+            extra["lastHttpUrl"] = it.url.orEmpty()
+            extra["lastHttpContentType"] = it.contentType.orEmpty()
+            extra["lastHttpTimestampMs"] = it.timestampMs.toString()
+            it.code?.let { code -> extra["httpResponseCode"] = code.toString() }
+        }
+
+        if (throwable is PlaybackException) {
+            extra["media3.errorCode"] = throwable.errorCode.toString()
+            extra["media3.errorCodeName"] = throwable.errorCodeName
+        }
+
+        findInvalidResponseCodeException(throwable)?.let { invalid ->
+            extra["httpResponseCode"] = invalid.responseCode.toString()
+        }
+
+        return extra
+    }
+
+    private fun findInvalidResponseCodeException(throwable: Throwable?): HttpDataSource.InvalidResponseCodeException? {
+        var current = throwable
+        var depth = 0
+        while (current != null && depth < 8) {
+            if (current is HttpDataSource.InvalidResponseCodeException) {
+                return current
+            }
+            current = current.cause
+            depth++
+        }
+        return null
     }
 
     private fun showPlayErrorDialog() {
