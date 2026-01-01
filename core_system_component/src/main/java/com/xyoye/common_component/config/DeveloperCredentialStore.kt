@@ -4,7 +4,7 @@ import android.os.Build
 import android.security.KeyPairGeneratorSpec
 import android.util.Base64
 import androidx.annotation.RequiresApi
-import com.xyoye.common_component.BuildConfig
+import com.xyoye.core_system_component.BuildConfig
 import com.xyoye.common_component.base.app.BaseApplication
 import java.math.BigInteger
 import java.security.KeyStore

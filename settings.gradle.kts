@@ -10,6 +10,7 @@ include(":common_component")
 include(":data_component")
 include(":core_contract_component")
 include(":core_log_component")
+include(":core_system_component")
 
 include(":repository:danmaku")
 include(":repository:immersion_bar")

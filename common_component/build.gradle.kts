@@ -1,8 +1,4 @@
 import setup.moduleSetup
-import java.util.Properties
-
-fun buildConfigString(value: String): String =
-    "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 plugins {
     id("com.android.library")
@@ -24,51 +20,12 @@ android {
         // Use AndroidX JUnit4 runner so @RunWith(AndroidJUnit4::class) tests work on device
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "APPLICATION_ID", "\"${Versions.applicationId}\"")
-
         val media3FallbackFlag =
             project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
         buildConfigField("boolean", "MEDIA3_ENABLED_FALLBACK", media3FallbackFlag.toString())
 
         val media3Version = project.findProperty("media3Version")?.toString() ?: "1.9.0"
         buildConfigField("String", "MEDIA3_VERSION", "\"$media3Version\"")
-
-        val localProperties =
-            Properties().apply {
-                val file = rootProject.file("local.properties")
-                if (file.exists()) {
-                    file.inputStream().use { load(it) }
-                }
-            }
-
-        // 从环境变量或属性读取密钥，用于GitHub Actions注入
-        // 本地开发时使用默认值，CI/CD时从Secrets注入
-        val buglyAppId =
-            System.getenv("BUGLY_APP_ID")
-                ?: project.findProperty("BUGLY_APP_ID")?.toString()
-                ?: localProperties.getProperty("BUGLY_APP_ID")
-                ?: "DEFAULT_BUGLY_ID"
-        buildConfigField("String", "BUGLY_APP_ID", buildConfigString(buglyAppId))
-
-        val dandanAppId =
-            System.getenv("DANDAN_APP_ID")
-                ?: project.findProperty("DANDAN_APP_ID")?.toString()
-                ?: localProperties.getProperty("DANDAN_APP_ID")
-                ?: ""
-        buildConfigField("String", "DANDAN_APP_ID", buildConfigString(dandanAppId))
-
-        val dandanAppSecret =
-            System.getenv("DANDAN_APP_SECRET")
-                ?: project.findProperty("DANDAN_APP_SECRET")?.toString()
-                ?: localProperties.getProperty("DANDAN_APP_SECRET")
-                ?: ""
-        buildConfigField("String", "DANDAN_APP_SECRET", buildConfigString(dandanAppSecret))
-
-        buildConfigField(
-            "boolean",
-            "DANDAN_DEV_CREDENTIAL_INJECTED",
-            (dandanAppId.isNotBlank() && dandanAppSecret.isNotBlank()).toString(),
-        )
     }
     namespace = "com.xyoye.common_component"
 }
@@ -84,6 +41,7 @@ dependencies {
 
     api(project(":core_contract_component"))
     api(project(":core_log_component"))
+    api(project(":core_system_component"))
     api(project(":data_component"))
     api(project(":repository:seven_zip"))
     api(project(":repository:immersion_bar"))
@@ -108,7 +66,6 @@ dependencies {
     api(Dependencies.AndroidX.multidex)
     api(Dependencies.AndroidX.palette)
     api(Dependencies.AndroidX.paging)
-    api(Dependencies.AndroidX.startup)
     api(Dependencies.AndroidX.preference)
     api(Dependencies.AndroidX.activity_ktx)
 

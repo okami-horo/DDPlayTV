@@ -1,8 +1,6 @@
 package com.xyoye.common_component.config
 
 import androidx.appcompat.app.AppCompatDelegate
-import com.xyoye.common_component.network.config.Api
-import com.xyoye.common_component.utils.meida.VideoExtension
 import com.xyoye.data_component.enums.HistorySort
 import com.xyoye.data_component.enums.StorageSort
 import com.xyoye.mmkv_annotation.MMKVFiled
@@ -10,6 +8,10 @@ import com.xyoye.mmkv_annotation.MMKVKotlinClass
 
 @MMKVKotlinClass(className = "AppConfig")
 object AppConfigTable {
+    private const val DEFAULT_BACKUP_DOMAIN = "http://139.217.235.62:16001/"
+    private const val DEFAULT_SUPPORT_VIDEO_EXTENSION =
+        "3gp,asf,asx,avi,dat,flv,m2ts,m3u8,m4s,m4v,mkv,mov,mp4,mpe,mpeg,mpg,rm,rmvb,vob,wmv"
+
     // 是否展示欢迎页
     @MMKVFiled
     const val showSplashAnimation = false
@@ -84,11 +86,11 @@ object AppConfigTable {
 
     // 备用域名地址
     @MMKVFiled
-    var backupDomain: String = Api.DAN_DAN_SPARE
+    var backupDomain: String = DEFAULT_BACKUP_DOMAIN
 
     // 支持的视频后缀
     @MMKVFiled
-    var supportVideoExtension: String = VideoExtension.supportText
+    var supportVideoExtension: String = DEFAULT_SUPPORT_VIDEO_EXTENSION
 
     // Jsoup的User-Agent
     @MMKVFiled

@@ -5,11 +5,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.launcher.ARouter
-import com.xyoye.common_component.BuildConfig
-import com.xyoye.common_component.extension.notificationManager
 import com.xyoye.common_component.notification.Notifications
 import com.xyoye.common_component.services.ScreencastReceiveService
 
@@ -21,18 +20,17 @@ class NotificationReceiver : BroadcastReceiver() {
     @Autowired
     lateinit var screencastReceiveService: ScreencastReceiveService
 
-    private object Action {
-        const val CANCEL_SCREENCAST_RECEIVE = "${BuildConfig.APPLICATION_ID}.CANCEL_SCREENCAST_RECEIVE"
-    }
-
     companion object {
+        private fun cancelScreencastReceiveAction(context: Context): String =
+            "${context.packageName}.CANCEL_SCREENCAST_RECEIVE"
+
         /**
          * 关闭投屏接收服务
          */
         fun cancelScreencastReceivePendingBroadcast(context: Context): PendingIntent {
             val intent =
                 Intent(context, NotificationReceiver::class.java).apply {
-                    action = Action.CANCEL_SCREENCAST_RECEIVE
+                    action = cancelScreencastReceiveAction(context)
                 }
 
             val flag =
@@ -54,7 +52,7 @@ class NotificationReceiver : BroadcastReceiver() {
         intent: Intent
     ) {
         when (intent.action) {
-            Action.CANCEL_SCREENCAST_RECEIVE ->
+            cancelScreencastReceiveAction(context) ->
                 cancelScreencastReceive(
                     context,
                     Notifications.Id.SCREENCAST_RECEIVE,
@@ -82,6 +80,6 @@ class NotificationReceiver : BroadcastReceiver() {
         context: Context,
         notificationId: Int
     ) {
-        context.notificationManager.cancel(notificationId)
+        NotificationManagerCompat.from(context).cancel(notificationId)
     }
 }

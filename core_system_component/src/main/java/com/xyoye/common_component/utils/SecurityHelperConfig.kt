@@ -1,6 +1,6 @@
 package com.xyoye.common_component.utils
 
-import com.xyoye.common_component.BuildConfig
+import com.xyoye.core_system_component.BuildConfig
 
 /**
  * 安全配置类
