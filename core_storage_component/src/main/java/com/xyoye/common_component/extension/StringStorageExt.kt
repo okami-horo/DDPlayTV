@@ -18,7 +18,7 @@ fun String?.toCoverFile(): File? {
     if (this.isNullOrEmpty()) {
         return null
     }
-    return File(PathHelper.getVideoCoverDirectory(), this)
+    return PathHelper.getVideoCoverFile(this)
 }
 
 fun String.decodeUrl(charset: Charset = Charsets.UTF_8): String {

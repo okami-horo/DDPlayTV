@@ -38,6 +38,15 @@ object PathHelper {
     fun getVideoCoverDirectory(): File = getCacheDirectory(CacheType.VIDEO_COVER_CACHE)
 
     /**
+     * 获取视频封面缓存文件
+     *
+     * 注意：key 可能来自 URL/URI 等资源标识，可能包含 `/` 等路径分隔符，不能直接作为文件名使用。
+     * 这里统一映射为安全文件名，避免路径被拆分导致 ENOENT 或潜在路径穿越风险。
+     */
+    fun getVideoCoverFile(key: String): File =
+        File(getVideoCoverDirectory(), CacheKeyMapper.toSafeFileName(key))
+
+    /**
      * 获取下载种子目录
      */
     fun getTorrentDirectory(): File = getCacheDirectory(CacheType.TORRENT_FILE_CACHE)
