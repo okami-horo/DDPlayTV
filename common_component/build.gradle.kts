@@ -46,6 +46,7 @@ dependencies {
     api(project(":core_database_component"))
     api(project(":core_storage_component"))
     api(project(":core_ui_component"))
+    api(project(":bilibili_component"))
     api(project(":data_component"))
     implementation(files("libs/mmkv-annotation.jar"))
 

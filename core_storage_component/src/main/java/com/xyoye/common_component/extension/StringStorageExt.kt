@@ -1,7 +1,5 @@
 package com.xyoye.common_component.extension
 
-import android.util.Base64
-import com.xyoye.common_component.utils.EntropyUtils
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.PathHelper
 import com.xyoye.data_component.enums.ResourceType
@@ -40,12 +38,6 @@ fun String.decodeUrl(charset: Charset = Charsets.UTF_8): String {
 }
 
 fun String.formatFileName(): String = trim().replace("[*>/:\\\\?<|]".toRegex(), "_").replace(" ", "_")
-
-fun String?.toMd5String(): String = EntropyUtils.string2Md5(this)
-
-fun String.aesEncode(key: String? = null): String? = EntropyUtils.aesEncode(key, this, Base64.NO_WRAP)
-
-fun String.aesDecode(key: String? = null): String? = EntropyUtils.aesDecode(key, this, Base64.NO_WRAP)
 
 inline fun String?.ifNullOrBlank(defaultValue: () -> String): String = if (this.isNullOrBlank()) defaultValue() else this
 

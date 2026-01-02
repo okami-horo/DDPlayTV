@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":core_system_component"))
     implementation(project(":core_log_component"))
     implementation(project(":core_database_component"))
+    implementation(project(":bilibili_component"))
 
     api(project(":repository:seven_zip"))
     api(project(":repository:thunder"))

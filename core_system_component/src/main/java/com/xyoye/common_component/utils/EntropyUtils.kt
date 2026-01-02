@@ -2,7 +2,6 @@ package com.xyoye.common_component.utils
 
 import android.text.TextUtils
 import android.util.Base64
-import com.xyoye.common_component.extension.isInvalid
 import com.xyoye.common_component.extension.toHexString
 import java.io.File
 import java.io.FileInputStream
@@ -34,7 +33,7 @@ object EntropyUtils {
      * 获取文件MD5值
      */
     fun file2Md5(file: File): String? {
-        if (file.isInvalid()) {
+        if (!file.exists() || !file.isFile || file.length() == 0L) {
             return null
         }
 

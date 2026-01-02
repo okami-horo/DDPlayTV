@@ -4,7 +4,6 @@ import android.net.Uri
 import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.source.inter.VideoSource
 import com.xyoye.common_component.utils.AuthenticationHelper
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.enums.MediaType
@@ -18,17 +17,35 @@ object BilibiliPlaybackErrorReporter {
     private const val TAG = "BILI-PLAYBACK"
     private const val CLASS_NAME = "BilibiliPlayback"
 
-    fun isBilibiliSource(source: VideoSource?): Boolean =
-        source?.getMediaType() == MediaType.BILIBILI_STORAGE
+    data class SourceSnapshot(
+        val mediaType: MediaType,
+        val storageId: Int,
+        val storagePath: String?,
+        val uniqueKey: String,
+        val videoTitle: String,
+        val videoUrl: String,
+        val httpHeader: Map<String, String>?,
+    )
 
-    fun isBilibiliLive(source: VideoSource?): Boolean =
-        source?.let {
-            it.getMediaType() == MediaType.BILIBILI_STORAGE &&
-                (BilibiliKeys.parse(it.getUniqueKey()) is BilibiliKeys.LiveKey)
-        } ?: false
+    fun isBilibiliSource(mediaType: MediaType?): Boolean =
+        mediaType == MediaType.BILIBILI_STORAGE
+
+    fun isBilibiliSource(source: SourceSnapshot?): Boolean =
+        isBilibiliSource(source?.mediaType)
+
+    fun isBilibiliLive(
+        mediaType: MediaType?,
+        uniqueKey: String?,
+    ): Boolean =
+        isBilibiliSource(mediaType) &&
+            uniqueKey != null &&
+            (BilibiliKeys.parse(uniqueKey) is BilibiliKeys.LiveKey)
+
+    fun isBilibiliLive(source: SourceSnapshot?): Boolean =
+        source != null && isBilibiliLive(source.mediaType, source.uniqueKey)
 
     fun reportPlaybackError(
-        source: VideoSource,
+        source: SourceSnapshot,
         throwable: Throwable?,
         scene: String,
         extra: Map<String, String> = emptyMap(),
@@ -54,7 +71,7 @@ object BilibiliPlaybackErrorReporter {
     }
 
     fun reportUnexpectedCompletion(
-        source: VideoSource,
+        source: SourceSnapshot,
         scene: String,
         extra: Map<String, String> = emptyMap(),
     ) {
@@ -71,15 +88,15 @@ object BilibiliPlaybackErrorReporter {
     }
 
     private fun buildReportInfo(
-        source: VideoSource,
+        source: SourceSnapshot,
         scene: String,
         extra: Map<String, String>,
     ): String {
-        val headers = source.getHttpHeader().orEmpty()
+        val headers = source.httpHeader.orEmpty()
         val headerKeys = headers.keys.sorted().joinToString(separator = ",")
         val hasCookieHeader = headers.keys.any { it.equals("cookie", ignoreCase = true) }
 
-        val biliKey = BilibiliKeys.parse(source.getUniqueKey())
+        val biliKey = BilibiliKeys.parse(source.uniqueKey)
         val biliKeyInfo =
             when (biliKey) {
                 is BilibiliKeys.LiveKey -> "type=live roomId=${biliKey.roomId}"
@@ -89,7 +106,7 @@ object BilibiliPlaybackErrorReporter {
                 null -> "type=unknown"
             }
 
-        val sanitizedUrl = sanitizeUrl(source.getVideoUrl())
+        val sanitizedUrl = sanitizeUrl(source.videoUrl)
         val authenticationDiagnosis =
             extra["httpResponseCode"]?.toIntOrNull()
                 ?.takeIf { it == 403 }
@@ -97,12 +114,12 @@ object BilibiliPlaybackErrorReporter {
 
         return buildString {
             append("event=").append(scene)
-            append(" mediaType=").append(source.getMediaType().name)
-            append(" storageId=").append(source.getStorageId())
-            append(" storagePath=").append(source.getStoragePath().orEmpty())
-            append(" uniqueKey=").append(source.getUniqueKey())
+            append(" mediaType=").append(source.mediaType.name)
+            append(" storageId=").append(source.storageId)
+            append(" storagePath=").append(source.storagePath.orEmpty())
+            append(" uniqueKey=").append(source.uniqueKey)
             append(" biliKey={").append(biliKeyInfo).append("}")
-            append(" title=").append(source.getVideoTitle())
+            append(" title=").append(source.videoTitle)
             append(" url=").append(sanitizedUrl.orEmpty())
             append(" headerKeys=[").append(headerKeys).append("]")
             append(" hasCookieHeader=").append(hasCookieHeader)
@@ -179,4 +196,3 @@ object BilibiliPlaybackErrorReporter {
         }
     }
 }
-

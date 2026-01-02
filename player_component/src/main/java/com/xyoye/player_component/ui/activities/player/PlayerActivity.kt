@@ -399,7 +399,7 @@ class PlayerActivity :
                     scene = "play_error",
                 )
 
-                val isBilibiliSource = BilibiliPlaybackErrorReporter.isBilibiliSource(source)
+                val isBilibiliSource = BilibiliPlaybackErrorReporter.isBilibiliSource(source.getMediaType())
                 val baseMessage = "play error title=${source.getVideoTitle()} position=${danDanPlayer.getCurrentPosition()}"
                 if (isBilibiliSource) {
                     LogFacade.e(LogModule.PLAYER, TAG_PLAYBACK, baseMessage)
@@ -711,7 +711,7 @@ class PlayerActivity :
     }
 
     private fun updateBilibiliLiveSession(source: BaseVideoSource) {
-        if (!BilibiliPlaybackErrorReporter.isBilibiliLive(source)) {
+        if (!BilibiliPlaybackErrorReporter.isBilibiliLive(source.getMediaType(), source.getUniqueKey())) {
             bilibiliLiveSessionKey = null
             bilibiliLiveSessionStartElapsedMs = null
             bilibiliLiveCompletionReported = false
@@ -731,11 +731,13 @@ class PlayerActivity :
         throwable: Throwable?,
         scene: String,
     ) {
-        if (!BilibiliPlaybackErrorReporter.isBilibiliSource(source)) {
+        val snapshot = source.toBilibiliPlaybackSourceSnapshot()
+
+        if (!BilibiliPlaybackErrorReporter.isBilibiliSource(snapshot)) {
             return
         }
 
-        val isLive = BilibiliPlaybackErrorReporter.isBilibiliLive(source)
+        val isLive = BilibiliPlaybackErrorReporter.isBilibiliLive(snapshot)
         if (isLive && bilibiliLiveErrorReported) {
             return
         }
@@ -745,7 +747,7 @@ class PlayerActivity :
 
         val extra = buildBilibiliPlaybackExtra(source, throwable)
         BilibiliPlaybackErrorReporter.reportPlaybackError(
-            source = source,
+            source = snapshot,
             throwable = throwable,
             scene = scene,
             extra = extra,
@@ -753,7 +755,9 @@ class PlayerActivity :
     }
 
     private fun reportBilibiliLiveCompletionIfNeeded(source: BaseVideoSource) {
-        if (!BilibiliPlaybackErrorReporter.isBilibiliLive(source)) {
+        val snapshot = source.toBilibiliPlaybackSourceSnapshot()
+
+        if (!BilibiliPlaybackErrorReporter.isBilibiliLive(snapshot)) {
             return
         }
         if (bilibiliLiveCompletionReported) {
@@ -787,11 +791,22 @@ class PlayerActivity :
             }
 
         BilibiliPlaybackErrorReporter.reportUnexpectedCompletion(
-            source = source,
+            source = snapshot,
             scene = "live_completed",
             extra = extra,
         )
     }
+
+    private fun BaseVideoSource.toBilibiliPlaybackSourceSnapshot(): BilibiliPlaybackErrorReporter.SourceSnapshot =
+        BilibiliPlaybackErrorReporter.SourceSnapshot(
+            mediaType = getMediaType(),
+            storageId = getStorageId(),
+            storagePath = getStoragePath(),
+            uniqueKey = getUniqueKey(),
+            videoTitle = getVideoTitle(),
+            videoUrl = getVideoUrl(),
+            httpHeader = getHttpHeader(),
+        )
 
     private fun buildBilibiliPlaybackExtra(
         source: BaseVideoSource,
