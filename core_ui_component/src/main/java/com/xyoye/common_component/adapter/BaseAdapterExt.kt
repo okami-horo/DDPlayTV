@@ -1,7 +1,7 @@
 package com.xyoye.common_component.adapter
 
 import androidx.databinding.ViewDataBinding
-import com.xyoye.common_component.databinding.LayoutEmptyBinding
+import com.xyoye.core_ui_component.databinding.LayoutEmptyBinding
 
 /**
  * Created by xyoye on 2020/7/7.

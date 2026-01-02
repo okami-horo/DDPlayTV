@@ -45,8 +45,8 @@ dependencies {
     api(project(":core_network_component"))
     api(project(":core_database_component"))
     api(project(":core_storage_component"))
+    api(project(":core_ui_component"))
     api(project(":data_component"))
-    api(project(":repository:immersion_bar"))
     implementation(files("libs/mmkv-annotation.jar"))
 
     api(Dependencies.Kotlin.stdlib_jdk7)
@@ -54,27 +54,15 @@ dependencies {
     api(Dependencies.Kotlin.coroutines_android)
 
     api(Dependencies.AndroidX.core)
+    api(Dependencies.AndroidX.multidex)
     api(Dependencies.AndroidX.lifecycle_viewmodel)
     api(Dependencies.AndroidX.lifecycle_runtime)
-    api(Dependencies.AndroidX.constraintlayout)
-    api(Dependencies.AndroidX.recyclerview)
-    api(Dependencies.AndroidX.swiperefreshlayout)
-    api(Dependencies.AndroidX.appcompat)
-    api(Dependencies.AndroidX.multidex)
-    api(Dependencies.AndroidX.palette)
-    api(Dependencies.AndroidX.paging)
-    api(Dependencies.AndroidX.preference)
-    api(Dependencies.AndroidX.activity_ktx)
-
-    api(Dependencies.Google.material)
+    api(Dependencies.AndroidX.lifecycle_livedata)
 
     api(Dependencies.Tencent.mmkv)
     // Bugly & crash 上报已收敛到 core_log_component
 
     // Network stack has been extracted to core_network_component.
-
-    api(Dependencies.Github.coil)
-    api(Dependencies.Github.coil_video)
 
     api(Dependencies.Huawei.scan)
 

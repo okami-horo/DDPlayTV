@@ -17,9 +17,9 @@ import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.adapter.setupVerticalAnimation
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.databinding.ItemStorageFolderBinding
-import com.xyoye.common_component.databinding.ItemStorageVideoBinding
-import com.xyoye.common_component.databinding.ItemStorageVideoTagBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageFolderBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageVideoBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageVideoTagBinding
 import com.xyoye.common_component.extension.dp
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.isInvalid

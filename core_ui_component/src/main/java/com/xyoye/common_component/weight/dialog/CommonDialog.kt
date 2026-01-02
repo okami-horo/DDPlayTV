@@ -3,8 +3,8 @@ package com.xyoye.common_component.weight.dialog
 import android.app.Activity
 import android.os.CountDownTimer
 import androidx.core.view.isVisible
-import com.xyoye.common_component.R
-import com.xyoye.common_component.databinding.DialogCommonBinding
+import com.xyoye.core_ui_component.R
+import com.xyoye.core_ui_component.databinding.DialogCommonBinding
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.toResString
 

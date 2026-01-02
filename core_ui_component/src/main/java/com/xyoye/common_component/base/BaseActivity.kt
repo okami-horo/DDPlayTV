@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.ViewModelProvider
 import com.gyf.immersionbar.ImmersionBar
-import com.xyoye.common_component.R
+import com.xyoye.core_ui_component.R
 import com.xyoye.common_component.extension.isNightMode
 import com.xyoye.data_component.helper.Loading
 

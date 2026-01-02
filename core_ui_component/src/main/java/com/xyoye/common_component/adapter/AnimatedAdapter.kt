@@ -5,7 +5,7 @@ import android.os.Looper
 import android.view.animation.AnimationUtils
 import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.RecyclerView
-import com.xyoye.common_component.R
+import com.xyoye.core_ui_component.R
 
 /**
  * Created by xyoye on 2023/1/2.

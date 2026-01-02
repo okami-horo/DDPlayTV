@@ -17,8 +17,8 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.xyoye.common_component.R
-import com.xyoye.common_component.databinding.DialogBaseBottomDialogBinding
+import com.xyoye.core_ui_component.R
+import com.xyoye.core_ui_component.databinding.DialogBaseBottomDialogBinding
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.utils.dp2px
 

@@ -14,9 +14,9 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.databinding.DataBindingUtil
-import com.xyoye.common_component.R
+import com.xyoye.core_ui_component.R
 import com.xyoye.common_component.base.app.BaseApplication
-import com.xyoye.common_component.databinding.LayoutLevelToastBinding
+import com.xyoye.core_ui_component.databinding.LayoutLevelToastBinding
 import com.xyoye.common_component.extension.isNightMode
 
 /**

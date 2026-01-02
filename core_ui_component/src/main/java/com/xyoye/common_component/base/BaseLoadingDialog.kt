@@ -8,8 +8,8 @@ import android.view.animation.LinearInterpolator
 import androidx.core.view.isGone
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ObservableField
-import com.xyoye.common_component.R
-import com.xyoye.common_component.databinding.DialogBaseLoadingBinding
+import com.xyoye.core_ui_component.R
+import com.xyoye.core_ui_component.databinding.DialogBaseLoadingBinding
 
 /**
  * Created by xyoye on 2020/4/15.

@@ -15,7 +15,7 @@ import android.view.View;
 
 import androidx.annotation.ArrayRes;
 
-import com.xyoye.common_component.R;
+import com.xyoye.core_ui_component.R;
 
 import java.util.ArrayList;
 import java.util.List;

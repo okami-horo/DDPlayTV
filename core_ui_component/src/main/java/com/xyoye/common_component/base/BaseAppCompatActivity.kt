@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
-import com.xyoye.common_component.R
+import com.xyoye.core_ui_component.R
 import java.lang.ref.WeakReference
 
 /**

@@ -2,14 +2,14 @@ package com.xyoye.common_component.weight.dialog
 
 import android.app.Activity
 import android.os.Environment
-import com.xyoye.common_component.R
+import com.xyoye.core_ui_component.R
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupVerticalAnimation
 import com.xyoye.common_component.config.AppConfig
-import com.xyoye.common_component.databinding.DialogFileManagerBinding
-import com.xyoye.common_component.databinding.ItemFileManagerBinding
-import com.xyoye.common_component.databinding.ItemFileManagerPathBinding
+import com.xyoye.core_ui_component.databinding.DialogFileManagerBinding
+import com.xyoye.core_ui_component.databinding.ItemFileManagerBinding
+import com.xyoye.core_ui_component.databinding.ItemFileManagerPathBinding
 import com.xyoye.common_component.extension.filterHiddenFile
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.setData

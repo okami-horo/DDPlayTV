@@ -10,7 +10,7 @@ import android.content.res.Configuration
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
-import com.xyoye.common_component.R
+import com.xyoye.core_ui_component.R
 import com.xyoye.common_component.weight.ToastCenter
 
 /**

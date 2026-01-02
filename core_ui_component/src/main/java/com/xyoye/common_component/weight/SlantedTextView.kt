@@ -6,7 +6,7 @@ import android.text.TextPaint
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.View
-import com.xyoye.common_component.R
+import com.xyoye.core_ui_component.R
 
 /**
  * @author HaoZhang

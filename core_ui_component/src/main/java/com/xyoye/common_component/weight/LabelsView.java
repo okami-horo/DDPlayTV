@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 import androidx.core.content.res.ResourcesCompat;
 
-import com.xyoye.common_component.R;
+import com.xyoye.core_ui_component.R;
 
 import java.util.ArrayList;
 import java.util.List;

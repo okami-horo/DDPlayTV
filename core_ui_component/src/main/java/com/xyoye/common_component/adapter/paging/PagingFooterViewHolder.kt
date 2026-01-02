@@ -7,8 +7,8 @@ import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.RecyclerView
-import com.xyoye.common_component.R
-import com.xyoye.common_component.databinding.ItemPagingFooterBinding
+import com.xyoye.core_ui_component.R
+import com.xyoye.core_ui_component.databinding.ItemPagingFooterBinding
 
 /**
  * Created by xyoye on 2020/12/4.
