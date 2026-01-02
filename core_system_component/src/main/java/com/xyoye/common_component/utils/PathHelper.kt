@@ -14,6 +14,9 @@ object PathHelper {
     // OpenCC文件夹名
     private const val OPEN_CC_DIRECTORY = "open_cc"
 
+    // MPV Shader 文件夹名
+    private const val MPV_SHADERS_DIRECTORY = "mpv_shaders"
+
     /**
      * 获取缓存路径
      */
@@ -68,6 +71,13 @@ object PathHelper {
     fun getOpenCCDirectory(): File {
         val fileDir = BaseApplication.getAppContext().filesDir
         return File(fileDir, OPEN_CC_DIRECTORY).apply {
+            checkDirectory(this)
+        }
+    }
+
+    fun getMpvShadersDirectory(): File {
+        val fileDir = BaseApplication.getAppContext().filesDir
+        return File(fileDir, MPV_SHADERS_DIRECTORY).apply {
             checkDirectory(this)
         }
     }

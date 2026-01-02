@@ -102,6 +102,10 @@ class ControlWrapper(
         mVideoPlayer.setRotation(rotation)
     }
 
+    override fun setMpvAnime4kMode(mode: Int) {
+        mVideoPlayer.setMpvAnime4kMode(mode)
+    }
+
     /**
      * ------------------Player Track Controller----------------------
      */

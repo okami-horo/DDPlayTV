@@ -13,6 +13,8 @@ enum class SettingAction(
 
     VIDEO_SPEED(SettingActionType.VIDEO, "倍速", R.drawable.ic_setting_video_speed),
 
+    ANIME4K(SettingActionType.VIDEO, "Anime4K", R.drawable.ic_setting_style),
+
     BACKGROUND_PLAY(SettingActionType.VIDEO, "后台播放", R.drawable.ic_setting_background_play),
 
     DANMU_TRACK(SettingActionType.DANMU, "弹幕轨", R.drawable.ic_setting_danmu_track),

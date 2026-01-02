@@ -17,10 +17,13 @@ import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
+import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingAction
 import com.xyoye.player.info.SettingActionType
 import com.xyoye.player.info.SettingItem
+import com.xyoye.player.kernel.impl.mpv.MpvOptions
+import com.xyoye.player.kernel.impl.mpv.Anime4kShaderManager
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ItemPlayerSettingBinding
 import com.xyoye.player_component.databinding.ItemPlayerSettingTypeBinding
@@ -35,10 +38,11 @@ class PlayerSettingView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutPlayerSettingBinding>(context, attrs, defStyleAttr) {
-    // 操作项集合
-    private val settingItems = generateItems()
+    // 操作项集合（每次展示时根据运行态重建）
+    private var settingItems: List<Any> = emptyList()
 
     init {
+        settingItems = generateItems()
         initRv()
     }
 
@@ -47,6 +51,7 @@ class PlayerSettingView(
     override fun getSettingViewType(): SettingViewType = SettingViewType.PLAYER_SETTING
 
     override fun onViewShow() {
+        settingItems = generateItems()
         settingItems
             .asSequence()
             .filter { it is SettingItem }
@@ -206,10 +211,16 @@ class PlayerSettingView(
     private fun generateItems(): List<Any> {
         val items = mutableListOf<Any>()
         val disabledActions =
-            setOf(
+            mutableSetOf(
                 SettingAction.SCREEN_SHOT,
-                SettingAction.BACKGROUND_PLAY,
+                SettingAction.BACKGROUND_PLAY
             )
+
+        val isMpvPlayer = PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER
+        val isGpuOutput = MpvOptions.isGpuVideoOutput(PlayerConfig.getMpvVideoOutput())
+        if (!isMpvPlayer || !isGpuOutput) {
+            disabledActions.add(SettingAction.ANIME4K)
+        }
         SettingAction
             .values()
             .asSequence()
@@ -243,6 +254,10 @@ class PlayerSettingView(
             SettingAction.VIDEO_SPEED -> {
                 selected = PlayerInitializer.Player.videoSpeed != PlayerInitializer.Player.DEFAULT_SPEED ||
                     PlayerInitializer.Player.pressVideoSpeed != PlayerInitializer.Player.DEFAULT_PRESS_SPEED
+            }
+
+            SettingAction.ANIME4K -> {
+                selected = PlayerConfig.getMpvAnime4kMode() != Anime4kShaderManager.MODE_OFF
             }
 
             SettingAction.BACKGROUND_PLAY -> {
@@ -324,6 +339,11 @@ class PlayerSettingView(
 
             SettingAction.VIDEO_ASPECT -> {
                 mControlWrapper.showSettingView(SettingViewType.VIDEO_ASPECT)
+                onSettingVisibilityChanged(false)
+            }
+
+            SettingAction.ANIME4K -> {
+                mControlWrapper.showSettingView(SettingViewType.MPV_ANIME4K)
                 onSettingVisibilityChanged(false)
             }
 

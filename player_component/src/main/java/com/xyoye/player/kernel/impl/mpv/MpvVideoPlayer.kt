@@ -131,6 +131,7 @@ class MpvVideoPlayer(
         if (!nativeBridge.isAvailable) return
         applyVideoOutputPreference()
         nativeBridge.setSurface(surface)
+        setAnime4kMode(PlayerConfig.getMpvAnime4kMode())
     }
 
     fun setSurfaceSize(
@@ -179,6 +180,49 @@ class MpvVideoPlayer(
         if (!nativeBridge.isAvailable) return false
         val resolvedPath = resolveShaderPath(shaderPath, stage) ?: return false
         return nativeBridge.addShader(resolvedPath)
+    }
+
+    fun setAnime4kMode(mode: Int) {
+        if (!nativeBridge.isAvailable) return
+
+        if (!MpvOptions.isGpuVideoOutput(PlayerConfig.getMpvVideoOutput())) {
+            return
+        }
+
+        val safeMode =
+            when (mode) {
+                Anime4kShaderManager.MODE_PERFORMANCE -> Anime4kShaderManager.MODE_PERFORMANCE
+                Anime4kShaderManager.MODE_QUALITY -> Anime4kShaderManager.MODE_QUALITY
+                else -> Anime4kShaderManager.MODE_OFF
+            }
+
+        if (!nativeBridge.clearShaders()) {
+            LogFacade.w(
+                LogModule.PLAYER,
+                "MpvVideoPlayer",
+                "clearShaders failed: ${nativeBridge.lastError().orEmpty()}"
+            )
+        }
+
+        if (safeMode == Anime4kShaderManager.MODE_OFF) {
+            return
+        }
+
+        val shaderPaths = Anime4kShaderManager.resolveShaderPaths(appContext, safeMode)
+        if (shaderPaths.isEmpty()) {
+            LogFacade.w(LogModule.PLAYER, "MpvVideoPlayer", "Anime4K shader paths unavailable")
+            return
+        }
+
+        shaderPaths.forEach { path ->
+            if (!nativeBridge.addShader(path)) {
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    "MpvVideoPlayer",
+                    "addShader failed: path=$path reason=${nativeBridge.lastError().orEmpty()}"
+                )
+            }
+        }
     }
 
     override fun prepareAsync() {
@@ -506,14 +550,7 @@ class MpvVideoPlayer(
     }
 
     private fun applyVideoOutputPreference() {
-        val configured = PlayerConfig.getMpvVideoOutput().orEmpty().trim()
-        val safeOutput =
-            when {
-                configured.equals("gpu-next", ignoreCase = true) -> "gpu-next"
-                configured.equals("mediacodec_embed", ignoreCase = true) -> "mediacodec_embed"
-                else -> "gpu"
-            }
-        nativeBridge.setVideoOutput(safeOutput)
+        nativeBridge.setVideoOutput(MpvOptions.resolveVideoOutput(PlayerConfig.getMpvVideoOutput()))
     }
 
     private fun applyHwdecPriority() {

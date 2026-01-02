@@ -128,4 +128,11 @@ interface InterVideoPlayer : InterVideoTrack {
      * 当前内容是否为直播
      */
     fun isLive(): Boolean = false
+
+    /**
+     * MPV Anime4K 超分：0 关闭 / 1 性能 / 2 质量
+     *
+     * 仅对 MPV 且 vo 为 gpu/gpu-next 时生效。
+     */
+    fun setMpvAnime4kMode(mode: Int) = Unit
 }

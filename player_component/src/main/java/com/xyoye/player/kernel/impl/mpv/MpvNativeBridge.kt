@@ -339,6 +339,11 @@ class MpvNativeBridge {
         return nativeAddShader(nativeHandle, path)
     }
 
+    fun clearShaders(): Boolean {
+        if (nativeHandle == 0L) return false
+        return nativeClearShaders(nativeHandle)
+    }
+
     fun currentPosition(): Long {
         if (nativeHandle == 0L) return 0
         return nativeGetPosition(nativeHandle)
@@ -523,6 +528,9 @@ class MpvNativeBridge {
             handle: Long,
             path: String
         ): Boolean
+
+        @JvmStatic
+        private external fun nativeClearShaders(handle: Long): Boolean
 
         @JvmStatic
         private external fun nativeSetDataSource(
