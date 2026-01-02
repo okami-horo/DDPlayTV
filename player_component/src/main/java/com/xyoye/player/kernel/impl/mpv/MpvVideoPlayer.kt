@@ -214,6 +214,17 @@ class MpvVideoPlayer(
             return
         }
 
+        val shaderList = shaderPaths.joinToString(separator = ":")
+        if (nativeBridge.setShaders(shaderList)) {
+            return
+        }
+
+        LogFacade.w(
+            LogModule.PLAYER,
+            "MpvVideoPlayer",
+            "setShaders failed, fallback to append: ${nativeBridge.lastError().orEmpty()}"
+        )
+
         shaderPaths.forEach { path ->
             if (!nativeBridge.addShader(path)) {
                 LogFacade.w(

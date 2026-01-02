@@ -339,6 +339,11 @@ class MpvNativeBridge {
         return nativeAddShader(nativeHandle, path)
     }
 
+    fun setShaders(value: String): Boolean {
+        if (nativeHandle == 0L) return false
+        return nativeSetShaders(nativeHandle, value)
+    }
+
     fun clearShaders(): Boolean {
         if (nativeHandle == 0L) return false
         return nativeClearShaders(nativeHandle)
@@ -527,6 +532,12 @@ class MpvNativeBridge {
         private external fun nativeAddShader(
             handle: Long,
             path: String
+        ): Boolean
+
+        @JvmStatic
+        private external fun nativeSetShaders(
+            handle: Long,
+            value: String
         ): Boolean
 
         @JvmStatic

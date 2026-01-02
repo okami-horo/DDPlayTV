@@ -965,7 +965,32 @@ bool addShader(MpvSession* session, const std::string& path) {
         return false;
     }
     const char* cmd[] = {"change-list", "glsl-shaders", "append", path.c_str(), nullptr};
-    return mpv_command(session->handle, cmd) >= 0;
+    const int result = mpv_command(session->handle, cmd);
+    if (result < 0) {
+        const std::string message =
+            "mpv glsl-shaders append failed: " + std::to_string(result) + " (" + mpv_error_string(result) +
+            ") path=" + path;
+        set_last_error(message);
+        return false;
+    }
+    set_last_error("");
+    return true;
+}
+
+bool setShaders(MpvSession* session, const std::string& listValue) {
+    if (session == nullptr || session->handle == nullptr) {
+        return false;
+    }
+    const char* cmd[] = {"change-list", "glsl-shaders", "set", listValue.c_str(), nullptr};
+    const int result = mpv_command(session->handle, cmd);
+    if (result < 0) {
+        const std::string message =
+            "mpv glsl-shaders set failed: " + std::to_string(result) + " (" + mpv_error_string(result) + ")";
+        set_last_error(message);
+        return false;
+    }
+    set_last_error("");
+    return true;
 }
 
 bool clearShaders(MpvSession* session) {
@@ -1002,6 +1027,10 @@ bool addExternalTrack(MpvSession*, jint, const std::string&) {
 }
 
 bool addShader(MpvSession*, const std::string&) {
+    return true;
+}
+
+bool setShaders(MpvSession*, const std::string&) {
     return true;
 }
 
@@ -1356,6 +1385,28 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeAddShader(
     (void)env;
     (void)handle;
     set_last_error("libmpv.so not linked; addShader is unavailable");
+    return JNI_FALSE;
+#endif
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetShaders(
+    JNIEnv* env, jclass, jlong handle, jstring value) {
+    auto* session = fromHandle(handle);
+    if (session == nullptr || value == nullptr) return JNI_FALSE;
+#if MPV_PREBUILT_AVAILABLE
+    const char* valueChars = env->GetStringUTFChars(value, nullptr);
+    if (valueChars == nullptr) {
+        set_last_error("Failed to decode shader list value for mpv");
+        return JNI_FALSE;
+    }
+    const std::string listValue = valueChars;
+    env->ReleaseStringUTFChars(value, valueChars);
+    return setShaders(session, listValue) ? JNI_TRUE : JNI_FALSE;
+#else
+    (void)env;
+    (void)handle;
+    set_last_error("libmpv.so not linked; setShaders is unavailable");
     return JNI_FALSE;
 #endif
 }
