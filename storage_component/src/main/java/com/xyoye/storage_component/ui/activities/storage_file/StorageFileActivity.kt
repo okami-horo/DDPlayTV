@@ -409,7 +409,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     /*
      * TV adaptation: Sender 设备选择入口关闭，保留原实现方便迁移至非 TV flavor
     private fun showSelectDeviceDialog(file: StorageFile, devices: List<MediaLibraryEntity>) {
-        val drawable = com.xyoye.common_component.R.drawable.ic_screencast_device
+        val drawable = com.xyoye.core_ui_component.R.drawable.ic_screencast_device
         val actionData = devices.map {
             SheetActionBean(it.id, it.displayName, drawable, it.url)
         }

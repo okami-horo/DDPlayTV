@@ -8,7 +8,7 @@ import com.xyoye.storage_component.databinding.DialogFontCacheProgressBinding
 
 class FontCacheProgressDialog(
     context: Context
-) : Dialog(context, com.xyoye.common_component.R.style.LoadingDialog) {
+) : Dialog(context, com.xyoye.core_ui_component.R.style.LoadingDialog) {
     private val binding: DialogFontCacheProgressBinding =
         DataBindingUtil.inflate(layoutInflater, R.layout.dialog_font_cache_progress, null, false)
 

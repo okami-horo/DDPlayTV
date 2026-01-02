@@ -15,7 +15,12 @@ kapt {
 }
 
 dependencies {
-    implementation(project(":common_component"))
+    implementation(project(":core_ui_component"))
+    implementation(project(":core_system_component"))
+    implementation(project(":core_log_component"))
+    implementation(project(":core_network_component"))
+    implementation(project(":core_database_component"))
+    implementation(project(":core_storage_component"))
 
     implementation(Dependencies.Kotlin.lib)
     implementation(Dependencies.Github.banner)

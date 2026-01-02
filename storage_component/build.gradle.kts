@@ -15,7 +15,13 @@ kapt {
 }
 
 dependencies {
-    implementation(project(":common_component"))
+    implementation(project(":core_ui_component"))
+    implementation(project(":core_system_component"))
+    implementation(project(":core_log_component"))
+    implementation(project(":core_network_component"))
+    implementation(project(":core_database_component"))
+    implementation(project(":core_storage_component"))
+    implementation(project(":bilibili_component"))
 
     implementation(Dependencies.Huawei.scan)
 
@@ -23,8 +29,4 @@ dependencies {
 }
 android {
     namespace = "com.xyoye.storage_component"
-    defaultConfig {
-        val media3Version = project.findProperty("media3Version")?.toString() ?: "1.9.0"
-        buildConfigField("String", "MEDIA3_VERSION", "\"$media3Version\"")
-    }
 }

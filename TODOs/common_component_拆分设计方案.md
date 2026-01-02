@@ -350,6 +350,8 @@ app (组合根)
    - 旧入口仅保留 `typealias`/转发与 `@Deprecated` 标记  
    - feature 逐个替换为新 core 依赖
 
+> ✅ 当前仓库已完成该步骤：业务模块已移除对 `:common_component` 的依赖，并已从 `settings.gradle.kts` 移除 `include(":common_component")`，仓库不再构建该模块；历史包名 `com.xyoye.common_component.*` 由各 `core_*`/feature 模块继续承载（仅用于兼容命名，边界以 Gradle 依赖为准）。
+
 ### 7.2 `core_database_component` 的备选方案
 
 若希望减少模块数量，也可将 `database` 全部迁入 `data_component`（让 data 成为“完整数据层”）。  
@@ -371,4 +373,3 @@ app (组合根)
 - `common_component` 明显瘦身：文件数/资源数/`api` 依赖数持续下降。
 - feature 不再依赖 `common_component`（或仅依赖过渡期 compat），依赖图更清晰。
 - 关键回归链路通过（至少）：任一入口拉起播放、媒体库浏览、投屏接收启停、登录/风控（如启用）。
-

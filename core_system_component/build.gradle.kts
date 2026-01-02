@@ -54,6 +54,13 @@ android {
             "DANDAN_DEV_CREDENTIAL_INJECTED",
             (dandanAppId.isNotBlank() && dandanAppSecret.isNotBlank()).toString(),
         )
+
+        val media3FallbackFlag =
+            project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
+        buildConfigField("boolean", "MEDIA3_ENABLED_FALLBACK", media3FallbackFlag.toString())
+
+        val media3Version = project.findProperty("media3Version")?.toString() ?: "1.9.0"
+        buildConfigField("String", "MEDIA3_VERSION", buildConfigString(media3Version))
     }
     namespace = "com.xyoye.core_system_component"
 }
@@ -82,10 +89,9 @@ dependencies {
 
     implementation(Dependencies.Tencent.mmkv)
 
-    // MMKV 配置表注解处理器：当前仍复用 common_component/libs 中的编译器 jar
-    implementation(files("../common_component/libs/mmkv-annotation.jar"))
-    kapt(files("../common_component/libs/mmkv-compiler.jar"))
+    // MMKV 配置表注解处理器：jar 统一放在 repository/mmkv
+    implementation(files("../repository/mmkv/mmkv-annotation.jar"))
+    kapt(files("../repository/mmkv/mmkv-compiler.jar"))
 
     kapt(Dependencies.Alibaba.arouter_compiler)
 }
-

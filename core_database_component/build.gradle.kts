@@ -21,9 +21,9 @@ dependencies {
 
     implementation(Dependencies.Tencent.mmkv)
 
-    // MMKV 配置表注解处理器：当前仍复用 common_component/libs 中的编译器 jar
-    implementation(files("../common_component/libs/mmkv-annotation.jar"))
-    kapt(files("../common_component/libs/mmkv-compiler.jar"))
+    // MMKV 配置表注解处理器：jar 统一放在 repository/mmkv
+    implementation(files("../repository/mmkv/mmkv-annotation.jar"))
+    kapt(files("../repository/mmkv/mmkv-compiler.jar"))
 }
 
 android {

@@ -60,13 +60,13 @@ class StorageFileAdapter(
         val icon: Int
     ) {
         // TV端暂时关闭投屏
-//        SCREENCAST("投屏", com.xyoye.common_component.R.drawable.ic_video_cast),
-        BIND_DANMU("手动查找弹幕", com.xyoye.common_component.R.drawable.ic_bind_danmu_manual),
-        BIND_SUBTITLE("手动查找字幕", com.xyoye.common_component.R.drawable.ic_bind_subtitle),
-        BIND_AUDIO("添加音频文件", com.xyoye.common_component.R.drawable.ic_bind_audio),
-        UNBIND_DANMU("移除弹幕绑定", com.xyoye.common_component.R.drawable.ic_unbind_danmu),
-        UNBIND_SUBTITLE("移除字幕绑定", com.xyoye.common_component.R.drawable.ic_unbind_subtitle),
-        UNBIND_AUDIO("移除音频绑定", com.xyoye.common_component.R.drawable.ic_unbind_subtitle);
+//        SCREENCAST("投屏", com.xyoye.core_ui_component.R.drawable.ic_video_cast),
+        BIND_DANMU("手动查找弹幕", com.xyoye.core_ui_component.R.drawable.ic_bind_danmu_manual),
+        BIND_SUBTITLE("手动查找字幕", com.xyoye.core_ui_component.R.drawable.ic_bind_subtitle),
+        BIND_AUDIO("添加音频文件", com.xyoye.core_ui_component.R.drawable.ic_bind_audio),
+        UNBIND_DANMU("移除弹幕绑定", com.xyoye.core_ui_component.R.drawable.ic_unbind_danmu),
+        UNBIND_SUBTITLE("移除字幕绑定", com.xyoye.core_ui_component.R.drawable.ic_unbind_subtitle),
+        UNBIND_AUDIO("移除音频绑定", com.xyoye.core_ui_component.R.drawable.ic_unbind_subtitle);
 
         fun toAction() = SheetActionBean(this, title, icon)
     }
@@ -260,10 +260,10 @@ class StorageFileAdapter(
     private fun getTitleColor(file: StorageFile): Int =
         when (file.playHistory?.isLastPlay == true) {
             true ->
-                com.xyoye.common_component.R.color.text_theme
+                com.xyoye.core_ui_component.R.color.text_theme
                     .toResColor(activity)
             else ->
-                com.xyoye.common_component.R.color.text_black
+                com.xyoye.core_ui_component.R.color.text_black
                     .toResColor(activity)
         }
 
