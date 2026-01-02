@@ -399,7 +399,7 @@ class PlayerBottomView(
     private fun syncDanmuToggleState() {
         if (this::mControlWrapper.isInitialized.not()) return
         val userVisible = mControlWrapper.isUserDanmuVisible()
-        viewBinding.danmuControlIv.isSelected = userVisible.not()
+        viewBinding.danmuControlIv.isSelected = userVisible
     }
 
     private fun updateDecodeTypeHint() {
