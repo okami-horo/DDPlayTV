@@ -10,7 +10,7 @@ import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.AlistStorageFile
-import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.data.alist.AlistFileData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
@@ -45,7 +45,13 @@ class AlistStorage(
 
         val result = AlistRepository.getUserInfo(rootUrl, token)
         if (result.isFailure) {
-            ToastCenter.showToast("${result.exceptionOrNull()?.message}")
+            result.exceptionOrNull()?.let { e ->
+                ErrorReportHelper.postCatchedException(
+                    e,
+                    "AlistStorage",
+                    "获取用户信息失败: $rootUrl",
+                )
+            }
             return null
         }
 

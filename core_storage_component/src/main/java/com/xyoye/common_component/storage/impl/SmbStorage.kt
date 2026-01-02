@@ -17,7 +17,6 @@ import com.xyoye.common_component.storage.file.helper.SmbPlayServer
 import com.xyoye.common_component.storage.file.impl.SmbStorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import java.io.InputStream
@@ -128,7 +127,6 @@ class SmbStorage(
         } catch (e: Exception) {
             e.printStackTrace()
             ErrorReportHelper.postCatchedException(e, "SMB", "获取文件信息失败: $filePath")
-            showErrorToast("获取文件信息失败", e)
             null
         }
     }
@@ -186,7 +184,6 @@ class SmbStorage(
         } catch (e: Exception) {
             e.printStackTrace()
             ErrorReportHelper.postCatchedException(e, "SMB", "连接至SMB服务失败: ${library.url}:${library.port}")
-            showErrorToast("连接至SMB服务失败", e)
             close()
         }
         return false
@@ -217,7 +214,6 @@ class SmbStorage(
         } catch (e: Exception) {
             e.printStackTrace()
             ErrorReportHelper.postCatchedException(e, "SMB", "获取共享目录列表失败")
-            showErrorToast("获取共享目录列表失败", e)
             emptyList()
         }
 
@@ -249,7 +245,6 @@ class SmbStorage(
         } catch (e: Exception) {
             e.printStackTrace()
             ErrorReportHelper.postCatchedException(e, "SMB", "获取文件列表失败: $filePath")
-            showErrorToast("获取文件列表失败", e)
             emptyList()
         }
     }
@@ -277,9 +272,6 @@ class SmbStorage(
         } catch (e: Exception) {
             e.printStackTrace()
             ErrorReportHelper.postCatchedException(e, "SMB", "切换共享目录失败: $shareName")
-            if (showToast) {
-                showErrorToast("切换共享目录失败", e)
-            }
 
             // 切换共享目录失败时，如果旧的共享目录不为空，切换回旧的共享目录
             if (currentShareName != null) {
@@ -325,11 +317,4 @@ class SmbStorage(
             .path
             ?.removePrefix("/")
             ?: ""
-
-    private fun showErrorToast(
-        message: String,
-        e: Exception
-    ) {
-        ToastCenter.showError("$message: ${e.message}")
-    }
 }

@@ -9,9 +9,9 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.helper.RemoteFileHelper
 import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.danmu.DanmuFinder
 import com.xyoye.common_component.utils.subtitle.SubtitleUtils
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.data.remote.RemoteVideoData
@@ -153,10 +153,14 @@ class RemoteStorage(
             val exception = result.exceptionOrNull() ?: return null
             if (exception.cause is CancellationException) {
                 // ignore
-            } else if (exception is NetworkException && exception.code == 401) {
-                ToastCenter.showWarning("连接失败：密钥验证失败")
             } else {
-                ToastCenter.showWarning("连接失败：${exception.message}")
+                val message =
+                    if (exception is NetworkException && exception.code == 401) {
+                        "连接失败：密钥验证失败"
+                    } else {
+                        "连接失败：${exception.message}"
+                    }
+                ErrorReportHelper.postCatchedException(exception, "RemoteStorage", message)
             }
             return null
         }

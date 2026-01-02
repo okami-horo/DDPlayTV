@@ -7,7 +7,6 @@ import com.xyoye.common_component.storage.file.helper.FtpPlayServer
 import com.xyoye.common_component.storage.file.impl.FtpStorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import org.apache.commons.net.ftp.FTP
@@ -38,8 +37,7 @@ class FtpStorage(
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            ErrorReportHelper.postCatchedException(e, "FTP", "获取文件列表失败: ${file.filePath()}")
-            showErrorToast("获取文件列表失败", e)
+            reportError("获取文件列表失败: ${file.filePath()}", e)
             close()
         }
         return emptyList()
@@ -141,7 +139,7 @@ class FtpStorage(
             mFtpClient.controlEncoding = library.ftpEncoding
             mFtpClient.connect(library.ftpAddress, library.port)
             if (checkLogin().not()) {
-                showErrorToast("登陆失败，请检查账号密码")
+                reportError("登陆失败，请检查账号密码")
                 return false
             }
             if (library.isActiveFTP) {
@@ -154,8 +152,7 @@ class FtpStorage(
             return true
         } catch (e: Exception) {
             e.printStackTrace()
-            ErrorReportHelper.postCatchedException(e, "FTP", "连接至FTP服务失败: ${library.ftpAddress}:${library.port}")
-            showErrorToast("连接至FTP服务失败", e)
+            reportError("连接至FTP服务失败: ${library.ftpAddress}:${library.port}", e)
             close()
         }
         return false
@@ -199,8 +196,7 @@ class FtpStorage(
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            ErrorReportHelper.postCatchedException(e, "FTP", "登录FTP服务失败")
-            showErrorToast("登录FTP服务失败", e)
+            reportError("登录FTP服务失败", e)
             close()
         }
         return false
@@ -241,14 +237,14 @@ class FtpStorage(
         }
     }
 
-    private fun showErrorToast(
+    private fun reportError(
         message: String,
         e: Exception? = null
     ) {
-        if (e == null) {
-            ToastCenter.showError(message)
-            return
+        if (e != null) {
+            ErrorReportHelper.postCatchedException(e, "FTP", message)
+        } else {
+            ErrorReportHelper.postException(message, "FTP")
         }
-        ToastCenter.showError("$message: ${e.message}")
     }
 }

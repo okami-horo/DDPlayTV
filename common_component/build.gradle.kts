@@ -44,13 +44,9 @@ dependencies {
     api(project(":core_system_component"))
     api(project(":core_network_component"))
     api(project(":core_database_component"))
+    api(project(":core_storage_component"))
     api(project(":data_component"))
-    api(project(":repository:seven_zip"))
     api(project(":repository:immersion_bar"))
-    api(project(":repository:thunder"))
-
-    api(files("libs/sardine-1.0.2.jar"))
-    api(files("libs/simple-xml-2.7.1.jar"))
     implementation(files("libs/mmkv-annotation.jar"))
 
     api(Dependencies.Kotlin.stdlib_jdk7)
@@ -71,7 +67,6 @@ dependencies {
     api(Dependencies.AndroidX.activity_ktx)
 
     api(Dependencies.Google.material)
-    api(Dependencies.Apache.commons_net)
 
     api(Dependencies.Tencent.mmkv)
     // Bugly & crash 上报已收敛到 core_log_component
@@ -80,9 +75,6 @@ dependencies {
 
     api(Dependencies.Github.coil)
     api(Dependencies.Github.coil_video)
-    api(Dependencies.Github.nano_http)
-    api(Dependencies.Github.smbj)
-    api(Dependencies.Github.dcerpc)
 
     api(Dependencies.Huawei.scan)
 

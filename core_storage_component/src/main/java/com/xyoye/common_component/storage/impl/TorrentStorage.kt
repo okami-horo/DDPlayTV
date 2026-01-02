@@ -9,7 +9,6 @@ import com.xyoye.common_component.storage.file.helper.TorrentBean
 import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.thunder.ThunderManager
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
@@ -44,7 +43,6 @@ class TorrentStorage(
                     "TorrentStorage",
                     RuntimeException("getTorrentFormFile returned null for file: ${file.fileName()}"),
                 )
-                ToastCenter.showError("获取种子文件失败")
                 return emptyList()
             }
             if (torrent.mSubFileInfo.isNullOrEmpty()) {
@@ -53,7 +51,6 @@ class TorrentStorage(
                     "TorrentStorage",
                     RuntimeException("Torrent path: ${torrent.torrentPath}"),
                 )
-                ToastCenter.showError("解析种子文件失败")
                 return emptyList()
             }
             torrent.mSubFileInfo.map {
@@ -66,7 +63,6 @@ class TorrentStorage(
                 "listFiles",
                 "文件名: ${file.fileName()}",
             )
-            ToastCenter.showError("列举种子文件失败")
             emptyList()
         }
     }

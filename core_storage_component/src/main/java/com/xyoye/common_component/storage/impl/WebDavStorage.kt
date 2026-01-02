@@ -9,7 +9,6 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.WebDavStorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
@@ -128,7 +127,6 @@ class WebDavStorage(
         } catch (e: Exception) {
             e.printStackTrace()
             ErrorReportHelper.postCatchedException(e, "WebDAV", "连接测试失败: ${library.url}")
-            ToastCenter.showError("连接失败: ${e.message}")
             false
         }
 

@@ -13,6 +13,7 @@ include(":core_log_component")
 include(":core_system_component")
 include(":core_network_component")
 include(":core_database_component")
+include(":core_storage_component")
 
 include(":repository:danmaku")
 include(":repository:immersion_bar")

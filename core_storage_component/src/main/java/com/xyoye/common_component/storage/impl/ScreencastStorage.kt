@@ -4,7 +4,6 @@ import android.net.Uri
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.aesEncode
 import com.xyoye.common_component.extension.authorizationValue
-import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.network.repository.ScreencastRepository
 import com.xyoye.common_component.storage.AbstractStorage
@@ -147,7 +146,6 @@ class ScreencastStorage(
                 "Screencast",
                 "初始化投屏服务失败: ${library.screencastAddress}:${library.port}",
             )
-            exception?.message?.toastError()
             return false
         }
         return true
