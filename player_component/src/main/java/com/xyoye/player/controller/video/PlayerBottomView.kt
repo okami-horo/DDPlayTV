@@ -63,10 +63,13 @@ class PlayerBottomView(
             actionHandler?.invoke(PlayerAction.TogglePlay) ?: mControlWrapper.togglePlay()
         }
 
-        viewBinding.danmuControlIv.setOnClickListener {
-            if (!controlsInputEnabled) return@setOnClickListener
-            actionHandler?.invoke(PlayerAction.ToggleDanmu) ?: mControlWrapper.toggleDanmuVisible()
-            syncDanmuToggleState()
+        viewBinding.danmuControlIv.setOnCheckedChangeListener { _, isChecked ->
+             if (!controlsInputEnabled) return@setOnCheckedChangeListener
+             val isDanmuVisible = mControlWrapper.isUserDanmuVisible()
+             if (isChecked != isDanmuVisible) {
+                 actionHandler?.invoke(PlayerAction.ToggleDanmu) ?: mControlWrapper.toggleDanmuVisible()
+                 syncDanmuToggleState()
+             }
         }
 
         /*
@@ -399,7 +402,9 @@ class PlayerBottomView(
     private fun syncDanmuToggleState() {
         if (this::mControlWrapper.isInitialized.not()) return
         val userVisible = mControlWrapper.isUserDanmuVisible()
-        viewBinding.danmuControlIv.isSelected = userVisible
+        if (viewBinding.danmuControlIv.isChecked != userVisible) {
+            viewBinding.danmuControlIv.isChecked = userVisible
+        }
     }
 
     private fun updateDecodeTypeHint() {

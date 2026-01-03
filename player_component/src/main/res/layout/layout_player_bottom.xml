@@ -164,17 +164,18 @@
             app:layout_constraintStart_toEndOf="@id/video_list_iv"
             app:layout_constraintTop_toTopOf="@id/play_iv" />
 
-        <ImageView
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/danmu_control_iv"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginEnd="20dp"
+            android:thumb="@drawable/thumb_danmu_switch"
+            app:track="@drawable/track_danmu_switch"
+            app:showText="false"
             android:background="@drawable/background_video_action_item"
-            android:contentDescription="@null"
+            android:padding="10dp"
             android:focusable="true"
             android:nextFocusUp="@id/video_title_tv"
-            android:padding="10dp"
-            android:src="@drawable/ic_danmaku_control"
             app:layout_constraintBottom_toBottomOf="@id/play_iv"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/play_iv" />
