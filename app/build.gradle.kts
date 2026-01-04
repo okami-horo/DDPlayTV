@@ -80,6 +80,7 @@ dependencies {
     implementation(project(":core_database_component"))
     implementation(project(":core_ui_component"))
     implementation(Dependencies.AndroidX.multidex)
+    debugImplementation(Dependencies.Square.leakcanary)
 
     implementation(project(":player_component"))
     implementation(project(":anime_component"))

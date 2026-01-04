@@ -68,15 +68,15 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
 
         val mpvVideoOutput =
             mapOf(
-                Pair("gpu（默认）", "gpu"),
+                Pair("gpu（默认，可使用自定义后处理效果）", "gpu"),
                 Pair("gpu-next（实验）", "gpu-next"),
-                Pair("mediacodec_embed（系统硬件渲染）", "mediacodec_embed"),
+                Pair("mediacodec_embed（系统硬件渲染，MPV 不会渲染字幕）", "mediacodec_embed"),
             )
 
         val mpvHwdecPriority =
             mapOf(
-                Pair("mediacodec（性能优先）", "mediacodec"),
-                Pair("mediacodec-copy（画面调节）", "mediacodec-copy"),
+                Pair("mediacodec", "mediacodec"),
+                Pair("mediacodec-copy", "mediacodec-copy"),
             )
 
         val localProxyMode =
