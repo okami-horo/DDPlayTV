@@ -206,6 +206,13 @@ class DanDanVideoPlayer(
             DecodeType.HW
         }
 
+    override fun getMpvAnime4kMode(): Int {
+        if (!this::mVideoPlayer.isInitialized) {
+            return 0
+        }
+        return (mVideoPlayer as? MpvVideoPlayer)?.getAnime4kMode() ?: 0
+    }
+
     override fun setMpvAnime4kMode(mode: Int) {
         if (!this::mVideoPlayer.isInitialized) {
             return

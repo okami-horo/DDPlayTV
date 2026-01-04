@@ -130,9 +130,11 @@ interface InterVideoPlayer : InterVideoTrack {
     fun isLive(): Boolean = false
 
     /**
-     * MPV Anime4K 超分：0 关闭 / 1 性能 / 2 质量
+     * MPV Anime4K 超分模式：0 关闭 / 1 性能 / 2 质量（单次播放，不持久化）
      *
-     * 仅对 MPV 且 vo 为 gpu/gpu-next 时生效。
+     * 仅对 MPV 且 vo 为 gpu 时生效。
      */
+    fun getMpvAnime4kMode(): Int = 0
+
     fun setMpvAnime4kMode(mode: Int) = Unit
 }

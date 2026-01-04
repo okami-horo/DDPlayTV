@@ -42,6 +42,7 @@ class MpvVideoPlayer(
     private var playbackSpeed = PlayerInitializer.Player.videoSpeed
     private var looping = PlayerInitializer.isLooping
     private var initializationError: Exception? = null
+    private var anime4kMode: Int = Anime4kShaderManager.MODE_OFF
 
     private fun failInitialization(
         message: String,
@@ -92,6 +93,7 @@ class MpvVideoPlayer(
         path: String,
         headers: Map<String, String>?
     ) {
+        setAnime4kMode(Anime4kShaderManager.MODE_OFF)
         dataSource = path
         runCatching {
             val playServer = HttpPlayServer.getInstance()
@@ -131,7 +133,7 @@ class MpvVideoPlayer(
         if (!nativeBridge.isAvailable) return
         applyVideoOutputPreference()
         nativeBridge.setSurface(surface)
-        setAnime4kMode(PlayerConfig.getMpvAnime4kMode())
+        setAnime4kMode(anime4kMode)
     }
 
     fun setSurfaceSize(
@@ -182,29 +184,41 @@ class MpvVideoPlayer(
         return nativeBridge.addShader(resolvedPath)
     }
 
+    fun getAnime4kMode(): Int {
+        return anime4kMode
+    }
+
     fun setAnime4kMode(mode: Int) {
-        if (!nativeBridge.isAvailable) return
-
-        if (!MpvOptions.isGpuVideoOutput(PlayerConfig.getMpvVideoOutput())) {
-            return
-        }
-
         val safeMode =
             when (mode) {
                 Anime4kShaderManager.MODE_PERFORMANCE -> Anime4kShaderManager.MODE_PERFORMANCE
                 Anime4kShaderManager.MODE_QUALITY -> Anime4kShaderManager.MODE_QUALITY
                 else -> Anime4kShaderManager.MODE_OFF
             }
+        anime4kMode = safeMode
 
-        if (!nativeBridge.clearShaders()) {
-            LogFacade.w(
-                LogModule.PLAYER,
-                "MpvVideoPlayer",
-                "clearShaders failed: ${nativeBridge.lastError().orEmpty()}"
-            )
+        if (!nativeBridge.isAvailable) {
+            return
+        }
+
+        val outputSupported = MpvOptions.isAnime4kSupportedVideoOutput(PlayerConfig.getMpvVideoOutput())
+
+        if (safeMode == Anime4kShaderManager.MODE_OFF || outputSupported) {
+            if (!nativeBridge.clearShaders()) {
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    "MpvVideoPlayer",
+                    "clearShaders failed: ${nativeBridge.lastError().orEmpty()}"
+                )
+            }
         }
 
         if (safeMode == Anime4kShaderManager.MODE_OFF) {
+            return
+        }
+
+        if (!outputSupported) {
+            anime4kMode = Anime4kShaderManager.MODE_OFF
             return
         }
 

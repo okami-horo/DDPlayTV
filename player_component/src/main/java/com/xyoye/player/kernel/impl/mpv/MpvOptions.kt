@@ -20,5 +20,8 @@ internal object MpvOptions {
             else -> false
         }
     }
-}
 
+    fun isAnime4kSupportedVideoOutput(configured: String?): Boolean {
+        return resolveVideoOutput(configured) == VO_GPU
+    }
+}

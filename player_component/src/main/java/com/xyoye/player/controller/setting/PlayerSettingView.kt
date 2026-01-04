@@ -217,8 +217,8 @@ class PlayerSettingView(
             )
 
         val isMpvPlayer = PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER
-        val isGpuOutput = MpvOptions.isGpuVideoOutput(PlayerConfig.getMpvVideoOutput())
-        if (!isMpvPlayer || !isGpuOutput) {
+        val isAnime4kSupported = MpvOptions.isAnime4kSupportedVideoOutput(PlayerConfig.getMpvVideoOutput())
+        if (!isMpvPlayer || !isAnime4kSupported) {
             disabledActions.add(SettingAction.ANIME4K)
         }
         SettingAction
@@ -257,7 +257,7 @@ class PlayerSettingView(
             }
 
             SettingAction.ANIME4K -> {
-                selected = PlayerConfig.getMpvAnime4kMode() != Anime4kShaderManager.MODE_OFF
+                selected = mControlWrapper.getMpvAnime4kMode() != Anime4kShaderManager.MODE_OFF
             }
 
             SettingAction.BACKGROUND_PLAY -> {

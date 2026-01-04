@@ -6,7 +6,6 @@ import android.view.KeyEvent
 import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
-import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.extension.nextItemIndex
 import com.xyoye.common_component.extension.previousItemIndex
 import com.xyoye.common_component.extension.requestIndexChildFocus
@@ -105,7 +104,7 @@ class SettingAnime4kView(
     }
 
     private fun applyModeStatus() {
-        val currentMode = PlayerConfig.getMpvAnime4kMode()
+        val currentMode = mControlWrapper.getMpvAnime4kMode()
         anime4kOptions.forEach { option ->
             option.isChecked = option.mode == currentMode
         }
@@ -113,7 +112,6 @@ class SettingAnime4kView(
     }
 
     private fun onClickMode(mode: Int) {
-        PlayerConfig.putMpvAnime4kMode(mode)
         mControlWrapper.setMpvAnime4kMode(mode)
         applyModeStatus()
     }

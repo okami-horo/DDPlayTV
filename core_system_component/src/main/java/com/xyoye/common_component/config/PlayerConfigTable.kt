@@ -76,8 +76,4 @@ object PlayerConfigTable {
     // MPV 硬解优先级：mediacodec / mediacodec-copy
     @MMKVFiled
     val mpvHwdecPriority = "mediacodec"
-
-    // MPV Anime4K 超分：0 关闭 / 1 性能 / 2 质量
-    @MMKVFiled
-    val mpvAnime4kMode = 0
 }
