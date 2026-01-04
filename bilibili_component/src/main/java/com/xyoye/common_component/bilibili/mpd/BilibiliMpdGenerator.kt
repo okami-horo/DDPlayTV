@@ -13,11 +13,12 @@ object BilibiliMpdGenerator {
         video: BilibiliDashMediaData,
         audio: BilibiliDashMediaData?,
         cdnHostOverride: String? = null,
+        cdnHostBlacklist: Set<String> = emptySet(),
     ): File {
         if (outputFile.parentFile?.exists() != true) {
             outputFile.parentFile?.mkdirs()
         }
-        val mpd = buildMpd(dash, video, audio, cdnHostOverride)
+        val mpd = buildMpd(dash, video, audio, cdnHostOverride, cdnHostBlacklist)
         outputFile.writeText(mpd)
         return outputFile
     }
@@ -27,6 +28,7 @@ object BilibiliMpdGenerator {
         video: BilibiliDashMediaData,
         audio: BilibiliDashMediaData?,
         cdnHostOverride: String?,
+        cdnHostBlacklist: Set<String>,
     ): String {
         val duration = dash.duration.takeIf { it > 0 } ?: 0
         val mpdDuration = "PT${duration}S"
@@ -44,12 +46,12 @@ object BilibiliMpdGenerator {
             )
             append("  <Period>\n")
             append("    <AdaptationSet contentType=\"video\" mimeType=\"${escape(video.mimeType)}\">\n")
-            appendRepresentation(video, cdnHostOverride)
+            appendRepresentation(video, cdnHostOverride, cdnHostBlacklist)
             append("    </AdaptationSet>\n")
 
             if (audio != null) {
                 append("    <AdaptationSet contentType=\"audio\" mimeType=\"${escape(audio.mimeType)}\">\n")
-                appendRepresentation(audio, cdnHostOverride)
+                appendRepresentation(audio, cdnHostOverride, cdnHostBlacklist)
                 append("    </AdaptationSet>\n")
             }
 
@@ -61,6 +63,7 @@ object BilibiliMpdGenerator {
     private fun StringBuilder.appendRepresentation(
         media: BilibiliDashMediaData,
         cdnHostOverride: String?,
+        cdnHostBlacklist: Set<String>,
     ) {
         val codecs = media.codecs?.takeIf { it.isNotBlank() }
         val width = media.width?.takeIf { it > 0 }
@@ -81,7 +84,17 @@ object BilibiliMpdGenerator {
                 options = BilibiliCdnStrategy.Options(hostOverride = cdnHostOverride),
             )
         val resolved = baseUrls.ifEmpty { listOf(media.baseUrl) }
-        resolved.forEachIndexed { index, url ->
+        val filtered =
+            if (cdnHostBlacklist.isEmpty()) {
+                resolved
+            } else {
+                resolved
+                    .filterNot { url ->
+                        val host = url.toHttpUrlOrNull()?.host ?: url
+                        cdnHostBlacklist.contains(host)
+                    }.ifEmpty { resolved }
+            }
+        filtered.forEachIndexed { index, url ->
             val priority = index + 1
             val serviceLocation = url.toHttpUrlOrNull()?.host ?: url
             append("        <BaseURL")

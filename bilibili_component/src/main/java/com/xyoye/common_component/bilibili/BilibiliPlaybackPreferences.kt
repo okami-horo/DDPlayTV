@@ -11,6 +11,10 @@ data class BilibiliPlaybackPreferences(
     val playMode: BilibiliPlayMode = BilibiliPlayMode.AUTO,
     val preferredQualityQn: Int = BilibiliQuality.QN_720P.qn,
     val preferredVideoCodec: BilibiliVideoCodec = BilibiliVideoCodec.AVC,
+    /**
+     * 对应 playurl 返回的 dash.audio[].id，0 表示自动选择（当前实现为带宽最大）。
+     */
+    val preferredAudioQualityId: Int = 0,
     val allow4k: Boolean = false,
     val cdnService: BilibiliCdnService = BilibiliCdnService.AUTO,
 )
@@ -45,6 +49,12 @@ enum class BilibiliVideoCodec(
     AVC(7, "AVC/H.264"),
     HEVC(12, "HEVC/H.265"),
     AV1(13, "AV1"),
+    ;
+
+    companion object {
+        fun fromCodecid(codecid: Int?): BilibiliVideoCodec? =
+            entries.firstOrNull { it.codecid != null && it.codecid == codecid }
+    }
 }
 
 enum class BilibiliQuality(

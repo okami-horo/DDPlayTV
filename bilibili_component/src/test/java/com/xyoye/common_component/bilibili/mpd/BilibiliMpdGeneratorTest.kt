@@ -4,6 +4,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliDashData
 import com.xyoye.data_component.data.bilibili.BilibiliDashMediaData
 import com.xyoye.data_component.data.bilibili.BilibiliSegmentBaseData
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import java.io.File
 
@@ -59,5 +60,37 @@ class BilibiliMpdGeneratorTest {
         assertTrue(mpd.contains(">https://b.example.com/audio.mp4</BaseURL>"))
         assertTrue(mpd.contains("dvb:priority=\"1\""))
     }
-}
 
+    @Test
+    fun writeDashMpdSkipsBlacklistedHost() {
+        val dash =
+            BilibiliDashData(
+                duration = 100,
+                minBufferTime = 1.5,
+                video = emptyList(),
+                audio = emptyList(),
+            )
+        val video =
+            BilibiliDashMediaData(
+                id = 64,
+                baseUrl = "https://a.example.com/video.mp4",
+                backupUrl = listOf("https://b.example.com/video.mp4"),
+                bandwidth = 3_000_000,
+                mimeType = "video/mp4",
+                codecs = "avc1.640028",
+            )
+
+        val mpdFile = File.createTempFile("bilibili_", ".mpd").apply { deleteOnExit() }
+        BilibiliMpdGenerator.writeDashMpd(
+            outputFile = mpdFile,
+            dash = dash,
+            video = video,
+            audio = null,
+            cdnHostBlacklist = setOf("a.example.com"),
+        )
+
+        val mpd = mpdFile.readText()
+        assertFalse(mpd.contains(">https://a.example.com/video.mp4</BaseURL>"))
+        assertTrue(mpd.contains(">https://b.example.com/video.mp4</BaseURL>"))
+    }
+}

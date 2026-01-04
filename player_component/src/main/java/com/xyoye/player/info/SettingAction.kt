@@ -13,6 +13,8 @@ enum class SettingAction(
 
     VIDEO_SPEED(SettingActionType.VIDEO, "倍速", R.drawable.ic_setting_video_speed),
 
+    BILIBILI_PLAYBACK(SettingActionType.VIDEO, "B站画质/编码", R.drawable.ic_setting_video_aspect),
+
     ANIME4K(SettingActionType.VIDEO, "Anime4K", R.drawable.ic_setting_style),
 
     BACKGROUND_PLAY(SettingActionType.VIDEO, "后台播放", R.drawable.ic_setting_background_play),

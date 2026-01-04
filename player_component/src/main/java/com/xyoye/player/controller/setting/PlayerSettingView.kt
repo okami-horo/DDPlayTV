@@ -14,10 +14,12 @@ import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
+import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.data_component.enums.PlayerType
+import com.xyoye.data_component.enums.MediaType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingAction
 import com.xyoye.player.info.SettingActionType
@@ -42,7 +44,6 @@ class PlayerSettingView(
     private var settingItems: List<Any> = emptyList()
 
     init {
-        settingItems = generateItems()
         initRv()
     }
 
@@ -216,6 +217,14 @@ class PlayerSettingView(
                 SettingAction.BACKGROUND_PLAY
             )
 
+        val source = mControlWrapper.getVideoSource()
+        val isBilibiliPlayable =
+            source.getMediaType() == MediaType.BILIBILI_STORAGE &&
+                (BilibiliKeys.parse(source.getUniqueKey()) !is BilibiliKeys.LiveKey)
+        if (!isBilibiliPlayable) {
+            disabledActions.add(SettingAction.BILIBILI_PLAYBACK)
+        }
+
         val isMpvPlayer = PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER
         val isAnime4kSupported = MpvOptions.isAnime4kSupportedVideoOutput(PlayerConfig.getMpvVideoOutput())
         if (!isMpvPlayer || !isAnime4kSupported) {
@@ -334,6 +343,11 @@ class PlayerSettingView(
 
             SettingAction.VIDEO_SPEED -> {
                 mControlWrapper.showSettingView(SettingViewType.VIDEO_SPEED)
+                onSettingVisibilityChanged(false)
+            }
+
+            SettingAction.BILIBILI_PLAYBACK -> {
+                mControlWrapper.showSettingView(SettingViewType.BILIBILI_PLAYBACK)
                 onSettingVisibilityChanged(false)
             }
 

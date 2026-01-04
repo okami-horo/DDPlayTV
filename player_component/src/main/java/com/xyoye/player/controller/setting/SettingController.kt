@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.KeyEvent
 import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
+import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.SettingViewType
@@ -22,6 +23,7 @@ class SettingController(
 ) : InterSettingController {
     private lateinit var playerSettingView: PlayerSettingView
     private lateinit var switchVideoSourceView: SwitchVideoSourceView
+    private lateinit var bilibiliPlaybackView: SettingBilibiliPlaybackView
     private lateinit var keywordBlockView: KeywordBlockView
     private lateinit var screenShotView: ScreenShotView
     private lateinit var settingDanmuStyleView: SettingDanmuStyleView
@@ -122,6 +124,11 @@ class SettingController(
             .setSwitchVideoSourceBlock(block)
     }
 
+    fun setBilibiliPlaybackUpdateBlock(block: (BilibiliPlaybackSession.PreferenceUpdate) -> Unit) {
+        (getSettingView(SettingViewType.BILIBILI_PLAYBACK) as SettingBilibiliPlaybackView)
+            .setUpdateBlock(block)
+    }
+
     private fun getSettingView(
         type: SettingViewType,
         extra: Any? = null
@@ -198,6 +205,14 @@ class SettingController(
                     addView.invoke(mpvAnime4kView)
                 }
                 return mpvAnime4kView
+            }
+
+            SettingViewType.BILIBILI_PLAYBACK -> {
+                if (this::bilibiliPlaybackView.isInitialized.not()) {
+                    bilibiliPlaybackView = SettingBilibiliPlaybackView(context)
+                    addView.invoke(bilibiliPlaybackView)
+                }
+                return bilibiliPlaybackView
             }
 
             SettingViewType.DANMU_STYLE -> {
