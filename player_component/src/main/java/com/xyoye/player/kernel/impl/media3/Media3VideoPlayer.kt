@@ -350,6 +350,7 @@ class Media3VideoPlayer(
 
     private fun getTrackType(type: TrackType): Int? =
         when (type) {
+            TrackType.VIDEO -> C.TRACK_TYPE_VIDEO
             TrackType.AUDIO -> C.TRACK_TYPE_AUDIO
             TrackType.SUBTITLE -> C.TRACK_TYPE_TEXT
             else -> null

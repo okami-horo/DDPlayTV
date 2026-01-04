@@ -9,6 +9,8 @@ enum class SettingAction(
 ) {
     AUDIO_TRACK(SettingActionType.VIDEO, "音轨", R.drawable.ic_setting_audio_track),
 
+    VIDEO_TRACK(SettingActionType.VIDEO, "视频轨", R.drawable.ic_setting_video_aspect),
+
     VIDEO_ASPECT(SettingActionType.VIDEO, "比例", R.drawable.ic_setting_video_aspect),
 
     VIDEO_SPEED(SettingActionType.VIDEO, "倍速", R.drawable.ic_setting_video_speed),

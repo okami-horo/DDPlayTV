@@ -258,6 +258,8 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                         null,
                     )
                 }
+
+                TrackType.VIDEO -> Unit
             }
             updateHistory()
         }

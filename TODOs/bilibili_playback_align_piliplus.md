@@ -296,6 +296,12 @@ P2（体验闭环）：
 - 升级 `BilibiliMpdGenerator` 写入多 video/audio rep
 - Media3 上提供更自然的“轨道/清晰度切换”
 
+> 落地状态（DDPlay-bilibili）：已实现（2026-01）
+> - 多 Representation MPD：`bilibili_component/src/main/java/com/xyoye/common_component/bilibili/mpd/BilibiliMpdGenerator.kt`（支持写入多 video/audio rep，并保证 Representation id 唯一）
+> - 会话写清单：`bilibili_component/src/main/java/com/xyoye/common_component/bilibili/playback/BilibiliPlaybackSession.kt`（按“选中清晰度/音质”为上限写入可降级的多 rep，避免默认选到超出偏好的更高档）
+> - Media3 视频轨切换：`player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3VideoPlayer.kt` + `data_component/src/main/java/com/xyoye/data_component/enums/TrackType.kt`（新增 `TrackType.VIDEO` 并支持选择）
+> - 播放器入口：`player_component/src/main/java/com/xyoye/player/info/SettingAction.kt` + `player_component/src/main/java/com/xyoye/player/controller/setting/PlayerSettingView.kt`（新增「视频轨」设置项，进入后可切换画质/轨道）
+
 ### Phase 4：心跳上报闭环（P2）
 
 - 增加 B 站心跳接口封装与节流上报

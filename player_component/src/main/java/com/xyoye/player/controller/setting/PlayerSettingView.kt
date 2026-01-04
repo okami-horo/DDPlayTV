@@ -225,6 +225,12 @@ class PlayerSettingView(
             disabledActions.add(SettingAction.BILIBILI_PLAYBACK)
         }
 
+        if (PlayerInitializer.playerType != PlayerType.TYPE_EXO_PLAYER ||
+            mControlWrapper.getTracks(TrackType.VIDEO).size <= 1
+        ) {
+            disabledActions.add(SettingAction.VIDEO_TRACK)
+        }
+
         val isMpvPlayer = PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER
         val isAnime4kSupported = MpvOptions.isAnime4kSupportedVideoOutput(PlayerConfig.getMpvVideoOutput())
         if (!isMpvPlayer || !isAnime4kSupported) {
@@ -363,6 +369,11 @@ class PlayerSettingView(
 
             SettingAction.AUDIO_TRACK -> {
                 mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.AUDIO)
+                onSettingVisibilityChanged(false)
+            }
+
+            SettingAction.VIDEO_TRACK -> {
+                mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.VIDEO)
                 onSettingVisibilityChanged(false)
             }
 

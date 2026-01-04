@@ -93,4 +93,52 @@ class BilibiliMpdGeneratorTest {
         assertFalse(mpd.contains(">https://a.example.com/video.mp4</BaseURL>"))
         assertTrue(mpd.contains(">https://b.example.com/video.mp4</BaseURL>"))
     }
+
+    @Test
+    fun writeDashMpdUsesUniqueRepresentationIds() {
+        val dash =
+            BilibiliDashData(
+                duration = 100,
+                minBufferTime = 1.5,
+                video = emptyList(),
+                audio = emptyList(),
+            )
+        val avcVideo =
+            BilibiliDashMediaData(
+                id = 64,
+                codecid = 7,
+                baseUrl = "https://a.example.com/video_avc.mp4",
+                backupUrl = emptyList(),
+                bandwidth = 3_000_000,
+                mimeType = "video/mp4",
+                codecs = "avc1.640028",
+                width = 1920,
+                height = 1080,
+            )
+        val hevcVideo =
+            BilibiliDashMediaData(
+                id = 64,
+                codecid = 12,
+                baseUrl = "https://a.example.com/video_hevc.mp4",
+                backupUrl = emptyList(),
+                bandwidth = 2_500_000,
+                mimeType = "video/mp4",
+                codecs = "hev1.1.6.L120.90",
+                width = 1920,
+                height = 1080,
+            )
+
+        val mpdFile = File.createTempFile("bilibili_", ".mpd").apply { deleteOnExit() }
+        BilibiliMpdGenerator.writeDashMpd(
+            outputFile = mpdFile,
+            dash = dash,
+            videos = listOf(avcVideo, hevcVideo),
+            audios = emptyList(),
+        )
+
+        val mpd = mpdFile.readText()
+        val ids = Regex("<Representation id=\"([^\"]+)\"").findAll(mpd).map { it.groupValues[1] }.toList()
+        assertTrue(ids.size >= 2)
+        assertTrue(ids.distinct().size == ids.size)
+    }
 }

@@ -363,7 +363,7 @@ class BilibiliPlaybackSession(
 
     private fun selectVideoByPreferences(candidates: List<BilibiliDashMediaData>): BilibiliDashMediaData? {
         val codecOrder =
-            when (val codec = preferences.preferredVideoCodec) {
+            when (preferences.preferredVideoCodec) {
                 BilibiliVideoCodec.AUTO -> listOf(BilibiliVideoCodec.AV1, BilibiliVideoCodec.HEVC, BilibiliVideoCodec.AVC)
                 BilibiliVideoCodec.AV1 -> listOf(BilibiliVideoCodec.AV1, BilibiliVideoCodec.HEVC, BilibiliVideoCodec.AVC)
                 BilibiliVideoCodec.HEVC -> listOf(BilibiliVideoCodec.HEVC, BilibiliVideoCodec.AVC)
@@ -401,17 +401,16 @@ class BilibiliPlaybackSession(
                 selectedVideo != null
 
         if (allowDash) {
-            val dashData = dashData ?: throw BilibiliException.from(-1, "取流失败：DASH为空")
+            val dashValue = dashData ?: throw BilibiliException.from(-1, "取流失败：DASH为空")
             val selectedVideo = selectedVideo ?: throw BilibiliException.from(-1, "取流失败：无可用视频流")
-            val selectedAudio = selectedAudio
             val blacklist = cdnHostBlacklist.keys
 
             withContext(Dispatchers.IO) {
                 BilibiliMpdGenerator.writeDashMpd(
                     outputFile = mpdFile,
-                    dash = dashData,
-                    video = selectedVideo,
-                    audio = selectedAudio,
+                    dash = dashValue,
+                    videos = buildDashVideoRepresentations(dashValue, selectedVideo),
+                    audios = buildDashAudioRepresentations(audioCandidates, selectedAudio),
                     cdnHostOverride = preferences.cdnService.host,
                     cdnHostBlacklist = blacklist,
                 )
@@ -422,9 +421,9 @@ class BilibiliPlaybackSession(
                 selectedQualityQn = selectedVideo.id,
                 selectedVideoCodec = BilibiliVideoCodec.fromCodecid(selectedVideo.codecid) ?: preferences.preferredVideoCodec,
                 selectedAudioQualityId = selectedAudio?.id ?: preferences.preferredAudioQualityId,
-                qualities = dashData.video.map { it.id }.distinct().sorted(),
+                qualities = dashValue.video.map { it.id }.distinct().sorted(),
                 codecs =
-                    dashData.video
+                    dashValue.video
                         .mapNotNull { BilibiliVideoCodec.fromCodecid(it.codecid) }
                         .distinct(),
                 audios = audioCandidates.map { AudioOption(it.id, it.bandwidth) },
@@ -458,6 +457,46 @@ class BilibiliPlaybackSession(
         }
 
         throw BilibiliException.from(-1, "取流失败：无可用流")
+    }
+
+    private fun buildDashVideoRepresentations(
+        dash: BilibiliDashData,
+        selectedVideo: BilibiliDashMediaData,
+    ): List<BilibiliDashMediaData> {
+        val candidates =
+            dash.video
+                .filter { it.baseUrl.isNotBlank() }
+                .sortedWith(compareByDescending<BilibiliDashMediaData> { it.id }.thenByDescending { it.bandwidth })
+
+        val codecid = selectedVideo.codecid
+        val codecFiltered =
+            if (codecid == null) {
+                candidates
+            } else {
+                candidates.filter { it.codecid == codecid }.ifEmpty { candidates }
+            }
+
+        val maxQualityQn = selectedVideo.id
+        val qualityFiltered = codecFiltered.filter { it.id <= maxQualityQn }.ifEmpty { codecFiltered }
+
+        return listOf(selectedVideo) + qualityFiltered.filterNot { it == selectedVideo }
+    }
+
+    private fun buildDashAudioRepresentations(
+        candidates: List<BilibiliDashMediaData>,
+        selectedAudio: BilibiliDashMediaData?,
+    ): List<BilibiliDashMediaData> {
+        if (selectedAudio == null) return emptyList()
+        val maxBandwidth = selectedAudio.bandwidth.takeIf { it > 0 } ?: return listOf(selectedAudio)
+
+        val filtered =
+            candidates
+                .filter { it.baseUrl.isNotBlank() }
+                .filter { it.bandwidth in 1..maxBandwidth }
+                .sortedWith(compareByDescending<BilibiliDashMediaData> { it.bandwidth }.thenByDescending { it.id })
+                .ifEmpty { listOf(selectedAudio) }
+
+        return listOf(selectedAudio) + filtered.filterNot { it == selectedAudio }
     }
 
     private fun updateSnapshot(

@@ -10,29 +10,48 @@ object BilibiliMpdGenerator {
     fun writeDashMpd(
         outputFile: File,
         dash: BilibiliDashData,
-        video: BilibiliDashMediaData,
-        audio: BilibiliDashMediaData?,
+        videos: List<BilibiliDashMediaData>,
+        audios: List<BilibiliDashMediaData> = emptyList(),
         cdnHostOverride: String? = null,
         cdnHostBlacklist: Set<String> = emptySet(),
     ): File {
         if (outputFile.parentFile?.exists() != true) {
             outputFile.parentFile?.mkdirs()
         }
-        val mpd = buildMpd(dash, video, audio, cdnHostOverride, cdnHostBlacklist)
+        val mpd = buildMpd(dash, videos, audios, cdnHostOverride, cdnHostBlacklist)
         outputFile.writeText(mpd)
         return outputFile
     }
 
-    private fun buildMpd(
+    fun writeDashMpd(
+        outputFile: File,
         dash: BilibiliDashData,
         video: BilibiliDashMediaData,
         audio: BilibiliDashMediaData?,
+        cdnHostOverride: String? = null,
+        cdnHostBlacklist: Set<String> = emptySet(),
+    ): File =
+        writeDashMpd(
+            outputFile = outputFile,
+            dash = dash,
+            videos = listOf(video),
+            audios = audio?.let(::listOf).orEmpty(),
+            cdnHostOverride = cdnHostOverride,
+            cdnHostBlacklist = cdnHostBlacklist,
+        )
+
+    private fun buildMpd(
+        dash: BilibiliDashData,
+        videos: List<BilibiliDashMediaData>,
+        audios: List<BilibiliDashMediaData>,
         cdnHostOverride: String?,
         cdnHostBlacklist: Set<String>,
     ): String {
         val duration = dash.duration.takeIf { it > 0 } ?: 0
         val mpdDuration = "PT${duration}S"
         val minBufferTime = dash.minBufferTime?.takeIf { it > 0 } ?: 1.5
+        val videoMimeType = videos.firstNotNullOfOrNull { it.mimeType?.takeIf(String::isNotBlank) }
+        val audioMimeType = audios.firstNotNullOfOrNull { it.mimeType?.takeIf(String::isNotBlank) }
 
         return buildString {
             append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
@@ -45,13 +64,32 @@ object BilibiliMpdGenerator {
                     "minBufferTime=\"PT${minBufferTime}S\">\n",
             )
             append("  <Period>\n")
-            append("    <AdaptationSet contentType=\"video\" mimeType=\"${escape(video.mimeType)}\">\n")
-            appendRepresentation(video, cdnHostOverride, cdnHostBlacklist)
-            append("    </AdaptationSet>\n")
 
-            if (audio != null) {
-                append("    <AdaptationSet contentType=\"audio\" mimeType=\"${escape(audio.mimeType)}\">\n")
-                appendRepresentation(audio, cdnHostOverride, cdnHostBlacklist)
+            if (videos.isNotEmpty()) {
+                append("    <AdaptationSet contentType=\"video\"")
+                if (!videoMimeType.isNullOrBlank()) {
+                    append(" mimeType=\"${escape(videoMimeType)}\"")
+                }
+                append(">\n")
+                val used = hashSetOf<String>()
+                videos.forEach { video ->
+                    val representationId = buildUniqueRepresentationId("v", video, used)
+                    appendRepresentation(representationId, video, cdnHostOverride, cdnHostBlacklist)
+                }
+                append("    </AdaptationSet>\n")
+            }
+
+            if (audios.isNotEmpty()) {
+                append("    <AdaptationSet contentType=\"audio\"")
+                if (!audioMimeType.isNullOrBlank()) {
+                    append(" mimeType=\"${escape(audioMimeType)}\"")
+                }
+                append(">\n")
+                val used = hashSetOf<String>()
+                audios.forEach { audio ->
+                    val representationId = buildUniqueRepresentationId("a", audio, used)
+                    appendRepresentation(representationId, audio, cdnHostOverride, cdnHostBlacklist)
+                }
                 append("    </AdaptationSet>\n")
             }
 
@@ -60,7 +98,44 @@ object BilibiliMpdGenerator {
         }
     }
 
+    private fun buildUniqueRepresentationId(
+        prefix: String,
+        media: BilibiliDashMediaData,
+        usedIds: MutableSet<String>,
+    ): String {
+        val baseId =
+            buildString {
+                append(prefix)
+                append('_')
+                append(media.id)
+                append('_')
+                append(media.codecid ?: 0)
+                val bandwidth = media.bandwidth.takeIf { it > 0 }
+                if (bandwidth != null) {
+                    append('_')
+                    append(bandwidth)
+                }
+                val width = media.width?.takeIf { it > 0 }
+                val height = media.height?.takeIf { it > 0 }
+                if (width != null && height != null) {
+                    append('_')
+                    append(width)
+                    append('x')
+                    append(height)
+                }
+            }
+
+        var id = baseId
+        var suffix = 1
+        while (!usedIds.add(id)) {
+            id = "${baseId}_$suffix"
+            suffix++
+        }
+        return id
+    }
+
     private fun StringBuilder.appendRepresentation(
+        representationId: String,
         media: BilibiliDashMediaData,
         cdnHostOverride: String?,
         cdnHostBlacklist: Set<String>,
@@ -68,13 +143,17 @@ object BilibiliMpdGenerator {
         val codecs = media.codecs?.takeIf { it.isNotBlank() }
         val width = media.width?.takeIf { it > 0 }
         val height = media.height?.takeIf { it > 0 }
+        val frameRate = media.frameRate?.takeIf { it.isNotBlank() }
+        val sar = media.sar?.takeIf { it.isNotBlank() }
         val bandwidth = media.bandwidth.takeIf { it > 0 }
 
-        append("      <Representation id=\"${media.id}\"")
+        append("      <Representation id=\"${escape(representationId)}\"")
         bandwidth?.let { append(" bandwidth=\"$it\"") }
         codecs?.let { append(" codecs=\"${escape(it)}\"") }
         width?.let { append(" width=\"$it\"") }
         height?.let { append(" height=\"$it\"") }
+        frameRate?.let { append(" frameRate=\"${escape(it)}\"") }
+        sar?.let { append(" sar=\"${escape(it)}\"") }
         append(">\n")
 
         val baseUrls =
