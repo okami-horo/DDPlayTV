@@ -45,6 +45,10 @@ class StorageFileFragmentViewModel : BaseViewModel() {
 
     lateinit var storage: Storage
 
+    @Volatile
+    var lastListError: String? = null
+        private set
+
     // 当前媒体库中最后一次播放记录
     private var storageLastPlay: PlayHistoryEntity? = null
 
@@ -62,6 +66,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         refresh: Boolean = false
     ) {
         viewModelScope.launch(Dispatchers.IO) {
+            lastListError = null
             try {
                 val target = directory ?: storage.getRootFile()
                 if (target == null) {
@@ -101,6 +106,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                     .apply { _fileLiveData.postValue(this) }
                     .also { filesSnapshot = it }
             } catch (e: Exception) {
+                lastListError = e.message
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
                     "StorageFileFragmentViewModel",
@@ -132,6 +138,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
     fun changeSortOption() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                lastListError = null
                 val currentFiles = _fileLiveData.value?.filterIsInstance<StorageFile>() ?: return@launch
                 val sorted =
                     mutableListOf<StorageFile>()
@@ -160,6 +167,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         if (storage.supportSearch()) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
+                    lastListError = null
                     refreshStorageLastPlay()
                     storage
                         .search(text)
@@ -285,7 +293,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         }
     }
 
-    fun loadMore() {
+    fun loadMore(showFailureToast: Boolean = true) {
         val pagedStorage = storage as? PagedStorage ?: return
         if (pagedStorage.state == PagedStorage.State.LOADING) {
             return
@@ -303,7 +311,9 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             val current = _fileLiveData.value?.filterIsInstance<StorageFile>().orEmpty()
             val result = pagedStorage.loadMore()
             if (result.isFailure) {
-                ToastCenter.showError("加载更多失败: ${result.exceptionOrNull()?.message}")
+                if (showFailureToast) {
+                    ToastCenter.showError("加载更多失败: ${result.exceptionOrNull()?.message}")
+                }
                 _fileLiveData.postValue(buildDisplayItems(current))
                 return@launch
             }
@@ -450,7 +460,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         val items = files.toMutableList<Any>()
         val paged = storage as? PagedStorage
         if (paged != null && storage.directory?.filePath() == "/history/") {
-            items.add(StoragePagingItem(paged.state, paged.hasMore()))
+            items.add(StoragePagingItem(paged.state, paged.hasMore(), files.isEmpty()))
         }
         return items
     }

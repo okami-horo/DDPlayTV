@@ -3,20 +3,24 @@ package com.xyoye.storage_component.ui.fragment.storage_file
 import android.graphics.Rect
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.base.BaseFragment
+import com.xyoye.common_component.extension.FocusTarget
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.BR
 import com.xyoye.storage_component.R
@@ -28,6 +32,8 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
     private val directory: StorageFile? by lazy { ownerActivity.directory }
     private var lastFocusedIndex = RecyclerView.NO_POSITION
     private var pendingFocusIndex = RecyclerView.NO_POSITION
+    private var pendingFocusUniqueKey: String? = null
+    private var rootDescendantFocusability: Int? = null
     private var tvHistoryHintShown = false
     private var lastPagingHintState: com.xyoye.common_component.storage.PagedStorage.State? = null
 
@@ -72,7 +78,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                         ownerActivity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
                         ownerActivity.directory?.filePath() == "/history/"
                     ) {
-                        ToastCenter.showInfo("提示：按菜单键/设置键可刷新，列表底部可选择“加载更多/重试”")
+                        ToastCenter.showInfo("提示：按菜单键/设置键可刷新，列表底部可选择“加载更多/重试/刷新”")
                         tvHistoryHintShown = true
                     }
 
@@ -86,12 +92,34 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             }
             // ownerActivity.onDirectoryDataLoaded(this, it)
             // 仅在需要恢复上次焦点时，才请求焦点（与媒体库首页保持一致：首次进入不默认高亮首项）
-            if (pendingFocusIndex != RecyclerView.NO_POSITION) {
+            if (!dataBinding.storageFileRv.isInTouchMode &&
+                pendingFocusIndex == RecyclerView.NO_POSITION &&
+                pendingFocusUniqueKey == null
+            ) {
+                val showEmptyActionFocus =
+                    it.isEmpty() ||
+                        ((it.singleOrNull() as? StoragePagingItem)?.isDataEmpty == true)
+                if (showEmptyActionFocus) {
+                    pendingFocusIndex = 0
+                }
+            }
+
+            if (pendingFocusIndex != RecyclerView.NO_POSITION || pendingFocusUniqueKey != null) {
                 // 触控模式下不恢复列表焦点，避免出现“默认高亮/焦点框”
                 if (dataBinding.storageFileRv.isInTouchMode) {
                     pendingFocusIndex = RecyclerView.NO_POSITION
+                    pendingFocusUniqueKey = null
                     return@observe
                 }
+
+                val adapterCount = dataBinding.storageFileRv.adapter?.itemCount ?: 0
+                if (adapterCount <= 0) {
+                    LogFacade.d(LogModule.STORAGE, TAG, "pending focus skipped, adapter empty")
+                    return@observe
+                }
+
+                pendingFocusIndex = resolvePendingFocusIndex(it, adapterCount)
+                pendingFocusUniqueKey = null
                 // 等待下一次消息循环后再请求焦点，避免因子 View 未就绪导致的滚动跳变
                 dataBinding.storageFileRv.post { requestFocus() }
             }
@@ -101,13 +129,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             if (library.mediaType != com.xyoye.data_component.enums.MediaType.BILIBILI_STORAGE) {
                 return@observe
             }
-            BilibiliLoginDialog(
-                activity = ownerActivity,
-                library = library,
-                onLoginSuccess = {
-                    reloadDirectory(refresh = true)
-                },
-            ).show()
+            showBilibiliLoginDialog(library)
         }
 
         viewModel.listFile(directory)
@@ -115,6 +137,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
 
     override fun onResume() {
         super.onResume()
+        setFragmentFocusBlocked(false)
         if (lastFocusedIndex != RecyclerView.NO_POSITION) {
             pendingFocusIndex = lastFocusedIndex
         }
@@ -125,7 +148,27 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
     override fun onPause() {
         saveCurrentFocusIndex()
         super.onPause()
+        setFragmentFocusBlocked(true)
         setRecyclerViewItemFocusAble(false)
+    }
+
+    /**
+     * StorageFileActivity stacks fragments via add(), so non-current fragments keep their view in the hierarchy.
+     * If we don't block focus for non-current fragments, TV DPAD navigation may "pierce" into invisible pages.
+     */
+    private fun setFragmentFocusBlocked(blocked: Boolean) {
+        val binding = bindingOrNull ?: return
+        val root = binding.root as? ViewGroup ?: return
+        if (rootDescendantFocusability == null) {
+            rootDescendantFocusability = root.descendantFocusability
+        }
+
+        if (blocked) {
+            root.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+            root.clearFocus()
+        } else {
+            root.descendantFocusability = rootDescendantFocusability ?: ViewGroup.FOCUS_AFTER_DESCENDANTS
+        }
     }
 
     private fun setRecyclerViewItemFocusAble(focusAble: Boolean) {
@@ -148,7 +191,13 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
         dataBinding.storageFileRv.apply {
             layoutManager = vertical()
 
-            adapter = StorageFileAdapter(ownerActivity, viewModel).create()
+            adapter =
+                StorageFileAdapter(
+                    activity = ownerActivity,
+                    viewModel = viewModel,
+                    onRefreshRequested = { triggerTvRefresh() },
+                    onLoginRequested = { showBilibiliLoginDialog(ownerActivity.storage.library) },
+                ).create()
 
             addOnScrollListener(
                 object : RecyclerView.OnScrollListener() {
@@ -199,8 +248,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                     KeyEvent.KEYCODE_MENU,
                     KeyEvent.KEYCODE_SETTINGS -> {
                         // TV/遥控器：提供可达的刷新入口（替代下拉刷新）
-                        ToastCenter.showInfo("刷新中…")
-                        reloadDirectory(refresh = true)
+                        triggerTvRefresh()
                         true
                     }
 
@@ -208,7 +256,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                         val nextIndex = currentIndex + 1
                         if (nextIndex < rvAdapter.itemCount) {
                             // 遥控器按下时手动分发焦点，保证列表可继续向下滚动
-                            val moved = requestIndexChildFocus(nextIndex)
+                            val moved = requestIndexChildFocus(nextIndex, resolveVerticalMoveFocusTarget())
                             LogFacade.d(
                                 LogModule.STORAGE,
                                 TAG,
@@ -225,14 +273,14 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                                 TAG,
                                 "key DOWN reach end current=$currentIndex count=${rvAdapter.itemCount}",
                             )
-                            true
+                            false
                         }
                     }
 
                     KeyEvent.KEYCODE_DPAD_UP -> {
                         val previousIndex = currentIndex - 1
                         if (previousIndex >= 0) {
-                            val moved = requestIndexChildFocus(previousIndex)
+                            val moved = requestIndexChildFocus(previousIndex, resolveVerticalMoveFocusTarget())
                             LogFacade.d(
                                 LogModule.STORAGE,
                                 TAG,
@@ -256,6 +304,46 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                 }
             }
         }
+    }
+
+    private fun RecyclerView.resolveVerticalMoveFocusTarget(): FocusTarget {
+        val focusedView = findFocus()
+        val isMoreActionFocused = focusedView?.id == com.xyoye.core_ui_component.R.id.more_action_iv
+        return if (isMoreActionFocused) {
+            FocusTarget.ViewId(com.xyoye.core_ui_component.R.id.more_action_iv)
+        } else {
+            FocusTarget.Tag(R.string.focusable_item.toResString())
+        }
+    }
+
+    fun triggerTvRefresh() {
+        val binding = bindingOrNull ?: return
+        val recyclerView = binding.storageFileRv
+        if (recyclerView.isInTouchMode) {
+            reloadDirectory(refresh = true)
+            return
+        }
+
+        val isBilibiliHistory =
+            ownerActivity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
+                directory?.filePath() == "/history/"
+
+        if (isBilibiliHistory) {
+            // 历史列表刷新：刷新后聚焦第一项（最新）
+            pendingFocusUniqueKey = null
+            pendingFocusIndex = 0
+        } else {
+            val (focusedIndex, focusedUniqueKey) = captureFocusedItem()
+            pendingFocusUniqueKey = focusedUniqueKey
+            pendingFocusIndex =
+                when {
+                    focusedIndex != RecyclerView.NO_POSITION -> focusedIndex
+                    else -> 0
+                }
+        }
+
+        ToastCenter.showInfo("刷新中…")
+        reloadDirectory(refresh = true)
     }
 
     fun reloadDirectory(refresh: Boolean = false) {
@@ -383,5 +471,62 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             pendingFocusIndex = index
             LogFacade.d(LogModule.STORAGE, TAG, "saveCurrentFocusIndex index=$index")
         }
+    }
+
+    private fun resolvePendingFocusIndex(
+        items: List<Any>,
+        itemCount: Int,
+    ): Int {
+        val pendingKey = pendingFocusUniqueKey
+        if (!pendingKey.isNullOrEmpty()) {
+            val resolvedIndex =
+                items.indexOfFirst { item ->
+                    val file = item as? StorageFile ?: return@indexOfFirst false
+                    file.uniqueKey() == pendingKey
+                }
+            if (resolvedIndex in 0 until itemCount) {
+                return resolvedIndex
+            }
+        }
+
+        if (pendingFocusIndex != RecyclerView.NO_POSITION) {
+            return pendingFocusIndex.coerceIn(0, itemCount - 1)
+        }
+
+        return 0
+    }
+
+    private fun captureFocusedItem(): Pair<Int, String?> {
+        val binding = bindingOrNull ?: return RecyclerView.NO_POSITION to null
+        val recyclerView = binding.storageFileRv
+        val focusedChild =
+            recyclerView.focusedChild
+                ?: return RecyclerView.NO_POSITION to null
+        val focusedIndex = recyclerView.getChildAdapterPosition(focusedChild)
+        if (focusedIndex == RecyclerView.NO_POSITION) {
+            return focusedIndex to null
+        }
+
+        val adapter = recyclerView.adapter as? BaseAdapter ?: return focusedIndex to null
+        val storageFile = adapter.items.getOrNull(focusedIndex) as? StorageFile ?: return focusedIndex to null
+        return focusedIndex to storageFile.uniqueKey()
+    }
+
+    private fun showBilibiliLoginDialog(library: MediaLibraryEntity) {
+        BilibiliLoginDialog(
+            activity = ownerActivity,
+            library = library,
+            onLoginSuccess = { triggerTvRefresh() },
+            onDismiss = {
+                val isHistoryPage = directory?.filePath() == "/history/"
+                val requiresLogin = (ownerActivity.storage as? BilibiliStorage)?.isConnected() == false
+                bindingOrNull?.let { binding ->
+                    if (!binding.storageFileRv.isInTouchMode && isHistoryPage && requiresLogin) {
+                        pendingFocusIndex = 0
+                        binding.storageFileRv.post { requestFocus() }
+                    }
+                }
+            },
+        ).show()
     }
 }

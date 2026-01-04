@@ -23,12 +23,14 @@ import com.xyoye.core_ui_component.databinding.ItemStorageVideoTagBinding
 import com.xyoye.common_component.extension.dp
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.isInvalid
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.loadStorageFileCover
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.toFile
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.common_component.extension.toResString
+import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.danmu
 import com.xyoye.common_component.storage.file.subtitle
@@ -42,6 +44,7 @@ import com.xyoye.common_component.weight.dialog.FileManagerDialog
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.bean.VideoTagBean
 import com.xyoye.data_component.enums.FileManagerAction
+import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ItemStoragePagingBinding
@@ -53,7 +56,9 @@ import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivit
 
 class StorageFileAdapter(
     private val activity: StorageFileActivity,
-    private val viewModel: StorageFileFragmentViewModel
+    private val viewModel: StorageFileFragmentViewModel,
+    private val onRefreshRequested: () -> Unit,
+    private val onLoginRequested: () -> Unit,
 ) {
     private enum class ManageAction(
         val title: String,
@@ -85,7 +90,29 @@ class StorageFileAdapter(
 
             addEmptyView(R.layout.layout_empty) {
                 initEmptyView {
-                    itemBinding.emptyTv.text = R.string.text_empty_video.toResString()
+                    val isBilibiliHistory =
+                        activity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
+                            activity.directory?.filePath() == "/history/"
+                    val requiresLogin =
+                        isBilibiliHistory && (activity.storage as? BilibiliStorage)?.isConnected() == false
+
+                    itemBinding.emptyActionTv.isVisible = true
+
+                    if (requiresLogin) {
+                        itemBinding.emptyTv.text = "需要登录才能查看历史记录"
+                        itemBinding.emptyActionTv.text = "扫码登录"
+                        itemBinding.emptyActionTv.setOnClickListener { onLoginRequested.invoke() }
+                        return@initEmptyView
+                    }
+
+                    if (!viewModel.lastListError.isNullOrBlank()) {
+                        itemBinding.emptyTv.text = "加载失败，请检查网络后重试"
+                        itemBinding.emptyActionTv.text = "重试加载"
+                    } else {
+                        itemBinding.emptyTv.text = R.string.text_empty_video.toResString()
+                        itemBinding.emptyActionTv.text = "刷新"
+                    }
+                    itemBinding.emptyActionTv.setOnClickListener { onRefreshRequested.invoke() }
                 }
             }
 
@@ -124,7 +151,7 @@ class StorageFileAdapter(
                 }
 
                 old is StoragePagingItem && new is StoragePagingItem -> {
-                    old.state == new.state && old.hasMore == new.hasMore
+                    old.state == new.state && old.hasMore == new.hasMore && old.isDataEmpty == new.isDataEmpty
                 }
 
                 else -> false
@@ -183,30 +210,50 @@ class StorageFileAdapter(
 
     private fun BaseViewHolderCreator<ItemStoragePagingBinding>.pagingItem() =
         { data: StoragePagingItem ->
+            val isDataEmpty = data.isDataEmpty
             val title =
                 when (data.state) {
                     com.xyoye.common_component.storage.PagedStorage.State.LOADING -> "加载中…"
-                    com.xyoye.common_component.storage.PagedStorage.State.ERROR -> "加载失败，点击重试"
-                    com.xyoye.common_component.storage.PagedStorage.State.NO_MORE -> "没有更多了"
+                    com.xyoye.common_component.storage.PagedStorage.State.ERROR -> "加载失败，按确认键重试"
+                    com.xyoye.common_component.storage.PagedStorage.State.NO_MORE ->
+                        if (isDataEmpty) "暂无历史记录" else "没有更多了"
                     com.xyoye.common_component.storage.PagedStorage.State.IDLE ->
-                        if (data.hasMore) "加载更多" else "没有更多了"
+                        when {
+                            data.hasMore && isDataEmpty -> "暂无历史记录"
+                            data.hasMore -> "加载更多"
+                            isDataEmpty -> "暂无历史记录"
+                            else -> "没有更多了"
+                        }
+                }
+            val subtitle =
+                when (data.state) {
+                    com.xyoye.common_component.storage.PagedStorage.State.ERROR ->
+                        if (isDataEmpty) "请检查网络后重试" else "弱网/断网时可稍后重试"
+                    com.xyoye.common_component.storage.PagedStorage.State.IDLE ->
+                        if (data.hasMore && isDataEmpty) "按确认键加载更多" else ""
+                    com.xyoye.common_component.storage.PagedStorage.State.NO_MORE ->
+                        if (isDataEmpty) "按确认键刷新" else ""
+                    else -> ""
                 }
 
             itemBinding.titleTv.text = title
-            itemBinding.subtitleTv.text =
-                when (data.state) {
-                    com.xyoye.common_component.storage.PagedStorage.State.ERROR -> "弱网/断网时可稍后重试"
-                    else -> ""
-                }
+            itemBinding.subtitleTv.text = subtitle
+            itemBinding.subtitleTv.isVisible = subtitle.isNotBlank()
             itemBinding.loadingPb.isVisible = data.state == com.xyoye.common_component.storage.PagedStorage.State.LOADING
 
             itemBinding.itemLayout.setOnClickListener {
-                if (!data.hasMore) return@setOnClickListener
-                if (
-                    data.state == com.xyoye.common_component.storage.PagedStorage.State.IDLE ||
-                    data.state == com.xyoye.common_component.storage.PagedStorage.State.ERROR
-                ) {
-                    viewModel.loadMore()
+                when {
+                    data.state == com.xyoye.common_component.storage.PagedStorage.State.LOADING -> Unit
+                    data.state == com.xyoye.common_component.storage.PagedStorage.State.ERROR -> {
+                        viewModel.loadMore(showFailureToast = !activity.isTelevisionUiMode())
+                    }
+
+                    data.state == com.xyoye.common_component.storage.PagedStorage.State.IDLE && data.hasMore -> {
+                        viewModel.loadMore(showFailureToast = !activity.isTelevisionUiMode())
+                    }
+
+                    data.isDataEmpty -> onRefreshRequested.invoke()
+                    else -> ToastCenter.showInfo("没有更多了")
                 }
             }
         }

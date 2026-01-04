@@ -338,8 +338,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             return false
         }
 
-        ToastCenter.showInfo("刷新中…")
-        fragment.reloadDirectory(refresh = true)
+        fragment.triggerTvRefresh()
         return true
     }
 
