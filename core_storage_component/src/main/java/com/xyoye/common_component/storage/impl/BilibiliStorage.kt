@@ -4,6 +4,7 @@ import android.net.Uri
 import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliVideoCodec
+import com.xyoye.common_component.bilibili.cdn.BilibiliCdnStrategy
 import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.bilibili.mpd.BilibiliMpdGenerator
 import com.xyoye.common_component.bilibili.net.BilibiliHeaders
@@ -416,11 +417,21 @@ class BilibiliStorage(
                             dash = dash,
                             video = selectedVideo,
                             audio = selectedAudio,
+                            cdnHostOverride = preferences.cdnService.host,
                         ).absolutePath
                 }
             }
 
-            primaryData?.durl?.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
+            primaryData?.durl?.firstOrNull()?.let { durl ->
+                BilibiliCdnStrategy
+                    .resolvePrimaryUrl(
+                        baseUrl = durl.url,
+                        backupUrls = durl.backupUrl,
+                        options = BilibiliCdnStrategy.Options(hostOverride = preferences.cdnService.host),
+                    )
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { return it }
+            }
 
             val fallback =
                 when (parsed) {
@@ -441,7 +452,16 @@ class BilibiliStorage(
 
                     else -> null
                 }
-            fallback?.getOrNull()?.durl?.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
+            fallback?.getOrNull()?.durl?.firstOrNull()?.let { durl ->
+                BilibiliCdnStrategy
+                    .resolvePrimaryUrl(
+                        baseUrl = durl.url,
+                        backupUrls = durl.backupUrl,
+                        options = BilibiliCdnStrategy.Options(hostOverride = preferences.cdnService.host),
+                    )
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { return it }
+            }
 
             throw primary.exceptionOrNull() ?: BilibiliException.from(-1, "取流失败")
         } catch (t: Throwable) {

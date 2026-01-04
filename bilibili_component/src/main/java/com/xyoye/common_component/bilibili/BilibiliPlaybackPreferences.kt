@@ -1,5 +1,7 @@
 package com.xyoye.common_component.bilibili
 
+import com.xyoye.common_component.bilibili.cdn.BilibiliCdnService
+
 /**
  * Bilibili 播放偏好配置（用于 playurl 取流与本地 mpd 生成选流）。
  *
@@ -10,6 +12,7 @@ data class BilibiliPlaybackPreferences(
     val preferredQualityQn: Int = BilibiliQuality.QN_720P.qn,
     val preferredVideoCodec: BilibiliVideoCodec = BilibiliVideoCodec.AVC,
     val allow4k: Boolean = false,
+    val cdnService: BilibiliCdnService = BilibiliCdnService.AUTO,
 )
 
 enum class BilibiliPlayMode(

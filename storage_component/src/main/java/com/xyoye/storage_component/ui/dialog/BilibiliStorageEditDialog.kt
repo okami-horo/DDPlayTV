@@ -10,6 +10,7 @@ import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliPlayMode
 import com.xyoye.common_component.bilibili.BilibiliQuality
 import com.xyoye.common_component.bilibili.BilibiliVideoCodec
+import com.xyoye.common_component.bilibili.cdn.BilibiliCdnService
 import com.xyoye.common_component.bilibili.cleanup.BilibiliCleanup
 import com.xyoye.common_component.config.PlayerActions
 import com.xyoye.common_component.extension.setTextColorRes
@@ -66,6 +67,7 @@ class BilibiliStorageEditDialog(
         binding.playModeActionTv.setOnClickListener { showPlayModeDialog() }
         binding.qualityActionTv.setOnClickListener { showQualityDialog() }
         binding.codecActionTv.setOnClickListener { showCodecDialog() }
+        binding.cdnActionTv.setOnClickListener { showCdnDialog() }
         binding.allow4kOnTv.setOnClickListener { updateAllow4k(true) }
         binding.allow4kOffTv.setOnClickListener { updateAllow4k(false) }
         binding.aiBlockOnTv.setOnClickListener { updateAiBlock(true) }
@@ -139,6 +141,7 @@ class BilibiliStorageEditDialog(
         binding.playModeValueTv.text = preferences.playMode.label
         binding.qualityValueTv.text = BilibiliQuality.fromQn(preferences.preferredQualityQn).label
         binding.codecValueTv.text = preferences.preferredVideoCodec.label
+        binding.cdnValueTv.text = preferences.cdnService.label
         setAllow4kSelected(preferences.allow4k)
 
         binding.aiLevelValueTv.text = formatAiLevel(danmakuBlockPreferences.aiLevel)
@@ -274,6 +277,29 @@ class BilibiliStorageEditDialog(
         BottomActionDialog(activity, actions, "视频编码") {
             val selected = it.actionId as? BilibiliVideoCodec ?: return@BottomActionDialog false
             preferences = preferences.copy(preferredVideoCodec = selected)
+            refreshPreferenceViews()
+            true
+        }.show()
+    }
+
+    private fun showCdnDialog() {
+        val actions =
+            BilibiliCdnService.entries.map {
+                val describe =
+                    if (it.host.isNullOrBlank()) {
+                        "不强制 CDN，按 base/backup 自动选择与回退"
+                    } else {
+                        it.host
+                    }
+                SheetActionBean(
+                    actionId = it,
+                    actionName = it.label,
+                    describe = describe,
+                )
+            }
+        BottomActionDialog(activity, actions, "CDN节点") {
+            val selected = it.actionId as? BilibiliCdnService ?: return@BottomActionDialog false
+            preferences = preferences.copy(cdnService = selected)
             refreshPreferenceViews()
             true
         }.show()

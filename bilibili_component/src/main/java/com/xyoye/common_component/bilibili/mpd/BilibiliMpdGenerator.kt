@@ -1,7 +1,9 @@
 package com.xyoye.common_component.bilibili.mpd
 
+import com.xyoye.common_component.bilibili.cdn.BilibiliCdnStrategy
 import com.xyoye.data_component.data.bilibili.BilibiliDashData
 import com.xyoye.data_component.data.bilibili.BilibiliDashMediaData
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.io.File
 
 object BilibiliMpdGenerator {
@@ -10,11 +12,12 @@ object BilibiliMpdGenerator {
         dash: BilibiliDashData,
         video: BilibiliDashMediaData,
         audio: BilibiliDashMediaData?,
+        cdnHostOverride: String? = null,
     ): File {
         if (outputFile.parentFile?.exists() != true) {
             outputFile.parentFile?.mkdirs()
         }
-        val mpd = buildMpd(dash, video, audio)
+        val mpd = buildMpd(dash, video, audio, cdnHostOverride)
         outputFile.writeText(mpd)
         return outputFile
     }
@@ -23,6 +26,7 @@ object BilibiliMpdGenerator {
         dash: BilibiliDashData,
         video: BilibiliDashMediaData,
         audio: BilibiliDashMediaData?,
+        cdnHostOverride: String?,
     ): String {
         val duration = dash.duration.takeIf { it > 0 } ?: 0
         val mpdDuration = "PT${duration}S"
@@ -32,18 +36,20 @@ object BilibiliMpdGenerator {
             append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
             append(
                 "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" " +
+                    "xmlns:dvb=\"urn:dvb:dash:profile:dvb-dash:2014\" " +
                     "type=\"static\" " +
+                    "profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011,urn:dvb:dash:profile:dvb-dash:2014\" " +
                     "mediaPresentationDuration=\"$mpdDuration\" " +
                     "minBufferTime=\"PT${minBufferTime}S\">\n",
             )
             append("  <Period>\n")
             append("    <AdaptationSet contentType=\"video\" mimeType=\"${escape(video.mimeType)}\">\n")
-            appendRepresentation(video)
+            appendRepresentation(video, cdnHostOverride)
             append("    </AdaptationSet>\n")
 
             if (audio != null) {
                 append("    <AdaptationSet contentType=\"audio\" mimeType=\"${escape(audio.mimeType)}\">\n")
-                appendRepresentation(audio)
+                appendRepresentation(audio, cdnHostOverride)
                 append("    </AdaptationSet>\n")
             }
 
@@ -52,7 +58,10 @@ object BilibiliMpdGenerator {
         }
     }
 
-    private fun StringBuilder.appendRepresentation(media: BilibiliDashMediaData) {
+    private fun StringBuilder.appendRepresentation(
+        media: BilibiliDashMediaData,
+        cdnHostOverride: String?,
+    ) {
         val codecs = media.codecs?.takeIf { it.isNotBlank() }
         val width = media.width?.takeIf { it > 0 }
         val height = media.height?.takeIf { it > 0 }
@@ -64,7 +73,23 @@ object BilibiliMpdGenerator {
         width?.let { append(" width=\"$it\"") }
         height?.let { append(" height=\"$it\"") }
         append(">\n")
-        append("        <BaseURL>${escapeUrl(media.baseUrl)}</BaseURL>\n")
+
+        val baseUrls =
+            BilibiliCdnStrategy.resolveUrls(
+                baseUrl = media.baseUrl,
+                backupUrls = media.backupUrl,
+                options = BilibiliCdnStrategy.Options(hostOverride = cdnHostOverride),
+            )
+        val resolved = baseUrls.ifEmpty { listOf(media.baseUrl) }
+        resolved.forEachIndexed { index, url ->
+            val priority = index + 1
+            val serviceLocation = url.toHttpUrlOrNull()?.host ?: url
+            append("        <BaseURL")
+            append(" serviceLocation=\"${escape(serviceLocation)}\"")
+            append(" dvb:priority=\"$priority\"")
+            append(" dvb:weight=\"1\"")
+            append(">${escapeUrl(url)}</BaseURL>\n")
+        }
 
         val segment = media.segmentBase
         val indexRange = segment?.indexRange?.takeIf { it.isNotBlank() }
@@ -90,4 +115,3 @@ object BilibiliMpdGenerator {
 
     private fun escapeUrl(url: String): String = escape(url)
 }
-

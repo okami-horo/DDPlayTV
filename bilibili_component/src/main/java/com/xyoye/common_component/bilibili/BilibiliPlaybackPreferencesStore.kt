@@ -1,5 +1,6 @@
 package com.xyoye.common_component.bilibili
 
+import com.xyoye.common_component.bilibili.cdn.BilibiliCdnService
 import com.tencent.mmkv.MMKV
 import com.xyoye.data_component.entity.MediaLibraryEntity
 
@@ -18,6 +19,7 @@ object BilibiliPlaybackPreferencesStore {
     private const val KEY_QUALITY_QN = "quality_qn"
     private const val KEY_VIDEO_CODEC = "video_codec"
     private const val KEY_ALLOW_4K = "allow_4k"
+    private const val KEY_CDN_SERVICE = "cdn_service"
 
     fun storageKey(library: MediaLibraryEntity): String =
         "${library.mediaType.value}:${library.url.trim().removeSuffix("/")}"
@@ -47,12 +49,17 @@ object BilibiliPlaybackPreferencesStore {
                 kv.decodeString(namespacedKey(storageKey, KEY_VIDEO_CODEC))?.let { BilibiliVideoCodec.valueOf(it) }
             }.getOrNull() ?: BilibiliVideoCodec.AVC
         val allow4k = kv.decodeBool(namespacedKey(storageKey, KEY_ALLOW_4K), false)
+        val cdnService =
+            runCatching {
+                kv.decodeString(namespacedKey(storageKey, KEY_CDN_SERVICE))?.let { BilibiliCdnService.valueOf(it) }
+            }.getOrNull() ?: BilibiliCdnService.AUTO
 
         return BilibiliPlaybackPreferences(
             playMode = mode,
             preferredQualityQn = qn,
             preferredVideoCodec = codec,
             allow4k = allow4k,
+            cdnService = cdnService,
         )
     }
 
@@ -65,6 +72,7 @@ object BilibiliPlaybackPreferencesStore {
         kv.encode(namespacedKey(storageKey, KEY_QUALITY_QN), preferences.preferredQualityQn)
         kv.encode(namespacedKey(storageKey, KEY_VIDEO_CODEC), preferences.preferredVideoCodec.name)
         kv.encode(namespacedKey(storageKey, KEY_ALLOW_4K), preferences.allow4k)
+        kv.encode(namespacedKey(storageKey, KEY_CDN_SERVICE), preferences.cdnService.name)
     }
 
     fun clear(storageKey: String) {
@@ -73,6 +81,7 @@ object BilibiliPlaybackPreferencesStore {
         kv.removeValueForKey(namespacedKey(storageKey, KEY_QUALITY_QN))
         kv.removeValueForKey(namespacedKey(storageKey, KEY_VIDEO_CODEC))
         kv.removeValueForKey(namespacedKey(storageKey, KEY_ALLOW_4K))
+        kv.removeValueForKey(namespacedKey(storageKey, KEY_CDN_SERVICE))
     }
 
     private fun mmkv(): MMKV = MMKV.mmkvWithID(MMKV_ID)
@@ -82,4 +91,3 @@ object BilibiliPlaybackPreferencesStore {
         fieldKey: String
     ): String = "$storageKey.$fieldKey"
 }
-
