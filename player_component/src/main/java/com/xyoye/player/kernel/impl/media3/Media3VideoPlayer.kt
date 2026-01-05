@@ -189,6 +189,7 @@ class Media3VideoPlayer(
 
         val releaseAction = {
             releaseSubtitleFrameDrivers()
+            embeddedSubtitleSink.set(null)
             player.run {
                 runCatching { removeListener(this@Media3VideoPlayer) }
                 runCatching { setVideoSurface(null) }

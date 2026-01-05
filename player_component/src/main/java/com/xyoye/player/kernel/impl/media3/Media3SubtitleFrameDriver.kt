@@ -8,15 +8,17 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.video.VideoFrameMetadataListener
 import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
+import java.lang.ref.WeakReference
 
 @UnstableApi
 class Media3SubtitleFrameDriver(
     private val player: ExoPlayer,
-    private val callback: SubtitleFrameDriver.Callback
+    callback: SubtitleFrameDriver.Callback
 ) : SubtitleFrameDriver,
     AnalyticsListener,
     VideoFrameMetadataListener {
     private var started = false
+    private val callbackRef = WeakReference(callback)
 
     override fun start() {
         if (started) return
@@ -30,6 +32,7 @@ class Media3SubtitleFrameDriver(
         started = false
         player.removeAnalyticsListener(this)
         player.clearVideoFrameMetadataListener(this)
+        callbackRef.clear()
     }
 
     override fun onVideoFrameAboutToBeRendered(
@@ -40,14 +43,14 @@ class Media3SubtitleFrameDriver(
     ) {
         val ptsMs = presentationTimeUs / 1_000L
         val vsyncId = releaseTimeNs / 1_000_000L
-        callback.onVideoFrame(ptsMs, vsyncId)
+        callbackRef.get()?.onVideoFrame(ptsMs, vsyncId)
     }
 
     override fun onPositionDiscontinuity(
         eventTime: AnalyticsListener.EventTime,
         reason: Int
     ) {
-        callback.onTimelineJump(
+        callbackRef.get()?.onTimelineJump(
             positionMs = player.contentPosition,
             playing = player.playWhenReady,
             reason = SubtitleFrameDriver.TimelineJumpReason.POSITION_DISCONTINUITY,
@@ -55,7 +58,7 @@ class Media3SubtitleFrameDriver(
     }
 
     override fun onSeekStarted(eventTime: AnalyticsListener.EventTime) {
-        callback.onTimelineJump(
+        callbackRef.get()?.onTimelineJump(
             positionMs = player.contentPosition,
             playing = player.playWhenReady,
             reason = SubtitleFrameDriver.TimelineJumpReason.SEEK,
@@ -66,7 +69,7 @@ class Media3SubtitleFrameDriver(
         eventTime: AnalyticsListener.EventTime,
         tracks: Tracks
     ) {
-        callback.onTimelineJump(
+        callbackRef.get()?.onTimelineJump(
             positionMs = player.contentPosition,
             playing = player.playWhenReady,
             reason = SubtitleFrameDriver.TimelineJumpReason.TRACKS_CHANGED,
@@ -78,8 +81,7 @@ class Media3SubtitleFrameDriver(
         state: Int
     ) {
         if (state == Player.STATE_ENDED) {
-            callback.onPlaybackEnded()
+            callbackRef.get()?.onPlaybackEnded()
         }
     }
 }
-

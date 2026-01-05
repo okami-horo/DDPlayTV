@@ -445,26 +445,29 @@ class DanDanVideoPlayer(
     }
 
     fun release() {
-        if (mCurrentPlayState != PlayState.STATE_IDLE) {
-            destroySubtitleRenderer()
-            // 释放缓存
-            CacheManager.release()
-            // 释放播放器控制器
-            mVideoController?.destroy()
-            // 释放播放器
-            mVideoPlayer.release()
-            // 关闭常亮
-            keepScreenOn = false
-            // 释放渲染布局
-            mRenderView?.run {
-                this@DanDanVideoPlayer.removeView(getView())
-                release()
-            }
-            // 取消音频焦点
-            mAudioFocusHelper.abandonFocus()
-            // 重置播放状态
-            setPlayState(PlayState.STATE_IDLE)
+        val hasActiveResources =
+            this::mVideoPlayer.isInitialized ||
+                mCurrentPlayState != PlayState.STATE_IDLE ||
+                subtitleRenderer != null ||
+                mRenderView != null
+        if (!hasActiveResources) {
+            return
         }
+
+        destroySubtitleRenderer()
+        CacheManager.release()
+        mVideoController?.destroy()
+        if (this::mVideoPlayer.isInitialized) {
+            runCatching { mVideoPlayer.release() }
+        }
+        keepScreenOn = false
+        mRenderView?.run {
+            this@DanDanVideoPlayer.removeView(getView())
+            release()
+        }
+        mRenderView = null
+        mAudioFocusHelper.abandonFocus()
+        setPlayState(PlayState.STATE_IDLE)
     }
 
     fun onBackPressed(): Boolean = mVideoController?.onBackPressed() ?: false
