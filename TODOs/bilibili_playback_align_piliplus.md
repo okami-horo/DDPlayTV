@@ -284,7 +284,7 @@ P2（体验闭环）：
 > - CDN 策略：`bilibili_component/src/main/java/com/xyoye/common_component/bilibili/cdn/BilibiliCdnStrategy.kt`
 > - 媒体库偏好：新增 `CDN节点` 选择（`BilibiliPlaybackPreferences.cdnService`），入口在 `storage_component` 的 Bilibili 媒体库编辑弹窗
 > - MPD BaseURL：`bilibili_component/src/main/java/com/xyoye/common_component/bilibili/mpd/BilibiliMpdGenerator.kt`（写入 `BaseURL + backupUrl`，并输出 `dvb:priority/weight + serviceLocation`，以支持 Media3 的 failover）
-> - 非 DASH durl：`core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BilibiliStorage.kt`（选择 `url + backup_url` 的优先候选）
+> - 非 DASH durl：`bilibili_component/src/main/java/com/xyoye/common_component/bilibili/playback/BilibiliPlaybackSession.kt`（使用 `url + backup_url` 的排序候选，并在失败时轮询切换）
 
 ### Phase 2：会话化重建与无缝续播（P0/P1）
 
@@ -313,6 +313,14 @@ P2（体验闭环）：
 > - 播放器回调挂载：`player_component/src/main/java/com/xyoye/player/controller/base/BaseVideoController.kt`
 > - 本地/服务端进度协调：`storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt`（服务端更“新”时回写本地）
 > - 开关：`Bilibili媒体库编辑弹窗` 增加「心跳上报」开关（默认关闭）
+
+---
+
+## 8. 收尾/补强项（已补齐）
+
+- 会话/心跳状态清理：`BilibiliPlaybackSessionStore.remove/clear*` 同步清理 `BilibiliPlaybackHeartbeat` 的内存状态，避免连续切源/退出导致状态累积。
+- 解码失败自动降级：`BilibiliPlaybackSession.recover(...)` 在「编码回退」失败后，增加「画质降级」兜底（同 codec 下选下一档更低 qn）。
+- 断开媒体库清理：`BilibiliCleanup.cleanup(...)` 额外清理本地 `bilibili_*.mpd` 播放清单缓存。
 
 ---
 

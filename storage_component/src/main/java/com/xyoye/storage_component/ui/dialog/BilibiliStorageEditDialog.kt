@@ -84,7 +84,7 @@ class BilibiliStorageEditDialog(
                 .Builder(activity)
                 .apply {
                     tips = "提示"
-                    content = "确认断开连接并清除该媒体库的隐私数据？\n\n将清除：Cookie/登录态、API类型偏好、播放偏好、弹幕屏蔽偏好、播放历史/进度、Bilibili 弹幕缓存文件。"
+                    content = "确认断开连接并清除该媒体库的隐私数据？\n\n将清除：Cookie/登录态、API类型偏好、播放偏好、弹幕屏蔽偏好、播放历史/进度、Bilibili 弹幕缓存文件、本地 MPD 播放清单缓存。"
                     positiveText = "确认清除"
                     addPositive { dialog ->
                         dialog.dismiss()

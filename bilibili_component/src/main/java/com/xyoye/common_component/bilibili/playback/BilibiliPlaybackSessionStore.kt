@@ -24,6 +24,7 @@ object BilibiliPlaybackSessionStore {
         uniqueKey: String,
     ) {
         sessions.remove(Key(storageId, uniqueKey))
+        BilibiliPlaybackHeartbeat.clear(storageId, uniqueKey)
     }
 
     fun clearStorage(storageId: Int) {
@@ -34,10 +35,11 @@ object BilibiliPlaybackSessionStore {
                 iterator.remove()
             }
         }
+        BilibiliPlaybackHeartbeat.clearStorage(storageId)
     }
 
     fun clear() {
         sessions.clear()
+        BilibiliPlaybackHeartbeat.clearAll()
     }
 }
-

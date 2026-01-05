@@ -5,6 +5,7 @@ import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.bilibili.auth.BilibiliAuthStore
 import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
+import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSessionStore
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.PathHelper
@@ -35,6 +36,8 @@ object BilibiliCleanup {
                 BilibiliApiPreferencesStore.clear(library)
                 BilibiliAuthStore.clear(storageKey)
                 BilibiliCookieJarStore(storageKey).clear()
+                BilibiliPlaybackSessionStore.clearStorage(storageId)
+                deleteBilibiliMpdFiles()
             }.onFailure { e ->
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     e,
@@ -57,6 +60,17 @@ object BilibiliCleanup {
                 if (!file.name.startsWith("bilibili_") || !file.name.endsWith(".xml")) return@runCatching
                 file.delete()
             }
+        }
+    }
+
+    private fun deleteBilibiliMpdFiles() {
+        runCatching {
+            val dir = PathHelper.getPlayCacheDirectory()
+            val files =
+                dir.listFiles()
+                    ?.filter { it.isFile && it.name.startsWith("bilibili_") && it.name.endsWith(".mpd") }
+                    .orEmpty()
+            files.forEach { it.delete() }
         }
     }
 }

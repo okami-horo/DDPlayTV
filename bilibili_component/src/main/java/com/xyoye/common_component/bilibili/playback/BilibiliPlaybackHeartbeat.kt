@@ -21,6 +21,27 @@ object BilibiliPlaybackHeartbeat {
 
     private val states = ConcurrentHashMap<BilibiliPlaybackSessionStore.Key, State>()
 
+    fun clear(
+        storageId: Int,
+        uniqueKey: String,
+    ) {
+        states.remove(BilibiliPlaybackSessionStore.Key(storageId = storageId, uniqueKey = uniqueKey))
+    }
+
+    fun clearStorage(storageId: Int) {
+        val iterator = states.entries.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            if (entry.key.storageId == storageId) {
+                iterator.remove()
+            }
+        }
+    }
+
+    fun clearAll() {
+        states.clear()
+    }
+
     fun onProgress(
         storageId: Int,
         uniqueKey: String,

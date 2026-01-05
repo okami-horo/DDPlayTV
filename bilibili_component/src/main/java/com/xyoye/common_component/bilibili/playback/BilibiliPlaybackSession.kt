@@ -123,8 +123,10 @@ class BilibiliPlaybackSession(
             val blacklisted = failure.failingUrl?.let { blacklistHost(it) } == true
             val forceRefresh = shouldForceRefresh(failure) || (failure.failingUrl.isNullOrBlank() && dash != null)
 
-            if (failure.isDecoderError && tryFallbackCodec()) {
-                return@runCatching buildPlayableOrThrow()
+            if (failure.isDecoderError) {
+                if (tryFallbackCodec() || tryFallbackQuality()) {
+                    return@runCatching buildPlayableOrThrow()
+                }
             }
 
             if (blacklisted) {
@@ -254,6 +256,17 @@ class BilibiliPlaybackSession(
         }
 
         return false
+    }
+
+    private fun tryFallbackQuality(): Boolean {
+        val current = selectedVideo ?: return false
+        val codec = BilibiliVideoCodec.fromCodecid(current.codecid) ?: BilibiliVideoCodec.AUTO
+        val candidates = videoCandidatesByCodec[codec].orEmpty()
+        if (candidates.isEmpty()) return false
+
+        val next = candidates.firstOrNull { it.id < current.id } ?: return false
+        selectedVideo = next
+        return true
     }
 
     private suspend fun ensureStreams(forceRefresh: Boolean) {
