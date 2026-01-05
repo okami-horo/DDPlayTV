@@ -70,6 +70,8 @@ class BilibiliStorageEditDialog(
         binding.cdnActionTv.setOnClickListener { showCdnDialog() }
         binding.allow4kOnTv.setOnClickListener { updateAllow4k(true) }
         binding.allow4kOffTv.setOnClickListener { updateAllow4k(false) }
+        binding.heartbeatOnTv.setOnClickListener { updateHeartbeatReport(true) }
+        binding.heartbeatOffTv.setOnClickListener { updateHeartbeatReport(false) }
         binding.aiBlockOnTv.setOnClickListener { updateAiBlock(true) }
         binding.aiBlockOffTv.setOnClickListener { updateAiBlock(false) }
         binding.aiLevelActionTv.setOnClickListener { showAiLevelDialog() }
@@ -136,6 +138,11 @@ class BilibiliStorageEditDialog(
         refreshPreferenceViews()
     }
 
+    private fun updateHeartbeatReport(enabled: Boolean) {
+        preferences = preferences.copy(enableHeartbeatReport = enabled)
+        refreshPreferenceViews()
+    }
+
     private fun refreshPreferenceViews() {
         binding.apiTypeValueTv.text = apiPreferences.apiType.label
         binding.playModeValueTv.text = preferences.playMode.label
@@ -143,6 +150,7 @@ class BilibiliStorageEditDialog(
         binding.codecValueTv.text = preferences.preferredVideoCodec.label
         binding.cdnValueTv.text = preferences.cdnService.label
         setAllow4kSelected(preferences.allow4k)
+        setHeartbeatReportSelected(preferences.enableHeartbeatReport)
 
         binding.aiLevelValueTv.text = formatAiLevel(danmakuBlockPreferences.aiLevel)
         setAiBlockSelected(danmakuBlockPreferences.aiSwitch)
@@ -176,6 +184,14 @@ class BilibiliStorageEditDialog(
 
         binding.allow4kOffTv.isSelected = !allow
         binding.allow4kOffTv.setTextColorRes(if (!allow) R.color.text_white else R.color.text_black)
+    }
+
+    private fun setHeartbeatReportSelected(enabled: Boolean) {
+        binding.heartbeatOnTv.isSelected = enabled
+        binding.heartbeatOnTv.setTextColorRes(if (enabled) R.color.text_white else R.color.text_black)
+
+        binding.heartbeatOffTv.isSelected = !enabled
+        binding.heartbeatOffTv.setTextColorRes(if (!enabled) R.color.text_white else R.color.text_black)
     }
 
     private fun updateAiBlock(enabled: Boolean) {

@@ -17,6 +17,12 @@ data class BilibiliPlaybackPreferences(
     val preferredAudioQualityId: Int = 0,
     val allow4k: Boolean = false,
     val cdnService: BilibiliCdnService = BilibiliCdnService.AUTO,
+    /**
+     * 播放心跳上报（可选）：用于同步 B 站服务端历史/续播进度。
+     *
+     * 注意：该能力依赖 Cookie + csrf；失败不会影响本地播放。
+     */
+    val enableHeartbeatReport: Boolean = false,
 )
 
 enum class BilibiliPlayMode(

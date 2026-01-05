@@ -307,6 +307,13 @@ P2（体验闭环）：
 - 增加 B 站心跳接口封装与节流上报
 - 与本地 `PlayHistory` 同步策略协调（避免互相覆盖）
 
+> 落地状态（DDPlay-bilibili）：已实现（2026-01）
+> - 心跳接口：`bilibili_component/src/main/java/com/xyoye/common_component/network/service/BilibiliService.kt` + `bilibili_component/src/main/java/com/xyoye/common_component/bilibili/repository/BilibiliRepository.kt`
+> - 节流上报：`bilibili_component/src/main/java/com/xyoye/common_component/bilibili/playback/BilibiliPlaybackHeartbeat.kt`（每 5 秒 + 暂停/完成额外上报）
+> - 播放器回调挂载：`player_component/src/main/java/com/xyoye/player/controller/base/BaseVideoController.kt`
+> - 本地/服务端进度协调：`storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt`（服务端更“新”时回写本地）
+> - 开关：`Bilibili媒体库编辑弹窗` 增加「心跳上报」开关（默认关闭）
+
 ---
 
 ## 6. 测试与验证建议

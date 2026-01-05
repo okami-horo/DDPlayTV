@@ -101,6 +101,13 @@ interface BilibiliService {
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>,
     ): BilibiliJsonModel<BilibiliHistoryCursorData>
 
+    @FormUrlEncoded
+    @POST("/x/click-interface/web/heartbeat")
+    suspend fun playbackHeartbeat(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @FieldMap params: Map<String, @JvmSuppressWildcards Any>,
+    ): BilibiliJsonModel<Any>
+
     @GET("/room/v1/Room/get_info")
     suspend fun liveRoomInfo(
         @Header(HeaderKey.BASE_URL) baseUrl: String,

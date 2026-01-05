@@ -24,9 +24,14 @@ import com.xyoye.data_component.enums.TrackType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Date
+import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 class StorageFileFragmentViewModel : BaseViewModel() {
     companion object {
+        private val remoteHistoryOverrideThresholdMs = TimeUnit.MINUTES.toMillis(1)
+        private const val remoteHistoryPositionToleranceMs = 3_000L
+
         private val lastPlayDirectory =
             PlayHistoryEntity(
                 url = "",
@@ -348,7 +353,11 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         if (file.isVideoFile().not()) {
             return null
         }
-        var history =
+
+        val bilibiliRemoteHistory = file.payloadAs<BilibiliHistoryItem>()
+            .takeIf { storage.library.mediaType == MediaType.BILIBILI_STORAGE }
+
+        var history: PlayHistoryEntity? =
             DatabaseManager.instance
                 .getPlayHistoryDao()
                 .getPlayHistory(file.uniqueKey(), file.storage.library.id)
@@ -369,23 +378,45 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             history.isLastPlay = history.id == storageLastPlay!!.id
         }
 
-        if (history == null && storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
-            val remote = file.payloadAs<BilibiliHistoryItem>() ?: return null
-            val positionMs = normalizeRemoteProgress(remote.progressSec, remote.durationSec) * 1000
-            val durationMs = remote.durationSec.coerceAtLeast(0) * 1000
-            val viewAtMs = remote.viewAt.coerceAtLeast(0) * 1000
-            return PlayHistoryEntity(
-                id = 0,
-                videoName = file.fileName(),
-                url = file.uniqueKey(),
-                mediaType = storage.library.mediaType,
-                videoPosition = positionMs,
-                videoDuration = durationMs,
-                playTime = Date(viewAtMs),
-                uniqueKey = file.uniqueKey(),
-                storagePath = file.storagePath(),
-                storageId = storage.library.id,
-            )
+        bilibiliRemoteHistory?.let { remote ->
+            val remotePositionMs = normalizeRemoteProgress(remote.progressSec, remote.durationSec) * 1000
+            val remoteDurationMs = remote.durationSec.coerceAtLeast(0) * 1000
+            val remoteViewAtMs = remote.viewAt.coerceAtLeast(0) * 1000
+
+            val local = history
+            if (local == null) {
+                return PlayHistoryEntity(
+                    id = 0,
+                    videoName = file.fileName(),
+                    url = file.uniqueKey(),
+                    mediaType = storage.library.mediaType,
+                    videoPosition = remotePositionMs,
+                    videoDuration = remoteDurationMs,
+                    playTime = Date(remoteViewAtMs),
+                    uniqueKey = file.uniqueKey(),
+                    storagePath = file.storagePath(),
+                    storageId = storage.library.id,
+                )
+            }
+
+            val localViewAtMs = local.playTime.time
+            val remoteNewer = remoteViewAtMs > localViewAtMs + remoteHistoryOverrideThresholdMs
+            val positionDeltaMs = abs(remotePositionMs - local.videoPosition)
+            val durationChanged = remoteDurationMs > 0 && remoteDurationMs != local.videoDuration
+            val positionChanged = positionDeltaMs >= remoteHistoryPositionToleranceMs
+
+            if (remoteNewer && (positionChanged || durationChanged)) {
+                val updated =
+                    local.copy(
+                        videoPosition = remotePositionMs,
+                        videoDuration = if (remoteDurationMs > 0) remoteDurationMs else local.videoDuration,
+                        playTime = Date(remoteViewAtMs),
+                    ).also {
+                        it.isLastPlay = local.isLastPlay
+                    }
+                DatabaseManager.instance.getPlayHistoryDao().insert(updated)
+                history = updated
+            }
         }
 
         return history

@@ -273,6 +273,47 @@
                 android:textSize="14sp" />
         </FrameLayout>
 
+        <FrameLayout
+            android:id="@+id/heartbeat_report_container"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/background_border_gray">
+
+            <TextView
+                android:layout_width="110dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/background_border_gray"
+                android:gravity="center"
+                android:text="心跳上报"
+                android:textColor="@color/text_gray"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/heartbeat_on_tv"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:background="@drawable/background_button_corner_state"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="开启"
+                android:textColor="@color/text_black"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/heartbeat_off_tv"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:background="@drawable/background_button_corner_state"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="关闭"
+                android:textColor="@color/text_black"
+                android:textSize="14sp" />
+        </FrameLayout>
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

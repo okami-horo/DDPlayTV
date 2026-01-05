@@ -95,6 +95,16 @@ class BilibiliPlaybackSession(
 
     fun snapshot(): Snapshot? = snapshot
 
+    suspend fun reportPlaybackHeartbeat(playedTimeSec: Long): Result<Unit> {
+        if (!BilibiliPlaybackPreferencesStore.read(storageKey).enableHeartbeatReport) {
+            return Result.success(Unit)
+        }
+        return repository.playbackHeartbeat(
+            key = key,
+            playedTimeSec = playedTimeSec,
+        )
+    }
+
     suspend fun prepare(): Result<String> =
         runCatching {
             preferences = BilibiliPlaybackPreferencesStore.read(storageKey)

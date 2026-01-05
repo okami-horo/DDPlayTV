@@ -1,6 +1,7 @@
 package com.xyoye.common_component.bilibili.repository
 
 import android.util.Base64
+import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.bilibili.BilibiliPlayurlPreferencesMapper
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferences
 import com.xyoye.common_component.bilibili.BilibiliApiPreferencesStore
@@ -509,6 +510,55 @@ class BilibiliRepository(
             if (isFirstPage) {
                 writeCachedHistoryFirstPage(type, data)
             }
+        }
+    }
+
+    suspend fun playbackHeartbeat(
+        key: BilibiliKeys.Key,
+        playedTimeSec: Long,
+    ): Result<Unit> {
+        // played_time: 0=ignore, -1=complete, >0=seconds
+        if (playedTimeSec == 0L) {
+            return Result.success(Unit)
+        }
+
+        val csrf =
+            BilibiliAuthStore
+                .read(storageKey)
+                .csrf
+                ?.takeIf { it.isNotBlank() }
+                ?: return Result.failure(BilibiliException.from(-1, "心跳上报失败：csrf 为空"))
+
+        val params: RequestParams =
+            hashMapOf(
+                "played_time" to playedTimeSec,
+                "csrf" to csrf,
+            )
+
+        when (key) {
+            is BilibiliKeys.ArchiveKey -> {
+                val cid = key.cid ?: return Result.failure(BilibiliException.from(-1, "心跳上报失败：cid 为空"))
+                params["bvid"] = key.bvid
+                params["cid"] = cid
+                params["type"] = 3
+            }
+
+            is BilibiliKeys.PgcEpisodeKey -> {
+                params["cid"] = key.cid
+                params["epid"] = key.epId
+                key.seasonId?.takeIf { it > 0 }?.let {
+                    params["sid"] = it
+                }
+                params["type"] = 4
+            }
+
+            is BilibiliKeys.LiveKey,
+            is BilibiliKeys.PgcSeasonKey,
+            -> return Result.success(Unit)
+        }
+
+        return requestBilibiliUnitAuthed(reason = "playbackHeartbeat") {
+            service.playbackHeartbeat(BASE_API, params)
         }
     }
 
@@ -1160,6 +1210,22 @@ class BilibiliRepository(
         if (refreshed.isFailure) return first
 
         return requestBilibili(block)
+    }
+
+    private suspend fun requestBilibiliUnitAuthed(
+        reason: String,
+        block: suspend () -> BilibiliJsonModel<Any>,
+    ): Result<Unit> {
+        refreshCookieIfNeeded(forceCheck = false, reason = reason)
+        refreshBiliTicketIfNeeded(reason = reason)
+        val first = requestBilibiliUnit(block)
+        val error = first.exceptionOrNull() as? BilibiliException ?: return first
+        if (error.code != -101) return first
+
+        val refreshed = refreshCookieIfNeeded(forceCheck = true, reason = "$reason(-101)")
+        if (refreshed.isFailure) return first
+
+        return requestBilibiliUnit(block)
     }
 
     private suspend fun <T> requestBilibiliResult(
