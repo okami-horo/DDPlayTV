@@ -30,6 +30,12 @@
     <string name="strict_parse_mode">严格模式</string>
     <string name="normal_parse_mode">宽松模式</string>
 
+    <string name="tips_player_kernel">播放器内核</string>
+    <string name="text_follow_global">跟随全局</string>
+    <string name="text_player_media3">Media3</string>
+    <string name="text_player_vlc">VLC</string>
+    <string name="text_player_mpv">MPV</string>
+
     <string name="text_start_screen_cast_server">启动投屏服务</string>
     <string name="text_stop_screen_cast_server">停止投屏服务</string>
     <string name="text_screencast_connect_type">连接方式</string>

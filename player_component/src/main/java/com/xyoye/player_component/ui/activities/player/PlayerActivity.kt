@@ -42,11 +42,14 @@ import com.xyoye.common_component.receiver.PlayerReceiverListener
 import com.xyoye.common_component.receiver.ScreenBroadcastReceiver
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.base.BaseVideoSource
+import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.utils.screencast.ScreencastHandler
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.VideoTrackBean
+import com.xyoye.data_component.bean.PlaybackProfile
+import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.entity.media3.Media3BackgroundMode
 import com.xyoye.data_component.entity.media3.PlaybackSession
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
@@ -704,7 +707,7 @@ class PlayerActivity :
          */
     }
 
-    private fun initPlayerConfig() {
+    private fun initPlayerConfig(overrideProfile: PlaybackProfile? = null) {
         // 播放器类型
         val storedPlayerType = PlayerConfig.getUsePlayerType()
         val resolvedPlayerType = PlayerType.valueOf(storedPlayerType)
@@ -716,8 +719,24 @@ class PlayerActivity :
             )
             PlayerConfig.putUsePlayerType(resolvedPlayerType.value)
         }
-        PlayerInitializer.playerType = resolvedPlayerType
-        LogFacade.d(LogModule.PLAYER, TAG_CONFIG, "playerType=${PlayerInitializer.playerType}")
+
+        val globalProfile =
+            PlaybackProfile(
+                playerType = resolvedPlayerType,
+                source = PlaybackProfileSource.GLOBAL,
+            )
+        val sessionProfile =
+            overrideProfile
+                ?: (VideoSourceManager.getInstance().getSource() as? StorageVideoSource)
+                    ?.getPlaybackProfile()
+                ?: globalProfile
+
+        PlayerInitializer.playerType = sessionProfile.playerType
+        LogFacade.d(
+            LogModule.PLAYER,
+            TAG_CONFIG,
+            "playerType=${PlayerInitializer.playerType} source=${sessionProfile.source}",
+        )
         // 是否使用SurfaceView
         PlayerInitializer.surfaceType =
             if (PlayerConfig.isUseSurfaceView()) SurfaceType.VIEW_SURFACE else SurfaceType.VIEW_TEXTURE
@@ -1027,6 +1046,7 @@ class PlayerActivity :
             danmu = source.getDanmu(),
             subtitlePath = source.getSubtitlePath(),
             audioPath = source.getAudioPath(),
+            playbackProfile = source.getPlaybackProfile(),
         )
     }
 
@@ -1056,10 +1076,39 @@ class PlayerActivity :
         if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
             builder.setPositiveButton("切换默认内核重试") { dialog, _ ->
                 dialog.dismiss()
-                val fallbackType = PlayerType.TYPE_EXO_PLAYER
-                PlayerConfig.putUsePlayerType(fallbackType.value)
-                initPlayerConfig()
-                videoSource?.let { applyPlaySource(it) } ?: this@PlayerActivity.finish()
+                val storageSource = videoSource as? StorageVideoSource
+                if (storageSource == null) {
+                    this@PlayerActivity.finish()
+                    return@setPositiveButton
+                }
+
+                val fallbackProfile =
+                    PlaybackProfile(
+                        playerType = PlayerType.TYPE_EXO_PLAYER,
+                        source = PlaybackProfileSource.FALLBACK,
+                    )
+                initPlayerConfig(overrideProfile = fallbackProfile)
+
+                showLoading()
+                danDanPlayer.pause()
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val newSource =
+                        StorageVideoSourceFactory.create(storageSource.getStorageFile(), fallbackProfile)
+                            ?.also {
+                                it.setDanmu(storageSource.getDanmu())
+                                it.setSubtitlePath(storageSource.getSubtitlePath())
+                                it.setAudioPath(storageSource.getAudioPath())
+                            }
+                    withContext(Dispatchers.Main) {
+                        hideLoading()
+                        if (newSource == null) {
+                            ToastCenter.showError("重试失败，找不到播放资源")
+                            this@PlayerActivity.finish()
+                            return@withContext
+                        }
+                        applyPlaySource(newSource)
+                    }
+                }
             }
         }
 

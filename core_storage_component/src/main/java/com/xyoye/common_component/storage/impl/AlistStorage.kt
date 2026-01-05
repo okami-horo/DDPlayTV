@@ -11,6 +11,8 @@ import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.AlistStorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.data_component.bean.PlaybackProfile
+import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.alist.AlistFileData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
@@ -102,7 +104,20 @@ class AlistStorage(
             ?.also { it.playHistory = history }
 
     override suspend fun createPlayUrl(file: StorageFile): String? {
-        val playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
+        return createPlayUrl(
+            file = file,
+            profile = PlaybackProfile(
+                playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
+                source = PlaybackProfileSource.GLOBAL,
+            ),
+        )
+    }
+
+    override suspend fun createPlayUrl(
+        file: StorageFile,
+        profile: PlaybackProfile,
+    ): String? {
+        val playerType = profile.playerType
         if (playerType != PlayerType.TYPE_MPV_PLAYER && playerType != PlayerType.TYPE_VLC_PLAYER) {
             return getStorageFileUrl(file)
         }

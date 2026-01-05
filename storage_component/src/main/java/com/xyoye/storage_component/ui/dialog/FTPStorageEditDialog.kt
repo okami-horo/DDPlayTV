@@ -42,6 +42,7 @@ class FTPStorageEditDialog(
                 21,
             )
         binding.serverData = serverData
+        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, serverData)
 
         // 编辑模式下，选中匿名
         if (isEditStorage && originalStorage!!.isAnonymous) {

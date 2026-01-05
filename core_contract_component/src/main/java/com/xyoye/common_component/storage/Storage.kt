@@ -3,6 +3,7 @@ package com.xyoye.common_component.storage
 import android.net.Uri
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.data_component.bean.LocalDanmuBean
+import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import java.io.InputStream
@@ -68,6 +69,11 @@ interface Storage {
      * 创建播放链接
      */
     suspend fun createPlayUrl(file: StorageFile): String?
+
+    suspend fun createPlayUrl(
+        file: StorageFile,
+        profile: PlaybackProfile,
+    ): String? = createPlayUrl(file)
 
     /**
      * 缓存弹幕文件到本地

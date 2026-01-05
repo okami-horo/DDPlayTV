@@ -60,6 +60,7 @@ class ScreencastStorageEditDialog(
                 MediaType.SCREEN_CAST,
             )
         binding.serverData = serverData
+        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, serverData)
         binding.ipEt.setText(serverData.url.split(":").getOrNull(0))
 
         initListener()

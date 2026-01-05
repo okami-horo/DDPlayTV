@@ -44,6 +44,7 @@ class SmbStorageEditDialog(
         setSmbV2(serverData.smbV2)
         setAnonymous(serverData.isAnonymous)
         binding.serverData = serverData
+        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, serverData)
 
         binding.serverTestConnectTv.setOnClickListener {
             if (checkParams(serverData)) {

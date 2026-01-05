@@ -33,6 +33,10 @@
             android:textColorHint="@color/text_gray"
             android:textSize="14sp" />
 
+        <include
+            android:id="@+id/player_type_override_layout"
+            layout="@layout/layout_player_type_override" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

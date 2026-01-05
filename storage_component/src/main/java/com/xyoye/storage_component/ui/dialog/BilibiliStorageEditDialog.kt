@@ -57,6 +57,7 @@ class BilibiliStorageEditDialog(
             editLibrary.url = Api.BILI_BILI_API
         }
         binding.library = editLibrary
+        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, editLibrary)
 
         apiPreferences = BilibiliApiPreferencesStore.read(editLibrary)
         preferences = BilibiliPlaybackPreferencesStore.read(editLibrary)

@@ -9,6 +9,7 @@ import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
 import com.xyoye.common_component.utils.getFileName
 import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.data_component.bean.LocalDanmuBean
+import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.enums.MediaType
 
 /**
@@ -21,7 +22,8 @@ class StorageVideoSource(
     private val videoSources: List<StorageFile>,
     private var danmu: LocalDanmuBean?,
     private var subtitlePath: String?,
-    private var audioPath: String?
+    private var audioPath: String?,
+    private val playbackProfile: PlaybackProfile,
 ) : BaseVideoSource(
         videoSources.indexOfFirst { it.uniqueKey() == file.uniqueKey() },
         videoSources,
@@ -52,6 +54,7 @@ class StorageVideoSource(
     override suspend fun indexSource(index: Int): BaseVideoSource? =
         StorageVideoSourceFactory.create(
             videoSources[index],
+            playbackProfile,
         )
 
     override fun getVideoUrl(): String = playUrl
@@ -109,4 +112,6 @@ class StorageVideoSource(
     fun getStorageFile(): StorageFile = file
 
     fun indexStorageFile(index: Int): StorageFile = videoSources[index]
+
+    fun getPlaybackProfile(): PlaybackProfile = playbackProfile
 }

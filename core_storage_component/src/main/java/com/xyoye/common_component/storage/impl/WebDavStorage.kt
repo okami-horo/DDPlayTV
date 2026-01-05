@@ -9,6 +9,8 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.WebDavStorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.data_component.bean.PlaybackProfile
+import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
@@ -79,7 +81,20 @@ class WebDavStorage(
     }
 
     override suspend fun createPlayUrl(file: StorageFile): String {
-        val playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
+        return createPlayUrl(
+            file = file,
+            profile = PlaybackProfile(
+                playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
+                source = PlaybackProfileSource.GLOBAL,
+            ),
+        )
+    }
+
+    override suspend fun createPlayUrl(
+        file: StorageFile,
+        profile: PlaybackProfile,
+    ): String {
+        val playerType = profile.playerType
         val upstream = file.fileUrl()
         val contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
         val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }

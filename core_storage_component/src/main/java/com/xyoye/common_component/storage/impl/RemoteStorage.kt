@@ -13,6 +13,8 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.danmu.DanmuFinder
 import com.xyoye.common_component.utils.subtitle.SubtitleUtils
 import com.xyoye.data_component.bean.LocalDanmuBean
+import com.xyoye.data_component.bean.PlaybackProfile
+import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.data.remote.RemoteVideoData
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -60,7 +62,20 @@ class RemoteStorage(
     }
 
     override suspend fun createPlayUrl(file: StorageFile): String {
-        val playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
+        return createPlayUrl(
+            file = file,
+            profile = PlaybackProfile(
+                playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
+                source = PlaybackProfileSource.GLOBAL,
+            ),
+        )
+    }
+
+    override suspend fun createPlayUrl(
+        file: StorageFile,
+        profile: PlaybackProfile,
+    ): String {
+        val playerType = profile.playerType
         val fileUrl = (file as RemoteStorageFile).fileUrl()
         val token = library.remoteSecret ?: return fileUrl
 
