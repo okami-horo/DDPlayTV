@@ -3,6 +3,13 @@
     <color name="theme">#2095f4</color>
     <color name="theme_color">#2095f4</color>
 
+    <!-- TV focus highlight -->
+    <color name="tv_focus_stroke_color">#FFFFFF</color>
+    <color name="tv_focus_overlay_color">#33FFFFFF</color>
+    <color name="tv_pressed_overlay_color">#55FFFFFF</color>
+    <color name="tv_unfocused_overlay_color">#1AFFFFFF</color>
+    <color name="tv_unfocused_stroke_color">#33FFFFFF</color>
+
     <color name="text_black">#353535</color>
     <color name="text_white">#ffffff</color>
 
