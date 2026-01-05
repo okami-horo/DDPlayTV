@@ -5,11 +5,11 @@
 
     <data>
 
-        <import type="com.xyoye.dandanplay.ui.main.MainViewModel" />
+        <import type="com.xyoye.dandanplay.ui.shell.ShellViewModel" />
 
         <variable
             name="viewModel"
-            type="com.xyoye.dandanplay.ui.main.MainViewModel" />
+            type="com.xyoye.dandanplay.ui.shell.ShellViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
