@@ -445,26 +445,29 @@ class DanDanVideoPlayer(
     }
 
     fun release() {
-        if (mCurrentPlayState != PlayState.STATE_IDLE) {
-            destroySubtitleRenderer()
-            // 释放缓存
-            CacheManager.release()
-            // 释放播放器控制器
-            mVideoController?.destroy()
-            // 释放播放器
-            mVideoPlayer.release()
-            // 关闭常亮
-            keepScreenOn = false
-            // 释放渲染布局
-            mRenderView?.run {
-                this@DanDanVideoPlayer.removeView(getView())
-                release()
-            }
-            // 取消音频焦点
-            mAudioFocusHelper.abandonFocus()
-            // 重置播放状态
-            setPlayState(PlayState.STATE_IDLE)
+        val hasActiveResources =
+            this::mVideoPlayer.isInitialized ||
+                mCurrentPlayState != PlayState.STATE_IDLE ||
+                subtitleRenderer != null ||
+                mRenderView != null
+        if (!hasActiveResources) {
+            return
         }
+
+        destroySubtitleRenderer()
+        CacheManager.release()
+        mVideoController?.destroy()
+        if (this::mVideoPlayer.isInitialized) {
+            runCatching { mVideoPlayer.release() }
+        }
+        keepScreenOn = false
+        mRenderView?.run {
+            this@DanDanVideoPlayer.removeView(getView())
+            release()
+        }
+        mRenderView = null
+        mAudioFocusHelper.abandonFocus()
+        setPlayState(PlayState.STATE_IDLE)
     }
 
     fun onBackPressed(): Boolean = mVideoController?.onBackPressed() ?: false
@@ -535,19 +538,46 @@ class DanDanVideoPlayer(
 
     override fun updateSubtitleOffsetTime() {
         SubtitlePreferenceUpdater.persistOffset(PlayerInitializer.Subtitle.offsetPosition)
-        mVideoPlayer.setSubtitleOffset(PlayerInitializer.Subtitle.offsetPosition)
+        if (this::mVideoPlayer.isInitialized && mCurrentPlayState != PlayState.STATE_IDLE) {
+            mVideoPlayer.setSubtitleOffset(PlayerInitializer.Subtitle.offsetPosition)
+        }
         subtitleRenderer?.onOffsetChanged(getCurrentPosition())
     }
 
-    override fun supportAddTrack(type: TrackType): Boolean = mVideoPlayer.supportAddTrack(type)
+    override fun supportAddTrack(type: TrackType): Boolean {
+        if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
+            return false
+        }
+        return mVideoPlayer.supportAddTrack(type)
+    }
 
-    override fun addTrack(track: VideoTrackBean): Boolean = mVideoPlayer.addTrack(track)
+    override fun addTrack(track: VideoTrackBean): Boolean {
+        if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
+            return false
+        }
+        return mVideoPlayer.addTrack(track)
+    }
 
-    override fun getTracks(type: TrackType): List<VideoTrackBean> = mVideoPlayer.getTracks(type)
+    override fun getTracks(type: TrackType): List<VideoTrackBean> {
+        if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
+            return emptyList()
+        }
+        return mVideoPlayer.getTracks(type)
+    }
 
-    override fun selectTrack(track: VideoTrackBean) = mVideoPlayer.selectTrack(track)
+    override fun selectTrack(track: VideoTrackBean) {
+        if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
+            return
+        }
+        mVideoPlayer.selectTrack(track)
+    }
 
-    override fun deselectTrack(type: TrackType) = mVideoPlayer.deselectTrack(type)
+    override fun deselectTrack(type: TrackType) {
+        if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
+            return
+        }
+        mVideoPlayer.deselectTrack(type)
+    }
 
     fun switchSubtitleBackend(target: SubtitleRendererBackend) {
         if (PlayerInitializer.Subtitle.backend == target &&

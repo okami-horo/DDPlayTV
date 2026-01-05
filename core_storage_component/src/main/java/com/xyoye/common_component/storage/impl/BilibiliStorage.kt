@@ -3,29 +3,23 @@ package com.xyoye.common_component.storage.impl
 import android.net.Uri
 import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
-import com.xyoye.common_component.bilibili.BilibiliVideoCodec
+import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
+import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSessionStore
 import com.xyoye.common_component.bilibili.error.BilibiliException
-import com.xyoye.common_component.bilibili.mpd.BilibiliMpdGenerator
 import com.xyoye.common_component.bilibili.net.BilibiliHeaders
 import com.xyoye.common_component.bilibili.repository.BilibiliRepository
-import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.file.impl.BilibiliStorageFile
-import com.xyoye.common_component.utils.PathHelper
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursor
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
 import java.io.InputStream
 import java.util.Date
-import java.util.UUID
 
 class BilibiliStorage(
     library: MediaLibraryEntity
@@ -368,82 +362,20 @@ class BilibiliStorage(
                 throw BilibiliException.from(-1, "取流失败")
             }
 
-            val preferences = BilibiliPlaybackPreferencesStore.read(library)
-
-            val pgcSession =
-                if (parsed is BilibiliKeys.PgcEpisodeKey) {
-                    UUID.randomUUID().toString().replace("-", "")
-                } else {
-                    null
-                }
-
-            val primary =
-                when (parsed) {
-                    is BilibiliKeys.ArchiveKey -> {
-                        val cid = parsed.cid ?: return null
-                        repository.playurl(parsed.bvid, cid, preferences)
-                    }
-
-                    is BilibiliKeys.PgcEpisodeKey -> {
-                        repository.pgcPlayurl(
-                            epId = parsed.epId,
-                            cid = parsed.cid,
-                            avid = parsed.avid,
-                            preferences = preferences,
-                            session = pgcSession,
-                        )
-                    }
-
-                    else -> return null
-                }
-            val primaryData = primary.getOrNull()
-            val dash = primaryData?.dash
-
-            if (dash != null && dash.video.isNotEmpty()) {
-                val selectedVideo = selectVideo(dash.video, preferences.preferredQualityQn, preferences.preferredVideoCodec)
-                    ?: dash.video.first()
-                val selectedAudio = dash.audio.maxByOrNull { it.bandwidth }
-
-                val mpdFile =
-                    File(
-                        PathHelper.getPlayCacheDirectory(),
-                        "bilibili_${file.uniqueKey().toMd5String()}.mpd",
-                    )
-                return withContext(Dispatchers.IO) {
-                    BilibiliMpdGenerator
-                        .writeDashMpd(
-                            outputFile = mpdFile,
-                            dash = dash,
-                            video = selectedVideo,
-                            audio = selectedAudio,
-                        ).absolutePath
-                }
-            }
-
-            primaryData?.durl?.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
-
-            val fallback =
-                when (parsed) {
-                    is BilibiliKeys.ArchiveKey -> {
-                        val cid = parsed.cid ?: return null
-                        repository.playurlFallbackOrNull(parsed.bvid, cid, preferences)
-                    }
-
-                    is BilibiliKeys.PgcEpisodeKey -> {
-                        repository.pgcPlayurlFallbackOrNull(
-                            epId = parsed.epId,
-                            cid = parsed.cid,
-                            avid = parsed.avid,
-                            preferences = preferences,
-                            session = pgcSession,
-                        )
-                    }
-
-                    else -> null
-                }
-            fallback?.getOrNull()?.durl?.firstOrNull()?.url?.takeIf { it.isNotBlank() }?.let { return it }
-
-            throw primary.exceptionOrNull() ?: BilibiliException.from(-1, "取流失败")
+            val session =
+                BilibiliPlaybackSession(
+                    storageId = library.id,
+                    uniqueKey = file.uniqueKey(),
+                    storageKey = storageKey,
+                    repository = repository,
+                    key = parsed,
+                )
+            BilibiliPlaybackSessionStore.put(session)
+            return session
+                .prepare()
+                .onFailure {
+                    BilibiliPlaybackSessionStore.remove(library.id, file.uniqueKey())
+                }.getOrThrow()
         } catch (t: Throwable) {
             val extraInfo =
                 "storageId=${library.id}, uniqueKey=${file.uniqueKey()}, filePath=${file.filePath()}, parsedType=${parsed::class.java.simpleName}"
@@ -515,26 +447,4 @@ class BilibiliStorage(
         }
     }
 
-    private fun selectVideo(
-        candidates: List<com.xyoye.data_component.data.bilibili.BilibiliDashMediaData>,
-        preferredQn: Int,
-        preferredCodec: BilibiliVideoCodec,
-    ): com.xyoye.data_component.data.bilibili.BilibiliDashMediaData? {
-        val byCodec =
-            if (preferredCodec != BilibiliVideoCodec.AUTO && preferredCodec.codecid != null) {
-                candidates.filter { it.codecid == preferredCodec.codecid }.ifEmpty { candidates }
-            } else {
-                candidates
-            }
-
-        if (preferredQn <= 0) {
-            return byCodec.maxByOrNull { it.bandwidth }
-        }
-
-        val exact = byCodec.firstOrNull { it.id == preferredQn }
-        if (exact != null) return exact
-
-        val lowerOrEqual = byCodec.filter { it.id <= preferredQn }
-        return (lowerOrEqual.ifEmpty { byCodec }).maxByOrNull { it.id }
-    }
 }

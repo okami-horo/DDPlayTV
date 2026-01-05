@@ -10,6 +10,7 @@ import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliPlayMode
 import com.xyoye.common_component.bilibili.BilibiliQuality
 import com.xyoye.common_component.bilibili.BilibiliVideoCodec
+import com.xyoye.common_component.bilibili.cdn.BilibiliCdnService
 import com.xyoye.common_component.bilibili.cleanup.BilibiliCleanup
 import com.xyoye.common_component.config.PlayerActions
 import com.xyoye.common_component.extension.setTextColorRes
@@ -66,8 +67,11 @@ class BilibiliStorageEditDialog(
         binding.playModeActionTv.setOnClickListener { showPlayModeDialog() }
         binding.qualityActionTv.setOnClickListener { showQualityDialog() }
         binding.codecActionTv.setOnClickListener { showCodecDialog() }
+        binding.cdnActionTv.setOnClickListener { showCdnDialog() }
         binding.allow4kOnTv.setOnClickListener { updateAllow4k(true) }
         binding.allow4kOffTv.setOnClickListener { updateAllow4k(false) }
+        binding.heartbeatOnTv.setOnClickListener { updateHeartbeatReport(true) }
+        binding.heartbeatOffTv.setOnClickListener { updateHeartbeatReport(false) }
         binding.aiBlockOnTv.setOnClickListener { updateAiBlock(true) }
         binding.aiBlockOffTv.setOnClickListener { updateAiBlock(false) }
         binding.aiLevelActionTv.setOnClickListener { showAiLevelDialog() }
@@ -80,7 +84,7 @@ class BilibiliStorageEditDialog(
                 .Builder(activity)
                 .apply {
                     tips = "提示"
-                    content = "确认断开连接并清除该媒体库的隐私数据？\n\n将清除：Cookie/登录态、API类型偏好、播放偏好、弹幕屏蔽偏好、播放历史/进度、Bilibili 弹幕缓存文件。"
+                    content = "确认断开连接并清除该媒体库的隐私数据？\n\n将清除：Cookie/登录态、API类型偏好、播放偏好、弹幕屏蔽偏好、播放历史/进度、Bilibili 弹幕缓存文件、本地 MPD 播放清单缓存。"
                     positiveText = "确认清除"
                     addPositive { dialog ->
                         dialog.dismiss()
@@ -134,12 +138,19 @@ class BilibiliStorageEditDialog(
         refreshPreferenceViews()
     }
 
+    private fun updateHeartbeatReport(enabled: Boolean) {
+        preferences = preferences.copy(enableHeartbeatReport = enabled)
+        refreshPreferenceViews()
+    }
+
     private fun refreshPreferenceViews() {
         binding.apiTypeValueTv.text = apiPreferences.apiType.label
         binding.playModeValueTv.text = preferences.playMode.label
         binding.qualityValueTv.text = BilibiliQuality.fromQn(preferences.preferredQualityQn).label
         binding.codecValueTv.text = preferences.preferredVideoCodec.label
+        binding.cdnValueTv.text = preferences.cdnService.label
         setAllow4kSelected(preferences.allow4k)
+        setHeartbeatReportSelected(preferences.enableHeartbeatReport)
 
         binding.aiLevelValueTv.text = formatAiLevel(danmakuBlockPreferences.aiLevel)
         setAiBlockSelected(danmakuBlockPreferences.aiSwitch)
@@ -173,6 +184,14 @@ class BilibiliStorageEditDialog(
 
         binding.allow4kOffTv.isSelected = !allow
         binding.allow4kOffTv.setTextColorRes(if (!allow) R.color.text_white else R.color.text_black)
+    }
+
+    private fun setHeartbeatReportSelected(enabled: Boolean) {
+        binding.heartbeatOnTv.isSelected = enabled
+        binding.heartbeatOnTv.setTextColorRes(if (enabled) R.color.text_white else R.color.text_black)
+
+        binding.heartbeatOffTv.isSelected = !enabled
+        binding.heartbeatOffTv.setTextColorRes(if (!enabled) R.color.text_white else R.color.text_black)
     }
 
     private fun updateAiBlock(enabled: Boolean) {
@@ -274,6 +293,29 @@ class BilibiliStorageEditDialog(
         BottomActionDialog(activity, actions, "视频编码") {
             val selected = it.actionId as? BilibiliVideoCodec ?: return@BottomActionDialog false
             preferences = preferences.copy(preferredVideoCodec = selected)
+            refreshPreferenceViews()
+            true
+        }.show()
+    }
+
+    private fun showCdnDialog() {
+        val actions =
+            BilibiliCdnService.entries.map {
+                val describe =
+                    if (it.host.isNullOrBlank()) {
+                        "不强制 CDN，按 base/backup 自动选择与回退"
+                    } else {
+                        it.host
+                    }
+                SheetActionBean(
+                    actionId = it,
+                    actionName = it.label,
+                    describe = describe,
+                )
+            }
+        BottomActionDialog(activity, actions, "CDN节点") {
+            val selected = it.actionId as? BilibiliCdnService ?: return@BottomActionDialog false
+            preferences = preferences.copy(cdnService = selected)
             refreshPreferenceViews()
             true
         }.show()

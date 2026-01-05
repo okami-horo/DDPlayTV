@@ -12,7 +12,9 @@ enum class TrackType {
 
     SUBTITLE,
 
-    AUDIO;
+    AUDIO,
+
+    VIDEO;
 
     fun getSubtitle(value: Any?): String? {
         if (value != null && value is String && this == SUBTITLE) {

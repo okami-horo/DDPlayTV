@@ -15,6 +15,14 @@ import kotlin.math.abs
 
 private const val FOCUS_KEYLINE_PERCENT = 0.5f
 
+sealed interface FocusTarget {
+    data class Tag(val tag: Any) : FocusTarget
+
+    data class ViewId(val viewId: Int) : FocusTarget
+
+    object ItemRoot : FocusTarget
+}
+
 fun RecyclerView.vertical(reverse: Boolean = false): LinearLayoutManager =
     LinearLayoutManager(context, LinearLayoutManager.VERTICAL, reverse)
 
@@ -46,6 +54,14 @@ fun RecyclerView.setData(items: List<Any>) {
 }
 
 fun RecyclerView.requestIndexChildFocus(index: Int): Boolean {
+    val targetTag = R.string.focusable_item.toResString()
+    return requestIndexChildFocus(index, FocusTarget.Tag(targetTag))
+}
+
+fun RecyclerView.requestIndexChildFocus(
+    index: Int,
+    target: FocusTarget
+): Boolean {
     val layoutManager = layoutManager ?: return false
     val adapter = adapter ?: return false
     if (index < 0 || index >= adapter.itemCount) {
@@ -53,16 +69,29 @@ fun RecyclerView.requestIndexChildFocus(index: Int): Boolean {
     }
 
     val useKeylineAlignment = !isInTouchMode
-    val targetTag = R.string.focusable_item.toResString()
+    val defaultTag = R.string.focusable_item.toResString()
+
+    fun resolveFocusView(itemView: View): View? {
+        val focusView =
+            when (target) {
+                is FocusTarget.Tag -> itemView.findViewWithTag<View>(target.tag)
+                is FocusTarget.ViewId -> itemView.findViewById(target.viewId)
+                FocusTarget.ItemRoot -> itemView.takeIf { it.isFocusable }
+            }
+
+        return focusView
+            ?: itemView.findViewWithTag<View>(defaultTag)
+            ?: itemView.takeIf { it.isFocusable }
+    }
 
     fun tryRequestFocus(): Boolean {
-        val target = layoutManager.findViewByPosition(index) ?: return false
-        val focusView = target.findViewWithTag<View>(targetTag) ?: target.takeIf { it.isFocusable }
+        val itemView = layoutManager.findViewByPosition(index) ?: return false
+        val focusView = resolveFocusView(itemView)
         if (focusView == null) {
             return false
         }
 
-        ensureChildFullyVisible(target)
+        ensureChildFullyVisible(itemView)
 
         val requested = focusView.requestFocus()
         if (requested && useKeylineAlignment) {

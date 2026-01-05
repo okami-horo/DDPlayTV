@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Selected & Focused (TV Remote) -->
+    <item android:state_selected="true" android:state_focused="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="@color/theme" />
+            <stroke
+                android:width="@dimen/tv_focus_stroke_width"
+                android:color="@color/tv_focus_stroke_color" />
+        </shape>
+    </item>
+
+    <!-- Selected (Currently Playing) -->
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="@color/theme" />
+        </shape>
+    </item>
+
+    <!-- Focused (TV Remote / D-Pad) -->
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="@color/tv_focus_overlay_color" />
+            <stroke
+                android:width="@dimen/tv_focus_stroke_width"
+                android:color="@color/tv_focus_stroke_color" />
+        </shape>
+    </item>
+
+    <!-- Pressed -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="@color/tv_pressed_overlay_color" />
+        </shape>
+    </item>
+
+    <!-- Normal -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="@color/tv_unfocused_overlay_color" />
+            <stroke android:width="1dp" android:color="@color/tv_unfocused_stroke_color" />
+        </shape>
+    </item>
+</selector>

@@ -32,29 +32,38 @@
         android:theme="@style/AppTheme"
         tools:targetApi="n">
 
-        <activity
-            android:name="com.xyoye.dandanplay.ui.splash.SplashActivity"
-            android:configChanges="orientation|screenSize"
-            android:theme="@style/SplashTheme"
-            android:banner="@mipmap/ic_leanback_banner"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+	        <activity
+	            android:name="com.xyoye.dandanplay.ui.splash.SplashActivity"
+	            android:configChanges="orientation|screenSize"
+	            android:theme="@style/SplashTheme"
+	            android:exported="true">
+	            <intent-filter>
+	                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+	                <category android:name="android.intent.category.LAUNCHER" />
+	            </intent-filter>
+	        </activity>
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+	        <activity
+	            android:name="com.xyoye.dandanplay.ui.splash.TvSplashActivity"
+	            android:configChanges="orientation|screenSize"
+	            android:theme="@style/SplashTheme"
+	            android:banner="@mipmap/ic_leanback_banner"
+	            android:exported="true">
+	            <intent-filter>
+	                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-            </intent-filter>
+	                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+	            </intent-filter>
+	        </activity>
 
-        </activity>
+	        <activity
+	            android:name="com.xyoye.dandanplay.ui.main.MainActivity"
+	            android:launchMode="singleTask" />
 
-        <activity
-            android:name="com.xyoye.dandanplay.ui.main.MainActivity"
-            android:launchMode="singleTask" />
+	        <activity
+	            android:name="com.xyoye.dandanplay.ui.tv.TvMainActivity"
+	            android:launchMode="singleTask" />
 
         <service
             android:name="com.xyoye.dandanplay.app.service.Media3SessionService"

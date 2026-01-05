@@ -23,6 +23,8 @@ enum class SettingViewType {
 
     MPV_ANIME4K,
 
+    BILIBILI_PLAYBACK,
+
     DANMU_CONFIGURE,
 
     DANMU_STYLE,

@@ -53,10 +53,13 @@ internal class LibassGpuSubtitleSession(
         embeddedSink = null
         runCatching { kernelBridge?.setEmbeddedSubtitleSink(null) }
         overlay?.let { view ->
-            runCatching { environment.playerView.detachSubtitleOverlay(view) }
+            environment.playerView?.let { playerView ->
+                runCatching { playerView.detachSubtitleOverlay(view) }
+            }
         }
         overlay = null
         runCatching { gpuRenderer.release() }
+        environment.clearUiReferences()
     }
 
     fun loadExternalTrack(path: String) {
@@ -64,7 +67,8 @@ internal class LibassGpuSubtitleSession(
         val defaultFont = SubtitleFontManager.getDefaultFontPath(environment.context)
         gpuRenderer.loadTrack(path, fonts, defaultFont)
         gpuRenderer.frameCleaner.onTrackChanged()
-        renderOnceIfPaused(environment.playerView.getCurrentPosition())
+        val positionMs = environment.playerView?.getCurrentPosition() ?: 0L
+        renderOnceIfPaused(positionMs)
     }
 
     fun updateOpacity(alphaPercent: Int) {
@@ -144,9 +148,14 @@ internal class LibassGpuSubtitleSession(
         object : Choreographer.FrameCallback {
             override fun doFrame(frameTimeNanos: Long) {
                 if (!choreographerRunning) return
-                if (environment.playerView.isPlaying() && tracker.currentTarget != null) {
+                val playerView =
+                    environment.playerView ?: run {
+                        stopChoreographerLoop()
+                        return
+                    }
+                if (playerView.isPlaying() && tracker.currentTarget != null) {
                     val pts =
-                        environment.playerView.getCurrentPosition().let { current ->
+                        playerView.getCurrentPosition().let { current ->
                             (current + SubtitlePreferenceUpdater.currentOffset()).coerceAtLeast(0L)
                         }
                     val vsyncId = frameTimeNanos / 1_000_000L
@@ -157,9 +166,10 @@ internal class LibassGpuSubtitleSession(
         }
 
     private fun attachOverlay() {
+        val playerView = environment.playerView ?: return
         val overlay =
             SubtitleSurfaceOverlay(environment.context).apply {
-                bindPlayerView(environment.playerView)
+                bindPlayerView(playerView)
                 setOnFrameSizeChanged { width, height ->
                     val surface = holder.surface
                     if (surface != null && surface.isValid) {
@@ -215,7 +225,7 @@ internal class LibassGpuSubtitleSession(
                     },
                 )
             }
-        environment.playerView.attachSubtitleOverlay(overlay)
+        playerView.attachSubtitleOverlay(overlay)
         this.overlay = overlay
     }
 
@@ -233,7 +243,8 @@ internal class LibassGpuSubtitleSession(
     }
 
     private fun renderOnceIfPaused(positionMs: Long) {
-        if (!environment.playerView.isPlaying()) {
+        val playerView = environment.playerView
+        if (playerView == null || !playerView.isPlaying()) {
             renderOnce(positionMs)
         }
     }

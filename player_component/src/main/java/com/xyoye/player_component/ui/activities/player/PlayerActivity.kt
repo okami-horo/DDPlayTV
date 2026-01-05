@@ -24,6 +24,8 @@ import com.gyf.immersionbar.BarHide
 import com.gyf.immersionbar.ImmersionBar
 import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.bilibili.error.BilibiliPlaybackErrorReporter
+import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
+import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSessionStore
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.bridge.PlayTaskBridge
 import com.xyoye.common_component.config.DanmuConfig
@@ -143,6 +145,9 @@ class PlayerActivity :
     private var bilibiliLiveSessionStartElapsedMs: Long? = null
     private var bilibiliLiveCompletionReported: Boolean = false
     private var bilibiliLiveErrorReported: Boolean = false
+    private var bilibiliRecoverJob: Job? = null
+    private var bilibiliRecoverAttempts: Int = 0
+    private var pendingSeekPositionMs: Long? = null
 
     private val media3ServiceConnection =
         object : ServiceConnection {
@@ -411,6 +416,9 @@ class PlayerActivity :
                         throwable = playbackError,
                     )
                 }
+                if (tryRecoverBilibiliPlayback(source, playbackError)) {
+                    return@observerPlayError
+                }
                 showPlayErrorDialog()
             }
             // 退出播放
@@ -457,6 +465,46 @@ class PlayerActivity :
                 val source = videoSource ?: return@observerTrackAdded
                 viewModel.storeTrackAdded(source, it)
             }
+
+            // B站画质/编码切换
+            observerBilibiliPlaybackUpdate { update ->
+                val source = danDanPlayer.getVideoSource()
+                if (!BilibiliPlaybackErrorReporter.isBilibiliSource(source.getMediaType())) {
+                    return@observerBilibiliPlaybackUpdate
+                }
+                if (BilibiliPlaybackErrorReporter.isBilibiliLive(source.getMediaType(), source.getUniqueKey())) {
+                    return@observerBilibiliPlaybackUpdate
+                }
+
+                val storageSource = source as? StorageVideoSource ?: return@observerBilibiliPlaybackUpdate
+                val session =
+                    BilibiliPlaybackSessionStore.get(storageSource.getStorageId(), storageSource.getUniqueKey())
+                        ?: run {
+                            ToastCenter.showWarning("未获取到B站播放会话")
+                            return@observerBilibiliPlaybackUpdate
+                        }
+
+                val positionMs = danDanPlayer.getCurrentPosition()
+                bilibiliRecoverJob?.cancel()
+                showLoading()
+                danDanPlayer.pause()
+                bilibiliRecoverJob =
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val result = session.applyPreferenceUpdate(update, positionMs)
+                        withContext(Dispatchers.Main) {
+                            hideLoading()
+                            val playUrl = result.getOrNull()
+                            if (playUrl.isNullOrBlank()) {
+                                ToastCenter.showError("切换失败")
+                                return@withContext
+                            }
+
+                            val newSource = rebuildStorageVideoSource(storageSource, playUrl)
+                            pendingSeekPositionMs = positionMs
+                            applyPlaySource(newSource)
+                        }
+                    }
+            }
         }
     }
 
@@ -466,6 +514,18 @@ class PlayerActivity :
             TAG_SOURCE,
             "apply start title=${newSource?.getVideoTitle()} type=${newSource?.getMediaType()} urlHash=${newSource?.getVideoUrl()?.hashCode()}",
         )
+        val previousSource = videoSource
+        if (previousSource != null &&
+            newSource != null &&
+            (previousSource.getStorageId() != newSource.getStorageId() || previousSource.getUniqueKey() != newSource.getUniqueKey()) &&
+            BilibiliPlaybackErrorReporter.isBilibiliSource(previousSource.getMediaType())
+        ) {
+            BilibiliPlaybackSessionStore.remove(previousSource.getStorageId(), previousSource.getUniqueKey())
+        }
+
+        bilibiliRecoverJob?.cancel()
+        bilibiliRecoverJob = null
+        bilibiliRecoverAttempts = 0
         danDanPlayer.recordPlayInfo()
         danDanPlayer.pause()
         danDanPlayer.release()
@@ -491,7 +551,12 @@ class PlayerActivity :
     private fun updatePlayer(source: BaseVideoSource) {
         videoController.apply {
             setVideoTitle(source.getVideoTitle())
-            setLastPosition(source.getCurrentPosition())
+            val seekPosition =
+                pendingSeekPositionMs
+                    ?.takeIf { it > 0 }
+                    ?: source.getCurrentPosition()
+            pendingSeekPositionMs = null
+            setLastPosition(seekPosition)
             setLastPlaySpeed(PlayerConfig.getNewVideoSpeed())
         }
 
@@ -861,6 +926,110 @@ class PlayerActivity :
         return null
     }
 
+    private fun findPlaybackException(throwable: Throwable?): PlaybackException? {
+        var current = throwable
+        var depth = 0
+        while (current != null && depth < 8) {
+            if (current is PlaybackException) {
+                return current
+            }
+            current = current.cause
+            depth++
+        }
+        return null
+    }
+
+    private fun tryRecoverBilibiliPlayback(
+        source: BaseVideoSource,
+        playbackError: Throwable?,
+    ): Boolean {
+        if (!BilibiliPlaybackErrorReporter.isBilibiliSource(source.getMediaType())) {
+            return false
+        }
+        if (BilibiliPlaybackErrorReporter.isBilibiliLive(source.getMediaType(), source.getUniqueKey())) {
+            return false
+        }
+
+        val storageSource = source as? StorageVideoSource ?: return false
+        val session =
+            BilibiliPlaybackSessionStore.get(storageSource.getStorageId(), storageSource.getUniqueKey())
+                ?: return false
+
+        if (bilibiliRecoverJob?.isActive == true) {
+            return true
+        }
+        if (bilibiliRecoverAttempts >= 3) {
+            return false
+        }
+        bilibiliRecoverAttempts += 1
+
+        val positionMs = danDanPlayer.getCurrentPosition()
+        val context = buildBilibiliRecoveryContext(playbackError)
+
+        showLoading()
+        danDanPlayer.pause()
+        bilibiliRecoverJob =
+            lifecycleScope.launch(Dispatchers.IO) {
+                val result = session.recover(context, positionMs)
+                withContext(Dispatchers.Main) {
+                    hideLoading()
+                    val playUrl = result.getOrNull()
+                    if (playUrl.isNullOrBlank()) {
+                        showPlayErrorDialog()
+                        return@withContext
+                    }
+
+                    val newSource = rebuildStorageVideoSource(storageSource, playUrl)
+                    pendingSeekPositionMs = positionMs
+                    bilibiliRecoverAttempts = 0
+                    videoController.showMessage("已自动恢复播放")
+                    applyPlaySource(newSource)
+                }
+            }
+
+        return true
+    }
+
+    private fun buildBilibiliRecoveryContext(playbackError: Throwable?): BilibiliPlaybackSession.FailureContext {
+        val invalid = findInvalidResponseCodeException(playbackError)
+        val snapshot = Media3Diagnostics.snapshotLastHttpOpen()
+
+        val failingUrl =
+            snapshot?.url
+                ?: invalid?.dataSpec?.uri?.toString()
+        val responseCode =
+            invalid?.responseCode
+                ?: snapshot?.code
+
+        val playbackException = findPlaybackException(playbackError)
+        val isDecoderError =
+            playbackException?.errorCode == PlaybackException.ERROR_CODE_DECODING_FAILED
+
+        return BilibiliPlaybackSession.FailureContext(
+            failingUrl = failingUrl,
+            httpResponseCode = responseCode,
+            isDecoderError = isDecoderError,
+        )
+    }
+
+    private fun rebuildStorageVideoSource(
+        source: StorageVideoSource,
+        playUrl: String,
+    ): StorageVideoSource {
+        val storageFile = source.getStorageFile()
+        val videoSources =
+            (0 until source.getGroupSize())
+                .map { index -> source.indexStorageFile(index) }
+        return StorageVideoSource(
+            playUrl = playUrl,
+            file = storageFile,
+            videoSources = videoSources,
+            danmu = source.getDanmu(),
+            subtitlePath = source.getSubtitlePath(),
+            audioPath = source.getAudioPath(),
+        )
+    }
+
     private fun showPlayErrorDialog() {
         val source = videoSource
         val isTorrentSource = source?.getMediaType() == MediaType.MAGNET_LINK
@@ -913,6 +1082,11 @@ class PlayerActivity :
         if (source is StorageVideoSource && source.getMediaType() == MediaType.MAGNET_LINK) {
             PlayTaskBridge.sendTaskRemoveMsg(source.getPlayTaskId())
         }
+        if (BilibiliPlaybackErrorReporter.isBilibiliSource(source.getMediaType())) {
+            BilibiliPlaybackSessionStore.remove(source.getStorageId(), source.getUniqueKey())
+        }
+        bilibiliRecoverJob?.cancel()
+        bilibiliRecoverJob = null
     }
 
     private fun switchVideoSource(index: Int) {

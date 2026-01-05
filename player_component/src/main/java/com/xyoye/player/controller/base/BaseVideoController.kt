@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackHeartbeat
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.controller.video.InterControllerView
@@ -241,6 +242,17 @@ abstract class BaseVideoController(
             entry.key.onPlayStateChanged(playState)
         }
         onPlayStateChanged(playState)
+
+        if (this::mControlWrapper.isInitialized) {
+            val source = mControlWrapper.getVideoSource()
+            BilibiliPlaybackHeartbeat.onPlayStateChanged(
+                storageId = source.getStorageId(),
+                uniqueKey = source.getUniqueKey(),
+                mediaType = source.getMediaType(),
+                playState = playState,
+                positionMs = mControlWrapper.getCurrentPosition(),
+            )
+        }
     }
 
     @CallSuper
@@ -336,6 +348,15 @@ abstract class BaseVideoController(
             entry.key.onProgressChanged(duration, position)
         }
         onProgressChanged(duration, position)
+
+        val source = mControlWrapper.getVideoSource()
+        BilibiliPlaybackHeartbeat.onProgress(
+            storageId = source.getStorageId(),
+            uniqueKey = source.getUniqueKey(),
+            mediaType = source.getMediaType(),
+            positionMs = position,
+            isPlaying = mControlWrapper.isPlaying(),
+        )
     }
 
     abstract fun getDanmuController(): InterDanmuController

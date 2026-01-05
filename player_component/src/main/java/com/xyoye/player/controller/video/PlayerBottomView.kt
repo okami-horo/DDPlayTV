@@ -13,6 +13,8 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
+import com.xyoye.common_component.focus.applyDpadFocusable
+import com.xyoye.common_component.focus.requestDefaultFocus
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.data_component.bean.SendDanmuBean
@@ -64,12 +66,18 @@ class PlayerBottomView(
         }
 
         viewBinding.danmuControlIv.setOnCheckedChangeListener { _, isChecked ->
-             if (!controlsInputEnabled) return@setOnCheckedChangeListener
-             val isDanmuVisible = mControlWrapper.isUserDanmuVisible()
-             if (isChecked != isDanmuVisible) {
-                 actionHandler?.invoke(PlayerAction.ToggleDanmu) ?: mControlWrapper.toggleDanmuVisible()
-                 syncDanmuToggleState()
-             }
+            if (!controlsInputEnabled) return@setOnCheckedChangeListener
+            val isDanmuVisible = mControlWrapper.isUserDanmuVisible()
+            if (isChecked == isDanmuVisible) {
+                return@setOnCheckedChangeListener
+            }
+            if (!isDanmuToggleReady()) {
+                mControlWrapper.showMessage(resolveDanmuToggleUnavailableHint())
+                syncDanmuToggleState()
+                return@setOnCheckedChangeListener
+            }
+            actionHandler?.invoke(PlayerAction.ToggleDanmu) ?: mControlWrapper.toggleDanmuVisible()
+            syncDanmuToggleState()
         }
 
         /*
@@ -169,9 +177,7 @@ class PlayerBottomView(
                 .setDuration(300)
                 .start()
             post {
-                if (!viewBinding.playIv.hasFocus()) {
-                    viewBinding.playIv.requestFocus()
-                }
+                viewBinding.playIv.requestDefaultFocus()
             }
         } else {
             if (!isControllerVisible) {
@@ -275,6 +281,7 @@ class PlayerBottomView(
     override fun onTrackChanged(type: TrackType) {
         if (type == TrackType.DANMU) {
             syncDanmuToggleState()
+            updateControlsInteractiveState(controlsInputEnabled)
         }
     }
 
@@ -361,19 +368,33 @@ class PlayerBottomView(
 
     private fun updateControlsInteractiveState(enabled: Boolean) {
         controlsInputEnabled = enabled
+        val inTouchMode = isInTouchMode
         val focusables =
             listOf(
                 viewBinding.playIv,
                 viewBinding.ivPreviousSource,
                 viewBinding.ivNextSource,
                 viewBinding.videoListIv,
-                viewBinding.danmuControlIv,
             )
         focusables.forEach { view ->
-            view.isFocusable = enabled
-            view.isFocusableInTouchMode = enabled
-            view.isClickable = enabled
+            view.applyDpadFocusable(
+                enabled = enabled,
+                inTouchMode = inTouchMode,
+                clickable = enabled,
+            )
         }
+
+        val danmuReady = enabled && isDanmuToggleReady()
+        viewBinding.danmuControlIv.applyDpadFocusable(
+            enabled = danmuReady,
+            inTouchMode = inTouchMode,
+            clickable = enabled,
+        )
+        viewBinding.danmuControlIv.alpha = if (isDanmuToggleReady()) 1f else 0.5f
+        if (!danmuReady && viewBinding.danmuControlIv.hasFocus() && !inTouchMode) {
+            viewBinding.playIv.requestDefaultFocus()
+        }
+        updateFocusNavigation()
     }
 
     private fun updateFocusNavigation() {
@@ -388,7 +409,9 @@ class PlayerBottomView(
         if (viewBinding.ivNextSource.isVisible) {
             focusables.add(viewBinding.ivNextSource)
         }
-        focusables.add(viewBinding.danmuControlIv)
+        if (viewBinding.danmuControlIv.isFocusable) {
+            focusables.add(viewBinding.danmuControlIv)
+        }
 
         focusables.forEachIndexed { index, view ->
             val left = focusables.getOrNull(index - 1) ?: view
@@ -404,6 +427,23 @@ class PlayerBottomView(
         val userVisible = mControlWrapper.isUserDanmuVisible()
         if (viewBinding.danmuControlIv.isChecked != userVisible) {
             viewBinding.danmuControlIv.isChecked = userVisible
+        }
+        viewBinding.danmuControlIv.alpha = if (isDanmuToggleReady()) 1f else 0.5f
+    }
+
+    private fun isDanmuToggleReady(): Boolean {
+        if (this::mControlWrapper.isInitialized.not()) return false
+        return mControlWrapper
+            .getTracks(TrackType.DANMU)
+            .any { it.selected && !it.disable }
+    }
+
+    private fun resolveDanmuToggleUnavailableHint(): String {
+        val tracks = mControlWrapper.getTracks(TrackType.DANMU).filterNot { it.disable }
+        return if (tracks.isEmpty()) {
+            "当前视频暂无弹幕轨道"
+        } else {
+            "请先选择弹幕轨道"
         }
     }
 

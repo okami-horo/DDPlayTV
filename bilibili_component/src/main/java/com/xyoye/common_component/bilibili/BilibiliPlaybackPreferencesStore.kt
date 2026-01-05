@@ -1,5 +1,6 @@
 package com.xyoye.common_component.bilibili
 
+import com.xyoye.common_component.bilibili.cdn.BilibiliCdnService
 import com.tencent.mmkv.MMKV
 import com.xyoye.data_component.entity.MediaLibraryEntity
 
@@ -17,7 +18,10 @@ object BilibiliPlaybackPreferencesStore {
     private const val KEY_PLAY_MODE = "play_mode"
     private const val KEY_QUALITY_QN = "quality_qn"
     private const val KEY_VIDEO_CODEC = "video_codec"
+    private const val KEY_AUDIO_QUALITY_ID = "audio_quality_id"
     private const val KEY_ALLOW_4K = "allow_4k"
+    private const val KEY_CDN_SERVICE = "cdn_service"
+    private const val KEY_HEARTBEAT_REPORT = "heartbeat_report"
 
     fun storageKey(library: MediaLibraryEntity): String =
         "${library.mediaType.value}:${library.url.trim().removeSuffix("/")}"
@@ -46,13 +50,22 @@ object BilibiliPlaybackPreferencesStore {
             runCatching {
                 kv.decodeString(namespacedKey(storageKey, KEY_VIDEO_CODEC))?.let { BilibiliVideoCodec.valueOf(it) }
             }.getOrNull() ?: BilibiliVideoCodec.AVC
+        val audioQualityId = kv.decodeInt(namespacedKey(storageKey, KEY_AUDIO_QUALITY_ID), 0)
         val allow4k = kv.decodeBool(namespacedKey(storageKey, KEY_ALLOW_4K), false)
+        val cdnService =
+            runCatching {
+                kv.decodeString(namespacedKey(storageKey, KEY_CDN_SERVICE))?.let { BilibiliCdnService.valueOf(it) }
+            }.getOrNull() ?: BilibiliCdnService.AUTO
+        val heartbeatReport = kv.decodeBool(namespacedKey(storageKey, KEY_HEARTBEAT_REPORT), false)
 
         return BilibiliPlaybackPreferences(
             playMode = mode,
             preferredQualityQn = qn,
             preferredVideoCodec = codec,
+            preferredAudioQualityId = audioQualityId,
             allow4k = allow4k,
+            cdnService = cdnService,
+            enableHeartbeatReport = heartbeatReport,
         )
     }
 
@@ -64,7 +77,10 @@ object BilibiliPlaybackPreferencesStore {
         kv.encode(namespacedKey(storageKey, KEY_PLAY_MODE), preferences.playMode.name)
         kv.encode(namespacedKey(storageKey, KEY_QUALITY_QN), preferences.preferredQualityQn)
         kv.encode(namespacedKey(storageKey, KEY_VIDEO_CODEC), preferences.preferredVideoCodec.name)
+        kv.encode(namespacedKey(storageKey, KEY_AUDIO_QUALITY_ID), preferences.preferredAudioQualityId)
         kv.encode(namespacedKey(storageKey, KEY_ALLOW_4K), preferences.allow4k)
+        kv.encode(namespacedKey(storageKey, KEY_CDN_SERVICE), preferences.cdnService.name)
+        kv.encode(namespacedKey(storageKey, KEY_HEARTBEAT_REPORT), preferences.enableHeartbeatReport)
     }
 
     fun clear(storageKey: String) {
@@ -72,7 +88,10 @@ object BilibiliPlaybackPreferencesStore {
         kv.removeValueForKey(namespacedKey(storageKey, KEY_PLAY_MODE))
         kv.removeValueForKey(namespacedKey(storageKey, KEY_QUALITY_QN))
         kv.removeValueForKey(namespacedKey(storageKey, KEY_VIDEO_CODEC))
+        kv.removeValueForKey(namespacedKey(storageKey, KEY_AUDIO_QUALITY_ID))
         kv.removeValueForKey(namespacedKey(storageKey, KEY_ALLOW_4K))
+        kv.removeValueForKey(namespacedKey(storageKey, KEY_CDN_SERVICE))
+        kv.removeValueForKey(namespacedKey(storageKey, KEY_HEARTBEAT_REPORT))
     }
 
     private fun mmkv(): MMKV = MMKV.mmkvWithID(MMKV_ID)
@@ -82,4 +101,3 @@ object BilibiliPlaybackPreferencesStore {
         fieldKey: String
     ): String = "$storageKey.$fieldKey"
 }
-

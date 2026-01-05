@@ -1,4 +1,4 @@
-package com.xyoye.dandanplay.ui.main
+package com.xyoye.dandanplay.ui.shell
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -22,7 +22,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  * Created by xyoye on 2020/7/27.
  */
 
-class MainViewModel : BaseViewModel() {
+class ShellViewModel : BaseViewModel() {
     val reLoginLiveData = MutableLiveData<LoginData>()
 
     fun reLogin() {

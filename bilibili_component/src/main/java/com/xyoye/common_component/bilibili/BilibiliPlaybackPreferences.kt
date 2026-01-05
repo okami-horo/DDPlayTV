@@ -1,5 +1,7 @@
 package com.xyoye.common_component.bilibili
 
+import com.xyoye.common_component.bilibili.cdn.BilibiliCdnService
+
 /**
  * Bilibili 播放偏好配置（用于 playurl 取流与本地 mpd 生成选流）。
  *
@@ -9,7 +11,18 @@ data class BilibiliPlaybackPreferences(
     val playMode: BilibiliPlayMode = BilibiliPlayMode.AUTO,
     val preferredQualityQn: Int = BilibiliQuality.QN_720P.qn,
     val preferredVideoCodec: BilibiliVideoCodec = BilibiliVideoCodec.AVC,
+    /**
+     * 对应 playurl 返回的 dash.audio[].id，0 表示自动选择（当前实现为带宽最大）。
+     */
+    val preferredAudioQualityId: Int = 0,
     val allow4k: Boolean = false,
+    val cdnService: BilibiliCdnService = BilibiliCdnService.AUTO,
+    /**
+     * 播放心跳上报（可选）：用于同步 B 站服务端历史/续播进度。
+     *
+     * 注意：该能力依赖 Cookie + csrf；失败不会影响本地播放。
+     */
+    val enableHeartbeatReport: Boolean = false,
 )
 
 enum class BilibiliPlayMode(
@@ -42,6 +55,12 @@ enum class BilibiliVideoCodec(
     AVC(7, "AVC/H.264"),
     HEVC(12, "HEVC/H.265"),
     AV1(13, "AV1"),
+    ;
+
+    companion object {
+        fun fromCodecid(codecid: Int?): BilibiliVideoCodec? =
+            entries.firstOrNull { it.codecid != null && it.codecid == codecid }
+    }
 }
 
 enum class BilibiliQuality(

@@ -3,6 +3,6 @@
     android:shape="oval">
     <solid android:color="@color/player_item_bg_color" />
     <stroke
-        android:width="2dp"
-        android:color="@color/white" />
+        android:width="@dimen/tv_focus_stroke_width"
+        android:color="@color/tv_focus_stroke_color" />
 </shape>

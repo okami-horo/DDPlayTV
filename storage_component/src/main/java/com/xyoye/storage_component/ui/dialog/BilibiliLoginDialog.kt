@@ -27,6 +27,7 @@ class BilibiliLoginDialog(
     private val activity: StorageFileActivity,
     private val library: MediaLibraryEntity,
     private val onLoginSuccess: () -> Unit,
+    private val onDismiss: (() -> Unit)? = null,
 ) : BaseBottomDialog<DialogBilibiliLoginBinding>(activity) {
     private lateinit var binding: DialogBilibiliLoginBinding
 
@@ -53,6 +54,7 @@ class BilibiliLoginDialog(
         setOnDismissListener {
             pollingJob?.cancel()
             scope.cancel()
+            onDismiss?.invoke()
         }
 
         startLoginFlow()
