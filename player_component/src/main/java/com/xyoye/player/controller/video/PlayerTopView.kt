@@ -64,7 +64,11 @@ class PlayerTopView(
         }
 
         // 将初始焦点置于标题，而不是返回按钮
-        post { viewBinding.videoTitleTv.requestFocus() }
+        post {
+            if (!isInTouchMode) {
+                viewBinding.videoTitleTv.requestFocus()
+            }
+        }
     }
 
     override fun attach(controlWrapper: ControlWrapper) {
