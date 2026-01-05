@@ -13,6 +13,8 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
+import com.xyoye.common_component.focus.applyDpadFocusable
+import com.xyoye.common_component.focus.requestDefaultFocus
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.data_component.bean.SendDanmuBean
@@ -175,9 +177,7 @@ class PlayerBottomView(
                 .setDuration(300)
                 .start()
             post {
-                if (!viewBinding.playIv.isInTouchMode && !viewBinding.playIv.hasFocus()) {
-                    viewBinding.playIv.requestFocus()
-                }
+                viewBinding.playIv.requestDefaultFocus()
             }
         } else {
             if (!isControllerVisible) {
@@ -377,18 +377,22 @@ class PlayerBottomView(
                 viewBinding.videoListIv,
             )
         focusables.forEach { view ->
-            view.isFocusable = enabled
-            view.isFocusableInTouchMode = enabled && !inTouchMode
-            view.isClickable = enabled
+            view.applyDpadFocusable(
+                enabled = enabled,
+                inTouchMode = inTouchMode,
+                clickable = enabled,
+            )
         }
 
         val danmuReady = enabled && isDanmuToggleReady()
-        viewBinding.danmuControlIv.isFocusable = danmuReady
-        viewBinding.danmuControlIv.isFocusableInTouchMode = danmuReady && !inTouchMode
-        viewBinding.danmuControlIv.isClickable = enabled
+        viewBinding.danmuControlIv.applyDpadFocusable(
+            enabled = danmuReady,
+            inTouchMode = inTouchMode,
+            clickable = enabled,
+        )
         viewBinding.danmuControlIv.alpha = if (isDanmuToggleReady()) 1f else 0.5f
         if (!danmuReady && viewBinding.danmuControlIv.hasFocus() && !inTouchMode) {
-            viewBinding.playIv.requestFocus()
+            viewBinding.playIv.requestDefaultFocus()
         }
         updateFocusNavigation()
     }

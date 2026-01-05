@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
+import com.xyoye.common_component.focus.resetDescendantFocus
 import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.data_component.bean.SendDanmuBean
@@ -168,11 +169,9 @@ class VideoController(
 
     private fun onSettingHidden() {
         hideController()
-        descendantFocusability = FOCUS_BLOCK_DESCENDANTS
-        clearFocus()
-        requestFocus()
-        // 恢复正常焦点分发，避免后续控制条显示时丢失焦点能力
-        post { descendantFocusability = FOCUS_AFTER_DESCENDANTS }
+        if (!isInTouchMode) {
+            resetDescendantFocus()
+        }
     }
 
     /**

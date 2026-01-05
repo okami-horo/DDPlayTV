@@ -1,17 +1,15 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
-import android.graphics.Rect
-import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.base.BaseFragment
+import com.xyoye.common_component.focus.RecyclerViewFocusDelegate
+import com.xyoye.common_component.focus.setDescendantFocusBlocked
 import com.xyoye.common_component.extension.FocusTarget
-import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.extension.vertical
@@ -30,12 +28,14 @@ import com.xyoye.storage_component.ui.dialog.BilibiliLoginDialog
 
 class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>() {
     private val directory: StorageFile? by lazy { ownerActivity.directory }
-    private var lastFocusedIndex = RecyclerView.NO_POSITION
-    private var pendingFocusIndex = RecyclerView.NO_POSITION
-    private var pendingFocusUniqueKey: String? = null
-    private var rootDescendantFocusability: Int? = null
     private var tvHistoryHintShown = false
     private var lastPagingHintState: com.xyoye.common_component.storage.PagedStorage.State? = null
+    private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
+        RecyclerViewFocusDelegate(
+            recyclerView = dataBinding.storageFileRv,
+            uniqueKeyProvider = { item -> (item as? StorageFile)?.uniqueKey() },
+        )
+    }
 
     companion object {
         private const val TAG = "StorageFileFocus"
@@ -93,22 +93,21 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             // ownerActivity.onDirectoryDataLoaded(this, it)
             // 仅在需要恢复上次焦点时，才请求焦点（与媒体库首页保持一致：首次进入不默认高亮首项）
             if (!dataBinding.storageFileRv.isInTouchMode &&
-                pendingFocusIndex == RecyclerView.NO_POSITION &&
-                pendingFocusUniqueKey == null
+                focusDelegate.pendingFocusIndex == RecyclerView.NO_POSITION &&
+                focusDelegate.pendingFocusUniqueKey == null
             ) {
                 val showEmptyActionFocus =
                     it.isEmpty() ||
                         ((it.singleOrNull() as? StoragePagingItem)?.isDataEmpty == true)
                 if (showEmptyActionFocus) {
-                    pendingFocusIndex = 0
+                    focusDelegate.setPendingFocus(index = 0)
                 }
             }
 
-            if (pendingFocusIndex != RecyclerView.NO_POSITION || pendingFocusUniqueKey != null) {
+            if (focusDelegate.pendingFocusIndex != RecyclerView.NO_POSITION || focusDelegate.pendingFocusUniqueKey != null) {
                 // 触控模式下不恢复列表焦点，避免出现“默认高亮/焦点框”
                 if (dataBinding.storageFileRv.isInTouchMode) {
-                    pendingFocusIndex = RecyclerView.NO_POSITION
-                    pendingFocusUniqueKey = null
+                    focusDelegate.clearPendingFocus()
                     return@observe
                 }
 
@@ -118,8 +117,8 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                     return@observe
                 }
 
-                pendingFocusIndex = resolvePendingFocusIndex(it, adapterCount)
-                pendingFocusUniqueKey = null
+                val resolvedIndex = focusDelegate.resolvePendingFocusIndex(it, adapterCount)
+                focusDelegate.setPendingFocus(index = resolvedIndex)
                 // 等待下一次消息循环后再请求焦点，避免因子 View 未就绪导致的滚动跳变
                 dataBinding.storageFileRv.post { requestFocus() }
             }
@@ -137,54 +136,15 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
 
     override fun onResume() {
         super.onResume()
-        setFragmentFocusBlocked(false)
-        if (lastFocusedIndex != RecyclerView.NO_POSITION) {
-            pendingFocusIndex = lastFocusedIndex
-        }
+        (bindingOrNull?.root as? ViewGroup)?.setDescendantFocusBlocked(false)
         viewModel.updateHistory()
-        setRecyclerViewItemFocusAble(true)
+        focusDelegate.onResume()
     }
 
     override fun onPause() {
-        saveCurrentFocusIndex()
+        focusDelegate.onPause()
         super.onPause()
-        setFragmentFocusBlocked(true)
-        setRecyclerViewItemFocusAble(false)
-    }
-
-    /**
-     * StorageFileActivity stacks fragments via add(), so non-current fragments keep their view in the hierarchy.
-     * If we don't block focus for non-current fragments, TV DPAD navigation may "pierce" into invisible pages.
-     */
-    private fun setFragmentFocusBlocked(blocked: Boolean) {
-        val binding = bindingOrNull ?: return
-        val root = binding.root as? ViewGroup ?: return
-        if (rootDescendantFocusability == null) {
-            rootDescendantFocusability = root.descendantFocusability
-        }
-
-        if (blocked) {
-            root.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
-            root.clearFocus()
-        } else {
-            root.descendantFocusability = rootDescendantFocusability ?: ViewGroup.FOCUS_AFTER_DESCENDANTS
-        }
-    }
-
-    private fun setRecyclerViewItemFocusAble(focusAble: Boolean) {
-        val focusTag = R.string.focusable_item.toResString()
-        val binding = bindingOrNull ?: return
-        val inTouchMode = binding.storageFileRv.isInTouchMode
-        LogFacade.d(
-            LogModule.STORAGE,
-            TAG,
-            "setRecyclerViewItemFocusAble focusAble=$focusAble childCount=${binding.storageFileRv.childCount}",
-        )
-        binding.storageFileRv.children.forEach { child ->
-            val target = child.findViewWithTag<View>(focusTag) ?: child
-            target.isFocusable = focusAble
-            target.isFocusableInTouchMode = focusAble && !inTouchMode
-        }
+        (bindingOrNull?.root as? ViewGroup)?.setDescendantFocusBlocked(true)
     }
 
     private fun initRecyclerView() {
@@ -222,87 +182,11 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                 },
             )
 
-            setOnKeyListener { _, keyCode, event ->
-                if (event?.action != KeyEvent.ACTION_DOWN) {
-                    LogFacade.d(LogModule.STORAGE, TAG, "ignore key action=${event?.action} keyCode=$keyCode")
-                    return@setOnKeyListener false
-                }
-
-                val rvAdapter =
-                    adapter ?: run {
-                        LogFacade.w(LogModule.STORAGE, TAG, "key event adapter null keyCode=$keyCode")
-                        return@setOnKeyListener false
-                    }
-                val focusedChild =
-                    focusedChild ?: run {
-                        LogFacade.w(LogModule.STORAGE, TAG, "key event focusedChild null keyCode=$keyCode")
-                        return@setOnKeyListener false
-                    }
-                val currentIndex = getChildAdapterPosition(focusedChild)
-                if (currentIndex == RecyclerView.NO_POSITION) {
-                    LogFacade.w(LogModule.STORAGE, TAG, "key event invalid position keyCode=$keyCode")
-                    return@setOnKeyListener false
-                }
-
-                return@setOnKeyListener when (keyCode) {
-                    KeyEvent.KEYCODE_MENU,
-                    KeyEvent.KEYCODE_SETTINGS -> {
-                        // TV/遥控器：提供可达的刷新入口（替代下拉刷新）
-                        triggerTvRefresh()
-                        true
-                    }
-
-                    KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        val nextIndex = currentIndex + 1
-                        if (nextIndex < rvAdapter.itemCount) {
-                            // 遥控器按下时手动分发焦点，保证列表可继续向下滚动
-                            val moved = requestIndexChildFocus(nextIndex, resolveVerticalMoveFocusTarget())
-                            LogFacade.d(
-                                LogModule.STORAGE,
-                                TAG,
-                                "key DOWN current=$currentIndex target=$nextIndex moved=$moved count=${rvAdapter.itemCount} repeat=${event.repeatCount}",
-                            )
-                            if (moved) {
-                                lastFocusedIndex = nextIndex
-                                pendingFocusIndex = RecyclerView.NO_POSITION
-                            }
-                            moved
-                        } else {
-                            LogFacade.d(
-                                LogModule.STORAGE,
-                                TAG,
-                                "key DOWN reach end current=$currentIndex count=${rvAdapter.itemCount}",
-                            )
-                            false
-                        }
-                    }
-
-                    KeyEvent.KEYCODE_DPAD_UP -> {
-                        val previousIndex = currentIndex - 1
-                        if (previousIndex >= 0) {
-                            val moved = requestIndexChildFocus(previousIndex, resolveVerticalMoveFocusTarget())
-                            LogFacade.d(
-                                LogModule.STORAGE,
-                                TAG,
-                                "key UP current=$currentIndex target=$previousIndex moved=$moved count=${rvAdapter.itemCount} repeat=${event.repeatCount}",
-                            )
-                            if (moved) {
-                                lastFocusedIndex = previousIndex
-                                pendingFocusIndex = RecyclerView.NO_POSITION
-                            }
-                            moved
-                        } else {
-                            LogFacade.d(LogModule.STORAGE, TAG, "key UP reach top current=$currentIndex")
-                            false
-                        }
-                    }
-
-                    else -> {
-                        LogFacade.d(LogModule.STORAGE, TAG, "key pass-through keyCode=$keyCode index=$currentIndex")
-                        false
-                    }
-                }
-            }
+            focusDelegate.installVerticalDpadKeyNavigation(
+                focusTargetProvider = { rv -> rv.resolveVerticalMoveFocusTarget() },
+                onMenuKeyDown = { triggerTvRefresh() },
+                onSettingsKeyDown = { triggerTvRefresh() },
+            )
         }
     }
 
@@ -330,16 +214,17 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
 
         if (isBilibiliHistory) {
             // 历史列表刷新：刷新后聚焦第一项（最新）
-            pendingFocusUniqueKey = null
-            pendingFocusIndex = 0
+            focusDelegate.setPendingFocus(index = 0)
         } else {
-            val (focusedIndex, focusedUniqueKey) = captureFocusedItem()
-            pendingFocusUniqueKey = focusedUniqueKey
-            pendingFocusIndex =
-                when {
-                    focusedIndex != RecyclerView.NO_POSITION -> focusedIndex
-                    else -> 0
-                }
+            val (focusedIndex, focusedUniqueKey) = focusDelegate.captureFocusedItem()
+            focusDelegate.setPendingFocus(
+                index =
+                    when {
+                        focusedIndex != RecyclerView.NO_POSITION -> focusedIndex
+                        else -> 0
+                    },
+                uniqueKey = focusedUniqueKey,
+            )
         }
 
         ToastCenter.showInfo("刷新中…")
@@ -355,78 +240,12 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
 
     fun requestFocus(reversed: Boolean = false) {
         val binding = bindingOrNull ?: return
-        val recyclerView = binding.storageFileRv
-        if (recyclerView.isInTouchMode) {
+        if (binding.storageFileRv.isInTouchMode) {
             LogFacade.d(LogModule.STORAGE, TAG, "requestFocus skipped (touch mode)")
             return
         }
-        val adapter = recyclerView.adapter ?: return
-        if (adapter.itemCount == 0) {
-            LogFacade.d(LogModule.STORAGE, TAG, "requestFocus skip empty adapter")
-            return
-        }
-        val hasPending = pendingFocusIndex != RecyclerView.NO_POSITION && !reversed
-        val desiredIndex =
-            when {
-                hasPending -> pendingFocusIndex
-                reversed -> adapter.itemCount - 1
-                else -> 0
-            }
-        val targetIndex = desiredIndex.coerceIn(0, adapter.itemCount - 1)
-        pendingFocusIndex = RecyclerView.NO_POSITION
-        LogFacade.d(
-            LogModule.STORAGE,
-            TAG,
-            "requestFocus start reversed=$reversed count=${adapter.itemCount} target=$targetIndex",
-        )
-        requestIndexFocusWhenReady(targetIndex)
-    }
-
-    private fun requestIndexFocusWhenReady(
-        targetIndex: Int,
-        attempt: Int = 0
-    ) {
-        val binding = bindingOrNull ?: return
-        val recyclerView = binding.storageFileRv
-        if (recyclerView.isInTouchMode) {
-            LogFacade.d(LogModule.STORAGE, TAG, "requestIndexFocusWhenReady skipped (touch mode)")
-            return
-        }
-
-        if (tryRequestIndexFocus(targetIndex)) {
-            lastFocusedIndex = targetIndex
-            LogFacade.d(LogModule.STORAGE, TAG, "requestIndexFocusWhenReady success attempt=$attempt target=$targetIndex")
-            return
-        }
-
-        if (attempt < 3) {
-            recyclerView.post { requestIndexFocusWhenReady(targetIndex, attempt + 1) }
-            return
-        }
-
-        // 最后兜底：滚动到目标位置，再请求焦点（用于目标项不在可见区域的场景）
-        val moved = recyclerView.requestIndexChildFocus(targetIndex)
-        LogFacade.d(LogModule.STORAGE, TAG, "requestIndexFocusWhenReady fallback moved=$moved target=$targetIndex")
-        if (moved) {
-            lastFocusedIndex = targetIndex
-        }
-    }
-
-    private fun tryRequestIndexFocus(targetIndex: Int): Boolean {
-        val binding = bindingOrNull ?: return false
-        val recyclerView = binding.storageFileRv
-        val layoutManager = recyclerView.layoutManager ?: return false
-        val target = layoutManager.findViewByPosition(targetIndex) ?: return false
-
-        // 保证目标项完整可见，避免只露出一部分导致的视效跳动
-        val rect = Rect()
-        target.getDrawingRect(rect)
-        recyclerView.offsetDescendantRectToMyCoords(target, rect)
-        recyclerView.requestChildRectangleOnScreen(target, rect, true)
-
-        val targetTag = R.string.focusable_item.toResString()
-        val focusView = target.findViewWithTag<View>(targetTag) ?: target.takeIf { it.isFocusable }
-        return focusView?.requestFocus() == true
+        val moved = focusDelegate.requestFocus(reversed = reversed)
+        LogFacade.d(LogModule.STORAGE, TAG, "requestFocus reversed=$reversed moved=$moved")
     }
 
     fun focusFile(uniqueKey: String) {
@@ -441,11 +260,8 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             LogFacade.w(LogModule.STORAGE, TAG, "focusFile target not found uniqueKey=$uniqueKey")
             return
         }
-        binding.storageFileRv.post {
-            bindingOrNull?.storageFileRv?.requestIndexChildFocus(targetIndex)
-        }
-        lastFocusedIndex = targetIndex
-        pendingFocusIndex = RecyclerView.NO_POSITION
+        focusDelegate.setPendingFocus(index = targetIndex)
+        binding.storageFileRv.post { requestFocus() }
     }
 
     /**
@@ -462,56 +278,6 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
         viewModel.changeSortOption()
     }
 
-    private fun saveCurrentFocusIndex() {
-        val binding = bindingOrNull ?: return
-        val focusedChild = binding.storageFileRv.focusedChild ?: return
-        val index = binding.storageFileRv.getChildAdapterPosition(focusedChild)
-        if (index != RecyclerView.NO_POSITION) {
-            lastFocusedIndex = index
-            pendingFocusIndex = index
-            LogFacade.d(LogModule.STORAGE, TAG, "saveCurrentFocusIndex index=$index")
-        }
-    }
-
-    private fun resolvePendingFocusIndex(
-        items: List<Any>,
-        itemCount: Int,
-    ): Int {
-        val pendingKey = pendingFocusUniqueKey
-        if (!pendingKey.isNullOrEmpty()) {
-            val resolvedIndex =
-                items.indexOfFirst { item ->
-                    val file = item as? StorageFile ?: return@indexOfFirst false
-                    file.uniqueKey() == pendingKey
-                }
-            if (resolvedIndex in 0 until itemCount) {
-                return resolvedIndex
-            }
-        }
-
-        if (pendingFocusIndex != RecyclerView.NO_POSITION) {
-            return pendingFocusIndex.coerceIn(0, itemCount - 1)
-        }
-
-        return 0
-    }
-
-    private fun captureFocusedItem(): Pair<Int, String?> {
-        val binding = bindingOrNull ?: return RecyclerView.NO_POSITION to null
-        val recyclerView = binding.storageFileRv
-        val focusedChild =
-            recyclerView.focusedChild
-                ?: return RecyclerView.NO_POSITION to null
-        val focusedIndex = recyclerView.getChildAdapterPosition(focusedChild)
-        if (focusedIndex == RecyclerView.NO_POSITION) {
-            return focusedIndex to null
-        }
-
-        val adapter = recyclerView.adapter as? BaseAdapter ?: return focusedIndex to null
-        val storageFile = adapter.items.getOrNull(focusedIndex) as? StorageFile ?: return focusedIndex to null
-        return focusedIndex to storageFile.uniqueKey()
-    }
-
     private fun showBilibiliLoginDialog(library: MediaLibraryEntity) {
         BilibiliLoginDialog(
             activity = ownerActivity,
@@ -522,7 +288,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                 val requiresLogin = (ownerActivity.storage as? BilibiliStorage)?.isConnected() == false
                 bindingOrNull?.let { binding ->
                     if (!binding.storageFileRv.isInTouchMode && isHistoryPage && requiresLogin) {
-                        pendingFocusIndex = 0
+                        focusDelegate.setPendingFocus(index = 0)
                         binding.storageFileRv.post { requestFocus() }
                     }
                 }
