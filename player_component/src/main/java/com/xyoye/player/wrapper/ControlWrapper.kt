@@ -69,6 +69,8 @@ class ControlWrapper(
 
     override fun getBufferedPercentage() = mVideoPlayer.getBufferedPercentage()
 
+    override fun supportBufferedPercentage() = mVideoPlayer.supportBufferedPercentage()
+
     override fun setSilence(isSilence: Boolean) {
         mVideoPlayer.setSilence(isSilence)
     }
@@ -93,6 +95,8 @@ class ControlWrapper(
     override fun getSpeed() = mVideoPlayer.getSpeed()
 
     override fun getTcpSpeed() = mVideoPlayer.getTcpSpeed()
+
+    override fun supportTcpSpeed() = mVideoPlayer.supportTcpSpeed()
 
     override fun getRenderView() = mVideoPlayer.getRenderView()
 

@@ -303,7 +303,7 @@ class PlayerActivity :
     override fun onKeyDown(
         keyCode: Int,
         event: KeyEvent?
-    ): Boolean = danDanPlayer.onKeyDown(keyCode, event) or super.onKeyDown(keyCode, event)
+    ): Boolean = danDanPlayer.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
 
     override fun onScreenLocked() {
     }

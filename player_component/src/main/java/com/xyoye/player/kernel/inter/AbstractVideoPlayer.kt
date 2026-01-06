@@ -138,9 +138,19 @@ abstract class AbstractVideoPlayer : InterVideoTrack {
     abstract fun getBufferedPercentage(): Int
 
     /**
+     * 是否支持缓冲进度
+     */
+    open fun supportBufferedPercentage(): Boolean = true
+
+    /**
      * 获取网络加载速度
      */
     abstract fun getTcpSpeed(): Long
+
+    /**
+     * 是否支持网络加载速度
+     */
+    open fun supportTcpSpeed(): Boolean = false
 
     /**
      * 当前解码方式（UI 提示用）

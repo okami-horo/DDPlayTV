@@ -165,6 +165,9 @@ class DanDanVideoPlayer(
 
     override fun getBufferedPercentage() = mVideoPlayer.getBufferedPercentage()
 
+    override fun supportBufferedPercentage(): Boolean =
+        this::mVideoPlayer.isInitialized && mVideoPlayer.supportBufferedPercentage()
+
     override fun setSilence(isSilence: Boolean) {
         val volume = if (isSilence) 0f else 1f
         setVolume(PointF(volume, volume))
@@ -198,6 +201,9 @@ class DanDanVideoPlayer(
     }
 
     override fun getTcpSpeed() = mVideoPlayer.getTcpSpeed()
+
+    override fun supportTcpSpeed(): Boolean =
+        this::mVideoPlayer.isInitialized && mVideoPlayer.supportTcpSpeed()
 
     override fun getDecodeType(): DecodeType =
         if (this::mVideoPlayer.isInitialized) {

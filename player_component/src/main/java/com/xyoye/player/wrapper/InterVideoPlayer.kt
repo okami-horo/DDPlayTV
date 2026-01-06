@@ -53,6 +53,14 @@ interface InterVideoPlayer : InterVideoTrack {
     fun getBufferedPercentage(): Int
 
     /**
+     * 是否支持缓冲进度（[getBufferedPercentage]）
+     *
+     * 部分内核无法提供可靠的缓冲百分比（例如仅能感知 buffering start/end），
+     * UI 应在不支持时做降级展示，避免展示错误的缓冲信息。
+     */
+    fun supportBufferedPercentage(): Boolean
+
+    /**
      * 静音
      */
     fun setSilence(isSilence: Boolean)
@@ -91,6 +99,11 @@ interface InterVideoPlayer : InterVideoTrack {
      * 获取网络加载速度
      */
     fun getTcpSpeed(): Long
+
+    /**
+     * 是否支持网络加载速度（[getTcpSpeed]）
+     */
+    fun supportTcpSpeed(): Boolean
 
     /**
      * 获取渲染布局

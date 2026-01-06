@@ -58,6 +58,7 @@ class VlcVideoPlayer(
     private var dataSource: String? = null
     private var proxySeekEnabled: Boolean = false
     private val mVideoSize = Point(0, 0)
+    private var looping = PlayerInitializer.isLooping
 
     override fun initPlayer() {
         audioOutput = PlayerInitializer.Player.vlcAudioOutput
@@ -71,6 +72,7 @@ class VlcVideoPlayer(
         path: String,
         headers: Map<String, String>?
     ) {
+        isBufferEnd = false
         dataSource = path
         runCatching {
             val playServer = HttpPlayServer.getInstance()
@@ -173,6 +175,7 @@ class VlcVideoPlayer(
     }
 
     override fun setLooping(isLooping: Boolean) {
+        looping = isLooping
     }
 
     override fun setOptions() {
@@ -197,6 +200,8 @@ class VlcVideoPlayer(
     override fun getVideoSize(): Point = mVideoSize
 
     override fun getBufferedPercentage(): Int = 0
+
+    override fun supportBufferedPercentage(): Boolean = false
 
     override fun getTcpSpeed(): Long = 0
 
@@ -327,8 +332,16 @@ class VlcVideoPlayer(
                 }
                 // 播放完成
                 MediaPlayer.Event.EndReached -> {
-                    mPlayerEventListener.onCompletion()
-                    VideoLog.d("$TAG--listener--onInfo--> onCompletion")
+                    if (looping) {
+                        if (isPlayerAvailable()) {
+                            mMediaPlayer.time = 0L
+                            mMediaPlayer.play()
+                        }
+                        VideoLog.d("$TAG--listener--onInfo--> loop restart")
+                    } else {
+                        mPlayerEventListener.onCompletion()
+                        VideoLog.d("$TAG--listener--onInfo--> onCompletion")
+                    }
                 }
             }
         }

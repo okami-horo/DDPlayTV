@@ -406,6 +406,8 @@ class MpvVideoPlayer(
 
     override fun getBufferedPercentage(): Int = 0
 
+    override fun supportBufferedPercentage(): Boolean = false
+
     override fun getTcpSpeed(): Long = 0
 
     override fun getDecodeType(): DecodeType {

@@ -256,10 +256,15 @@ class PlayerBottomView(
 
         viewBinding.playSeekBar.isEnabled = duration > 0 && mControlWrapper.isUserSeekAllowed()
 
-        var bufferedPercent = mControlWrapper.getBufferedPercentage()
-        if (bufferedPercent > 95) {
-            bufferedPercent = 100
-        }
+        val bufferedPercent =
+            if (mControlWrapper.supportBufferedPercentage()) {
+                mControlWrapper
+                    .getBufferedPercentage()
+                    .coerceIn(0, 100)
+                    .let { percent -> if (percent > 95) 100 else percent }
+            } else {
+                viewBinding.playSeekBar.progress
+            }
         viewBinding.playSeekBar.secondaryProgress = bufferedPercent
 
         viewBinding.durationTv.text = formatDuration(duration)
