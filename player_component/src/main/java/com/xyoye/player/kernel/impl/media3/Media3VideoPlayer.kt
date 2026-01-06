@@ -469,7 +469,7 @@ class Media3VideoPlayer(
 
         var bestGroupIdx = -1
         var bestTrackIdx = -1
-        var bestScore = Int.MIN_VALUE
+        var bestScore = Long.MIN_VALUE
 
         videoGroups.forEachIndexed { groupIndex, group ->
             for (trackIndex in 0 until group.length) {
@@ -489,7 +489,11 @@ class Media3VideoPlayer(
                 val bitrate = format.bitrate
                 val frameRate = format.frameRate.takeUnless { it.isNaN() || it <= 0f } ?: 0f
                 val frameRateScore = (frameRate * 500).roundToInt() // 60fps≈30k，远小于 HDR/分辨率
-                val score = hdrScore * 1_000_000_000 + height * 10_000 + bitrate / 1000 + frameRateScore
+                val score =
+                    hdrScore.toLong() * 1_000_000_000L +
+                        height.toLong() * 10_000L +
+                        (bitrate / 1000).toLong() +
+                        frameRateScore.toLong()
                 if (score > bestScore) {
                     bestScore = score
                     bestGroupIdx = groupIndex
