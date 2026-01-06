@@ -35,6 +35,7 @@
     <string name="text_player_media3">Media3</string>
     <string name="text_player_vlc">VLC</string>
     <string name="text_player_mpv">MPV</string>
+    <string name="text_player_fixed_suffix">（固定）</string>
 
     <string name="text_start_screen_cast_server">启动投屏服务</string>
     <string name="text_stop_screen_cast_server">停止投屏服务</string>

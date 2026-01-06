@@ -52,6 +52,8 @@ object StorageVideoSourceFactory {
             library = resolvedLibrary,
             globalPlayerType = globalPlayerType,
             mediaType = storage.library.mediaType,
+            supportedPlayerTypes = storage.supportedPlayerTypes(),
+            preferredPlayerType = storage.preferredPlayerType(),
         )
     }
 

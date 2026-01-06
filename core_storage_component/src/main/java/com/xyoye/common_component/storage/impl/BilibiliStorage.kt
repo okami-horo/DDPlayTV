@@ -18,6 +18,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursor
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
+import com.xyoye.data_component.enums.PlayerType
 import java.io.InputStream
 import java.util.Date
 
@@ -388,6 +389,10 @@ class BilibiliStorage(
             throw t
         }
     }
+
+    override fun supportedPlayerTypes(): Set<PlayerType> = setOf(PlayerType.TYPE_EXO_PLAYER)
+
+    override fun preferredPlayerType(): PlayerType = PlayerType.TYPE_EXO_PLAYER
 
     override fun getNetworkHeaders(): Map<String, String>? =
         BilibiliHeaders.withCookie(repository.cookieHeaderOrNull())
