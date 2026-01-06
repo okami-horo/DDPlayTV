@@ -8,6 +8,7 @@ import android.os.Looper
 import android.view.Display
 import android.view.Surface
 import androidx.media3.common.C
+import androidx.media3.common.Effect
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
@@ -16,11 +17,13 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
 import androidx.media3.common.text.Cue
 import androidx.media3.common.util.Clock
+import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.LoadControl
+import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
@@ -34,6 +37,8 @@ import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.extension.mapByLength
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
+import com.xyoye.player.kernel.anime4k.Anime4kMode
+import com.xyoye.player.kernel.impl.media3.effect.Anime4kPerformanceGlEffect
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
@@ -82,6 +87,11 @@ class Media3VideoPlayer(
 
     private val trackNameProvider by lazy { DefaultTrackNameProvider(appContext.resources) }
 
+    private var anime4kMode: Int = Anime4kMode.MODE_OFF
+    private var effectsPipelineConfigured = false
+    private var outputResolution: Size? = null
+    private var videoRenderer: Renderer? = null
+
     override fun initPlayer() {
         if (trackSelector is DefaultTrackSelector) {
             val preferredMimeTypes =
@@ -115,6 +125,9 @@ class Media3VideoPlayer(
                 .setAnalyticsCollector(DefaultAnalyticsCollector(Clock.DEFAULT))
                 .build()
 
+        // Always initialize the effects pipeline before prepare() so effects can be toggled later.
+        applyVideoEffects()
+
         setOptions()
 
         if (PlayerInitializer.isPrintLog && trackSelector is MappingTrackSelector) {
@@ -144,6 +157,7 @@ class Media3VideoPlayer(
 
     override fun setSurface(surface: Surface) {
         player.setVideoSurface(surface)
+        sendVideoOutputResolutionIfConfigured()
     }
 
     override fun prepareAsync() {
@@ -158,6 +172,75 @@ class Media3VideoPlayer(
         // 为单一 MediaSource 注入比特流修补（仅 H.264 avcC -> Annex-B，目前媒体管线已覆盖大部分情况）
         player.setMediaSource(mediaSource)
         player.prepare()
+    }
+
+    fun getAnime4kMode(): Int = anime4kMode
+
+    fun setAnime4kMode(mode: Int) {
+        val safeMode =
+            when (mode) {
+                Anime4kMode.MODE_PERFORMANCE -> Anime4kMode.MODE_PERFORMANCE
+                else -> Anime4kMode.MODE_OFF
+            }
+        if (anime4kMode == safeMode) {
+            return
+        }
+        anime4kMode = safeMode
+        applyVideoEffects()
+    }
+
+    fun setVideoOutputResolution(
+        width: Int,
+        height: Int
+    ) {
+        if (width <= 0 || height <= 0) return
+        outputResolution = Size(width, height)
+        sendVideoOutputResolutionIfConfigured()
+    }
+
+    private fun applyVideoEffects() {
+        if (!this::player.isInitialized) {
+            return
+        }
+
+        val effects: List<Effect> =
+            if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
+                listOf(Anime4kPerformanceGlEffect())
+            } else {
+                emptyList()
+            }
+        player.setVideoEffects(effects)
+        effectsPipelineConfigured = true
+        sendVideoOutputResolutionIfConfigured()
+    }
+
+    private fun resolveVideoRenderer(): Renderer? {
+        if (!this::player.isInitialized) return null
+        for (index in 0 until player.rendererCount) {
+            if (player.getRendererType(index) == C.TRACK_TYPE_VIDEO) {
+                return player.getRenderer(index)
+            }
+        }
+        return null
+    }
+
+    private fun sendVideoOutputResolutionIfConfigured() {
+        if (!effectsPipelineConfigured || !this::player.isInitialized) {
+            return
+        }
+        val resolution = outputResolution ?: return
+        val renderer =
+            videoRenderer
+                ?: resolveVideoRenderer().also { resolved ->
+                    videoRenderer = resolved
+                }
+                ?: return
+
+        player
+            .createMessage(renderer)
+            .setType(Renderer.MSG_SET_VIDEO_OUTPUT_RESOLUTION)
+            .setPayload(resolution)
+            .send()
     }
 
     override fun start() {

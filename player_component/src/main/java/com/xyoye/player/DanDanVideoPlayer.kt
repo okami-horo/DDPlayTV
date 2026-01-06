@@ -28,6 +28,7 @@ import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.facoty.PlayerFactory
 import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
 import com.xyoye.player.kernel.impl.mpv.MpvVideoPlayer
+import com.xyoye.player.kernel.anime4k.Anime4kMode
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.inter.VideoPlayerEventListener
@@ -212,18 +213,25 @@ class DanDanVideoPlayer(
             DecodeType.HW
         }
 
-    override fun getMpvAnime4kMode(): Int {
+    override fun getAnime4kMode(): Int {
         if (!this::mVideoPlayer.isInitialized) {
-            return 0
+            return Anime4kMode.MODE_OFF
         }
-        return (mVideoPlayer as? MpvVideoPlayer)?.getAnime4kMode() ?: 0
+        return when (val videoPlayer = mVideoPlayer) {
+            is MpvVideoPlayer -> videoPlayer.getAnime4kMode()
+            is Media3VideoPlayer -> videoPlayer.getAnime4kMode()
+            else -> Anime4kMode.MODE_OFF
+        }
     }
 
-    override fun setMpvAnime4kMode(mode: Int) {
+    override fun setAnime4kMode(mode: Int) {
         if (!this::mVideoPlayer.isInitialized) {
             return
         }
-        (mVideoPlayer as? MpvVideoPlayer)?.setAnime4kMode(mode)
+        when (val videoPlayer = mVideoPlayer) {
+            is MpvVideoPlayer -> videoPlayer.setAnime4kMode(mode)
+            is Media3VideoPlayer -> videoPlayer.setAnime4kMode(mode)
+        }
     }
 
     override fun isSeekable(): Boolean {

@@ -24,8 +24,8 @@ import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingAction
 import com.xyoye.player.info.SettingActionType
 import com.xyoye.player.info.SettingItem
+import com.xyoye.player.kernel.anime4k.Anime4kMode
 import com.xyoye.player.kernel.impl.mpv.MpvOptions
-import com.xyoye.player.kernel.impl.mpv.Anime4kShaderManager
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ItemPlayerSettingBinding
 import com.xyoye.player_component.databinding.ItemPlayerSettingTypeBinding
@@ -231,9 +231,14 @@ class PlayerSettingView(
             disabledActions.add(SettingAction.VIDEO_TRACK)
         }
 
-        val isMpvPlayer = PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER
-        val isAnime4kSupported = MpvOptions.isAnime4kSupportedVideoOutput(PlayerConfig.getMpvVideoOutput())
-        if (!isMpvPlayer || !isAnime4kSupported) {
+        val playerType = PlayerInitializer.playerType
+        val isAnime4kSupported =
+            when (playerType) {
+                PlayerType.TYPE_MPV_PLAYER -> MpvOptions.isAnime4kSupportedVideoOutput(PlayerConfig.getMpvVideoOutput())
+                PlayerType.TYPE_EXO_PLAYER -> true
+                else -> false
+            }
+        if (!isAnime4kSupported) {
             disabledActions.add(SettingAction.ANIME4K)
         }
         SettingAction
@@ -272,7 +277,7 @@ class PlayerSettingView(
             }
 
             SettingAction.ANIME4K -> {
-                selected = mControlWrapper.getMpvAnime4kMode() != Anime4kShaderManager.MODE_OFF
+                selected = mControlWrapper.getAnime4kMode() != Anime4kMode.MODE_OFF
             }
 
             SettingAction.BACKGROUND_PLAY -> {
@@ -363,7 +368,7 @@ class PlayerSettingView(
             }
 
             SettingAction.ANIME4K -> {
-                mControlWrapper.showSettingView(SettingViewType.MPV_ANIME4K)
+                mControlWrapper.showSettingView(SettingViewType.ANIME4K)
                 onSettingVisibilityChanged(false)
             }
 

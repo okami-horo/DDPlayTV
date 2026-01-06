@@ -4,6 +4,7 @@ import android.content.Context
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.utils.PathHelper
+import com.xyoye.player.kernel.anime4k.Anime4kMode
 import java.io.File
 import java.io.FileOutputStream
 
@@ -12,9 +13,9 @@ internal object Anime4kShaderManager {
     private const val ASSET_SHADER_DIR = "shaders"
     private const val OUTPUT_DIR_NAME = "anime4k"
 
-    const val MODE_OFF = 0
-    const val MODE_PERFORMANCE = 1
-    const val MODE_QUALITY = 2
+    const val MODE_OFF = Anime4kMode.MODE_OFF
+    const val MODE_PERFORMANCE = Anime4kMode.MODE_PERFORMANCE
+    const val MODE_QUALITY = Anime4kMode.MODE_QUALITY
 
     private val qualityShaders =
         arrayOf(

@@ -5,6 +5,7 @@ import android.graphics.SurfaceTexture
 import android.view.Surface
 import android.view.TextureView
 import com.xyoye.data_component.enums.VideoScreenScale
+import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.RenderMeasureHelper
 
@@ -29,6 +30,9 @@ class RenderTextureView(
                 width: Int,
                 height: Int
             ) {
+                if (this@RenderTextureView::mVideoPlayer.isInitialized) {
+                    (mVideoPlayer as? Media3VideoPlayer)?.setVideoOutputResolution(width, height)
+                }
             }
 
             override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
@@ -44,6 +48,7 @@ class RenderTextureView(
                 mSurface = Surface(surface)
                 if (this@RenderTextureView::mVideoPlayer.isInitialized) {
                     mVideoPlayer.setSurface(mSurface!!)
+                    (mVideoPlayer as? Media3VideoPlayer)?.setVideoOutputResolution(width, height)
                 }
             }
         }

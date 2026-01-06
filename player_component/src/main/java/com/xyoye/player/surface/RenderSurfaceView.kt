@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.xyoye.data_component.enums.VideoScreenScale
+import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.RenderMeasureHelper
 
@@ -26,6 +27,9 @@ class RenderSurfaceView(
                 width: Int,
                 height: Int
             ) {
+                if (this@RenderSurfaceView::mVideoPlayer.isInitialized) {
+                    (mVideoPlayer as? Media3VideoPlayer)?.setVideoOutputResolution(width, height)
+                }
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {

@@ -106,12 +106,12 @@ class ControlWrapper(
         mVideoPlayer.setRotation(rotation)
     }
 
-    override fun getMpvAnime4kMode(): Int {
-        return mVideoPlayer.getMpvAnime4kMode()
+    override fun getAnime4kMode(): Int {
+        return mVideoPlayer.getAnime4kMode()
     }
 
-    override fun setMpvAnime4kMode(mode: Int) {
-        mVideoPlayer.setMpvAnime4kMode(mode)
+    override fun setAnime4kMode(mode: Int) {
+        mVideoPlayer.setAnime4kMode(mode)
     }
 
     /**

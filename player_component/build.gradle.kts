@@ -167,6 +167,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-hls:$media3Version")
     implementation("androidx.media3:media3-exoplayer-smoothstreaming:$media3Version")
     implementation("androidx.media3:media3-exoplayer-workmanager:$media3Version")
+    implementation("androidx.media3:media3-effect:$media3Version")
     implementation("androidx.media3:media3-session:$media3Version")
     implementation("androidx.media3:media3-ui:$media3Version")
     implementation("androidx.media3:media3-cast:$media3Version")
