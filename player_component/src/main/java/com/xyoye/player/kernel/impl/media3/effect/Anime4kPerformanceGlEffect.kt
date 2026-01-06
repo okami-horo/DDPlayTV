@@ -2,6 +2,7 @@ package com.xyoye.player.kernel.impl.media3.effect
 
 import android.content.Context
 import androidx.media3.common.VideoFrameProcessingException
+import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.GlEffect
 import androidx.media3.effect.GlShaderProgram
@@ -9,7 +10,9 @@ import androidx.media3.effect.PassthroughShaderProgram
 import com.xyoye.player.kernel.impl.media3.Media3Diagnostics
 
 @UnstableApi
-class Anime4kPerformanceGlEffect : GlEffect {
+class Anime4kPerformanceGlEffect(
+    private val outputSizeProvider: () -> Size?,
+) : GlEffect {
     @Throws(VideoFrameProcessingException::class)
     override fun toGlShaderProgram(
         context: Context,
@@ -23,7 +26,7 @@ class Anime4kPerformanceGlEffect : GlEffect {
             return PassthroughShaderProgram()
         }
         val shaderProgram =
-            runCatching { Anime4kPerformanceShaderProgram(context) }
+            runCatching { Anime4kPerformanceShaderProgram(context, outputSizeProvider) }
                 .onSuccess {
                     Media3Diagnostics.logAnime4kGlEffectDecision(
                         useHdr = false,

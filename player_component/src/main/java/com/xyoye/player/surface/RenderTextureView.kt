@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.SurfaceTexture
 import android.view.Surface
 import android.view.TextureView
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
@@ -25,6 +26,7 @@ class RenderTextureView(
 
     private val listener =
         object : SurfaceTextureListener {
+            @UnstableApi
             override fun onSurfaceTextureSizeChanged(
                 surface: SurfaceTexture,
                 width: Int,
@@ -39,6 +41,7 @@ class RenderTextureView(
 
             override fun onSurfaceTextureDestroyed(surface: SurfaceTexture) = false
 
+            @UnstableApi
             override fun onSurfaceTextureAvailable(
                 surface: SurfaceTexture,
                 width: Int,

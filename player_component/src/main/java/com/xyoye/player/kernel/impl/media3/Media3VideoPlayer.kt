@@ -199,8 +199,19 @@ class Media3VideoPlayer(
         height: Int
     ) {
         if (width <= 0 || height <= 0) return
-        outputResolution = Size(width, height)
-        sendVideoOutputResolutionIfConfigured()
+        val newResolution = Size(width, height)
+        if (outputResolution == newResolution) {
+            return
+        }
+        outputResolution = newResolution
+
+        // Some Anime4K passes (mpv user shader format) depend on OUTPUT.w/h for WHEN/WIDTH/HEIGHT evaluation.
+        // Re-apply the effects so the shader program can re-configure when output size changes.
+        if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
+            applyVideoEffects()
+        } else {
+            sendVideoOutputResolutionIfConfigured()
+        }
     }
 
     private fun applyVideoEffects() {
@@ -210,7 +221,7 @@ class Media3VideoPlayer(
 
         val effects: List<Effect> =
             if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
-                listOf(Anime4kPerformanceGlEffect())
+                listOf(Anime4kPerformanceGlEffect(outputSizeProvider = { outputResolution }))
             } else {
                 emptyList()
             }

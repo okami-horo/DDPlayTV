@@ -3,6 +3,7 @@ package com.xyoye.player.surface
 import android.content.Context
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import androidx.media3.common.util.UnstableApi
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
@@ -21,6 +22,7 @@ class RenderSurfaceView(
 
     private val mSurfaceCallback =
         object : SurfaceHolder.Callback {
+            @UnstableApi
             override fun surfaceChanged(
                 holder: SurfaceHolder,
                 format: Int,

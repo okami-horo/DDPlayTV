@@ -306,6 +306,122 @@ object Media3Diagnostics {
         )
     }
 
+    fun logAnime4kShaderPipelineParsed(
+        shaderFiles: List<String>,
+        totalPasses: Int
+    ) {
+        log {
+            val files = shaderFiles.joinToString()
+            LogFacade.i(
+                MODULE,
+                TAG,
+                "$ANIME4K_PREFIX shader pipeline parsed: files=[$files] totalPasses=$totalPasses",
+            )
+        }
+        emit(
+            "anime4k_shader_pipeline_parsed",
+            mapOf(
+                "files" to shaderFiles.joinToString(),
+                "totalPasses" to totalPasses.toString(),
+            ),
+        )
+    }
+
+    fun logAnime4kShaderPipelinePlanned(
+        inputSize: Size,
+        outputControlSize: Size,
+        totalPasses: Int,
+        activePasses: Int,
+        activeMainPasses: Int,
+        outputSize: Size,
+        skippedPasses: List<String>
+    ) {
+        log {
+            val skippedSummary =
+                if (skippedPasses.isEmpty()) {
+                    "none"
+                } else {
+                    val head = skippedPasses.take(6).joinToString()
+                    if (skippedPasses.size > 6) "$head ...(+${skippedPasses.size - 6})" else head
+                }
+            LogFacade.i(
+                MODULE,
+                TAG,
+                "$ANIME4K_PREFIX pipeline planned: input=${inputSize.width}x${inputSize.height} " +
+                    "outputControl=${outputControlSize.width}x${outputControlSize.height} " +
+                    "output=${outputSize.width}x${outputSize.height} " +
+                    "passes=$activePasses/$totalPasses mainPasses=$activeMainPasses skipped=[$skippedSummary]",
+            )
+        }
+        emit(
+            "anime4k_shader_pipeline_planned",
+            mapOf(
+                "input" to "${inputSize.width}x${inputSize.height}",
+                "outputControl" to "${outputControlSize.width}x${outputControlSize.height}",
+                "output" to "${outputSize.width}x${outputSize.height}",
+                "totalPasses" to totalPasses.toString(),
+                "activePasses" to activePasses.toString(),
+                "activeMainPasses" to activeMainPasses.toString(),
+                "skippedPassesCount" to skippedPasses.size.toString(),
+            ),
+        )
+    }
+
+    fun logAnime4kShaderDirectiveEvalFailed(
+        passDescription: String,
+        directive: String,
+        expression: String,
+        mainSize: Size,
+        nativeSize: Size,
+        outputSize: Size
+    ) {
+        log {
+            LogFacade.w(
+                MODULE,
+                TAG,
+                "$ANIME4K_PREFIX directive eval failed: pass=$passDescription directive=$directive expr=\"$expression\" " +
+                    "main=${mainSize.width}x${mainSize.height} native=${nativeSize.width}x${nativeSize.height} " +
+                    "output=${outputSize.width}x${outputSize.height}",
+            )
+        }
+        emit(
+            "anime4k_shader_directive_eval_failed",
+            mapOf(
+                "pass" to passDescription,
+                "directive" to directive,
+                "expression" to expression,
+                "main" to "${mainSize.width}x${mainSize.height}",
+                "native" to "${nativeSize.width}x${nativeSize.height}",
+                "output" to "${outputSize.width}x${outputSize.height}",
+            ),
+        )
+    }
+
+    fun logAnime4kShaderFirstFrame(
+        inputSize: Size,
+        outputSize: Size,
+        activePasses: Int,
+        outputFboId: Int
+    ) {
+        log {
+            LogFacade.d(
+                MODULE,
+                TAG,
+                "$ANIME4K_PREFIX drawFrame: firstFrame input=${inputSize.width}x${inputSize.height} " +
+                    "output=${outputSize.width}x${outputSize.height} activePasses=$activePasses outputFboId=$outputFboId",
+            )
+        }
+        emit(
+            "anime4k_shader_first_frame",
+            mapOf(
+                "input" to "${inputSize.width}x${inputSize.height}",
+                "output" to "${outputSize.width}x${outputSize.height}",
+                "activePasses" to activePasses.toString(),
+                "outputFboId" to outputFboId.toString(),
+            ),
+        )
+    }
+
     fun logAnime4kShaderConfigured(
         inputSize: Size,
         outputSize: Size,
