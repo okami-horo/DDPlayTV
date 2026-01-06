@@ -105,11 +105,12 @@ class Media3VideoPlayer(
                     .build()
         }
 
+        val embeddedSinkRef = embeddedSubtitleSink
         val renderersFactory =
             LibassAwareRenderersFactory(
                 appContext,
                 AggressiveMediaCodecSelector(),
-                embeddedSinkProvider = { embeddedSubtitleSink.get() }
+                embeddedSinkProvider = { embeddedSinkRef.get() }
             ).apply {
                 setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             }
@@ -185,6 +186,10 @@ class Media3VideoPlayer(
         if (anime4kMode == safeMode) {
             return
         }
+        Media3Diagnostics.logAnime4kModeChanged(
+            requestedMode = mode,
+            appliedMode = safeMode,
+        )
         anime4kMode = safeMode
         applyVideoEffects()
     }
@@ -209,6 +214,10 @@ class Media3VideoPlayer(
             } else {
                 emptyList()
             }
+        Media3Diagnostics.logAnime4kEffectsApplied(
+            mode = anime4kMode,
+            effectsCount = effects.size,
+        )
         player.setVideoEffects(effects)
         effectsPipelineConfigured = true
         sendVideoOutputResolutionIfConfigured()
@@ -228,19 +237,44 @@ class Media3VideoPlayer(
         if (!effectsPipelineConfigured || !this::player.isInitialized) {
             return
         }
-        val resolution = outputResolution ?: return
+        val resolution =
+            outputResolution
+                ?: run {
+                    if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
+                        Media3Diagnostics.logAnime4kOutputResolutionSkipped("output_resolution_unset")
+                    }
+                    return
+                }
         val renderer =
             videoRenderer
                 ?: resolveVideoRenderer().also { resolved ->
                     videoRenderer = resolved
                 }
-                ?: return
+                ?: run {
+                    if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
+                        Media3Diagnostics.logAnime4kOutputResolutionSkipped("video_renderer_unresolved")
+                    }
+                    return
+                }
 
-        player
-            .createMessage(renderer)
-            .setType(Renderer.MSG_SET_VIDEO_OUTPUT_RESOLUTION)
-            .setPayload(resolution)
-            .send()
+        val rendererName = renderer.javaClass.simpleName.ifBlank { renderer.javaClass.name }
+        val sent =
+            runCatching {
+                player
+                    .createMessage(renderer)
+                    .setType(Renderer.MSG_SET_VIDEO_OUTPUT_RESOLUTION)
+                    .setPayload(resolution)
+                    .send()
+            }.isSuccess
+
+        if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
+            Media3Diagnostics.logAnime4kOutputResolutionMessage(
+                resolution = resolution,
+                renderer = rendererName,
+                sent = sent,
+                reason = if (sent) null else "message_send_failed",
+            )
+        }
     }
 
     override fun start() {
@@ -266,6 +300,7 @@ class Media3VideoPlayer(
     }
 
     override fun release() {
+        clearPlayerEventListener()
         if (!this::player.isInitialized) {
             return
         }
@@ -273,6 +308,8 @@ class Media3VideoPlayer(
         val releaseAction = {
             releaseSubtitleFrameDrivers()
             embeddedSubtitleSink.set(null)
+            videoRenderer = null
+            outputResolution = null
             player.run {
                 runCatching { removeListener(this@Media3VideoPlayer) }
                 runCatching { setVideoSurface(null) }

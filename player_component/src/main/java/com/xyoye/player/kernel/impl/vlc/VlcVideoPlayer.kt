@@ -141,6 +141,7 @@ class VlcVideoPlayer(
     }
 
     override fun release() {
+        clearPlayerEventListener()
         stop()
         IOUtils.closeIO(videoSourceFd)
         mMediaPlayer.setEventListener(null)

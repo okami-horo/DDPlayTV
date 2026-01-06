@@ -13,13 +13,18 @@ import com.xyoye.player.wrapper.InterVideoTrack
 
 abstract class AbstractVideoPlayer : InterVideoTrack {
     // 播放器事件回调
-    protected lateinit var mPlayerEventListener: VideoPlayerEventListener
+    @Volatile
+    protected var mPlayerEventListener: VideoPlayerEventListener = VideoPlayerEventListener.NO_OP
 
     /**
      * 设置播放器回调
      */
-    fun setPlayerEventListener(playerEventListener: VideoPlayerEventListener) {
-        mPlayerEventListener = playerEventListener
+    fun setPlayerEventListener(playerEventListener: VideoPlayerEventListener?) {
+        mPlayerEventListener = playerEventListener ?: VideoPlayerEventListener.NO_OP
+    }
+
+    fun clearPlayerEventListener() {
+        mPlayerEventListener = VideoPlayerEventListener.NO_OP
     }
 
     /**

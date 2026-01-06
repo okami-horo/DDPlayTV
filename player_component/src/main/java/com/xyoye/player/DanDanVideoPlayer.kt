@@ -472,6 +472,7 @@ class DanDanVideoPlayer(
         CacheManager.release()
         mVideoController?.destroy()
         if (this::mVideoPlayer.isInitialized) {
+            mVideoPlayer.clearPlayerEventListener()
             runCatching { mVideoPlayer.release() }
         }
         keepScreenOn = false

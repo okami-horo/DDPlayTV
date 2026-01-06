@@ -332,6 +332,7 @@ class MpvVideoPlayer(
     }
 
     override fun release() {
+        clearPlayerEventListener()
         stop()
         nativeBridge.clearEventListener()
         nativeBridge.destroy()

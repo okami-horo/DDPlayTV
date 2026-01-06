@@ -2,6 +2,7 @@ package com.xyoye.player.kernel.impl.media3
 
 import androidx.media3.common.Format
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Size
 import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
@@ -10,6 +11,7 @@ import com.xyoye.common_component.log.model.LogModule
 object Media3Diagnostics {
     private const val TAG = "Media3Diag"
     private val MODULE = LogModule.PLAYER
+    private const val ANIME4K_PREFIX = "Anime4K"
 
     data class HttpOpenSnapshot(
         val url: String?,
@@ -218,6 +220,171 @@ object Media3Diagnostics {
         emit(
             "content_type_override",
             mapOf("url" to url, "contentType" to contentType, "reason" to reason),
+        )
+    }
+
+    fun logAnime4kModeChanged(
+        requestedMode: Int,
+        appliedMode: Int
+    ) {
+        log {
+            LogFacade.i(
+                MODULE,
+                TAG,
+                "$ANIME4K_PREFIX mode changed: requested=$requestedMode applied=$appliedMode",
+            )
+        }
+        emit(
+            "anime4k_mode_changed",
+            mapOf(
+                "requested" to requestedMode.toString(),
+                "applied" to appliedMode.toString(),
+            ),
+        )
+    }
+
+    fun logAnime4kEffectsApplied(
+        mode: Int,
+        effectsCount: Int
+    ) {
+        log {
+            LogFacade.i(
+                MODULE,
+                TAG,
+                "$ANIME4K_PREFIX effects applied: mode=$mode effectsCount=$effectsCount",
+            )
+        }
+        emit(
+            "anime4k_effects_applied",
+            mapOf(
+                "mode" to mode.toString(),
+                "effectsCount" to effectsCount.toString(),
+            ),
+        )
+    }
+
+    fun logAnime4kGlEffectDecision(
+        useHdr: Boolean,
+        decision: String,
+        throwable: Throwable? = null
+    ) {
+        log {
+            val message = "$ANIME4K_PREFIX GlEffect decision: useHdr=$useHdr decision=$decision"
+            if (throwable == null) {
+                LogFacade.i(MODULE, TAG, message)
+            } else {
+                LogFacade.w(MODULE, TAG, message, throwable = throwable)
+            }
+        }
+        emit(
+            "anime4k_gl_effect_decision",
+            buildMap {
+                put("useHdr", useHdr.toString())
+                put("decision", decision)
+                throwable?.let { put("error", it.javaClass.simpleName) }
+            },
+        )
+    }
+
+    fun logAnime4kShaderParsed(
+        restorePassCount: Int,
+        upscalePassCount: Int
+    ) {
+        log {
+            LogFacade.i(
+                MODULE,
+                TAG,
+                "$ANIME4K_PREFIX shader parsed: restorePasses=$restorePassCount upscalePasses=$upscalePassCount",
+            )
+        }
+        emit(
+            "anime4k_shader_parsed",
+            mapOf(
+                "restorePasses" to restorePassCount.toString(),
+                "upscalePasses" to upscalePassCount.toString(),
+            ),
+        )
+    }
+
+    fun logAnime4kShaderConfigured(
+        inputSize: Size,
+        outputSize: Size,
+        fallbackToCopy: Boolean,
+        reason: String? = null,
+        glInfo: String? = null,
+        throwable: Throwable? = null
+    ) {
+        log {
+            val suffix =
+                buildString {
+                    if (!reason.isNullOrBlank()) {
+                        append(" reason=").append(reason)
+                    }
+                    if (!glInfo.isNullOrBlank()) {
+                        append(" gl=").append(glInfo)
+                    }
+                }
+            val message =
+                "$ANIME4K_PREFIX shader configured: input=${inputSize.width}x${inputSize.height} " +
+                    "output=${outputSize.width}x${outputSize.height} fallbackToCopy=$fallbackToCopy$suffix"
+            if (throwable == null) {
+                if (fallbackToCopy) {
+                    LogFacade.w(MODULE, TAG, message)
+                } else {
+                    LogFacade.i(MODULE, TAG, message)
+                }
+            } else {
+                LogFacade.w(MODULE, TAG, message, throwable = throwable)
+            }
+        }
+        emit(
+            "anime4k_shader_configured",
+            buildMap {
+                put("input", "${inputSize.width}x${inputSize.height}")
+                put("output", "${outputSize.width}x${outputSize.height}")
+                put("fallbackToCopy", fallbackToCopy.toString())
+                reason?.let { put("reason", it) }
+                glInfo?.let { put("glInfo", it) }
+                throwable?.let { put("error", it.javaClass.simpleName) }
+            },
+        )
+    }
+
+    fun logAnime4kOutputResolutionMessage(
+        resolution: Size,
+        renderer: String,
+        sent: Boolean,
+        reason: String? = null
+    ) {
+        log {
+            val message =
+                "$ANIME4K_PREFIX output resolution message: " +
+                    "resolution=${resolution.width}x${resolution.height} renderer=$renderer sent=$sent" +
+                    (reason?.takeIf { it.isNotBlank() }?.let { " reason=$it" } ?: "")
+            if (sent) {
+                LogFacade.d(MODULE, TAG, message)
+            } else {
+                LogFacade.w(MODULE, TAG, message)
+            }
+        }
+        emit(
+            "anime4k_output_resolution_message",
+            buildMap {
+                put("resolution", "${resolution.width}x${resolution.height}")
+                put("renderer", renderer)
+                put("sent", sent.toString())
+                reason?.let { put("reason", it) }
+            },
+        )
+    }
+
+    fun logAnime4kOutputResolutionSkipped(reason: String) {
+        log {
+            LogFacade.w(MODULE, TAG, "$ANIME4K_PREFIX output resolution skipped: reason=$reason")
+        }
+        emit(
+            "anime4k_output_resolution_skipped",
+            mapOf("reason" to reason),
         )
     }
 }

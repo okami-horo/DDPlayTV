@@ -10,6 +10,7 @@ import androidx.media3.common.util.GlUtil
 import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.BaseGlShaderProgram
+import com.xyoye.player.kernel.impl.media3.Media3Diagnostics
 import java.io.IOException
 import kotlin.math.max
 
@@ -55,6 +56,7 @@ class Anime4kPerformanceShaderProgram(
     private var configuredInputSize = Size.ZERO
     private var configuredOutputSize = Size.ZERO
     private var fallbackToCopy = false
+    private var loggedFallbackToCopy = false
 
     private var restoredTexture = GlTextureInfo.UNSET
     private var conv2dTfTexture = GlTextureInfo.UNSET
@@ -73,6 +75,10 @@ class Anime4kPerformanceShaderProgram(
 
         val restorePasses = parseMpvShaderPasses(restoreSource)
         val upscalePasses = parseMpvShaderPasses(upscaleSource)
+        Media3Diagnostics.logAnime4kShaderParsed(
+            restorePassCount = restorePasses.size,
+            upscalePassCount = upscalePasses.size,
+        )
 
         restorePrograms = restorePasses.map { pass ->
             PassProgram(pass, GlProgram(VERTEX_SHADER, buildFragmentShader(pass)))
@@ -103,6 +109,7 @@ class Anime4kPerformanceShaderProgram(
         configuredInputSize = inputSize
         configuredOutputSize = Size(safeInputWidth * 2, safeInputHeight * 2)
         fallbackToCopy = false
+        loggedFallbackToCopy = false
 
         releaseIntermediateTextures()
         try {
@@ -124,14 +131,35 @@ class Anime4kPerformanceShaderProgram(
                 program.setFloatsUniform("uTransformationMatrix", identity)
                 program.setFloatsUniform("uTexTransformationMatrix", identity)
             }
-        } catch (_: VideoFrameProcessingException) {
+            Media3Diagnostics.logAnime4kShaderConfigured(
+                inputSize = inputSize,
+                outputSize = configuredOutputSize,
+                fallbackToCopy = false,
+            )
+        } catch (e: VideoFrameProcessingException) {
             fallbackToCopy = true
             configuredOutputSize = inputSize
             releaseIntermediateTextures()
-        } catch (_: GlUtil.GlException) {
+            Media3Diagnostics.logAnime4kShaderConfigured(
+                inputSize = inputSize,
+                outputSize = configuredOutputSize,
+                fallbackToCopy = true,
+                reason = "configure_failed_video_frame_processing_exception",
+                glInfo = readGlInfo(),
+                throwable = e,
+            )
+        } catch (e: GlUtil.GlException) {
             fallbackToCopy = true
             configuredOutputSize = inputSize
             releaseIntermediateTextures()
+            Media3Diagnostics.logAnime4kShaderConfigured(
+                inputSize = inputSize,
+                outputSize = configuredOutputSize,
+                fallbackToCopy = true,
+                reason = "configure_failed_gl_exception",
+                glInfo = readGlInfo(),
+                throwable = e,
+            )
         }
         return configuredOutputSize
     }
@@ -142,6 +170,16 @@ class Anime4kPerformanceShaderProgram(
         presentationTimeUs: Long
     ) {
         if (fallbackToCopy) {
+            if (!loggedFallbackToCopy) {
+                loggedFallbackToCopy = true
+                Media3Diagnostics.logAnime4kShaderConfigured(
+                    inputSize = configuredInputSize,
+                    outputSize = configuredOutputSize,
+                    fallbackToCopy = true,
+                    reason = "drawFrame_fallback_copy",
+                    glInfo = readGlInfo(),
+                )
+            }
             renderCopy(inputTexId)
             return
         }
@@ -344,6 +382,14 @@ class Anime4kPerformanceShaderProgram(
         } catch (e: IOException) {
             throw VideoFrameProcessingException(e)
         }
+
+    private fun readGlInfo(): String? =
+        runCatching {
+            val vendor = GLES20.glGetString(GLES20.GL_VENDOR)
+            val renderer = GLES20.glGetString(GLES20.GL_RENDERER)
+            val version = GLES20.glGetString(GLES20.GL_VERSION)
+            "vendor=${vendor ?: "<null>"} renderer=${renderer ?: "<null>"} version=${version ?: "<null>"}"
+        }.getOrNull()
 
     private fun parseMpvShaderPasses(source: String): List<ShaderPass> {
         var current: ShaderPassBuilder? = null

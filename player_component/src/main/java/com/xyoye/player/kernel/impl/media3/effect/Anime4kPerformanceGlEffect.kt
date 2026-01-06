@@ -6,6 +6,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.GlEffect
 import androidx.media3.effect.GlShaderProgram
 import androidx.media3.effect.PassthroughShaderProgram
+import com.xyoye.player.kernel.impl.media3.Media3Diagnostics
 
 @UnstableApi
 class Anime4kPerformanceGlEffect : GlEffect {
@@ -15,9 +16,26 @@ class Anime4kPerformanceGlEffect : GlEffect {
         useHdr: Boolean
     ): GlShaderProgram {
         if (useHdr) {
+            Media3Diagnostics.logAnime4kGlEffectDecision(
+                useHdr = true,
+                decision = "skip_passthrough_due_to_hdr",
+            )
             return PassthroughShaderProgram()
         }
-        return runCatching { Anime4kPerformanceShaderProgram(context) }
-            .getOrElse { PassthroughShaderProgram() }
+        val shaderProgram =
+            runCatching { Anime4kPerformanceShaderProgram(context) }
+                .onSuccess {
+                    Media3Diagnostics.logAnime4kGlEffectDecision(
+                        useHdr = false,
+                        decision = "create_shader_program_success",
+                    )
+                }.onFailure { error ->
+                    Media3Diagnostics.logAnime4kGlEffectDecision(
+                        useHdr = false,
+                        decision = "create_shader_program_failed_fallback_passthrough",
+                        throwable = error,
+                    )
+                }.getOrElse { null }
+        return shaderProgram ?: PassthroughShaderProgram()
     }
 }
