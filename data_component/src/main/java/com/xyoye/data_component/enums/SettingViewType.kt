@@ -21,7 +21,7 @@ enum class SettingViewType {
 
     VIDEO_ASPECT,
 
-    MPV_ANIME4K,
+    ANIME4K,
 
     BILIBILI_PLAYBACK,
 

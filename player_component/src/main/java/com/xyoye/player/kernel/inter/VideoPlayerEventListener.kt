@@ -24,4 +24,27 @@ interface VideoPlayerEventListener {
     )
 
     fun onSubtitleTextOutput(subtitle: MixedSubtitle)
+
+    companion object {
+        val NO_OP: VideoPlayerEventListener =
+            object : VideoPlayerEventListener {
+                override fun onPrepared() = Unit
+
+                override fun onError(e: Exception?) = Unit
+
+                override fun onCompletion() = Unit
+
+                override fun onVideoSizeChange(
+                    width: Int,
+                    height: Int
+                ) = Unit
+
+                override fun onInfo(
+                    what: Int,
+                    extra: Int
+                ) = Unit
+
+                override fun onSubtitleTextOutput(subtitle: MixedSubtitle) = Unit
+            }
+    }
 }

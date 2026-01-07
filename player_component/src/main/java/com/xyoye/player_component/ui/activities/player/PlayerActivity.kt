@@ -73,6 +73,7 @@ import com.xyoye.player_component.databinding.ActivityPlayerBinding
 import com.xyoye.player_component.widgets.popup.PlayerPopupManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -302,7 +303,7 @@ class PlayerActivity :
     override fun onKeyDown(
         keyCode: Int,
         event: KeyEvent?
-    ): Boolean = danDanPlayer.onKeyDown(keyCode, event) or super.onKeyDown(keyCode, event)
+    ): Boolean = danDanPlayer.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
 
     override fun onScreenLocked() {
     }
@@ -488,27 +489,42 @@ class PlayerActivity :
                         }
 
                 val positionMs = danDanPlayer.getCurrentPosition()
-                bilibiliRecoverJob?.cancel()
+                cancelBilibiliRecoverJob(resetAttempts = false)
                 showLoading()
                 danDanPlayer.pause()
                 bilibiliRecoverJob =
                     lifecycleScope.launch(Dispatchers.IO) {
-                        val result = session.applyPreferenceUpdate(update, positionMs)
-                        withContext(Dispatchers.Main) {
-                            hideLoading()
-                            val playUrl = result.getOrNull()
-                            if (playUrl.isNullOrBlank()) {
-                                ToastCenter.showError("切换失败")
-                                return@withContext
-                            }
+                        try {
+                            val result = session.applyPreferenceUpdate(update, positionMs)
+                            withContext(Dispatchers.Main) {
+                                hideLoading()
+                                val playUrl = result.getOrNull()
+                                if (playUrl.isNullOrBlank()) {
+                                    ToastCenter.showError("切换失败")
+                                    return@withContext
+                                }
 
-                            val newSource = rebuildStorageVideoSource(storageSource, playUrl)
-                            pendingSeekPositionMs = positionMs
-                            applyPlaySource(newSource)
+                                val newSource = rebuildStorageVideoSource(storageSource, playUrl)
+                                pendingSeekPositionMs = positionMs
+                                applyPlaySource(newSource)
+                            }
+                        } finally {
+                            withContext(NonCancellable + Dispatchers.Main) {
+                                hideLoading()
+                            }
                         }
                     }
             }
         }
+    }
+
+    private fun cancelBilibiliRecoverJob(resetAttempts: Boolean) {
+        bilibiliRecoverJob?.cancel()
+        bilibiliRecoverJob = null
+        if (resetAttempts) {
+            bilibiliRecoverAttempts = 0
+        }
+        hideLoading()
     }
 
     private fun applyPlaySource(newSource: BaseVideoSource?) {
@@ -523,12 +539,10 @@ class PlayerActivity :
             (previousSource.getStorageId() != newSource.getStorageId() || previousSource.getUniqueKey() != newSource.getUniqueKey()) &&
             BilibiliPlaybackErrorReporter.isBilibiliSource(previousSource.getMediaType())
         ) {
-            BilibiliPlaybackSessionStore.remove(previousSource.getStorageId(), previousSource.getUniqueKey())
+                BilibiliPlaybackSessionStore.remove(previousSource.getStorageId(), previousSource.getUniqueKey())
         }
 
-        bilibiliRecoverJob?.cancel()
-        bilibiliRecoverJob = null
-        bilibiliRecoverAttempts = 0
+        cancelBilibiliRecoverJob(resetAttempts = true)
         danDanPlayer.recordPlayInfo()
         danDanPlayer.pause()
         danDanPlayer.release()
@@ -989,20 +1003,26 @@ class PlayerActivity :
         danDanPlayer.pause()
         bilibiliRecoverJob =
             lifecycleScope.launch(Dispatchers.IO) {
-                val result = session.recover(context, positionMs)
-                withContext(Dispatchers.Main) {
-                    hideLoading()
-                    val playUrl = result.getOrNull()
-                    if (playUrl.isNullOrBlank()) {
-                        showPlayErrorDialog()
-                        return@withContext
-                    }
+                try {
+                    val result = session.recover(context, positionMs)
+                    withContext(Dispatchers.Main) {
+                        hideLoading()
+                        val playUrl = result.getOrNull()
+                        if (playUrl.isNullOrBlank()) {
+                            showPlayErrorDialog()
+                            return@withContext
+                        }
 
-                    val newSource = rebuildStorageVideoSource(storageSource, playUrl)
-                    pendingSeekPositionMs = positionMs
-                    bilibiliRecoverAttempts = 0
-                    videoController.showMessage("已自动恢复播放")
-                    applyPlaySource(newSource)
+                        val newSource = rebuildStorageVideoSource(storageSource, playUrl)
+                        pendingSeekPositionMs = positionMs
+                        bilibiliRecoverAttempts = 0
+                        videoController.showMessage("已自动恢复播放")
+                        applyPlaySource(newSource)
+                    }
+                } finally {
+                    withContext(NonCancellable + Dispatchers.Main) {
+                        hideLoading()
+                    }
                 }
             }
 
@@ -1134,8 +1154,7 @@ class PlayerActivity :
         if (BilibiliPlaybackErrorReporter.isBilibiliSource(source.getMediaType())) {
             BilibiliPlaybackSessionStore.remove(source.getStorageId(), source.getUniqueKey())
         }
-        bilibiliRecoverJob?.cancel()
-        bilibiliRecoverJob = null
+        cancelBilibiliRecoverJob(resetAttempts = false)
     }
 
     private fun switchVideoSource(index: Int) {

@@ -69,6 +69,8 @@ class ControlWrapper(
 
     override fun getBufferedPercentage() = mVideoPlayer.getBufferedPercentage()
 
+    override fun supportBufferedPercentage() = mVideoPlayer.supportBufferedPercentage()
+
     override fun setSilence(isSilence: Boolean) {
         mVideoPlayer.setSilence(isSilence)
     }
@@ -94,6 +96,8 @@ class ControlWrapper(
 
     override fun getTcpSpeed() = mVideoPlayer.getTcpSpeed()
 
+    override fun supportTcpSpeed() = mVideoPlayer.supportTcpSpeed()
+
     override fun getRenderView() = mVideoPlayer.getRenderView()
 
     override fun getVideoSize() = mVideoPlayer.getVideoSize()
@@ -102,12 +106,12 @@ class ControlWrapper(
         mVideoPlayer.setRotation(rotation)
     }
 
-    override fun getMpvAnime4kMode(): Int {
-        return mVideoPlayer.getMpvAnime4kMode()
+    override fun getAnime4kMode(): Int {
+        return mVideoPlayer.getAnime4kMode()
     }
 
-    override fun setMpvAnime4kMode(mode: Int) {
-        mVideoPlayer.setMpvAnime4kMode(mode)
+    override fun setAnime4kMode(mode: Int) {
+        mVideoPlayer.setAnime4kMode(mode)
     }
 
     /**

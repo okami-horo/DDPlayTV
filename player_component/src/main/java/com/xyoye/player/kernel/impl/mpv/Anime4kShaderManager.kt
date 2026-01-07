@@ -4,38 +4,22 @@ import android.content.Context
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.utils.PathHelper
+import com.xyoye.player.kernel.anime4k.Anime4kShaderAssets
+import com.xyoye.player.kernel.anime4k.Anime4kMode
 import java.io.File
 import java.io.FileOutputStream
 
 internal object Anime4kShaderManager {
     private const val TAG = "Anime4kShaderManager"
-    private const val ASSET_SHADER_DIR = "shaders"
+    private const val ASSET_SHADER_DIR = Anime4kShaderAssets.ASSET_DIR
     private const val OUTPUT_DIR_NAME = "anime4k"
 
-    const val MODE_OFF = 0
-    const val MODE_PERFORMANCE = 1
-    const val MODE_QUALITY = 2
+    const val MODE_OFF = Anime4kMode.MODE_OFF
+    const val MODE_PERFORMANCE = Anime4kMode.MODE_PERFORMANCE
+    const val MODE_QUALITY = Anime4kMode.MODE_QUALITY
 
-    private val qualityShaders =
-        arrayOf(
-            "Anime4K_Clamp_Highlights.glsl",
-            "Anime4K_Restore_CNN_VL.glsl",
-            "Anime4K_Upscale_CNN_x2_VL.glsl",
-            "Anime4K_AutoDownscalePre_x2.glsl",
-            "Anime4K_AutoDownscalePre_x4.glsl",
-            "Anime4K_Upscale_CNN_x2_M.glsl"
-        )
-
-    private val performanceShaders =
-        arrayOf(
-            "Anime4K_Clamp_Highlights.glsl",
-            "Anime4K_Restore_CNN_M.glsl",
-            "Anime4K_Restore_CNN_S.glsl",
-            "Anime4K_Upscale_CNN_x2_M.glsl",
-            "Anime4K_AutoDownscalePre_x2.glsl",
-            "Anime4K_AutoDownscalePre_x4.glsl",
-            "Anime4K_Upscale_CNN_x2_S.glsl"
-        )
+    private val qualityShaders = Anime4kShaderAssets.qualityShaders.toTypedArray()
+    private val performanceShaders = Anime4kShaderAssets.performanceShaders.toTypedArray()
 
     fun resolveShaderPaths(
         context: Context,
@@ -51,7 +35,7 @@ internal object Anime4kShaderManager {
             return emptyList()
         }
 
-        val directory = ensureShadersDirectory(context) ?: return emptyList()
+        val directory = ensureShadersDirectory() ?: return emptyList()
         val shaderFiles =
             when (safeMode) {
                 MODE_PERFORMANCE -> performanceShaders
@@ -67,7 +51,7 @@ internal object Anime4kShaderManager {
         return resolved
     }
 
-    private fun ensureShadersDirectory(context: Context): File? {
+    private fun ensureShadersDirectory(): File? {
         val baseDir = PathHelper.getMpvShadersDirectory()
         val directory =
             File(baseDir, OUTPUT_DIR_NAME).apply {
