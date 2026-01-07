@@ -39,6 +39,7 @@ import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.kernel.anime4k.Anime4kMode
 import com.xyoye.player.kernel.impl.media3.effect.Anime4kPerformanceGlEffect
+import com.xyoye.player.kernel.impl.media3.effect.Anime4kQualityGlEffect
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
@@ -178,11 +179,7 @@ class Media3VideoPlayer(
     fun getAnime4kMode(): Int = anime4kMode
 
     fun setAnime4kMode(mode: Int) {
-        val safeMode =
-            when (mode) {
-                Anime4kMode.MODE_PERFORMANCE -> Anime4kMode.MODE_PERFORMANCE
-                else -> Anime4kMode.MODE_OFF
-            }
+        val safeMode = Anime4kMode.normalize(mode)
         if (anime4kMode == safeMode) {
             return
         }
@@ -207,7 +204,7 @@ class Media3VideoPlayer(
 
         // Some Anime4K passes (mpv user shader format) depend on OUTPUT.w/h for WHEN/WIDTH/HEIGHT evaluation.
         // Re-apply the effects so the shader program can re-configure when output size changes.
-        if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
+        if (anime4kMode != Anime4kMode.MODE_OFF) {
             applyVideoEffects()
         } else {
             sendVideoOutputResolutionIfConfigured()
@@ -220,10 +217,10 @@ class Media3VideoPlayer(
         }
 
         val effects: List<Effect> =
-            if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
-                listOf(Anime4kPerformanceGlEffect(outputSizeProvider = { outputResolution }))
-            } else {
-                emptyList()
+            when (anime4kMode) {
+                Anime4kMode.MODE_PERFORMANCE -> listOf(Anime4kPerformanceGlEffect(outputSizeProvider = { outputResolution }))
+                Anime4kMode.MODE_QUALITY -> listOf(Anime4kQualityGlEffect(outputSizeProvider = { outputResolution }))
+                else -> emptyList()
             }
         Media3Diagnostics.logAnime4kEffectsApplied(
             mode = anime4kMode,
@@ -248,10 +245,11 @@ class Media3VideoPlayer(
         if (!effectsPipelineConfigured || !this::player.isInitialized) {
             return
         }
+        val shouldLog = anime4kMode != Anime4kMode.MODE_OFF
         val resolution =
             outputResolution
                 ?: run {
-                    if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
+                    if (shouldLog) {
                         Media3Diagnostics.logAnime4kOutputResolutionSkipped("output_resolution_unset")
                     }
                     return
@@ -262,7 +260,7 @@ class Media3VideoPlayer(
                     videoRenderer = resolved
                 }
                 ?: run {
-                    if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
+                    if (shouldLog) {
                         Media3Diagnostics.logAnime4kOutputResolutionSkipped("video_renderer_unresolved")
                     }
                     return
@@ -278,7 +276,7 @@ class Media3VideoPlayer(
                     .send()
             }.isSuccess
 
-        if (anime4kMode == Anime4kMode.MODE_PERFORMANCE) {
+        if (shouldLog) {
             Media3Diagnostics.logAnime4kOutputResolutionMessage(
                 resolution = resolution,
                 renderer = rendererName,

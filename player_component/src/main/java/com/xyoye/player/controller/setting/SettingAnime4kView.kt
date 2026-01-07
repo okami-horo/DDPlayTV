@@ -74,7 +74,10 @@ class SettingAnime4kView(
         anime4kOptions.clear()
         anime4kOptions.add(Anime4kOption(Anime4kMode.MODE_OFF, "关闭"))
         anime4kOptions.add(Anime4kOption(Anime4kMode.MODE_PERFORMANCE, "性能"))
-        if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
+        if (
+            PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER ||
+            PlayerInitializer.playerType == PlayerType.TYPE_EXO_PLAYER
+        ) {
             anime4kOptions.add(Anime4kOption(Anime4kMode.MODE_QUALITY, "质量"))
         }
 
