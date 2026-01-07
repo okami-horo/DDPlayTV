@@ -27,6 +27,11 @@ class Anime4kPerformanceShaderProgram(
     ) {
     private val appContext = context.applicationContext
 
+    private data class PingPongTextureSet(
+        var first: GlTextureInfo,
+        var second: GlTextureInfo,
+    )
+
     private data class ShaderPass(
         val description: String,
         val hookStage: String?,
@@ -102,6 +107,8 @@ class Anime4kPerformanceShaderProgram(
     private var configuredPasses: List<ConfiguredPass> = emptyList()
 
     private val namedTextures = HashMap<String, GlTextureInfo>()
+    private val pingPongTextures = HashMap<String, PingPongTextureSet>()
+    private val pingPongSaveTargets = HashSet<String>()
     private var mainSwapA = GlTextureInfo.UNSET
     private var mainSwapB = GlTextureInfo.UNSET
 
@@ -120,6 +127,12 @@ class Anime4kPerformanceShaderProgram(
             shaderFiles = shaderFiles,
             totalPasses = passes.size,
         )
+        passes.forEach { pass ->
+            val save = pass.save?.takeIf { it.isNotBlank() && it != "MAIN" } ?: return@forEach
+            if (pass.binds.contains(save)) {
+                pingPongSaveTargets.add(save)
+            }
+        }
 
         pipelinePrograms =
             passes.map { pass ->
@@ -185,7 +198,11 @@ class Anime4kPerformanceShaderProgram(
                 val pass = configured.program.pass
                 val save = pass.save?.takeIf { it.isNotBlank() } ?: return@forEach
                 if (save == "MAIN") return@forEach
-                ensureNamedTexture(save, configured.outputSize)
+                if (pingPongSaveTargets.contains(save)) {
+                    ensurePingPongTextureSet(save, configured.outputSize)
+                } else {
+                    ensureNamedTexture(save, configured.outputSize)
+                }
             }
 
             val identity = GlUtil.create4x4IdentityMatrix()
@@ -300,7 +317,22 @@ class Anime4kPerformanceShaderProgram(
                     target to true
                 } else {
                     val name = pass.save?.takeIf { it.isNotBlank() } ?: return@forEach
-                    ensureNamedTexture(name, targetSize) to false
+                    if (pingPongSaveTargets.contains(name)) {
+                        val set = ensurePingPongTextureSet(name, targetSize)
+                        val readTexId = saved[name]?.texId
+                        val needsPingPong = passProgram.requiredSamplers.contains(name)
+                        val target =
+                            if (needsPingPong && readTexId == set.first.texId) {
+                                set.second
+                            } else if (needsPingPong && readTexId == set.second.texId) {
+                                set.first
+                            } else {
+                                set.first
+                            }
+                        target to false
+                    } else {
+                        ensureNamedTexture(name, targetSize) to false
+                    }
                 }
 
             try {
@@ -434,6 +466,12 @@ class Anime4kPerformanceShaderProgram(
             runCatching { texture.release() }
         }
         namedTextures.clear()
+
+        pingPongTextures.values.forEach { set ->
+            runCatching { set.first.release() }
+            runCatching { set.second.release() }
+        }
+        pingPongTextures.clear()
 
         runCatching { mainSwapA.release() }
         runCatching { mainSwapB.release() }
@@ -657,6 +695,35 @@ class Anime4kPerformanceShaderProgram(
         existing?.let { runCatching { it.release() } }
         val created = createHalfFloatTexture(size.width, size.height)
         namedTextures[name] = created
+        return created
+    }
+
+    private fun ensurePingPongTextureSet(
+        name: String,
+        size: Size,
+    ): PingPongTextureSet {
+        val existing = pingPongTextures[name]
+        if (
+            existing != null &&
+            existing.first.width == size.width &&
+            existing.first.height == size.height &&
+            existing.second.width == size.width &&
+            existing.second.height == size.height
+        ) {
+            return existing
+        }
+
+        existing?.let {
+            runCatching { it.first.release() }
+            runCatching { it.second.release() }
+        }
+
+        val created =
+            PingPongTextureSet(
+                first = createHalfFloatTexture(size.width, size.height),
+                second = createHalfFloatTexture(size.width, size.height),
+            )
+        pingPongTextures[name] = created
         return created
     }
 
