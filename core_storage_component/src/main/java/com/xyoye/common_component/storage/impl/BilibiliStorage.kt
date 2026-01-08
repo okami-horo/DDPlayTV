@@ -215,8 +215,9 @@ class BilibiliStorage(
         bvid: String
     ): List<StorageFile> {
         val coverUrl = directory.fileCover()
-        val historyItem = directory.payloadAs<BilibiliHistoryItem>()
-        val baseTitle = historyItem?.title?.ifBlank { bvid } ?: directory.fileName().ifBlank { bvid }
+        val remoteHistoryItem = directory.payloadAs<BilibiliHistoryItem>()
+        val remoteHistoryCid = remoteHistoryItem?.history?.cid?.takeIf { it > 0 }
+        val baseTitle = remoteHistoryItem?.title?.ifBlank { bvid } ?: directory.fileName().ifBlank { bvid }
 
         val pages =
             repository.pagelist(bvid).getOrThrow()
@@ -228,6 +229,12 @@ class BilibiliStorage(
                 val title =
                     page.part?.takeIf { it.isNotBlank() }?.let { "$baseTitle - $it" }
                         ?: baseTitle
+                val payload: Any? =
+                    if (remoteHistoryCid != null && remoteHistoryCid == page.cid) {
+                        remoteHistoryItem
+                    } else {
+                        page
+                    }
                 BilibiliStorageFile.archivePartFile(
                     storage = this,
                     bvid = bvid,
@@ -235,7 +242,7 @@ class BilibiliStorage(
                     title = title,
                     coverUrl = coverUrl,
                     durationMs = page.duration.coerceAtLeast(0) * 1000,
-                    payload = page,
+                    payload = payload,
                 )
             }
     }
