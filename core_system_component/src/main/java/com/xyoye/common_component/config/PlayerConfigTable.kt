@@ -76,4 +76,12 @@ object PlayerConfigTable {
     // MPV 硬解优先级：mediacodec / mediacodec-copy
     @MMKVFiled
     val mpvHwdecPriority = "mediacodec"
+
+    // MPV 音频输出（ao）：default / opensles / audiotrack
+    @MMKVFiled
+    val mpvAudioOutput = "default"
+
+    // MPV 视频同步（video-sync）：default / audio / display-resample / ...
+    @MMKVFiled
+    val mpvVideoSync = "default"
 }

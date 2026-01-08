@@ -19,6 +19,14 @@
         android:title="MPV 本地防风控代理"
         android:summary="关闭：不使用本地代理；自动：仅对部分上游启用；强制：尽量对可寻址的 HTTP(S) 直链启用（可能带来额外开销）" />
     <ListPreference
+        android:key="mpv_audio_output"
+        android:title="MPV 音频输出（ao）"
+        android:summary="默认：交给 MPV 自动选择\nOpenSL ES 优先：降低部分设备的音频延迟\nAudioTrack 优先：部分 ROM/机型更稳定（音画不同步/无声可尝试）" />
+    <ListPreference
+        android:key="mpv_video_sync"
+        android:title="MPV 视频同步（video-sync）"
+        android:summary="默认：交给 MPV\ndisplay-resample：常用的同步策略\n如出现音画不同步/卡顿，可尝试切换" />
+    <ListPreference
         android:key="mpv_hwdec_priority"
         android:title="MPV 硬解优先级"
         android:summary="mediacodec\nmediacodec-copy" />

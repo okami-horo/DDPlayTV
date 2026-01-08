@@ -86,6 +86,8 @@ class MpvVideoPlayer(
         nativeBridge.setLooping(looping)
         nativeBridge.setSpeed(playbackSpeed)
         applyHwdecPriority()
+        applyAudioOutputPreference()
+        applyVideoSyncPreference()
         applyVideoOutputPreference()
     }
 
@@ -591,6 +593,26 @@ class MpvVideoPlayer(
                 "mediacodec,mediacodec-copy"
             }
         nativeBridge.setHwdecPriority(hwdec)
+    }
+
+    private fun applyAudioOutputPreference() {
+        val configured = PlayerConfig.getMpvAudioOutput().orEmpty().trim()
+        val ao =
+            when {
+                configured.equals("default", ignoreCase = true) || configured.isEmpty() -> null
+                configured.equals("opensles", ignoreCase = true) -> "opensles,audiotrack"
+                configured.equals("audiotrack", ignoreCase = true) -> "audiotrack,opensles"
+                else -> configured
+            }
+        ao?.let(nativeBridge::setAudioOutput)
+    }
+
+    private fun applyVideoSyncPreference() {
+        val configured = PlayerConfig.getMpvVideoSync().orEmpty().trim()
+        if (configured.equals("default", ignoreCase = true) || configured.isEmpty()) {
+            return
+        }
+        nativeBridge.setVideoSync(configured)
     }
 
     private fun resolveShaderPath(

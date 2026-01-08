@@ -25,6 +25,8 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
     companion object {
         private const val DEFAULT_MPV_VIDEO_OUTPUT = "gpu"
         private const val DEFAULT_MPV_HWDEC_PRIORITY = "mediacodec"
+        private const val DEFAULT_MPV_AUDIO_OUTPUT = "default"
+        private const val DEFAULT_MPV_VIDEO_SYNC = "default"
         private const val DEFAULT_LOCAL_PROXY_MODE = "1"
 
         fun newInstance() = PlayerSettingFragment()
@@ -62,6 +64,8 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             arrayOf(
                 "mpv_proxy_range_interval_ms",
                 "mpv_local_proxy_mode",
+                "mpv_audio_output",
+                "mpv_video_sync",
                 "mpv_hwdec_priority",
                 "mpv_video_output",
             )
@@ -77,6 +81,27 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             mapOf(
                 Pair("mediacodec", "mediacodec"),
                 Pair("mediacodec-copy", "mediacodec-copy"),
+            )
+
+        val mpvAudioOutput =
+            mapOf(
+                Pair("默认（交给 MPV）", "default"),
+                Pair("OpenSL ES 优先", "opensles"),
+                Pair("AudioTrack 优先", "audiotrack"),
+            )
+
+        val mpvVideoSync =
+            mapOf(
+                Pair("默认（交给 MPV）", "default"),
+                Pair("audio", "audio"),
+                Pair("display-resample（推荐）", "display-resample"),
+                Pair("display-resample-vdrop", "display-resample-vdrop"),
+                Pair("display-resample-desync", "display-resample-desync"),
+                Pair("display-tempo", "display-tempo"),
+                Pair("display-vdrop", "display-vdrop"),
+                Pair("display-adrop", "display-adrop"),
+                Pair("display-desync", "display-desync"),
+                Pair("desync", "desync"),
             )
 
         val localProxyMode =
@@ -148,6 +173,36 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             if (value != safeValue) {
                 value = safeValue
                 PlayerConfig.putMpvVideoOutput(safeValue)
+            }
+            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+        }
+
+        // MPV音频输出（ao）
+        findPreference<ListPreference>("mpv_audio_output")?.apply {
+            entries = mpvAudioOutput.keys.toTypedArray()
+            entryValues = mpvAudioOutput.values.toTypedArray()
+            val current = PlayerConfig.getMpvAudioOutput()
+            val safeValue =
+                current.takeIf { mpvAudioOutput.containsValue(it) }
+                    ?: DEFAULT_MPV_AUDIO_OUTPUT
+            if (value != safeValue) {
+                value = safeValue
+                PlayerConfig.putMpvAudioOutput(safeValue)
+            }
+            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+        }
+
+        // MPV视频同步（video-sync）
+        findPreference<ListPreference>("mpv_video_sync")?.apply {
+            entries = mpvVideoSync.keys.toTypedArray()
+            entryValues = mpvVideoSync.values.toTypedArray()
+            val current = PlayerConfig.getMpvVideoSync()
+            val safeValue =
+                current.takeIf { mpvVideoSync.containsValue(it) }
+                    ?: DEFAULT_MPV_VIDEO_SYNC
+            if (value != safeValue) {
+                value = safeValue
+                PlayerConfig.putMpvVideoSync(safeValue)
             }
             summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         }
@@ -292,6 +347,26 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                         }
                         safeValue
                     }
+                    "mpv_audio_output" -> {
+                        val current = PlayerConfig.getMpvAudioOutput()
+                        val safeValue =
+                            current.takeIf { mpvAudioOutput.containsValue(it) }
+                                ?: DEFAULT_MPV_AUDIO_OUTPUT
+                        if (current != safeValue) {
+                            PlayerConfig.putMpvAudioOutput(safeValue)
+                        }
+                        safeValue
+                    }
+                    "mpv_video_sync" -> {
+                        val current = PlayerConfig.getMpvVideoSync()
+                        val safeValue =
+                            current.takeIf { mpvVideoSync.containsValue(it) }
+                                ?: DEFAULT_MPV_VIDEO_SYNC
+                        if (current != safeValue) {
+                            PlayerConfig.putMpvVideoSync(safeValue)
+                        }
+                        safeValue
+                    }
                     "mpv_local_proxy_mode" -> {
                         val current = PlayerConfig.getMpvLocalProxyMode()
                         val safeValue = LocalProxyMode.from(current).value.toString()
@@ -349,6 +424,18 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                                 value.takeIf { mpvHwdecPriority.containsValue(it) }
                                     ?: DEFAULT_MPV_HWDEC_PRIORITY
                             PlayerConfig.putMpvHwdecPriority(safeValue)
+                        }
+                        "mpv_audio_output" -> {
+                            val safeValue =
+                                value.takeIf { mpvAudioOutput.containsValue(it) }
+                                    ?: DEFAULT_MPV_AUDIO_OUTPUT
+                            PlayerConfig.putMpvAudioOutput(safeValue)
+                        }
+                        "mpv_video_sync" -> {
+                            val safeValue =
+                                value.takeIf { mpvVideoSync.containsValue(it) }
+                                    ?: DEFAULT_MPV_VIDEO_SYNC
+                            PlayerConfig.putMpvVideoSync(safeValue)
                         }
                         "mpv_local_proxy_mode" -> {
                             val safeValue = LocalProxyMode.from(value.toIntOrNull()).value

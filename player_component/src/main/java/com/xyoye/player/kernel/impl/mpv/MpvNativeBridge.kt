@@ -203,6 +203,18 @@ class MpvNativeBridge {
         setOption("hwdec", value)
     }
 
+    fun setAudioOutput(value: String) {
+        if (nativeHandle == 0L) return
+        if (value.isBlank()) return
+        setOption("ao", value)
+    }
+
+    fun setVideoSync(value: String) {
+        if (nativeHandle == 0L) return
+        if (value.isBlank()) return
+        setOption("video-sync", value)
+    }
+
     fun setVideoOutput(output: String) {
         if (nativeHandle == 0L) return
         if (output.isBlank()) return
