@@ -397,7 +397,12 @@ class BilibiliStorage(
         }
     }
 
-    override fun supportedPlayerTypes(): Set<PlayerType> = setOf(PlayerType.TYPE_EXO_PLAYER)
+    override fun supportedPlayerTypes(): Set<PlayerType> =
+        setOf(
+            PlayerType.TYPE_EXO_PLAYER,
+            PlayerType.TYPE_VLC_PLAYER,
+            PlayerType.TYPE_MPV_PLAYER,
+        )
 
     override fun preferredPlayerType(): PlayerType = PlayerType.TYPE_EXO_PLAYER
 

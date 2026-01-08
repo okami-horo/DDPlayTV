@@ -489,6 +489,15 @@ class PlayerActivity :
                         }
 
                 val positionMs = danDanPlayer.getCurrentPosition()
+                if (PlayerInitializer.playerType != PlayerType.TYPE_EXO_PLAYER) {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        session.applyPreferenceUpdate(update, positionMs)
+                        withContext(Dispatchers.Main) {
+                            ToastCenter.showInfo("已保存设置，重新播放后生效")
+                        }
+                    }
+                    return@observerBilibiliPlaybackUpdate
+                }
                 cancelBilibiliRecoverJob(resetAttempts = false)
                 showLoading()
                 danDanPlayer.pause()
