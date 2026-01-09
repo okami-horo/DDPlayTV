@@ -1,3 +1,4 @@
+import governance.VerifyModuleDependenciesTask
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 buildscript {
@@ -44,6 +45,8 @@ tasks {
     val clean by registering(Delete::class) {
         delete(buildDir)
     }
+
+    register<VerifyModuleDependenciesTask>("verifyModuleDependencies")
 
     //检查依赖库更新
     //gradlew dependencyUpdates

@@ -488,10 +488,23 @@ graph TD
 
 - 让依赖治理从“口头约定”变成“可执行规则”
 
-**建议任务**
+**状态**
 
-- 增加 Gradle 自定义校验任务：扫描所有模块的 project 依赖，按“允许矩阵”进行校验并在 CI 失败
-- 或引入依赖分析工具（例如 Gradle dependency analysis）辅助发现：
+- ✅ 已落地基础校验（Gradle 任务 + PR CI）
+
+**落地内容**
+
+- Gradle 校验任务：`./gradlew verifyModuleDependencies`
+  - 实现位置：`buildSrc/src/main/java/governance/ModuleDependencyGovernance.kt`
+  - 校验范围：各模块 `dependencies { ... project(":...") ... }` 的**直接依赖**
+  - 覆盖规则：v2 允许矩阵（4.3）+ DR-0002（bilibili 白名单）+ DR-0003（限制 `api(project(...))`）
+- GitHub Actions（PR）：
+  - workflow：`.github/workflows/module-dependency-governance.yml`
+  - PR 引入违例依赖时直接失败，并输出清晰的违例列表与修复建议
+
+**建议后续增强（可选）**
+
+- 引入依赖分析工具（例如 Gradle dependency analysis）辅助发现：
   - 未使用依赖（可移除）
   - 该用 `implementation` 却用了 `api`
 

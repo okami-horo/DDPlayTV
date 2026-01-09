@@ -195,6 +195,7 @@ Use Gradle from repo root:
 - `./gradlew assembleRelease` – optimized, signed release artifacts.
 - `./gradlew clean build` – full rebuild to validate cross-module wiring.
 - `./gradlew dependencyUpdates` – report outdated libraries defined in `build.gradle.kts`.
+- `./gradlew verifyModuleDependencies` – 模块依赖治理校验（v2），检查 `project(...)` 直接依赖是否符合允许矩阵/白名单。
 - `./gradlew testDebugUnitTest` and `./gradlew connectedDebugAndroidTest` – run JVM unit tests and device/emulator instrumentation respectively.
 
 ### Build Verification Requirement
