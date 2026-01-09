@@ -4,6 +4,8 @@ import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.bilibili.net.BilibiliHeaders
+import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackAddon
+import com.xyoye.common_component.playback.addon.PlaybackAddon
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
 import com.xyoye.common_component.utils.getFileName
@@ -24,10 +26,13 @@ class StorageVideoSource(
     private var subtitlePath: String?,
     private var audioPath: String?,
     private val playbackProfile: PlaybackProfile,
+    private val playbackAddon: PlaybackAddon? = createDefaultPlaybackAddon(file),
 ) : BaseVideoSource(
         videoSources.indexOfFirst { it.uniqueKey() == file.uniqueKey() },
         videoSources,
     ) {
+    override fun getPlaybackAddon(): PlaybackAddon? = playbackAddon
+
     override fun getDanmu(): LocalDanmuBean? = danmu
 
     override fun setDanmu(danmu: LocalDanmuBean?) {
@@ -114,4 +119,16 @@ class StorageVideoSource(
     fun indexStorageFile(index: Int): StorageFile = videoSources[index]
 
     fun getPlaybackProfile(): PlaybackProfile = playbackProfile
+
+    private companion object {
+        fun createDefaultPlaybackAddon(file: StorageFile): PlaybackAddon? =
+            if (file.storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
+                BilibiliPlaybackAddon(
+                    storageId = file.storage.library.id,
+                    uniqueKey = file.uniqueKey(),
+                )
+            } else {
+                null
+            }
+    }
 }
