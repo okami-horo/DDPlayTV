@@ -6,6 +6,7 @@ import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.bilibili.net.BilibiliHeaders
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackAddon
 import com.xyoye.common_component.playback.addon.PlaybackAddon
+import com.xyoye.common_component.playback.addon.PlaybackIdentity
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
 import com.xyoye.common_component.utils.getFileName
@@ -13,6 +14,7 @@ import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.enums.MediaType
+import com.xyoye.data_component.enums.PlayerType
 
 /**
  * Created by xyoye on 2023/1/2.
@@ -26,7 +28,7 @@ class StorageVideoSource(
     private var subtitlePath: String?,
     private var audioPath: String?,
     private val playbackProfile: PlaybackProfile,
-    private val playbackAddon: PlaybackAddon? = createDefaultPlaybackAddon(file),
+    private val playbackAddon: PlaybackAddon? = createDefaultPlaybackAddon(playUrl, file, playbackProfile),
 ) : BaseVideoSource(
         videoSources.indexOfFirst { it.uniqueKey() == file.uniqueKey() },
         videoSources,
@@ -121,11 +123,23 @@ class StorageVideoSource(
     fun getPlaybackProfile(): PlaybackProfile = playbackProfile
 
     private companion object {
-        fun createDefaultPlaybackAddon(file: StorageFile): PlaybackAddon? =
+        fun createDefaultPlaybackAddon(
+            playUrl: String,
+            file: StorageFile,
+            playbackProfile: PlaybackProfile,
+        ): PlaybackAddon? =
             if (file.storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
                 BilibiliPlaybackAddon(
-                    storageId = file.storage.library.id,
-                    uniqueKey = file.uniqueKey(),
+                    identity =
+                        PlaybackIdentity(
+                            storageId = file.storage.library.id,
+                            uniqueKey = file.uniqueKey(),
+                            mediaType = file.storage.library.mediaType,
+                            storagePath = file.storagePath(),
+                            videoTitle = file.fileName(),
+                            videoUrl = playUrl,
+                        ),
+                    supportsSeamlessPreferenceSwitch = playbackProfile.playerType == PlayerType.TYPE_EXO_PLAYER,
                 )
             } else {
                 null
