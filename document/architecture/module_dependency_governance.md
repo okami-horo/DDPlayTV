@@ -1,19 +1,24 @@
-# 模块依赖治理：问题分析、方案设计与任务规划（面向 DanDanPlayForAndroid）
+# 模块依赖治理规范（v2）（面向 DanDanPlayForAndroid）
+
+> 说明：本文件曾位于 `TODOs/`，现作为长期维护的依赖治理文档存放于 `document/architecture/`。
 
 本文基于当前仓库 **实际 Gradle 依赖**（`settings.gradle.kts` + 各模块 `build.gradle.kts` 的 `project(...)`）与仓库内“理想模块依赖关系图（建议目标）”，整理出：
 
 - 当前依赖关系的 **真实形态**（哪些差异是“文档过期/设计演进”，哪些是“可治理的问题”）
-- 一套更贴近现状、可逐步落地的 **目标依赖模型**
-- 分阶段的 **任务规划**（含验收标准、风险与回滚策略）
+- 一套更贴近现状、可逐步落地的 **目标依赖模型（v2）**
+- **依赖治理规则**（允许矩阵/禁止规则/`api` 暴露策略/白名单）
+- **自动化校验与维护流程**（Gradle 校验任务 + CI）
+- 关键 **决策记录（DR）**（用于解释“为何允许/禁止”）
 
 > 说明：本文关注“模块依赖治理/分层一致性”，不讨论业务功能本身的对错；优先追求架构逻辑一致与可持续演进，而不是最小侵入式补丁。
 
 ---
 
-## 快速入口（阶段 0 基线）
+## 快速入口（治理基线）
 
 - 当前直接依赖快照（自动生成）：`document/architecture/module_dependencies_snapshot.md`
 - 快照生成脚本：`python3 scripts/module_deps_snapshot.py --write`
+- 自动化校验：`./gradlew verifyModuleDependencies`（CI：`.github/workflows/module-dependency-governance.yml`）
 
 ---
 
@@ -114,7 +119,7 @@
 
 - 理想图中 `:local_component` 不依赖 `:core_network_component`，但当前 local 业务包含字幕/弹幕等联网能力，实际需要 network（例如 `local_component/.../SubtitleSearchHelper.kt` 使用 `ResourceRepository`）。
 - 理想图中 `:storage_component` 不依赖 `:bilibili_component`，但当前 storage 模块内包含 B 站登录/媒体库配置 UI（`storage_component/ui/dialog/BilibiliLoginDialog.kt` 等），直接依赖 bilibili 是自然结果。
-- 理想图中 `:app` 不依赖 network/db/log；现已在阶段 4 收敛 network/db：`:app` 不再直接依赖 `:core_network_component/:core_database_component`，跨域初始化通过契约 Service / Startup initializer 下沉到对应域模块（log/system 作为 runtime 组合根依赖仍保留）。
+- 理想图中 `:app` 不依赖 network/db/log；当前已收敛 network/db：`:app` 不再直接依赖 `:core_network_component/:core_database_component`，跨域初始化通过契约 Service / Startup initializer 下沉到对应域模块（log/system 作为 runtime 组合根依赖仍保留）。
 
 这类差异更像“架构目标没有同步演进”，应先明确：我们到底要回到理想图，还是把目标图升级到 v2。
 
@@ -122,8 +127,8 @@
 
 典型是 `api` 传递导致的边界模糊：
 
-- ✅ 阶段 2 已收敛：将大多数 `api(project(...))` 改为 `implementation`，并在使用方补齐显式依赖，避免“通过实现层拿类型”的隐式耦合。
-- 典型历史问题包括：`core_system_component/core_ui_component/core_storage_component` 曾通过 `api` 传递暴露类型边界；现状已按规则修复（见阶段 2 状态）。
+- 已收敛：将大多数 `api(project(...))` 改为 `implementation`，并在使用方补齐显式依赖，避免“通过实现层拿类型”的隐式耦合。
+- 典型历史问题包括：`core_system_component/core_ui_component/core_storage_component` 曾通过 `api` 传递暴露类型边界；现状已按规则修复（见 DR-0003 与依赖快照）。
 
 这类“隐式获得”本身不一定错误，但会导致：
 
@@ -134,7 +139,7 @@
 
 最典型且收益很高的一条：
 
-- ✅ 已完成（阶段 1）：`core_ui_component` 不再直接依赖 `core_storage_component`
+- 现状：`core_ui_component` 不再直接依赖 `core_storage_component`
   - 但 `core_ui_component` 内部对“存储域”的引用目前可见的主要是 `StorageFile`（例如 `core_ui_component/.../ImageViewExt.kt` 的 `loadStorageFileCover(file: StorageFile)`），而 `StorageFile` 实际定义在 `core_contract_component`：`core_contract_component/src/main/java/com/xyoye/common_component/storage/file/StorageFile.kt`。
   - 这意味着：`core_ui_component -> core_storage_component` 很可能是“历史遗留 + 通过 storage 的 api 间接拿到 contract 类型”，而不是 UI 基建真实需要 storage 的实现层。
 
@@ -169,9 +174,9 @@
 
 ### P2：`:app` 中存在跨域业务编排，分层“事实”与“概念”不一致
 
-**状态**
+**现状**
 
-- ✅ 已完成（阶段 4）：`:app` 仅保留启动触发入口，不再直接使用 network/db；具体实现下沉到所属域模块（通过契约 Service / Startup initializer 装配）。
+- `:app` 仅保留启动触发入口，不再直接使用 network/db；具体实现下沉到所属域模块（通过契约 Service / Startup initializer 装配）。
 
 壳层启动链路触发了：
 
@@ -301,13 +306,13 @@ graph TD
 
 ### 4.3 v2 依赖规则（允许/禁止列表）
 
-> 目的：把“目标依赖图 v2”落到可用于 code review 的规则；后续阶段 5 可将其转为自动化校验。
+> 目的：把“目标依赖图 v2”落到可用于 code review 的规则，并通过自动化校验让规则可执行（见第 5 节）。
 
 #### 4.3.1 分层与模块归类（v2）
 
 | 分层 | 模块 | 备注 |
 | --- | --- | --- |
-| app（组合根/壳层） | `:app` | 允许保留少量跨域编排（阶段 4 收敛） |
+| app（组合根/壳层） | `:app` | 允许保留少量跨域编排（已收敛，优先下沉到所属域） |
 | feature（业务功能） | `:anime_component` `:local_component` `:user_component` `:storage_component` `:player_component` | feature 之间禁止互相依赖 |
 | ui（UI 基建） | `:core_ui_component` | **不得依赖实现层**（storage/network/db/bilibili 等） |
 | infra（基础设施实现） | `:core_storage_component` `:bilibili_component` `:core_network_component` `:core_database_component` | 可被 feature 直接依赖（按现状），但要控制边界 |
@@ -365,156 +370,43 @@ graph TD
 
 ---
 
-## 5. 任务规划（分阶段、可验收）
+## 5. 自动化校验与维护流程
 
-### 阶段 0：达成一致与建立基线（P0，1 天）
+### 5.1 校验口径（范围）
 
-**目标**
+- 仅校验 Gradle module 的**直接依赖**：`dependencies { ... project(":...") ... }`
+- 不校验外部库依赖；不展开 transitive 依赖图
+- 依赖快照参考：`document/architecture/module_dependencies_snapshot.md`
 
-- 明确“目标依赖图 v2”作为近期治理基线（至少包含：`core_ui` 不依赖 `core_storage`）
-- 明确哪些差异属于“文档需要更新”，哪些属于“必须修”
+### 5.2 本地校验
 
-**任务**
+- 执行：`./gradlew verifyModuleDependencies`
+- 失败时输出：按“模块 -> configuration -> 违例依赖”列出，并指向本文档作为规则依据
 
-1) 输出一份“当前直接依赖快照”到文档/脚本（可复用）  
-   - 产出：`document/architecture/module_dependencies_snapshot.md`（脚本：`python3 scripts/module_deps_snapshot.py --write`）  
-2) 在团队内确认：system/log 的路线选择（A 或 B），并写入本文档的“决策记录”  
-   - 产出：DR-0001（见第 6 节）  
+### 5.3 CI 校验（PR）
 
-**验收标准**
+- workflow：`.github/workflows/module-dependency-governance.yml`
+- 触发：`pull_request`
 
-- 有明确的 v2 依赖规则（允许/禁止列表，见 4.3）
-- 后续改动可以据此做 code review 判定
+### 5.4 规则变更流程（新增模块/新增依赖）
 
-### 阶段 1：修复 `core_ui_component -> core_storage_component` 依赖泄漏（P1，0.5~1 天）
+当出现以下场景之一，需要同步更新规则与校验实现：
 
-**目标**
+- 新增模块（`settings.gradle.kts` 新增 `include(...)`）
+- 新增/调整 `project(":...")` 直接依赖
+- 新增对 `:bilibili_component` 的直接依赖（需更新 DR-0002 白名单）
+- 新增 `api(project(...))`（需更新 DR-0003 白名单，并在对应 `build.gradle.kts` 写清理由）
 
-- UI 基建层不直接依赖 storage 实现层；依赖关系回到“契约层”
+变更步骤：
 
-**状态**
-
-- ✅ 已完成（`core_ui_component/build.gradle.kts` 已移除对 `:core_storage_component` 的直接依赖，并显式依赖 `:core_contract_component`）
-
-**建议实现步骤**
-
-1) 修改 `core_ui_component/build.gradle.kts`  
-   - 移除 `implementation(project(":core_storage_component"))`
-   - 增加 `implementation(project(":core_contract_component"))`
-2) 编译验证：`./gradlew :core_ui_component:assembleDebug`、`./gradlew :app:assembleDebug`
-3) 若出现缺失类型：
-   - 优先把“抽象/接口/数据类型”移动或提炼到 `core_contract_component`（而不是让 UI 回头依赖 storage 实现）
-
-**验收标准**
-
-- `core_ui_component` 不再直接依赖 `core_storage_component`
-- App 正常编译，UI 相关功能不受影响
-
-**风险与回滚**
-
-- 若 `core_ui_component` 真实使用了 `core_storage_component` 的实现类（而非契约），需要先做契约抽象；若短期无法抽象，可临时保留依赖，但必须记录原因与迁移 TODO。
-
-### 阶段 2：收敛 `api` 泄漏与显式化依赖（P1，2~4 天）
-
-**目标**
-
-- 让 build.gradle 的依赖声明更接近真实耦合，降低“隐式传递”带来的重构风险
-
-**状态**
-
-- ✅ 已完成（已将大多数 `api(project(...))` 收敛为 `implementation`，并在使用方补齐 `:core_contract_component / :data_component` 显式依赖）
-- ✅ 已更新依赖快照：`document/architecture/module_dependencies_snapshot.md`
-
-**任务**
-
-1) 梳理所有 `api(project(...))` 的使用理由（逐个模块）  
-2) 对“无需对外暴露类型”的依赖改为 `implementation`  
-3) 对依赖传递形成的“隐式获得”，在使用方补齐显式依赖（按规则执行）  
-   - 例如某 feature 使用 `RouteTable`/`StorageFile` 等契约类型时，明确依赖 `core_contract_component`（是否需要可由依赖治理规则决定）
-
-**验收标准**
-
-- `api` 依赖数量下降，且每个 `api` 都有“必须暴露”的理由
-- 关键模块（core/ui/feature）间的边界更清晰
-
-### 阶段 3：system/log 分层语义对齐（P2，2~7 天，取决于路线）
-
-**状态**
-
-- ✅ 已完成（采用路线 A）
-  - 已更新：`AGENTS.md`（system/log 职责描述 + 分层依赖图，明确 `system -> log`）
-  - 已新增：`document/architecture/module_layering_v2.md`（作为 v2 分层语义入口）
-
-**路线 A（更新文档，已采用）**
-
-- 任务：更新理想图/模块职责说明，把 `core_system_component` 定义为 runtime；补充依赖治理说明
-- 验收：架构文档与 Gradle 依赖一致
-
-**路线 B（新增 core_app_component）**
-
-- 任务：
-  1) 新建模块 `:core_app_component`，迁移 `BaseApplication` 与启动编排
-  2) 调整 `:app` 只依赖 `core_app_component`（以及 feature/ui 等组合根依赖）
-  3) 调整其他模块对 `core_system_component` 的依赖保持不变
-- 验收：
-  - `core_system_component` 不依赖 `core_log_component`
-  - 启动流程不回退，Bugly 仍能早期初始化
-
-### 阶段 4：下沉 `:app` 中的跨域编排（P2，2~5 天）
-
-**状态**
-
-- ✅ 已完成
-  - `:app` 不再直接引用 `DatabaseManager/UserRepository/OtherRepository/ManualMigration`
-  - `:app` 已移除对 `:core_network_component/:core_database_component` 的直接 Gradle 依赖（见依赖快照）
-
-**目标**
-
-- `:app` 更接近“组合根/壳层”，跨域初始化通过契约或所属域模块完成
-
-**落地内容**
-
-- “云端屏蔽词同步”下沉至 `player_component`：`CloudDanmuBlockServiceImpl`
-- “refresh_token 续期/登录态恢复”下沉至 `user_component`：`UserSessionServiceImpl`
-- 数据迁移触发下沉至 `core_database_component` 启动 hook：`ManualMigrationInitializer`
-
-**验收标准**
-
-- ✅ `app` 中直接引用 `DatabaseManager/UserRepository/OtherRepository` 的点已全部消失
-
-### 阶段 5：引入自动化校验（持续建设）
-
-**目标**
-
-- 让依赖治理从“口头约定”变成“可执行规则”
-
-**状态**
-
-- ✅ 已落地基础校验（Gradle 任务 + PR CI）
-
-**落地内容**
-
-- Gradle 校验任务：`./gradlew verifyModuleDependencies`
-  - 实现位置：`buildSrc/src/main/java/governance/ModuleDependencyGovernance.kt`
-  - 校验范围：各模块 `dependencies { ... project(":...") ... }` 的**直接依赖**
-  - 覆盖规则：v2 允许矩阵（4.3）+ DR-0002（bilibili 白名单）+ DR-0003（限制 `api(project(...))`）
-- GitHub Actions（PR）：
-  - workflow：`.github/workflows/module-dependency-governance.yml`
-  - PR 引入违例依赖时直接失败，并输出清晰的违例列表与修复建议
-
-**建议后续增强（可选）**
-
-- 引入依赖分析工具（例如 Gradle dependency analysis）辅助发现：
-  - 未使用依赖（可移除）
-  - 该用 `implementation` 却用了 `api`
-
-**验收标准**
-
-- PR 引入违例依赖时 CI 能直接失败，并给出清晰提示
+1) 更新本文档的允许矩阵/白名单（含 DR）  
+2) 同步更新 `buildSrc/src/main/java/governance/ModuleDependencyGovernance.kt` 的矩阵/白名单  
+3) 运行 `./gradlew verifyModuleDependencies`，确认输出以 `BUILD SUCCESSFUL` 结束  
+4) 如涉及依赖结构变化，同步更新依赖快照：`python3 scripts/module_deps_snapshot.py --write`
 
 ---
 
-## 6. 决策记录（阶段 0：已建立基线）
+## 6. 决策记录（DR）
 
 > 本节用于记录“依赖治理规则”的关键决策；后续如有调整，需要同步更新：本文件 + `document/architecture/module_dependencies_snapshot.md`（以及后续可能引入的自动化校验）。
 
@@ -541,13 +433,13 @@ graph TD
   - `:data_component`（共享数据类型）
 - 允许例外（仅限对外公开 API 确实暴露 `:data_component` 类型）：
   - `:core_ui_component` `:core_network_component` `:core_database_component` `:core_log_component`
-- 明确禁止：实现层（尤其 `:core_storage_component` / `:bilibili_component`）对外通过 `api` 泄漏 `:repository:*` 或其他实现模块；若短期无法调整，必须登记为阶段 2 遗留并给出迁移方向（改为 `implementation` 或把类型下沉到 contract/data）。
+- 明确禁止：实现层（尤其 `:core_storage_component` / `:bilibili_component`）对外通过 `api` 泄漏 `:repository:*` 或其他实现模块；若短期无法调整，必须登记为遗留并给出迁移方向（改为 `implementation` 或把类型下沉到 contract/data）。
 
-**阶段 0 已知遗留（后续阶段处理）**
+**已处理的历史遗留（记录）**
 
-- ✅ 已完成：`core_ui_component` 不再直接依赖 `core_storage_component`（阶段 1）。
-- ✅ 已完成：`core_storage_component` 不再通过 `api` 暴露 `repository:*`（阶段 2）。
-- 现存 `api(project(...))`（阶段 2 落地后）：
+- `core_ui_component` 不再直接依赖 `core_storage_component`。
+- `core_storage_component` 不再通过 `api` 暴露 `repository:*`。
+- 现存 `api(project(...))`（当前）：
   - `:core_contract_component -> :data_component`（契约层对外暴露 data 类型）
   - `:core_ui_component -> :repository:immersion_bar`（feature 存量代码直接引用 ImmersionBar 类型，暂保留；后续可通过 UI 封装收敛）
 

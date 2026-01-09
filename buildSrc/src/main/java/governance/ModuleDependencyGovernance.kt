@@ -6,7 +6,7 @@ import org.gradle.api.artifacts.ProjectDependency
 
 internal object ModuleDependencyGovernance {
 
-    private const val RULES_DOC = "TODOs/module_dependency_governance.md"
+    private const val RULES_DOC = "document/architecture/module_dependency_governance.md"
 
     private val allKnownModules: Set<String> =
         setOf(

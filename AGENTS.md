@@ -34,8 +34,8 @@ The app follows a modular MVVM layout: `app/` hosts the launcher shell, shared U
   - `:repository:thunder`：`thunder.aar` 下载相关库封装。
   - `:repository:video_cache`：`library-release.aar` 视频缓存库封装。
 
-## 模块依赖分层图（v2，基于当前 Gradle 依赖）
-> 说明：本图用于“分层语义对齐 + 依赖治理”参考；边关系以 `document/architecture/module_dependencies_snapshot.md`（Gradle `project(...)` 直接依赖快照）为准；分层语义入口见 `document/architecture/module_layering_v2.md`，治理规则与决策以 `TODOs/module_dependency_governance.md` 为准（DR-0001：system 视为 runtime，允许 `system -> log`）。
+## 模块依赖分层规则（基于当前 Gradle 依赖）
+> 说明：用于“分层语义对齐 + 依赖治理”参考；边关系以 `document/architecture/module_dependencies_snapshot.md`（Gradle `project(...)` 直接依赖快照）为准；分层语义与治理规则以 `document/architecture/module_dependency_governance.md` 为准（含 DR-0001：system 视为 runtime，允许 `system -> log`）。
 
 **设计原则**
 - 单向依赖、无环（依赖只允许从“上层业务”指向“下层基础设施/契约/数据”）。
