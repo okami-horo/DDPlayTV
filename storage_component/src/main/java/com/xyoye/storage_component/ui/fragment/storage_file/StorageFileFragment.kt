@@ -68,7 +68,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             dataBinding.loading.isVisible = false
             dataBinding.refreshLayout.isVisible = true
             dataBinding.refreshLayout.isRefreshing = false
-            ownerActivity.onDirectoryOpened(it.filterIsInstance<StorageFile>())
+            ownerActivity.onDirectoryOpened(this, it.filterIsInstance<StorageFile>())
             dataBinding.storageFileRv.setData(it)
 
             if (!dataBinding.storageFileRv.isInTouchMode) {

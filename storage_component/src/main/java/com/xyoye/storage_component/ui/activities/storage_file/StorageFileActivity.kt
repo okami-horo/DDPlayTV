@@ -57,15 +57,27 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     lateinit var storage: Storage
         private set
 
-    // 当前所处文件夹
-    var directory: StorageFile? = null
-        private set
+    private data class RouteEntry(
+        val path: StorageFilePath,
+        var directory: StorageFile?,
+        val fragment: StorageFileFragment,
+        var directoryFilesSnapshot: List<StorageFile> = emptyList(),
+        var displayVideoCount: Int = 0,
+        var displayDirectoryCount: Int = 0,
+    )
+
+    // 导航栈：当前页面/目录的单一事实源
+    private val routeStack = mutableListOf<RouteEntry>()
+
+    // 当前所处文件夹（由导航栈推导，避免状态不同步）
+    val directory: StorageFile?
+        get() = routeStack.lastOrNull()?.directory
+
+    private val currentRoute: String
+        get() = routeStack.lastOrNull()?.path?.route ?: "/"
 
     // 标题栏菜单管理器
     private var mMenus: StorageFileMenus? = null
-
-    // 文件Fragment列表
-    private val mRouteFragmentMap = mutableMapOf<StorageFilePath, StorageFileFragment>()
 
     // 标题栏样式工具
     private val mToolbarStyleHelper: StorageFileStyleHelper by lazy {
@@ -291,16 +303,18 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         return true
     }
 
-    private fun pushFragment(path: StorageFilePath) {
+    private fun pushFragment(
+        path: StorageFilePath,
+        directory: StorageFile?,
+    ) {
         val fragment = StorageFileFragment.newInstance()
-        mRouteFragmentMap[path] = fragment
-        LogFacade.d(LogModule.STORAGE, TAG, "pushFragment route=${path.route} size=${mRouteFragmentMap.size}")
+        val previousFragment = routeStack.lastOrNull()?.fragment
+        routeStack.add(RouteEntry(path = path, directory = directory, fragment = fragment))
+        LogFacade.d(LogModule.STORAGE, TAG, "pushFragment route=${path.route} size=${routeStack.size}")
 
         supportFragmentManager.beginTransaction().apply {
             // 添加前的最后一个Fragment，设置为STARTED状态
-            supportFragmentManager.fragments.lastOrNull()?.let {
-                setMaxLifecycle(it, Lifecycle.State.STARTED)
-            }
+            previousFragment?.let { setMaxLifecycle(it, Lifecycle.State.STARTED) }
 
             setCustomAnimations(R.anim.fragment_fade_in, R.anim.fragment_fade_out)
             setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
@@ -319,9 +333,8 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         if (event.repeatCount != 0) return false
 
         val library = storage.library
-        val directory = directory
         if (library.mediaType != MediaType.BILIBILI_STORAGE) return false
-        if (directory?.filePath() != "/history/") return false
+        if (currentRoute != "/history/") return false
 
         val isRefreshKey =
             when (event.keyCode) {
@@ -332,7 +345,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             }
         if (!isRefreshKey) return false
 
-        val fragment = mRouteFragmentMap.values.lastOrNull()
+        val fragment = routeStack.lastOrNull()?.fragment
         if (fragment == null) {
             LogFacade.w(LogModule.STORAGE, TAG, "history refresh ignored, fragment null keyCode=${event.keyCode}")
             return false
@@ -343,40 +356,54 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     private fun popFragment(): Boolean {
-        if (mRouteFragmentMap.entries.size <= 1) {
-            LogFacade.d(LogModule.STORAGE, TAG, "popFragment ignored, only root fragment left size=${mRouteFragmentMap.size}")
+        if (routeStack.size <= 1) {
+            LogFacade.d(LogModule.STORAGE, TAG, "popFragment ignored, only root fragment left size=${routeStack.size}")
             return false
         }
-        val lastRoute = mRouteFragmentMap.keys.last()
-        val fragment =
-            mRouteFragmentMap.remove(lastRoute)
-                ?: return true
-        LogFacade.d(LogModule.STORAGE, TAG, "popFragment route=${lastRoute.route} remain=${mRouteFragmentMap.size}")
-        removeFragment(listOf(fragment))
+        val removedEntry = routeStack.removeAt(routeStack.lastIndex)
+        LogFacade.d(LogModule.STORAGE, TAG, "popFragment route=${removedEntry.path.route} remain=${routeStack.size}")
+        syncStorageToCurrentRoute()
+        removeFragment(listOf(removedEntry.fragment))
         onDisplayFragmentChanged()
         return true
     }
 
+    private fun syncStorageToCurrentRoute() {
+        val entry = routeStack.lastOrNull() ?: return
+        storage.directory = entry.directory
+        storage.directoryFiles = entry.directoryFilesSnapshot
+        updateToolbarSubtitle(entry.displayVideoCount, entry.displayDirectoryCount)
+    }
+
     private fun backToRouteFragment(target: StorageFilePath) {
-        val fragments = mutableListOf<Fragment>()
-        for (path in mRouteFragmentMap.keys.reversed()) {
-            if (path == target) {
-                break
-            }
-            mRouteFragmentMap.remove(path)?.let { fragment ->
-                fragments.add(fragment)
-            }
+        val targetIndex = routeStack.indexOfFirst { it.path == target }
+        if (targetIndex == -1) {
+            LogFacade.w(LogModule.STORAGE, TAG, "backToRouteFragment ignored, target not found route=${target.route}")
+            return
         }
+        if (targetIndex == routeStack.lastIndex) {
+            return
+        }
+
+        val removedEntries =
+            routeStack
+                .subList(targetIndex + 1, routeStack.size)
+                .toList()
+        routeStack.subList(targetIndex + 1, routeStack.size).clear()
+
+        val fragments: List<Fragment> = removedEntries.map { it.fragment }
         LogFacade.d(
             LogModule.STORAGE,
             TAG,
-            "backToRouteFragment target=${target.route} remove=${fragments.size} remain=${mRouteFragmentMap.size}",
+            "backToRouteFragment target=${target.route} remove=${fragments.size} remain=${routeStack.size}",
         )
+        syncStorageToCurrentRoute()
         removeFragment(fragments)
         onDisplayFragmentChanged()
     }
 
     private fun removeFragment(fragments: List<Fragment>) {
+        val resumedFragment = routeStack.lastOrNull()?.fragment
         supportFragmentManager.beginTransaction().apply {
             setCustomAnimations(R.anim.fragment_fade_in, R.anim.fragment_fade_out)
             setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
@@ -387,16 +414,16 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                 setMaxLifecycle(it, Lifecycle.State.CREATED)
             }
 
-            // 非移除的最后一个Fragment，设置为RESUMED状态
-            supportFragmentManager.fragments
-                .lastOrNull { it !in fragments }
-                ?.let { setMaxLifecycle(it, Lifecycle.State.RESUMED) }
+            // 以导航栈为准：最后一个Fragment，设置为RESUMED状态
+            if (resumedFragment != null && resumedFragment !in fragments) {
+                setMaxLifecycle(resumedFragment, Lifecycle.State.RESUMED)
+            }
             commit()
         }
     }
 
     private fun onDisplayFragmentChanged() {
-        val newPathData = StorageFilePathAdapter.buildPathData(mRouteFragmentMap)
+        val newPathData = StorageFilePathAdapter.buildPathData(routeStack.map { it.path })
         LogFacade.d(LogModule.STORAGE, TAG, "onDisplayFragmentChanged pathSize=${newPathData.size}")
         dataBinding.pathRv.setData(newPathData)
         dataBinding.pathRv.post {
@@ -482,14 +509,14 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
      * 搜索文案
      */
     private fun onSearchTextChanged(text: String) {
-        mRouteFragmentMap.values.lastOrNull()?.search(text)
+        routeStack.lastOrNull()?.fragment?.search(text)
     }
 
     /**
      * 改变文件排序
      */
     private fun onSortOptionChanged() {
-        mRouteFragmentMap.values.onEach { it.sort() }
+        routeStack.map { it.fragment }.onEach { it.sort() }
     }
 
 //    /**
@@ -510,7 +537,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
      * 分发焦点到最后一个Fragment
      */
     fun dispatchFocus(reversed: Boolean = false) {
-        mRouteFragmentMap.values.lastOrNull()?.requestFocus(reversed)
+        routeStack.lastOrNull()?.fragment?.requestFocus(reversed)
     }
 
 //    fun onDirectoryDataLoaded(fragment: StorageFileFragment, files: List<StorageFile>) {
@@ -570,6 +597,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 //        }
 //    }
 
+    @Suppress("UNUSED_PARAMETER")
     fun onDirectoryDataLoaded(
         fragment: StorageFileFragment,
         files: List<StorageFile>
@@ -580,17 +608,44 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     fun isLocatingLastPlay() = false
 
     fun openDirectory(file: StorageFile?) {
-        directory = file
-
         val route = file?.filePath() ?: "/"
         val name = file?.fileName() ?: "根目录"
-        pushFragment(StorageFilePath(name, route))
+        pushFragment(StorageFilePath(name, route), directory = file)
     }
 
-    fun onDirectoryOpened(fileList: List<StorageFile>) {
-        val videoCount = fileList.count { it.isFile() }
-        val directoryCount = fileList.count { it.isDirectory() }
-        updateToolbarSubtitle(videoCount, directoryCount)
+    fun onDirectoryOpened(
+        fragment: StorageFileFragment,
+        displayFiles: List<StorageFile>,
+    ) {
+        val entry =
+            routeStack.firstOrNull { it.fragment == fragment }
+                ?: run {
+                    LogFacade.w(LogModule.STORAGE, TAG, "onDirectoryOpened ignored, entry not found")
+                    return
+                }
+
+        val storageDirectory = storage.directory
+        val directoryMatchesRoute = storageDirectory?.filePath() == entry.path.route
+        if (!directoryMatchesRoute) {
+            val message =
+                "onDirectoryOpened directory mismatch, route=${entry.path.route}, storage=${storageDirectory?.filePath()}"
+            if (entry.path.route == "/") {
+                LogFacade.d(LogModule.STORAGE, TAG, message)
+            } else {
+                LogFacade.w(LogModule.STORAGE, TAG, message)
+            }
+        }
+        if (storageDirectory != null) {
+            entry.directory = storageDirectory
+        }
+        entry.directoryFilesSnapshot = storage.directoryFiles
+
+        entry.displayVideoCount = displayFiles.count { it.isFile() }
+        entry.displayDirectoryCount = displayFiles.count { it.isDirectory() }
+
+        if (routeStack.lastOrNull()?.fragment == fragment) {
+            updateToolbarSubtitle(entry.displayVideoCount, entry.displayDirectoryCount)
+        }
     }
 
     fun openFile(file: StorageFile) {

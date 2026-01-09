@@ -11,7 +11,6 @@ import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ItemStoragePathBinding
 import com.xyoye.storage_component.databinding.ItemStoragePathDividerBinding
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
-import com.xyoye.storage_component.ui.fragment.storage_file.StorageFileFragment
 
 /**
  * Created by xyoye on 2023/1/1.
@@ -74,10 +73,10 @@ object StorageFilePathAdapter {
         }
     }
 
-    fun buildPathData(routeFragments: MutableMap<StorageFilePath, StorageFileFragment>): List<Any> {
+    fun buildPathData(paths: List<StorageFilePath>): List<Any> {
         val pathList = mutableListOf<Any>(marginDivider)
-        val lastIndex = routeFragments.keys.size - 1
-        routeFragments.keys.forEachIndexed { index, path ->
+        val lastIndex = paths.size - 1
+        paths.forEachIndexed { index, path ->
             val lastItem = index == lastIndex
             path.isLast = lastItem
             pathList.add(path)
