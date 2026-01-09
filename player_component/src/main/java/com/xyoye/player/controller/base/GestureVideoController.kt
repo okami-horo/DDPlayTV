@@ -1,14 +1,13 @@
 package com.xyoye.player.controller.base
 
 import android.app.Activity
-import android.app.UiModeManager
 import android.content.Context
-import android.content.res.Configuration
 import android.media.AudioManager
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.utils.getScreenWidth
 import com.xyoye.common_component.utils.isScreenEdge
 import com.xyoye.data_component.enums.PlayState
@@ -100,7 +99,9 @@ abstract class GestureVideoController(
                     longPressAccelerator.disable()
                     stopSlide()
                     if (mSeekPosition >= 0) {
-                        mControlWrapper.seekTo(mSeekPosition)
+                        if (mControlWrapper.isUserSeekAllowed()) {
+                            mControlWrapper.seekTo(mSeekPosition)
+                        }
                         mSeekPosition = -1L
                     }
                 }
@@ -231,6 +232,9 @@ abstract class GestureVideoController(
 
     protected fun slideToChangePosition(deltaX: Float) {
         if (disableTouchGestures) {
+            return
+        }
+        if (!mControlWrapper.isUserSeekAllowed()) {
             return
         }
         // 滑动距离与实际进度缩放比例
@@ -365,12 +369,4 @@ abstract class GestureVideoController(
             (mCurrentPlayState != PlayState.STATE_ERROR) and
             (mCurrentPlayState != PlayState.STATE_IDLE) and
             (mCurrentPlayState != PlayState.STATE_START_ABORT)
-}
-
-private fun Context.isTelevisionUiMode(): Boolean {
-    val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
-    val currentModeType =
-        uiModeManager?.currentModeType
-            ?: (resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)
-    return currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
 }

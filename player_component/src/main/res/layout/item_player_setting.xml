@@ -6,36 +6,46 @@
         android:id="@+id/item_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:background="@drawable/background_video_view">
+        android:padding="4dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <ImageView
-            android:id="@+id/iv_setting"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="@drawable/background_player_setting_item"
+        <LinearLayout
+            android:id="@+id/cl_card"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/selector_player_setting_item_bg"
+            android:orientation="vertical"
+            android:paddingVertical="12dp"
             android:focusable="true"
-            android:padding="12dp"
+            android:clickable="true"
             android:tag="@string/focusable_item"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:src="@drawable/ic_setting_video_aspect" />
+            app:layout_constraintTop_toTopOf="parent">
 
-        <com.xyoye.common_component.weight.MarqueeTextView
-            android:id="@+id/tv_setting"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:ellipsize="marquee"
-            android:gravity="center"
-            android:singleLine="true"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@id/iv_setting"
-            app:layout_constraintStart_toStartOf="@id/iv_setting"
-            app:layout_constraintTop_toBottomOf="@id/iv_setting"
-            tools:text="测试" />
+            <ImageView
+                android:id="@+id/iv_setting"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center_horizontal"
+                android:contentDescription="@null"
+                tools:src="@drawable/ic_setting_video_aspect" />
+
+            <com.xyoye.common_component.weight.MarqueeTextView
+                android:id="@+id/tv_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:ellipsize="marquee"
+                android:gravity="center"
+                android:paddingHorizontal="4dp"
+                android:singleLine="true"
+                android:textColor="@color/text_white_immutable"
+                android:textSize="12sp"
+                tools:text="测试" />
+
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -27,7 +27,12 @@ Recent history uses the `<type>: <summary>` pattern (`fix: ...`, `refactor: ...`
 Sensitive tokens belong in `local.properties` or Gradle properties; never hard-code keys. Toggle `IS_DEBUG_MODE` and `IS_APPLICATION_RUN` in `gradle.properties` when enabling verbose logs or single-module runs, then rebuild so the flags propagate. Follow `BUGLY_CONFIG.md` for crash reporting credentials, and remember the `user_component` ships with remote APIs disabled—avoid re-enabling interfaces without coordinator approval to keep builds distributable.
 
 ## Recent Changes
+- 003-add-bilibili-history: Added Kotlin 1.9.25（JVM target 1.8），Android Gradle Plugin 8.7.2 + AndroidX（Lifecycle/ViewModel/Room 等）、Kotlin Coroutines、Retrofit/OkHttp、Moshi、Media3、ARouter、MMKV
 - 001-migrate-media3: Added Kotlin 1.7.x with Java interoperability for existing Exo helper classes
 
 ## TV/Remote UX
 - When adjusting UI element logic (focus/order/visibility), always consider Android TV remote navigation: ensure DPAD can reach/give feedback for all controls and verify focus loops are reachable on TV.
+
+## Active Technologies
+- Kotlin 1.9.25（JVM target 1.8），Android Gradle Plugin 8.7.2 + AndroidX（Lifecycle/ViewModel/Room 等）、Kotlin Coroutines、Retrofit/OkHttp、Moshi、Media3、ARouter、MMKV (003-add-bilibili-history)
+- Room（SQLite）+ MMKV（Key-Value）+ 本地缓存文件（用于临时 mpd/二维码图片等） (003-add-bilibili-history)

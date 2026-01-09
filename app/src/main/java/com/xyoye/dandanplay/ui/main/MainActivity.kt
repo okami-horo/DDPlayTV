@@ -5,33 +5,21 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
-import androidx.lifecycle.MutableLiveData
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.launcher.ARouter
-import com.xyoye.common_component.base.BaseActivity
-import com.xyoye.common_component.bridge.LoginObserver
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.config.ScreencastConfig
-import com.xyoye.common_component.config.UserConfig
 import com.xyoye.common_component.extension.findAndRemoveFragment
 import com.xyoye.common_component.extension.hideFragment
 import com.xyoye.common_component.extension.showFragment
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.services.ScreencastReceiveService
-import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.common_component.weight.dialog.CommonDialog
-import com.xyoye.dandanplay.BR
+import com.xyoye.common_component.services.DeveloperMenuService
 import com.xyoye.dandanplay.R
 import com.xyoye.dandanplay.databinding.ActivityMainBinding
-import com.xyoye.data_component.data.LoginData
-import com.xyoye.user_component.ui.weight.DeveloperMenus
-import kotlin.random.Random
-import kotlin.system.exitProcess
+import com.xyoye.dandanplay.ui.shell.BaseShellActivity
 
 class MainActivity :
-    BaseActivity<MainViewModel, ActivityMainBinding>(),
-    LoginObserver {
+    BaseShellActivity<ActivityMainBinding>() {
     companion object {
         private const val TAG_FRAGMENT_HOME = "tag_fragment_home"
         private const val TAG_FRAGMENT_MEDIA = "tag_fragment_media"
@@ -45,24 +33,16 @@ class MainActivity :
     private lateinit var previousFragment: Fragment
 
     @Autowired
-    lateinit var receiveService: ScreencastReceiveService
+    lateinit var developerMenuService: DeveloperMenuService
 
     private var fragmentTag = ""
-    private var touchTime = 0L
 
     // 标题栏菜单管理器
-    private lateinit var mMenus: DeveloperMenus
-
-    override fun initViewModel() =
-        ViewModelInit(
-            BR.viewModel,
-            MainViewModel::class.java,
-        )
+    private var developerMenus: DeveloperMenuService.Delegate? = null
 
     override fun getLayoutId() = R.layout.activity_main
 
     override fun initView() {
-        ARouter.getInstance().inject(this)
         // 隐藏返回按钮
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(false)
@@ -110,45 +90,28 @@ class MainActivity :
             return@setOnItemSelectedListener true
         }
 
-        viewModel.initDatabase()
-        viewModel.initCloudBlockData()
-
-        initScreencastReceive()
-
-        if (UserConfig.isUserLoggedIn()) {
-            viewModel.reLogin()
-        }
+        initShell()
     }
 
     override fun onKeyDown(
         keyCode: Int,
         event: KeyEvent?
     ): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (checkServiceExit()) {
-                return true
-            }
-
-            if (System.currentTimeMillis() - touchTime > 1500) {
-                ToastCenter.showToast("再按一次退出应用")
-                touchTime = System.currentTimeMillis()
-                return true
-            }
+        if (keyCode == KeyEvent.KEYCODE_BACK && handleBackExit()) {
+            return true
         }
         return super.onKeyDown(keyCode, event)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        mMenus = DeveloperMenus.inflater(this, menu)
+        developerMenus = developerMenuService.create(this, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        mMenus.onOptionsItemSelected(item)
-        return super.onOptionsItemSelected(item)
+        val handled = developerMenus?.onOptionsItemSelected(item) == true
+        return handled || super.onOptionsItemSelected(item)
     }
-
-    override fun getLoginLiveData(): MutableLiveData<LoginData> = viewModel.reLoginLiveData
 
     private fun switchFragment(tag: String) {
         // 重复打开当前页面，不进行任何操作
@@ -238,43 +201,4 @@ class MainActivity :
             .getInstance()
             .build(path)
             .navigation() as Fragment?
-
-    private fun initScreencastReceive() {
-        if (ScreencastConfig.isStartReceiveWhenLaunch().not()) {
-            return
-        }
-        if (receiveService.isRunning(this)) {
-            return
-        }
-
-        var httpPort = ScreencastConfig.getReceiverPort()
-        if (httpPort == 0) {
-            httpPort = Random.nextInt(20000, 30000)
-            ScreencastConfig.putReceiverPort(httpPort)
-        }
-        val receiverPwd = ScreencastConfig.getReceiverPassword()
-        receiveService.startService(this, httpPort, receiverPwd)
-    }
-
-    private fun checkServiceExit(): Boolean {
-        val isReceiveServiceRunning = receiveService.isRunning(this)
-        if (isReceiveServiceRunning.not()) {
-            return false
-        }
-        CommonDialog
-            .Builder(this)
-            .run {
-                tips = "确认退出？"
-                content = "投屏接收服务正在运行中，退出将中断投屏"
-                addNegative()
-                addPositive("退出") {
-                    it.dismiss()
-                    receiveService.stopService(this@MainActivity)
-                    finish()
-                    exitProcess(0)
-                }
-                build()
-            }.show()
-        return true
-    }
 }

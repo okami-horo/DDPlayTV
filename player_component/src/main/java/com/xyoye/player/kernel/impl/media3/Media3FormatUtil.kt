@@ -1,5 +1,6 @@
 package com.xyoye.player.kernel.impl.media3
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.display.DisplayManager
 import android.net.Uri
@@ -11,6 +12,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.mediacodec.MediaCodecUtil
 import java.util.Locale
 
+@SuppressLint("InlinedApi")
 @UnstableApi
 object Media3FormatUtil {
     /**

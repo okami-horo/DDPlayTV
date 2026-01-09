@@ -10,7 +10,7 @@
             android:id="@+id/toolbar_layout"
             layout="@layout/layout_toolbar" />
 
-        <fragment
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/fragment"
             android:name="com.xyoye.user_component.ui.fragment.personal.PersonalFragment"
             android:layout_width="match_parent"

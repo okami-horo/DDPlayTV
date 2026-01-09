@@ -57,7 +57,11 @@ class MpvNativeBridge {
 
     private var nativeHandle: Long = 0
     private val mainHandler = Handler(Looper.getMainLooper())
-    private var eventListener: ((Event) -> Unit)? = null
+
+    private val listenerLock = Any()
+    private val eventListeners = LinkedHashSet<(Event) -> Unit>()
+
+    @Volatile
     private var eventLoopStarted = false
 
     val availabilityReason: String?
@@ -81,7 +85,11 @@ class MpvNativeBridge {
             Log.w(TAG, "nativeCreate returned null handle")
             return false
         }
-        if (eventListener != null) {
+        val hasListeners =
+            synchronized(listenerLock) {
+                eventListeners.isNotEmpty()
+            }
+        if (hasListeners) {
             startEventLoop()
         }
         return true
@@ -96,7 +104,9 @@ class MpvNativeBridge {
             nativeHandle = 0
         }
         eventLoopStarted = false
-        eventListener = null
+        synchronized(listenerLock) {
+            eventListeners.clear()
+        }
     }
 
     fun setSurface(surface: Surface?) {
@@ -187,6 +197,30 @@ class MpvNativeBridge {
         setOption("force-seekable", if (enabled) "yes" else "no")
     }
 
+    fun setHwdecPriority(value: String) {
+        if (nativeHandle == 0L) return
+        if (value.isBlank()) return
+        setOption("hwdec", value)
+    }
+
+    fun setAudioOutput(value: String) {
+        if (nativeHandle == 0L) return
+        if (value.isBlank()) return
+        setOption("ao", value)
+    }
+
+    fun setVideoSync(value: String) {
+        if (nativeHandle == 0L) return
+        if (value.isBlank()) return
+        setOption("video-sync", value)
+    }
+
+    fun setVideoOutput(output: String) {
+        if (nativeHandle == 0L) return
+        if (output.isBlank()) return
+        setOption("vo", output)
+    }
+
     fun setSubtitleFonts(
         fontsDir: String,
         defaultFontFamily: String
@@ -212,18 +246,44 @@ class MpvNativeBridge {
     }
 
     fun setEventListener(listener: (Event) -> Unit) {
-        eventListener = listener
+        synchronized(listenerLock) {
+            eventListeners.clear()
+            eventListeners.add(listener)
+        }
         if (nativeHandle != 0L) {
             startEventLoop()
         }
     }
 
+    fun addEventListener(listener: (Event) -> Unit) {
+        synchronized(listenerLock) {
+            eventListeners.add(listener)
+        }
+        if (nativeHandle != 0L) {
+            startEventLoop()
+        }
+    }
+
+    fun removeEventListener(listener: (Event) -> Unit) {
+        val shouldStop =
+            synchronized(listenerLock) {
+                eventListeners.remove(listener)
+                eventListeners.isEmpty()
+            }
+        if (shouldStop && nativeHandle != 0L && eventLoopStarted) {
+            nativeStopEventLoop(nativeHandle)
+            eventLoopStarted = false
+        }
+    }
+
     fun clearEventListener() {
+        synchronized(listenerLock) {
+            eventListeners.clear()
+        }
         if (nativeHandle != 0L && eventLoopStarted) {
             nativeStopEventLoop(nativeHandle)
         }
         eventLoopStarted = false
-        eventListener = null
     }
 
     fun videoSize(): Pair<Int, Int> {
@@ -232,6 +292,11 @@ class MpvNativeBridge {
         val width = (packed shr 32).toInt()
         val height = (packed and 0xffffffffL).toInt()
         return width to height
+    }
+
+    fun hwdecCurrent(): String? {
+        if (nativeHandle == 0L) return null
+        return nativeGetHwdecCurrent(nativeHandle)
     }
 
     fun listTracks(): List<TrackInfo> {
@@ -281,6 +346,21 @@ class MpvNativeBridge {
         return nativeAddExternalTrack(nativeHandle, nativeType, path)
     }
 
+    fun addShader(path: String): Boolean {
+        if (nativeHandle == 0L || path.isBlank()) return false
+        return nativeAddShader(nativeHandle, path)
+    }
+
+    fun setShaders(value: String): Boolean {
+        if (nativeHandle == 0L) return false
+        return nativeSetShaders(nativeHandle, value)
+    }
+
+    fun clearShaders(): Boolean {
+        if (nativeHandle == 0L) return false
+        return nativeClearShaders(nativeHandle)
+    }
+
     fun currentPosition(): Long {
         if (nativeHandle == 0L) return 0
         return nativeGetPosition(nativeHandle)
@@ -310,9 +390,22 @@ class MpvNativeBridge {
                 EVENT_LOG_MESSAGE -> Event.LogMessage(arg1.toInt(), message)
                 else -> null
             }
-        if (event != null) {
-            mainHandler.post {
-                eventListener?.invoke(event)
+
+        if (event == null) {
+            return
+        }
+
+        val listeners =
+            synchronized(listenerLock) {
+                eventListeners.toList()
+            }
+        if (listeners.isEmpty()) {
+            return
+        }
+
+        mainHandler.post {
+            listeners.forEach { listener ->
+                runCatching { listener(event) }
             }
         }
     }
@@ -422,6 +515,9 @@ class MpvNativeBridge {
         private external fun nativeGetVideoSize(handle: Long): Long
 
         @JvmStatic
+        private external fun nativeGetHwdecCurrent(handle: Long): String?
+
+        @JvmStatic
         private external fun nativeListTracks(handle: Long): Array<String>?
 
         @JvmStatic
@@ -443,6 +539,21 @@ class MpvNativeBridge {
             trackType: Int,
             path: String
         ): Boolean
+
+        @JvmStatic
+        private external fun nativeAddShader(
+            handle: Long,
+            path: String
+        ): Boolean
+
+        @JvmStatic
+        private external fun nativeSetShaders(
+            handle: Long,
+            value: String
+        ): Boolean
+
+        @JvmStatic
+        private external fun nativeClearShaders(handle: Long): Boolean
 
         @JvmStatic
         private external fun nativeSetDataSource(

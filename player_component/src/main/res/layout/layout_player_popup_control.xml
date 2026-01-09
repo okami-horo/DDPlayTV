@@ -17,6 +17,7 @@
             android:layout_height="24dp"
             android:layout_marginStart="5dp"
             android:layout_marginTop="5dp"
+            android:contentDescription="@null"
             android:padding="5dp"
             android:src="@drawable/ic_dialog_close"
             app:layout_constraintStart_toStartOf="parent"
@@ -28,18 +29,22 @@
             android:layout_height="24dp"
             android:layout_marginTop="5dp"
             android:layout_marginEnd="5dp"
+            android:contentDescription="@null"
             android:padding="5dp"
             android:rotation="45"
             android:src="@drawable/ic_float_expand"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/iv_danmu_control"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:padding="2dp"
-            android:src="@drawable/ic_danmaku_control"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:thumb="@drawable/thumb_danmu_switch"
+            app:track="@drawable/track_danmu_switch"
+            app:showText="false"
+            app:layout_constraintBottom_toBottomOf="@id/iv_expand"
             app:layout_constraintEnd_toStartOf="@id/iv_expand"
             app:layout_constraintTop_toTopOf="@id/iv_expand" />
 
@@ -48,6 +53,7 @@
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:layout_marginBottom="5dp"
+            android:contentDescription="@null"
             android:padding="5dp"
             android:src="@drawable/ic_play_bt"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -58,10 +64,12 @@
             android:id="@+id/iv_seek_back"
             android:layout_width="30dp"
             android:layout_height="30dp"
+            android:contentDescription="@null"
             android:padding="5dp"
             android:src="@drawable/ic_seek_back"
             app:layout_constraintBottom_toBottomOf="@id/iv_play"
             app:layout_constraintEnd_toStartOf="@id/iv_play"
+            app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/iv_play" />
 
@@ -69,6 +77,7 @@
             android:id="@+id/iv_seek_forward"
             android:layout_width="30dp"
             android:layout_height="30dp"
+            android:contentDescription="@null"
             android:padding="5dp"
             android:src="@drawable/ic_seek_forward"
             app:layout_constraintBottom_toBottomOf="@id/iv_play"

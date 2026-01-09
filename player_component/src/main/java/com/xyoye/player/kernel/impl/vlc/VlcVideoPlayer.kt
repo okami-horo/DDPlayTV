@@ -7,6 +7,7 @@ import android.graphics.Point
 import android.net.Uri
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.Surface
+import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.IOUtils
 import com.xyoye.common_component.utils.SupervisorScope
@@ -16,6 +17,7 @@ import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.data_component.enums.VLCHWDecode
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
+import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.utils.VideoLog
 import kotlinx.coroutines.launch
@@ -34,7 +36,8 @@ import java.util.Locale
 
 class VlcVideoPlayer(
     private val mContext: Context
-) : AbstractVideoPlayer() {
+) : AbstractVideoPlayer(),
+    SubtitleKernelBridge {
     companion object {
         private val TAG = VlcVideoPlayer::class.java.simpleName
 
@@ -52,7 +55,10 @@ class VlcVideoPlayer(
     private var mCurrentDuration = 0L
     private var seekable = true
     private var isBufferEnd = false
+    private var dataSource: String? = null
+    private var proxySeekEnabled: Boolean = false
     private val mVideoSize = Point(0, 0)
+    private var looping = PlayerInitializer.isLooping
 
     override fun initPlayer() {
         audioOutput = PlayerInitializer.Player.vlcAudioOutput
@@ -66,6 +72,16 @@ class VlcVideoPlayer(
         path: String,
         headers: Map<String, String>?
     ) {
+        isBufferEnd = false
+        dataSource = path
+        runCatching {
+            val playServer = HttpPlayServer.getInstance()
+            if (playServer.isServingUrl(path)) {
+                playServer.setSeekEnabled(false)
+                proxySeekEnabled = false
+            }
+        }
+
         val vlcMedia = createVlcMedia(path, headers)
         if (vlcMedia == null) {
             mPlayerEventListener.onInfo(PlayerConstant.MEDIA_INFO_URL_EMPTY, 0)
@@ -125,6 +141,7 @@ class VlcVideoPlayer(
     }
 
     override fun release() {
+        clearPlayerEventListener()
         stop()
         IOUtils.closeIO(videoSourceFd)
         mMediaPlayer.setEventListener(null)
@@ -159,6 +176,7 @@ class VlcVideoPlayer(
     }
 
     override fun setLooping(isLooping: Boolean) {
+        looping = isLooping
     }
 
     override fun setOptions() {
@@ -183,6 +201,8 @@ class VlcVideoPlayer(
     override fun getVideoSize(): Point = mVideoSize
 
     override fun getBufferedPercentage(): Int = 0
+
+    override fun supportBufferedPercentage(): Boolean = false
 
     override fun getTcpSpeed(): Long = 0
 
@@ -293,6 +313,16 @@ class VlcVideoPlayer(
                 MediaPlayer.Event.Vout -> {
                     if (it.voutCount > 0) {
                         mMediaPlayer.updateVideoSurfaces()
+                        val path = dataSource
+                        if (!proxySeekEnabled && !path.isNullOrEmpty()) {
+                            runCatching {
+                                val playServer = HttpPlayServer.getInstance()
+                                if (playServer.isServingUrl(path)) {
+                                    playServer.setSeekEnabled(true)
+                                    proxySeekEnabled = true
+                                }
+                            }
+                        }
 
                         mPlayerEventListener.onInfo(
                             PlayerConstant.MEDIA_INFO_VIDEO_RENDERING_START,
@@ -303,8 +333,16 @@ class VlcVideoPlayer(
                 }
                 // 播放完成
                 MediaPlayer.Event.EndReached -> {
-                    mPlayerEventListener.onCompletion()
-                    VideoLog.d("$TAG--listener--onInfo--> onCompletion")
+                    if (looping) {
+                        if (isPlayerAvailable()) {
+                            mMediaPlayer.time = 0L
+                            mMediaPlayer.play()
+                        }
+                        VideoLog.d("$TAG--listener--onInfo--> loop restart")
+                    } else {
+                        mPlayerEventListener.onCompletion()
+                        VideoLog.d("$TAG--listener--onInfo--> onCompletion")
+                    }
                 }
             }
         }

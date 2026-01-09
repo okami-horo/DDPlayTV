@@ -32,6 +32,7 @@ import com.xyoye.common_component.utils.getFolderName
 import com.xyoye.common_component.utils.isAudioFile
 import com.xyoye.common_component.utils.isDanmuFile
 import com.xyoye.common_component.utils.isSubtitleFile
+import com.xyoye.common_component.utils.isVideoFile
 import com.xyoye.common_component.utils.view.FilePathItemDecoration
 import com.xyoye.common_component.utils.view.ItemDecorationOrientation
 import com.xyoye.data_component.bean.FileManagerBean
@@ -71,6 +72,7 @@ class SwitchSourceView(
                 TrackType.AUDIO -> "选择音轨文件"
                 TrackType.DANMU -> "选择弹幕轨文件"
                 TrackType.SUBTITLE -> "选择字幕轨文件"
+                TrackType.VIDEO -> "选择视频轨文件"
             }
 
     // 是否显示搜索网络弹幕按钮
@@ -83,6 +85,7 @@ class SwitchSourceView(
                 TrackType.AUDIO -> R.drawable.ic_file_audio
                 TrackType.DANMU -> R.drawable.ic_file_xml
                 TrackType.SUBTITLE -> R.drawable.ic_file_subtitle
+                TrackType.VIDEO -> R.drawable.ic_file_video
             }
 
     init {
@@ -264,6 +267,8 @@ class SwitchSourceView(
             TrackType.SUBTITLE -> {
                 mControlWrapper.addTrack(VideoTrackBean.subtitle(data.filePath))
             }
+
+            TrackType.VIDEO -> Unit
         }
     }
 
@@ -359,6 +364,7 @@ class SwitchSourceView(
             TrackType.AUDIO -> isAudioFile(filePath)
             TrackType.DANMU -> isDanmuFile(filePath)
             TrackType.SUBTITLE -> isSubtitleFile(filePath)
+            TrackType.VIDEO -> isVideoFile(filePath)
         }
 
     /**
@@ -408,6 +414,7 @@ class SwitchSourceView(
                 TrackType.AUDIO -> mControlWrapper.getVideoSource().getAudioPath()
                 TrackType.DANMU -> mControlWrapper.getVideoSource().getDanmu()?.danmuPath
                 TrackType.SUBTITLE -> mControlWrapper.getVideoSource().getSubtitlePath()
+                TrackType.VIDEO -> null
             }
         if (addedSourcePath.isNullOrEmpty()) {
             return PathHelper.getCachePath()

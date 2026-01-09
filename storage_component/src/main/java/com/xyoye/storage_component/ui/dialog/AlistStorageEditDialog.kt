@@ -36,6 +36,7 @@ class AlistStorageEditDialog(
                 MediaType.ALSIT_STORAGE,
             )
         binding.library = editLibrary
+        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, editLibrary)
 
         binding.serverTestConnectTv.setOnClickListener {
             if (checkParams(editLibrary)) {

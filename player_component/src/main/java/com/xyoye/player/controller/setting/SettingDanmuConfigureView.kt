@@ -45,7 +45,14 @@ class SettingDanmuConfigureView(
     }
 
     override fun onViewShowed() {
-        viewBinding.llScrollDanmu.requestFocus()
+        val target =
+            when (settingMode) {
+                BaseDanmaku.TYPE_SCROLL_RL -> viewBinding.llScrollDanmu
+                BaseDanmaku.TYPE_FIX_TOP -> viewBinding.llTopDanmu
+                BaseDanmaku.TYPE_FIX_BOTTOM -> viewBinding.llBottomDanmu
+                else -> viewBinding.llScrollDanmu
+            }
+        target.requestFocus()
     }
 
     override fun onKeyDown(
@@ -81,24 +88,31 @@ class SettingDanmuConfigureView(
             mControlWrapper.showSettingView(SettingViewType.KEYWORD_BLOCK)
         }
 
+        viewBinding.llScrollDanmu.setOnClickListener {
+            selectSettingMode(BaseDanmaku.TYPE_SCROLL_RL)
+        }
+        viewBinding.llTopDanmu.setOnClickListener {
+            selectSettingMode(BaseDanmaku.TYPE_FIX_TOP)
+        }
+        viewBinding.llBottomDanmu.setOnClickListener {
+            selectSettingMode(BaseDanmaku.TYPE_FIX_BOTTOM)
+        }
+
         viewBinding.llScrollDanmu.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                settingMode = BaseDanmaku.TYPE_SCROLL_RL
-                applyDanmuConfigureStatus()
+                selectSettingMode(BaseDanmaku.TYPE_SCROLL_RL)
             }
         }
 
         viewBinding.llTopDanmu.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                settingMode = BaseDanmaku.TYPE_FIX_TOP
-                applyDanmuConfigureStatus()
+                selectSettingMode(BaseDanmaku.TYPE_FIX_TOP)
             }
         }
 
         viewBinding.llBottomDanmu.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                settingMode = BaseDanmaku.TYPE_FIX_BOTTOM
-                applyDanmuConfigureStatus()
+                selectSettingMode(BaseDanmaku.TYPE_FIX_BOTTOM)
             }
         }
 
@@ -153,6 +167,7 @@ class SettingDanmuConfigureView(
     }
 
     private fun applyDanmuConfigureStatus() {
+        applySettingModeSelectedState()
         when (settingMode) {
             BaseDanmaku.TYPE_SCROLL_RL -> applyScrollDanmuConfigure()
             BaseDanmaku.TYPE_FIX_TOP -> applyTopDanmuConfigure()
@@ -160,9 +175,23 @@ class SettingDanmuConfigureView(
         }
     }
 
+    private fun selectSettingMode(mode: Int) {
+        if (settingMode == mode) {
+            return
+        }
+        settingMode = mode
+        applyDanmuConfigureStatus()
+    }
+
+    private fun applySettingModeSelectedState() {
+        viewBinding.llScrollDanmu.isSelected = settingMode == BaseDanmaku.TYPE_SCROLL_RL
+        viewBinding.llTopDanmu.isSelected = settingMode == BaseDanmaku.TYPE_FIX_TOP
+        viewBinding.llBottomDanmu.isSelected = settingMode == BaseDanmaku.TYPE_FIX_BOTTOM
+    }
+
     private fun applyScrollDanmuConfigure() {
-        viewBinding.tvLineLimitTips.text = "滚动弹幕行数限制"
-        viewBinding.tvDanmuEnableTips.text = "启用滚动弹幕"
+        viewBinding.tvLineLimitTips.text = context.getString(R.string.tips_scroll_danmu_line_limit)
+        viewBinding.tvDanmuEnableTips.text = context.getString(R.string.tips_enable_scroll_danmu)
         viewBinding.groupScreenLimit.isVisible = true
         viewBinding.switchDanmuEnable.isChecked = PlayerInitializer.Danmu.mobileDanmu
         if (PlayerInitializer.Danmu.maxScrollLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
@@ -193,8 +222,8 @@ class SettingDanmuConfigureView(
     }
 
     private fun applyTopDanmuConfigure() {
-        viewBinding.tvLineLimitTips.text = "顶部弹幕行数限制"
-        viewBinding.tvDanmuEnableTips.text = "启用顶部弹幕"
+        viewBinding.tvLineLimitTips.text = context.getString(R.string.tips_top_danmu_line_limit)
+        viewBinding.tvDanmuEnableTips.text = context.getString(R.string.tips_enable_top_danmu)
         viewBinding.groupScreenLimit.isVisible = false
         viewBinding.switchDanmuEnable.isChecked = PlayerInitializer.Danmu.topDanmu
         if (PlayerInitializer.Danmu.maxTopLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
@@ -207,8 +236,8 @@ class SettingDanmuConfigureView(
     }
 
     private fun applyBottomDanmuConfigure() {
-        viewBinding.tvLineLimitTips.text = "底部弹幕行数限制"
-        viewBinding.tvDanmuEnableTips.text = "启用底部弹幕"
+        viewBinding.tvLineLimitTips.text = context.getString(R.string.tips_bottom_danmu_line_limit)
+        viewBinding.tvDanmuEnableTips.text = context.getString(R.string.tips_enable_bottom_danmu)
         viewBinding.groupScreenLimit.isVisible = false
         viewBinding.switchDanmuEnable.isChecked = PlayerInitializer.Danmu.bottomDanmu
         if (PlayerInitializer.Danmu.maxBottomLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
@@ -267,15 +296,30 @@ class SettingDanmuConfigureView(
     }
 
     private fun handleKeyCode(keyCode: Int) {
+        if (viewBinding.tvLanguageOrigin.hasFocus()) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.tvLanguageSc.requestFocus()
+                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
+            }
+            return
+        } else if (viewBinding.tvLanguageSc.hasFocus()) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.tvLanguageOrigin.requestFocus()
+                KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.tvLanguageTc.requestFocus()
+                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
+            }
+            return
+        } else if (viewBinding.tvLanguageTc.hasFocus()) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.tvLanguageSc.requestFocus()
+                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
+            }
+            return
+        }
+
         if (viewBinding.tvKeywordBlock.hasFocus()) {
             when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> {
-                    if (settingMode == BaseDanmaku.TYPE_SCROLL_RL) {
-                        viewBinding.tvScreenNoLimit.requestFocus()
-                    } else {
-                        viewBinding.tvLineNoLimit.requestFocus()
-                    }
-                }
+                KeyEvent.KEYCODE_DPAD_UP -> selectedLanguageView().requestFocus()
                 KeyEvent.KEYCODE_DPAD_DOWN -> {
                     when (settingMode) {
                         BaseDanmaku.TYPE_SCROLL_RL -> viewBinding.llScrollDanmu.requestFocus()
@@ -323,8 +367,6 @@ class SettingDanmuConfigureView(
                 KeyEvent.KEYCODE_DPAD_DOWN -> {
                     if (settingMode == BaseDanmaku.TYPE_SCROLL_RL) {
                         viewBinding.tvScreenNoLimit.requestFocus()
-                    } else {
-                        viewBinding.tvKeywordBlock.requestFocus()
                     }
                 }
             }
@@ -334,28 +376,23 @@ class SettingDanmuConfigureView(
                 KeyEvent.KEYCODE_DPAD_DOWN -> {
                     if (settingMode == BaseDanmaku.TYPE_SCROLL_RL) {
                         viewBinding.tvScreenNoLimit.requestFocus()
-                    } else {
-                        viewBinding.tvKeywordBlock.requestFocus()
                     }
                 }
             }
         } else if (viewBinding.tvScreenNoLimit.hasFocus()) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.tvLineNoLimit.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
                 KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.tvScreenAutoLimit.requestFocus()
             }
         } else if (viewBinding.tvScreenAutoLimit.hasFocus()) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.tvLineNoLimit.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
                 KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.tvScreenNoLimit.requestFocus()
                 KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.etScreenMaxNum.requestFocus()
             }
         } else if (viewBinding.etScreenMaxNum.hasFocus()) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.tvScreenAutoLimit.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvKeywordBlock.requestFocus()
             }
         } else {
             viewBinding.llScrollDanmu.requestFocus()
@@ -370,4 +407,11 @@ class SettingDanmuConfigureView(
         viewBinding.tvLanguageSc.isSelected = language == DanmakuLanguage.SC
         viewBinding.tvLanguageTc.isSelected = language == DanmakuLanguage.TC
     }
+
+    private fun selectedLanguageView() =
+        when (PlayerInitializer.Danmu.language) {
+            DanmakuLanguage.ORIGINAL -> viewBinding.tvLanguageOrigin
+            DanmakuLanguage.SC -> viewBinding.tvLanguageSc
+            DanmakuLanguage.TC -> viewBinding.tvLanguageTc
+        }
 }

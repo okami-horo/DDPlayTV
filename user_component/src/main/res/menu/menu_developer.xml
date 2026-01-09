@@ -6,10 +6,10 @@
         android:icon="@null"
         android:title=""
         android:visible="false"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/item_developer_setting"
-        android:title="开发者设置"
+        android:title="@string/action_developer_setting"
         app:showAsAction="never" />
 </menu>

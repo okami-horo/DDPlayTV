@@ -45,17 +45,18 @@
                 app:layout_constraintStart_toEndOf="@id/type_tv"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
-                android:id="@+id/type_expand_iv"
-                android:layout_width="50dp"
-                android:layout_height="35dp"
-                android:layout_alignParentEnd="true"
-                android:onClick="@{() -> viewModel.toggleExpand()}"
-                android:padding="5dp"
-                android:rotation="@{viewModel.isTypeExpanded() ? 90 : 270}"
-                android:src="@drawable/ic_arrow_right_dark"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+	        <ImageView
+	            android:id="@+id/type_expand_iv"
+	            android:layout_width="50dp"
+	            android:layout_height="35dp"
+	            android:layout_alignParentEnd="true"
+	            android:contentDescription="@null"
+	            android:onClick="@{() -> viewModel.toggleExpand()}"
+	            android:padding="5dp"
+	            android:rotation="@{viewModel.isTypeExpanded() ? 90 : 270}"
+	            android:src="@drawable/ic_arrow_right_dark"
+	            app:layout_constraintEnd_toEndOf="parent"
+	            app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -116,22 +117,23 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
                 android:padding="12dp"
-                android:text="搜索历史"
+                android:text="@string/search_history"
                 android:textColor="@color/text_black"
                 android:textSize="14sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
-                android:id="@+id/history_clear_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:paddingStart="12dp"
-                android:paddingTop="11dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="11dp"
-                android:src="@drawable/ic_delete_history"
-                app:layout_constraintBottom_toBottomOf="@id/history_tips"
+	        <ImageView
+	            android:id="@+id/history_clear_tv"
+	            android:layout_width="wrap_content"
+	            android:layout_height="0dp"
+	            android:contentDescription="@null"
+	            android:paddingStart="12dp"
+	            android:paddingTop="11dp"
+	            android:paddingEnd="12dp"
+	            android:paddingBottom="11dp"
+	            android:src="@drawable/ic_delete_history"
+	            app:layout_constraintBottom_toBottomOf="@id/history_tips"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@id/history_tips" />
 

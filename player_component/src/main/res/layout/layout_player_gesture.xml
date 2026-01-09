@@ -22,6 +22,7 @@
             <ImageView
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:contentDescription="@null"
                 android:src="@drawable/ic_volume" />
 
             <TextView
@@ -50,6 +51,7 @@
             <ImageView
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:contentDescription="@null"
                 android:src="@drawable/ic_brightness" />
 
             <TextView
@@ -67,15 +69,16 @@
         <!-- 进度 -->
         <TextView
             android:id="@+id/position_tv"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="140dp"
+            android:layout_height="80dp"
             android:layout_gravity="center"
             android:background="@drawable/background_video_view"
             android:drawablePadding="5dp"
             android:gravity="center"
             android:textColor="@color/text_white_immutable"
+            android:textSize="16sp"
             android:visibility="gone"
-            tools:text="12:12:/31:01\n+6秒" />
+            tools:text="12:12/31:01\n+6秒" />
 
         <!-- 倍速 -->
         <LinearLayout
@@ -92,6 +95,7 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:contentDescription="@null"
                 android:src="@drawable/ic_speed_accelerate" />
 
             <TextView

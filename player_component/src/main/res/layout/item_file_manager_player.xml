@@ -17,6 +17,7 @@
             android:id="@+id/file_iv"
             android:layout_width="30dp"
             android:layout_height="30dp"
+            android:contentDescription="@null"
             android:padding="2dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

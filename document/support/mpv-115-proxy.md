@@ -6,7 +6,7 @@
 为兼容此类上游，项目引入了本地轻量 HTTP 代理：`common_component/src/main/java/com/xyoye/common_component/storage/file/helper/HttpPlayServer.kt`，由 `AlistStorage` 在 MPV 播放时生成本地播放 URL：`common_component/src/main/java/com/xyoye/common_component/storage/impl/AlistStorage.kt`。
 
 ## 问题现象
-常见日志关键词（仅示例，实际以 `.tmp/debug.log` 为准）：
+常见日志关键词（仅示例，实际以 `.tmp/log.txt` 为准）：
 - `ffmpeg[warn] http: HTTP error 403 Forbidden`
 - `ffmpeg[error] Seek failed ...`
 - `cplayer[error] no audio or video data played`

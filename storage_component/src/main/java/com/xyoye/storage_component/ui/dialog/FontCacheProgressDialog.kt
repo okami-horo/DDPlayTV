@@ -8,7 +8,7 @@ import com.xyoye.storage_component.databinding.DialogFontCacheProgressBinding
 
 class FontCacheProgressDialog(
     context: Context
-) : Dialog(context, com.xyoye.common_component.R.style.LoadingDialog) {
+) : Dialog(context, com.xyoye.core_ui_component.R.style.LoadingDialog) {
     private val binding: DialogFontCacheProgressBinding =
         DataBindingUtil.inflate(layoutInflater, R.layout.dialog_font_cache_progress, null, false)
 
@@ -16,15 +16,23 @@ class FontCacheProgressDialog(
         setContentView(binding.root)
         setCancelable(false)
         setCanceledOnTouchOutside(false)
+        binding.progressPercentTv.text = context.getString(R.string.text_font_cache_progress_percent, 0)
+        binding.progressTv.text = context.getString(R.string.text_font_cache_progress_default)
     }
 
     fun update(
         total: Int,
         cached: Int
     ) {
-        binding.progressPb.max = total
-        binding.progressPb.progress = cached
+        val safeTotal = total.coerceAtLeast(1)
+        val safeCached = cached.coerceIn(0, safeTotal)
+        val percent = if (total <= 0) 0 else (safeCached * 100 / total)
+
+        binding.progressPb.max = safeTotal
+        binding.progressPb.progress = safeCached
         binding.progressTv.text =
-            context.getString(R.string.text_font_cache_progress_format, cached, total)
+            context.getString(R.string.text_font_cache_progress_format, safeCached, total)
+        binding.progressPercentTv.text =
+            context.getString(R.string.text_font_cache_progress_percent, percent)
     }
 }

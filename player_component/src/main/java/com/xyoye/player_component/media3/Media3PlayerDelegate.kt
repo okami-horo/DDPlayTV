@@ -3,11 +3,11 @@ package com.xyoye.player_component.media3
 import com.xyoye.common_component.config.Media3ToggleProvider
 import com.xyoye.common_component.media3.Media3CrashTagger
 import com.xyoye.common_component.media3.Media3LocalStore
-import com.xyoye.common_component.network.repository.Media3SessionBundle
 import com.xyoye.common_component.network.repository.Media3TelemetryRepository
 import com.xyoye.common_component.network.repository.Media3TelemetrySink
 import com.xyoye.data_component.data.media3.CapabilityCommandResponseData
 import com.xyoye.data_component.entity.media3.Media3Capability
+import com.xyoye.data_component.entity.media3.Media3SessionBundle
 import com.xyoye.data_component.entity.media3.Media3SourceType
 import com.xyoye.data_component.entity.media3.PlaybackSession
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract

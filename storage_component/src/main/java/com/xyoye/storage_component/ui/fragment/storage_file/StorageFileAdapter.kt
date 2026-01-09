@@ -17,18 +17,20 @@ import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.adapter.setupVerticalAnimation
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.databinding.ItemStorageFolderBinding
-import com.xyoye.common_component.databinding.ItemStorageVideoBinding
-import com.xyoye.common_component.databinding.ItemStorageVideoTagBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageFolderBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageVideoBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageVideoTagBinding
 import com.xyoye.common_component.extension.dp
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.isInvalid
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.loadStorageFileCover
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.toFile
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.common_component.extension.toResString
+import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.danmu
 import com.xyoye.common_component.storage.file.subtitle
@@ -42,8 +44,10 @@ import com.xyoye.common_component.weight.dialog.FileManagerDialog
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.bean.VideoTagBean
 import com.xyoye.data_component.enums.FileManagerAction
+import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.storage_component.R
+import com.xyoye.storage_component.databinding.ItemStoragePagingBinding
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
 
 /**
@@ -52,20 +56,22 @@ import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivit
 
 class StorageFileAdapter(
     private val activity: StorageFileActivity,
-    private val viewModel: StorageFileFragmentViewModel
+    private val viewModel: StorageFileFragmentViewModel,
+    private val onRefreshRequested: () -> Unit,
+    private val onLoginRequested: () -> Unit,
 ) {
     private enum class ManageAction(
         val title: String,
         val icon: Int
     ) {
         // TV端暂时关闭投屏
-//        SCREENCAST("投屏", com.xyoye.common_component.R.drawable.ic_video_cast),
-        BIND_DANMU("手动查找弹幕", com.xyoye.common_component.R.drawable.ic_bind_danmu_manual),
-        BIND_SUBTITLE("手动查找字幕", com.xyoye.common_component.R.drawable.ic_bind_subtitle),
-        BIND_AUDIO("添加音频文件", com.xyoye.common_component.R.drawable.ic_bind_audio),
-        UNBIND_DANMU("移除弹幕绑定", com.xyoye.common_component.R.drawable.ic_unbind_danmu),
-        UNBIND_SUBTITLE("移除字幕绑定", com.xyoye.common_component.R.drawable.ic_unbind_subtitle),
-        UNBIND_AUDIO("移除音频绑定", com.xyoye.common_component.R.drawable.ic_unbind_subtitle);
+//        SCREENCAST("投屏", com.xyoye.core_ui_component.R.drawable.ic_video_cast),
+        BIND_DANMU("手动查找弹幕", com.xyoye.core_ui_component.R.drawable.ic_bind_danmu_manual),
+        BIND_SUBTITLE("手动查找字幕", com.xyoye.core_ui_component.R.drawable.ic_bind_subtitle),
+        BIND_AUDIO("添加音频文件", com.xyoye.core_ui_component.R.drawable.ic_bind_audio),
+        UNBIND_DANMU("移除弹幕绑定", com.xyoye.core_ui_component.R.drawable.ic_unbind_danmu),
+        UNBIND_SUBTITLE("移除字幕绑定", com.xyoye.core_ui_component.R.drawable.ic_unbind_subtitle),
+        UNBIND_AUDIO("移除音频绑定", com.xyoye.core_ui_component.R.drawable.ic_unbind_subtitle);
 
         fun toAction() = SheetActionBean(this, title, icon)
     }
@@ -84,7 +90,29 @@ class StorageFileAdapter(
 
             addEmptyView(R.layout.layout_empty) {
                 initEmptyView {
-                    itemBinding.emptyTv.text = R.string.text_empty_video.toResString()
+                    val isBilibiliHistory =
+                        activity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
+                            activity.directory?.filePath() == "/history/"
+                    val requiresLogin =
+                        isBilibiliHistory && (activity.storage as? BilibiliStorage)?.isConnected() == false
+
+                    itemBinding.emptyActionTv.isVisible = true
+
+                    if (requiresLogin) {
+                        itemBinding.emptyTv.text = "需要登录才能查看历史记录"
+                        itemBinding.emptyActionTv.text = "扫码登录"
+                        itemBinding.emptyActionTv.setOnClickListener { onLoginRequested.invoke() }
+                        return@initEmptyView
+                    }
+
+                    if (!viewModel.lastListError.isNullOrBlank()) {
+                        itemBinding.emptyTv.text = "加载失败，请检查网络后重试"
+                        itemBinding.emptyActionTv.text = "重试加载"
+                    } else {
+                        itemBinding.emptyTv.text = R.string.text_empty_video.toResString()
+                        itemBinding.emptyActionTv.text = "刷新"
+                    }
+                    itemBinding.emptyActionTv.setOnClickListener { onRefreshRequested.invoke() }
                 }
             }
 
@@ -96,22 +124,38 @@ class StorageFileAdapter(
                 checkType { data -> isVideoItem(data) }
                 initView(videoItem())
             }
+            addItem(R.layout.item_storage_paging) {
+                checkType { data -> data is StoragePagingItem }
+                initView(pagingItem())
+            }
         }
 
     private fun isSameStorageFileItem() =
         { old: Any, new: Any ->
-            (old as? StorageFile)?.uniqueKey() == (new as? StorageFile)?.uniqueKey()
+            when {
+                old is StorageFile && new is StorageFile -> old.uniqueKey() == new.uniqueKey()
+                old is StoragePagingItem && new is StoragePagingItem -> true
+                else -> false
+            }
         }
 
     private fun isSameStorageFileContent() =
         { old: Any, new: Any ->
-            val oldItem = old as? StorageFile?
-            val newItem = new as? StorageFile?
-            oldItem?.fileUrl() == newItem?.fileUrl() &&
-                oldItem?.fileName() == newItem?.fileName() &&
-                oldItem?.childFileCount() == newItem?.childFileCount() &&
-                oldItem?.playHistory == newItem?.playHistory &&
-                oldItem?.playHistory?.isLastPlay == newItem?.playHistory?.isLastPlay
+            when {
+                old is StorageFile && new is StorageFile -> {
+                    old.fileUrl() == new.fileUrl() &&
+                        old.fileName() == new.fileName() &&
+                        old.childFileCount() == new.childFileCount() &&
+                        old.playHistory == new.playHistory &&
+                        old.playHistory?.isLastPlay == new.playHistory?.isLastPlay
+                }
+
+                old is StoragePagingItem && new is StoragePagingItem -> {
+                    old.state == new.state && old.hasMore == new.hasMore && old.isDataEmpty == new.isDataEmpty
+                }
+
+                else -> false
+            }
         }
 
     private fun isDirectoryItem(data: Any) = data is StorageFile && data.isDirectory()
@@ -160,6 +204,56 @@ class StorageFileAdapter(
 
                 moreActionIv.setOnClickListener {
                     showMoreAction(data, createShareOptions(itemLayout))
+                }
+            }
+        }
+
+    private fun BaseViewHolderCreator<ItemStoragePagingBinding>.pagingItem() =
+        { data: StoragePagingItem ->
+            val isDataEmpty = data.isDataEmpty
+            val title =
+                when (data.state) {
+                    com.xyoye.common_component.storage.PagedStorage.State.LOADING -> "加载中…"
+                    com.xyoye.common_component.storage.PagedStorage.State.ERROR -> "加载失败，按确认键重试"
+                    com.xyoye.common_component.storage.PagedStorage.State.NO_MORE ->
+                        if (isDataEmpty) "暂无历史记录" else "没有更多了"
+                    com.xyoye.common_component.storage.PagedStorage.State.IDLE ->
+                        when {
+                            data.hasMore && isDataEmpty -> "暂无历史记录"
+                            data.hasMore -> "加载更多"
+                            isDataEmpty -> "暂无历史记录"
+                            else -> "没有更多了"
+                        }
+                }
+            val subtitle =
+                when (data.state) {
+                    com.xyoye.common_component.storage.PagedStorage.State.ERROR ->
+                        if (isDataEmpty) "请检查网络后重试" else "弱网/断网时可稍后重试"
+                    com.xyoye.common_component.storage.PagedStorage.State.IDLE ->
+                        if (data.hasMore && isDataEmpty) "按确认键加载更多" else ""
+                    com.xyoye.common_component.storage.PagedStorage.State.NO_MORE ->
+                        if (isDataEmpty) "按确认键刷新" else ""
+                    else -> ""
+                }
+
+            itemBinding.titleTv.text = title
+            itemBinding.subtitleTv.text = subtitle
+            itemBinding.subtitleTv.isVisible = subtitle.isNotBlank()
+            itemBinding.loadingPb.isVisible = data.state == com.xyoye.common_component.storage.PagedStorage.State.LOADING
+
+            itemBinding.itemLayout.setOnClickListener {
+                when {
+                    data.state == com.xyoye.common_component.storage.PagedStorage.State.LOADING -> Unit
+                    data.state == com.xyoye.common_component.storage.PagedStorage.State.ERROR -> {
+                        viewModel.loadMore(showFailureToast = !activity.isTelevisionUiMode())
+                    }
+
+                    data.state == com.xyoye.common_component.storage.PagedStorage.State.IDLE && data.hasMore -> {
+                        viewModel.loadMore(showFailureToast = !activity.isTelevisionUiMode())
+                    }
+
+                    data.isDataEmpty -> onRefreshRequested.invoke()
+                    else -> ToastCenter.showInfo("没有更多了")
                 }
             }
         }
@@ -213,10 +307,10 @@ class StorageFileAdapter(
     private fun getTitleColor(file: StorageFile): Int =
         when (file.playHistory?.isLastPlay == true) {
             true ->
-                com.xyoye.common_component.R.color.text_theme
+                com.xyoye.core_ui_component.R.color.text_theme
                     .toResColor(activity)
             else ->
-                com.xyoye.common_component.R.color.text_black
+                com.xyoye.core_ui_component.R.color.text_black
                     .toResColor(activity)
         }
 

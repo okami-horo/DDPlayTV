@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <import type="com.xyoye.user_component.ui.activities.bilibili_risk_verify.BilibiliRiskVerifyViewModel" />
+
+        <variable
+            name="viewModel"
+            type="com.xyoye.user_component.ui.activities.bilibili_risk_verify.BilibiliRiskVerifyViewModel" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <include layout="@layout/layout_toolbar" />
+
+        <TextView
+            android:id="@+id/tips_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="12dp"
+            android:text="@string/bilibili_risk_verify_tip"
+            android:textColor="@color/text_theme"
+            android:textSize="14sp" />
+
+        <WebView
+            android:id="@+id/web_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+</layout>
+

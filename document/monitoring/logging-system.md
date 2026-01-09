@@ -10,7 +10,7 @@
 - 目录（默认）：`/sdcard/Android/data/com.xyoye.dandanplay/files/logs/`  
   - 实际实现中由 `LogPaths.LOG_DIR_NAME` 与 `PathHelper.getCachePath()` 共同决定，即「应用外部缓存根目录」下的 `logs` 子目录。
   - 如外部缓存目录不可用（极少数设备/环境），会自动回退到内部目录：`/data/data/com.xyoye.dandanplay/files/logs/`。
-- 文件：`debug.log`（当前会话）、`debug_old.log`（上一会话），单文件上限约 5MB，总体约 10MB，冷启动会自动轮转并合并历史。
+- 文件：`log.txt`（当前会话）、`log_old.txt`（上一会话），单文件上限约 5MB，总体约 10MB，冷启动会自动轮转并合并历史。
 
 ## 获取与排查步骤
 1. **确认开关状态**：在「开发者设置 > 日志」中开启调试日志，并选择需要的最小日志级别（默认 INFO）。磁盘错误熔断后需重新开关调试会话。

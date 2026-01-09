@@ -30,6 +30,13 @@
     <string name="strict_parse_mode">严格模式</string>
     <string name="normal_parse_mode">宽松模式</string>
 
+    <string name="tips_player_kernel">播放器内核</string>
+    <string name="text_follow_global">跟随全局</string>
+    <string name="text_player_media3">Media3</string>
+    <string name="text_player_vlc">VLC</string>
+    <string name="text_player_mpv">MPV</string>
+    <string name="text_player_fixed_suffix">（固定）</string>
+
     <string name="text_start_screen_cast_server">启动投屏服务</string>
     <string name="text_stop_screen_cast_server">停止投屏服务</string>
     <string name="text_screencast_connect_type">连接方式</string>
@@ -71,7 +78,13 @@
     <string name="text_font_cache_title">缓存字幕字体</string>
     <string name="text_font_cache_progress_default">准备缓存字体…</string>
     <string name="text_font_cache_progress_format">已缓存字体 %1$d/%2$d</string>
+    <string name="text_font_cache_subtitle">正在准备字幕字体，保障字幕正常显示</string>
+    <string name="text_font_cache_state">字体文件缓存中</string>
+    <string name="text_font_cache_progress_percent">%1$d%%</string>
+    <string name="text_font_cache_notice">字体缓存完成后将自动开始播放，请保持网络连接</string>
     <string name="text_font_cache_prompt">检测到字体文件夹，是否加载字幕字体？</string>
     <string name="text_font_cache_empty">字体目录为空，跳过缓存</string>
     <string name="text_font_cache_dir_error">字体缓存目录不可用</string>
+
+    <string name="format_int">%1$d</string>
 </resources>

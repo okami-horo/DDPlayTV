@@ -12,19 +12,24 @@ import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
 import com.xyoye.cache.CacheManager
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.PlayState
-import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.player.controller.VideoController
-import com.xyoye.player.controller.subtitle.SubtitleController
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.facoty.PlayerFactory
+import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
+import com.xyoye.player.kernel.impl.mpv.MpvVideoPlayer
+import com.xyoye.player.kernel.anime4k.Anime4kMode
+import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.inter.VideoPlayerEventListener
 import com.xyoye.player.subtitle.backend.CanvasTextRendererBackend
@@ -36,6 +41,8 @@ import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.player.surface.InterSurfaceView
 import com.xyoye.player.surface.SurfaceFactory
 import com.xyoye.player.utils.AudioFocusHelper
+import com.xyoye.player.utils.DecodeType
+import com.xyoye.player.utils.PlaybackErrorFormatter
 import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.wrapper.InterVideoPlayer
 import com.xyoye.player.wrapper.InterVideoTrack
@@ -56,6 +63,9 @@ class DanDanVideoPlayer(
     VideoPlayerEventListener {
     // 播放状态
     private var mCurrentPlayState = PlayState.STATE_IDLE
+
+    @Volatile
+    private var lastPlaybackError: Exception? = null
 
     // 默认组件参数
     private val mDefaultLayoutParams =
@@ -148,12 +158,16 @@ class DanDanVideoPlayer(
     override fun seekTo(timeMs: Long) {
         if (timeMs >= 0 && isInPlayState()) {
             mVideoPlayer.seekTo(timeMs)
+            subtitleRenderer?.onSeek(timeMs)
         }
     }
 
     override fun isPlaying() = isInPlayState() && mVideoPlayer.isPlaying()
 
     override fun getBufferedPercentage() = mVideoPlayer.getBufferedPercentage()
+
+    override fun supportBufferedPercentage(): Boolean =
+        this::mVideoPlayer.isInitialized && mVideoPlayer.supportBufferedPercentage()
 
     override fun setSilence(isSilence: Boolean) {
         val volume = if (isSilence) 0f else 1f
@@ -189,7 +203,55 @@ class DanDanVideoPlayer(
 
     override fun getTcpSpeed() = mVideoPlayer.getTcpSpeed()
 
+    override fun supportTcpSpeed(): Boolean =
+        this::mVideoPlayer.isInitialized && mVideoPlayer.supportTcpSpeed()
+
+    override fun getDecodeType(): DecodeType =
+        if (this::mVideoPlayer.isInitialized) {
+            mVideoPlayer.getDecodeType()
+        } else {
+            DecodeType.HW
+        }
+
+    override fun getAnime4kMode(): Int {
+        if (!this::mVideoPlayer.isInitialized) {
+            return Anime4kMode.MODE_OFF
+        }
+        return when (val videoPlayer = mVideoPlayer) {
+            is MpvVideoPlayer -> videoPlayer.getAnime4kMode()
+            is Media3VideoPlayer -> videoPlayer.getAnime4kMode()
+            else -> Anime4kMode.MODE_OFF
+        }
+    }
+
+    override fun setAnime4kMode(mode: Int) {
+        if (!this::mVideoPlayer.isInitialized) {
+            return
+        }
+        when (val videoPlayer = mVideoPlayer) {
+            is MpvVideoPlayer -> videoPlayer.setAnime4kMode(mode)
+            is Media3VideoPlayer -> videoPlayer.setAnime4kMode(mode)
+        }
+    }
+
+    override fun isSeekable(): Boolean {
+        val exoPlayer = exoPlayerOrNull()
+        return exoPlayer?.isCurrentMediaItemSeekable ?: (getDuration() > 0)
+    }
+
+    override fun isLive(): Boolean {
+        val exoPlayer = exoPlayerOrNull()
+        return exoPlayer?.isCurrentMediaItemLive ?: false
+    }
+
     override fun getRenderView(): InterSurfaceView? = mRenderView
+
+    internal fun exoPlayerOrNull(): ExoPlayer? {
+        if (!this::mVideoPlayer.isInitialized) {
+            return null
+        }
+        return (mVideoPlayer as? Media3VideoPlayer)?.exoPlayerOrNull()
+    }
 
     override fun getVideoSize() = mVideoPlayer.getVideoSize()
 
@@ -207,6 +269,20 @@ class DanDanVideoPlayer(
     }
 
     override fun onError(e: Exception?) {
+        lastPlaybackError = e
+        val title =
+            if (this::videoSource.isInitialized) {
+                videoSource.getVideoTitle()
+            } else {
+                "<unknown>"
+            }
+        val position = getCurrentPosition()
+        LogFacade.e(
+            LogModule.PLAYER,
+            TAG_PLAYBACK,
+            "play error title=$title position=$position ${PlaybackErrorFormatter.format(e)}",
+            throwable = e,
+        )
         setPlayState(PlayState.STATE_ERROR)
         keepScreenOn = false
     }
@@ -292,11 +368,10 @@ class DanDanVideoPlayer(
     }
 
     private fun configureSubtitleRenderer() {
-        if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
+        if (this::mVideoPlayer.isInitialized.not()) {
             return
         }
         val controller = mVideoController ?: return
-        val backend = PlayerInitializer.Subtitle.backend
         val environment =
             SubtitleRenderEnvironment(
                 context,
@@ -304,10 +379,26 @@ class DanDanVideoPlayer(
                 this,
                 subtitleFallbackDispatcher,
             )
-        val renderer =
-            when (backend) {
-                SubtitleRendererBackend.LEGACY_CANVAS -> CanvasTextRendererBackend()
-                SubtitleRendererBackend.LIBASS -> LibassRendererBackend()
+
+        val kernelBridge = mVideoPlayer as? SubtitleKernelBridge
+        val requestedBackend = PlayerInitializer.Subtitle.backend
+        val resolvedBackend =
+            when (requestedBackend) {
+                SubtitleRendererBackend.LIBASS ->
+                    if (kernelBridge?.canStartGpuSubtitlePipeline() == false) {
+                        SubtitleRendererBackend.LEGACY_CANVAS
+                    } else {
+                        SubtitleRendererBackend.LIBASS
+                    }
+                SubtitleRendererBackend.LEGACY_CANVAS -> SubtitleRendererBackend.LEGACY_CANVAS
+            }
+        PlayerInitializer.Subtitle.backend = resolvedBackend
+
+        val renderer: SubtitleRenderer =
+            if (resolvedBackend == SubtitleRendererBackend.LIBASS) {
+                LibassRendererBackend(kernelBridge)
+            } else {
+                CanvasTextRendererBackend()
             }
         renderer.bind(environment)
         renderer.onSurfaceTypeChanged(PlayerInitializer.surfaceType)
@@ -368,26 +459,30 @@ class DanDanVideoPlayer(
     }
 
     fun release() {
-        if (mCurrentPlayState != PlayState.STATE_IDLE) {
-            destroySubtitleRenderer()
-            // 释放缓存
-            CacheManager.release()
-            // 释放播放器控制器
-            mVideoController?.destroy()
-            // 释放播放器
-            mVideoPlayer.release()
-            // 关闭常亮
-            keepScreenOn = false
-            // 释放渲染布局
-            mRenderView?.run {
-                this@DanDanVideoPlayer.removeView(getView())
-                release()
-            }
-            // 取消音频焦点
-            mAudioFocusHelper.abandonFocus()
-            // 重置播放状态
-            setPlayState(PlayState.STATE_IDLE)
+        val hasActiveResources =
+            this::mVideoPlayer.isInitialized ||
+                mCurrentPlayState != PlayState.STATE_IDLE ||
+                subtitleRenderer != null ||
+                mRenderView != null
+        if (!hasActiveResources) {
+            return
         }
+
+        destroySubtitleRenderer()
+        CacheManager.release()
+        mVideoController?.destroy()
+        if (this::mVideoPlayer.isInitialized) {
+            mVideoPlayer.clearPlayerEventListener()
+            runCatching { mVideoPlayer.release() }
+        }
+        keepScreenOn = false
+        mRenderView?.run {
+            this@DanDanVideoPlayer.removeView(getView())
+            release()
+        }
+        mRenderView = null
+        mAudioFocusHelper.abandonFocus()
+        setPlayState(PlayState.STATE_IDLE)
     }
 
     fun onBackPressed(): Boolean = mVideoController?.onBackPressed() ?: false
@@ -398,8 +493,13 @@ class DanDanVideoPlayer(
     ): Boolean = mVideoController?.onKeyDown(keyCode, event) ?: false
 
     fun setVideoSource(source: BaseVideoSource) {
+        lastPlaybackError = null
         videoSource = source
     }
+
+    fun getPlayState(): PlayState = mCurrentPlayState
+
+    fun getLastPlaybackErrorOrNull(): Exception? = lastPlaybackError
 
     fun setController(controller: VideoController?) {
         destroySubtitleRenderer()
@@ -409,7 +509,9 @@ class DanDanVideoPlayer(
             it.setMediaPlayer(this)
             addView(it, mDefaultLayoutParams)
         }
-        configureSubtitleRenderer()
+        if (this::mVideoPlayer.isInitialized) {
+            configureSubtitleRenderer()
+        }
     }
 
     fun enterPopupMode() {
@@ -451,41 +553,68 @@ class DanDanVideoPlayer(
 
     override fun updateSubtitleOffsetTime() {
         SubtitlePreferenceUpdater.persistOffset(PlayerInitializer.Subtitle.offsetPosition)
-        mVideoPlayer.setSubtitleOffset(PlayerInitializer.Subtitle.offsetPosition)
+        if (this::mVideoPlayer.isInitialized && mCurrentPlayState != PlayState.STATE_IDLE) {
+            mVideoPlayer.setSubtitleOffset(PlayerInitializer.Subtitle.offsetPosition)
+        }
+        subtitleRenderer?.onOffsetChanged(getCurrentPosition())
     }
 
-    override fun supportAddTrack(type: TrackType): Boolean = mVideoPlayer.supportAddTrack(type)
+    override fun supportAddTrack(type: TrackType): Boolean {
+        if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
+            return false
+        }
+        return mVideoPlayer.supportAddTrack(type)
+    }
 
-    override fun addTrack(track: VideoTrackBean): Boolean = mVideoPlayer.addTrack(track)
+    override fun addTrack(track: VideoTrackBean): Boolean {
+        if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
+            return false
+        }
+        return mVideoPlayer.addTrack(track)
+    }
 
-    override fun getTracks(type: TrackType): List<VideoTrackBean> = mVideoPlayer.getTracks(type)
+    override fun getTracks(type: TrackType): List<VideoTrackBean> {
+        if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
+            return emptyList()
+        }
+        return mVideoPlayer.getTracks(type)
+    }
 
-    override fun selectTrack(track: VideoTrackBean) = mVideoPlayer.selectTrack(track)
+    override fun selectTrack(track: VideoTrackBean) {
+        if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
+            return
+        }
+        mVideoPlayer.selectTrack(track)
+    }
 
-    override fun deselectTrack(type: TrackType) = mVideoPlayer.deselectTrack(type)
+    override fun deselectTrack(type: TrackType) {
+        if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
+            return
+        }
+        mVideoPlayer.deselectTrack(type)
+    }
 
     fun switchSubtitleBackend(target: SubtitleRendererBackend) {
-        if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
-            return
-        }
         if (PlayerInitializer.Subtitle.backend == target &&
             subtitleRenderer?.backend == target
-        ) {
-            return
-        }
+        ) return
+
         PlayerInitializer.Subtitle.backend = target
         destroySubtitleRenderer()
         configureSubtitleRenderer()
-        if (target == SubtitleRendererBackend.LEGACY_CANVAS) {
-            (mVideoController?.getSubtitleController() as? SubtitleController)?.reloadExternalTrack()
-        }
     }
 
     private fun destroySubtitleRenderer() {
-        subtitleRenderer?.let {
-            it.release()
-            SubtitleRendererRegistry.unregister(it)
+        val renderer = subtitleRenderer ?: return
+        try {
+            renderer.release()
+        } finally {
+            SubtitleRendererRegistry.unregister(renderer)
+            subtitleRenderer = null
         }
-        subtitleRenderer = null
+    }
+
+    private companion object {
+        private const val TAG_PLAYBACK = "PlayerPlayback"
     }
 }

@@ -15,8 +15,13 @@ fun Project.moduleSetup() {
         defaultConfig {
             minSdk = Versions.minSdkVersion
             targetSdk = Versions.targetSdkVersion
+            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
         ndkVersion = Versions.ndkVersion
+
+        lintOptions {
+            lintConfig = rootProject.file("lint.xml")
+        }
 
         buildTypes {
             getByName("release") {

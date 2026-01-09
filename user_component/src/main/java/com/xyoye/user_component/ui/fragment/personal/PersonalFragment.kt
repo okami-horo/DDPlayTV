@@ -16,6 +16,7 @@ import com.xyoye.user_component.BR
 import com.xyoye.user_component.R
 import com.xyoye.user_component.databinding.FragmentPersonalBinding
 import com.xyoye.user_component.ui.dialog.UserCoverDialog
+import java.text.NumberFormat
 
 /**
  * Created by xyoye on 2020/7/28.
@@ -39,9 +40,10 @@ class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersona
         applyLoginData(null)
 
         viewModel.relationLiveData.observe(this) {
-            dataBinding.followAnimeTv.text = it.first.toString()
+            val numberFormat = NumberFormat.getIntegerInstance()
+            dataBinding.followAnimeTv.text = numberFormat.format(it.first)
             dataBinding.followAnimeTv.setTextColorRes(R.color.text_pink)
-            dataBinding.cloudHistoryTv.text = it.second.toString()
+            dataBinding.cloudHistoryTv.text = numberFormat.format(it.second)
         }
 
         UserInfoHelper.loginLiveData.observe(this) {
@@ -168,7 +170,7 @@ class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersona
                 .navigation()
         }
 
-        dataBinding.bilibiliDanmuLl.setOnClickListener {
+        dataBinding.bilibiliDanmuLl?.setOnClickListener {
             ARouter
                 .getInstance()
                 .build(RouteTable.Local.BiliBiliDanmu)

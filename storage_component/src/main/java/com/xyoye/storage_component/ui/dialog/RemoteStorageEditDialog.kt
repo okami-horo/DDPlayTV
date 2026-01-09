@@ -45,6 +45,8 @@ class RemoteStorageEditDialog(
         setTitle(if (isEditStorage) "编辑PC端媒体库帐号" else "添加PC端媒体库帐号")
         binding.remoteData = remoteData
 
+        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, remoteData)
+
         setGroupMode(remoteData.remoteAnimeGrouping)
 
         // TV 端移除扫码入口，隐藏按钮并保留原实现注释

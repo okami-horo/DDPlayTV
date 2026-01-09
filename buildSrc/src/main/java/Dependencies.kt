@@ -25,6 +25,8 @@ object Dependencies {
             "androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.lifecycle}"
         const val lifecycle_runtime =
             "androidx.lifecycle:lifecycle-runtime-ktx:${Versions.lifecycle}"
+        const val lifecycle_livedata =
+            "androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifecycle}"
 
         const val activity_ktx = "androidx.activity:activity-ktx:1.6.1"
 
@@ -101,6 +103,7 @@ object Dependencies {
         const val retrofit = "com.squareup.retrofit2:retrofit:${Versions.retrofit}"
         const val retrofit_moshi = "com.squareup.retrofit2:converter-moshi:${Versions.retrofit}"
         const val moshi = "com.squareup.moshi:moshi:${Versions.moshi}"
+        const val moshi_kotlin = "com.squareup.moshi:moshi-kotlin:${Versions.moshi}"
         const val moshi_codegen = "com.squareup.moshi:moshi-kotlin-codegen:${Versions.moshi}"
     }
 

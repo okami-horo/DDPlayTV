@@ -4,7 +4,9 @@ import android.graphics.Point
 import android.graphics.PointF
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.enums.VideoScreenScale
+import com.xyoye.player.kernel.anime4k.Anime4kMode
 import com.xyoye.player.surface.InterSurfaceView
+import com.xyoye.player.utils.DecodeType
 
 /**
  * Created by xyoye on 2020/11/1.
@@ -52,6 +54,14 @@ interface InterVideoPlayer : InterVideoTrack {
     fun getBufferedPercentage(): Int
 
     /**
+     * 是否支持缓冲进度（[getBufferedPercentage]）
+     *
+     * 部分内核无法提供可靠的缓冲百分比（例如仅能感知 buffering start/end），
+     * UI 应在不支持时做降级展示，避免展示错误的缓冲信息。
+     */
+    fun supportBufferedPercentage(): Boolean
+
+    /**
      * 静音
      */
     fun setSilence(isSilence: Boolean)
@@ -92,6 +102,11 @@ interface InterVideoPlayer : InterVideoTrack {
     fun getTcpSpeed(): Long
 
     /**
+     * 是否支持网络加载速度（[getTcpSpeed]）
+     */
+    fun supportTcpSpeed(): Boolean
+
+    /**
      * 获取渲染布局
      */
     fun getRenderView(): InterSurfaceView?
@@ -110,4 +125,30 @@ interface InterVideoPlayer : InterVideoTrack {
      * 更新字幕偏移时间
      */
     fun updateSubtitleOffsetTime()
+
+    /**
+     * 当前解码方式（UI 提示用）
+     */
+    fun getDecodeType(): DecodeType = DecodeType.HW
+
+    /**
+     * 当前内容是否可拖动进度（用于 UI/交互判断）
+     *
+     * 注：直播流可能存在 DVR 时间窗，此时底层播放器可能仍然支持 seek。
+     */
+    fun isSeekable(): Boolean = getDuration() > 0
+
+    /**
+     * 当前内容是否为直播
+     */
+    fun isLive(): Boolean = false
+
+    /**
+     * Anime4K 模式：0 关闭 / 1 性能 / 2 质量（单次播放，不持久化）
+     *
+     * 不同内核对模式支持程度不同，未支持时应回落到关闭或最接近的模式。
+     */
+    fun getAnime4kMode(): Int = Anime4kMode.MODE_OFF
+
+    fun setAnime4kMode(mode: Int) = Unit
 }

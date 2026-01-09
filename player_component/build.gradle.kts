@@ -9,7 +9,7 @@ plugins {
 
 moduleSetup()
 
-val media3Version = project.findProperty("media3Version")?.toString() ?: "1.8.0"
+val media3Version = project.findProperty("media3Version")?.toString() ?: "1.9.0"
 val unstrippedJniLibsDir = layout.projectDirectory.dir("libs")
 val strippedJniLibsDir = layout.buildDirectory.dir("strippedJniLibs")
 
@@ -81,6 +81,9 @@ android {
         }
     }
     namespace = "com.xyoye.player_component"
+    lint {
+        disable += setOf("ChromeOsAbiSupport", "GradleDependency")
+    }
 }
 
 kapt {
@@ -142,7 +145,14 @@ tasks.matching { it.name == "mergeBetaJniLibFolders" }.configureEach {
 }
 
 dependencies {
-    implementation(project(":common_component"))
+    implementation(project(":core_ui_component"))
+    implementation(project(":core_system_component"))
+    implementation(project(":core_log_component"))
+    implementation(project(":core_network_component"))
+    implementation(project(":core_database_component"))
+    implementation(project(":core_storage_component"))
+    implementation(project(":bilibili_component"))
+
     implementation(project(":repository:panel_switch"))
     implementation(project(":repository:danmaku"))
     implementation(project(":repository:video_cache"))
@@ -157,6 +167,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-hls:$media3Version")
     implementation("androidx.media3:media3-exoplayer-smoothstreaming:$media3Version")
     implementation("androidx.media3:media3-exoplayer-workmanager:$media3Version")
+    implementation("androidx.media3:media3-effect:$media3Version")
     implementation("androidx.media3:media3-session:$media3Version")
     implementation("androidx.media3:media3-ui:$media3Version")
     implementation("androidx.media3:media3-cast:$media3Version")

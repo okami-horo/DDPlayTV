@@ -1,0 +1,74 @@
+package com.xyoye.common_component.config
+
+import android.graphics.Color
+import com.xyoye.mmkv_annotation.MMKVFiled
+import com.xyoye.mmkv_annotation.MMKVKotlinClass
+
+/**
+ * Created by xyoye on 2020/9/21.
+ */
+
+@MMKVKotlinClass(className = "SubtitleConfig")
+object SubtitleConfigTable {
+    @MMKVFiled
+    const val shooterSecret = ""
+
+    // 字幕文字大小百分比
+    @MMKVFiled
+    const val textSize = 50
+
+    // 字幕描边百分比
+    @MMKVFiled
+    const val strokeWidth = 50
+
+    // 字幕文字颜色所在位置百分比
+    @MMKVFiled
+    const val textColor = Color.WHITE
+
+    // 字幕描边颜色所在位置百分比
+    @MMKVFiled
+    const val strokeColor = Color.BLACK
+
+    // 字幕透明度百分比
+    @MMKVFiled
+    const val alpha = 100
+
+    // 字幕阴影开关
+    @MMKVFiled
+    const val shadowEnabled = true
+
+    // 字幕垂直偏移百分比
+    @MMKVFiled
+    const val verticalOffset = 0
+
+    /**
+     * -------------播放器设置-----------
+     */
+    // 自动加载同名字幕
+    @MMKVFiled
+    const val autoLoadSameNameSubtitle = true
+
+    // 自动匹配同名字幕
+    @MMKVFiled
+    const val autoMatchSubtitle = true
+
+    // 字幕优先级
+    @MMKVFiled
+    var subtitlePriority: String? = null
+
+    // 字幕渲染后端
+    @MMKVFiled
+    const val subtitleRendererBackend = "LIBASS"
+
+    // 字幕渲染后端来源（DEFAULT / LOCAL_SETTINGS）
+    @MMKVFiled
+    const val subtitleRendererSource = "DEFAULT"
+
+    // 字幕渲染后端最后更新时间（毫秒）
+    @MMKVFiled
+    const val subtitleRendererUpdatedAt = 0L
+
+    // 字幕时间偏移（毫秒）
+    @MMKVFiled
+    const val subtitleOffsetMs = 0L
+}

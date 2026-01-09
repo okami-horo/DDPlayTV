@@ -16,19 +16,24 @@
         android:layout_height="match_parent"
         android:background="@color/item_bg_color">
 
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/storage_file_rv"
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/refresh_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:nestedScrollingEnabled="true"
-            android:paddingBottom="@dimen/storage_file_list_bottom_padding"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/storage_file_rv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="true"
+                android:paddingBottom="@dimen/storage_file_list_bottom_padding" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <ProgressBar
             android:id="@+id/loading"

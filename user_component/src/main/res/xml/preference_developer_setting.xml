@@ -31,11 +31,14 @@
             android:summary="@string/developer_subtitle_session_status_summary_empty"
             app:icon="@drawable/ic_app_setting_about_us" />
 
+        <!-- Legacy fallback action is disabled. -->
+        <!--
         <Preference
             android:key="subtitle_force_fallback"
             android:title="@string/developer_subtitle_force_fallback_title"
             android:summary="@string/developer_subtitle_force_fallback_summary"
             app:icon="@drawable/ic_feedback" />
+        -->
     </PreferenceCategory>
 
     <PreferenceCategory

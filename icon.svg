@@ -1,0 +1,30 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background: TV Screen shape with gradient -->
+  <rect x="32" y="64" width="448" height="384" rx="64" fill="url(#paint0_linear)" />
+  
+  <!-- Screen Border/Bezel effect (subtle) -->
+  <rect x="32" y="64" width="448" height="384" rx="64" stroke="white" stroke-opacity="0.2" stroke-width="8"/>
+
+  <!-- Play Button (Triangle) -->
+  <path d="M190 170 L360 256 L190 342 V170 Z" fill="white"/>
+
+  <!-- Danmaku Lines (Bullet comments flying in) -->
+  <!-- Line 1: Top right -->
+  <rect x="320" y="130" width="120" height="24" rx="12" fill="white" fill-opacity="0.8"/>
+  <!-- Line 2: Bottom right, slightly offset -->
+  <rect x="280" y="360" width="140" height="24" rx="12" fill="white" fill-opacity="0.6"/>
+  <!-- Line 3: Middle right, passing behind play button implied -->
+  <rect x="380" y="250" width="80" height="20" rx="10" fill="white" fill-opacity="0.4"/>
+
+  <!-- Antenna (TV feel) -->
+  <path d="M256 64 L196 20" stroke="#FF758C" stroke-width="16" stroke-linecap="round"/>
+  <path d="M256 64 L316 20" stroke="#FF758C" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- Gradient Definition -->
+  <defs>
+    <linearGradient id="paint0_linear" x1="32" y1="64" x2="480" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF7EB3"/>
+      <stop offset="1" stop-color="#FF758C"/>
+    </linearGradient>
+  </defs>
+</svg>

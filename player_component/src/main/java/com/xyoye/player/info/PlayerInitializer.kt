@@ -73,7 +73,7 @@ object PlayerInitializer {
         const val DEFAULT_STROKE_COLOR = Color.BLACK
         const val DEFAULT_ALPHA = 100
         const val DEFAULT_VERTICAL_OFFSET = 0
-        val DEFAULT_BACKEND = SubtitleRendererBackend.LEGACY_CANVAS
+        val DEFAULT_BACKEND = SubtitleRendererBackend.LIBASS
 
         var offsetPosition = DEFAULT_POSITION
 

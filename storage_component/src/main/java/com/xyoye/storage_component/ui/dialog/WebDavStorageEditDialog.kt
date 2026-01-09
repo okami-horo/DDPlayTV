@@ -39,6 +39,7 @@ class WebDavStorageEditDialog(
         setAnonymous(serverData.isAnonymous)
         setParseMode(serverData.webDavStrict)
         binding.serverData = serverData
+        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, serverData)
 
         binding.serverTestConnectTv.setOnClickListener {
             if (checkParams(serverData)) {

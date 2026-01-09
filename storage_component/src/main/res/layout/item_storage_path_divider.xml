@@ -3,5 +3,6 @@
     <ImageView
         android:layout_width="16dp"
         android:layout_height="match_parent"
+        android:contentDescription="@null"
         android:src="@drawable/ic_storage_file_divider" />
 </layout>

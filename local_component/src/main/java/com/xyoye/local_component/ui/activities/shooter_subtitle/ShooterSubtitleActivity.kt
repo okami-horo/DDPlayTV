@@ -43,11 +43,9 @@ class ShooterSubtitleActivity : BaseActivity<ShooterSubtitleViewModel, ActivityS
                 addItem<SubtitleSourceBean, ItemSubtitleSearchSourceBinding>(R.layout.item_subtitle_search_source) {
                     initView { data, position, _ ->
                         itemBinding.apply {
-                            val language = "语言: ${data.language}"
-
-                            positionTv.text = (position + 1).toString()
+                            positionTv.text = getString(R.string.subtitle_search_position, position + 1)
                             subtitleNameTv.text = data.name
-                            subtitleDescribeTv.text = language
+                            subtitleDescribeTv.text = getString(R.string.subtitle_search_language, data.language)
                             itemLayout.setOnClickListener {
                                 viewModel.getSearchSubDetail(data.id)
                             }

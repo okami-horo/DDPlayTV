@@ -100,7 +100,7 @@ jobs:
           abis=(arm64-v8a armeabi-v7a universal)
           for abi in ${abis[@]}
           do
-            file_name="dandanplay_v${{ env.BUILD_VERSION }}_${abi}-${{ env.BUILD_TYPE }}.apk"
+            file_name="ddplaytv_v${{ env.BUILD_VERSION }}_${abi}-${{ env.BUILD_TYPE }}.apk"
             mv app/build/outputs/apk/${{ env.BUILD_TYPE }}/${file_name} $file_name
           done
 
@@ -118,8 +118,8 @@ jobs:
           body_path: change/dandanplay-v${{ env.BUILD_VERSION }}.txt
           prerelease: false
           files: |
-            dandanplay_v${{ env.BUILD_VERSION }}_arm64-v8a-${{ env.BUILD_TYPE }}.apk
-            dandanplay_v${{ env.BUILD_VERSION }}_armeabi-v7a-${{ env.BUILD_TYPE }}.apk
-            dandanplay_v${{ env.BUILD_VERSION }}_universal-${{ env.BUILD_TYPE }}.apk
+            ddplaytv_v${{ env.BUILD_VERSION }}_arm64-v8a-${{ env.BUILD_TYPE }}.apk
+            ddplaytv_v${{ env.BUILD_VERSION }}_armeabi-v7a-${{ env.BUILD_TYPE }}.apk
+            ddplaytv_v${{ env.BUILD_VERSION }}_universal-${{ env.BUILD_TYPE }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

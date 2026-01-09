@@ -48,6 +48,10 @@ class ControlWrapper(
 
     override fun getCurrentPosition() = mVideoPlayer.getCurrentPosition()
 
+    override fun isSeekable() = mVideoPlayer.isSeekable()
+
+    override fun isLive() = mVideoPlayer.isLive()
+
     override fun seekTo(timeMs: Long) {
         // 播放器
         mVideoPlayer.seekTo(timeMs)
@@ -64,6 +68,8 @@ class ControlWrapper(
     override fun isPlaying() = mVideoPlayer.isPlaying()
 
     override fun getBufferedPercentage() = mVideoPlayer.getBufferedPercentage()
+
+    override fun supportBufferedPercentage() = mVideoPlayer.supportBufferedPercentage()
 
     override fun setSilence(isSilence: Boolean) {
         mVideoPlayer.setSilence(isSilence)
@@ -90,12 +96,22 @@ class ControlWrapper(
 
     override fun getTcpSpeed() = mVideoPlayer.getTcpSpeed()
 
+    override fun supportTcpSpeed() = mVideoPlayer.supportTcpSpeed()
+
     override fun getRenderView() = mVideoPlayer.getRenderView()
 
     override fun getVideoSize() = mVideoPlayer.getVideoSize()
 
     override fun setRotation(rotation: Float) {
         mVideoPlayer.setRotation(rotation)
+    }
+
+    override fun getAnime4kMode(): Int {
+        return mVideoPlayer.getAnime4kMode()
+    }
+
+    override fun setAnime4kMode(mode: Int) {
+        mVideoPlayer.setAnime4kMode(mode)
     }
 
     /**
@@ -363,6 +379,8 @@ class ControlWrapper(
         mVideoPlayer.updateSubtitleOffsetTime()
     }
 
+    override fun getDecodeType() = mVideoPlayer.getDecodeType()
+
     override fun onSubtitleTextOutput(subtitle: MixedSubtitle) {
         mSubtitleController.onSubtitleTextOutput(subtitle)
     }
@@ -430,4 +448,6 @@ class ControlWrapper(
             showController()
         }
     }
+
+    fun isUserSeekAllowed(): Boolean = isSeekable() && !isLive()
 }

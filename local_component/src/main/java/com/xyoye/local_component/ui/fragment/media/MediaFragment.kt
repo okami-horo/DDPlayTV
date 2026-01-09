@@ -127,7 +127,8 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
             MediaType.WEBDAV_SERVER,
             MediaType.REMOTE_STORAGE,
             MediaType.EXTERNAL_STORAGE,
-            MediaType.ALSIT_STORAGE -> {
+            MediaType.ALSIT_STORAGE,
+            MediaType.BILIBILI_STORAGE -> {
                 ARouter
                     .getInstance()
                     .build(RouteTable.Stream.StorageFile)

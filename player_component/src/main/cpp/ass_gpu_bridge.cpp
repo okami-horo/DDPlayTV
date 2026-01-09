@@ -852,30 +852,42 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     double upload_ms = 0.0;
     double composite_ms = 0.0;
 
-    for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
-        if (cur->w <= 0 || cur->h <= 0) continue;
-        const float base_alpha = static_cast<float>(AssAlphaToAndroid(cur->color)) / 255.0F;
-        const float final_alpha = base_alpha * context->user_alpha;
-        if (final_alpha <= 0.0F) continue;
+	    for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
+	        if (cur->w <= 0 || cur->h <= 0) continue;
+	        const float base_alpha = static_cast<float>(AssAlphaToAndroid(cur->color)) / 255.0F;
+	        const float final_alpha = base_alpha * context->user_alpha;
+	        if (final_alpha <= 0.0F) continue;
 
-        const auto upload_start = std::chrono::steady_clock::now();
-        const size_t required = static_cast<size_t>(cur->w * cur->h);
-        if (context->upload_buffer.size() < required) {
-            context->upload_buffer.resize(required);
-        }
-        uint8_t *coverage = context->upload_buffer.data();
-        for (int y = 0; y < cur->h; ++y) {
-            const uint8_t *src_row = cur->bitmap + y * cur->stride;
-            std::memcpy(coverage + static_cast<size_t>(y * cur->w), src_row,
-                        static_cast<size_t>(cur->w));
-        }
-        AcquireTexture(context, cur->w, cur->h);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h, GL_RED, GL_UNSIGNED_BYTE,
-                        coverage);
-        const auto upload_end = std::chrono::steady_clock::now();
-        upload_ms += std::chrono::duration_cast<std::chrono::microseconds>(upload_end - upload_start)
-                         .count() /
-                     1000.0;
+	        const auto upload_start = std::chrono::steady_clock::now();
+	        AcquireTexture(context, cur->w, cur->h);
+	        if (context->gles_version >= 3 && cur->bitmap != nullptr && cur->stride > 0 &&
+	            cur->stride >= cur->w) {
+	            if (cur->stride != cur->w) {
+	                glPixelStorei(GL_UNPACK_ROW_LENGTH, cur->stride);
+	            }
+	            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h, GL_RED, GL_UNSIGNED_BYTE,
+	                            cur->bitmap);
+	            if (cur->stride != cur->w) {
+	                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	            }
+	        } else {
+	            const size_t required = static_cast<size_t>(cur->w * cur->h);
+	            if (context->upload_buffer.size() < required) {
+	                context->upload_buffer.resize(required);
+	            }
+	            uint8_t *coverage = context->upload_buffer.data();
+	            for (int y = 0; y < cur->h; ++y) {
+	                const uint8_t *src_row = cur->bitmap + y * cur->stride;
+	                std::memcpy(coverage + static_cast<size_t>(y * cur->w), src_row,
+	                            static_cast<size_t>(cur->w));
+	            }
+	            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h, GL_RED, GL_UNSIGNED_BYTE,
+	                            coverage);
+	        }
+	        const auto upload_end = std::chrono::steady_clock::now();
+	        upload_ms += std::chrono::duration_cast<std::chrono::microseconds>(upload_end - upload_start)
+	                         .count() /
+	                     1000.0;
 
         const float left = (static_cast<float>(cur->dst_x) / static_cast<float>(context->width)) *
                                2.0F -

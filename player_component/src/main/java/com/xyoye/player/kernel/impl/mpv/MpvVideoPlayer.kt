@@ -4,7 +4,9 @@ import android.content.Context
 import android.graphics.Point
 import android.net.Uri
 import android.view.Surface
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
+import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.LogSystem
 import com.xyoye.common_component.log.model.LogModule
@@ -14,12 +16,17 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
+import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.PlayerConstant
+import java.io.File
 
+@androidx.annotation.OptIn(UnstableApi::class)
 class MpvVideoPlayer(
     private val context: Context
-) : AbstractVideoPlayer() {
+) : AbstractVideoPlayer(),
+    SubtitleKernelBridge {
     private val appContext: Context = context.applicationContext
     private val nativeBridge = MpvNativeBridge()
     private var dataSource: String? = null
@@ -31,9 +38,11 @@ class MpvVideoPlayer(
     private var isPrepared = false
     private var isPreparing = false
     private var isPlaying = false
+    private var decodeType: DecodeType = DecodeType.SW
     private var playbackSpeed = PlayerInitializer.Player.videoSpeed
     private var looping = PlayerInitializer.isLooping
     private var initializationError: Exception? = null
+    private var anime4kMode: Int = Anime4kShaderManager.MODE_OFF
 
     private fun failInitialization(
         message: String,
@@ -76,12 +85,17 @@ class MpvVideoPlayer(
         nativeBridge.setSubtitleFonts(fontsDir, SubtitleFontManager.DEFAULT_FONT_FAMILY)
         nativeBridge.setLooping(looping)
         nativeBridge.setSpeed(playbackSpeed)
+        applyHwdecPriority()
+        applyAudioOutputPreference()
+        applyVideoSyncPreference()
+        applyVideoOutputPreference()
     }
 
     override fun setDataSource(
         path: String,
         headers: Map<String, String>?
     ) {
+        setAnime4kMode(Anime4kShaderManager.MODE_OFF)
         dataSource = path
         runCatching {
             val playServer = HttpPlayServer.getInstance()
@@ -119,7 +133,9 @@ class MpvVideoPlayer(
 
     override fun setSurface(surface: Surface) {
         if (!nativeBridge.isAvailable) return
+        applyVideoOutputPreference()
         nativeBridge.setSurface(surface)
+        setAnime4kMode(anime4kMode)
     }
 
     fun setSurfaceSize(
@@ -128,6 +144,112 @@ class MpvVideoPlayer(
     ) {
         if (!nativeBridge.isAvailable) return
         nativeBridge.setSurfaceSize(width, height)
+    }
+
+    /**
+     * Append a custom shader to mpv's `glsl-shaders` list.
+     *
+     * If [stage] is provided:
+     * - When the shader file already contains `//!HOOK`, it must include the same hook.
+     * - Otherwise the shader source is wrapped with `//!HOOK <stage>` and `//!BIND HOOKED`
+     *   and written to app cache before being appended.
+     *
+     * Supported hook stages (case-insensitive, libplacebo/mpv):
+     * - RGB: input plane with RGB values
+     * - LUMA: input plane with luma (Y)
+     * - CHROMA: input chroma plane(s)
+     * - ALPHA: input alpha plane
+     * - XYZ: input plane with XYZ values
+     * - CHROMA_SCALED: chroma upscaled to luma size
+     * - ALPHA_SCALED: alpha upscaled to luma size
+     * - NATIVE: merged input planes before color conversion
+     * - MAIN: after RGB conversion, before linearization/scaling
+     * - MAINPRESUB: mpv compatibility hook, treated as MAIN by libplacebo
+     * - LINEAR: after conversion to linear light
+     * - SIGMOID: after conversion to sigmoidized light (for upscaling)
+     * - PREKERNEL: right before main scaling kernel
+     * - POSTKERNEL: right after main scaling kernel
+     * - SCALED: after scaling (linear or nonlinear light)
+     * - PREOUTPUT: after conversion to output colorspace, before blending
+     * - OUTPUT: after blending, before dithering/final output
+     *
+     * Note: some hooks may never fire depending on input (e.g. RGB input skips LUMA/CHROMA).
+     *
+     * Example: addShader("/sdcard/shaders/filmgrain.hook", "LUMA")
+     */
+    fun addShader(
+        shaderPath: String,
+        stage: String? = null
+    ): Boolean {
+        if (!nativeBridge.isAvailable) return false
+        val resolvedPath = resolveShaderPath(shaderPath, stage) ?: return false
+        return nativeBridge.addShader(resolvedPath)
+    }
+
+    fun getAnime4kMode(): Int {
+        return anime4kMode
+    }
+
+    fun setAnime4kMode(mode: Int) {
+        val safeMode =
+            when (mode) {
+                Anime4kShaderManager.MODE_PERFORMANCE -> Anime4kShaderManager.MODE_PERFORMANCE
+                Anime4kShaderManager.MODE_QUALITY -> Anime4kShaderManager.MODE_QUALITY
+                else -> Anime4kShaderManager.MODE_OFF
+            }
+        anime4kMode = safeMode
+
+        if (!nativeBridge.isAvailable) {
+            return
+        }
+
+        val outputSupported = MpvOptions.isAnime4kSupportedVideoOutput(PlayerConfig.getMpvVideoOutput())
+
+        if (safeMode == Anime4kShaderManager.MODE_OFF || outputSupported) {
+            if (!nativeBridge.clearShaders()) {
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    "MpvVideoPlayer",
+                    "clearShaders failed: ${nativeBridge.lastError().orEmpty()}"
+                )
+            }
+        }
+
+        if (safeMode == Anime4kShaderManager.MODE_OFF) {
+            return
+        }
+
+        if (!outputSupported) {
+            anime4kMode = Anime4kShaderManager.MODE_OFF
+            return
+        }
+
+        val shaderPaths = Anime4kShaderManager.resolveShaderPaths(appContext, safeMode)
+        if (shaderPaths.isEmpty()) {
+            LogFacade.w(LogModule.PLAYER, "MpvVideoPlayer", "Anime4K shader paths unavailable")
+            return
+        }
+
+        val shaderList = shaderPaths.joinToString(separator = ":")
+        if (nativeBridge.setShaders(shaderList)) {
+            return
+        }
+
+        LogFacade.w(
+            LogModule.PLAYER,
+            "MpvVideoPlayer",
+            "setShaders failed, fallback to append: ${nativeBridge.lastError().orEmpty()}"
+        )
+
+        shaderPaths.forEach { path ->
+            if (!nativeBridge.addShader(path)) {
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    "MpvVideoPlayer",
+                    "addShader failed: path=$path reason=${nativeBridge.lastError().orEmpty()}"
+                )
+            }
+        }
     }
 
     override fun prepareAsync() {
@@ -206,17 +328,20 @@ class MpvVideoPlayer(
         isPrepared = false
         isPreparing = false
         isPlaying = false
+        decodeType = DecodeType.SW
         videoSize = Point(0, 0)
         initializationError = null
     }
 
     override fun release() {
+        clearPlayerEventListener()
         stop()
         nativeBridge.clearEventListener()
         nativeBridge.destroy()
         isPrepared = false
         isPreparing = false
         isPlaying = false
+        decodeType = DecodeType.SW
     }
 
     override fun seekTo(timeMs: Long) {
@@ -284,7 +409,14 @@ class MpvVideoPlayer(
 
     override fun getBufferedPercentage(): Int = 0
 
+    override fun supportBufferedPercentage(): Boolean = false
+
     override fun getTcpSpeed(): Long = 0
+
+    override fun getDecodeType(): DecodeType {
+        refreshDecodeTypeFromNative()
+        return decodeType
+    }
 
     override fun supportAddTrack(type: TrackType): Boolean = type == TrackType.AUDIO || type == TrackType.SUBTITLE
 
@@ -409,6 +541,7 @@ class MpvVideoPlayer(
             }
             is MpvNativeBridge.Event.RenderingStart -> {
                 isPlaying = true
+                refreshDecodeTypeFromNative()
                 val path = dataSource
                 if (!path.isNullOrEmpty()) {
                     runCatching {
@@ -430,6 +563,124 @@ class MpvVideoPlayer(
                 mPlayerEventListener.onVideoSizeChange(event.width, event.height)
             }
         }
+    }
+
+    private fun refreshDecodeTypeFromNative() {
+        if (!nativeBridge.isAvailable) {
+            decodeType = DecodeType.SW
+            return
+        }
+        val current = nativeBridge.hwdecCurrent()?.trim().orEmpty()
+        decodeType =
+            if (current.isEmpty() || current.equals("no", ignoreCase = true) || current.equals("none", ignoreCase = true)) {
+                DecodeType.SW
+            } else {
+                DecodeType.HW
+            }
+    }
+
+    private fun applyVideoOutputPreference() {
+        nativeBridge.setVideoOutput(MpvOptions.resolveVideoOutput(PlayerConfig.getMpvVideoOutput()))
+    }
+
+    private fun applyHwdecPriority() {
+        val configured = PlayerConfig.getMpvHwdecPriority().orEmpty().trim()
+        val preferCopy = configured.equals("mediacodec-copy", ignoreCase = true)
+        val hwdec =
+            if (preferCopy) {
+                "mediacodec-copy,mediacodec"
+            } else {
+                "mediacodec,mediacodec-copy"
+            }
+        nativeBridge.setHwdecPriority(hwdec)
+    }
+
+    private fun applyAudioOutputPreference() {
+        val configured = PlayerConfig.getMpvAudioOutput().orEmpty().trim()
+        val ao =
+            when {
+                configured.equals("default", ignoreCase = true) || configured.isEmpty() -> null
+                configured.equals("opensles", ignoreCase = true) -> "opensles,audiotrack"
+                configured.equals("audiotrack", ignoreCase = true) -> "audiotrack,opensles"
+                else -> configured
+            }
+        ao?.let(nativeBridge::setAudioOutput)
+    }
+
+    private fun applyVideoSyncPreference() {
+        val configured = PlayerConfig.getMpvVideoSync().orEmpty().trim()
+        if (configured.equals("default", ignoreCase = true) || configured.isEmpty()) {
+            return
+        }
+        nativeBridge.setVideoSync(configured)
+    }
+
+    private fun resolveShaderPath(
+        shaderPath: String,
+        stage: String?
+    ): String? {
+        if (shaderPath.isBlank()) return null
+        val requestedStage = stage?.trim().orEmpty()
+        if (requestedStage.isEmpty()) return shaderPath
+
+        val stageToken = requestedStage.uppercase()
+        val shaderFile = File(shaderPath)
+        if (!shaderFile.isFile) {
+            LogFacade.w(LogModule.PLAYER, "MpvVideoPlayer", "shader file missing: $shaderPath")
+            return null
+        }
+        val content =
+            runCatching { shaderFile.readText() }.getOrElse { error ->
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    "MpvVideoPlayer",
+                    "shader read failed: $shaderPath, reason=${error.message}"
+                )
+                return null
+            }
+
+        val hookRegex = Regex("^\\s*//!HOOK\\s+(\\S+)", RegexOption.IGNORE_CASE)
+        val hooks =
+            content.lineSequence()
+                .mapNotNull { line -> hookRegex.find(line)?.groupValues?.getOrNull(1) }
+                .toList()
+        if (hooks.isNotEmpty()) {
+            val matched = hooks.any { it.equals(stageToken, ignoreCase = true) }
+            if (!matched) {
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    "MpvVideoPlayer",
+                    "shader hook mismatch: requested=$stageToken, found=${hooks.joinToString(",")}"
+                )
+                return null
+            }
+            return shaderFile.absolutePath
+        }
+
+        val cacheDir = File(appContext.cacheDir, "mpv-shaders")
+        if (!cacheDir.exists() && !cacheDir.mkdirs()) {
+            LogFacade.w(LogModule.PLAYER, "MpvVideoPlayer", "shader cache dir create failed: ${cacheDir.path}")
+            return null
+        }
+        val stageTag = stageToken.replace(Regex("[^A-Z0-9_-]"), "_").lowercase()
+        val cacheKey = "${shaderFile.absolutePath}:${shaderFile.lastModified()}:$stageToken"
+        val cacheHash = Integer.toHexString(cacheKey.hashCode())
+        val wrapperFile = File(cacheDir, "hook_${stageTag}_$cacheHash.hook")
+        val header =
+            buildString {
+                append("//!HOOK ").append(stageToken).append('\n')
+                append("//!BIND HOOKED").append('\n')
+            }
+        val output = header + content
+        runCatching { wrapperFile.writeText(output) }.getOrElse { error ->
+            LogFacade.w(
+                LogModule.PLAYER,
+                "MpvVideoPlayer",
+                "shader write failed: ${wrapperFile.path}, reason=${error.message}"
+            )
+            return null
+        }
+        return wrapperFile.absolutePath
     }
 
     private fun sanitizeMpvLog(message: String): String {
@@ -465,9 +716,11 @@ class MpvVideoPlayer(
                 } else if (reason != null) {
                     add("reason=$reason")
                 }
-            }
+        }
         return details.joinToString(" | ").ifEmpty { "mpv playback error" }
     }
+
+    override fun canStartGpuSubtitlePipeline(): Boolean = false
 }
 
 private class MpvPlaybackException(

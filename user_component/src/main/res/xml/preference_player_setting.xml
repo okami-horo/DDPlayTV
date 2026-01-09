@@ -15,6 +15,26 @@
         app:updatesContinuously="true"
         app:showSeekBarValue="true" />
     <ListPreference
+        android:key="mpv_local_proxy_mode"
+        android:title="MPV 本地防风控代理"
+        android:summary="关闭：不使用本地代理；自动：仅对部分上游启用；强制：尽量对可寻址的 HTTP(S) 直链启用（可能带来额外开销）" />
+    <ListPreference
+        android:key="mpv_audio_output"
+        android:title="MPV 音频输出（ao）"
+        android:summary="默认：交给 MPV 自动选择\nOpenSL ES 优先：降低部分设备的音频延迟\nAudioTrack 优先：部分 ROM/机型更稳定（音画不同步/无声可尝试）" />
+    <ListPreference
+        android:key="mpv_video_sync"
+        android:title="MPV 视频同步（video-sync）"
+        android:summary="默认：交给 MPV\ndisplay-resample：常用的同步策略\n如出现音画不同步/卡顿，可尝试切换" />
+    <ListPreference
+        android:key="mpv_hwdec_priority"
+        android:title="MPV 硬解优先级"
+        android:summary="mediacodec\nmediacodec-copy" />
+    <ListPreference
+        android:key="mpv_video_output"
+        android:title="MPV 视频输出"
+        android:summary="gpu：可使用自定义后处理效果\ngpu-next：新渲染器（可能不兼容）\nmediacodec_embed：系统硬件渲染（MPV 不会渲染字幕）" />
+    <ListPreference
         android:key="vlc_hardware_acceleration"
         android:summary="禁用：稳定性更高\n解码：可能提升性能\n完全：可能进一步提升性能"
         android:title="硬件加速"
@@ -24,6 +44,19 @@
         android:summary="更改VLC输出音频的方式"
         android:title="音频输出"
         app:icon="@drawable/ic_player_setting_opensl" />
+    <SeekBarPreference
+        android:key="vlc_proxy_range_interval_ms"
+        android:max="2000"
+        android:title="VLC Range 限速间隔（ms）"
+        android:summary="本地 HTTP 代理转发 Range 请求的最小间隔。数值越大越不易触发风控，但拖动进度可能更慢。"
+        app:min="0"
+        app:seekBarIncrement="100"
+        app:updatesContinuously="true"
+        app:showSeekBarValue="true" />
+    <ListPreference
+        android:key="vlc_local_proxy_mode"
+        android:title="VLC 本地防风控代理"
+        android:summary="关闭：不使用本地代理；自动：仅对部分上游启用；强制：尽量对可寻址的 HTTP(S) 直链启用（可能带来额外开销）" />
     <SwitchPreference
         android:key="surface_renders"
         android:summary="使用后视频渲染性能更高"

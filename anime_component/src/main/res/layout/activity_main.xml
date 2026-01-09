@@ -11,7 +11,7 @@
             android:id="@+id/toolbar_layout"
             layout="@layout/layout_toolbar" />
 
-        <fragment
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/fragment"
             android:name="com.xyoye.anime_component.ui.fragment.home.HomeFragment"
             android:layout_width="match_parent"

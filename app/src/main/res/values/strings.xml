@@ -1,7 +1,11 @@
 <resources>
     <string name="app_name">DDPlayTV</string>
 
-	<string name="text_main_toolbar_item">新增媒体库</string>
+    <string name="navigation_home">首页</string>
+    <string name="navigation_media">媒体库</string>
+    <string name="navigation_personal">我的</string>
+    <string name="navigation_search">搜索</string>
+    <string name="navigation_setting">设置</string>
 
     <string name="official_website">www.dandanplay.com</string>
 

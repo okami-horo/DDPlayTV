@@ -57,7 +57,9 @@ data class MediaLibraryEntity(
     @ColumnInfo(name = "screencast_address")
     var screencastAddress: String = "",
     @ColumnInfo(name = "remote_anime_grouping")
-    var remoteAnimeGrouping: Boolean = false
+    var remoteAnimeGrouping: Boolean = false,
+    @ColumnInfo(name = "player_type_override")
+    var playerTypeOverride: Int = 0
 ) : Parcelable {
     companion object {
         val LOCAL =

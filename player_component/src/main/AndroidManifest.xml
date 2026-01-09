@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
 
-    <application>
+    <queries>
+        <intent>
+            <action android:name="android.settings.action.MANAGE_OVERLAY_PERMISSION" />
+        </intent>
+    </queries>
+
+
+    <application android:supportsRtl="true">
         <activity
             android:name=".ui.activities.player.PlayerActivity"
             android:configChanges="orientation|screenSize|screenLayout"
@@ -1136,6 +1144,16 @@
             android:name=".ui.activities.overlay_permission.OverlayPermissionActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:screenOrientation="portrait" />
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="com.xyoye.player_component.providers.PlayerFoundationInitializer"
+                android:value="androidx.startup" />
+        </provider>
     </application>
 
 </manifest>

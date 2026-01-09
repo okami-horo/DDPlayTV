@@ -1,5 +1,6 @@
 package com.xyoye.storage_component.ui.activities.storage_file
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Menu
@@ -15,6 +16,7 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.base.app.BaseApplication
+import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.requestIndexChildFocus
@@ -72,9 +74,13 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     companion object {
         private const val TAG = "StorageFileActivity"
+        private const val REQUEST_CODE_BILIBILI_RISK_VERIFY = 3301
     }
 
     var shareStorageFile: StorageFile? = null
+
+    private var pendingRiskVerifyFile: StorageFile? = null
+    private var riskVerifyInProgress: Boolean = false
 
     // private var locatingLastPlay = false
     // private var lastPlayHistory: PlayHistoryEntity? = null
@@ -178,6 +184,15 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                 .build(RouteTable.Player.Player)
                 .navigation()
         }
+
+        viewModel.bilibiliRiskVerifyLiveData.observe(this) { payload ->
+            if (riskVerifyInProgress) {
+                return@observe
+            }
+            riskVerifyInProgress = true
+            pendingRiskVerifyFile = payload.file
+            showBilibiliRiskVerifyDialog(payload.vVoucher)
+        }
         // viewModel.locateLastPlayLiveData.observe(this) {
         //     startLocateToHistory(it)
         // }
@@ -218,6 +233,23 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         return super.onOptionsItemSelected(item)
     }
 
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        if (requestCode == REQUEST_CODE_BILIBILI_RISK_VERIFY) {
+            riskVerifyInProgress = false
+            val file = pendingRiskVerifyFile
+            pendingRiskVerifyFile = null
+
+            if (resultCode == RESULT_OK && file != null) {
+                openFile(file)
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
     override fun onKeyDown(
         keyCode: Int,
         event: KeyEvent?
@@ -229,6 +261,13 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             return true
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (handleTvHistoryRefreshKey(event)) {
+            return true
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onDestroy() {
@@ -273,6 +312,34 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         }
 
         onDisplayFragmentChanged()
+    }
+
+    private fun handleTvHistoryRefreshKey(event: KeyEvent): Boolean {
+        if (event.action != KeyEvent.ACTION_DOWN) return false
+        if (event.repeatCount != 0) return false
+
+        val library = storage.library
+        val directory = directory
+        if (library.mediaType != MediaType.BILIBILI_STORAGE) return false
+        if (directory?.filePath() != "/history/") return false
+
+        val isRefreshKey =
+            when (event.keyCode) {
+                KeyEvent.KEYCODE_MENU -> true
+                // 部分 TV 遥控器“菜单”键会被映射为 Settings
+                KeyEvent.KEYCODE_SETTINGS -> true
+                else -> false
+            }
+        if (!isRefreshKey) return false
+
+        val fragment = mRouteFragmentMap.values.lastOrNull()
+        if (fragment == null) {
+            LogFacade.w(LogModule.STORAGE, TAG, "history refresh ignored, fragment null keyCode=${event.keyCode}")
+            return false
+        }
+
+        fragment.triggerTvRefresh()
+        return true
     }
 
     private fun popFragment(): Boolean {
@@ -341,7 +408,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     /*
      * TV adaptation: Sender 设备选择入口关闭，保留原实现方便迁移至非 TV flavor
     private fun showSelectDeviceDialog(file: StorageFile, devices: List<MediaLibraryEntity>) {
-        val drawable = com.xyoye.common_component.R.drawable.ic_screencast_device
+        val drawable = com.xyoye.core_ui_component.R.drawable.ic_screencast_device
         val actionData = devices.map {
             SheetActionBean(it.id, it.displayName, drawable, it.url)
         }
@@ -383,6 +450,32 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                     "${videoCount}视频  ${directoryCount}文件夹"
                 }
             }
+    }
+
+    private fun showBilibiliRiskVerifyDialog(vVoucher: String) {
+        val storageKey = BilibiliPlaybackPreferencesStore.storageKey(storage.library)
+
+        CommonDialog
+            .Builder(this)
+            .apply {
+                tips = "B站风控验证"
+                content = "检测到B站风控，需要完成验证码验证后才能继续播放。\n\nv_voucher：$vVoucher"
+                addNegative("取消") { dialog ->
+                    dialog.dismiss()
+                    riskVerifyInProgress = false
+                    pendingRiskVerifyFile = null
+                }
+                addPositive("去验证") { dialog ->
+                    dialog.dismiss()
+                    ARouter
+                        .getInstance()
+                        .build(RouteTable.User.BilibiliRiskVerify)
+                        .withString("storageKey", storageKey)
+                        .withString("vVoucher", vVoucher)
+                        .navigation(this@StorageFileActivity, REQUEST_CODE_BILIBILI_RISK_VERIFY)
+                }
+            }.build()
+            .show()
     }
 
     /**

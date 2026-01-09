@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.KeyEvent
 import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
+import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.SettingViewType
@@ -22,12 +23,14 @@ class SettingController(
 ) : InterSettingController {
     private lateinit var playerSettingView: PlayerSettingView
     private lateinit var switchVideoSourceView: SwitchVideoSourceView
+    private lateinit var bilibiliPlaybackView: SettingBilibiliPlaybackView
     private lateinit var keywordBlockView: KeywordBlockView
     private lateinit var screenShotView: ScreenShotView
     private lateinit var settingDanmuStyleView: SettingDanmuStyleView
     private lateinit var searchDanmuView: SearchDanmuView
     private lateinit var videoSpeedView: SettingVideoSpeedView
     private lateinit var videoAspectView: SettingVideoAspectView
+    private lateinit var anime4kView: SettingAnime4kView
     private lateinit var danmuConfigureView: SettingDanmuConfigureView
     private lateinit var offsetTimeView: SettingOffsetTimeView
     private lateinit var subtitleStyleView: SettingSubtitleStyleView
@@ -54,8 +57,10 @@ class SettingController(
         }
 
         val settingView = getSettingView(viewType, extra)
-        if (settingView.isSettingShowing().not()) {
+        if (showingSettingViews.contains(settingView).not()) {
             showingSettingViews.add(settingView)
+        }
+        if (settingView.isSettingShowing().not()) {
             settingView.onSettingVisibilityChanged(true)
         }
     }
@@ -117,6 +122,11 @@ class SettingController(
     fun setSwitchVideoSourceBlock(block: (Int) -> Unit) {
         (getSettingView(SettingViewType.SWITCH_VIDEO_SOURCE) as SwitchVideoSourceView)
             .setSwitchVideoSourceBlock(block)
+    }
+
+    fun setBilibiliPlaybackUpdateBlock(block: (BilibiliPlaybackSession.PreferenceUpdate) -> Unit) {
+        (getSettingView(SettingViewType.BILIBILI_PLAYBACK) as SettingBilibiliPlaybackView)
+            .setUpdateBlock(block)
     }
 
     private fun getSettingView(
@@ -187,6 +197,22 @@ class SettingController(
                     addView.invoke(videoAspectView)
                 }
                 return videoAspectView
+            }
+
+            SettingViewType.ANIME4K -> {
+                if (this::anime4kView.isInitialized.not()) {
+                    anime4kView = SettingAnime4kView(context)
+                    addView.invoke(anime4kView)
+                }
+                return anime4kView
+            }
+
+            SettingViewType.BILIBILI_PLAYBACK -> {
+                if (this::bilibiliPlaybackView.isInitialized.not()) {
+                    bilibiliPlaybackView = SettingBilibiliPlaybackView(context)
+                    addView.invoke(bilibiliPlaybackView)
+                }
+                return bilibiliPlaybackView
             }
 
             SettingViewType.DANMU_STYLE -> {

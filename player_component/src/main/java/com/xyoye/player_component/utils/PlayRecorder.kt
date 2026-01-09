@@ -110,18 +110,18 @@ object PlayRecorder {
             val bitmap =
                 try {
                     generateRenderImage(view)
-                } catch (e: Exception) {
-                    ErrorReportHelper.postCatchedExceptionWithContext(
-                        e,
-                        "PlayRecorder",
-                        "recordImage",
-                        "Failed to generate render image for key: $key",
-                    )
-                    e.printStackTrace()
-                    null
-                } ?: return@launch
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    e,
+                    "PlayRecorder",
+                    "recordImage",
+                    "Failed to generate render image for key: $key",
+                )
+                e.printStackTrace()
+                null
+            } ?: return@launch
 
-            val bitmapFile = File(PathHelper.getVideoCoverDirectory(), key)
+            val bitmapFile = PathHelper.getVideoCoverFile(key)
             MediaUtils.saveImage(bitmapFile, bitmap)
             bitmap.recycle()
         }

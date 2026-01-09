@@ -104,7 +104,7 @@
         <item>ERROR</item>
     </string-array>
     <string name="developer_app_log_enable_title">启用调试日志写入</string>
-    <string name="developer_app_log_enable_summary_on">已开启：输出日志到 logcat，并写入 debug.log / debug_old.log</string>
+    <string name="developer_app_log_enable_summary_on">已开启：输出日志到 logcat，并写入 log.txt / log_old.txt</string>
     <string name="developer_app_log_enable_summary_off">关闭后仅保留默认策略（logcat INFO+），不写入本地调试日志</string>
     <string name="developer_subtitle_debug_category_title">字幕调试</string>
     <string name="developer_subtitle_session_status_title">字幕后端状态</string>
@@ -174,4 +174,10 @@
         <item>紫薇</item>
         <item>紫萱</item>
     </string-array>
+
+    <string name="bilibili_risk_verify_title">B站风控验证</string>
+    <string name="bilibili_risk_verify_tip">检测到B站风控，需要完成验证码验证后才能继续播放。</string>
+    <string name="bilibili_risk_verify_success">验证成功</string>
+    <string name="bilibili_risk_verify_page_failed">加载验证页面失败</string>
+    <string name="bilibili_risk_verify_result_failed">验证码结果无效</string>
 </resources>

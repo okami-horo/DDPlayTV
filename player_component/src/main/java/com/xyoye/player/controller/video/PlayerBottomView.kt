@@ -13,6 +13,8 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
+import com.xyoye.common_component.focus.applyDpadFocusable
+import com.xyoye.common_component.focus.requestDefaultFocus
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.data_component.bean.SendDanmuBean
@@ -22,6 +24,7 @@ import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.controller.action.PlayerAction
 import com.xyoye.player.utils.formatDuration
 import com.xyoye.player.wrapper.ControlWrapper
+import com.xyoye.player.utils.DecodeType
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutPlayerBottomBinding
 
@@ -62,8 +65,17 @@ class PlayerBottomView(
             actionHandler?.invoke(PlayerAction.TogglePlay) ?: mControlWrapper.togglePlay()
         }
 
-        viewBinding.danmuControlIv.setOnClickListener {
-            if (!controlsInputEnabled) return@setOnClickListener
+        viewBinding.danmuControlIv.setOnCheckedChangeListener { _, isChecked ->
+            if (!controlsInputEnabled) return@setOnCheckedChangeListener
+            val isDanmuVisible = mControlWrapper.isUserDanmuVisible()
+            if (isChecked == isDanmuVisible) {
+                return@setOnCheckedChangeListener
+            }
+            if (!isDanmuToggleReady()) {
+                mControlWrapper.showMessage(resolveDanmuToggleUnavailableHint())
+                syncDanmuToggleState()
+                return@setOnCheckedChangeListener
+            }
             actionHandler?.invoke(PlayerAction.ToggleDanmu) ?: mControlWrapper.toggleDanmuVisible()
             syncDanmuToggleState()
         }
@@ -131,6 +143,7 @@ class PlayerBottomView(
     override fun attach(controlWrapper: ControlWrapper) {
         mControlWrapper = controlWrapper
         syncDanmuToggleState()
+        updateDecodeTypeHint()
     }
 
     override fun getView() = this
@@ -151,10 +164,12 @@ class PlayerBottomView(
             if (isControllerVisible) {
                 // Avoid re-focusing play on every DPAD event when controller is already visible.
                 syncDanmuToggleState()
+                updateDecodeTypeHint()
                 return
             }
             isControllerVisible = true
             syncDanmuToggleState()
+            updateDecodeTypeHint()
             updateControlsInteractiveState(true)
             ViewCompat
                 .animate(viewBinding.playerBottomLl)
@@ -162,9 +177,7 @@ class PlayerBottomView(
                 .setDuration(300)
                 .start()
             post {
-                if (!viewBinding.playIv.hasFocus()) {
-                    viewBinding.playIv.requestFocus()
-                }
+                viewBinding.playIv.requestDefaultFocus()
             }
         } else {
             if (!isControllerVisible) {
@@ -183,6 +196,7 @@ class PlayerBottomView(
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
+        updateDecodeTypeHint()
         when (playState) {
             PlayState.STATE_IDLE -> {
                 viewBinding.playSeekBar.progress = 0
@@ -223,22 +237,34 @@ class PlayerBottomView(
         duration: Long,
         position: Long
     ) {
-        if (mIsDragging) {
+        if (mControlWrapper.isLive()) {
+            mIsDragging = false
+            viewBinding.playSeekBar.isEnabled = false
+            viewBinding.playSeekBar.progress = viewBinding.playSeekBar.max
+            viewBinding.playSeekBar.secondaryProgress = viewBinding.playSeekBar.max
+            viewBinding.currentPositionTv.text = context.getString(R.string.text_live)
+            viewBinding.durationTv.text = ""
             return
         }
 
+        if (mIsDragging) return
+
         if (duration > 0) {
-            viewBinding.playSeekBar.isEnabled = true
             viewBinding.playSeekBar.progress =
                 (position.toFloat() / duration * viewBinding.playSeekBar.max).toInt()
-        } else {
-            viewBinding.playSeekBar.isEnabled = false
         }
 
-        var bufferedPercent = mControlWrapper.getBufferedPercentage()
-        if (bufferedPercent > 95) {
-            bufferedPercent = 100
-        }
+        viewBinding.playSeekBar.isEnabled = duration > 0 && mControlWrapper.isUserSeekAllowed()
+
+        val bufferedPercent =
+            if (mControlWrapper.supportBufferedPercentage()) {
+                mControlWrapper
+                    .getBufferedPercentage()
+                    .coerceIn(0, 100)
+                    .let { percent -> if (percent > 95) 100 else percent }
+            } else {
+                viewBinding.playSeekBar.progress
+            }
         viewBinding.playSeekBar.secondaryProgress = bufferedPercent
 
         viewBinding.durationTv.text = formatDuration(duration)
@@ -260,6 +286,7 @@ class PlayerBottomView(
     override fun onTrackChanged(type: TrackType) {
         if (type == TrackType.DANMU) {
             syncDanmuToggleState()
+            updateControlsInteractiveState(controlsInputEnabled)
         }
     }
 
@@ -271,6 +298,9 @@ class PlayerBottomView(
         if (!fromUser) {
             return
         }
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            return
+        }
         val duration = mControlWrapper.getDuration()
         val newPosition = (duration * progress) / viewBinding.playSeekBar.max
         viewBinding.currentPositionTv.text =
@@ -278,12 +308,19 @@ class PlayerBottomView(
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            return
+        }
         mIsDragging = true
         mControlWrapper.stopProgress()
         mControlWrapper.stopFadeOut()
     }
 
     override fun onStopTrackingTouch(seekBar: SeekBar?) {
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            mIsDragging = false
+            return
+        }
         mIsDragging = false
         val duration = mControlWrapper.getDuration()
         val newPosition =
@@ -336,39 +373,54 @@ class PlayerBottomView(
 
     private fun updateControlsInteractiveState(enabled: Boolean) {
         controlsInputEnabled = enabled
+        val inTouchMode = isInTouchMode
         val focusables =
             listOf(
                 viewBinding.playIv,
                 viewBinding.ivPreviousSource,
                 viewBinding.ivNextSource,
                 viewBinding.videoListIv,
-                viewBinding.danmuControlIv,
             )
         focusables.forEach { view ->
-            view.isFocusable = enabled
-            view.isFocusableInTouchMode = enabled
-            view.isClickable = enabled
+            view.applyDpadFocusable(
+                enabled = enabled,
+                inTouchMode = inTouchMode,
+                clickable = enabled,
+            )
         }
+
+        val danmuReady = enabled && isDanmuToggleReady()
+        viewBinding.danmuControlIv.applyDpadFocusable(
+            enabled = danmuReady,
+            inTouchMode = inTouchMode,
+            clickable = enabled,
+        )
+        viewBinding.danmuControlIv.alpha = if (isDanmuToggleReady()) 1f else 0.5f
+        if (!danmuReady && viewBinding.danmuControlIv.hasFocus() && !inTouchMode) {
+            viewBinding.playIv.requestDefaultFocus()
+        }
+        updateFocusNavigation()
     }
 
     private fun updateFocusNavigation() {
         val focusables = mutableListOf<View>()
-        focusables.add(viewBinding.playIv)
-        if (viewBinding.ivPreviousSource.isVisible) {
-            focusables.add(viewBinding.ivPreviousSource)
-        }
-        if (viewBinding.ivNextSource.isVisible) {
-            focusables.add(viewBinding.ivNextSource)
-        }
         if (viewBinding.videoListIv.isVisible) {
             focusables.add(viewBinding.videoListIv)
         }
-        focusables.add(viewBinding.danmuControlIv)
+        if (viewBinding.ivPreviousSource.isVisible) {
+            focusables.add(viewBinding.ivPreviousSource)
+        }
+        focusables.add(viewBinding.playIv)
+        if (viewBinding.ivNextSource.isVisible) {
+            focusables.add(viewBinding.ivNextSource)
+        }
+        if (viewBinding.danmuControlIv.isFocusable) {
+            focusables.add(viewBinding.danmuControlIv)
+        }
 
-        val size = focusables.size
         focusables.forEachIndexed { index, view ->
-            val left = focusables[(index - 1 + size) % size]
-            val right = focusables[(index + 1) % size]
+            val left = focusables.getOrNull(index - 1) ?: view
+            val right = focusables.getOrNull(index + 1) ?: view
             view.nextFocusLeftId = left.id
             view.nextFocusRightId = right.id
             view.nextFocusUpId = R.id.video_title_tv
@@ -378,6 +430,35 @@ class PlayerBottomView(
     private fun syncDanmuToggleState() {
         if (this::mControlWrapper.isInitialized.not()) return
         val userVisible = mControlWrapper.isUserDanmuVisible()
-        viewBinding.danmuControlIv.isSelected = userVisible.not()
+        if (viewBinding.danmuControlIv.isChecked != userVisible) {
+            viewBinding.danmuControlIv.isChecked = userVisible
+        }
+        viewBinding.danmuControlIv.alpha = if (isDanmuToggleReady()) 1f else 0.5f
+    }
+
+    private fun isDanmuToggleReady(): Boolean {
+        if (this::mControlWrapper.isInitialized.not()) return false
+        return mControlWrapper
+            .getTracks(TrackType.DANMU)
+            .any { it.selected && !it.disable }
+    }
+
+    private fun resolveDanmuToggleUnavailableHint(): String {
+        val tracks = mControlWrapper.getTracks(TrackType.DANMU).filterNot { it.disable }
+        return if (tracks.isEmpty()) {
+            "当前视频暂无弹幕轨道"
+        } else {
+            "请先选择弹幕轨道"
+        }
+    }
+
+    private fun updateDecodeTypeHint() {
+        val decodeType =
+            if (this::mControlWrapper.isInitialized) {
+                mControlWrapper.getDecodeType()
+            } else {
+                DecodeType.HW
+            }
+        viewBinding.decodeTypeTv.text = decodeType.label
     }
 }

@@ -74,7 +74,14 @@ kapt {
 }
 
 dependencies {
-    implementation(project(":common_component"))
+    implementation(project(":core_system_component"))
+    implementation(project(":core_log_component"))
+    implementation(project(":core_network_component"))
+    implementation(project(":core_database_component"))
+    implementation(project(":core_ui_component"))
+    implementation(Dependencies.AndroidX.multidex)
+    debugImplementation(Dependencies.Square.leakcanary)
+
     implementation(project(":player_component"))
     implementation(project(":anime_component"))
     implementation(project(":user_component"))

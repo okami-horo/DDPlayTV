@@ -43,6 +43,7 @@ class SettingTracksView
                     TrackType.AUDIO -> "音轨"
                     TrackType.DANMU -> "弹幕轨"
                     TrackType.SUBTITLE -> "字幕轨"
+                    TrackType.VIDEO -> "视频轨"
                 }
 
         private val actionText
@@ -51,6 +52,7 @@ class SettingTracksView
                     TrackType.AUDIO -> "添加音轨"
                     TrackType.DANMU -> "添加弹幕轨"
                     TrackType.SUBTITLE -> "添加字幕轨"
+                    TrackType.VIDEO -> "添加视频轨"
                 }
 
         init {
@@ -74,6 +76,7 @@ class SettingTracksView
         override fun onViewShow() {
             viewBinding.tvTitle.text = title
             viewBinding.tvAddTrack.text = actionText
+            viewBinding.tvAddTrack.isVisible = mTrackType != TrackType.VIDEO
 
             refreshTracks()
         }
@@ -183,6 +186,9 @@ class SettingTracksView
             if (focusedChildIndex == tracks.lastIndex &&
                 (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
             ) {
+                if (viewBinding.tvAddTrack.isVisible.not()) {
+                    return true
+                }
                 viewBinding.tvAddTrack.requestFocus()
                 return true
             }
@@ -229,7 +235,7 @@ class SettingTracksView
 
             tracks.clear()
             // 当轨道列表不为空时，添加禁用轨道
-            if (realTracks.isNotEmpty()) {
+            if (realTracks.isNotEmpty() && mTrackType != TrackType.VIDEO) {
                 tracks.add(VideoTrackBean.disable(mTrackType, disabled))
             }
             tracks.addAll(mControlWrapper.getTracks(mTrackType))

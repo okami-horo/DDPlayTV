@@ -148,6 +148,8 @@ class PlayerViewModel : BaseViewModel() {
                         historyDao.updateDanmu(uniqueKey, storageId, danmu.danmuPath, danmu.episodeId)
                     }
                 }
+
+                TrackType.VIDEO -> Unit
             }
         }
     }

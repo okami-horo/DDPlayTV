@@ -97,11 +97,12 @@
                 app:layout_constraintStart_toStartOf="@id/right_space"
                 app:layout_constraintTop_toTopOf="@id/user_account_cl">
 
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_video_player_setting" />
+	                <ImageView
+	                    android:layout_width="40dp"
+	                    android:layout_height="40dp"
+	                    android:contentDescription="@null"
+	                    android:scaleType="centerCrop"
+	                    android:src="@drawable/ic_video_player_setting" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -127,11 +128,12 @@
                 app:layout_constraintStart_toEndOf="@id/player_setting_ll"
                 app:layout_constraintTop_toTopOf="@id/user_account_cl">
 
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_scan_manager" />
+	                <ImageView
+	                    android:layout_width="40dp"
+	                    android:layout_height="40dp"
+	                    android:contentDescription="@null"
+	                    android:scaleType="centerCrop"
+	                    android:src="@drawable/ic_scan_manager" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -156,11 +158,12 @@
                 app:layout_constraintStart_toEndOf="@id/scan_manager_ll"
                 app:layout_constraintTop_toTopOf="@id/user_account_cl">
 
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_cache_manager" />
+	                <ImageView
+	                    android:layout_width="40dp"
+	                    android:layout_height="40dp"
+	                    android:contentDescription="@null"
+	                    android:scaleType="centerCrop"
+	                    android:src="@drawable/ic_cache_manager" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -185,11 +188,12 @@
                 app:layout_constraintStart_toEndOf="@id/cache_manager_ll"
                 app:layout_constraintTop_toTopOf="@id/user_account_cl">
 
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_commonly_manager" />
+	                <ImageView
+	                    android:layout_width="40dp"
+	                    android:layout_height="40dp"
+	                    android:contentDescription="@null"
+	                    android:scaleType="centerCrop"
+	                    android:src="@drawable/ic_commonly_manager" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -277,7 +281,7 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <LinearLayout
-                android:id="@+id/bilibili_danmu_ll"
+                android:id="@+id/shooter_subtitle_ll"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:background="@drawable/background_item_press_corner"
@@ -288,42 +292,12 @@
                 app:layout_constraintStart_toStartOf="@id/player_setting_ll"
                 app:layout_constraintTop_toTopOf="@id/user_follow_cl">
 
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_bilibili_danmu_download" />
-
-                <com.xyoye.common_component.weight.MarqueeTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="10dp"
-                    android:layout_marginTop="10dp"
-                    android:ellipsize="marquee"
-                    android:singleLine="true"
-                    android:text="@string/action_bilibili_danmu_download"
-                    android:textColor="@color/text_black"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/shooter_subtitle_ll"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:background="@drawable/background_item_press_corner"
-                android:gravity="center"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toBottomOf="@id/user_follow_cl"
-                app:layout_constraintEnd_toEndOf="@+id/scan_manager_ll"
-                app:layout_constraintStart_toStartOf="@id/scan_manager_ll"
-                app:layout_constraintTop_toTopOf="@id/user_follow_cl">
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_shooter_subtitle_download" />
+	                <ImageView
+	                    android:layout_width="40dp"
+	                    android:layout_height="40dp"
+	                    android:contentDescription="@null"
+	                    android:scaleType="centerCrop"
+	                    android:src="@drawable/ic_shooter_subtitle_download" />
 
                 <com.xyoye.common_component.weight.MarqueeTextView
                     android:layout_width="wrap_content"
@@ -345,21 +319,22 @@
                 android:background="@drawable/background_item_press_corner"
                 android:gravity="center"
                 app:layout_constraintBottom_toBottomOf="@id/user_follow_cl"
-                app:layout_constraintEnd_toEndOf="@+id/cache_manager_ll"
-                app:layout_constraintStart_toStartOf="@id/cache_manager_ll"
+                app:layout_constraintEnd_toEndOf="@+id/scan_manager_ll"
+                app:layout_constraintStart_toStartOf="@id/scan_manager_ll"
                 app:layout_constraintTop_toTopOf="@id/user_follow_cl">
 
-                <ImageView
-                    android:id="@+id/screencast_receiver_iv"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_screencast_receiver"
-                    app:layout_constraintBottom_toTopOf="@id/screencast_receiver_tv"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_chainStyle="packed" />
+	                <ImageView
+	                    android:id="@+id/screencast_receiver_iv"
+	                    android:layout_width="40dp"
+	                    android:layout_height="40dp"
+	                    android:contentDescription="@null"
+	                    android:scaleType="centerCrop"
+	                    android:src="@drawable/ic_screencast_receiver"
+	                    app:layout_constraintBottom_toTopOf="@id/screencast_receiver_tv"
+	                    app:layout_constraintEnd_toEndOf="parent"
+	                    app:layout_constraintStart_toStartOf="parent"
+	                    app:layout_constraintTop_toTopOf="parent"
+	                    app:layout_constraintVertical_chainStyle="packed" />
 
                 <com.xyoye.common_component.weight.MarqueeTextView
                     android:id="@+id/screencast_receiver_tv"
@@ -405,21 +380,51 @@
                 android:gravity="center"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="@id/user_follow_cl"
-                app:layout_constraintEnd_toEndOf="@+id/commonly_manager_ll"
-                app:layout_constraintStart_toStartOf="@id/commonly_manager_ll"
+                app:layout_constraintEnd_toEndOf="@+id/cache_manager_ll"
+                app:layout_constraintStart_toStartOf="@id/cache_manager_ll"
                 app:layout_constraintTop_toTopOf="@id/user_follow_cl">
 
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_app_setting" />
+	                <ImageView
+	                    android:layout_width="40dp"
+	                    android:layout_height="40dp"
+	                    android:contentDescription="@null"
+	                    android:scaleType="centerCrop"
+	                    android:src="@drawable/ic_app_setting" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:text="@string/action_app_setting"
+                    android:textColor="@color/text_black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/developer_setting_ll"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/background_item_press_corner"
+                android:gravity="center"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="@id/user_follow_cl"
+                app:layout_constraintEnd_toEndOf="@id/commonly_manager_ll"
+                app:layout_constraintStart_toStartOf="@id/commonly_manager_ll"
+                app:layout_constraintTop_toTopOf="@id/user_follow_cl">
+
+	                <ImageView
+	                    android:layout_width="40dp"
+	                    android:layout_height="40dp"
+	                    android:contentDescription="@null"
+	                    android:scaleType="centerCrop"
+	                    android:src="@drawable/ic_developer_authenticated" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/action_developer_setting"
                     android:textColor="@color/text_black"
                     android:textSize="16sp"
                     android:textStyle="bold" />

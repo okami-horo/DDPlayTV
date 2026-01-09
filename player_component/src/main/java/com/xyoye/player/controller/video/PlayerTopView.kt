@@ -8,6 +8,7 @@ import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
+import com.xyoye.common_component.focus.requestDefaultFocus
 import com.xyoye.common_component.extension.toText
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.SettingViewType
@@ -64,7 +65,9 @@ class PlayerTopView(
         }
 
         // 将初始焦点置于标题，而不是返回按钮
-        post { viewBinding.videoTitleTv.requestFocus() }
+        post {
+            viewBinding.videoTitleTv.requestDefaultFocus()
+        }
     }
 
     override fun attach(controlWrapper: ControlWrapper) {

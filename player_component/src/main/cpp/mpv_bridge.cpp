@@ -147,16 +147,18 @@ struct MpvSession {
     int video_width = 0;
     int video_height = 0;
     std::atomic<bool> running = false;
-    std::thread event_thread;
-    EventCallbackRef event_callback;
     std::mutex mutex;
     jobject surface_ref = nullptr;
     ANativeWindow* native_window = nullptr;
     std::atomic<bool> surface_changed = false;
+    std::thread event_thread;
+    EventCallbackRef event_callback;
+
     std::atomic<bool> render_requested = false;
     int surface_width = 0;
     int surface_height = 0;
     // Rendering state (lives on event thread)
+
     EGLDisplay egl_display = EGL_NO_DISPLAY;
     EGLContext egl_context = EGL_NO_CONTEXT;
     EGLSurface egl_surface = EGL_NO_SURFACE;
@@ -325,6 +327,18 @@ double getDoubleProperty(mpv_handle* handle, const char* property) {
     return value;
 }
 
+bool tryGetDoubleProperty(mpv_handle* handle, const char* property, double* out_value) {
+    if (handle == nullptr || property == nullptr || out_value == nullptr) {
+        return false;
+    }
+    double value = 0.0;
+    if (mpv_get_property(handle, property, MPV_FORMAT_DOUBLE, &value) < 0) {
+        return false;
+    }
+    *out_value = value;
+    return true;
+}
+
 #else
 struct MpvSession {
     std::string path;
@@ -400,8 +414,6 @@ void observeProperties(mpv_handle* handle) {
         return;
     }
     mpv_observe_property(handle, 0, "paused-for-cache", MPV_FORMAT_FLAG);
-    mpv_observe_property(handle, 0, "width", MPV_FORMAT_INT64);
-    mpv_observe_property(handle, 0, "height", MPV_FORMAT_INT64);
 }
 
 void destroyRenderContext(MpvSession* session) {
@@ -692,7 +704,7 @@ void eventLoop(MpvSession* session) {
                     const char* level = log->level == nullptr ? "" : log->level;
                     const char* text = log->text == nullptr ? "" : log->text;
                     __android_log_print(ANDROID_LOG_INFO, kLogTag, "mpv[%s][%s] %s", prefix, level, text);
-                    // Forward to Kotlin logger so it can be written into debug.log.
+                    // Forward to Kotlin logger so it can be written into log.txt.
                     // Note: do not include newlines; mpv log text usually ends with '\n'.
                     std::string forwarded = std::string(prefix) + "[" + level + "] " + text;
                     dispatchEvent(
@@ -738,8 +750,10 @@ void eventLoop(MpvSession* session) {
             }
             case MPV_EVENT_PROPERTY_CHANGE: {
                 auto* prop = static_cast<mpv_event_property*>(event->data);
-                if (prop != nullptr && prop->name != nullptr && prop->format == MPV_FORMAT_FLAG &&
-                    strcmp(prop->name, "paused-for-cache") == 0) {
+                if (prop == nullptr || prop->name == nullptr) {
+                    break;
+                }
+                if (prop->format == MPV_FORMAT_FLAG && strcmp(prop->name, "paused-for-cache") == 0) {
                     const bool isCaching = *static_cast<int*>(prop->data) != 0;
                     dispatchEvent(
                         env,
@@ -749,6 +763,7 @@ void eventLoop(MpvSession* session) {
                         0,
                         nullptr
                     );
+                    break;
                 }
                 break;
             }
@@ -916,15 +931,83 @@ bool addExternalTrack(MpvSession* session, jint trackType, const std::string& pa
     if (session == nullptr || session->handle == nullptr || path.empty()) {
         return false;
     }
-    if (trackType == kTrackAudio) {
-        const char* cmd[] = {"audio-add", path.c_str(), "select", nullptr};
-        return mpv_command(session->handle, cmd) >= 0;
-    }
-    if (trackType == kTrackSubtitle) {
-        const char* cmd[] = {"sub-add", path.c_str(), "select", nullptr};
-        return mpv_command(session->handle, cmd) >= 0;
-    }
+	    if (trackType == kTrackAudio) {
+	        const char* cmd[] = {"audio-add", path.c_str(), "select", nullptr};
+	        const int result = mpv_command(session->handle, cmd);
+	        if (result < 0) {
+	            const std::string message =
+	                "mpv audio-add failed: " + std::to_string(result) + " (" + mpv_error_string(result) +
+	                ") path=" + path;
+	            set_last_error(message);
+	            return false;
+	        }
+	        set_last_error("");
+	        return true;
+	    }
+	    if (trackType == kTrackSubtitle) {
+	        const char* cmd[] = {"sub-add", path.c_str(), "select", nullptr};
+	        const int result = mpv_command(session->handle, cmd);
+	        if (result < 0) {
+	            const std::string message =
+	                "mpv sub-add failed: " + std::to_string(result) + " (" + mpv_error_string(result) +
+	                ") path=" + path;
+	            set_last_error(message);
+	            return false;
+	        }
+	        set_last_error("");
+	        return true;
+	    }
     return false;
+}
+
+bool addShader(MpvSession* session, const std::string& path) {
+    if (session == nullptr || session->handle == nullptr || path.empty()) {
+        return false;
+    }
+    const char* cmd[] = {"change-list", "glsl-shaders", "append", path.c_str(), nullptr};
+    const int result = mpv_command(session->handle, cmd);
+    if (result < 0) {
+        const std::string message =
+            "mpv glsl-shaders append failed: " + std::to_string(result) + " (" + mpv_error_string(result) +
+            ") path=" + path;
+        set_last_error(message);
+        return false;
+    }
+    set_last_error("");
+    return true;
+}
+
+bool setShaders(MpvSession* session, const std::string& listValue) {
+    if (session == nullptr || session->handle == nullptr) {
+        return false;
+    }
+    const char* cmd[] = {"change-list", "glsl-shaders", "set", listValue.c_str(), nullptr};
+    const int result = mpv_command(session->handle, cmd);
+    if (result < 0) {
+        const std::string message =
+            "mpv glsl-shaders set failed: " + std::to_string(result) + " (" + mpv_error_string(result) + ")";
+        set_last_error(message);
+        return false;
+    }
+    set_last_error("");
+    return true;
+}
+
+bool clearShaders(MpvSession* session) {
+    if (session == nullptr || session->handle == nullptr) {
+        return false;
+    }
+    const char* cmd[] = {"change-list", "glsl-shaders", "clr", "", nullptr};
+    const int result = mpv_command(session->handle, cmd);
+    if (result < 0) {
+        const std::string message =
+            "mpv glsl-shaders clr failed: " + std::to_string(result) + " (" + mpv_error_string(result) +
+            ")";
+        set_last_error(message);
+        return false;
+    }
+    set_last_error("");
+    return true;
 }
 #else
 std::vector<std::string> fetchTrackList(MpvSession*) {
@@ -940,6 +1023,18 @@ bool deselectTrack(MpvSession*, jint) {
 }
 
 bool addExternalTrack(MpvSession*, jint, const std::string&) {
+    return true;
+}
+
+bool addShader(MpvSession*, const std::string&) {
+    return true;
+}
+
+bool setShaders(MpvSession*, const std::string&) {
+    return true;
+}
+
+bool clearShaders(MpvSession*) {
     return true;
 }
 
@@ -1072,7 +1167,16 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetSurface(
         }
 
         // Keep mpv rendering enabled while the surface is alive.
-        mpv_set_property_string(session->handle, "vo", "gpu");
+        std::string target_vo = "gpu";
+        char* current_vo = mpv_get_property_string(session->handle, "vo");
+        if (current_vo != nullptr) {
+            std::string configured = current_vo;
+            if (!configured.empty() && configured != "null") {
+                target_vo = configured;
+            }
+            mpv_free(current_vo);
+        }
+        mpv_set_property_string(session->handle, "vo", target_vo.c_str());
         mpv_set_property_string(session->handle, "force-window", "yes");
 
         // Help mpv pick the correct output size.
@@ -1260,6 +1364,66 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeAddExternalTrack(
     return addExternalTrack(session, trackType, pathString) ? JNI_TRUE : JNI_FALSE;
 }
 
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeAddShader(
+    JNIEnv* env, jclass, jlong handle, jstring path) {
+    auto* session = fromHandle(handle);
+    if (session == nullptr || path == nullptr) return JNI_FALSE;
+#if MPV_PREBUILT_AVAILABLE
+    const char* pathChars = env->GetStringUTFChars(path, nullptr);
+    if (pathChars == nullptr) {
+        set_last_error("Failed to decode shader path for mpv");
+        return JNI_FALSE;
+    }
+    const std::string pathString = pathChars;
+    env->ReleaseStringUTFChars(path, pathChars);
+    if (pathString.empty()) {
+        return JNI_FALSE;
+    }
+    return addShader(session, pathString) ? JNI_TRUE : JNI_FALSE;
+#else
+    (void)env;
+    (void)handle;
+    set_last_error("libmpv.so not linked; addShader is unavailable");
+    return JNI_FALSE;
+#endif
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetShaders(
+    JNIEnv* env, jclass, jlong handle, jstring value) {
+    auto* session = fromHandle(handle);
+    if (session == nullptr || value == nullptr) return JNI_FALSE;
+#if MPV_PREBUILT_AVAILABLE
+    const char* valueChars = env->GetStringUTFChars(value, nullptr);
+    if (valueChars == nullptr) {
+        set_last_error("Failed to decode shader list value for mpv");
+        return JNI_FALSE;
+    }
+    const std::string listValue = valueChars;
+    env->ReleaseStringUTFChars(value, valueChars);
+    return setShaders(session, listValue) ? JNI_TRUE : JNI_FALSE;
+#else
+    (void)env;
+    (void)handle;
+    set_last_error("libmpv.so not linked; setShaders is unavailable");
+    return JNI_FALSE;
+#endif
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeClearShaders(
+    JNIEnv*, jclass, jlong handle) {
+    auto* session = fromHandle(handle);
+    if (session == nullptr) return JNI_FALSE;
+#if MPV_PREBUILT_AVAILABLE
+    return clearShaders(session) ? JNI_TRUE : JNI_FALSE;
+#else
+    set_last_error("libmpv.so not linked; clearShaders is unavailable");
+    return JNI_FALSE;
+#endif
+}
+
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeGetVideoSize(
     JNIEnv*, jclass, jlong handle) {
@@ -1279,6 +1443,28 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeGetVideoSize(
     int64_t height = session->video_height;
 #endif
     return (width << 32) | (height & 0xffffffff);
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeGetHwdecCurrent(
+    JNIEnv* env, jclass, jlong handle) {
+    auto* session = fromHandle(handle);
+    if (session == nullptr) return nullptr;
+#if MPV_PREBUILT_AVAILABLE
+    if (session->handle == nullptr) return nullptr;
+    char* value = mpv_get_property_string(session->handle, "hwdec-current");
+    if (value == nullptr) {
+        return nullptr;
+    }
+    jstring result = env->NewStringUTF(value);
+    mpv_free(value);
+    return result;
+#else
+    (void)env;
+    (void)handle;
+    set_last_error("libmpv.so not linked; hwdec-current unavailable");
+    return nullptr;
+#endif
 }
 
 extern "C" JNIEXPORT jboolean JNICALL

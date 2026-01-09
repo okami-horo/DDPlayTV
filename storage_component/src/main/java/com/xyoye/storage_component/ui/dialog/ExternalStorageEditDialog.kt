@@ -25,12 +25,24 @@ class ExternalStorageEditDialog(
     private lateinit var binding: DialogExternalStorageEditBinding
     private var mDocumentFile: DocumentFile? = null
 
+    private lateinit var editLibrary: MediaLibraryEntity
+    private var originalDisplayName: String? = null
+    private var originalPlayerTypeOverride: Int? = null
+
     private val documentTreeLauncher = DocumentTreeLauncher(activity, onResult())
 
     override fun getChildLayoutId() = R.layout.dialog_external_storage_edit
 
     override fun initView(binding: DialogExternalStorageEditBinding) {
         this.binding = binding
+
+        editLibrary =
+            library ?: MediaLibraryEntity(
+                0,
+                "",
+                "",
+                MediaType.EXTERNAL_STORAGE,
+            )
 
         if (library == null) {
             setTitle("添加设备存储库")
@@ -43,6 +55,10 @@ class ExternalStorageEditDialog(
             binding.selectRootTv.background =
                 R.drawable.background_button_corner_disable.toResDrawable(activity)
         }
+
+        originalDisplayName = editLibrary.displayName
+        originalPlayerTypeOverride = editLibrary.playerTypeOverride
+        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, editLibrary)
 
         initListener()
     }
@@ -88,7 +104,10 @@ class ExternalStorageEditDialog(
 
     private fun updateLibrary(library: MediaLibraryEntity): MediaLibraryEntity? {
         val newDisplayName = getDisplayNameByEdit(library)
-        if (newDisplayName == library.displayName) {
+        val oldDisplayName = originalDisplayName ?: library.displayName
+        val oldOverride = originalPlayerTypeOverride ?: library.playerTypeOverride
+        val hasChanged = newDisplayName != oldDisplayName || library.playerTypeOverride != oldOverride
+        if (!hasChanged) {
             return null
         }
 
@@ -112,7 +131,9 @@ class ExternalStorageEditDialog(
             url = documentFile.uri.toString(),
             describe = getDescribe(documentFile),
             mediaType = MediaType.EXTERNAL_STORAGE,
-        )
+        ).apply {
+            playerTypeOverride = editLibrary.playerTypeOverride
+        }
     }
 
     private fun getDisplayNameByEdit(storage: MediaLibraryEntity): String {

@@ -20,6 +20,7 @@
         <activity android:name=".ui.activities.login.LoginActivity"/>
         <activity android:name=".ui.activities.user_info.UserInfoActivity"/>
         <activity android:name=".ui.activities.setting_player.SettingPlayerActivity"/>
+        <activity android:name=".ui.activities.bilibili_risk_verify.BilibiliRiskVerifyActivity"/>
     </application>
 
 </manifest>

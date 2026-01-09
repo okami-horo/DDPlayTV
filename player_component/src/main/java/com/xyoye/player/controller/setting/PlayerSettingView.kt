@@ -14,13 +14,18 @@ import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
+import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
+import com.xyoye.data_component.enums.PlayerType
+import com.xyoye.data_component.enums.MediaType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingAction
 import com.xyoye.player.info.SettingActionType
 import com.xyoye.player.info.SettingItem
+import com.xyoye.player.kernel.anime4k.Anime4kMode
+import com.xyoye.player.kernel.impl.mpv.MpvOptions
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ItemPlayerSettingBinding
 import com.xyoye.player_component.databinding.ItemPlayerSettingTypeBinding
@@ -35,8 +40,8 @@ class PlayerSettingView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutPlayerSettingBinding>(context, attrs, defStyleAttr) {
-    // 操作项集合
-    private val settingItems = generateItems()
+    // 操作项集合（每次展示时根据运行态重建）
+    private var settingItems: List<Any> = emptyList()
 
     init {
         initRv()
@@ -47,6 +52,7 @@ class PlayerSettingView(
     override fun getSettingViewType(): SettingViewType = SettingViewType.PLAYER_SETTING
 
     override fun onViewShow() {
+        settingItems = generateItems()
         settingItems
             .asSequence()
             .filter { it is SettingItem }
@@ -103,8 +109,8 @@ class PlayerSettingView(
                             (data as SettingItem).apply {
                                 itemBinding.tvSetting.text = display
                                 itemBinding.ivSetting.setImageResource(icon)
-                                itemBinding.ivSetting.isSelected = selected
-                                itemBinding.ivSetting.setOnClickListener {
+                                itemBinding.clCard.isSelected = selected
+                                itemBinding.clCard.setOnClickListener {
                                     onItemClick(this)
                                 }
                             }
@@ -206,10 +212,35 @@ class PlayerSettingView(
     private fun generateItems(): List<Any> {
         val items = mutableListOf<Any>()
         val disabledActions =
-            setOf(
+            mutableSetOf(
                 SettingAction.SCREEN_SHOT,
-                SettingAction.BACKGROUND_PLAY,
+                SettingAction.BACKGROUND_PLAY
             )
+
+        val source = mControlWrapper.getVideoSource()
+        val isBilibiliPlayable =
+            source.getMediaType() == MediaType.BILIBILI_STORAGE &&
+                (BilibiliKeys.parse(source.getUniqueKey()) !is BilibiliKeys.LiveKey)
+        if (!isBilibiliPlayable) {
+            disabledActions.add(SettingAction.BILIBILI_PLAYBACK)
+        }
+
+        if (PlayerInitializer.playerType != PlayerType.TYPE_EXO_PLAYER ||
+            mControlWrapper.getTracks(TrackType.VIDEO).size <= 1
+        ) {
+            disabledActions.add(SettingAction.VIDEO_TRACK)
+        }
+
+        val playerType = PlayerInitializer.playerType
+        val isAnime4kSupported =
+            when (playerType) {
+                PlayerType.TYPE_MPV_PLAYER -> MpvOptions.isAnime4kSupportedVideoOutput(PlayerConfig.getMpvVideoOutput())
+                PlayerType.TYPE_EXO_PLAYER -> true
+                else -> false
+            }
+        if (!isAnime4kSupported) {
+            disabledActions.add(SettingAction.ANIME4K)
+        }
         SettingAction
             .values()
             .asSequence()
@@ -243,6 +274,10 @@ class PlayerSettingView(
             SettingAction.VIDEO_SPEED -> {
                 selected = PlayerInitializer.Player.videoSpeed != PlayerInitializer.Player.DEFAULT_SPEED ||
                     PlayerInitializer.Player.pressVideoSpeed != PlayerInitializer.Player.DEFAULT_PRESS_SPEED
+            }
+
+            SettingAction.ANIME4K -> {
+                selected = mControlWrapper.getAnime4kMode() != Anime4kMode.MODE_OFF
             }
 
             SettingAction.BACKGROUND_PLAY -> {
@@ -322,13 +357,28 @@ class PlayerSettingView(
                 onSettingVisibilityChanged(false)
             }
 
+            SettingAction.BILIBILI_PLAYBACK -> {
+                mControlWrapper.showSettingView(SettingViewType.BILIBILI_PLAYBACK)
+                onSettingVisibilityChanged(false)
+            }
+
             SettingAction.VIDEO_ASPECT -> {
                 mControlWrapper.showSettingView(SettingViewType.VIDEO_ASPECT)
                 onSettingVisibilityChanged(false)
             }
 
+            SettingAction.ANIME4K -> {
+                mControlWrapper.showSettingView(SettingViewType.ANIME4K)
+                onSettingVisibilityChanged(false)
+            }
+
             SettingAction.AUDIO_TRACK -> {
                 mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.AUDIO)
+                onSettingVisibilityChanged(false)
+            }
+
+            SettingAction.VIDEO_TRACK -> {
+                mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.VIDEO)
                 onSettingVisibilityChanged(false)
             }
 

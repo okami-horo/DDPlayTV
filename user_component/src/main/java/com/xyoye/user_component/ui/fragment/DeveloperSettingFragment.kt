@@ -8,9 +8,6 @@ import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import com.xyoye.common_component.config.DevelopConfig
-import com.xyoye.common_component.config.SubtitlePreferenceUpdater
-import com.xyoye.common_component.enums.RendererPreferenceSource
-import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.LogSystem
 import com.xyoye.common_component.log.model.LogLevel
@@ -19,7 +16,6 @@ import com.xyoye.common_component.log.model.PolicySource
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SecurityHelperConfig
 import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.user_component.R
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -38,7 +34,6 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         private const val KEY_LOG_LEVEL = "developer_log_level"
         private const val KEY_BUGLY_STATUS = "bugly_status"
         private const val KEY_SUBTITLE_SESSION_STATUS = "subtitle_session_status"
-        private const val KEY_SUBTITLE_FORCE_FALLBACK = "subtitle_force_fallback"
         private const val SUBTITLE_STATUS_PROVIDER =
             "com.xyoye.player.subtitle.debug.PlaybackSessionStatusProvider"
     }
@@ -132,12 +127,6 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
             }
         }
 
-        findPreference<Preference>(KEY_SUBTITLE_FORCE_FALLBACK)?.apply {
-            setOnPreferenceClickListener {
-                forceFallback()
-                true
-            }
-        }
     }
 
     private fun initBuglyStatusPreference() {
@@ -273,30 +262,7 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
         }
 
     private fun forceFallback() {
-        SubtitlePreferenceUpdater.persistBackend(
-            SubtitleRendererBackend.LEGACY_CANVAS,
-            RendererPreferenceSource.LOCAL_SETTINGS,
-        )
-        runCatching {
-            val providerClass = Class.forName(SUBTITLE_STATUS_PROVIDER)
-            val updateBackend =
-                providerClass.getMethod(
-                    "updateBackend",
-                    SubtitleRendererBackend::class.java,
-                )
-            updateBackend.invoke(null, SubtitleRendererBackend.LEGACY_CANVAS)
-            val markFallback =
-                providerClass.getMethod(
-                    "markFallback",
-                    SubtitleFallbackReason::class.java,
-                    Throwable::class.java,
-                )
-            markFallback.invoke(null, SubtitleFallbackReason.USER_REQUEST, null)
-        }.onFailure {
-            LogFacade.w(LogModule.SUBTITLE, SUBTITLE_TAG, "force fallback reflection failed: ${it.message}")
-        }
-        ToastCenter.showSuccess(getString(R.string.developer_subtitle_force_fallback_toast))
-        updateSubtitleSessionSummary()
+        // Legacy backend fallback disabled.
     }
 
     private fun updateSubtitleSessionSummary() {

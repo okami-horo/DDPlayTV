@@ -1,13 +1,8 @@
 package com.xyoye.storage_component.ui.activities.screencast.receiver
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.core.view.isVisible
 import com.alibaba.android.arouter.facade.annotation.Route
-import com.huawei.hms.hmsscankit.ScanUtil
-import com.huawei.hms.ml.scan.HmsBuildBitmapOption
-import com.huawei.hms.ml.scan.HmsScan
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.bridge.ServiceLifecycleBridge
 import com.xyoye.common_component.config.RouteTable
@@ -16,6 +11,7 @@ import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.storage.helper.ScreencastConstants
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.JsonHelper
+import com.xyoye.common_component.utils.QrCodeHelper
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
@@ -109,7 +105,7 @@ class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastB
                     addPositive {
                         httpPort = Random.nextInt(20000, 30000)
                         ScreencastConfig.putReceiverPort(httpPort)
-                        dataBinding.portTv.text = httpPort.toString()
+                        dataBinding.portTv.text = getString(R.string.format_int, httpPort)
                         it.dismiss()
                     }
                     addNegative { it.dismiss() }
@@ -137,7 +133,7 @@ class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastB
             httpPort = Random.nextInt(20000, 30000)
             ScreencastConfig.putReceiverPort(httpPort)
         }
-        dataBinding.portTv.text = httpPort.toString()
+        dataBinding.portTv.text = getString(R.string.format_int, httpPort)
     }
 
     private fun initPassword() {
@@ -222,36 +218,17 @@ class ScreencastActivity : BaseActivity<ScreencastViewModel, ActivityScreenCastB
     private fun createQRCode(
         content: String,
         enable: Boolean = true
-    ): Bitmap? {
+    ): android.graphics.Bitmap? {
         val logoRes = if (enable) R.mipmap.ic_logo else R.mipmap.ic_logo_gray
         val bmpColor = if (enable) R.color.text_black else R.color.text_gray
 
-        try {
-            val logo = BitmapFactory.decodeResource(resources, logoRes)
-            val options =
-                HmsBuildBitmapOption
-                    .Creator()
-                    .setQRLogoBitmap(logo)
-                    .setBitmapColor(bmpColor.toResColor())
-                    .create()
-            return ScanUtil.buildBitmap(
-                content,
-                HmsScan.QRCODE_SCAN_TYPE,
-                dp2px(200),
-                dp2px(200),
-                options,
-            )
-        } catch (e: Exception) {
-            // 上报二维码生成异常
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "ScreencastActivity",
-                "createQRCode",
-                "生成投屏二维码失败，content长度=${content.length}, enable=$enable",
-            )
-            e.printStackTrace()
-        }
-
-        return null
+        return QrCodeHelper.createQrCode(
+            context = this,
+            content = content,
+            sizePx = dp2px(200),
+            logoResId = logoRes,
+            bitmapColor = bmpColor.toResColor(),
+            errorContext = "生成投屏二维码失败，enable=$enable",
+        )
     }
 }

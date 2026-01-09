@@ -3,6 +3,8 @@ package com.xyoye.player.controller.base
 import android.content.Context
 import android.util.AttributeSet
 import android.view.KeyEvent
+import com.xyoye.common_component.focus.applyDpadFocusable
+import com.xyoye.common_component.focus.requestDefaultFocus
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player.controller.action.PlayerAction
 import com.xyoye.player.controller.video.InterGestureView
@@ -54,8 +56,7 @@ abstract class TvVideoController(
     protected var actionHandler: ((PlayerAction) -> Unit)? = null
 
     init {
-        isFocusable = true
-        isFocusableInTouchMode = true
+        applyDpadFocusable(enabled = true)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -105,7 +106,7 @@ abstract class TvVideoController(
     override fun hideController() {
         super.hideController()
         clearFocus()
-        requestFocus()
+        requestDefaultFocus()
     }
 
     protected fun dispatchAction(action: PlayerAction) {
@@ -152,6 +153,9 @@ abstract class TvVideoController(
     }
 
     protected fun changePosition(offset: Long) {
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            return
+        }
         val duration = mControlWrapper.getDuration()
         if (duration <= 0) {
             return
@@ -174,6 +178,10 @@ abstract class TvVideoController(
 
     private fun commitPendingSeek() {
         if (pendingSeekStartPosition == null) {
+            return
+        }
+        if (!mControlWrapper.isUserSeekAllowed()) {
+            resetPendingSeek()
             return
         }
         val duration = mControlWrapper.getDuration()

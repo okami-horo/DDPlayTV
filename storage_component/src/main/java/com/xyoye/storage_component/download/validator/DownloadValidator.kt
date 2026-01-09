@@ -2,11 +2,11 @@ package com.xyoye.storage_component.download.validator
 
 import com.xyoye.common_component.media3.Media3LocalStore
 import com.xyoye.common_component.network.repository.Media3Repository
+import com.xyoye.core_system_component.BuildConfig
 import com.xyoye.data_component.data.media3.DownloadValidationRequestData
 import com.xyoye.data_component.data.media3.DownloadValidationResponseData
 import com.xyoye.data_component.entity.media3.DownloadAssetCheck
 import com.xyoye.data_component.entity.media3.DownloadRequiredAction
-import com.xyoye.storage_component.BuildConfig
 
 class DownloadValidator(
     private val media3Version: String = BuildConfig.MEDIA3_VERSION,
