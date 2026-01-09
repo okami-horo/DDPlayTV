@@ -440,7 +440,13 @@ graph TD
 
 ### 阶段 3：system/log 分层语义对齐（P2，2~7 天，取决于路线）
 
-**路线 A（更新文档）**
+**状态**
+
+- ✅ 已完成（采用路线 A）
+  - 已更新：`AGENTS.md`（system/log 职责描述 + 分层依赖图，明确 `system -> log`）
+  - 已新增：`document/architecture/module_layering_v2.md`（作为 v2 分层语义入口）
+
+**路线 A（更新文档，已采用）**
 
 - 任务：更新理想图/模块职责说明，把 `core_system_component` 定义为 runtime；补充依赖治理说明
 - 验收：架构文档与 Gradle 依赖一致

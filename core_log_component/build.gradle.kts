@@ -9,6 +9,7 @@ plugins {
 moduleSetup()
 
 dependencies {
+    // Keep core_log_component low-level (no dependency on :core_system_component); runtime wiring happens in :core_system_component.
     // Avoid leaking :data_component transitively; consumers should declare it explicitly when used.
     implementation(project(":data_component"))
 
