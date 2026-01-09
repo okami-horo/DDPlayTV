@@ -20,7 +20,7 @@
             android:layout_marginTop="20dp"
             android:textColor="@color/text_white_immutable"
             android:textSize="16sp"
-            tools:text="B站画质/编码" />
+            tools:text="播放源设置" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_options"
@@ -48,4 +48,3 @@
 
     </FrameLayout>
 </layout>
-

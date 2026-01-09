@@ -12,14 +12,13 @@ import com.xyoye.common_component.extension.nextItemIndex
 import com.xyoye.common_component.extension.previousItemIndex
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
+import com.xyoye.common_component.playback.addon.PlaybackSettingsAddon
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
-import com.xyoye.common_component.utils.danmu.StorageDanmuMatcher
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.data_component.enums.PlayerType
-import com.xyoye.data_component.enums.MediaType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingAction
 import com.xyoye.player.info.SettingActionType
@@ -218,11 +217,9 @@ class PlayerSettingView(
             )
 
         val source = mControlWrapper.getVideoSource()
-        val isBilibiliPlayable =
-            source.getMediaType() == MediaType.BILIBILI_STORAGE &&
-                StorageDanmuMatcher.isBilibiliLive(source).not()
-        if (!isBilibiliPlayable) {
-            disabledActions.add(SettingAction.BILIBILI_PLAYBACK)
+        val canShowPlaybackSetting = source.getPlaybackAddon() is PlaybackSettingsAddon
+        if (!canShowPlaybackSetting) {
+            disabledActions.add(SettingAction.PLAYBACK_ADDON_SETTING)
         }
 
         if (PlayerInitializer.playerType != PlayerType.TYPE_EXO_PLAYER ||
@@ -357,7 +354,7 @@ class PlayerSettingView(
                 onSettingVisibilityChanged(false)
             }
 
-            SettingAction.BILIBILI_PLAYBACK -> {
+            SettingAction.PLAYBACK_ADDON_SETTING -> {
                 mControlWrapper.showSettingView(SettingViewType.BILIBILI_PLAYBACK)
                 onSettingVisibilityChanged(false)
             }

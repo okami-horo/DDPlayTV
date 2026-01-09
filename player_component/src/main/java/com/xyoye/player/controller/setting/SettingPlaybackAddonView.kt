@@ -21,7 +21,7 @@ import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ItemPlayerSettingTypeBinding
 import com.xyoye.player_component.databinding.ItemSettingTracksBinding
-import com.xyoye.player_component.databinding.LayoutSettingBilibiliPlaybackBinding
+import com.xyoye.player_component.databinding.LayoutSettingPlaybackAddonBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -36,7 +36,7 @@ class SettingPlaybackAddonView
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,
-    ) : BaseSettingView<LayoutSettingBilibiliPlaybackBinding>(context, attrs, defStyleAttr) {
+    ) : BaseSettingView<LayoutSettingPlaybackAddonBinding>(context, attrs, defStyleAttr) {
         private data class SectionRow(
             val title: String,
         )
@@ -65,7 +65,7 @@ class SettingPlaybackAddonView
             initView()
         }
 
-        override fun getLayoutId(): Int = R.layout.layout_setting_bilibili_playback
+        override fun getLayoutId(): Int = R.layout.layout_setting_playback_addon
 
         // 过渡阶段沿用旧 ViewType，避免修改枚举/路由
         override fun getSettingViewType(): SettingViewType = SettingViewType.BILIBILI_PLAYBACK
@@ -228,4 +228,3 @@ class SettingPlaybackAddonView
             loadJob = null
         }
     }
-
