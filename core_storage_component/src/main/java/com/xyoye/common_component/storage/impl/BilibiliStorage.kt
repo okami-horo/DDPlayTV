@@ -409,6 +409,23 @@ class BilibiliStorage(
     override fun getNetworkHeaders(): Map<String, String>? =
         BilibiliHeaders.withCookie(repository.cookieHeaderOrNull())
 
+    override fun getNetworkHeaders(file: StorageFile): Map<String, String>? {
+        val headers = getNetworkHeaders() ?: return null
+        val bilibiliKey = BilibiliKeys.parse(file.uniqueKey()) ?: return headers
+
+        val referer =
+            when (bilibiliKey) {
+                is BilibiliKeys.ArchiveKey -> "https://www.bilibili.com/video/${bilibiliKey.bvid}"
+                is BilibiliKeys.PgcEpisodeKey -> "https://www.bilibili.com/bangumi/play/ep${bilibiliKey.epId}"
+                is BilibiliKeys.LiveKey -> "https://live.bilibili.com/${bilibiliKey.roomId}"
+                is BilibiliKeys.PgcSeasonKey -> null
+            } ?: return headers
+
+        return headers.toMutableMap().apply {
+            this[BilibiliHeaders.HEADER_REFERER] = referer
+        }
+    }
+
     override suspend fun test(): Boolean {
         val nav = repository.nav().getOrNull() ?: return false
         return nav.isLogin && repository.isLoggedIn()

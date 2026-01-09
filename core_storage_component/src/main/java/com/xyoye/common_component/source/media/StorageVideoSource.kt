@@ -2,8 +2,6 @@ package com.xyoye.common_component.source.media
 
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
-import com.xyoye.common_component.bilibili.BilibiliKeys
-import com.xyoye.common_component.bilibili.net.BilibiliHeaders
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackAddon
 import com.xyoye.common_component.playback.addon.PlaybackAddon
 import com.xyoye.common_component.playback.addon.PlaybackIdentity
@@ -74,22 +72,7 @@ class StorageVideoSource(
 
     override fun getUniqueKey(): String = file.uniqueKey()
 
-    override fun getHttpHeader(): Map<String, String>? {
-        val headers = file.storage.getNetworkHeaders() ?: return null
-        val bilibiliKey = BilibiliKeys.parse(file.uniqueKey()) ?: return headers
-
-        val referer =
-            when (bilibiliKey) {
-                is BilibiliKeys.ArchiveKey -> "https://www.bilibili.com/video/${bilibiliKey.bvid}"
-                is BilibiliKeys.PgcEpisodeKey -> "https://www.bilibili.com/bangumi/play/ep${bilibiliKey.epId}"
-                is BilibiliKeys.LiveKey -> "https://live.bilibili.com/${bilibiliKey.roomId}"
-                is BilibiliKeys.PgcSeasonKey -> null
-            } ?: return headers
-
-        return headers.toMutableMap().apply {
-            this[BilibiliHeaders.HEADER_REFERER] = referer
-        }
-    }
+    override fun getHttpHeader(): Map<String, String>? = file.storage.getNetworkHeaders(file)
 
     override fun getStorageId(): Int = file.storage.library.id
 
