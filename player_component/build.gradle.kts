@@ -151,7 +151,6 @@ dependencies {
     implementation(project(":core_network_component"))
     implementation(project(":core_database_component"))
     implementation(project(":core_storage_component"))
-    implementation(project(":bilibili_component"))
 
     implementation(project(":repository:panel_switch"))
     implementation(project(":repository:danmaku"))

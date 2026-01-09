@@ -21,7 +21,6 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.gyf.immersionbar.BarHide
 import com.gyf.immersionbar.ImmersionBar
-import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.bridge.PlayTaskBridge
 import com.xyoye.common_component.config.DanmuConfig
@@ -48,6 +47,7 @@ import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
 import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
 import com.xyoye.common_component.playback.addon.PlaybackUrlRecoverableAddon
 import com.xyoye.common_component.utils.screencast.ScreencastHandler
+import com.xyoye.common_component.utils.danmu.StorageDanmuMatcher
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.VideoTrackBean
@@ -467,25 +467,19 @@ class PlayerActivity :
             }
 
             // B站画质/编码切换
-            observerBilibiliPlaybackUpdate { update ->
+            observerPlaybackSettingUpdate { update ->
                 val source = danDanPlayer.getVideoSource()
-                val storageSource = source as? StorageVideoSource ?: return@observerBilibiliPlaybackUpdate
+                val storageSource = source as? StorageVideoSource ?: return@observerPlaybackSettingUpdate
                 val addon = storageSource.getPlaybackAddon() as? PlaybackPreferenceSwitchableAddon
                 if (addon == null) {
                     ToastCenter.showWarning("当前播放源不支持切换")
-                    return@observerBilibiliPlaybackUpdate
+                    return@observerPlaybackSettingUpdate
                 }
-                val settingUpdate =
-                    runCatching { update.toPlaybackSettingUpdate() }
-                        .getOrElse {
-                            ToastCenter.showError(it.message ?: "切换失败")
-                            return@observerBilibiliPlaybackUpdate
-                        }
 
                 val positionMs = danDanPlayer.getCurrentPosition()
                 if (PlayerInitializer.playerType != PlayerType.TYPE_EXO_PLAYER) {
                     lifecycleScope.launch(Dispatchers.IO) {
-                        val result = addon.applySettingUpdate(settingUpdate, positionMs)
+                        val result = addon.applySettingUpdate(update, positionMs)
                         withContext(Dispatchers.Main) {
                             if (result.isFailure) {
                                 ToastCenter.showError(result.exceptionOrNull()?.message ?: "设置失败")
@@ -494,7 +488,7 @@ class PlayerActivity :
                             }
                         }
                     }
-                    return@observerBilibiliPlaybackUpdate
+                    return@observerPlaybackSettingUpdate
                 }
                 cancelPlaybackAddonJob(resetAttempts = false)
                 showLoading()
@@ -502,7 +496,7 @@ class PlayerActivity :
                 playbackAddonJob =
                     lifecycleScope.launch(Dispatchers.IO) {
                         try {
-                            val result = addon.applySettingUpdate(settingUpdate, positionMs)
+                            val result = addon.applySettingUpdate(update, positionMs)
                             withContext(Dispatchers.Main) {
                                 hideLoading()
                                 val playUrl = result.getOrNull()
@@ -631,10 +625,7 @@ class PlayerActivity :
             LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "load history cid=${historyDanmu.episodeId}")
             videoController.addExtendTrack(VideoTrackBean.danmu(historyDanmu))
         } else {
-            val isBilibiliLive =
-                source.getMediaType() == MediaType.BILIBILI_STORAGE &&
-                    (BilibiliKeys.parse(source.getUniqueKey()) is BilibiliKeys.LiveKey)
-
+            val isBilibiliLive = StorageDanmuMatcher.isBilibiliLive(source)
             if (
                 isBilibiliLive &&
                 DanmuConfig.isAutoEnableBilibiliLiveDanmaku() &&
@@ -849,42 +840,6 @@ class PlayerActivity :
     private fun releasePlaybackAddonIfNeeded(source: BaseVideoSource) {
         val addon = source.getPlaybackAddon() as? PlaybackReleasableAddon ?: return
         runCatching { addon.onRelease() }
-    }
-
-    private fun com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession.PreferenceUpdate.toPlaybackSettingUpdate(): PlaybackSettingUpdate {
-        val playMode = playMode
-        if (playMode != null) {
-            return PlaybackSettingUpdate(
-                settingId = "bilibili.play_mode",
-                optionId = playMode.name,
-            )
-        }
-
-        val qualityQn = qualityQn
-        if (qualityQn != null) {
-            return PlaybackSettingUpdate(
-                settingId = "bilibili.quality_qn",
-                optionId = qualityQn.toString(),
-            )
-        }
-
-        val videoCodec = videoCodec
-        if (videoCodec != null) {
-            return PlaybackSettingUpdate(
-                settingId = "bilibili.video_codec",
-                optionId = videoCodec.name,
-            )
-        }
-
-        val audioQualityId = audioQualityId
-        if (audioQualityId != null) {
-            return PlaybackSettingUpdate(
-                settingId = "bilibili.audio_quality",
-                optionId = audioQualityId.toString(),
-            )
-        }
-
-        throw IllegalArgumentException("未知B站设置项")
     }
 
     private fun dispatchPlaybackSourceChangedEvent(source: BaseVideoSource) {

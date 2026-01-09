@@ -14,7 +14,7 @@ import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
-import com.xyoye.common_component.bilibili.BilibiliKeys
+import com.xyoye.common_component.utils.danmu.StorageDanmuMatcher
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
@@ -220,7 +220,7 @@ class PlayerSettingView(
         val source = mControlWrapper.getVideoSource()
         val isBilibiliPlayable =
             source.getMediaType() == MediaType.BILIBILI_STORAGE &&
-                (BilibiliKeys.parse(source.getUniqueKey()) !is BilibiliKeys.LiveKey)
+                StorageDanmuMatcher.isBilibiliLive(source).not()
         if (!isBilibiliPlayable) {
             disabledActions.add(SettingAction.BILIBILI_PLAYBACK)
         }

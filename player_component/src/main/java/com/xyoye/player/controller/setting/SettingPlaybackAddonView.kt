@@ -7,15 +7,14 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
-import com.xyoye.common_component.bilibili.BilibiliPlayMode
-import com.xyoye.common_component.bilibili.BilibiliQuality
-import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
-import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSessionStore
 import com.xyoye.common_component.extension.nextItemIndex
 import com.xyoye.common_component.extension.previousItemIndex
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
+import com.xyoye.common_component.playback.addon.PlaybackSettingSpec
+import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
+import com.xyoye.common_component.playback.addon.PlaybackSettingsAddon
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationOrientation
 import com.xyoye.data_component.enums.SettingViewType
@@ -23,26 +22,36 @@ import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ItemPlayerSettingTypeBinding
 import com.xyoye.player_component.databinding.ItemSettingTracksBinding
 import com.xyoye.player_component.databinding.LayoutSettingBilibiliPlaybackBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class SettingBilibiliPlaybackView
+class SettingPlaybackAddonView
     @JvmOverloads
     constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
     ) : BaseSettingView<LayoutSettingBilibiliPlaybackBinding>(context, attrs, defStyleAttr) {
-        private data class Section(
+        private data class SectionRow(
             val title: String,
         )
 
-        private data class Option(
+        private data class OptionRow(
             val label: String,
-            val update: BilibiliPlaybackSession.PreferenceUpdate,
+            val update: PlaybackSettingUpdate,
             val selected: Boolean,
         )
 
         private var rows: List<Any> = emptyList()
-        private var updateBlock: ((BilibiliPlaybackSession.PreferenceUpdate) -> Unit)? = null
+        private var updateBlock: ((PlaybackSettingUpdate) -> Unit)? = null
+
+        private var loadJob: Job? = null
+        private var loadScope: CoroutineScope? = null
 
         private val decoration
             get() =
@@ -58,21 +67,30 @@ class SettingBilibiliPlaybackView
 
         override fun getLayoutId(): Int = R.layout.layout_setting_bilibili_playback
 
+        // 过渡阶段沿用旧 ViewType，避免修改枚举/路由
         override fun getSettingViewType(): SettingViewType = SettingViewType.BILIBILI_PLAYBACK
 
         override fun onViewShow() {
-            viewBinding.tvTitle.text = "B站画质/编码"
+            viewBinding.tvTitle.text = "播放源设置"
             refreshRows()
         }
 
         override fun onViewHide() {
             viewBinding.rvOptions.focusedChild?.clearFocus()
             viewBinding.rvOptions.clearFocus()
+            cancelLoadJob()
+        }
+
+        override fun onDetachedFromWindow() {
+            cancelLoadJob()
+            loadScope?.cancel()
+            loadScope = null
+            super.onDetachedFromWindow()
         }
 
         override fun onKeyDown(
             keyCode: Int,
-            event: KeyEvent?
+            event: KeyEvent?,
         ): Boolean {
             if (isSettingShowing().not()) {
                 return false
@@ -83,14 +101,14 @@ class SettingBilibiliPlaybackView
                 return true
             }
 
-            val firstIndex = rows.indexOfFirst { it is Option }
+            val firstIndex = rows.indexOfFirst { it is OptionRow }
             if (firstIndex != -1) {
                 viewBinding.rvOptions.requestIndexChildFocus(firstIndex)
             }
             return true
         }
 
-        fun setUpdateBlock(block: (BilibiliPlaybackSession.PreferenceUpdate) -> Unit) {
+        fun setUpdateBlock(block: (PlaybackSettingUpdate) -> Unit) {
             updateBlock = block
         }
 
@@ -101,16 +119,16 @@ class SettingBilibiliPlaybackView
                 adapter =
                     buildAdapter {
                         addItem<Any, ItemPlayerSettingTypeBinding>(R.layout.item_player_setting_type) {
-                            checkType { data, _ -> data is Section }
+                            checkType { data, _ -> data is SectionRow }
                             initView { data, _, _ ->
-                                itemBinding.tvType.text = (data as Section).title
+                                itemBinding.tvType.text = (data as SectionRow).title
                             }
                         }
 
                         addItem<Any, ItemSettingTracksBinding>(R.layout.item_setting_tracks) {
-                            checkType { data, _ -> data is Option }
+                            checkType { data, _ -> data is OptionRow }
                             initView { data, _, _ ->
-                                val option = data as Option
+                                val option = data as OptionRow
                                 itemBinding.tvName.text = option.label
                                 itemBinding.tvName.isSelected = option.selected
                                 itemBinding.tvName.setOnClickListener {
@@ -127,85 +145,60 @@ class SettingBilibiliPlaybackView
         }
 
         private fun refreshRows() {
-            val source = mControlWrapper.getVideoSource()
-            val session = BilibiliPlaybackSessionStore.get(source.getStorageId(), source.getUniqueKey())
-            val snapshot = session?.snapshot()
+            cancelLoadJob()
 
-            rows =
-                if (snapshot == null) {
-                    emptyList()
-                } else {
-                    buildRows(snapshot)
-                }
+            viewBinding.tvEmpty.isVisible = false
+            rows = emptyList()
             viewBinding.rvOptions.setData(rows)
-            viewBinding.tvEmpty.isVisible = rows.none { it is Option }
-        }
 
-        private fun buildRows(snapshot: BilibiliPlaybackSession.Snapshot): List<Any> {
-            val items = mutableListOf<Any>()
-
-            items.add(Section("播放模式"))
-            BilibiliPlayMode.entries.forEach { mode ->
-                items.add(
-                    Option(
-                        label = mode.label,
-                        update = BilibiliPlaybackSession.PreferenceUpdate(playMode = mode),
-                        selected = snapshot.playMode == mode,
-                    ),
-                )
-            }
-
-            if (snapshot.dashAvailable) {
-                items.add(Section("画质"))
-                snapshot.qualities
-                    .sorted()
-                    .forEach { qn ->
-                        items.add(
-                            Option(
-                                label = qualityLabel(qn),
-                                update = BilibiliPlaybackSession.PreferenceUpdate(qualityQn = qn),
-                                selected = snapshot.selectedQualityQn == qn,
-                            ),
-                        )
+            val scope = (loadScope ?: CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)).also { loadScope = it }
+            loadJob =
+                scope.launch {
+                    val addon = mControlWrapper.getVideoSource().getPlaybackAddon() as? PlaybackSettingsAddon
+                    if (addon == null) {
+                        rows = emptyList()
+                        viewBinding.rvOptions.setData(rows)
+                        viewBinding.tvEmpty.isVisible = true
+                        return@launch
                     }
 
-                items.add(Section("视频编码"))
-                snapshot.videoCodecs.forEach { codec ->
-                    items.add(
-                        Option(
-                            label = codec.label,
-                            update = BilibiliPlaybackSession.PreferenceUpdate(videoCodec = codec),
-                            selected = snapshot.selectedVideoCodec == codec,
-                        ),
-                    )
-                }
+                    val spec =
+                        withContext(Dispatchers.IO) {
+                            addon.getSettingSpec().getOrNull()
+                        }
 
-                items.add(Section("音质"))
-                snapshot.audios.forEach { audio ->
-                    val kbps = if (audio.bandwidth > 0) audio.bandwidth / 1000 else 0
-                    val label = if (kbps > 0) "音质 ${audio.id}（${kbps}kbps）" else "音质 ${audio.id}"
-                    items.add(
-                        Option(
-                            label = label,
-                            update = BilibiliPlaybackSession.PreferenceUpdate(audioQualityId = audio.id),
-                            selected = snapshot.selectedAudioQualityId == audio.id,
-                        ),
-                    )
+                    rows = spec?.let { buildRows(it) }.orEmpty()
+                    viewBinding.rvOptions.setData(rows)
+                    viewBinding.tvEmpty.isVisible = rows.none { it is OptionRow }
                 }
-            }
-
-            return items
         }
 
-        private fun qualityLabel(qn: Int): String {
-            val mapped = BilibiliQuality.fromQn(qn)
-            if (mapped != BilibiliQuality.AUTO) {
-                return mapped.label
+        private fun buildRows(spec: PlaybackSettingSpec): List<Any> {
+            val items = mutableListOf<Any>()
+            spec.sections.forEach { section ->
+                items.add(SectionRow(section.title))
+
+                section.items.forEach { item ->
+                    when (item) {
+                        is PlaybackSettingSpec.Item.SingleChoice -> {
+                            item.options.forEach { option ->
+                                items.add(
+                                    OptionRow(
+                                        label = option.label,
+                                        update =
+                                            PlaybackSettingUpdate(
+                                                settingId = item.settingId,
+                                                optionId = option.optionId,
+                                            ),
+                                        selected = item.selectedOptionId == option.optionId,
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                }
             }
-            if (qn == BilibiliQuality.AUTO.qn) {
-                return mapped.label
-            }
-            return "QN $qn"
+            return items
         }
 
         private fun handleKeyCode(keyCode: Int): Boolean {
@@ -219,8 +212,8 @@ class SettingBilibiliPlaybackView
 
             val targetIndex =
                 when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_LEFT -> rows.previousItemIndex<Option>(focusedIndex)
-                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT -> rows.nextItemIndex<Option>(focusedIndex)
+                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_LEFT -> rows.previousItemIndex<OptionRow>(focusedIndex)
+                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT -> rows.nextItemIndex<OptionRow>(focusedIndex)
                     else -> return false
                 }
             if (targetIndex == -1) {
@@ -229,4 +222,10 @@ class SettingBilibiliPlaybackView
             viewBinding.rvOptions.requestIndexChildFocus(targetIndex)
             return true
         }
+
+        private fun cancelLoadJob() {
+            loadJob?.cancel()
+            loadJob = null
+        }
     }
+

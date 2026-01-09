@@ -4,9 +4,9 @@ import android.content.Context
 import android.util.AttributeSet
 import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
-import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
 import com.xyoye.common_component.focus.resetDescendantFocus
 import com.xyoye.common_component.extension.isTelevisionUiMode
+import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
 import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
@@ -290,8 +290,8 @@ class VideoController(
         mSettingController.setDanmuSearch(search, download, searchResult)
     }
 
-    fun observerBilibiliPlaybackUpdate(block: (BilibiliPlaybackSession.PreferenceUpdate) -> Unit) {
-        mSettingController.setBilibiliPlaybackUpdateBlock(block)
+    fun observerPlaybackSettingUpdate(block: (PlaybackSettingUpdate) -> Unit) {
+        mSettingController.setPlaybackSettingUpdateBlock(block)
     }
 
     /**
