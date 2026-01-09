@@ -19,13 +19,14 @@ kapt {
 }
 
 dependencies {
+    implementation(project(":core_contract_component"))
     implementation(project(":core_system_component"))
     implementation(project(":core_log_component"))
-    implementation(project(":core_storage_component"))
 
-    // Dialog/UI public API leaks some data types.
-    api(project(":data_component"))
+    // Avoid leaking :data_component transitively; consumers should declare it explicitly when used.
+    implementation(project(":data_component"))
 
+    // Feature modules reference ImmersionBar types directly; keep as API surface for now.
     api(project(":repository:immersion_bar"))
 
     api(Dependencies.Kotlin.coroutines_core)

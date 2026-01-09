@@ -35,7 +35,6 @@ abstract class BaseShellActivity<V : ViewDataBinding> :
     protected fun initShell() {
         ARouter.getInstance().inject(this)
 
-        viewModel.initDatabase()
         viewModel.initCloudBlockData()
         initScreencastReceive()
 

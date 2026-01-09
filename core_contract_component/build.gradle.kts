@@ -8,6 +8,7 @@ plugins {
 moduleSetup()
 
 dependencies {
+    // Contract types reference :data_component in their public API.
     api(project(":data_component"))
     api(Dependencies.Alibaba.arouter_api)
 

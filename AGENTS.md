@@ -18,8 +18,8 @@ The app follows a modular MVVM layout: `app/` hosts the launcher shell, shared U
   - `:bilibili_component`：B 站能力适配（鉴权/Cookie、签名、播放链接/MPD、弹幕下载、直播弹幕 socket、播放心跳与风控态等），供多模块复用。
 - 核心基础组件（7）
   - `:core_contract_component`：跨模块契约与路由（如 `RouteTable`）、Service 接口（存储文件共享/投屏等）、播放扩展/Media3 会话公共 API。
-  - `:core_system_component`：应用基础设施（Application/初始化、权限/通知/广播、全局配置表与工具、构建期注入密钥/开关等）。
-  - `:core_log_component`：日志与上报（日志采集/落盘、Bugly 上报、运行态日志策略/采样、字幕/播放遥测等）。
+  - `:core_system_component`：运行时（runtime）与系统能力整合（Application/启动编排、权限/通知/广播、全局配置表与工具、构建期注入密钥/开关等；允许依赖 `:core_log_component` 以完成“尽早初始化日志/崩溃上报链路”）。
+  - `:core_log_component`：日志与上报基础设施（日志采集/落盘、Bugly 上报、运行态日志策略/采样、字幕/播放遥测等；由 runtime 负责初始化与装配，`core_log_component` 本身不依赖 `core_system_component`）。
   - `:core_network_component`：网络层基础（Retrofit+Moshi、请求封装与拦截器体系、各业务 Service/Repository）。
   - `:core_database_component`：数据库层（Room 数据库管理、DAO、迁移、部分本地 Store）。
   - `:core_storage_component`：存储抽象与实现（多协议/多来源 Storage、媒体解析/播放代理、弹幕/字幕查找、7zip 解压、thunder 下载管理等）。
@@ -34,8 +34,8 @@ The app follows a modular MVVM layout: `app/` hosts the launcher shell, shared U
   - `:repository:thunder`：`thunder.aar` 下载相关库封装。
   - `:repository:video_cache`：`library-release.aar` 视频缓存库封装。
 
-## 理想模块依赖关系图（建议目标）
-> 说明：当前实际依赖以各模块 `build.gradle.kts` 为准；此图用于“理想重构目标/依赖治理”参考。
+## 模块依赖分层规则（基于当前 Gradle 依赖）
+> 说明：用于“分层语义对齐 + 依赖治理”参考；边关系以 `document/architecture/module_dependencies_snapshot.md`（Gradle `project(...)` 直接依赖快照）为准；分层语义与治理规则以 `document/architecture/module_dependency_governance.md` 为准（含 DR-0001：system 视为 runtime，允许 `system -> log`）。
 
 **设计原则**
 - 单向依赖、无环（依赖只允许从“上层业务”指向“下层基础设施/契约/数据”）。
@@ -61,7 +61,7 @@ graph TD
     contract[":core_contract_component"]
   end
 
-  subgraph Platform["平台层（系统能力）"]
+  subgraph Runtime["运行时层（runtime）"]
     system[":core_system_component"]
     log[":core_log_component"]
   end
@@ -91,15 +91,14 @@ graph TD
   system --> contract
   system --> data
 
-  log --> system
   log --> data
+  system --> log
 
   network --> system
   network --> log
   network --> data
 
   db --> system
-  db --> log
   db --> data
 
   bilibili --> network
@@ -126,6 +125,8 @@ graph TD
   uiCore --> repo_immersion
 
   anime --> uiCore
+  anime --> system
+  anime --> log
   anime --> network
   anime --> db
   anime --> storageCore
@@ -133,13 +134,19 @@ graph TD
   anime --> data
 
   local --> uiCore
+  local --> system
+  local --> log
+  local --> network
   local --> storageCore
   local --> db
+  local --> bilibili
   local --> contract
   local --> data
 
   user --> uiCore
   user --> system
+  user --> log
+  user --> network
   user --> db
   user --> storageCore
   user --> bilibili
@@ -147,10 +154,11 @@ graph TD
   user --> data
 
   player --> uiCore
+  player --> system
+  player --> log
   player --> storageCore
   player --> network
   player --> db
-  player --> bilibili
   player --> contract
   player --> data
   player --> repo_danmaku
@@ -158,7 +166,12 @@ graph TD
   player --> repo_cache
 
   storageFeature --> uiCore
+  storageFeature --> system
+  storageFeature --> log
+  storageFeature --> network
+  storageFeature --> db
   storageFeature --> storageCore
+  storageFeature --> bilibili
   storageFeature --> contract
   storageFeature --> data
 
@@ -168,7 +181,12 @@ graph TD
   app --> player
   app --> storageFeature
   app --> system
+  app --> log
+  app --> network
+  app --> db
   app --> uiCore
+  app --> contract
+  app --> data
 ```
 
 ## Build, Test, and Development Commands
@@ -177,6 +195,7 @@ Use Gradle from repo root:
 - `./gradlew assembleRelease` – optimized, signed release artifacts.
 - `./gradlew clean build` – full rebuild to validate cross-module wiring.
 - `./gradlew dependencyUpdates` – report outdated libraries defined in `build.gradle.kts`.
+- `./gradlew verifyModuleDependencies` – 模块依赖治理校验（v2），检查 `project(...)` 直接依赖是否符合允许矩阵/白名单。
 - `./gradlew testDebugUnitTest` and `./gradlew connectedDebugAndroidTest` – run JVM unit tests and device/emulator instrumentation respectively.
 
 ### Build Verification Requirement
