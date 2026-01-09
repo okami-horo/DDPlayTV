@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/gray_40">
-    <item>
-        <shape android:shape="rectangle">
-            <corners android:radius="24dp" />
-            <solid android:color="@color/layout_bg_color" />
-        </shape>
-    </item>
-</ripple>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:drawable="@drawable/background_button_corner_gray_focused"
+        android:state_focused="true" />
+    <item android:drawable="@drawable/background_button_corner_gray_ripple" />
+</selector>
