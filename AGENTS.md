@@ -3,6 +3,174 @@
 ## Project Structure & Module Organization
 The app follows a modular MVVM layout: `app/` hosts the launcher shell, shared UI glue, and manifest; feature slices live in sibling directories (`anime_component/`, `player_component/`, `local_component/`, `storage_component/`, `stream_component/`, `user_component/`, `download_component/`). Foundation logic is centralized in `common_component/` (base classes, utilities) and `data_component/` (entities, repositories). Build tooling resides in `buildSrc/` and custom assets/scripts live under `document/`, `scripts/`, and `repository/`. Keep media or prompts within `Img/` or `prompts/` instead of polluting module folders.
 
+## 组件大类与用途（以 `settings.gradle.kts` 为准）
+> 统计口径：仅包含 `settings.gradle.kts` 里 `include(...)` 的模块；仓库里可能还有同名目录但未被纳入当前主工程构建。
+
+- 总模块数：`21`（主业务/核心/数据 `15` + `repository` 内置依赖 `6`）
+- 入口壳（1）
+  - `:app`：应用入口与壳层（启动/主界面含 TV），并负责把各组件组装成最终 APK；同时承载 Media3 会话/后台服务等全局能力。
+- 业务功能组件（6）
+  - `:anime_component`：番剧/资源搜索、筛选、详情、追番、历史等（含磁力搜索相关界面）。
+  - `:local_component`：本地媒体库与播放入口；播放历史；弹幕/字幕来源绑定与下载（如 B 站弹幕、Shooter 字幕等）。
+  - `:player_component`：播放器能力与 UI（Media3/VLC/mpv 内核适配、字幕/ASS 渲染、弹幕渲染与过滤、TV/手势控制、缓存等）。
+  - `:storage_component`：存储与“串流/投屏”业务 UI（文件浏览、远程存储配置、扫码/远程扫描、投屏提供与接收等）。
+  - `:user_component`：用户中心与设置（登录/用户信息、主题、播放器/应用/开发者设置、缓存与扫描管理、关于/许可等）。
+  - `:bilibili_component`：B 站能力适配（鉴权/Cookie、签名、播放链接/MPD、弹幕下载、直播弹幕 socket、播放心跳与风控态等），供多模块复用。
+- 核心基础组件（7）
+  - `:core_contract_component`：跨模块契约与路由（如 `RouteTable`）、Service 接口（存储文件共享/投屏等）、播放扩展/Media3 会话公共 API。
+  - `:core_system_component`：应用基础设施（Application/初始化、权限/通知/广播、全局配置表与工具、构建期注入密钥/开关等）。
+  - `:core_log_component`：日志与上报（日志采集/落盘、Bugly 上报、运行态日志策略/采样、字幕/播放遥测等）。
+  - `:core_network_component`：网络层基础（Retrofit+Moshi、请求封装与拦截器体系、各业务 Service/Repository）。
+  - `:core_database_component`：数据库层（Room 数据库管理、DAO、迁移、部分本地 Store）。
+  - `:core_storage_component`：存储抽象与实现（多协议/多来源 Storage、媒体解析/播放代理、弹幕/字幕查找、7zip 解压、thunder 下载管理等）。
+  - `:core_ui_component`：通用 UI 基建（BaseActivity/Fragment/ViewModel、Adapter/分页、主题/焦点策略、公共控件/对话框等）。
+- 数据模型组件（1）
+  - `:data_component`：共享数据层（Room Entity/Converter、网络模型 Moshi、业务枚举/参数对象）。
+- 内置仓库依赖模块（6）
+  - `:repository:danmaku`：`DanmakuFlameMaster.aar` 弹幕渲染库封装。
+  - `:repository:immersion_bar`：`immersionbar.aar` 沉浸式状态栏库封装。
+  - `:repository:panel_switch`：`panelSwitchHelper-androidx.aar` 面板/键盘切换库封装。
+  - `:repository:seven_zip`：`sevenzipjbinding4Android.aar` 7z 解压库封装。
+  - `:repository:thunder`：`thunder.aar` 下载相关库封装。
+  - `:repository:video_cache`：`library-release.aar` 视频缓存库封装。
+
+## 理想模块依赖关系图（建议目标）
+> 说明：当前实际依赖以各模块 `build.gradle.kts` 为准；此图用于“理想重构目标/依赖治理”参考。
+
+**设计原则**
+- 单向依赖、无环（依赖只允许从“上层业务”指向“下层基础设施/契约/数据”）。
+- `core_*` 只提供可复用能力，不反向依赖任何业务功能模块。
+- 业务功能模块之间禁止互相依赖（跨业务协作通过 `core_contract_component` 的契约/接口 + 路由完成）。
+- `repository:*` 仅作为二/三方封装，被需要的模块直接依赖，避免 `app` 无意义引入。
+
+```mermaid
+graph TD
+  %% 约定：A --> B 表示 A 依赖 B
+
+  subgraph Repo["repository/*（内置 AAR 依赖）"]
+    repo_danmaku[":repository:danmaku"]
+    repo_immersion[":repository:immersion_bar"]
+    repo_panel[":repository:panel_switch"]
+    repo_seven[":repository:seven_zip"]
+    repo_thunder[":repository:thunder"]
+    repo_cache[":repository:video_cache"]
+  end
+
+  subgraph Base["基础层（纯数据/契约）"]
+    data[":data_component"]
+    contract[":core_contract_component"]
+  end
+
+  subgraph Platform["平台层（系统能力）"]
+    system[":core_system_component"]
+    log[":core_log_component"]
+  end
+
+  subgraph Infra["基础设施层（可替换实现）"]
+    network[":core_network_component"]
+    db[":core_database_component"]
+    bilibili[":bilibili_component"]
+    storageCore[":core_storage_component"]
+  end
+
+  subgraph UI["UI 基建层"]
+    uiCore[":core_ui_component"]
+  end
+
+  subgraph Feature["业务功能层"]
+    anime[":anime_component"]
+    local[":local_component"]
+    user[":user_component"]
+    player[":player_component"]
+    storageFeature[":storage_component"]
+  end
+
+  app[":app（组合根/壳）"]
+
+  contract --> data
+  system --> contract
+  system --> data
+
+  log --> system
+  log --> data
+
+  network --> system
+  network --> log
+  network --> data
+
+  db --> system
+  db --> log
+  db --> data
+
+  bilibili --> network
+  bilibili --> db
+  bilibili --> system
+  bilibili --> log
+  bilibili --> contract
+  bilibili --> data
+
+  storageCore --> contract
+  storageCore --> network
+  storageCore --> db
+  storageCore --> system
+  storageCore --> log
+  storageCore --> data
+  storageCore --> bilibili
+  storageCore --> repo_seven
+  storageCore --> repo_thunder
+
+  uiCore --> system
+  uiCore --> log
+  uiCore --> contract
+  uiCore --> data
+  uiCore --> repo_immersion
+
+  anime --> uiCore
+  anime --> network
+  anime --> db
+  anime --> storageCore
+  anime --> contract
+  anime --> data
+
+  local --> uiCore
+  local --> storageCore
+  local --> db
+  local --> contract
+  local --> data
+
+  user --> uiCore
+  user --> system
+  user --> db
+  user --> storageCore
+  user --> bilibili
+  user --> contract
+  user --> data
+
+  player --> uiCore
+  player --> storageCore
+  player --> network
+  player --> db
+  player --> bilibili
+  player --> contract
+  player --> data
+  player --> repo_danmaku
+  player --> repo_panel
+  player --> repo_cache
+
+  storageFeature --> uiCore
+  storageFeature --> storageCore
+  storageFeature --> contract
+  storageFeature --> data
+
+  app --> anime
+  app --> local
+  app --> user
+  app --> player
+  app --> storageFeature
+  app --> system
+  app --> uiCore
+```
+
 ## Build, Test, and Development Commands
 Use Gradle from repo root:
 - `./gradlew assembleDebug` – fast developer build with logging enabled.
