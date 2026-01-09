@@ -9,6 +9,7 @@ import com.xyoye.common_component.bilibili.error.BilibiliPlaybackErrorReporter
 import com.xyoye.common_component.playback.addon.PlaybackEvent
 import com.xyoye.common_component.playback.addon.PlaybackIdentity
 import com.xyoye.common_component.playback.addon.PlaybackRecoveryRequest
+import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
 import com.xyoye.common_component.playback.addon.PlaybackSettingSpec
 import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
 import com.xyoye.common_component.playback.addon.PlaybackPreferenceSwitchableAddon
@@ -22,7 +23,8 @@ class BilibiliPlaybackAddon(
     private val supportsSeamlessPreferenceSwitch: Boolean,
 ) : PlaybackSettingsAddon,
     PlaybackPreferenceSwitchableAddon,
-    PlaybackUrlRecoverableAddon {
+    PlaybackUrlRecoverableAddon,
+    PlaybackReleasableAddon {
     private val storageId: Int = identity.storageId
     private val uniqueKey: String = identity.uniqueKey
     private val isLiveKey: Boolean = BilibiliKeys.parse(uniqueKey) is BilibiliKeys.LiveKey
@@ -36,6 +38,10 @@ class BilibiliPlaybackAddon(
     private var lastDurationMs: Long? = null
 
     override val addonId: String = "bilibili/playback"
+
+    override fun onRelease() {
+        BilibiliPlaybackSessionStore.remove(storageId, uniqueKey)
+    }
 
     override suspend fun getSettingSpec(): Result<PlaybackSettingSpec?> =
         runCatching {
