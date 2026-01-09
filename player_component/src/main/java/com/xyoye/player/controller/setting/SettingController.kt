@@ -125,7 +125,7 @@ class SettingController(
     }
 
     fun setPlaybackSettingUpdateBlock(block: (PlaybackSettingUpdate) -> Unit) {
-        (getSettingView(SettingViewType.BILIBILI_PLAYBACK) as SettingPlaybackAddonView)
+        (getSettingView(SettingViewType.PLAYBACK_ADDON_SETTING) as SettingPlaybackAddonView)
             .setUpdateBlock(block)
     }
 
@@ -207,7 +207,7 @@ class SettingController(
                 return anime4kView
             }
 
-            SettingViewType.BILIBILI_PLAYBACK -> {
+            SettingViewType.PLAYBACK_ADDON_SETTING -> {
                 if (this::playbackAddonView.isInitialized.not()) {
                     playbackAddonView = SettingPlaybackAddonView(context)
                     addView.invoke(playbackAddonView)

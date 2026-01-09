@@ -355,7 +355,7 @@ class PlayerSettingView(
             }
 
             SettingAction.PLAYBACK_ADDON_SETTING -> {
-                mControlWrapper.showSettingView(SettingViewType.BILIBILI_PLAYBACK)
+                mControlWrapper.showSettingView(SettingViewType.PLAYBACK_ADDON_SETTING)
                 onSettingVisibilityChanged(false)
             }
 

@@ -67,8 +67,7 @@ class SettingPlaybackAddonView
 
         override fun getLayoutId(): Int = R.layout.layout_setting_playback_addon
 
-        // 过渡阶段沿用旧 ViewType，避免修改枚举/路由
-        override fun getSettingViewType(): SettingViewType = SettingViewType.BILIBILI_PLAYBACK
+        override fun getSettingViewType(): SettingViewType = SettingViewType.PLAYBACK_ADDON_SETTING
 
         override fun onViewShow() {
             viewBinding.tvTitle.text = "播放源设置"
