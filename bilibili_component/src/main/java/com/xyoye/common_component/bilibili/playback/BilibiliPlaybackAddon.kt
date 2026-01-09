@@ -8,10 +8,12 @@ import com.xyoye.common_component.bilibili.BilibiliVideoCodec
 import com.xyoye.common_component.bilibili.error.BilibiliPlaybackErrorReporter
 import com.xyoye.common_component.playback.addon.PlaybackEvent
 import com.xyoye.common_component.playback.addon.PlaybackIdentity
+import com.xyoye.common_component.playback.addon.PlaybackRecoveryRequest
 import com.xyoye.common_component.playback.addon.PlaybackSettingSpec
 import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
 import com.xyoye.common_component.playback.addon.PlaybackPreferenceSwitchableAddon
 import com.xyoye.common_component.playback.addon.PlaybackSettingsAddon
+import com.xyoye.common_component.playback.addon.PlaybackUrlRecoverableAddon
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayState
 
@@ -19,7 +21,8 @@ class BilibiliPlaybackAddon(
     private val identity: PlaybackIdentity,
     private val supportsSeamlessPreferenceSwitch: Boolean,
 ) : PlaybackSettingsAddon,
-    PlaybackPreferenceSwitchableAddon {
+    PlaybackPreferenceSwitchableAddon,
+    PlaybackUrlRecoverableAddon {
     private val storageId: Int = identity.storageId
     private val uniqueKey: String = identity.uniqueKey
     private val isLiveKey: Boolean = BilibiliKeys.parse(uniqueKey) is BilibiliKeys.LiveKey
@@ -71,6 +74,29 @@ class BilibiliPlaybackAddon(
         val playUrl = result.getOrElse { return Result.failure(it) }
         if (playUrl.isBlank()) {
             return Result.failure(IllegalStateException("切换失败"))
+        }
+        return Result.success(playUrl)
+    }
+
+    override suspend fun recover(request: PlaybackRecoveryRequest): Result<String?> {
+        if (!canHandle(request.identity.mediaType, request.identity.storageId, request.identity.uniqueKey)) {
+            return Result.success(null)
+        }
+        if (isLiveKey) return Result.success(null)
+        if (identity.mediaType != MediaType.BILIBILI_STORAGE) return Result.success(null)
+
+        val session =
+            BilibiliPlaybackSessionStore.get(storageId, uniqueKey)
+                ?: return Result.failure(IllegalStateException("未获取到B站播放会话"))
+
+        val playUrl =
+            session.recover(
+                failure = request.toFailureContext(),
+                positionMs = request.positionMs,
+            ).getOrElse { return Result.failure(it) }
+
+        if (playUrl.isBlank()) {
+            return Result.success(null)
         }
         return Result.success(playUrl)
     }
@@ -184,6 +210,25 @@ class BilibiliPlaybackAddon(
 
             else -> throw IllegalArgumentException("未知设置项：$settingId")
         }
+
+    private fun PlaybackRecoveryRequest.toFailureContext(): BilibiliPlaybackSession.FailureContext {
+        val failingUrl =
+            diagnostics[DIAG_LAST_HTTP_URL]
+                ?.takeIf { it.isNotBlank() }
+                ?: diagnostics[DIAG_FAILING_URL]?.takeIf { it.isNotBlank() }
+
+        val httpResponseCode = diagnostics[DIAG_HTTP_RESPONSE_CODE]?.toIntOrNull()
+
+        val isDecoderError =
+            diagnostics[DIAG_IS_DECODER_ERROR]?.toBooleanStrictOrNull()
+                ?: (diagnostics[DIAG_MEDIA3_ERROR_CODE_NAME] == DIAG_MEDIA3_DECODING_FAILED_NAME)
+
+        return BilibiliPlaybackSession.FailureContext(
+            failingUrl = failingUrl,
+            httpResponseCode = httpResponseCode,
+            isDecoderError = isDecoderError,
+        )
+    }
 
     private fun buildSettingSections(snapshot: BilibiliPlaybackSession.Snapshot): List<PlaybackSettingSpec.Section> {
         val sections = mutableListOf<PlaybackSettingSpec.Section>()
@@ -367,5 +412,12 @@ class BilibiliPlaybackAddon(
         private const val SETTING_ID_VIDEO_CODEC = "bilibili.video_codec"
         private const val SETTING_ID_AUDIO_QUALITY = "bilibili.audio_quality"
         private const val BILIBILI_LIVE_COMPLETION_REPORT_MIN_WATCH_MS = 5 * 60_000L
+
+        private const val DIAG_LAST_HTTP_URL = "lastHttpUrl"
+        private const val DIAG_FAILING_URL = "failingUrl"
+        private const val DIAG_HTTP_RESPONSE_CODE = "httpResponseCode"
+        private const val DIAG_IS_DECODER_ERROR = "isDecoderError"
+        private const val DIAG_MEDIA3_ERROR_CODE_NAME = "media3.errorCodeName"
+        private const val DIAG_MEDIA3_DECODING_FAILED_NAME = "ERROR_CODE_DECODING_FAILED"
     }
 }
