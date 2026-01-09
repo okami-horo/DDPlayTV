@@ -1,8 +1,35 @@
-# 播放器内核模块与 Bilibili 存储库耦合分析（现状与问题定位）
+# 播放器内核模块与 Bilibili 存储库耦合分析（改造前现状与问题定位）
 
-**文档状态**：草案（Draft）  
-**最后更新**：2026-01-08  
+**文档状态**：归档（Archived，保留为“改造前问题定位”记录）  
+**最后更新**：2026-01-09  
+**现状说明**：已按 `TODOs/player_storage_playback_addon_design.md` 完成解耦（T-01 ~ T-12），本文下半部分的“耦合点/证据”用于说明为何需要解耦；与当前代码行号可能不一致。  
 **适用范围**：`player_component` / `core_storage_component` / `bilibili_component` / `core_contract_component` / `data_component`  
+
+---
+
+## 0. 改造落地结果（已解耦后的现状）
+
+- 播放器侧已引入 **Playback Addon** 机制：`player_component` 仅通过 `core_contract_component` 的 Contract 与存储扩展交互，不再依赖 `bilibili_component`。
+- Contract：`core_contract_component/src/main/java/com/xyoye/common_component/playback/addon/*`
+- Source 挂载：`core_storage_component/src/main/java/com/xyoye/common_component/source/base/BaseVideoSource.kt` 实现 `PlaybackAddonProvider`；`core_storage_component/src/main/java/com/xyoye/common_component/source/media/StorageVideoSource.kt` 为需要的来源创建 addon（B 站为 `BilibiliPlaybackAddon`）。
+- 事件派发：
+  - `player_component/src/main/java/com/xyoye/player/controller/base/BaseVideoController.kt` 派发 `PlaybackEvent.Progress/PlayStateChanged`
+  - `player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt` 派发 `PlaybackEvent.SourceChanged/PlaybackError`，并通过 addon 可选能力完成“切换/恢复”
+- Header/Referer：`core_contract_component/src/main/java/com/xyoye/common_component/storage/Storage.kt` 新增 `getNetworkHeaders(file)`；B 站 referer 注入迁回 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BilibiliStorage.kt`；`StorageVideoSource` 不再解析 `BilibiliKeys`。
+- 设置系统：移除 `SettingViewType.BILIBILI_PLAYBACK`；新增 `SettingViewType.PLAYBACK_ADDON_SETTING` + `player_component/src/main/java/com/xyoye/player/controller/setting/SettingPlaybackAddonView.kt`（schema 渲染）。
+
+### 0.1 改造后依赖关系（简化）
+
+```mermaid
+graph TD
+  P[player_component] --> CC[core_contract_component]
+  P --> CS[core_storage_component]
+  P --> DC[data_component]
+  CS --> CC
+  CS --> B[bilibili_component]
+  B --> CC
+  B --> DC[data_component]
+```
 
 ---
 
@@ -197,4 +224,3 @@ graph TD
 4. **重构设置系统的“存储专属设置”注入方式**，避免 `SettingViewType.BILIBILI_PLAYBACK` 这类跨层枚举污染
 
 后续设计与任务拆分见：`TODOs/player_storage_playback_addon_design.md`。
-

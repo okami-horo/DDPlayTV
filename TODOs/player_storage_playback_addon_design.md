@@ -1,8 +1,9 @@
 # 播放器-存储 播放期扩展（Playback Addon）解耦设计与任务拆分
 
-**文档状态**：草案（Draft）  
-**最后更新**：2026-01-08  
+**文档状态**：已落地（Implemented）  
+**最后更新**：2026-01-09  
 **关联现状分析**：`TODOs/player_kernel_bilibili_coupling_analysis.md`  
+**落地状态**：T-01 ~ T-12 已全部完成（已验证 `./gradlew assembleDebug`，结果为 `BUILD SUCCESSFUL`）  
 
 ---
 
@@ -19,6 +20,15 @@
 - `PreferenceUpdate` 采用 **通用 schema + 通用更新动作**（不把 B 站字段固化进通用层）。
 - Header/Referer 采用 **扩展 `Storage.getNetworkHeaders(file)`**，并将 Referer 逻辑迁回 `BilibiliStorage`（`StorageVideoSource` 不解析 `BilibiliKeys`）。
 - B 站错误上报/直播会话统计迁入 **Bilibili addon**（播放器仅派发通用事件与诊断信息）。
+
+### 0.1 落地结果（代码索引）
+
+- Contract：`core_contract_component/src/main/java/com/xyoye/common_component/playback/addon/*`
+- Source 挂载：`core_storage_component/src/main/java/com/xyoye/common_component/source/base/BaseVideoSource.kt`、`core_storage_component/src/main/java/com/xyoye/common_component/source/media/StorageVideoSource.kt`
+- 事件派发：`player_component/src/main/java/com/xyoye/player/controller/base/BaseVideoController.kt`、`player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt`
+- Bilibili addon：`bilibili_component/src/main/java/com/xyoye/common_component/bilibili/playback/BilibiliPlaybackAddon.kt`
+- Header/Referer：`core_contract_component/src/main/java/com/xyoye/common_component/storage/Storage.kt`、`core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BilibiliStorage.kt`
+- 设置页面（schema 渲染）：`player_component/src/main/java/com/xyoye/player/controller/setting/SettingPlaybackAddonView.kt`
 
 ---
 
