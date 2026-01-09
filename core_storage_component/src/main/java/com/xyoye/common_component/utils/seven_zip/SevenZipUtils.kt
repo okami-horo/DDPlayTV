@@ -16,16 +16,12 @@ import kotlin.coroutines.resume
  */
 
 object SevenZipUtils {
-    fun getArchiveFormat(fileExtension: String): ArchiveFormat? {
-        if (fileExtension.isEmpty()) return null
-        for (format in ArchiveFormat.values()) {
-            val upperMethodName = format.methodName.uppercase(Locale.ROOT)
-            val upperExtension = fileExtension.uppercase(Locale.ROOT)
-            if (upperMethodName == upperExtension) {
-                return format
-            }
+    fun isSupportedArchive(fileExtension: String): Boolean {
+        if (fileExtension.isEmpty()) return false
+        val upperExtension = fileExtension.uppercase(Locale.ROOT)
+        return ArchiveFormat.values().any { format ->
+            format.methodName.uppercase(Locale.ROOT) == upperExtension
         }
-        return null
     }
 
     @Throws(IOException::class)

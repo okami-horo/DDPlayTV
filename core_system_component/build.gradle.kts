@@ -72,7 +72,9 @@ kapt {
 }
 
 dependencies {
-    api(project(":core_contract_component"))
+    // Avoid leaking contract transitively; consumers should declare :core_contract_component explicitly.
+    implementation(project(":core_contract_component"))
+    implementation(project(":data_component"))
     implementation(project(":core_log_component"))
 
     // BaseApplication is part of public API; expose Coil types to consumers.

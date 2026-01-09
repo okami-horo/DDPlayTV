@@ -35,7 +35,7 @@ class SubtitleDetailDialog(
 
         if (!subDetailData.url.isNullOrEmpty()) {
             val fileExtension = getFileExtension(fileName)
-            if (SevenZipUtils.getArchiveFormat(fileExtension) != null) {
+            if (SevenZipUtils.isSupportedArchive(fileExtension)) {
                 extension = ".$fileExtension"
                 binding.fileExtensionTv.text = extension
             }

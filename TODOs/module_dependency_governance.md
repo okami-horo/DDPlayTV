@@ -393,6 +393,10 @@ graph TD
 
 - UI 基建层不直接依赖 storage 实现层；依赖关系回到“契约层”
 
+**状态**
+
+- ✅ 已完成（`core_ui_component/build.gradle.kts` 已移除对 `:core_storage_component` 的直接依赖，并显式依赖 `:core_contract_component`）
+
 **建议实现步骤**
 
 1) 修改 `core_ui_component/build.gradle.kts`  
@@ -416,6 +420,11 @@ graph TD
 **目标**
 
 - 让 build.gradle 的依赖声明更接近真实耦合，降低“隐式传递”带来的重构风险
+
+**状态**
+
+- ✅ 已完成（已将大多数 `api(project(...))` 收敛为 `implementation`，并在使用方补齐 `:core_contract_component / :data_component` 显式依赖）
+- ✅ 已更新依赖快照：`document/architecture/module_dependencies_snapshot.md`
 
 **任务**
 
@@ -512,8 +521,11 @@ graph TD
 
 **阶段 0 已知遗留（后续阶段处理）**
 
-- `:core_ui_component` 当前仍直接依赖 `:core_storage_component`（违背 v2 规则，阶段 1 处理）。
-- `:core_storage_component` 当前通过 `api` 暴露 `:repository:seven_zip` / `:repository:thunder`（阶段 2 收敛）。
+- ✅ 已完成：`core_ui_component` 不再直接依赖 `core_storage_component`（阶段 1）。
+- ✅ 已完成：`core_storage_component` 不再通过 `api` 暴露 `repository:*`（阶段 2）。
+- 现存 `api(project(...))`（阶段 2 落地后）：
+  - `:core_contract_component -> :data_component`（契约层对外暴露 data 类型）
+  - `:core_ui_component -> :repository:immersion_bar`（feature 存量代码直接引用 ImmersionBar 类型，暂保留；后续可通过 UI 封装收敛）
 
 ---
 

@@ -8,7 +8,8 @@ plugins {
 moduleSetup()
 
 dependencies {
-    api(project(":data_component"))
+    // Avoid leaking :data_component transitively; consumers should declare it explicitly when used.
+    implementation(project(":data_component"))
 
     implementation(project(":core_log_component"))
     implementation(project(":core_system_component"))

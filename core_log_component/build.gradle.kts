@@ -9,7 +9,8 @@ plugins {
 moduleSetup()
 
 dependencies {
-    api(project(":data_component"))
+    // Avoid leaking :data_component transitively; consumers should declare it explicitly when used.
+    implementation(project(":data_component"))
 
     implementation(Dependencies.AndroidX.core)
     implementation(Dependencies.Tencent.mmkv)

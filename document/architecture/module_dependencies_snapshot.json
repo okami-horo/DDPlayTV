@@ -33,6 +33,16 @@
         },
         {
           "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
           "module": ":player_component",
           "scope": "main"
         },
@@ -97,6 +107,16 @@
           "configuration": "implementation",
           "module": ":bilibili_component",
           "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
         }
       ]
     },
@@ -133,6 +153,16 @@
         {
           "configuration": "implementation",
           "module": ":core_storage_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
           "scope": "main"
         }
       ]
@@ -176,6 +206,16 @@
           "configuration": "implementation",
           "module": ":bilibili_component",
           "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
         }
       ]
     },
@@ -218,6 +258,16 @@
           "configuration": "implementation",
           "module": ":bilibili_component",
           "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
         }
       ]
     },
@@ -254,6 +304,16 @@
         {
           "configuration": "implementation",
           "module": ":core_storage_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
           "scope": "main"
         },
         {
@@ -297,7 +357,7 @@
       "name": ":core_log_component",
       "project_dependencies": [
         {
-          "configuration": "api",
+          "configuration": "implementation",
           "module": ":data_component",
           "scope": "main"
         }
@@ -309,8 +369,13 @@
       "name": ":core_system_component",
       "project_dependencies": [
         {
-          "configuration": "api",
+          "configuration": "implementation",
           "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
           "scope": "main"
         },
         {
@@ -326,7 +391,7 @@
       "name": ":core_network_component",
       "project_dependencies": [
         {
-          "configuration": "api",
+          "configuration": "implementation",
           "module": ":data_component",
           "scope": "main"
         },
@@ -353,7 +418,7 @@
       "name": ":core_database_component",
       "project_dependencies": [
         {
-          "configuration": "api",
+          "configuration": "implementation",
           "module": ":data_component",
           "scope": "main"
         },
@@ -370,8 +435,13 @@
       "name": ":core_storage_component",
       "project_dependencies": [
         {
-          "configuration": "api",
+          "configuration": "implementation",
           "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
           "scope": "main"
         },
         {
@@ -400,12 +470,12 @@
           "scope": "main"
         },
         {
-          "configuration": "api",
+          "configuration": "implementation",
           "module": ":repository:seven_zip",
           "scope": "main"
         },
         {
-          "configuration": "api",
+          "configuration": "implementation",
           "module": ":repository:thunder",
           "scope": "main"
         }
@@ -418,6 +488,11 @@
       "project_dependencies": [
         {
           "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
           "module": ":core_system_component",
           "scope": "main"
         },
@@ -428,11 +503,6 @@
         },
         {
           "configuration": "implementation",
-          "module": ":core_storage_component",
-          "scope": "main"
-        },
-        {
-          "configuration": "api",
           "module": ":data_component",
           "scope": "main"
         },

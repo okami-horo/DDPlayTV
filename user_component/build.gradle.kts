@@ -22,6 +22,8 @@ dependencies {
     implementation(project(":core_database_component"))
     implementation(project(":core_storage_component"))
     implementation(project(":bilibili_component"))
+    implementation(project(":core_contract_component"))
+    implementation(project(":data_component"))
 
     kapt(Dependencies.Alibaba.arouter_compiler)
 }

@@ -1,5 +1,6 @@
 package com.xyoye.common_component.utils.thunder
 
+import android.content.Context
 import com.xunlei.downloadlib.XLDownloadManager
 import com.xunlei.downloadlib.XLTaskHelper
 import com.xunlei.downloadlib.parameter.*
@@ -40,6 +41,10 @@ class ThunderManager private constructor() {
         private const val TIME_OUT_DOWNLOAD_TORRENT = 5 * 1000L
 
         fun getInstance() = Holder.instance
+
+        fun initialize(context: Context) {
+            XLTaskHelper.init(context)
+        }
 
         fun media3DownloadId(
             source: String,
