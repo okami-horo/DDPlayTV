@@ -102,6 +102,13 @@ interface Storage {
     fun getNetworkHeaders(): Map<String, String>?
 
     /**
+     * 获取网络请求头（按文件细化）。
+     *
+     * 默认实现回落到 [getNetworkHeaders]，以兼容未实现细化能力的 Storage。
+     */
+    fun getNetworkHeaders(file: StorageFile): Map<String, String>? = getNetworkHeaders()
+
+    /**
      * 是否支持搜索
      */
     fun supportSearch(): Boolean
