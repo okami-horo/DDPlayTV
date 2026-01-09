@@ -9,14 +9,14 @@
 ## 汇总
 
 - 模块数：21
-- 依赖条目数：89（生产 88 / 测试 1）
+- 依赖条目数：87（生产 86 / 测试 1）
 
 ## 依赖列表（按模块）
 
 ### :app
 
 **生产依赖**
-- `implementation`：:anime_component, :core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_system_component, :core_ui_component, :data_component, :local_component, :player_component, :storage_component, :user_component
+- `implementation`：:anime_component, :core_contract_component, :core_log_component, :core_system_component, :core_ui_component, :data_component, :local_component, :player_component, :storage_component, :user_component
 
 **测试依赖**
 - （无）
@@ -218,9 +218,7 @@ graph TD
   anime_component --> data_component
   app --> anime_component
   app --> core_contract_component
-  app --> core_database_component
   app --> core_log_component
-  app --> core_network_component
   app --> core_system_component
   app --> core_ui_component
   app --> data_component

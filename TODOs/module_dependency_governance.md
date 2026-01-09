@@ -54,15 +54,17 @@
 
 - `implementation(:core_system_component)`
 - `implementation(:core_log_component)`
-- `implementation(:core_network_component)`
-- `implementation(:core_database_component)`
 - `implementation(:core_ui_component)`
+- `implementation(:core_contract_component)`
+- `implementation(:data_component)`
 - `implementation(:player_component/:anime_component/:user_component/:local_component/:storage_component)`
 
-典型使用点（证明 `:app` 直接使用了 network/db，不只是“初始化依赖”）：
+典型使用点（证明 `:app` 已收敛为“壳层触发入口”，不再直接使用 network/db 实现）：
 
 - `app/src/main/java/com/xyoye/dandanplay/ui/shell/ShellViewModel.kt`  
-  - 直接调用 `UserRepository/OtherRepository`（network）与 `DatabaseManager`（db）进行 token 刷新、云端屏蔽词同步、迁移触发等。
+  - 通过 `UserSessionService/CloudDanmuBlockService` 触发登录态恢复、云端屏蔽词同步等启动任务；具体实现已下沉到所属域模块。
+- `core_database_component/src/main/java/com/xyoye/common_component/database/migration/ManualMigrationInitializer.kt`  
+  - 启动阶段触发 `ManualMigration.migrate()`，`app` 不再负责迁移编排。
 
 ### 1.2 业务功能模块（feature）
 
@@ -84,28 +86,22 @@
 - `:core_contract_component`
   - `api(:data_component)`（对外暴露契约与数据类型）
 - `:core_log_component`
-  - `api(:data_component)`
+  - `implementation(:data_component)`（避免向上层泄漏 data）
 - `:core_system_component`
-  - `api(:core_contract_component)`（把契约作为系统基础的一部分暴露出去）
-  - `implementation(:core_log_component)`
+  - `implementation(:core_contract_component/:core_log_component/:data_component)`
   - 关键原因：`core_system_component/src/main/java/com/xyoye/common_component/base/app/BaseApplication.kt` 中直接调用 `BuglyReporter`/`LogFacade`，且需要“尽早初始化 Bugly 捕获 Application onCreate 之前崩溃”。
 - `:core_network_component`
-  - `api(:data_component)`
-  - `implementation(:core_log_component)`
-  - `implementation(:core_system_component)`
+  - `implementation(:data_component/:core_log_component/:core_system_component)`
   - `testImplementation(:core_contract_component)`（仅测试用）
 - `:core_database_component`
-  - `api(:data_component)`
-  - `implementation(:core_system_component)`
+  - `implementation(:data_component/:core_system_component)`
 - `:bilibili_component`
   - `implementation(:core_contract_component/:core_network_component/:core_log_component/:core_system_component/:core_database_component/:data_component)`
 - `:core_storage_component`
-  - `api(:core_contract_component)`
-  - `implementation(:core_network_component/:core_system_component/:core_log_component/:core_database_component/:bilibili_component)`
-  - `api(:repository:seven_zip/:repository:thunder)`
+  - `implementation(:core_contract_component/:data_component/:core_network_component/:core_system_component/:core_log_component/:core_database_component/:bilibili_component)`
+  - `implementation(:repository:seven_zip/:repository:thunder)`
 - `:core_ui_component`
-  - `implementation(:core_system_component/:core_log_component/:core_storage_component)`
-  - `api(:data_component)`
+  - `implementation(:core_contract_component/:core_system_component/:core_log_component/:data_component)`
   - `api(:repository:immersion_bar)`
 
 ---
@@ -118,7 +114,7 @@
 
 - 理想图中 `:local_component` 不依赖 `:core_network_component`，但当前 local 业务包含字幕/弹幕等联网能力，实际需要 network（例如 `local_component/.../SubtitleSearchHelper.kt` 使用 `ResourceRepository`）。
 - 理想图中 `:storage_component` 不依赖 `:bilibili_component`，但当前 storage 模块内包含 B 站登录/媒体库配置 UI（`storage_component/ui/dialog/BilibiliLoginDialog.kt` 等），直接依赖 bilibili 是自然结果。
-- 理想图中 `:app` 不依赖 network/db/log，但当前 `ShellViewModel` 等确实直接使用了这些能力。
+- 理想图中 `:app` 不依赖 network/db/log；现已在阶段 4 收敛 network/db：`:app` 不再直接依赖 `:core_network_component/:core_database_component`，跨域初始化通过契约 Service / Startup initializer 下沉到对应域模块（log/system 作为 runtime 组合根依赖仍保留）。
 
 这类差异更像“架构目标没有同步演进”，应先明确：我们到底要回到理想图，还是把目标图升级到 v2。
 
@@ -126,9 +122,8 @@
 
 典型是 `api` 传递导致的边界模糊：
 
-- `core_system_component` 用 `api` 暴露 `core_contract_component`，导致依赖 system 的模块“隐式”获得 contract（例如 `RouteTable` 位于 contract，但业务模块往往不显式依赖 contract）。
-- `core_ui_component` 用 `api` 暴露 `data_component`（注释：Dialog/UI public API leaks some data types），导致依赖 ui 的模块“隐式”获得 data。
-- `core_storage_component` 用 `api` 暴露 `core_contract_component`，导致依赖 storage 的模块“隐式”获得 contract。
+- ✅ 阶段 2 已收敛：将大多数 `api(project(...))` 改为 `implementation`，并在使用方补齐显式依赖，避免“通过实现层拿类型”的隐式耦合。
+- 典型历史问题包括：`core_system_component/core_ui_component/core_storage_component` 曾通过 `api` 传递暴露类型边界；现状已按规则修复（见阶段 2 状态）。
 
 这类“隐式获得”本身不一定错误，但会导致：
 
@@ -139,7 +134,7 @@
 
 最典型且收益很高的一条：
 
-- `core_ui_component` **直接依赖** `core_storage_component`（`core_ui_component/build.gradle.kts:24`）
+- ✅ 已完成（阶段 1）：`core_ui_component` 不再直接依赖 `core_storage_component`
   - 但 `core_ui_component` 内部对“存储域”的引用目前可见的主要是 `StorageFile`（例如 `core_ui_component/.../ImageViewExt.kt` 的 `loadStorageFileCover(file: StorageFile)`），而 `StorageFile` 实际定义在 `core_contract_component`：`core_contract_component/src/main/java/com/xyoye/common_component/storage/file/StorageFile.kt`。
   - 这意味着：`core_ui_component -> core_storage_component` 很可能是“历史遗留 + 通过 storage 的 api 间接拿到 contract 类型”，而不是 UI 基建真实需要 storage 的实现层。
 
@@ -174,11 +169,15 @@
 
 ### P2：`:app` 中存在跨域业务编排，分层“事实”与“概念”不一致
 
-`ShellViewModel` 同时做了：
+**状态**
 
-- 用户 refresh_token 续期（用户域）
-- 云端屏蔽词同步并写入数据库（弹幕/播放器域 + 数据域）
-- 手动触发数据库迁移（数据域）
+- ✅ 已完成（阶段 4）：`:app` 仅保留启动触发入口，不再直接使用 network/db；具体实现下沉到所属域模块（通过契约 Service / Startup initializer 装配）。
+
+壳层启动链路触发了：
+
+- 用户 refresh_token 续期（用户域，`UserSessionService` -> `user_component`）
+- 云端屏蔽词同步并写入数据库（弹幕/播放器域 + 数据域，`CloudDanmuBlockService` -> `player_component`）
+- 数据迁移触发（数据域，`ManualMigrationInitializer` -> `core_database_component`）
 
 这不是“错”，但如果目标是让 `:app` 成为组合根/壳层，则需要逐步把这些编排下沉到对应域（或通过契约服务化）。
 
@@ -463,19 +462,25 @@ graph TD
 
 ### 阶段 4：下沉 `:app` 中的跨域编排（P2，2~5 天）
 
+**状态**
+
+- ✅ 已完成
+  - `:app` 不再直接引用 `DatabaseManager/UserRepository/OtherRepository/ManualMigration`
+  - `:app` 已移除对 `:core_network_component/:core_database_component` 的直接 Gradle 依赖（见依赖快照）
+
 **目标**
 
 - `:app` 更接近“组合根/壳层”，跨域初始化通过契约或所属域模块完成
 
-**任务示例（按收益排序）**
+**落地内容**
 
-- 将“云端屏蔽词同步”移动到更贴近弹幕/播放器域的模块（例如 `player_component` 或 `core_storage_component` 的某个 usecase），`app` 仅触发入口
-- 将“refresh_token 续期/登录态恢复”迁移到 `user_component` 或抽象为 `core_contract_component` 服务接口
-- 数据迁移触发（`ManualMigration.migrate()`）迁移到 `core_database_component` 的启动 hook 或专用 initializer
+- “云端屏蔽词同步”下沉至 `player_component`：`CloudDanmuBlockServiceImpl`
+- “refresh_token 续期/登录态恢复”下沉至 `user_component`：`UserSessionServiceImpl`
+- 数据迁移触发下沉至 `core_database_component` 启动 hook：`ManualMigrationInitializer`
 
 **验收标准**
 
-- `app` 中直接引用 `DatabaseManager/UserRepository/OtherRepository` 的点显著减少（或全部消失）
+- ✅ `app` 中直接引用 `DatabaseManager/UserRepository/OtherRepository` 的点已全部消失
 
 ### 阶段 5：引入自动化校验（持续建设）
 
@@ -547,4 +552,7 @@ graph TD
   - `core_ui_component/src/main/java/com/xyoye/common_component/extension/ImageViewExt.kt`（引用 `StorageFile`）
   - `core_contract_component/src/main/java/com/xyoye/common_component/storage/file/StorageFile.kt`（`StorageFile` 实际定义位置）
   - `core_system_component/src/main/java/com/xyoye/common_component/base/app/BaseApplication.kt`（system 依赖 log 的根因之一）
-  - `app/src/main/java/com/xyoye/dandanplay/ui/shell/ShellViewModel.kt`（app 直接使用 network/db 的根因之一）
+  - `app/src/main/java/com/xyoye/dandanplay/ui/shell/ShellViewModel.kt`（壳层启动触发入口：通过 contract Service 触发各域初始化）
+  - `user_component/src/main/java/com/xyoye/user_component/services/UserSessionServiceImpl.kt`（登录态恢复 / token 续期实现）
+  - `player_component/src/main/java/com/xyoye/player_component/services/CloudDanmuBlockServiceImpl.kt`（云端屏蔽词同步实现）
+  - `core_database_component/src/main/java/com/xyoye/common_component/database/migration/ManualMigrationInitializer.kt`（数据库手动迁移启动 hook）
