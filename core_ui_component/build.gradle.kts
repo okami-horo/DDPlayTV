@@ -19,9 +19,9 @@ kapt {
 }
 
 dependencies {
+    implementation(project(":core_contract_component"))
     implementation(project(":core_system_component"))
     implementation(project(":core_log_component"))
-    implementation(project(":core_storage_component"))
 
     // Dialog/UI public API leaks some data types.
     api(project(":data_component"))

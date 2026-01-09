@@ -1,7 +1,5 @@
 package com.xyoye.common_component.utils.comparator
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
 import java.text.CollationKey
 import java.text.Collator
 import java.util.Comparator
@@ -74,13 +72,11 @@ class FileNameComparator<T>(
         }.run(isDirectory)
 }
 
-@Parcelize
 private class ByteArrayCollationKey(
     @Suppress("CanBeParameter")
     private val source: String,
     private val bytes: ByteArray
-) : CollationKey(source),
-    Parcelable {
+) : CollationKey(source) {
     override fun compareTo(other: CollationKey): Int {
         other as ByteArrayCollationKey
         return bytes.unsignedCompareTo(other.bytes)

@@ -1,18 +1,12 @@
 package com.xyoye.common_component.utils.comparator
-import android.os.Parcelable
-import kotlinx.parcelize.IgnoredOnParcel
-import kotlinx.parcelize.Parcelize
+
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.min
 
-// @see https://youtrack.jetbrains.com/issue/KT-24842
-// @Parcelize throws IllegalAccessError if the primary constructor is private.
-@Parcelize
 class ByteString internal constructor(
     private val bytes: ByteArray
-) : Comparable<ByteString>,
-    Parcelable {
+) : Comparable<ByteString> {
     val length: Int
         get() = bytes.size
 
@@ -111,7 +105,6 @@ class ByteString internal constructor(
         return result
     }
 
-    @IgnoredOnParcel
     private var stringCache: String? = null
 
     override fun toString(): String {
