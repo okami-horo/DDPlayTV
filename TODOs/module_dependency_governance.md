@@ -10,6 +10,13 @@
 
 ---
 
+## 快速入口（阶段 0 基线）
+
+- 当前直接依赖快照（自动生成）：`document/architecture/module_dependencies_snapshot.md`
+- 快照生成脚本：`python3 scripts/module_deps_snapshot.py --write`
+
+---
+
 ## 0. 范围与约定
 
 ### 0.1 覆盖范围（以 `settings.gradle.kts` 为准）
@@ -39,7 +46,7 @@
 
 ## 1. 现状快照：各模块的直接依赖（来自 `build.gradle.kts`）
 
-> 以下仅列出对“分层与治理”最关键的 module 依赖，详细列表可直接看各模块 `build.gradle.kts`。
+> 以下仅列出对“分层与治理”最关键的 module 依赖；完整直接依赖快照见：`document/architecture/module_dependencies_snapshot.md`。
 
 ### 1.1 入口壳 `:app`
 
@@ -293,7 +300,52 @@ graph TD
 
 > 备注：上图中 feature 对 infra 的直接依赖仍然存在（这是“按现状可落地”的选择），治理重点是：**把不该依赖的依赖移除**，并逐步把“横向复用能力”收敛到 contract/storage 层。
 
-### 4.3 中期演进方向：解决 system/log 的语义冲突（两条路线）
+### 4.3 v2 依赖规则（允许/禁止列表）
+
+> 目的：把“目标依赖图 v2”落到可用于 code review 的规则；后续阶段 5 可将其转为自动化校验。
+
+#### 4.3.1 分层与模块归类（v2）
+
+| 分层 | 模块 | 备注 |
+| --- | --- | --- |
+| app（组合根/壳层） | `:app` | 允许保留少量跨域编排（阶段 4 收敛） |
+| feature（业务功能） | `:anime_component` `:local_component` `:user_component` `:storage_component` `:player_component` | feature 之间禁止互相依赖 |
+| ui（UI 基建） | `:core_ui_component` | **不得依赖实现层**（storage/network/db/bilibili 等） |
+| infra（基础设施实现） | `:core_storage_component` `:bilibili_component` `:core_network_component` `:core_database_component` | 可被 feature 直接依赖（按现状），但要控制边界 |
+| runtime（系统/运行时编排） | `:core_system_component` `:core_log_component` | system/log 的语义见“决策记录” |
+| contract（跨模块契约） | `:core_contract_component` | 跨模块类型/接口优先下沉到此层 |
+| data（共享数据类型） | `:data_component` | 只承载纯数据/类型，不反向依赖其他模块 |
+| repository（内置 AAR 封装） | `:repository:*` | 只提供封装，不反向依赖其他模块 |
+
+#### 4.3.2 允许的直接依赖（v2）
+
+以“直接 Gradle module 依赖”为准，允许如下方向（未列出即默认不推荐/需评审）：
+
+- `:app` -> `feature` / `core_*`（组合根允许依赖所有上层业务与基础设施入口）
+- `feature` -> `:core_ui_component` / `:core_system_component` / `:core_log_component` / `:core_network_component` / `:core_database_component` / `:core_storage_component` / `:bilibili_component` / `:core_contract_component` / `:data_component`（仅当确实需要；优先走 contract/storage 的统一入口）
+- `:core_ui_component` -> `:core_contract_component` / `:core_system_component` / `:core_log_component` / `:data_component` / `:repository:immersion_bar`
+- `:core_storage_component` -> `:core_contract_component` / `:core_network_component` / `:core_database_component` / `:core_system_component` / `:core_log_component` / `:bilibili_component` / `:data_component` / `:repository:seven_zip` / `:repository:thunder`
+- `:bilibili_component` -> `:core_contract_component` / `:core_network_component` / `:core_database_component` / `:core_system_component` / `:core_log_component` / `:data_component`
+- `:core_network_component` -> `:core_system_component` / `:core_log_component` / `:data_component`（测试可额外依赖 `:core_contract_component`）
+- `:core_database_component` -> `:core_system_component` / `:data_component`
+- `:core_system_component` -> `:core_contract_component`（以及 `:core_log_component`，取决于 system/log 路线）
+- `:core_log_component` -> `:data_component`
+- `:core_contract_component` -> `:data_component`
+- `:data_component` / `:repository:*` -> （不依赖本工程其他模块）
+
+#### 4.3.3 明确禁止（v2，硬规则）
+
+- 禁止任何 feature 之间互相依赖（如 `:anime_component -> :player_component`）。
+- 禁止 core/infra/contract/data/repository 反向依赖 `:app` 或任何 feature（避免依赖倒置引入环）。
+- 禁止 `:core_ui_component` 依赖实现层（`core_storage_component/core_network_component/core_database_component/bilibili_component` 以及 `:repository:*` 中除 `:repository:immersion_bar` 外的模块）。
+- 禁止为了“拿到 transitive 类型”而新增实现层依赖；应把类型下沉到 `:core_contract_component`（或 `:data_component`）。
+
+#### 4.3.4 `api` 暴露策略（v2，code review 规则）
+
+- 默认使用 `implementation`；仅当 **本模块对外公开 API** 必须暴露对方类型时才允许使用 `api(project(...))`，并在对应 `build.gradle.kts` 写清楚理由。
+- 禁止对外通过 `api` 泄漏实现层（尤其是 `:core_storage_component` / `:bilibili_component` / `:core_network_component` / `:core_database_component` / `:repository:*`）；若短期无法调整，必须在“决策记录”登记为遗留并给出迁移计划。
+
+### 4.4 中期演进方向：解决 system/log 的语义冲突（两条路线）
 
 为了让“模块名=职责”更一致，建议在中期做一次明确选择：
 
@@ -326,11 +378,13 @@ graph TD
 **任务**
 
 1) 输出一份“当前直接依赖快照”到文档/脚本（可复用）  
+   - 产出：`document/architecture/module_dependencies_snapshot.md`（脚本：`python3 scripts/module_deps_snapshot.py --write`）  
 2) 在团队内确认：system/log 的路线选择（A 或 B），并写入本文档的“决策记录”  
+   - 产出：DR-0001（见第 6 节）  
 
 **验收标准**
 
-- 有明确的 v2 依赖规则（允许/禁止列表）
+- 有明确的 v2 依赖规则（允许/禁止列表，见 4.3）
 - 后续改动可以据此做 code review 判定
 
 ### 阶段 1：修复 `core_ui_component -> core_storage_component` 依赖泄漏（P1，0.5~1 天）
@@ -427,11 +481,39 @@ graph TD
 
 ---
 
-## 6. 决策记录（需要在阶段 0 补齐）
+## 6. 决策记录（阶段 0：已建立基线）
 
-- system/log 分层路线选择：A / B
-- feature 直接依赖 bilibili 的边界：哪些 UI/业务允许直接依赖，哪些必须走 storage/contract
-- `api` 暴露策略：哪些模块作为“facade”允许对外暴露（例如 contract/data），哪些禁止（例如 storage 实现）
+> 本节用于记录“依赖治理规则”的关键决策；后续如有调整，需要同步更新：本文件 + `document/architecture/module_dependencies_snapshot.md`（以及后续可能引入的自动化校验）。
+
+### DR-0001：system/log 分层路线 = 路线 A（接受 `system -> log`）
+
+- 决策：选择路线 A。将 `:core_system_component` 定义为“应用运行时（runtime）/启动编排与系统能力整合”，允许其依赖 `:core_log_component`。
+- 理由：当前 `BaseApplication` 需要尽早初始化 Bugly/日志链路，短期拆分成本较高；先用“语义对齐 + 文档一致”达成共识。
+- 后续：若需要更严格的“system 纯基建”语义，再评估路线 B（新增 `:core_app_component` 并迁移启动编排）。
+
+### DR-0002：feature 直接依赖 `:bilibili_component` 的边界（白名单）
+
+- 允许直接依赖（当前存量 + 业务归属清晰）：`:local_component` `:user_component` `:storage_component` `:core_storage_component`
+- 默认禁止新增依赖：`:app` `:anime_component` `:player_component` `:core_ui_component` 以及其他 core/infra 模块
+- 新增依赖流程：如确需新增（新增了明确的 B 站 UI/业务且不适合下沉到 storage/contract），必须在 PR 说明：
+  - 为什么不能通过 `:core_storage_component` 或 `:core_contract_component` 的契约完成
+  - 对未来“替换/移除 bilibili 实现”的影响评估
+  - 同步更新本节白名单与依赖快照
+
+### DR-0003：`api(project(...))` 暴露策略（facade 白名单）
+
+- 目标：避免“实现层被当作类型来源”，让模块边界可逐步收敛。
+- 允许作为类型出口（可使用 `api(project(...))`，仍需在 `build.gradle.kts` 写清理由）：
+  - `:core_contract_component`（跨模块契约）
+  - `:data_component`（共享数据类型）
+- 允许例外（仅限对外公开 API 确实暴露 `:data_component` 类型）：
+  - `:core_ui_component` `:core_network_component` `:core_database_component` `:core_log_component`
+- 明确禁止：实现层（尤其 `:core_storage_component` / `:bilibili_component`）对外通过 `api` 泄漏 `:repository:*` 或其他实现模块；若短期无法调整，必须登记为阶段 2 遗留并给出迁移方向（改为 `implementation` 或把类型下沉到 contract/data）。
+
+**阶段 0 已知遗留（后续阶段处理）**
+
+- `:core_ui_component` 当前仍直接依赖 `:core_storage_component`（违背 v2 规则，阶段 1 处理）。
+- `:core_storage_component` 当前通过 `api` 暴露 `:repository:seven_zip` / `:repository:thunder`（阶段 2 收敛）。
 
 ---
 
@@ -448,4 +530,3 @@ graph TD
   - `core_contract_component/src/main/java/com/xyoye/common_component/storage/file/StorageFile.kt`（`StorageFile` 实际定义位置）
   - `core_system_component/src/main/java/com/xyoye/common_component/base/app/BaseApplication.kt`（system 依赖 log 的根因之一）
   - `app/src/main/java/com/xyoye/dandanplay/ui/shell/ShellViewModel.kt`（app 直接使用 network/db 的根因之一）
-
