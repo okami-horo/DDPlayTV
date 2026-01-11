@@ -260,58 +260,8 @@ class PlayerSettingView(
         var selected = false
 
         when (item.action) {
-            SettingAction.AUDIO_TRACK -> {
-                selected = mControlWrapper.getVideoSource().getAudioPath()?.isNotEmpty() == true
-            }
-
-            SettingAction.VIDEO_ASPECT -> {
-                selected = PlayerInitializer.screenScale != VideoScreenScale.SCREEN_SCALE_DEFAULT
-            }
-
-            SettingAction.VIDEO_SPEED -> {
-                selected = PlayerInitializer.Player.videoSpeed != PlayerInitializer.Player.DEFAULT_SPEED ||
-                    PlayerInitializer.Player.pressVideoSpeed != PlayerInitializer.Player.DEFAULT_PRESS_SPEED
-            }
-
-            SettingAction.ANIME4K -> {
-                selected = mControlWrapper.getAnime4kMode() != Anime4kMode.MODE_OFF
-            }
-
             SettingAction.BACKGROUND_PLAY -> {
                 selected = PlayerConfig.isBackgroundPlay()
-            }
-
-            SettingAction.DANMU_TRACK -> {
-                selected = mControlWrapper.getVideoSource().getDanmu() != null
-            }
-
-            SettingAction.DANMU_STYLE -> {
-                selected = PlayerInitializer.Danmu.size != PlayerInitializer.Danmu.DEFAULT_SIZE ||
-                    PlayerInitializer.Danmu.alpha != PlayerInitializer.Danmu.DEFAULT_ALPHA ||
-                    PlayerInitializer.Danmu.stoke != PlayerInitializer.Danmu.DEFAULT_STOKE ||
-                    PlayerInitializer.Danmu.speed != PlayerInitializer.Danmu.DEFAULT_SPEED
-            }
-
-            SettingAction.DANMU_TIME -> {
-                selected =
-                    PlayerInitializer.Danmu.offsetPosition != PlayerInitializer.Danmu.DEFAULT_POSITION
-            }
-
-            SettingAction.SUBTITLE_TRACK -> {
-                selected = mControlWrapper.getVideoSource().getSubtitlePath() != null
-            }
-
-            SettingAction.SUBTITLE_STYLE -> {
-                selected =
-                    PlayerInitializer.Subtitle.textSize != PlayerInitializer.Subtitle.DEFAULT_SIZE ||
-                    PlayerInitializer.Subtitle.strokeWidth != PlayerInitializer.Subtitle.DEFAULT_STROKE ||
-                    PlayerInitializer.Subtitle.textColor != PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR ||
-                    PlayerInitializer.Subtitle.strokeColor != PlayerInitializer.Subtitle.DEFAULT_STROKE_COLOR
-            }
-
-            SettingAction.SUBTITLE_TIME -> {
-                selected =
-                    PlayerInitializer.Subtitle.offsetPosition != PlayerInitializer.Subtitle.DEFAULT_POSITION
             }
 
             SettingAction.SCREEN_ORIENTATION -> {
