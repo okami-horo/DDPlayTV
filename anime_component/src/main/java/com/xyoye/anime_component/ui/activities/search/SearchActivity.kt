@@ -5,9 +5,9 @@ import android.text.TextWatcher
 import android.view.inputmethod.EditorInfo
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
-import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.tabs.TabLayoutMediator
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
@@ -49,7 +49,7 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
     override fun initView() {
         ARouter.getInstance().inject(this)
 
-        searchAdapter = SearchPageAdapter(supportFragmentManager, searchWord)
+        searchAdapter = SearchPageAdapter(searchWord)
 
         dataBinding.viewpager.apply {
             adapter = searchAdapter
@@ -57,7 +57,11 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
             currentItem = if (isSearchMagnet) 1 else 0
         }
 
-        dataBinding.tabLayout.setupWithViewPager(dataBinding.viewpager)
+        TabLayoutMediator(dataBinding.tabLayout, dataBinding.viewpager) { tab, position ->
+            tab.text = searchAdapter.getItemTitle(position)
+        }.attach()
+
+        updateSearchHint(dataBinding.viewpager.currentItem)
 
         if (!isSearchMagnet) {
             dataBinding.searchEt.postDelayed({
@@ -133,42 +137,36 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
             clearText()
         }
 
-        dataBinding.viewpager.addOnPageChangeListener(
-            object : ViewPager.OnPageChangeListener {
-                override fun onPageScrollStateChanged(state: Int) {
-                }
-
-                override fun onPageScrolled(
-                    position: Int,
-                    positionOffset: Float,
-                    positionOffsetPixels: Int
-                ) {
-                }
-
+        dataBinding.viewpager.registerOnPageChangeCallback(
+            object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
-                    dataBinding.searchEt.hint =
-                        when (position) {
-                            0 -> getString(R.string.search_anime_hint)
-                            1 -> getString(R.string.search_magnet_hint)
-                            else -> ""
-                        }
+                    updateSearchHint(position)
                 }
             },
         )
     }
 
     private fun search(searchText: String) {
-        val tag = "android:switcher:${R.id.viewpager}:${dataBinding.viewpager.currentItem}"
-        supportFragmentManager.findFragmentByTag(tag)?.apply {
-            (this as SearchListener).search(searchText)
-        }
+        getCurrentSearchFragment()?.search(searchText)
     }
 
     private fun clearText() {
-        val tag = "android:switcher:${R.id.viewpager}:${dataBinding.viewpager.currentItem}"
-        supportFragmentManager.findFragmentByTag(tag)?.apply {
-            (this as SearchListener).onTextClear()
-        }
+        getCurrentSearchFragment()?.onTextClear()
+    }
+
+    private fun getCurrentSearchFragment(): SearchListener? {
+        val currentItem = dataBinding.viewpager.currentItem
+        val fragmentTag = searchAdapter.getFragmentTag(currentItem)
+        return supportFragmentManager.findFragmentByTag(fragmentTag) as? SearchListener
+    }
+
+    private fun updateSearchHint(position: Int) {
+        dataBinding.searchEt.hint =
+            when (position) {
+                0 -> getString(R.string.search_anime_hint)
+                1 -> getString(R.string.search_magnet_hint)
+                else -> ""
+            }
     }
 
     fun onSearch(searchText: String) {
@@ -183,23 +181,21 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
     }
 
     inner class SearchPageAdapter(
-        fragmentManager: FragmentManager,
         private val searchWord: String?
-    ) : FragmentPagerAdapter(
-            fragmentManager,
-            BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT,
-        ) {
-        private var titles = arrayOf("搜番剧", "搜资源")
+    ) : FragmentStateAdapter(this@SearchActivity) {
+        private val titles = arrayOf("搜番剧", "搜资源")
 
-        override fun getItem(position: Int): Fragment =
+        override fun getItemCount(): Int = titles.size
+
+        override fun createFragment(position: Int): Fragment =
             when (position) {
                 0 -> SearchAnimeFragment.newInstance()
                 1 -> SearchMagnetFragment.newInstance(searchWord)
                 else -> throw IndexOutOfBoundsException("only 2 fragment, but position : $position")
             }
 
-        override fun getCount() = titles.size
+        fun getItemTitle(position: Int): String = titles.getOrNull(position).orEmpty()
 
-        override fun getPageTitle(position: Int): CharSequence = titles[position]
+        fun getFragmentTag(position: Int): String = "f${getItemId(position)}"
     }
 }

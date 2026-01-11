@@ -6,11 +6,11 @@
 
 ## 2. UI Pager 迁移（统一到 ViewPager2）
 
-- [ ] 2.1 迁移 `anime_component/src/main/java/com/xyoye/anime_component/ui/activities/search/SearchActivity.kt` 到 ViewPager2
-- [ ] 2.2 迁移 `anime_component/src/main/java/com/xyoye/anime_component/ui/fragment/home/HomeFragment.kt` 到 ViewPager2
-- [ ] 2.3 迁移 `user_component/src/main/java/com/xyoye/user_component/ui/activities/scan_manager/ScanManagerActivity.kt` 到 ViewPager2
-- [ ] 2.4 迁移 `user_component/src/main/java/com/xyoye/user_component/ui/activities/setting_player/SettingPlayerActivity.kt` 到 ViewPager2
-- [ ] 2.5 回归验证：页面切换/配置变更/返回栈/TV 遥控器焦点可达性
+- [x] 2.1 迁移 `anime_component/src/main/java/com/xyoye/anime_component/ui/activities/search/SearchActivity.kt` 到 ViewPager2
+- [x] 2.2 迁移 `anime_component/src/main/java/com/xyoye/anime_component/ui/fragment/home/HomeFragment.kt` 到 ViewPager2
+- [x] 2.3 迁移 `user_component/src/main/java/com/xyoye/user_component/ui/activities/scan_manager/ScanManagerActivity.kt` 到 ViewPager2
+- [x] 2.4 迁移 `user_component/src/main/java/com/xyoye/user_component/ui/activities/setting_player/SettingPlayerActivity.kt` 到 ViewPager2
+- [x] 2.5 回归验证：页面切换/配置变更/返回栈/TV 遥控器焦点可达性（已通过 `./gradlew :anime_component:assembleDebug :user_component:assembleDebug`）
 
 ## 3. 播放代理链路：阻塞点治理（线程模型一致 + 性能稳定）
 
