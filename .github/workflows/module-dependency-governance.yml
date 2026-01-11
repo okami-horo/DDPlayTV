@@ -1,4 +1,4 @@
-name: module dependency governance
+name: architecture governance
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   verify:
-    name: Verify module dependencies
+    name: Verify architecture governance
     runs-on: ubuntu-latest
     steps:
       - name: checkout source code
@@ -49,6 +49,5 @@ jobs:
           java-version: 17
           distribution: adopt
 
-      - name: verify module dependency governance
-        run: chmod +x gradlew && ./gradlew verifyModuleDependencies --stacktrace
-
+      - name: verify architecture governance
+        run: chmod +x gradlew && ./gradlew verifyArchitectureGovernance --stacktrace

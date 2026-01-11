@@ -1,8 +1,8 @@
 ## 1. 规格与门禁（Spec + Guardrails）
 
-- [ ] 1.1 补齐本变更的 OpenSpec delta（`architecture-governance`）并通过 `openspec validate --strict`
-- [ ] 1.2 明确并固化“本地/CI 的推荐验证集合”（至少包含 `verifyModuleDependencies`、`ktlintCheck`、`lint`、单元测试）
-- [ ] 1.3 增加静态门禁：禁止新增 `FragmentPagerAdapter`/`androidx.viewpager.widget.ViewPager`
+- [x] 1.1 补齐本变更的 OpenSpec delta（`architecture-governance`）并通过 `openspec validate --strict`
+- [x] 1.2 明确并固化“本地/CI 的推荐验证集合”（至少包含 `verifyModuleDependencies`、`ktlintCheck`、`lint`、单元测试）
+- [x] 1.3 增加静态门禁：禁止新增 `FragmentPagerAdapter`/`androidx.viewpager.widget.ViewPager`
 
 ## 2. UI Pager 迁移（统一到 ViewPager2）
 
@@ -25,4 +25,3 @@
 - [ ] 4.3 `./gradlew testDebugUnitTest`
 - [ ] 4.4 `./gradlew lint`（或按工程约定的 Debug lint 任务）
 - [ ] 4.5 若涉及播放链路：`./gradlew connectedDebugAndroidTest`（需要设备/模拟器）
-

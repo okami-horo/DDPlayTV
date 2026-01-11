@@ -18,7 +18,7 @@
 
 - 当前直接依赖快照（自动生成）：`document/architecture/module_dependencies_snapshot.md`
 - 快照生成脚本：`python3 scripts/module_deps_snapshot.py --write`
-- 自动化校验：`./gradlew verifyModuleDependencies`（CI：`.github/workflows/module-dependency-governance.yml`）
+- 自动化校验：`./gradlew verifyModuleDependencies`（推荐统一门禁：`./gradlew verifyArchitectureGovernance`；CI：`.github/workflows/module-dependency-governance.yml`）
 
 ---
 
