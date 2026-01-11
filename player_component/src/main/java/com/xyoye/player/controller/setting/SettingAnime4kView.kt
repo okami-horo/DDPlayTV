@@ -13,8 +13,8 @@ import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationOrientation
-import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.data_component.enums.PlayerType
+import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.anime4k.Anime4kMode
 import com.xyoye.player_component.R
@@ -26,7 +26,6 @@ class SettingAnime4kView(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingAnime4kBinding>(context, attrs, defStyleAttr) {
-
     private data class Anime4kOption(
         val mode: Int,
         val display: String,
@@ -103,8 +102,8 @@ class SettingAnime4kView(
                 ItemDecorationOrientation(
                     dividerPx = dp2px(10),
                     headerFooterPx = 0,
-                    orientation = RecyclerView.VERTICAL
-                )
+                    orientation = RecyclerView.VERTICAL,
+                ),
             )
 
             setData(anime4kOptions)

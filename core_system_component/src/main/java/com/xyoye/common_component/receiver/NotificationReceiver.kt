@@ -21,8 +21,7 @@ class NotificationReceiver : BroadcastReceiver() {
     lateinit var screencastReceiveService: ScreencastReceiveService
 
     companion object {
-        private fun cancelScreencastReceiveAction(context: Context): String =
-            "${context.packageName}.CANCEL_SCREENCAST_RECEIVE"
+        private fun cancelScreencastReceiveAction(context: Context): String = "${context.packageName}.CANCEL_SCREENCAST_RECEIVE"
 
         /**
          * 关闭投屏接收服务

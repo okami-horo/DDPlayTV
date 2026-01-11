@@ -1,7 +1,7 @@
 package com.xyoye.common_component.network.helper
 
-import com.xyoye.core_network_component.BuildConfig
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.core_network_component.BuildConfig
 import okhttp3.*
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.internal.http.promisesBody

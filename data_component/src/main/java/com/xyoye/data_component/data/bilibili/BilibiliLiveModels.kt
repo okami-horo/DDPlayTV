@@ -13,17 +13,16 @@ data class BilibiliLiveRoomInfoData(
     @Json(name = "user_cover")
     val userCover: String? = null,
     @Json(name = "live_status")
-    val liveStatus: Int = 0,
+    val liveStatus: Int = 0
 )
 
 @JsonClass(generateAdapter = true)
 data class BilibiliLivePlayUrlData(
-    val durl: List<BilibiliLivePlayUrlDurl> = emptyList(),
+    val durl: List<BilibiliLivePlayUrlDurl> = emptyList()
 )
 
 @JsonClass(generateAdapter = true)
 data class BilibiliLivePlayUrlDurl(
     val url: String = "",
-    val order: Int = 0,
+    val order: Int = 0
 )
-

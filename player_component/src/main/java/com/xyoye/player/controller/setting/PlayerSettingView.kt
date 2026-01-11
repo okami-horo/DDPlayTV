@@ -15,10 +15,10 @@ import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.playback.addon.PlaybackSettingsAddon
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
+import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
-import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingAction
 import com.xyoye.player.info.SettingActionType
@@ -213,7 +213,7 @@ class PlayerSettingView(
         val disabledActions =
             mutableSetOf(
                 SettingAction.SCREEN_SHOT,
-                SettingAction.BACKGROUND_PLAY
+                SettingAction.BACKGROUND_PLAY,
             )
 
         val source = mControlWrapper.getVideoSource()

@@ -16,7 +16,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.HttpDataSource
-import com.xyoye.player.utils.PlaybackErrorFormatter
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.gyf.immersionbar.BarHide
@@ -32,6 +31,12 @@ import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.media3.Media3SessionClient
+import com.xyoye.common_component.playback.addon.PlaybackEvent
+import com.xyoye.common_component.playback.addon.PlaybackIdentity
+import com.xyoye.common_component.playback.addon.PlaybackPreferenceSwitchableAddon
+import com.xyoye.common_component.playback.addon.PlaybackRecoveryRequest
+import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
+import com.xyoye.common_component.playback.addon.PlaybackUrlRecoverableAddon
 import com.xyoye.common_component.receiver.HeadsetBroadcastReceiver
 import com.xyoye.common_component.receiver.PlayerReceiverListener
 import com.xyoye.common_component.receiver.ScreenBroadcastReceiver
@@ -39,26 +44,18 @@ import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media.StorageVideoSource
-import com.xyoye.common_component.playback.addon.PlaybackEvent
-import com.xyoye.common_component.playback.addon.PlaybackIdentity
-import com.xyoye.common_component.playback.addon.PlaybackPreferenceSwitchableAddon
-import com.xyoye.common_component.playback.addon.PlaybackRecoveryRequest
-import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
-import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
-import com.xyoye.common_component.playback.addon.PlaybackUrlRecoverableAddon
-import com.xyoye.common_component.utils.screencast.ScreencastHandler
 import com.xyoye.common_component.utils.danmu.StorageDanmuMatcher
+import com.xyoye.common_component.utils.screencast.ScreencastHandler
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
-import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
+import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.entity.media3.Media3BackgroundMode
 import com.xyoye.data_component.entity.media3.PlaybackSession
 import com.xyoye.data_component.entity.media3.PlayerCapabilityContract
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.MediaType
-import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.data_component.enums.SurfaceType
@@ -70,6 +67,7 @@ import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.impl.media3.Media3Diagnostics
 import com.xyoye.player.kernel.impl.vlc.VlcAudioPolicy
 import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
+import com.xyoye.player.utils.PlaybackErrorFormatter
 import com.xyoye.player_component.BR
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ActivityPlayerBinding
@@ -536,9 +534,11 @@ class PlayerActivity :
         )
         val previousSource = videoSource
         if (previousSource != null &&
-            (newSource == null ||
-                previousSource.getStorageId() != newSource.getStorageId() ||
-                previousSource.getUniqueKey() != newSource.getUniqueKey())
+            (
+                newSource == null ||
+                    previousSource.getStorageId() != newSource.getStorageId() ||
+                    previousSource.getUniqueKey() != newSource.getUniqueKey()
+            )
         ) {
             releasePlaybackAddonIfNeeded(previousSource)
         }
@@ -810,7 +810,7 @@ class PlayerActivity :
     private fun dispatchPlaybackErrorEvent(
         source: BaseVideoSource,
         throwable: Throwable?,
-        scene: String,
+        scene: String
     ) {
         val addon = source.getPlaybackAddon() ?: return
         val identity = buildPlaybackIdentity(source)
@@ -857,7 +857,7 @@ class PlayerActivity :
 
     private fun buildPlaybackDiagnostics(
         source: BaseVideoSource,
-        throwable: Throwable?,
+        throwable: Throwable?
     ): Map<String, String> {
         val diagnostics = linkedMapOf<String, String>()
         diagnostics["playerType"] = PlayerInitializer.playerType.name
@@ -936,7 +936,7 @@ class PlayerActivity :
 
     private fun tryRecoverPlayback(
         source: BaseVideoSource,
-        playbackError: Throwable?,
+        playbackError: Throwable?
     ): Boolean {
         val storageSource = source as? StorageVideoSource ?: return false
         val addon = storageSource.getPlaybackAddon() as? PlaybackUrlRecoverableAddon ?: return false
@@ -990,7 +990,7 @@ class PlayerActivity :
 
     private fun rebuildStorageVideoSource(
         source: StorageVideoSource,
-        playUrl: String,
+        playUrl: String
     ): StorageVideoSource {
         val storageFile = source.getStorageFile()
         val videoSources =
@@ -1050,7 +1050,8 @@ class PlayerActivity :
                 danDanPlayer.pause()
                 lifecycleScope.launch(Dispatchers.IO) {
                     val newSource =
-                        StorageVideoSourceFactory.create(storageSource.getStorageFile(), fallbackProfile)
+                        StorageVideoSourceFactory
+                            .create(storageSource.getStorageFile(), fallbackProfile)
                             ?.also {
                                 it.setDanmu(storageSource.getDanmu())
                                 it.setSubtitlePath(storageSource.getSubtitlePath())

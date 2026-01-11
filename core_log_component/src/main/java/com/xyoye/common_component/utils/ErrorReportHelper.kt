@@ -1,7 +1,7 @@
 package com.xyoye.common_component.utils
 
-import com.xyoye.core_log_component.BuildConfig
 import com.tencent.bugly.crashreport.CrashReport
+import com.xyoye.core_log_component.BuildConfig
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -130,7 +130,7 @@ object ErrorReportHelper {
         className: String,
         methodName: String,
         extraInfo: String = "",
-        authDiagnosis: String = "",
+        authDiagnosis: String = ""
     ) {
         val fullExtraInfo =
             buildString {

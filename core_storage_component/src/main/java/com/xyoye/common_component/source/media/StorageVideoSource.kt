@@ -1,10 +1,10 @@
 package com.xyoye.common_component.source.media
 
-import com.xyoye.common_component.source.base.BaseVideoSource
-import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackAddon
 import com.xyoye.common_component.playback.addon.PlaybackAddon
 import com.xyoye.common_component.playback.addon.PlaybackIdentity
+import com.xyoye.common_component.source.base.BaseVideoSource
+import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
 import com.xyoye.common_component.utils.getFileName
@@ -26,7 +26,7 @@ class StorageVideoSource(
     private var subtitlePath: String?,
     private var audioPath: String?,
     private val playbackProfile: PlaybackProfile,
-    private val playbackAddon: PlaybackAddon? = createDefaultPlaybackAddon(playUrl, file, playbackProfile),
+    private val playbackAddon: PlaybackAddon? = createDefaultPlaybackAddon(playUrl, file, playbackProfile)
 ) : BaseVideoSource(
         videoSources.indexOfFirst { it.uniqueKey() == file.uniqueKey() },
         videoSources,
@@ -109,7 +109,7 @@ class StorageVideoSource(
         fun createDefaultPlaybackAddon(
             playUrl: String,
             file: StorageFile,
-            playbackProfile: PlaybackProfile,
+            playbackProfile: PlaybackProfile
         ): PlaybackAddon? =
             if (file.storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
                 BilibiliPlaybackAddon(

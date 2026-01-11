@@ -73,7 +73,7 @@ interface Storage {
 
     suspend fun createPlayUrl(
         file: StorageFile,
-        profile: PlaybackProfile,
+        profile: PlaybackProfile
     ): String? = createPlayUrl(file)
 
     /**

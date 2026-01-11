@@ -14,7 +14,7 @@ object BilibiliAppSigner {
         params: Map<String, Any?>,
         appKey: String,
         appSec: String,
-        tsSeconds: Long = System.currentTimeMillis() / 1000,
+        tsSeconds: Long = System.currentTimeMillis() / 1000
     ): RequestParams {
         val toSign = params.toMutableMap()
         toSign["appkey"] = appKey
@@ -41,12 +41,10 @@ object BilibiliAppSigner {
         }
     }
 
-    private fun encodeURIComponent(input: String): String =
-        URLEncoder.encode(input, Charsets.UTF_8.name())
+    private fun encodeURIComponent(input: String): String = URLEncoder.encode(input, Charsets.UTF_8.name())
 
     private fun <K, V : Any> Map<K, V?>.filterValuesNotNull(): Map<K, V> =
         entries
             .filter { it.value != null }
             .associate { it.key to it.value!! }
 }
-

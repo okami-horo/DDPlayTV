@@ -104,4 +104,3 @@ abstract class BaseSplashActivity : BaseAppCompatActivity<ActivitySplashBinding>
         finish()
     }
 }
-

@@ -7,6 +7,5 @@ data class BilibiliPagelistItem(
     val cid: Long = 0,
     val page: Int = 0,
     val part: String? = null,
-    val duration: Long = 0,
+    val duration: Long = 0
 )
-

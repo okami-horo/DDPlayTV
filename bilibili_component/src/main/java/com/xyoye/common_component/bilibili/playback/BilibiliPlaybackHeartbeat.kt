@@ -16,14 +16,14 @@ object BilibiliPlaybackHeartbeat {
 
     private data class State(
         var lastSentAtMs: Long = 0L,
-        var lastFailureLogAtMs: Long = 0L,
+        var lastFailureLogAtMs: Long = 0L
     )
 
     private val states = ConcurrentHashMap<BilibiliPlaybackSessionStore.Key, State>()
 
     fun clear(
         storageId: Int,
-        uniqueKey: String,
+        uniqueKey: String
     ) {
         states.remove(BilibiliPlaybackSessionStore.Key(storageId = storageId, uniqueKey = uniqueKey))
     }
@@ -48,7 +48,7 @@ object BilibiliPlaybackHeartbeat {
         mediaType: MediaType,
         positionMs: Long,
         isPlaying: Boolean,
-        nowMs: Long = System.currentTimeMillis(),
+        nowMs: Long = System.currentTimeMillis()
     ) {
         if (mediaType != MediaType.BILIBILI_STORAGE) return
         if (!isPlaying) return
@@ -72,7 +72,7 @@ object BilibiliPlaybackHeartbeat {
         mediaType: MediaType,
         playState: PlayState,
         positionMs: Long,
-        nowMs: Long = System.currentTimeMillis(),
+        nowMs: Long = System.currentTimeMillis()
     ) {
         if (mediaType != MediaType.BILIBILI_STORAGE) return
 
@@ -100,7 +100,7 @@ object BilibiliPlaybackHeartbeat {
             }
 
             PlayState.STATE_IDLE,
-            PlayState.STATE_START_ABORT,
+            PlayState.STATE_START_ABORT
             -> {
                 states.remove(key)
             }
@@ -113,7 +113,7 @@ object BilibiliPlaybackHeartbeat {
         session: BilibiliPlaybackSession,
         key: BilibiliPlaybackSessionStore.Key,
         playedTimeSec: Long,
-        state: State,
+        state: State
     ) {
         SupervisorScope.IO.launch {
             session

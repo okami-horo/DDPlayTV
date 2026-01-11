@@ -34,7 +34,7 @@ object BilibiliHeaders {
 
     fun withCookie(
         cookieHeader: String?,
-        referer: String = REFERER,
+        referer: String = REFERER
     ): Map<String, String> {
         val headers = defaultHeaders(referer).toMutableMap()
         cookieHeader?.takeIf { it.isNotBlank() }?.let {

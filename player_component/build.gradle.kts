@@ -16,14 +16,15 @@ val strippedJniLibsDir = layout.buildDirectory.dir("strippedJniLibs")
 fun computeNdkHostTag(ndkDir: File): String {
     val osName = System.getProperty("os.name").lowercase()
     val arch = System.getProperty("os.arch").lowercase()
-    val hostTags = when {
-        osName.contains("mac") && arch.contains("aarch64") ->
-            listOf("darwin-arm64", "darwin-aarch64", "darwin-x86_64")
-        osName.contains("mac") -> listOf("darwin-x86_64")
-        osName.contains("win") -> listOf("windows-x86_64")
-        osName.contains("linux") -> listOf("linux-x86_64")
-        else -> emptyList()
-    }
+    val hostTags =
+        when {
+            osName.contains("mac") && arch.contains("aarch64") ->
+                listOf("darwin-arm64", "darwin-aarch64", "darwin-x86_64")
+            osName.contains("mac") -> listOf("darwin-x86_64")
+            osName.contains("win") -> listOf("windows-x86_64")
+            osName.contains("linux") -> listOf("linux-x86_64")
+            else -> emptyList()
+        }
     return hostTags.firstOrNull { ndkDir.resolve("toolchains/llvm/prebuilt/$it/bin").isDirectory }
         ?: error("Unsupported host OS for NDK strip tools")
 }
@@ -98,8 +99,9 @@ val stripReleaseJniLibs by tasks.registering {
     outputs.dir(strippedJniLibsDir)
 
     doLast {
-        val ndkDir = android.ndkDirectory?.takeIf { it.isDirectory }
-            ?: error("NDK not found, cannot strip release .so files.")
+        val ndkDir =
+            android.ndkDirectory?.takeIf { it.isDirectory }
+                ?: error("NDK not found, cannot strip release .so files.")
         val hostTag = computeNdkHostTag(ndkDir)
         val stripExecutableName = if (hostTag.startsWith("windows")) "llvm-strip.exe" else "llvm-strip"
         val stripExecutable = ndkDir.resolve("toolchains/llvm/prebuilt/$hostTag/bin/$stripExecutableName")
@@ -116,7 +118,10 @@ val stripReleaseJniLibs by tasks.registering {
             into(strippedJniLibsDir)
         }
 
-        strippedJniLibsDir.get().asFile.walkTopDown()
+        strippedJniLibsDir
+            .get()
+            .asFile
+            .walkTopDown()
             .filter { it.isFile && it.extension == "so" }
             .forEach { so ->
                 project.exec {
@@ -125,9 +130,14 @@ val stripReleaseJniLibs by tasks.registering {
             }
 
         val duplicateNames = setOf("libmpv.so", "libass.so")
-        val cxxIntermediates = layout.buildDirectory.dir("intermediates/cxx").get().asFile
+        val cxxIntermediates =
+            layout.buildDirectory
+                .dir("intermediates/cxx")
+                .get()
+                .asFile
         if (cxxIntermediates.isDirectory) {
-            cxxIntermediates.walkTopDown()
+            cxxIntermediates
+                .walkTopDown()
                 .filter { it.isFile && it.name in duplicateNames }
                 .forEach { duplicate ->
                     duplicate.delete()

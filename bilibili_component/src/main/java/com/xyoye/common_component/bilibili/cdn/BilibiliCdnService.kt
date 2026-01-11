@@ -7,12 +7,11 @@ package com.xyoye.common_component.bilibili.cdn
  */
 enum class BilibiliCdnService(
     val host: String?,
-    val label: String,
+    val label: String
 ) {
     AUTO(null, "自动（不强制）"),
     ALI("upos-sz-mirrorali.bilivideo.com", "ali（阿里云）"),
     COS("upos-sz-mirrorcos.bilivideo.com", "cos（腾讯云）"),
     HW("upos-sz-mirrorhw.bilivideo.com", "hw（华为云）"),
-    AKAMAI("upos-hz-mirrorakam.akamaized.net", "akamai（海外）"),
+    AKAMAI("upos-hz-mirrorakam.akamaized.net", "akamai（海外）")
 }
-

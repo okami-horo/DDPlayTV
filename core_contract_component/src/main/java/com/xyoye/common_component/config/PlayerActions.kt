@@ -10,7 +10,7 @@ object PlayerActions {
 
     fun sendExitPlayer(
         context: Context,
-        storageId: Int,
+        storageId: Int
     ) {
         context.sendBroadcast(
             Intent(ACTION_EXIT_PLAYER)

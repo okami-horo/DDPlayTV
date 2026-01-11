@@ -19,22 +19,22 @@ object BilibiliKeys {
 
     data class ArchiveKey(
         val bvid: String,
-        val cid: Long? = null,
+        val cid: Long? = null
     ) : Key
 
     data class LiveKey(
-        val roomId: Long,
+        val roomId: Long
     ) : Key
 
     data class PgcEpisodeKey(
         val epId: Long,
         val cid: Long,
         val seasonId: Long? = null,
-        val avid: Long? = null,
+        val avid: Long? = null
     ) : Key
 
     data class PgcSeasonKey(
-        val seasonId: Long,
+        val seasonId: Long
     ) : Key
 
     fun archiveDirectoryKey(bvid: String): String =
@@ -48,7 +48,7 @@ object BilibiliKeys {
 
     fun archivePartKey(
         bvid: String,
-        cid: Long,
+        cid: Long
     ): String =
         Uri
             .Builder()
@@ -72,7 +72,7 @@ object BilibiliKeys {
         epId: Long,
         cid: Long,
         seasonId: Long? = null,
-        avid: Long? = null,
+        avid: Long? = null
     ): String =
         Uri
             .Builder()
@@ -116,18 +116,27 @@ object BilibiliKeys {
                 }
 
                 authority.equals(HOST_LIVE, ignoreCase = true) -> {
-                    val roomId = uri.pathSegments.firstOrNull()?.toLongOrNull()?.takeIf { it > 0 }
-                        ?: return@runCatching null
+                    val roomId =
+                        uri.pathSegments
+                            .firstOrNull()
+                            ?.toLongOrNull()
+                            ?.takeIf { it > 0 }
+                            ?: return@runCatching null
                     LiveKey(roomId = roomId)
                 }
 
                 authority.equals(HOST_PGC, ignoreCase = true) -> {
                     when {
                         uri.pathSegments.getOrNull(0).equals(PATH_PGC_EPISODE, ignoreCase = true) -> {
-                            val epId = uri.pathSegments.getOrNull(1)?.toLongOrNull()?.takeIf { it > 0 }
-                                ?: return@runCatching null
-                            val cid = uri.getQueryParameter(QUERY_CID)?.toLongOrNull()?.takeIf { it > 0 }
-                                ?: return@runCatching null
+                            val epId =
+                                uri.pathSegments
+                                    .getOrNull(1)
+                                    ?.toLongOrNull()
+                                    ?.takeIf { it > 0 }
+                                    ?: return@runCatching null
+                            val cid =
+                                uri.getQueryParameter(QUERY_CID)?.toLongOrNull()?.takeIf { it > 0 }
+                                    ?: return@runCatching null
                             val seasonId = uri.getQueryParameter(QUERY_SEASON_ID)?.toLongOrNull()?.takeIf { it > 0 }
                             val avid = uri.getQueryParameter(QUERY_AVID)?.toLongOrNull()?.takeIf { it > 0 }
                             PgcEpisodeKey(
@@ -139,8 +148,12 @@ object BilibiliKeys {
                         }
 
                         uri.pathSegments.getOrNull(0).equals(PATH_PGC_SEASON, ignoreCase = true) -> {
-                            val seasonId = uri.pathSegments.getOrNull(1)?.toLongOrNull()?.takeIf { it > 0 }
-                                ?: return@runCatching null
+                            val seasonId =
+                                uri.pathSegments
+                                    .getOrNull(1)
+                                    ?.toLongOrNull()
+                                    ?.takeIf { it > 0 }
+                                    ?: return@runCatching null
                             PgcSeasonKey(seasonId = seasonId)
                         }
 

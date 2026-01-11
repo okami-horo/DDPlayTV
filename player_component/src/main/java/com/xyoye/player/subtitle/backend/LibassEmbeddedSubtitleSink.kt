@@ -13,7 +13,6 @@ class LibassEmbeddedSubtitleSink(
     private val fontDirectories: List<String>,
     private val defaultFont: String?
 ) : EmbeddedSubtitleSink {
-
     private val lock = Any()
     private var released = false
     private var initialized = false
@@ -26,7 +25,11 @@ class LibassEmbeddedSubtitleSink(
         }
     }
 
-    override fun onSample(data: ByteArray, timeUs: Long, durationUs: Long?) {
+    override fun onSample(
+        data: ByteArray,
+        timeUs: Long,
+        durationUs: Long?
+    ) {
         synchronized(lock) {
             if (released) return
             if (!initialized) {

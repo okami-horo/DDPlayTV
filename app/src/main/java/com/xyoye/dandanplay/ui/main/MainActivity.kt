@@ -18,8 +18,7 @@ import com.xyoye.dandanplay.R
 import com.xyoye.dandanplay.databinding.ActivityMainBinding
 import com.xyoye.dandanplay.ui.shell.BaseShellActivity
 
-class MainActivity :
-    BaseShellActivity<ActivityMainBinding>() {
+class MainActivity : BaseShellActivity<ActivityMainBinding>() {
     companion object {
         private const val TAG_FRAGMENT_HOME = "tag_fragment_home"
         private const val TAG_FRAGMENT_MEDIA = "tag_fragment_media"

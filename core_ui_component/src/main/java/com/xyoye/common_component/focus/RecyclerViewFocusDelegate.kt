@@ -12,7 +12,7 @@ import com.xyoye.core_ui_component.R
 
 class RecyclerViewFocusDelegate(
     private val recyclerView: RecyclerView,
-    private val uniqueKeyProvider: ((Any) -> String?)? = null,
+    private val uniqueKeyProvider: ((Any) -> String?)? = null
 ) {
     var lastFocusedIndex: Int = RecyclerView.NO_POSITION
         private set
@@ -38,7 +38,7 @@ class RecyclerViewFocusDelegate(
     fun installVerticalDpadKeyNavigation(
         focusTargetProvider: (RecyclerView) -> FocusTarget = { defaultFocusTarget() },
         onMenuKeyDown: (() -> Unit)? = null,
-        onSettingsKeyDown: (() -> Unit)? = onMenuKeyDown,
+        onSettingsKeyDown: (() -> Unit)? = onMenuKeyDown
     ) {
         recyclerView.setOnKeyListener { _, keyCode, event ->
             if (event?.action != KeyEvent.ACTION_DOWN) {
@@ -66,19 +66,21 @@ class RecyclerViewFocusDelegate(
                     true
                 }
 
-                KeyEvent.KEYCODE_DPAD_DOWN -> moveFocusBy(
-                    offset = 1,
-                    itemCount = rvAdapter.itemCount,
-                    currentIndex = currentIndex,
-                    focusTarget = focusTargetProvider(recyclerView),
-                )
+                KeyEvent.KEYCODE_DPAD_DOWN ->
+                    moveFocusBy(
+                        offset = 1,
+                        itemCount = rvAdapter.itemCount,
+                        currentIndex = currentIndex,
+                        focusTarget = focusTargetProvider(recyclerView),
+                    )
 
-                KeyEvent.KEYCODE_DPAD_UP -> moveFocusBy(
-                    offset = -1,
-                    itemCount = rvAdapter.itemCount,
-                    currentIndex = currentIndex,
-                    focusTarget = focusTargetProvider(recyclerView),
-                )
+                KeyEvent.KEYCODE_DPAD_UP ->
+                    moveFocusBy(
+                        offset = -1,
+                        itemCount = rvAdapter.itemCount,
+                        currentIndex = currentIndex,
+                        focusTarget = focusTargetProvider(recyclerView),
+                    )
 
                 else -> false
             }
@@ -87,7 +89,7 @@ class RecyclerViewFocusDelegate(
 
     fun setChildrenFocusable(
         focusable: Boolean,
-        target: FocusTarget = defaultFocusTarget(),
+        target: FocusTarget = defaultFocusTarget()
     ) {
         val inTouchMode = recyclerView.isInTouchMode
         val defaultTag = R.string.focusable_item.toResString()
@@ -109,7 +111,7 @@ class RecyclerViewFocusDelegate(
 
     fun setPendingFocus(
         index: Int = RecyclerView.NO_POSITION,
-        uniqueKey: String? = null,
+        uniqueKey: String? = null
     ) {
         pendingFocusIndex = index
         pendingFocusUniqueKey = uniqueKey
@@ -131,7 +133,7 @@ class RecyclerViewFocusDelegate(
 
     fun resolvePendingFocusIndex(
         items: List<Any>,
-        itemCount: Int,
+        itemCount: Int
     ): Int {
         if (itemCount <= 0) {
             return 0
@@ -170,7 +172,7 @@ class RecyclerViewFocusDelegate(
 
     fun requestFocus(
         reversed: Boolean = false,
-        target: FocusTarget = defaultFocusTarget(),
+        target: FocusTarget = defaultFocusTarget()
     ): Boolean {
         if (recyclerView.isInTouchMode) {
             return false
@@ -195,15 +197,13 @@ class RecyclerViewFocusDelegate(
         return recyclerView.requestIndexChildFocus(targetIndex, target)
     }
 
-    private fun defaultFocusTarget(): FocusTarget {
-        return FocusTarget.Tag(R.string.focusable_item.toResString())
-    }
+    private fun defaultFocusTarget(): FocusTarget = FocusTarget.Tag(R.string.focusable_item.toResString())
 
     private fun moveFocusBy(
         offset: Int,
         itemCount: Int,
         currentIndex: Int,
-        focusTarget: FocusTarget,
+        focusTarget: FocusTarget
     ): Boolean {
         if (itemCount <= 0) {
             return false

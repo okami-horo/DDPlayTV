@@ -6,10 +6,10 @@ import com.xyoye.common_component.network.repository.AlistRepository
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.AlistStorageFile
+import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
@@ -27,6 +27,8 @@ import java.io.InputStream
 class AlistStorage(
     library: MediaLibraryEntity
 ) : AbstractStorage(library) {
+    private val rangeUnsupportedRefreshLock = Any()
+
     private var token: String = ""
 
     private val rootUrl by lazy { rootUri.toString() }
@@ -103,19 +105,19 @@ class AlistStorage(
             ?.let { pathFile(it, false) }
             ?.also { it.playHistory = history }
 
-    override suspend fun createPlayUrl(file: StorageFile): String? {
-        return createPlayUrl(
+    override suspend fun createPlayUrl(file: StorageFile): String? =
+        createPlayUrl(
             file = file,
-            profile = PlaybackProfile(
-                playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
-                source = PlaybackProfileSource.GLOBAL,
-            ),
+            profile =
+                PlaybackProfile(
+                    playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
+                    source = PlaybackProfileSource.GLOBAL,
+                ),
         )
-    }
 
     override suspend fun createPlayUrl(
         file: StorageFile,
-        profile: PlaybackProfile,
+        profile: PlaybackProfile
     ): String? {
         val playerType = profile.playerType
         if (playerType != PlayerType.TYPE_MPV_PLAYER && playerType != PlayerType.TYPE_VLC_PLAYER) {
@@ -144,7 +146,19 @@ class AlistStorage(
             prePlayRangeMinIntervalMs = interval,
             fileName = fileName,
             autoEnabled = true,
-            onRangeUnsupported = {
+            onRangeUnsupported = buildRangeUnsupportedRefreshSupplier(file),
+        )
+    }
+
+    /**
+     * Threading model:
+     * - Invoked by [HttpPlayServer] when upstream Range probing fails.
+     * - Runs on NanoHTTPD request thread (NOT main thread).
+     * - Serialized by [rangeUnsupportedRefreshLock] to avoid concurrent token refresh storms.
+     */
+    private fun buildRangeUnsupportedRefreshSupplier(file: StorageFile): () -> HttpPlayServer.UpstreamSource? =
+        {
+            synchronized(rangeUnsupportedRefreshLock) {
                 runCatching {
                     runBlocking {
                         val refreshed =
@@ -158,9 +172,8 @@ class AlistStorage(
                         }
                     }
                 }.getOrNull()
-            },
-        )
-    }
+            }
+        }
 
     override suspend fun test(): Boolean = refreshToken()?.isNotEmpty() == true
 

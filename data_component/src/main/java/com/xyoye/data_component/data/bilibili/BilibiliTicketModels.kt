@@ -15,12 +15,11 @@ data class BilibiliWebTicketData(
     /**
      * WBI 相关字段（可用于更新 wbi_img）
      */
-    val nav: BilibiliWebTicketNavData? = null,
+    val nav: BilibiliWebTicketNavData? = null
 )
 
 @JsonClass(generateAdapter = true)
 data class BilibiliWebTicketNavData(
     val img: String? = null,
-    val sub: String? = null,
+    val sub: String? = null
 )
-

@@ -13,14 +13,14 @@ import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
  * - 刷新时仍可保留旧数据展示（由 UI 层控制）
  */
 class BilibiliHistoryCacheStore(
-    storageKey: String,
+    storageKey: String
 ) {
     private val kv: MMKV = MMKV.mmkvWithID("bilibili_history_cache_${storageKey.toMd5String()}")
 
     fun readFirstPageOrNull(
         type: String,
         maxAgeMs: Long,
-        nowMs: Long = System.currentTimeMillis(),
+        nowMs: Long = System.currentTimeMillis()
     ): BilibiliHistoryCursorData? {
         val key = normalizeType(type)
         val savedAt = kv.decodeLong(keyFirstPageAt(key), 0L)
@@ -34,7 +34,7 @@ class BilibiliHistoryCacheStore(
     fun writeFirstPage(
         type: String,
         data: BilibiliHistoryCursorData,
-        nowMs: Long = System.currentTimeMillis(),
+        nowMs: Long = System.currentTimeMillis()
     ) {
         val raw = JsonHelper.toJson(data) ?: return
         val key = normalizeType(type)

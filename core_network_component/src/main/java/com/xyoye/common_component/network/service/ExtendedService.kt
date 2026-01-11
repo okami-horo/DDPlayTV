@@ -8,6 +8,7 @@ import com.xyoye.data_component.data.SubtitleSubData
 import com.xyoye.data_component.data.SubtitleThunderData
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
+import retrofit2.Call
 import retrofit2.http.*
 
 /**
@@ -41,6 +42,13 @@ interface ExtendedService {
         @Url url: String,
         @HeaderMap headers: Map<String, String>
     ): retrofit2.Response<ResponseBody>
+
+    @GET
+    @Streaming
+    fun getResourceResponseCall(
+        @Url url: String,
+        @HeaderMap headers: Map<String, String>
+    ): Call<ResponseBody>
 
     @GET
     @Streaming

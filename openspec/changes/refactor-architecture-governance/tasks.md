@@ -14,14 +14,14 @@
 
 ## 3. 播放代理链路：阻塞点治理（线程模型一致 + 性能稳定）
 
-- [ ] 3.1 梳理 `core_storage_component` 内 `runBlocking` 使用点（如 `HttpPlayServer`/`FtpPlayServer`/`SmbPlayServer`），标注调用线程与并发模型
-- [ ] 3.2 制定并落地替换策略：保证不阻塞主线程、并发可控、行为可回归
-- [ ] 3.3 为关键行为补充最小化自动化验证（单元测试或仪表测试，视可行性而定）
+- [x] 3.1 梳理 `core_storage_component` 内 `runBlocking` 使用点（如 `HttpPlayServer`/`FtpPlayServer`/`SmbPlayServer`），标注调用线程与并发模型
+- [x] 3.2 制定并落地替换策略：保证不阻塞主线程、并发可控、行为可回归
+- [x] 3.3 为关键行为补充最小化自动化验证（单元测试或仪表测试，视可行性而定）
 
 ## 4. 验证（本地与 CI）
 
-- [ ] 4.1 `./gradlew verifyModuleDependencies`
-- [ ] 4.2 `./gradlew ktlintCheck`
-- [ ] 4.3 `./gradlew testDebugUnitTest`
-- [ ] 4.4 `./gradlew lint`（或按工程约定的 Debug lint 任务）
-- [ ] 4.5 若涉及播放链路：`./gradlew connectedDebugAndroidTest`（需要设备/模拟器）
+- [x] 4.1 `./gradlew verifyModuleDependencies`
+- [x] 4.2 `./gradlew ktlintCheck`
+- [x] 4.3 `./gradlew testDebugUnitTest`
+- [x] 4.4 `./gradlew lint`（或按工程约定的 Debug lint 任务）
+- [ ] 4.5 若涉及播放链路：`./gradlew connectedDebugAndroidTest`（需要设备/模拟器；当前环境 `adb devices` 无设备）

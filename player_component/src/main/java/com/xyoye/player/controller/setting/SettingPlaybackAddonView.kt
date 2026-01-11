@@ -35,16 +35,16 @@ class SettingPlaybackAddonView
     constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
+        defStyleAttr: Int = 0
     ) : BaseSettingView<LayoutSettingPlaybackAddonBinding>(context, attrs, defStyleAttr) {
         private data class SectionRow(
-            val title: String,
+            val title: String
         )
 
         private data class OptionRow(
             val label: String,
             val update: PlaybackSettingUpdate,
-            val selected: Boolean,
+            val selected: Boolean
         )
 
         private var rows: List<Any> = emptyList()
@@ -89,7 +89,7 @@ class SettingPlaybackAddonView
 
         override fun onKeyDown(
             keyCode: Int,
-            event: KeyEvent?,
+            event: KeyEvent?
         ): Boolean {
             if (isSettingShowing().not()) {
                 return false

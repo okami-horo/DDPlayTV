@@ -5,20 +5,20 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
+import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.database.DatabaseManager
-import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.PagedStorage
+import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageSortOption
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.common_component.bilibili.error.BilibiliException
-import com.xyoye.data_component.entity.PlayHistoryEntity
-import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
+import com.xyoye.data_component.entity.MediaLibraryEntity
+import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.TrackType
 import kotlinx.coroutines.Dispatchers
@@ -105,8 +105,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                         } else {
                             files.sortedWith(StorageSortOption.comparator())
                         }
-                    }
-                    .onEach { it.playHistory = getHistory(it) }
+                    }.onEach { it.playHistory = getHistory(it) }
                     .let { buildDisplayItems(it) }
                     .apply { _fileLiveData.postValue(this) }
                     .also { filesSnapshot = it }
@@ -280,20 +279,20 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             refreshStorageLastPlay()
             val updated =
                 fileList
-                .map {
-                    val history = getHistory(it)
-                    val isSameHistory =
-                        if (it.isFile()) {
-                            it.playHistory == history && it.playHistory?.isLastPlay == history?.isLastPlay
-                        } else {
-                            it.playHistory?.id == history?.id
+                    .map {
+                        val history = getHistory(it)
+                        val isSameHistory =
+                            if (it.isFile()) {
+                                it.playHistory == history && it.playHistory?.isLastPlay == history?.isLastPlay
+                            } else {
+                                it.playHistory?.id == history?.id
+                            }
+                        if (isSameHistory) {
+                            return@map it
                         }
-                    if (isSameHistory) {
-                        return@map it
+                        // 历史记录不一致时，返回拷贝的新对象
+                        it.clone().apply { playHistory = history }
                     }
-                    // 历史记录不一致时，返回拷贝的新对象
-                    it.clone().apply { playHistory = history }
-                }
             val items = buildDisplayItems(updated)
             _fileLiveData.postValue(items)
             filesSnapshot = items
@@ -354,8 +353,10 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             return null
         }
 
-        val bilibiliRemoteHistory = file.payloadAs<BilibiliHistoryItem>()
-            .takeIf { storage.library.mediaType == MediaType.BILIBILI_STORAGE }
+        val bilibiliRemoteHistory =
+            file
+                .payloadAs<BilibiliHistoryItem>()
+                .takeIf { storage.library.mediaType == MediaType.BILIBILI_STORAGE }
 
         var history: PlayHistoryEntity? =
             DatabaseManager.instance
@@ -407,13 +408,14 @@ class StorageFileFragmentViewModel : BaseViewModel() {
 
             if (remoteNewer && (positionChanged || durationChanged)) {
                 val updated =
-                    local.copy(
-                        videoPosition = remotePositionMs,
-                        videoDuration = if (remoteDurationMs > 0) remoteDurationMs else local.videoDuration,
-                        playTime = Date(remoteViewAtMs),
-                    ).also {
-                        it.isLastPlay = local.isLastPlay
-                    }
+                    local
+                        .copy(
+                            videoPosition = remotePositionMs,
+                            videoDuration = if (remoteDurationMs > 0) remoteDurationMs else local.videoDuration,
+                            playTime = Date(remoteViewAtMs),
+                        ).also {
+                            it.isLastPlay = local.isLastPlay
+                        }
                 DatabaseManager.instance.getPlayHistoryDao().insert(updated)
                 history = updated
             }
@@ -424,7 +426,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
 
     private fun normalizeRemoteProgress(
         progressSec: Long,
-        durationSec: Long,
+        durationSec: Long
     ): Long {
         if (progressSec <= 0) return 0
         if (durationSec > 0 && progressSec >= durationSec) return 0

@@ -25,13 +25,13 @@ import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.kernel.anime4k.Anime4kMode
 import com.xyoye.player.kernel.facoty.PlayerFactory
 import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
 import com.xyoye.player.kernel.impl.mpv.MpvVideoPlayer
-import com.xyoye.player.kernel.anime4k.Anime4kMode
-import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.inter.VideoPlayerEventListener
+import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.subtitle.backend.CanvasTextRendererBackend
 import com.xyoye.player.subtitle.backend.LibassRendererBackend
 import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
@@ -166,8 +166,7 @@ class DanDanVideoPlayer(
 
     override fun getBufferedPercentage() = mVideoPlayer.getBufferedPercentage()
 
-    override fun supportBufferedPercentage(): Boolean =
-        this::mVideoPlayer.isInitialized && mVideoPlayer.supportBufferedPercentage()
+    override fun supportBufferedPercentage(): Boolean = this::mVideoPlayer.isInitialized && mVideoPlayer.supportBufferedPercentage()
 
     override fun setSilence(isSilence: Boolean) {
         val volume = if (isSilence) 0f else 1f
@@ -203,8 +202,7 @@ class DanDanVideoPlayer(
 
     override fun getTcpSpeed() = mVideoPlayer.getTcpSpeed()
 
-    override fun supportTcpSpeed(): Boolean =
-        this::mVideoPlayer.isInitialized && mVideoPlayer.supportTcpSpeed()
+    override fun supportTcpSpeed(): Boolean = this::mVideoPlayer.isInitialized && mVideoPlayer.supportTcpSpeed()
 
     override fun getDecodeType(): DecodeType =
         if (this::mVideoPlayer.isInitialized) {
@@ -597,7 +595,9 @@ class DanDanVideoPlayer(
     fun switchSubtitleBackend(target: SubtitleRendererBackend) {
         if (PlayerInitializer.Subtitle.backend == target &&
             subtitleRenderer?.backend == target
-        ) return
+        ) {
+            return
+        }
 
         PlayerInitializer.Subtitle.backend = target
         destroySubtitleRenderer()

@@ -9,20 +9,20 @@ sealed class PlaybackEvent {
      */
     data class SourceChanged(
         val identity: PlaybackIdentity,
-        val httpHeader: Map<String, String>?,
+        val httpHeader: Map<String, String>?
     ) : PlaybackEvent()
 
     data class PlayStateChanged(
         val identity: PlaybackIdentity,
         val playState: PlayState,
-        val positionMs: Long,
+        val positionMs: Long
     ) : PlaybackEvent()
 
     data class Progress(
         val identity: PlaybackIdentity,
         val positionMs: Long,
         val durationMs: Long,
-        val isPlaying: Boolean,
+        val isPlaying: Boolean
     ) : PlaybackEvent()
 
     data class PlaybackError(
@@ -33,7 +33,6 @@ sealed class PlaybackEvent {
          * 播放器侧可观测诊断信息（来源可能包含 Media3/播放器内核）。
          * 仅传递事实，不在通用层固化“某个存储专属字段”。
          */
-        val diagnostics: Map<String, String> = emptyMap(),
+        val diagnostics: Map<String, String> = emptyMap()
     ) : PlaybackEvent()
 }
-

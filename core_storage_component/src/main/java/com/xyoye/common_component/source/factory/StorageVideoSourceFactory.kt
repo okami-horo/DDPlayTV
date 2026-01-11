@@ -26,7 +26,7 @@ object StorageVideoSourceFactory {
 
     suspend fun create(
         file: StorageFile,
-        profile: PlaybackProfile,
+        profile: PlaybackProfile
     ): StorageVideoSource? {
         val storage = file.storage
         val videoSources = getVideoSources(storage)

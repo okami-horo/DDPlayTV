@@ -3,8 +3,8 @@ package com.xyoye.common_component.bilibili.mpd
 import com.xyoye.data_component.data.bilibili.BilibiliDashData
 import com.xyoye.data_component.data.bilibili.BilibiliDashMediaData
 import com.xyoye.data_component.data.bilibili.BilibiliSegmentBaseData
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 

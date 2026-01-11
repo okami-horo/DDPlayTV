@@ -5,6 +5,7 @@ import com.xyoye.data_component.data.bilibili.LiveDanmakuEvent
 interface LiveDanmakuClient {
     interface Listener {
         fun onStateChanged(state: LiveDanmakuState)
+
         fun onEvent(event: LiveDanmakuEvent)
     }
 
@@ -12,20 +13,20 @@ interface LiveDanmakuClient {
         data object Connecting : LiveDanmakuState
 
         data class Connected(
-            val host: String,
+            val host: String
         ) : LiveDanmakuState
 
         data class Reconnecting(
             val attempt: Int,
-            val delayMs: Long,
+            val delayMs: Long
         ) : LiveDanmakuState
 
         data class Disconnected(
-            val reason: String?,
+            val reason: String?
         ) : LiveDanmakuState
 
         data class Error(
-            val message: String,
+            val message: String
         ) : LiveDanmakuState
     }
 
@@ -33,4 +34,3 @@ interface LiveDanmakuClient {
 
     fun stop()
 }
-

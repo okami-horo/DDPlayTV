@@ -84,7 +84,7 @@ class CloudDanmuBlockServiceImpl : CloudDanmuBlockService {
                     it,
                     true,
                     Date(),
-                    true
+                    true,
                 )
             }
         val dao = DatabaseManager.instance.getDanmuBlockDao()
@@ -96,4 +96,3 @@ class CloudDanmuBlockServiceImpl : CloudDanmuBlockService {
         private const val UPDATE_INTERVAL_MS = 7L * 24 * 60 * 60 * 1000
     }
 }
-

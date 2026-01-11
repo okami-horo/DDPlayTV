@@ -11,7 +11,7 @@ import com.xyoye.player.kernel.impl.media3.Media3Diagnostics
 
 @UnstableApi
 class Anime4kQualityGlEffect(
-    private val outputSizeProvider: () -> Size?,
+    private val outputSizeProvider: () -> Size?
 ) : GlEffect {
     @Throws(VideoFrameProcessingException::class)
     override fun toGlShaderProgram(
@@ -42,4 +42,3 @@ class Anime4kQualityGlEffect(
         return shaderProgram ?: PassthroughShaderProgram()
     }
 }
-

@@ -18,4 +18,3 @@ class UserSessionServiceImpl : UserSessionService {
         return if (UserInfoHelper.login(loginData)) loginData else null
     }
 }
-

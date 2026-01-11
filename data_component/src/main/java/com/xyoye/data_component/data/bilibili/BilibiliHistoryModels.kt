@@ -6,7 +6,7 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class BilibiliHistoryCursorData(
     val cursor: BilibiliHistoryCursor? = null,
-    val list: List<BilibiliHistoryItem> = emptyList(),
+    val list: List<BilibiliHistoryItem> = emptyList()
 )
 
 @JsonClass(generateAdapter = true)
@@ -15,7 +15,7 @@ data class BilibiliHistoryCursor(
     @Json(name = "view_at")
     val viewAt: Long = 0,
     val business: String = "",
-    val ps: Int = 0,
+    val ps: Int = 0
 )
 
 @JsonClass(generateAdapter = true)
@@ -55,7 +55,7 @@ data class BilibiliHistoryItem(
     val tagName: String? = null,
     @Json(name = "live_status")
     val liveStatus: Int? = null,
-    val history: BilibiliHistoryItemHistory? = null,
+    val history: BilibiliHistoryItemHistory? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -75,5 +75,5 @@ data class BilibiliHistoryItemHistory(
     val cid: Long = 0,
     val business: String? = null,
     val page: Int = 0,
-    val part: String? = null,
+    val part: String? = null
 )

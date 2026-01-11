@@ -5,13 +5,13 @@ import android.app.NotificationManager
 import android.app.UiModeManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.content.res.Configuration
+import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
-import com.xyoye.core_ui_component.R
 import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.core_ui_component.R
 
 /**
  * Created by xyoye on 2021/4/1.

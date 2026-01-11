@@ -27,4 +27,3 @@ class CacheKeyMapperTest {
         assertEquals("(invalid)", CacheKeyMapper.toSafeFileName("   "))
     }
 }
-

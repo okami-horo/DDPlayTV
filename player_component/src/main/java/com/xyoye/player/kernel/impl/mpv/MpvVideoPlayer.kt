@@ -16,8 +16,8 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
-import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
+import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.PlayerConstant
 import java.io.File
@@ -186,9 +186,7 @@ class MpvVideoPlayer(
         return nativeBridge.addShader(resolvedPath)
     }
 
-    fun getAnime4kMode(): Int {
-        return anime4kMode
-    }
+    fun getAnime4kMode(): Int = anime4kMode
 
     fun setAnime4kMode(mode: Int) {
         val safeMode =
@@ -210,7 +208,7 @@ class MpvVideoPlayer(
                 LogFacade.w(
                     LogModule.PLAYER,
                     "MpvVideoPlayer",
-                    "clearShaders failed: ${nativeBridge.lastError().orEmpty()}"
+                    "clearShaders failed: ${nativeBridge.lastError().orEmpty()}",
                 )
             }
         }
@@ -238,7 +236,7 @@ class MpvVideoPlayer(
         LogFacade.w(
             LogModule.PLAYER,
             "MpvVideoPlayer",
-            "setShaders failed, fallback to append: ${nativeBridge.lastError().orEmpty()}"
+            "setShaders failed, fallback to append: ${nativeBridge.lastError().orEmpty()}",
         )
 
         shaderPaths.forEach { path ->
@@ -246,7 +244,7 @@ class MpvVideoPlayer(
                 LogFacade.w(
                     LogModule.PLAYER,
                     "MpvVideoPlayer",
-                    "addShader failed: path=$path reason=${nativeBridge.lastError().orEmpty()}"
+                    "addShader failed: path=$path reason=${nativeBridge.lastError().orEmpty()}",
                 )
             }
         }
@@ -634,14 +632,15 @@ class MpvVideoPlayer(
                 LogFacade.w(
                     LogModule.PLAYER,
                     "MpvVideoPlayer",
-                    "shader read failed: $shaderPath, reason=${error.message}"
+                    "shader read failed: $shaderPath, reason=${error.message}",
                 )
                 return null
             }
 
         val hookRegex = Regex("^\\s*//!HOOK\\s+(\\S+)", RegexOption.IGNORE_CASE)
         val hooks =
-            content.lineSequence()
+            content
+                .lineSequence()
                 .mapNotNull { line -> hookRegex.find(line)?.groupValues?.getOrNull(1) }
                 .toList()
         if (hooks.isNotEmpty()) {
@@ -650,7 +649,7 @@ class MpvVideoPlayer(
                 LogFacade.w(
                     LogModule.PLAYER,
                     "MpvVideoPlayer",
-                    "shader hook mismatch: requested=$stageToken, found=${hooks.joinToString(",")}"
+                    "shader hook mismatch: requested=$stageToken, found=${hooks.joinToString(",")}",
                 )
                 return null
             }
@@ -676,7 +675,7 @@ class MpvVideoPlayer(
             LogFacade.w(
                 LogModule.PLAYER,
                 "MpvVideoPlayer",
-                "shader write failed: ${wrapperFile.path}, reason=${error.message}"
+                "shader write failed: ${wrapperFile.path}, reason=${error.message}",
             )
             return null
         }
@@ -716,7 +715,7 @@ class MpvVideoPlayer(
                 } else if (reason != null) {
                     add("reason=$reason")
                 }
-        }
+            }
         return details.joinToString(" | ").ifEmpty { "mpv playback error" }
     }
 

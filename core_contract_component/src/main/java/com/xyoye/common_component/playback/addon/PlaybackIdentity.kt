@@ -8,6 +8,5 @@ data class PlaybackIdentity(
     val mediaType: MediaType,
     val storagePath: String?,
     val videoTitle: String,
-    val videoUrl: String,
+    val videoUrl: String
 )
-

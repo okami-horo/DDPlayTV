@@ -14,4 +14,3 @@ interface UserSessionService : IProvider {
      */
     suspend fun refreshTokenAndLogin(): LoginData?
 }
-

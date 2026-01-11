@@ -1,8 +1,8 @@
 package com.xyoye.player.kernel.impl.media3
 
 import androidx.media3.common.Format
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Size
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
@@ -17,7 +17,7 @@ object Media3Diagnostics {
         val url: String?,
         val code: Int?,
         val contentType: String?,
-        val timestampMs: Long,
+        val timestampMs: Long
     )
 
     /** 外部可控制是否输出详细日志，必要时可关闭减少噪音。 */

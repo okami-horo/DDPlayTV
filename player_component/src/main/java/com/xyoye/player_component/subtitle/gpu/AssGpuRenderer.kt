@@ -85,11 +85,19 @@ class AssGpuRenderer(
         nativeBridge.loadTrack(path, fontDirs, defaultFont)
     }
 
-    fun initEmbeddedTrack(codecPrivate: ByteArray?, fontDirs: List<String>, defaultFont: String?) {
+    fun initEmbeddedTrack(
+        codecPrivate: ByteArray?,
+        fontDirs: List<String>,
+        defaultFont: String?
+    ) {
         nativeBridge.initEmbeddedTrack(codecPrivate, fontDirs, defaultFont)
     }
 
-    fun appendEmbeddedSample(data: ByteArray, timeMs: Long, durationMs: Long?) {
+    fun appendEmbeddedSample(
+        data: ByteArray,
+        timeMs: Long,
+        durationMs: Long?
+    ) {
         nativeBridge.appendEmbeddedChunk(data, timeMs, durationMs)
     }
 

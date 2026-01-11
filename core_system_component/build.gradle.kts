@@ -1,8 +1,7 @@
 import setup.moduleSetup
 import java.util.Properties
 
-fun buildConfigString(value: String): String =
-    "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+fun buildConfigString(value: String): String = "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 plugins {
     id("com.android.library")

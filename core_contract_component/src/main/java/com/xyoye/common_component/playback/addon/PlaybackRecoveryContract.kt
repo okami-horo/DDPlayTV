@@ -8,7 +8,7 @@ data class PlaybackRecoveryRequest(
      * 播放器侧可观测的诊断信息（来源可能包含 Media3/播放器内核）。
      * 仅传递事实，不在通用层固化“某个存储专属字段”。
      */
-    val diagnostics: Map<String, String> = emptyMap(),
+    val diagnostics: Map<String, String> = emptyMap()
 )
 
 interface PlaybackUrlRecoverableAddon : PlaybackAddon {
@@ -20,4 +20,3 @@ interface PlaybackUrlRecoverableAddon : PlaybackAddon {
      */
     suspend fun recover(request: PlaybackRecoveryRequest): Result<String?>
 }
-

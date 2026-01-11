@@ -12,10 +12,10 @@ object BilibiliDanmakuDownloader {
     suspend fun getOrDownload(
         storageKey: String,
         cid: Long,
-        forceRefresh: Boolean = false,
+        forceRefresh: Boolean = false
     ): LocalDanmuBean? {
         if (cid <= 0) return null
-        val danmuFile = File(PathHelper.getDanmuDirectory(), "bilibili_${cid}.xml")
+        val danmuFile = File(PathHelper.getDanmuDirectory(), "bilibili_$cid.xml")
         if (!forceRefresh && danmuFile.exists() && danmuFile.length() > 0) {
             return LocalDanmuBean(danmuFile.absolutePath)
         }
@@ -55,4 +55,3 @@ object BilibiliDanmakuDownloader {
         }
     }
 }
-

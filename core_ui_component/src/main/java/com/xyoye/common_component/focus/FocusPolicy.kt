@@ -13,7 +13,7 @@ object FocusPolicy {
         view: View,
         enabled: Boolean,
         inTouchMode: Boolean = view.isInTouchMode,
-        clickable: Boolean? = null,
+        clickable: Boolean? = null
     ) {
         view.isFocusable = enabled
         view.isFocusableInTouchMode = enabled && !inTouchMode
@@ -36,7 +36,7 @@ object FocusPolicy {
     @MainThread
     fun setDescendantFocusBlocked(
         root: ViewGroup,
-        blocked: Boolean,
+        blocked: Boolean
     ) {
         val originKey = R.id.focus_policy_origin_descendant_focusability
         if (root.getTag(originKey) == null) {
@@ -56,7 +56,7 @@ object FocusPolicy {
     @MainThread
     fun resetDescendantFocus(
         root: ViewGroup,
-        restoreAsync: Boolean = true,
+        restoreAsync: Boolean = true
     ) {
         val originKey = R.id.focus_policy_origin_descendant_focusability
         if (root.getTag(originKey) == null) {
@@ -80,7 +80,7 @@ object FocusPolicy {
 fun View.applyDpadFocusable(
     enabled: Boolean,
     inTouchMode: Boolean = isInTouchMode,
-    clickable: Boolean? = null,
+    clickable: Boolean? = null
 ) {
     FocusPolicy.applyDpadFocusable(
         view = this,

@@ -17,9 +17,6 @@ import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.adapter.setupVerticalAnimation
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.core_ui_component.databinding.ItemStorageFolderBinding
-import com.xyoye.core_ui_component.databinding.ItemStorageVideoBinding
-import com.xyoye.core_ui_component.databinding.ItemStorageVideoTagBinding
 import com.xyoye.common_component.extension.dp
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.isInvalid
@@ -30,10 +27,10 @@ import com.xyoye.common_component.extension.toFile
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.common_component.extension.toResString
-import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.danmu
 import com.xyoye.common_component.storage.file.subtitle
+import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.utils.PlayHistoryUtils
 import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.common_component.utils.getRecognizableFileName
@@ -41,6 +38,9 @@ import com.xyoye.common_component.utils.view.ItemDecorationOrientation
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.FileManagerDialog
+import com.xyoye.core_ui_component.databinding.ItemStorageFolderBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageVideoBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageVideoTagBinding
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.bean.VideoTagBean
 import com.xyoye.data_component.enums.FileManagerAction
@@ -58,7 +58,7 @@ class StorageFileAdapter(
     private val activity: StorageFileActivity,
     private val viewModel: StorageFileFragmentViewModel,
     private val onRefreshRequested: () -> Unit,
-    private val onLoginRequested: () -> Unit,
+    private val onLoginRequested: () -> Unit
 ) {
     private enum class ManageAction(
         val title: String,

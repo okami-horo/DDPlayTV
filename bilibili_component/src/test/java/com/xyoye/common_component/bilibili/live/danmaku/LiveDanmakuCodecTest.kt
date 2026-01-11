@@ -87,14 +87,14 @@ class LiveDanmakuCodecTest {
         val json =
             // Minimal structure required by parser: info[0][1/3/4/15], info[1], info[2][0/1]
             """
-	            {
-	              "cmd": "DANMU_MSG",
-	              "info": [
-	                [0, 5, 25, 9920249, 1748266797000, 0, 0, "", 0, 0, 0, "", 0, "", "", { "extra": "{\"recommend_score\":3}" }],
-	                "白花300块[热]",
-	                [0, "*user", 0, 0, 0, 0, 0]
-	              ]
-	            }
+            {
+              "cmd": "DANMU_MSG",
+              "info": [
+                [0, 5, 25, 9920249, 1748266797000, 0, 0, "", 0, 0, 0, "", 0, "", "", { "extra": "{\"recommend_score\":3}" }],
+                "白花300块[热]",
+                [0, "*user", 0, 0, 0, 0, 0]
+              ]
+            }
             """.trimIndent()
 
         val event = LiveDanmakuCommandParser.parseCommand(json)

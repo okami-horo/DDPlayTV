@@ -44,9 +44,7 @@ object Media3Repository : BaseRepository() {
         sessionId: String,
         capability: Media3Capability,
         payload: Map<String, @JvmSuppressWildcards Any?>? = null
-    ): Result<CapabilityCommandResponseData> {
-        return Result.failure(disabledException("dispatchCapability"))
-    }
+    ): Result<CapabilityCommandResponseData> = Result.failure(disabledException("dispatchCapability"))
 
     suspend fun emitTelemetry(event: TelemetryEvent): Result<Unit> =
         // Media3 网关能力当前禁用：避免在公网环境触发 DNS 解析失败/网络异常上报。

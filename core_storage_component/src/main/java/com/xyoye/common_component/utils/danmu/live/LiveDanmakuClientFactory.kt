@@ -10,7 +10,7 @@ object LiveDanmakuClientFactory {
     fun create(
         resource: DanmuTrackResource,
         scope: CoroutineScope,
-        listener: LiveDanmakuClient.Listener,
+        listener: LiveDanmakuClient.Listener
     ): LiveDanmakuClient? =
         when (resource) {
             is DanmuTrackResource.BilibiliLive -> {
@@ -62,4 +62,3 @@ object LiveDanmakuClientFactory {
             is LiveDanmakuSocketClient.LiveDanmakuState.Error -> LiveDanmakuClient.LiveDanmakuState.Error(message = message)
         }
 }
-

@@ -15,7 +15,7 @@ class BilibiliStorageFile(
     private val durationMs: Long = 0L,
     private val childCount: Int = 0,
     private val payload: Any? = null,
-    private val playable: Boolean = false,
+    private val playable: Boolean = false
 ) : StorageFile {
     override var playHistory: PlayHistoryEntity? = null
 
@@ -96,7 +96,7 @@ class BilibiliStorageFile(
             title: String,
             coverUrl: String?,
             childCount: Int,
-            payload: Any?,
+            payload: Any?
         ): BilibiliStorageFile =
             BilibiliStorageFile(
                 storage = storage,
@@ -116,7 +116,7 @@ class BilibiliStorageFile(
             title: String,
             coverUrl: String?,
             durationMs: Long,
-            payload: Any?,
+            payload: Any?
         ): BilibiliStorageFile =
             BilibiliStorageFile(
                 storage = storage,
@@ -135,7 +135,7 @@ class BilibiliStorageFile(
             roomId: Long,
             title: String,
             coverUrl: String?,
-            payload: Any?,
+            payload: Any?
         ): BilibiliStorageFile =
             BilibiliStorageFile(
                 storage = storage,
@@ -158,7 +158,7 @@ class BilibiliStorageFile(
             title: String,
             coverUrl: String?,
             durationMs: Long,
-            payload: Any?,
+            payload: Any?
         ): BilibiliStorageFile {
             val resolvedSeasonId = seasonId?.takeIf { it > 0 } ?: 0
             return BilibiliStorageFile(

@@ -104,8 +104,7 @@ class HomeFragment : BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>() 
     ) : FragmentStateAdapter(this@HomeFragment) {
         override fun getItemCount(): Int = weeklyAnimeData.size
 
-        override fun createFragment(position: Int): Fragment =
-            HomePageFragment.newInstance(weeklyAnimeData[position])
+        override fun createFragment(position: Int): Fragment = HomePageFragment.newInstance(weeklyAnimeData[position])
 
         fun getItemTitle(position: Int): String = viewModel.tabTitles.getOrNull(position).orEmpty()
     }

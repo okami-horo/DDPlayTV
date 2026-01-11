@@ -6,8 +6,9 @@ import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
 class BilibiliException(
     val code: Int,
     val bilibiliMessage: String? = null,
-    val hint: String? = null,
-) : RuntimeException(buildMessage(code, bilibiliMessage, hint)), PassThroughException {
+    val hint: String? = null
+) : RuntimeException(buildMessage(code, bilibiliMessage, hint)),
+    PassThroughException {
     companion object {
         fun from(model: BilibiliJsonModel<*>): BilibiliException =
             from(
@@ -17,7 +18,7 @@ class BilibiliException(
 
         fun from(
             code: Int,
-            message: String? = null,
+            message: String? = null
         ): BilibiliException {
             val hint =
                 when (code) {
@@ -37,7 +38,7 @@ class BilibiliException(
         private fun buildMessage(
             code: Int,
             message: String?,
-            hint: String?,
+            hint: String?
         ): String {
             val base = hint ?: "Bilibili 请求失败"
             val detail = message?.takeIf { it.isNotBlank() }

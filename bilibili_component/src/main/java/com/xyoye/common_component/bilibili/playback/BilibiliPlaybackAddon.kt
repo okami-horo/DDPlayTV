@@ -8,11 +8,11 @@ import com.xyoye.common_component.bilibili.BilibiliVideoCodec
 import com.xyoye.common_component.bilibili.error.BilibiliPlaybackErrorReporter
 import com.xyoye.common_component.playback.addon.PlaybackEvent
 import com.xyoye.common_component.playback.addon.PlaybackIdentity
+import com.xyoye.common_component.playback.addon.PlaybackPreferenceSwitchableAddon
 import com.xyoye.common_component.playback.addon.PlaybackRecoveryRequest
 import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
 import com.xyoye.common_component.playback.addon.PlaybackSettingSpec
 import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
-import com.xyoye.common_component.playback.addon.PlaybackPreferenceSwitchableAddon
 import com.xyoye.common_component.playback.addon.PlaybackSettingsAddon
 import com.xyoye.common_component.playback.addon.PlaybackUrlRecoverableAddon
 import com.xyoye.data_component.enums.MediaType
@@ -20,7 +20,7 @@ import com.xyoye.data_component.enums.PlayState
 
 class BilibiliPlaybackAddon(
     private val identity: PlaybackIdentity,
-    private val supportsSeamlessPreferenceSwitch: Boolean,
+    private val supportsSeamlessPreferenceSwitch: Boolean
 ) : PlaybackSettingsAddon,
     PlaybackPreferenceSwitchableAddon,
     PlaybackUrlRecoverableAddon,
@@ -59,7 +59,7 @@ class BilibiliPlaybackAddon(
 
     override suspend fun applySettingUpdate(
         update: PlaybackSettingUpdate,
-        positionMs: Long,
+        positionMs: Long
     ): Result<String?> {
         if (isLiveKey) return Result.success(null)
         if (identity.mediaType != MediaType.BILIBILI_STORAGE) return Result.success(null)
@@ -96,10 +96,11 @@ class BilibiliPlaybackAddon(
                 ?: return Result.failure(IllegalStateException("未获取到B站播放会话"))
 
         val playUrl =
-            session.recover(
-                failure = request.toFailureContext(),
-                positionMs = request.positionMs,
-            ).getOrElse { return Result.failure(it) }
+            session
+                .recover(
+                    failure = request.toFailureContext(),
+                    positionMs = request.positionMs,
+                ).getOrElse { return Result.failure(it) }
 
         if (playUrl.isBlank()) {
             return Result.success(null)
@@ -393,7 +394,7 @@ class BilibiliPlaybackAddon(
     private fun canHandle(
         mediaType: MediaType,
         eventStorageId: Int,
-        eventUniqueKey: String,
+        eventUniqueKey: String
     ): Boolean {
         if (mediaType != MediaType.BILIBILI_STORAGE) return false
         if (eventStorageId != storageId) return false

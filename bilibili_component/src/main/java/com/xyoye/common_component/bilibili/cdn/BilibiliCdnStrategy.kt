@@ -1,6 +1,5 @@
 package com.xyoye.common_component.bilibili.cdn
 
-import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /**
@@ -14,13 +13,13 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
  */
 object BilibiliCdnStrategy {
     data class Options(
-        val hostOverride: String? = null,
+        val hostOverride: String? = null
     )
 
     fun resolveUrls(
         baseUrl: String,
         backupUrls: List<String>,
-        options: Options = Options(),
+        options: Options = Options()
     ): List<String> {
         val candidates =
             buildList {
@@ -57,19 +56,19 @@ object BilibiliCdnStrategy {
     fun resolvePrimaryUrl(
         baseUrl: String,
         backupUrls: List<String>,
-        options: Options = Options(),
+        options: Options = Options()
     ): String? = resolveUrls(baseUrl, backupUrls, options).firstOrNull()
 
     private data class Candidate(
         val url: String,
         val score: Int,
-        val index: Int,
+        val index: Int
     )
 
     private data class HostOverride(
         val scheme: String,
         val host: String,
-        val port: Int?,
+        val port: Int?
     )
 
     private fun score(url: String): Int {
@@ -95,7 +94,7 @@ object BilibiliCdnStrategy {
 
     private fun rewriteOrNull(
         url: String,
-        override: HostOverride,
+        override: HostOverride
     ): String? {
         val httpUrl = url.toHttpUrlOrNull() ?: return null
         val builder =

@@ -11,4 +11,3 @@ inline fun <reified T> StorageFile.payloadAs(): T? {
     val payload = getFile<Any?>()
     return payload as? T
 }
-

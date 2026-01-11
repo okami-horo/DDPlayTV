@@ -6,8 +6,8 @@ import coil.request.CachePolicy
 import coil.request.videoFramePercent
 import coil.size.Scale
 import coil.transform.RoundedCornersTransformation
-import com.xyoye.core_ui_component.R
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.core_ui_component.R
 import com.xyoye.data_component.enums.ResourceType
 import java.io.File
 

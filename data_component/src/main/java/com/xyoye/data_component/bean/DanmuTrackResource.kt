@@ -8,12 +8,11 @@ package com.xyoye.data_component.bean
  */
 sealed interface DanmuTrackResource {
     data class LocalFile(
-        val danmu: LocalDanmuBean,
+        val danmu: LocalDanmuBean
     ) : DanmuTrackResource
 
     data class BilibiliLive(
         val storageKey: String,
-        val roomId: Long,
+        val roomId: Long
     ) : DanmuTrackResource
 }
-

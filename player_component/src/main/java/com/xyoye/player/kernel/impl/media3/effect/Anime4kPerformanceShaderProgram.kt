@@ -8,7 +8,7 @@ import com.xyoye.player.kernel.anime4k.Anime4kShaderAssets
 @UnstableApi
 class Anime4kPerformanceShaderProgram(
     context: Context,
-    outputSizeProvider: () -> Size?,
+    outputSizeProvider: () -> Size?
 ) : Anime4kMpvShaderProgram(
         context = context,
         outputSizeProvider = outputSizeProvider,

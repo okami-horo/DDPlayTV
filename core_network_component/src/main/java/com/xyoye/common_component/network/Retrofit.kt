@@ -38,7 +38,7 @@ class Retrofit private constructor() {
         fun <T> createService(
             baseUrl: String,
             client: OkHttpClient,
-            service: Class<T>,
+            service: Class<T>
         ): T =
             retrofit2.Retrofit
                 .Builder()

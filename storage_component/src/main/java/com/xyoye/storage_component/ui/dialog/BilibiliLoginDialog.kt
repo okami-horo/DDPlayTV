@@ -27,7 +27,7 @@ class BilibiliLoginDialog(
     private val activity: StorageFileActivity,
     private val library: MediaLibraryEntity,
     private val onLoginSuccess: () -> Unit,
-    private val onDismiss: (() -> Unit)? = null,
+    private val onDismiss: (() -> Unit)? = null
 ) : BaseBottomDialog<DialogBilibiliLoginBinding>(activity) {
     private lateinit var binding: DialogBilibiliLoginBinding
 
@@ -81,7 +81,9 @@ class BilibiliLoginDialog(
                         content = data.url,
                         sizePx = dp2px(220),
                         logoResId = R.mipmap.ic_logo,
-                        bitmapColor = com.xyoye.core_ui_component.R.color.text_black.toResColor(activity),
+                        bitmapColor =
+                            com.xyoye.core_ui_component.R.color.text_black
+                                .toResColor(activity),
                         errorContext = "生成 Bilibili 登录二维码失败",
                     )
                 binding.qrCodeIv.setImageBitmap(qrCode)

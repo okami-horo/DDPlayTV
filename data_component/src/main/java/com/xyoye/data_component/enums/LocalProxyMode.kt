@@ -8,13 +8,12 @@ enum class LocalProxyMode(
     FORCE(2);
 
     companion object {
-        fun from(value: Int?): LocalProxyMode {
-            return when (value) {
+        fun from(value: Int?): LocalProxyMode =
+            when (value) {
                 OFF.value -> OFF
                 FORCE.value -> FORCE
                 AUTO.value -> AUTO
                 else -> AUTO
             }
-        }
     }
 }

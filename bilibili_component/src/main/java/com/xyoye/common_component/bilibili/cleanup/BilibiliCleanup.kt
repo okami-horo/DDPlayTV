@@ -15,9 +15,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 object BilibiliCleanup {
-    suspend fun cleanup(
-        library: MediaLibraryEntity,
-    ) {
+    suspend fun cleanup(library: MediaLibraryEntity) {
         val storageId = library.id
         if (storageId <= 0) return
 
@@ -67,7 +65,8 @@ object BilibiliCleanup {
         runCatching {
             val dir = PathHelper.getPlayCacheDirectory()
             val files =
-                dir.listFiles()
+                dir
+                    .listFiles()
                     ?.filter { it.isFile && it.name.startsWith("bilibili_") && it.name.endsWith(".mpd") }
                     .orEmpty()
             files.forEach { it.delete() }

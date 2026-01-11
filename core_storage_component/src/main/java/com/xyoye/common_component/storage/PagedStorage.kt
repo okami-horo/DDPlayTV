@@ -14,7 +14,7 @@ interface PagedStorage {
         IDLE,
         LOADING,
         ERROR,
-        NO_MORE,
+        NO_MORE
     }
 
     var state: State
@@ -25,4 +25,3 @@ interface PagedStorage {
 
     suspend fun loadMore(): Result<List<StorageFile>>
 }
-

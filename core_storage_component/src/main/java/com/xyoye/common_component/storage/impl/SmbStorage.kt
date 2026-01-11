@@ -75,6 +75,13 @@ class SmbStorage(
     }
 
     override suspend fun openFile(file: StorageFile): InputStream? {
+        if (file !is SmbStorageFile) {
+            return null
+        }
+        return openFileBlocking(file)
+    }
+
+    internal fun openFileBlocking(file: SmbStorageFile): InputStream? {
         // 检测SMB通讯是否正常
         if (checkConnection().not()) {
             return null
@@ -82,9 +89,7 @@ class SmbStorage(
         if (mDiskShare?.isConnected != true) {
             return null
         }
-        val shareName =
-            (file as SmbStorageFile).getShareName()
-                ?: return null
+        val shareName = file.getShareName() ?: return null
         if (switchShareDisk(shareName).not()) {
             return null
         }

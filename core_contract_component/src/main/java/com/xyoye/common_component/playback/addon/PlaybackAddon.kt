@@ -13,4 +13,3 @@ interface PlaybackAddon {
      */
     fun onEvent(event: PlaybackEvent)
 }
-

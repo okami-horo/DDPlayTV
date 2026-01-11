@@ -274,9 +274,7 @@ class DanmuView(
         syncLiveDanmakuConnection()
     }
 
-    fun isUserVisible(): Boolean {
-        return userVisible
-    }
+    fun isUserVisible(): Boolean = userVisible
 
     private fun setDanmuVisible(visible: Boolean) {
         if (visible) {
@@ -292,7 +290,7 @@ class DanmuView(
 
     private fun addLocalTrack(
         track: VideoTrackBean,
-        resource: DanmuTrackResource.LocalFile,
+        resource: DanmuTrackResource.LocalFile
     ): Boolean {
         val danmu = resource.danmu
         val danmuFile = File(danmu.danmuPath)
@@ -325,7 +323,7 @@ class DanmuView(
 
     private fun addBilibiliLiveTrack(
         track: VideoTrackBean,
-        resource: DanmuTrackResource.BilibiliLive,
+        resource: DanmuTrackResource.BilibiliLive
     ): Boolean {
         // 释放上一次加载的弹幕
         release()
@@ -377,20 +375,21 @@ class DanmuView(
         startLiveRenderLoop(scope)
 
         liveDanmakuClient =
-            LiveDanmakuClientFactory.create(
-                resource = resource,
-                scope = scope,
-                listener =
-                    object : LiveDanmakuClient.Listener {
-                        override fun onStateChanged(state: LiveDanmakuClient.LiveDanmakuState) {
-                            handleLiveState(state)
-                        }
+            LiveDanmakuClientFactory
+                .create(
+                    resource = resource,
+                    scope = scope,
+                    listener =
+                        object : LiveDanmakuClient.Listener {
+                            override fun onStateChanged(state: LiveDanmakuClient.LiveDanmakuState) {
+                                handleLiveState(state)
+                            }
 
-                        override fun onEvent(event: LiveDanmakuEvent) {
-                            handleLiveEvent(event)
-                        }
-                    },
-            )?.also { it.start() }
+                            override fun onEvent(event: LiveDanmakuEvent) {
+                                handleLiveEvent(event)
+                            }
+                        },
+                )?.also { it.start() }
     }
 
     private fun startLiveRenderLoop(scope: CoroutineScope) {

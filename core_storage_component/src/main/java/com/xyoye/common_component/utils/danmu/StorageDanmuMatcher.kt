@@ -49,6 +49,6 @@ object StorageDanmuMatcher {
 
     private fun storageKey(
         mediaTypeValue: String,
-        libraryUrl: String,
+        libraryUrl: String
     ): String = "$mediaTypeValue:${libraryUrl.trim().removeSuffix("/")}"
 }

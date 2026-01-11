@@ -67,4 +67,3 @@ object LiveDanmakuCommandParser {
         return extraObj.optInt("recommend_score", 0)
     }
 }
-

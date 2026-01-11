@@ -15,7 +15,6 @@ class LibassAwareRenderersFactory(
     selector: MediaCodecSelector = AggressiveMediaCodecSelector(),
     private val embeddedSinkProvider: () -> EmbeddedSubtitleSink?
 ) : AggressiveRenderersFactory(context, selector) {
-
     override fun buildTextRenderers(
         context: Context,
         output: TextOutput,

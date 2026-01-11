@@ -5,8 +5,8 @@ import android.view.View
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.xyoye.core_ui_component.R
 import com.xyoye.common_component.adapter.BaseAdapter
+import com.xyoye.core_ui_component.R
 import kotlin.math.abs
 
 /**
@@ -16,9 +16,13 @@ import kotlin.math.abs
 private const val FOCUS_KEYLINE_PERCENT = 0.5f
 
 sealed interface FocusTarget {
-    data class Tag(val tag: Any) : FocusTarget
+    data class Tag(
+        val tag: Any
+    ) : FocusTarget
 
-    data class ViewId(val viewId: Int) : FocusTarget
+    data class ViewId(
+        val viewId: Int
+    ) : FocusTarget
 
     object ItemRoot : FocusTarget
 }
@@ -115,7 +119,7 @@ fun RecyclerView.requestIndexChildFocus(
 private fun RecyclerView.alignPosition(
     index: Int,
     layoutManager: RecyclerView.LayoutManager,
-    useKeylineAlignment: Boolean,
+    useKeylineAlignment: Boolean
 ) {
     if (!useKeylineAlignment) {
         if (layoutManager is LinearLayoutManager) {
@@ -133,7 +137,7 @@ private fun RecyclerView.alignPosition(
 
 private fun RecyclerView.alignChildToKeyline(
     index: Int,
-    layoutManager: RecyclerView.LayoutManager,
+    layoutManager: RecyclerView.LayoutManager
 ) {
     val linearLayoutManager = layoutManager as? LinearLayoutManager ?: return
     val target = linearLayoutManager.findViewByPosition(index) ?: return

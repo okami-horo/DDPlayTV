@@ -14,7 +14,7 @@ class SubtitleRenderEnvironment(
     context: Context,
     subtitleController: SubtitleController,
     playerView: DanDanVideoPlayer,
-    fallbackDispatcher: SubtitleFallbackDispatcher,
+    fallbackDispatcher: SubtitleFallbackDispatcher
 ) {
     val context: Context = context.applicationContext
 

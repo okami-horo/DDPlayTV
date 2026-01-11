@@ -1,19 +1,19 @@
 package com.xyoye.common_component.bilibili.repository
 
 import android.util.Base64
-import com.xyoye.common_component.bilibili.BilibiliKeys
-import com.xyoye.common_component.bilibili.BilibiliPlayurlPreferencesMapper
-import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferences
 import com.xyoye.common_component.bilibili.BilibiliApiPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliApiType
+import com.xyoye.common_component.bilibili.BilibiliKeys
+import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferences
+import com.xyoye.common_component.bilibili.BilibiliPlayurlPreferencesMapper
 import com.xyoye.common_component.bilibili.app.BilibiliAppSigner
 import com.xyoye.common_component.bilibili.app.BilibiliTvClient
 import com.xyoye.common_component.bilibili.auth.BilibiliAuthStore
 import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
 import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.bilibili.history.BilibiliHistoryCacheStore
-import com.xyoye.common_component.bilibili.login.BilibiliLoginQrCode
 import com.xyoye.common_component.bilibili.login.BilibiliLoginPollResult
+import com.xyoye.common_component.bilibili.login.BilibiliLoginQrCode
 import com.xyoye.common_component.bilibili.net.BilibiliOkHttpClientFactory
 import com.xyoye.common_component.bilibili.risk.BilibiliGaiaActivateRequest
 import com.xyoye.common_component.bilibili.risk.BilibiliRiskStateStore
@@ -22,49 +22,46 @@ import com.xyoye.common_component.bilibili.wbi.BilibiliWbiSigner
 import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.network.config.Api
-import com.xyoye.common_component.network.request.RequestParams
 import com.xyoye.common_component.network.repository.BaseRepository
+import com.xyoye.common_component.network.request.RequestParams
 import com.xyoye.common_component.network.service.BilibiliService
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.SupervisorScope
-import com.xyoye.data_component.data.bilibili.BilibiliCookieInfoData
-import com.xyoye.data_component.data.bilibili.BilibiliCookieRefreshData
 import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateRegisterData
 import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateValidateData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
 import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuConnectInfo
-import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
 import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
 import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
-import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import com.xyoye.data_component.data.bilibili.BilibiliPgcPlayurlV2Result
+import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodeGenerateData
 import com.xyoye.data_component.data.bilibili.BilibiliQrcodePollData
 import com.xyoye.data_component.data.bilibili.BilibiliResultJsonModel
 import com.xyoye.data_component.data.bilibili.BilibiliTvCookieInfo
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import okhttp3.Cookie
 import okhttp3.ResponseBody
-import java.util.UUID
 import java.net.SocketTimeoutException
 import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.spec.MGF1ParameterSpec
 import java.security.spec.X509EncodedKeySpec
+import java.util.UUID
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 import javax.crypto.Cipher
 import javax.crypto.spec.OAEPParameterSpec
 import javax.crypto.spec.PSource
+import kotlin.random.Random
 
 class BilibiliRepository(
-    private val storageKey: String,
+    private val storageKey: String
 ) : BaseRepository() {
     private val service: BilibiliService by lazy {
         Retrofit.createService(
@@ -114,7 +111,7 @@ class BilibiliRepository(
         challenge: String,
         token: String,
         validate: String,
-        seccode: String,
+        seccode: String
     ): Result<String> =
         requestBilibiliAuthed(reason = "gaiaVgateValidate") {
             val params: RequestParams = hashMapOf()
@@ -165,38 +162,39 @@ class BilibiliRepository(
      */
     private suspend fun preheatIfNeeded(
         force: Boolean,
-        reason: String,
+        reason: String
     ): Result<Boolean> =
-        preheatMutex.withLock {
-            runCatching {
-                val now = System.currentTimeMillis()
-                val lastPreheatAt = riskStateStore.lastPreheatAt()
-                val need =
-                    force ||
-                        !isPreheatCookieReady() ||
-                        now - lastPreheatAt >= PREHEAT_TTL_MS
+        preheatMutex
+            .withLock {
+                runCatching {
+                    val now = System.currentTimeMillis()
+                    val lastPreheatAt = riskStateStore.lastPreheatAt()
+                    val need =
+                        force ||
+                            !isPreheatCookieReady() ||
+                            now - lastPreheatAt >= PREHEAT_TTL_MS
 
-                if (!need) {
-                    return@runCatching false
+                    if (!need) {
+                        return@runCatching false
+                    }
+
+                    if (!force && now - lastPreheatAttemptAt < PREHEAT_MIN_RETRY_INTERVAL_MS) {
+                        return@runCatching false
+                    }
+                    lastPreheatAttemptAt = now
+
+                    service.preheat(BASE_WWW).close()
+                    riskStateStore.updatePreheatAt(now)
+                    true
                 }
-
-                if (!force && now - lastPreheatAttemptAt < PREHEAT_MIN_RETRY_INTERVAL_MS) {
-                    return@runCatching false
-                }
-                lastPreheatAttemptAt = now
-
-                service.preheat(BASE_WWW).close()
-                riskStateStore.updatePreheatAt(now)
-                true
+            }.onFailure { t ->
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    t,
+                    "BilibiliRepository",
+                    "preheatIfNeeded",
+                    "storageKey=$storageKey reason=$reason force=$force",
+                )
             }
-        }.onFailure { t ->
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                t,
-                "BilibiliRepository",
-                "preheatIfNeeded",
-                "storageKey=$storageKey reason=$reason force=$force",
-            )
-        }
 
     /**
      * GAIA 风控网关激活（对齐 PiliPlus 的 buvidActive），用于降低高风控接口（如 playurl）命中概率。
@@ -205,36 +203,37 @@ class BilibiliRepository(
      */
     private suspend fun activateBuvidIfNeeded(
         force: Boolean,
-        reason: String,
+        reason: String
     ): Result<Boolean> =
-        gaiaActivateMutex.withLock {
-            runCatching {
-                val now = System.currentTimeMillis()
-                val lastActivatedAt = riskStateStore.lastGaiaActivateAt()
-                val need = force || now - lastActivatedAt >= GAIA_ACTIVATE_TTL_MS
+        gaiaActivateMutex
+            .withLock {
+                runCatching {
+                    val now = System.currentTimeMillis()
+                    val lastActivatedAt = riskStateStore.lastGaiaActivateAt()
+                    val need = force || now - lastActivatedAt >= GAIA_ACTIVATE_TTL_MS
 
-                if (!need) {
-                    return@runCatching false
+                    if (!need) {
+                        return@runCatching false
+                    }
+
+                    if (!force && now - lastGaiaActivateAttemptAt < GAIA_ACTIVATE_MIN_RETRY_INTERVAL_MS) {
+                        return@runCatching false
+                    }
+                    lastGaiaActivateAttemptAt = now
+
+                    val payload = buildGaiaActivatePayload()
+                    service.gaiaActivateBuvid(BASE_API, BilibiliGaiaActivateRequest(payload)).close()
+                    riskStateStore.updateGaiaActivateAt(now)
+                    true
                 }
-
-                if (!force && now - lastGaiaActivateAttemptAt < GAIA_ACTIVATE_MIN_RETRY_INTERVAL_MS) {
-                    return@runCatching false
-                }
-                lastGaiaActivateAttemptAt = now
-
-                val payload = buildGaiaActivatePayload()
-                service.gaiaActivateBuvid(BASE_API, BilibiliGaiaActivateRequest(payload)).close()
-                riskStateStore.updateGaiaActivateAt(now)
-                true
+            }.onFailure { t ->
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    t,
+                    "BilibiliRepository",
+                    "activateBuvidIfNeeded",
+                    "storageKey=$storageKey reason=$reason force=$force",
+                )
             }
-        }.onFailure { t ->
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                t,
-                "BilibiliRepository",
-                "activateBuvidIfNeeded",
-                "storageKey=$storageKey reason=$reason force=$force",
-            )
-        }
 
     private fun buildGaiaActivatePayload(): String {
         val randomTailBytes = ByteArray(32 + 8 + 4)
@@ -255,7 +254,8 @@ class BilibiliRepository(
         }
 
         val bfe9 =
-            Base64.encodeToString(randomTailBytes, Base64.NO_WRAP)
+            Base64
+                .encodeToString(randomTailBytes, Base64.NO_WRAP)
                 .takeLast(50)
 
         // payload 字段本身是一个 JSON 字符串（与 PiliPlus 一致）
@@ -270,7 +270,7 @@ class BilibiliRepository(
 
     private suspend fun prepareRiskControl(
         reason: String,
-        force: Boolean,
+        force: Boolean
     ) {
         preheatIfNeeded(force = force, reason = reason).getOrNull()
         activateBuvidIfNeeded(force = force, reason = reason).getOrNull()
@@ -278,7 +278,7 @@ class BilibiliRepository(
 
     private fun applyWebPlayurlRiskParams(
         params: MutableMap<String, Any?>,
-        allowTryLook: Boolean,
+        allowTryLook: Boolean
     ) {
         params["gaia_source"] = PLAYURL_GAIA_SOURCE
         params["isGaiaAvoided"] = true
@@ -301,7 +301,7 @@ class BilibiliRepository(
 
     private suspend fun fetchWebVVoucherOrNull(
         baseParams: Map<String, Any?>,
-        allowTryLook: Boolean,
+        allowTryLook: Boolean
     ): String? {
         val attemptParams = baseParams.toMutableMap()
         attemptParams["fnval"] = 1
@@ -339,7 +339,7 @@ class BilibiliRepository(
         maxAttempts: Int,
         initialDelayMs: Long,
         maxDelayMs: Long,
-        block: suspend () -> Result<T>,
+        block: suspend () -> Result<T>
     ): Result<T> {
         var remedied = false
         return retryBilibiliRiskControl(
@@ -484,7 +484,7 @@ class BilibiliRepository(
         business: String? = null,
         ps: Int = 30,
         type: String = "archive",
-        preferCache: Boolean = true,
+        preferCache: Boolean = true
     ): Result<BilibiliHistoryCursorData> {
         val isFirstPage = max == null && viewAt == null && business == null
         if (preferCache && isFirstPage) {
@@ -515,7 +515,7 @@ class BilibiliRepository(
 
     suspend fun playbackHeartbeat(
         key: BilibiliKeys.Key,
-        playedTimeSec: Long,
+        playedTimeSec: Long
     ): Result<Unit> {
         // played_time: 0=ignore, -1=complete, >0=seconds
         if (playedTimeSec == 0L) {
@@ -553,7 +553,7 @@ class BilibiliRepository(
             }
 
             is BilibiliKeys.LiveKey,
-            is BilibiliKeys.PgcSeasonKey,
+            is BilibiliKeys.PgcSeasonKey
             -> return Result.success(Unit)
         }
 
@@ -569,7 +569,7 @@ class BilibiliRepository(
 
     suspend fun livePlayUrl(
         roomId: Long,
-        platform: String = "h5",
+        platform: String = "h5"
     ): Result<BilibiliLivePlayUrlData> {
         val params: RequestParams = hashMapOf()
         params["cid"] = roomId
@@ -622,7 +622,7 @@ class BilibiliRepository(
     suspend fun playurl(
         bvid: String,
         cid: Long,
-        preferences: BilibiliPlaybackPreferences,
+        preferences: BilibiliPlaybackPreferences
     ): Result<BilibiliPlayurlData> {
         val apiType = currentApiType()
         val baseParams = hashMapOf<String, Any?>()
@@ -632,61 +632,25 @@ class BilibiliRepository(
         val allowTryLook = !isLoggedIn()
 
         return when (apiType) {
-            BilibiliApiType.WEB -> run {
-                prepareRiskControl(reason = "playurl", force = false)
+            BilibiliApiType.WEB ->
+                run {
+                    prepareRiskControl(reason = "playurl", force = false)
 
-                val pcResult =
-                    retryBilibiliRiskControlWithRemedy(
-                        reason = "playurl",
-                        maxAttempts = PLAYURL_RISK_MAX_ATTEMPTS,
-                        initialDelayMs = PLAYURL_RISK_INITIAL_DELAY_MS,
-                        maxDelayMs = PLAYURL_RISK_MAX_DELAY_MS,
-                    ) {
-                        val attemptParams = baseParams.toMutableMap()
-                        applyWebPlayurlRiskParams(attemptParams, allowTryLook)
-                        val signed =
-                            BilibiliWbiSigner.sign(attemptParams) {
-                                fetchWbiKeys()
-                            }
-
-                        requestBilibiliAuthed(reason = "playurl") {
-                            service.playurl(BASE_API, signed)
-                        }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
-                            if (hasPlayableStream(data)) {
-                                data
-                            } else if (!data.vVoucher.isNullOrBlank()) {
-                                throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
-                            } else {
-                                throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
-                            }
-                        }
-                    }
-                if (pcResult.isSuccess) {
-                    return@run pcResult
-                }
-
-                val pcError = pcResult.exceptionOrNull() as? BilibiliException
-                val fnval = (baseParams["fnval"] as? Number)?.toInt()
-                val shouldTryHtml5 = fnval == 1 && pcError?.code in RISK_CONTROL_CODES
-
-                val html5Result =
-                    if (shouldTryHtml5) {
+                    val pcResult =
                         retryBilibiliRiskControlWithRemedy(
-                            reason = "playurl(html5)",
+                            reason = "playurl",
                             maxAttempts = PLAYURL_RISK_MAX_ATTEMPTS,
                             initialDelayMs = PLAYURL_RISK_INITIAL_DELAY_MS,
                             maxDelayMs = PLAYURL_RISK_MAX_DELAY_MS,
                         ) {
                             val attemptParams = baseParams.toMutableMap()
-                        attemptParams["platform"] = "html5"
-                        attemptParams["high_quality"] = 1
-                        applyWebPlayurlRiskParams(attemptParams, allowTryLook = allowTryLook)
-                        val signed =
-                            BilibiliWbiSigner.sign(attemptParams) {
-                                fetchWbiKeys()
-                            }
+                            applyWebPlayurlRiskParams(attemptParams, allowTryLook)
+                            val signed =
+                                BilibiliWbiSigner.sign(attemptParams) {
+                                    fetchWbiKeys()
+                                }
 
-                            requestBilibiliAuthed(reason = "playurl(html5)") {
+                            requestBilibiliAuthed(reason = "playurl") {
                                 service.playurl(BASE_API, signed)
                             }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
                                 if (hasPlayableStream(data)) {
@@ -698,52 +662,89 @@ class BilibiliRepository(
                                 }
                             }
                         }
-                    } else {
-                        null
+                    if (pcResult.isSuccess) {
+                        return@run pcResult
                     }
-                if (html5Result?.isSuccess == true) {
-                    return@run html5Result
-                }
 
-                // Web 无法取流时，尝试使用 TV/API 签名链路作为兜底（不改变用户偏好）。
-                val tvResult =
-                    retryBilibiliRiskControlWithRemedy(
-                        reason = "playurl(tvFallback)",
-                        maxAttempts = PLAYURL_RISK_MAX_ATTEMPTS,
-                        initialDelayMs = PLAYURL_RISK_INITIAL_DELAY_MS,
-                        maxDelayMs = PLAYURL_RISK_MAX_DELAY_MS,
-                    ) {
-                        val attemptParams = baseParams.toMutableMap()
-                        val auth = BilibiliAuthStore.read(storageKey)
-                        auth.appAccessToken?.takeIf { it.isNotBlank() }?.let { attemptParams["access_key"] = it }
-                        attemptParams["mobi_app"] = BilibiliTvClient.MOBI_APP
-                        attemptParams["platform"] = BilibiliTvClient.PLATFORM
+                    val pcError = pcResult.exceptionOrNull() as? BilibiliException
+                    val fnval = (baseParams["fnval"] as? Number)?.toInt()
+                    val shouldTryHtml5 = fnval == 1 && pcError?.code in RISK_CONTROL_CODES
 
-                        val signed =
-                            BilibiliAppSigner.sign(
-                                params = attemptParams,
-                                appKey = BilibiliTvClient.APP_KEY,
-                                appSec = BilibiliTvClient.APP_SEC,
-                            )
+                    val html5Result =
+                        if (shouldTryHtml5) {
+                            retryBilibiliRiskControlWithRemedy(
+                                reason = "playurl(html5)",
+                                maxAttempts = PLAYURL_RISK_MAX_ATTEMPTS,
+                                initialDelayMs = PLAYURL_RISK_INITIAL_DELAY_MS,
+                                maxDelayMs = PLAYURL_RISK_MAX_DELAY_MS,
+                            ) {
+                                val attemptParams = baseParams.toMutableMap()
+                                attemptParams["platform"] = "html5"
+                                attemptParams["high_quality"] = 1
+                                applyWebPlayurlRiskParams(attemptParams, allowTryLook = allowTryLook)
+                                val signed =
+                                    BilibiliWbiSigner.sign(attemptParams) {
+                                        fetchWbiKeys()
+                                    }
 
-                        requestBilibili {
-                            service.playurlOld(BASE_API, signed)
-                        }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
-                            if (hasPlayableStream(data)) {
-                                data
-                            } else if (!data.vVoucher.isNullOrBlank()) {
-                                throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
-                            } else {
-                                throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                                requestBilibiliAuthed(reason = "playurl(html5)") {
+                                    service.playurl(BASE_API, signed)
+                                }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
+                                    if (hasPlayableStream(data)) {
+                                        data
+                                    } else if (!data.vVoucher.isNullOrBlank()) {
+                                        throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                                    } else {
+                                        throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                                    }
+                                }
+                            }
+                        } else {
+                            null
+                        }
+                    if (html5Result?.isSuccess == true) {
+                        return@run html5Result
+                    }
+
+                    // Web 无法取流时，尝试使用 TV/API 签名链路作为兜底（不改变用户偏好）。
+                    val tvResult =
+                        retryBilibiliRiskControlWithRemedy(
+                            reason = "playurl(tvFallback)",
+                            maxAttempts = PLAYURL_RISK_MAX_ATTEMPTS,
+                            initialDelayMs = PLAYURL_RISK_INITIAL_DELAY_MS,
+                            maxDelayMs = PLAYURL_RISK_MAX_DELAY_MS,
+                        ) {
+                            val attemptParams = baseParams.toMutableMap()
+                            val auth = BilibiliAuthStore.read(storageKey)
+                            auth.appAccessToken?.takeIf { it.isNotBlank() }?.let { attemptParams["access_key"] = it }
+                            attemptParams["mobi_app"] = BilibiliTvClient.MOBI_APP
+                            attemptParams["platform"] = BilibiliTvClient.PLATFORM
+
+                            val signed =
+                                BilibiliAppSigner.sign(
+                                    params = attemptParams,
+                                    appKey = BilibiliTvClient.APP_KEY,
+                                    appSec = BilibiliTvClient.APP_SEC,
+                                )
+
+                            requestBilibili {
+                                service.playurlOld(BASE_API, signed)
+                            }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { data ->
+                                if (hasPlayableStream(data)) {
+                                    data
+                                } else if (!data.vVoucher.isNullOrBlank()) {
+                                    throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                                } else {
+                                    throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                                }
                             }
                         }
+                    if (tvResult.isSuccess) {
+                        tvResult
+                    } else {
+                        html5Result ?: pcResult
                     }
-                if (tvResult.isSuccess) {
-                    tvResult
-                } else {
-                    html5Result ?: pcResult
                 }
-            }
 
             BilibiliApiType.TV -> {
                 prepareRiskControl(reason = "playurl(tv)", force = false)
@@ -800,7 +801,7 @@ class BilibiliRepository(
     suspend fun playurlFallbackOrNull(
         bvid: String,
         cid: Long,
-        preferences: BilibiliPlaybackPreferences,
+        preferences: BilibiliPlaybackPreferences
     ): Result<BilibiliPlayurlData>? {
         val apiType = currentApiType()
         val fallback = BilibiliPlayurlPreferencesMapper.fallbackParamsOrNull(preferences, apiType) ?: return null
@@ -884,7 +885,7 @@ class BilibiliRepository(
         cid: Long,
         avid: Long? = null,
         preferences: BilibiliPlaybackPreferences,
-        session: String? = null,
+        session: String? = null
     ): Result<BilibiliPlayurlData> {
         val params: RequestParams = hashMapOf()
         params["ep_id"] = epId
@@ -897,66 +898,67 @@ class BilibiliRepository(
         params.putAll(BilibiliPlayurlPreferencesMapper.pgcPrimaryParams(preferences, apiType))
 
         return when (apiType) {
-            BilibiliApiType.WEB -> run {
-                prepareRiskControl(reason = "pgcPlayurl", force = false)
+            BilibiliApiType.WEB ->
+                run {
+                    prepareRiskControl(reason = "pgcPlayurl", force = false)
 
-                val baseParams = params.toMutableMap<String, Any?>()
-                applyPgcPlayurlRiskParams(baseParams)
+                    val baseParams = params.toMutableMap<String, Any?>()
+                    applyPgcPlayurlRiskParams(baseParams)
 
-                val webResult =
-                    retryBilibiliRiskControlWithRemedy(
-                        reason = "pgcPlayurl(v2)",
-                        maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
-                        initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
-                        maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
-                    ) {
-                        val attemptParams = baseParams.toMutableMap()
-                        val signed =
-                            BilibiliWbiSigner.sign(attemptParams) {
-                                fetchWbiKeys()
-                            }
+                    val webResult =
+                        retryBilibiliRiskControlWithRemedy(
+                            reason = "pgcPlayurl(v2)",
+                            maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+                            initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+                            maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+                        ) {
+                            val attemptParams = baseParams.toMutableMap()
+                            val signed =
+                                BilibiliWbiSigner.sign(attemptParams) {
+                                    fetchWbiKeys()
+                                }
 
-                        requestBilibiliResultAuthed(reason = "pgcPlayurl(v2)") {
-                            service.pgcPlayurlV2(BASE_API, signed)
-                        }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { result: BilibiliPgcPlayurlV2Result ->
-                            val data =
-                                result.videoInfo
-                                    ?: throw BilibiliException.from(code = -1, message = "取流失败：响应数据为空")
+                            requestBilibiliResultAuthed(reason = "pgcPlayurl(v2)") {
+                                service.pgcPlayurlV2(BASE_API, signed)
+                            }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { result: BilibiliPgcPlayurlV2Result ->
+                                val data =
+                                    result.videoInfo
+                                        ?: throw BilibiliException.from(code = -1, message = "取流失败：响应数据为空")
 
-                            if (hasPlayableStream(data)) {
-                                data
-                            } else if (!data.vVoucher.isNullOrBlank()) {
-                                throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
-                            } else {
-                                throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                                if (hasPlayableStream(data)) {
+                                    data
+                                } else if (!data.vVoucher.isNullOrBlank()) {
+                                    throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                                } else {
+                                    throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                                }
                             }
                         }
+                    if (webResult.isSuccess) {
+                        return@run webResult
                     }
-                if (webResult.isSuccess) {
-                    return@run webResult
-                }
 
-                val webError = webResult.exceptionOrNull() as? BilibiliException
-                if (webError?.code !in RISK_CONTROL_CODES) {
-                    return@run webResult
-                }
-
-                // Web 番剧接口触发风控时，尝试使用 TV/API 签名链路兜底（不改变用户偏好）。
-                val tvResult =
-                    retryBilibiliRiskControlWithRemedy(
-                        reason = "pgcPlayurl(tvFallback)",
-                        maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
-                        initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
-                        maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
-                    ) {
-                        pgcPlayurlByTvApi(params, reason = "pgcPlayurl(tvFallback)")
+                    val webError = webResult.exceptionOrNull() as? BilibiliException
+                    if (webError?.code !in RISK_CONTROL_CODES) {
+                        return@run webResult
                     }
-                if (tvResult.isSuccess) {
-                    tvResult
-                } else {
-                    webResult
+
+                    // Web 番剧接口触发风控时，尝试使用 TV/API 签名链路兜底（不改变用户偏好）。
+                    val tvResult =
+                        retryBilibiliRiskControlWithRemedy(
+                            reason = "pgcPlayurl(tvFallback)",
+                            maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+                            initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+                            maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+                        ) {
+                            pgcPlayurlByTvApi(params, reason = "pgcPlayurl(tvFallback)")
+                        }
+                    if (tvResult.isSuccess) {
+                        tvResult
+                    } else {
+                        webResult
+                    }
                 }
-            }
 
             BilibiliApiType.TV -> {
                 prepareRiskControl(reason = "pgcPlayurl(tv)", force = false)
@@ -977,7 +979,7 @@ class BilibiliRepository(
         cid: Long,
         avid: Long? = null,
         preferences: BilibiliPlaybackPreferences,
-        session: String? = null,
+        session: String? = null
     ): Result<BilibiliPlayurlData>? {
         val apiType = currentApiType()
         val fallback = BilibiliPlayurlPreferencesMapper.pgcFallbackParamsOrNull(preferences, apiType) ?: return null
@@ -991,59 +993,60 @@ class BilibiliRepository(
         params.putAll(fallback)
 
         return when (apiType) {
-            BilibiliApiType.WEB -> run {
-                prepareRiskControl(reason = "pgcPlayurlFallback", force = false)
+            BilibiliApiType.WEB ->
+                run {
+                    prepareRiskControl(reason = "pgcPlayurlFallback", force = false)
 
-                val baseParams = params.toMutableMap<String, Any?>()
-                applyPgcPlayurlRiskParams(baseParams)
+                    val baseParams = params.toMutableMap<String, Any?>()
+                    applyPgcPlayurlRiskParams(baseParams)
 
-                val webResult =
+                    val webResult =
+                        retryBilibiliRiskControlWithRemedy(
+                            reason = "pgcPlayurlFallback(v2)",
+                            maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
+                            initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
+                            maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
+                        ) {
+                            val attemptParams = baseParams.toMutableMap()
+                            val signed =
+                                BilibiliWbiSigner.sign(attemptParams) {
+                                    fetchWbiKeys()
+                                }
+
+                            requestBilibiliResultAuthed(reason = "pgcPlayurlFallback(v2)") {
+                                service.pgcPlayurlV2(BASE_API, signed)
+                            }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { result: BilibiliPgcPlayurlV2Result ->
+                                val data =
+                                    result.videoInfo
+                                        ?: throw BilibiliException.from(code = -1, message = "取流失败：响应数据为空")
+
+                                if (hasPlayableStream(data)) {
+                                    data
+                                } else if (!data.vVoucher.isNullOrBlank()) {
+                                    throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                                } else {
+                                    throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
+                                }
+                            }
+                        }
+                    if (webResult.isSuccess) {
+                        return@run webResult
+                    }
+
+                    val webError = webResult.exceptionOrNull() as? BilibiliException
+                    if (webError?.code !in RISK_CONTROL_CODES) {
+                        return@run webResult
+                    }
+
                     retryBilibiliRiskControlWithRemedy(
-                        reason = "pgcPlayurlFallback(v2)",
+                        reason = "pgcPlayurlFallback(tvFallback)",
                         maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
                         initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
                         maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
                     ) {
-                        val attemptParams = baseParams.toMutableMap()
-                        val signed =
-                            BilibiliWbiSigner.sign(attemptParams) {
-                                fetchWbiKeys()
-                            }
-
-                        requestBilibiliResultAuthed(reason = "pgcPlayurlFallback(v2)") {
-                            service.pgcPlayurlV2(BASE_API, signed)
-                        }.recoverTimeout("取流超时，请检查网络后重试").mapCatching { result: BilibiliPgcPlayurlV2Result ->
-                            val data =
-                                result.videoInfo
-                                    ?: throw BilibiliException.from(code = -1, message = "取流失败：响应数据为空")
-
-                            if (hasPlayableStream(data)) {
-                                data
-                            } else if (!data.vVoucher.isNullOrBlank()) {
-                                throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
-                            } else {
-                                throw BilibiliException.from(code = -1, message = "取流失败：响应无可用流")
-                            }
-                        }
+                        pgcPlayurlByTvApi(params, reason = "pgcPlayurlFallback(tvFallback)")
                     }
-                if (webResult.isSuccess) {
-                    return@run webResult
                 }
-
-                val webError = webResult.exceptionOrNull() as? BilibiliException
-                if (webError?.code !in RISK_CONTROL_CODES) {
-                    return@run webResult
-                }
-
-                retryBilibiliRiskControlWithRemedy(
-                    reason = "pgcPlayurlFallback(tvFallback)",
-                    maxAttempts = PGC_PLAYURL_RISK_MAX_ATTEMPTS,
-                    initialDelayMs = PGC_PLAYURL_RISK_INITIAL_DELAY_MS,
-                    maxDelayMs = PGC_PLAYURL_RISK_MAX_DELAY_MS,
-                ) {
-                    pgcPlayurlByTvApi(params, reason = "pgcPlayurlFallback(tvFallback)")
-                }
-            }
 
             BilibiliApiType.TV -> {
                 prepareRiskControl(reason = "pgcPlayurlFallback(tv)", force = false)
@@ -1061,7 +1064,7 @@ class BilibiliRepository(
 
     private suspend fun pgcPlayurlByTvApi(
         params: Map<String, Any?>,
-        reason: String,
+        reason: String
     ): Result<BilibiliPlayurlData> {
         val baseTvParams = params.toMutableMap()
 
@@ -1128,11 +1131,9 @@ class BilibiliRepository(
         historyCacheStore.clear()
     }
 
-    private fun currentApiType(): BilibiliApiType =
-        BilibiliApiPreferencesStore.read(storageKey).apiType
+    private fun currentApiType(): BilibiliApiType = BilibiliApiPreferencesStore.read(storageKey).apiType
 
-    private fun normalizeCookieDomain(domain: String): String =
-        domain.trim().removePrefix(".").ifBlank { domain }
+    private fun normalizeCookieDomain(domain: String): String = domain.trim().removePrefix(".").ifBlank { domain }
 
     private fun upsertTvCookiesOrThrow(cookieInfo: BilibiliTvCookieInfo?) {
         if (cookieInfo == null || cookieInfo.cookies.isEmpty()) return
@@ -1187,9 +1188,7 @@ class BilibiliRepository(
         )
     }
 
-    private suspend fun <T> requestBilibili(
-        block: suspend () -> BilibiliJsonModel<T>
-    ): Result<T> =
+    private suspend fun <T> requestBilibili(block: suspend () -> BilibiliJsonModel<T>): Result<T> =
         request().doGet {
             val model = block()
             ensureSuccess(model)
@@ -1198,7 +1197,7 @@ class BilibiliRepository(
 
     private suspend fun <T> requestBilibiliAuthed(
         reason: String,
-        block: suspend () -> BilibiliJsonModel<T>,
+        block: suspend () -> BilibiliJsonModel<T>
     ): Result<T> {
         refreshCookieIfNeeded(forceCheck = false, reason = reason)
         refreshBiliTicketIfNeeded(reason = reason)
@@ -1214,7 +1213,7 @@ class BilibiliRepository(
 
     private suspend fun requestBilibiliUnitAuthed(
         reason: String,
-        block: suspend () -> BilibiliJsonModel<Any>,
+        block: suspend () -> BilibiliJsonModel<Any>
     ): Result<Unit> {
         refreshCookieIfNeeded(forceCheck = false, reason = reason)
         refreshBiliTicketIfNeeded(reason = reason)
@@ -1228,9 +1227,7 @@ class BilibiliRepository(
         return requestBilibiliUnit(block)
     }
 
-    private suspend fun <T> requestBilibiliResult(
-        block: suspend () -> BilibiliResultJsonModel<T>
-    ): Result<T> =
+    private suspend fun <T> requestBilibiliResult(block: suspend () -> BilibiliResultJsonModel<T>): Result<T> =
         request()
             .doGet {
                 block()
@@ -1243,7 +1240,7 @@ class BilibiliRepository(
 
     private suspend fun <T> requestBilibiliResultAuthed(
         reason: String,
-        block: suspend () -> BilibiliResultJsonModel<T>,
+        block: suspend () -> BilibiliResultJsonModel<T>
     ): Result<T> {
         refreshCookieIfNeeded(forceCheck = false, reason = reason)
         refreshBiliTicketIfNeeded(reason = reason)
@@ -1258,85 +1255,83 @@ class BilibiliRepository(
     }
 
     private suspend fun refreshBiliTicketIfNeeded(reason: String): Result<Boolean> =
-        biliTicketMutex.withLock {
-            runCatching {
-                val now = System.currentTimeMillis()
-                val existing = cookieJarStore.getCookieOrNull(name = COOKIE_BILI_TICKET)
-                val needsRefresh =
-                    existing == null ||
-                        existing.expiresAt <= now + BILI_TICKET_REFRESH_AHEAD_MS
+        biliTicketMutex
+            .withLock {
+                runCatching {
+                    val now = System.currentTimeMillis()
+                    val existing = cookieJarStore.getCookieOrNull(name = COOKIE_BILI_TICKET)
+                    val needsRefresh =
+                        existing == null ||
+                            existing.expiresAt <= now + BILI_TICKET_REFRESH_AHEAD_MS
 
-                if (!needsRefresh) {
-                    return@runCatching false
+                    if (!needsRefresh) {
+                        return@runCatching false
+                    }
+
+                    if (now - lastBiliTicketAttemptAt < BILI_TICKET_MIN_RETRY_INTERVAL_MS) {
+                        return@runCatching false
+                    }
+                    lastBiliTicketAttemptAt = now
+
+                    // 预热 www 域名以补齐基础 Cookie，降低风控概率
+                    preheatIfNeeded(force = false, reason = "biliTicket:$reason").getOrNull()
+
+                    val signed = BilibiliTicketSigner.sign()
+                    val csrf = BilibiliAuthStore.read(storageKey).csrf
+
+                    val params: RequestParams = hashMapOf()
+                    params["key_id"] = signed.keyId
+                    params["hexsign"] = signed.hexsign
+                    params["context[ts]"] = signed.timestampSec
+                    csrf?.takeIf { it.isNotBlank() }?.let {
+                        params["csrf"] = it
+                    }
+
+                    val data =
+                        requestBilibili {
+                            service.genWebTicket(BASE_API, params)
+                        }.getOrThrow()
+
+                    val ticket =
+                        data.ticket.takeIf { it.isNotBlank() }
+                            ?: throw BilibiliException.from(code = -1, message = "获取 bili_ticket 失败：响应为空")
+
+                    val createdAtSec = data.createdAt.takeIf { it > 0 } ?: signed.timestampSec
+                    val ttlSec = data.ttl.takeIf { it > 0 } ?: BILI_TICKET_DEFAULT_TTL_SEC
+                    val expiresAtMs = (createdAtSec + ttlSec) * 1000L
+
+                    val cookie =
+                        Cookie
+                            .Builder()
+                            .name(COOKIE_BILI_TICKET)
+                            .value(ticket)
+                            .domain("bilibili.com")
+                            .path("/")
+                            .expiresAt(expiresAtMs)
+                            .secure()
+                            .httpOnly()
+                            .build()
+
+                    cookieJarStore.upsertCookie(cookie, bucketHost = "bilibili.com")
+                    true
                 }
-
-                if (now - lastBiliTicketAttemptAt < BILI_TICKET_MIN_RETRY_INTERVAL_MS) {
-                    return@runCatching false
-                }
-                lastBiliTicketAttemptAt = now
-
-                // 预热 www 域名以补齐基础 Cookie，降低风控概率
-                preheatIfNeeded(force = false, reason = "biliTicket:$reason").getOrNull()
-
-                val signed = BilibiliTicketSigner.sign()
-                val csrf = BilibiliAuthStore.read(storageKey).csrf
-
-                val params: RequestParams = hashMapOf()
-                params["key_id"] = signed.keyId
-                params["hexsign"] = signed.hexsign
-                params["context[ts]"] = signed.timestampSec
-                csrf?.takeIf { it.isNotBlank() }?.let {
-                    params["csrf"] = it
-                }
-
-                val data =
-                    requestBilibili {
-                        service.genWebTicket(BASE_API, params)
-                    }.getOrThrow()
-
-                val ticket = data.ticket.takeIf { it.isNotBlank() }
-                    ?: throw BilibiliException.from(code = -1, message = "获取 bili_ticket 失败：响应为空")
-
-                val createdAtSec = data.createdAt.takeIf { it > 0 } ?: signed.timestampSec
-                val ttlSec = data.ttl.takeIf { it > 0 } ?: BILI_TICKET_DEFAULT_TTL_SEC
-                val expiresAtMs = (createdAtSec + ttlSec) * 1000L
-
-                val cookie =
-                    Cookie
-                        .Builder()
-                        .name(COOKIE_BILI_TICKET)
-                        .value(ticket)
-                        .domain("bilibili.com")
-                        .path("/")
-                        .expiresAt(expiresAtMs)
-                        .secure()
-                        .httpOnly()
-                        .build()
-
-                cookieJarStore.upsertCookie(cookie, bucketHost = "bilibili.com")
-                true
+            }.onFailure { t ->
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    t,
+                    "BilibiliRepository",
+                    "refreshBiliTicketIfNeeded",
+                    "storageKey=$storageKey reason=$reason",
+                )
             }
-        }.onFailure { t ->
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                t,
-                "BilibiliRepository",
-                "refreshBiliTicketIfNeeded",
-                "storageKey=$storageKey reason=$reason",
-            )
-        }
 
-    private suspend fun requestBilibiliUnit(
-        block: suspend () -> BilibiliJsonModel<Any>,
-    ): Result<Unit> =
+    private suspend fun requestBilibiliUnit(block: suspend () -> BilibiliJsonModel<Any>): Result<Unit> =
         request().doGet {
             val model = block()
             ensureSuccess(model)
             Unit
         }
 
-    private fun readCachedHistoryFirstPageOrNull(): BilibiliHistoryCursorData? {
-        return readCachedHistoryFirstPageOrNull(type = "archive")
-    }
+    private fun readCachedHistoryFirstPageOrNull(): BilibiliHistoryCursorData? = readCachedHistoryFirstPageOrNull(type = "archive")
 
     private fun readCachedHistoryFirstPageOrNull(type: String): BilibiliHistoryCursorData? {
         val now = System.currentTimeMillis()
@@ -1353,7 +1348,10 @@ class BilibiliRepository(
         return cached
     }
 
-    private fun writeCachedHistoryFirstPage(type: String, data: BilibiliHistoryCursorData) {
+    private fun writeCachedHistoryFirstPage(
+        type: String,
+        data: BilibiliHistoryCursorData
+    ) {
         historyFirstPageMemoryCache[type] = data
         historyFirstPageMemoryAt[type] = System.currentTimeMillis()
         historyCacheStore.writeFirstPage(type, data)
@@ -1361,114 +1359,116 @@ class BilibiliRepository(
 
     private suspend fun refreshCookieIfNeeded(
         forceCheck: Boolean,
-        reason: String,
+        reason: String
     ): Result<Boolean> =
-        cookieRefreshMutex.withLock {
-            val auth = BilibiliAuthStore.read(storageKey)
-            val refreshToken = auth.webRefreshToken?.takeIf { it.isNotBlank() } ?: return@withLock Result.success(false)
+        cookieRefreshMutex
+            .withLock {
+                val auth = BilibiliAuthStore.read(storageKey)
+                val refreshToken = auth.webRefreshToken?.takeIf { it.isNotBlank() } ?: return@withLock Result.success(false)
 
-            val now = System.currentTimeMillis()
-            if (!forceCheck && now - lastCookieInfoCheckAt < COOKIE_INFO_CHECK_INTERVAL_MS) {
-                return@withLock Result.success(false)
-            }
-            lastCookieInfoCheckAt = now
+                val now = System.currentTimeMillis()
+                if (!forceCheck && now - lastCookieInfoCheckAt < COOKIE_INFO_CHECK_INTERVAL_MS) {
+                    return@withLock Result.success(false)
+                }
+                lastCookieInfoCheckAt = now
 
-            val info =
-                requestBilibili {
-                    service.cookieInfo(BASE_PASSPORT, auth.csrf)
-                }.getOrElse { throwable ->
-                    val e = throwable as? BilibiliException
-                    if (e?.code == -101) {
-                        return@withLock Result.failure(BilibiliException.from(code = -101, message = "登录已失效，请重新扫码登录"))
+                val info =
+                    requestBilibili {
+                        service.cookieInfo(BASE_PASSPORT, auth.csrf)
+                    }.getOrElse { throwable ->
+                        val e = throwable as? BilibiliException
+                        if (e?.code == -101) {
+                            return@withLock Result.failure(BilibiliException.from(code = -101, message = "登录已失效，请重新扫码登录"))
+                        }
+                        return@withLock Result.success(false)
                     }
+
+                if (!info.refresh) {
                     return@withLock Result.success(false)
                 }
 
-            if (!info.refresh) {
-                return@withLock Result.success(false)
-            }
+                if (now - lastCookieRefreshAttemptAt < COOKIE_REFRESH_MIN_INTERVAL_MS) {
+                    return@withLock Result.success(false)
+                }
+                lastCookieRefreshAttemptAt = now
 
-            if (now - lastCookieRefreshAttemptAt < COOKIE_REFRESH_MIN_INTERVAL_MS) {
-                return@withLock Result.success(false)
-            }
-            lastCookieRefreshAttemptAt = now
+                val csrf =
+                    auth.csrf?.takeIf { it.isNotBlank() }
+                        ?: return@withLock Result.failure(BilibiliException.from(code = -1, message = "缺少 csrf（bili_jct），请重新扫码登录"))
 
-            val csrf = auth.csrf?.takeIf { it.isNotBlank() }
-                ?: return@withLock Result.failure(BilibiliException.from(code = -1, message = "缺少 csrf（bili_jct），请重新扫码登录"))
+                val correspondPath =
+                    runCatching { encryptCorrespondPath(info.timestamp) }
+                        .getOrNull()
+                        ?: return@withLock Result.failure(BilibiliException.from(code = -1, message = "生成 correspondPath 失败"))
 
-            val correspondPath =
-                runCatching { encryptCorrespondPath(info.timestamp) }
-                    .getOrNull()
-                    ?: return@withLock Result.failure(BilibiliException.from(code = -1, message = "生成 correspondPath 失败"))
+                val refreshCsrf =
+                    runCatching { service.correspond(BASE_WWW, correspondPath).string() }
+                        .mapCatching { extractRefreshCsrf(it) }
+                        .getOrNull()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: return@withLock Result.failure(BilibiliException.from(code = -1, message = "获取 refresh_csrf 失败"))
 
-            val refreshCsrf =
-                runCatching { service.correspond(BASE_WWW, correspondPath).string() }
-                    .mapCatching { extractRefreshCsrf(it) }
-                    .getOrNull()
-                    ?.takeIf { it.isNotBlank() }
-                    ?: return@withLock Result.failure(BilibiliException.from(code = -1, message = "获取 refresh_csrf 失败"))
+                val refreshTokenOld = refreshToken
+                val refreshData =
+                    requestBilibili {
+                        val params: RequestParams =
+                            hashMapOf(
+                                "csrf" to csrf,
+                                "refresh_csrf" to refreshCsrf,
+                                "source" to "main_web",
+                                "refresh_token" to refreshTokenOld,
+                            )
+                        service.cookieRefresh(BASE_PASSPORT, params)
+                    }.getOrElse { throwable ->
+                        val e = throwable as? BilibiliException
+                        if (e?.code == -101 || e?.code == 86095) {
+                            clear()
+                            return@withLock Result.failure(BilibiliException.from(code = -101, message = "登录已失效，请重新扫码登录"))
+                        }
+                        return@withLock Result.failure(throwable)
+                    }
 
-            val refreshTokenOld = refreshToken
-            val refreshData =
-                requestBilibili {
+                val refreshTokenNew =
+                    refreshData.refreshToken?.takeIf { it.isNotBlank() }
+                        ?: return@withLock Result.failure(BilibiliException.from(code = -1, message = "刷新成功但未返回 refresh_token"))
+
+                // 写入新的 csrf/mid/refresh_token（csrf 从新 cookie 中读取）
+                BilibiliAuthStore.updateFromCookies(
+                    storageKey = storageKey,
+                    cookieJarStore = cookieJarStore,
+                    webRefreshToken = refreshTokenNew,
+                )
+
+                val csrfNew =
+                    BilibiliAuthStore.read(storageKey).csrf?.takeIf { it.isNotBlank() }
+                        ?: return@withLock Result.failure(BilibiliException.from(code = -1, message = "刷新 Cookie 后缺少 csrf"))
+
+                // 注意：这里必须使用“刷新前的旧 refresh_token”进行确认
+                requestBilibiliUnit {
                     val params: RequestParams =
                         hashMapOf(
-                            "csrf" to csrf,
-                            "refresh_csrf" to refreshCsrf,
-                            "source" to "main_web",
+                            "csrf" to csrfNew,
                             "refresh_token" to refreshTokenOld,
                         )
-                    service.cookieRefresh(BASE_PASSPORT, params)
+                    service.confirmRefresh(BASE_PASSPORT, params)
                 }.getOrElse { throwable ->
                     val e = throwable as? BilibiliException
-                    if (e?.code == -101 || e?.code == 86095) {
+                    if (e?.code == -101) {
                         clear()
                         return@withLock Result.failure(BilibiliException.from(code = -101, message = "登录已失效，请重新扫码登录"))
                     }
                     return@withLock Result.failure(throwable)
                 }
 
-            val refreshTokenNew =
-                refreshData.refreshToken?.takeIf { it.isNotBlank() }
-                    ?: return@withLock Result.failure(BilibiliException.from(code = -1, message = "刷新成功但未返回 refresh_token"))
-
-            // 写入新的 csrf/mid/refresh_token（csrf 从新 cookie 中读取）
-            BilibiliAuthStore.updateFromCookies(
-                storageKey = storageKey,
-                cookieJarStore = cookieJarStore,
-                webRefreshToken = refreshTokenNew,
-            )
-
-            val csrfNew =
-                BilibiliAuthStore.read(storageKey).csrf?.takeIf { it.isNotBlank() }
-                    ?: return@withLock Result.failure(BilibiliException.from(code = -1, message = "刷新 Cookie 后缺少 csrf"))
-
-            // 注意：这里必须使用“刷新前的旧 refresh_token”进行确认
-            requestBilibiliUnit {
-                val params: RequestParams =
-                    hashMapOf(
-                        "csrf" to csrfNew,
-                        "refresh_token" to refreshTokenOld,
-                    )
-                service.confirmRefresh(BASE_PASSPORT, params)
-            }.getOrElse { throwable ->
-                val e = throwable as? BilibiliException
-                if (e?.code == -101) {
-                    clear()
-                    return@withLock Result.failure(BilibiliException.from(code = -101, message = "登录已失效，请重新扫码登录"))
-                }
-                return@withLock Result.failure(throwable)
+                Result.success(true)
+            }.onFailure { t ->
+                ErrorReportHelper.postCatchedExceptionWithContext(
+                    t,
+                    "BilibiliRepository",
+                    "refreshCookieIfNeeded",
+                    "storageKey=$storageKey forceCheck=$forceCheck reason=$reason",
+                )
             }
-
-            Result.success(true)
-        }.onFailure { t ->
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                t,
-                "BilibiliRepository",
-                "refreshCookieIfNeeded",
-                "storageKey=$storageKey forceCheck=$forceCheck reason=$reason",
-            )
-        }
 
     private fun encryptCorrespondPath(timestamp: Long): String {
         val cipher =
@@ -1486,7 +1486,12 @@ class BilibiliRepository(
     private fun extractRefreshCsrf(html: String): String? {
         // 解析 HTML：<div id="1-name">refresh_csrf</div>
         val regex = Regex("<div\\s+id=\"1-name\"[^>]*>([^<]+)</div>")
-        return regex.find(html)?.groupValues?.getOrNull(1)?.trim()?.ifEmpty { null }
+        return regex
+            .find(html)
+            ?.groupValues
+            ?.getOrNull(1)
+            ?.trim()
+            ?.ifEmpty { null }
     }
 
     private val CORRESPOND_PUBLIC_KEY: PublicKey by lazy {
@@ -1515,22 +1520,22 @@ class BilibiliRepository(
 
     private fun newPgcSession(): String = UUID.randomUUID().toString().replace("-", "")
 
-    private fun isRiskControlError(error: BilibiliException): Boolean =
-        error.code in RISK_CONTROL_CODES
+    private fun isRiskControlError(error: BilibiliException): Boolean = error.code in RISK_CONTROL_CODES
 
     private suspend fun <T> retryBilibiliRiskControl(
         maxAttempts: Int,
         initialDelayMs: Long,
         maxDelayMs: Long,
-        block: suspend () -> Result<T>,
+        block: suspend () -> Result<T>
     ): Result<T> {
         var attempt = 1
         var delayMs = initialDelayMs
 
         while (true) {
             val result = block()
-            val error = result.exceptionOrNull() as? BilibiliException
-                ?: return result
+            val error =
+                result.exceptionOrNull() as? BilibiliException
+                    ?: return result
             if (!isRiskControlError(error)) {
                 return result
             }

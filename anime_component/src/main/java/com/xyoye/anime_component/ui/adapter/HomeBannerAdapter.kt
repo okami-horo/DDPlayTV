@@ -2,7 +2,6 @@ package com.xyoye.anime_component.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.annotation.NonNull
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.launcher.ARouter

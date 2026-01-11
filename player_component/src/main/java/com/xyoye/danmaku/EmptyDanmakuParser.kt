@@ -7,4 +7,3 @@ import master.flame.danmaku.danmaku.parser.BaseDanmakuParser
 class EmptyDanmakuParser : BaseDanmakuParser() {
     override fun parse(): Danmakus = Danmakus(ST_BY_TIME, false, mContext.baseComparator)
 }
-

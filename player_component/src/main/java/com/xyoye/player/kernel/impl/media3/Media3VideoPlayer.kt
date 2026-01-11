@@ -37,18 +37,16 @@ import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.extension.mapByLength
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
+import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.anime4k.Anime4kMode
+import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper.getMediaSource
 import com.xyoye.player.kernel.impl.media3.effect.Anime4kPerformanceGlEffect
 import com.xyoye.player.kernel.impl.media3.effect.Anime4kQualityGlEffect
-import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
-import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper.getMediaSource
-import com.xyoye.player.kernel.impl.media3.AggressiveMediaCodecSelector
-import com.xyoye.player.kernel.impl.media3.LibassAwareRenderersFactory
-import com.xyoye.player.kernel.inter.AbstractVideoPlayer
-import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
+import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.subtitle.MixedSubtitle
 import com.xyoye.subtitle.SubtitleType
 import java.util.concurrent.atomic.AtomicReference
@@ -136,7 +134,7 @@ class Media3VideoPlayer(
             LibassAwareRenderersFactory(
                 appContext,
                 AggressiveMediaCodecSelector(),
-                embeddedSinkProvider = { embeddedSinkRef.get() }
+                embeddedSinkProvider = { embeddedSinkRef.get() },
             ).apply {
                 setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             }

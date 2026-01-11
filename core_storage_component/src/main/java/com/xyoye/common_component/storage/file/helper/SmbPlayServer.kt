@@ -9,9 +9,8 @@ import com.xyoye.common_component.utils.IOUtils
 import com.xyoye.common_component.utils.RangeUtils
 import com.xyoye.common_component.utils.getFileExtension
 import fi.iki.elonen.NanoHTTPD
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.IOException
 import java.io.InputStream
 import java.net.URLEncoder
@@ -22,6 +21,8 @@ import kotlin.random.Random
  */
 
 class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
+    private val startMutex = Mutex()
+
     private var mStorageFile: SmbStorageFile? = null
     private var mStorage: SmbStorage? = null
     private var mContentType: String = "video/*"
@@ -46,6 +47,7 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
         fun getInstance() = Holder.instance
     }
 
+    @Synchronized
     override fun serve(session: IHTTPSession): Response {
         val storage = mStorage ?: return resourceNotFound
         val storageFile = mStorageFile ?: return resourceNotFound
@@ -55,7 +57,7 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
 
         // 重新打开数据流，重要，否则无法设置offset
         val inputStream =
-            getInputStream(storage, storageFile)
+            openInputStreamBlocking(storage, storageFile)
                 ?: return resourceOpenFailed
         mInputStream = inputStream
 
@@ -74,11 +76,18 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
         }
     }
 
-    private fun getInputStream(
+    /**
+     * Threading model:
+     * - Called from NanoHTTPD request thread (NOT main thread).
+     * - Serialized by [serve] so the underlying SMB session isn't accessed concurrently.
+     */
+    private fun openInputStreamBlocking(
         storage: Storage,
         file: StorageFile
-    ) = runBlocking {
-        storage.openFile(file)
+    ): InputStream? {
+        val smbStorage = storage as? SmbStorage ?: return null
+        val smbFile = file as? SmbStorageFile ?: return null
+        return smbStorage.openFileBlocking(smbFile)
     }
 
     private fun getPartialResponse(
@@ -139,26 +148,25 @@ class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
     }
 
     suspend fun startSync(timeoutMs: Long = 5000): Boolean {
-        if (wasStarted()) {
-            release()
-        }
-        return try {
-            withTimeout(timeoutMs) {
-                start()
-                while (isActive) {
-                    if (wasStarted()) {
-                        return@withTimeout true
-                    }
-                }
-                stop()
-                return@withTimeout false
+        return startMutex.withLock {
+            if (wasStarted()) {
+                release()
             }
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedException(e, "SMBPlayServer", "启动播放服务器失败: timeout=${timeoutMs}ms")
-            false
+            return@withLock try {
+                start()
+                val started = awaitCondition(timeoutMs = timeoutMs) { wasStarted() }
+                if (!started) {
+                    stop()
+                }
+                started
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedException(e, "SMBPlayServer", "启动播放服务器失败: timeout=${timeoutMs}ms")
+                false
+            }
         }
     }
 
+    @Synchronized
     fun generatePlayUrl(
         storage: SmbStorage,
         storageFile: SmbStorageFile

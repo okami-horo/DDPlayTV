@@ -7,10 +7,10 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayoutMediator
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
+import com.google.android.material.tabs.TabLayoutMediator
 import com.xyoye.anime_component.BR
 import com.xyoye.anime_component.R
 import com.xyoye.anime_component.databinding.ActivitySearchBinding

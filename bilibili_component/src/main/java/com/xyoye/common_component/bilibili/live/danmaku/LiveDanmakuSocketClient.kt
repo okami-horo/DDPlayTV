@@ -30,10 +30,11 @@ class LiveDanmakuSocketClient(
     private val storageKey: String,
     private val roomId: Long,
     private val scope: CoroutineScope,
-    private val listener: Listener,
+    private val listener: Listener
 ) {
     interface Listener {
         fun onStateChanged(state: LiveDanmakuState)
+
         fun onEvent(event: LiveDanmakuEvent)
     }
 
@@ -41,20 +42,20 @@ class LiveDanmakuSocketClient(
         data object Connecting : LiveDanmakuState
 
         data class Connected(
-            val host: String,
+            val host: String
         ) : LiveDanmakuState
 
         data class Reconnecting(
             val attempt: Int,
-            val delayMs: Long,
+            val delayMs: Long
         ) : LiveDanmakuState
 
         data class Disconnected(
-            val reason: String?,
+            val reason: String?
         ) : LiveDanmakuState
 
         data class Error(
-            val message: String,
+            val message: String
         ) : LiveDanmakuState
     }
 
@@ -133,7 +134,7 @@ class LiveDanmakuSocketClient(
                             object : WebSocketListener() {
                                 override fun onOpen(
                                     webSocket: WebSocket,
-                                    response: Response,
+                                    response: Response
                                 ) {
                                     // auth within 5s
                                     val authJson =
@@ -158,14 +159,14 @@ class LiveDanmakuSocketClient(
 
                                 override fun onMessage(
                                     webSocket: WebSocket,
-                                    bytes: ByteString,
+                                    bytes: ByteString
                                 ) {
                                     binaryChannel.trySend(bytes.toByteArray())
                                 }
 
                                 override fun onMessage(
                                     webSocket: WebSocket,
-                                    text: String,
+                                    text: String
                                 ) {
                                     // Keep compatibility: treat as JSON command if server sends text frames.
                                     val event = LiveDanmakuCommandParser.parseCommand(text) ?: return
@@ -175,7 +176,7 @@ class LiveDanmakuSocketClient(
                                 override fun onClosing(
                                     webSocket: WebSocket,
                                     code: Int,
-                                    reason: String,
+                                    reason: String
                                 ) {
                                     webSocket.close(code, reason)
                                 }
@@ -183,7 +184,7 @@ class LiveDanmakuSocketClient(
                                 override fun onClosed(
                                     webSocket: WebSocket,
                                     code: Int,
-                                    reason: String,
+                                    reason: String
                                 ) {
                                     closedSignal.set(true)
                                     listener.onStateChanged(LiveDanmakuState.Disconnected(reason.ifBlank { null }))
@@ -192,7 +193,7 @@ class LiveDanmakuSocketClient(
                                 override fun onFailure(
                                     webSocket: WebSocket,
                                     t: Throwable,
-                                    response: Response?,
+                                    response: Response?
                                 ) {
                                     closedSignal.set(true)
                                     ErrorReportHelper.postCatchedExceptionWithContext(
@@ -355,7 +356,13 @@ class LiveDanmakuSocketClient(
     }
 
     private fun webSocketHost(): String =
-        runCatching { webSocket?.request()?.url?.host.orEmpty() }.getOrDefault("")
+        runCatching {
+            webSocket
+                ?.request()
+                ?.url
+                ?.host
+                .orEmpty()
+        }.getOrDefault("")
 
     private companion object {
         private const val HEARTBEAT_INTERVAL_MS = 30_000L

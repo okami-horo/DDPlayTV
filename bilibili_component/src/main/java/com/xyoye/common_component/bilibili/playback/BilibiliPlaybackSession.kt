@@ -27,11 +27,11 @@ class BilibiliPlaybackSession(
     val uniqueKey: String,
     private val storageKey: String,
     private val repository: BilibiliRepository,
-    private val key: BilibiliKeys.Key,
+    private val key: BilibiliKeys.Key
 ) {
     data class AudioOption(
         val id: Int,
-        val bandwidth: Int,
+        val bandwidth: Int
     )
 
     data class Snapshot(
@@ -43,20 +43,20 @@ class BilibiliPlaybackSession(
         val qualities: List<Int>,
         val videoCodecs: List<BilibiliVideoCodec>,
         val audios: List<AudioOption>,
-        val lastPositionMs: Long,
+        val lastPositionMs: Long
     )
 
     data class PreferenceUpdate(
         val playMode: BilibiliPlayMode? = null,
         val qualityQn: Int? = null,
         val videoCodec: BilibiliVideoCodec? = null,
-        val audioQualityId: Int? = null,
+        val audioQualityId: Int? = null
     )
 
     data class FailureContext(
         val failingUrl: String? = null,
         val httpResponseCode: Int? = null,
-        val isDecoderError: Boolean = false,
+        val isDecoderError: Boolean = false
     )
 
     private val mpdFile =
@@ -114,7 +114,7 @@ class BilibiliPlaybackSession(
 
     suspend fun recover(
         failure: FailureContext,
-        positionMs: Long,
+        positionMs: Long
     ): Result<String> =
         runCatching {
             lastPositionMs = positionMs
@@ -138,7 +138,7 @@ class BilibiliPlaybackSession(
 
     suspend fun applyPreferenceUpdate(
         update: PreferenceUpdate,
-        positionMs: Long,
+        positionMs: Long
     ): Result<String> =
         runCatching {
             lastPositionMs = positionMs
@@ -338,7 +338,11 @@ class BilibiliPlaybackSession(
         if (data.dash?.video?.isNotEmpty() == true) {
             return true
         }
-        if (data.durl.firstOrNull()?.url?.isNotBlank() == true) {
+        if (data.durl
+                .firstOrNull()
+                ?.url
+                ?.isNotBlank() == true
+        ) {
             return true
         }
         return false
@@ -348,19 +352,22 @@ class BilibiliPlaybackSession(
         val dashData = dash
 
         videoCandidatesByCodec =
-            dashData?.video
+            dashData
+                ?.video
                 ?.groupBy { media -> BilibiliVideoCodec.fromCodecid(media.codecid) ?: BilibiliVideoCodec.AUTO }
                 ?.mapValues { (_, list) ->
                     list.sortedWith(compareByDescending<BilibiliDashMediaData> { it.id }.thenByDescending { it.bandwidth })
                 }.orEmpty()
 
         audioCandidates =
-            dashData?.audio
+            dashData
+                ?.audio
                 ?.sortedWith(compareByDescending<BilibiliDashMediaData> { it.bandwidth }.thenByDescending { it.id })
                 .orEmpty()
 
         selectedVideo =
-            dashData?.video
+            dashData
+                ?.video
                 ?.takeIf { it.isNotEmpty() }
                 ?.let { selectVideoByPreferences(it) }
 
@@ -374,13 +381,15 @@ class BilibiliPlaybackSession(
             }
 
         selectedDurlCandidates =
-            durl.firstOrNull()?.let { first ->
-                BilibiliCdnStrategy.resolveUrls(
-                    baseUrl = first.url,
-                    backupUrls = first.backupUrl,
-                    options = BilibiliCdnStrategy.Options(hostOverride = preferences.cdnService.host),
-                )
-            }.orEmpty()
+            durl
+                .firstOrNull()
+                ?.let { first ->
+                    BilibiliCdnStrategy.resolveUrls(
+                        baseUrl = first.url,
+                        backupUrls = first.backupUrl,
+                        options = BilibiliCdnStrategy.Options(hostOverride = preferences.cdnService.host),
+                    )
+                }.orEmpty()
         selectedDurlIndex = 0
     }
 
@@ -444,7 +453,11 @@ class BilibiliPlaybackSession(
                 selectedQualityQn = selectedVideo.id,
                 selectedVideoCodec = BilibiliVideoCodec.fromCodecid(selectedVideo.codecid) ?: preferences.preferredVideoCodec,
                 selectedAudioQualityId = selectedAudio?.id ?: preferences.preferredAudioQualityId,
-                qualities = dashValue.video.map { it.id }.distinct().sorted(),
+                qualities =
+                    dashValue.video
+                        .map { it.id }
+                        .distinct()
+                        .sorted(),
                 codecs =
                     dashValue.video
                         .mapNotNull { BilibiliVideoCodec.fromCodecid(it.codecid) }
@@ -484,7 +497,7 @@ class BilibiliPlaybackSession(
 
     private fun buildDashVideoRepresentations(
         dash: BilibiliDashData,
-        selectedVideo: BilibiliDashMediaData,
+        selectedVideo: BilibiliDashMediaData
     ): List<BilibiliDashMediaData> {
         val candidates =
             dash.video
@@ -507,7 +520,7 @@ class BilibiliPlaybackSession(
 
     private fun buildDashAudioRepresentations(
         candidates: List<BilibiliDashMediaData>,
-        selectedAudio: BilibiliDashMediaData?,
+        selectedAudio: BilibiliDashMediaData?
     ): List<BilibiliDashMediaData> {
         if (selectedAudio == null) return emptyList()
         val maxBandwidth = selectedAudio.bandwidth.takeIf { it > 0 } ?: return listOf(selectedAudio)
@@ -529,7 +542,7 @@ class BilibiliPlaybackSession(
         selectedAudioQualityId: Int,
         qualities: List<Int>,
         codecs: List<BilibiliVideoCodec>,
-        audios: List<AudioOption>,
+        audios: List<AudioOption>
     ) {
         snapshot =
             Snapshot(

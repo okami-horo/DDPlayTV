@@ -126,7 +126,6 @@ class DeveloperSettingFragment : PreferenceFragmentCompat() {
                 true
             }
         }
-
     }
 
     private fun initBuglyStatusPreference() {

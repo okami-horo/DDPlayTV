@@ -27,7 +27,7 @@ object BilibiliWbiSigner {
     data class WbiKeys(
         val imgKey: String,
         val subKey: String,
-        val updatedAt: Long,
+        val updatedAt: Long
     )
 
     suspend fun sign(
@@ -90,7 +90,7 @@ object BilibiliWbiSigner {
             sorted.entries.joinToString("&") { (k, v) ->
                 val value = v.toString()
                 val encoded = encodeURIComponent(value)
-                "${k}=$encoded"
+                "$k=$encoded"
             }
         // WBI 签名要求移除特定字符，避免不同端编码差异导致签名不一致
         return raw.replace("[!'()*]".toRegex(), "")

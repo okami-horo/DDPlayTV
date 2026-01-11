@@ -7,11 +7,11 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.TextView
-import com.xyoye.player_component.R
 import com.xyoye.common_component.log.SubtitleTelemetryLogger
 import com.xyoye.data_component.bean.subtitle.TelemetrySample
 import com.xyoye.data_component.bean.subtitle.TelemetrySnapshot
 import com.xyoye.data_component.enums.SubtitleFrameStatus
+import com.xyoye.player_component.R
 
 /**
  * Lightweight overlay to surface GPU subtitle telemetry on-device without

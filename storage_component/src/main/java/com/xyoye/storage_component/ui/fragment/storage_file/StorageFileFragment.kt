@@ -1,22 +1,21 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
-import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.base.BaseFragment
-import com.xyoye.common_component.focus.RecyclerViewFocusDelegate
-import com.xyoye.common_component.focus.setDescendantFocusBlocked
 import com.xyoye.common_component.extension.FocusTarget
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.extension.vertical
+import com.xyoye.common_component.focus.RecyclerViewFocusDelegate
+import com.xyoye.common_component.focus.setDescendantFocusBlocked
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType

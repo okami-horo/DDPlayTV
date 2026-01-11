@@ -63,7 +63,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         val fragment: StorageFileFragment,
         var directoryFilesSnapshot: List<StorageFile> = emptyList(),
         var displayVideoCount: Int = 0,
-        var displayDirectoryCount: Int = 0,
+        var displayDirectoryCount: Int = 0
     )
 
     // 导航栈：当前页面/目录的单一事实源
@@ -305,7 +305,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     private fun pushFragment(
         path: StorageFilePath,
-        directory: StorageFile?,
+        directory: StorageFile?
     ) {
         val fragment = StorageFileFragment.newInstance()
         val previousFragment = routeStack.lastOrNull()?.fragment
@@ -615,7 +615,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     fun onDirectoryOpened(
         fragment: StorageFileFragment,
-        displayFiles: List<StorageFile>,
+        displayFiles: List<StorageFile>
     ) {
         val entry =
             routeStack.firstOrNull { it.fragment == fragment }

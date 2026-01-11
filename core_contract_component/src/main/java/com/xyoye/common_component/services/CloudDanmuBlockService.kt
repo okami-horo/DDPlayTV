@@ -13,4 +13,3 @@ interface CloudDanmuBlockService : IProvider {
      */
     suspend fun syncIfNeed()
 }
-

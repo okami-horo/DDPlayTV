@@ -22,7 +22,7 @@ import com.xyoye.player_component.subtitle.gpu.SubtitleSurfaceLifecycleHandler
 @UnstableApi
 internal class LibassGpuSubtitleSession(
     private val environment: SubtitleRenderEnvironment,
-    private val kernelBridge: SubtitleKernelBridge?,
+    private val kernelBridge: SubtitleKernelBridge?
 ) : SubtitleFrameDriver.Callback {
     private val pipelineApi = LocalSubtitlePipelineApi()
     private val pipelineController = SubtitlePipelineController(pipelineApi)

@@ -15,4 +15,3 @@ object BilibiliTvClient {
     // TV 端扫码登录参数，可为 0
     const val LOCAL_ID = 0
 }
-

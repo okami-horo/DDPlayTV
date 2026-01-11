@@ -9,7 +9,11 @@ import androidx.media3.common.util.UnstableApi
 interface EmbeddedSubtitleSink {
     fun onFormat(codecPrivate: ByteArray?)
 
-    fun onSample(data: ByteArray, timeUs: Long, durationUs: Long?)
+    fun onSample(
+        data: ByteArray,
+        timeUs: Long,
+        durationUs: Long?
+    )
 
     fun onFlush()
 

@@ -4,8 +4,8 @@ import android.os.Build
 import android.security.KeyPairGeneratorSpec
 import android.util.Base64
 import androidx.annotation.RequiresApi
-import com.xyoye.core_system_component.BuildConfig
 import com.xyoye.common_component.base.app.BaseApplication
+import com.xyoye.core_system_component.BuildConfig
 import java.math.BigInteger
 import java.security.KeyStore
 import java.security.SecureRandom
@@ -93,7 +93,7 @@ object DeveloperCredentialStore {
         encrypted: String?,
         legacyPlain: String?,
         saveEncrypted: (String) -> Unit,
-        clearLegacyPlain: () -> Unit,
+        clearLegacyPlain: () -> Unit
     ): String? {
         if (!encrypted.isNullOrBlank()) {
             decrypt(encrypted)?.let { return it }
@@ -112,7 +112,7 @@ object DeveloperCredentialStore {
 
     private fun getStoredCredentialForPrefill(
         encrypted: String?,
-        legacyPlain: String?,
+        legacyPlain: String?
     ): String? {
         if (!encrypted.isNullOrBlank()) {
             decrypt(encrypted)?.let { return it }
@@ -124,7 +124,7 @@ object DeveloperCredentialStore {
         value: String,
         saveEncrypted: (String) -> Unit,
         clearLegacyPlain: () -> Unit,
-        saveLegacyPlain: (String) -> Unit,
+        saveLegacyPlain: (String) -> Unit
     ) {
         if (value.isBlank()) {
             saveEncrypted("")
@@ -175,11 +175,9 @@ object DeveloperCredentialStore {
             String(cipher.doFinal(cipherText), Charsets.UTF_8)
         }.getOrNull()
 
-    private fun base64Encode(bytes: ByteArray): String =
-        Base64.encodeToString(bytes, Base64.NO_WRAP)
+    private fun base64Encode(bytes: ByteArray): String = Base64.encodeToString(bytes, Base64.NO_WRAP)
 
-    private fun base64Decode(value: String): ByteArray =
-        Base64.decode(value, Base64.NO_WRAP)
+    private fun base64Decode(value: String): ByteArray = Base64.decode(value, Base64.NO_WRAP)
 
     private fun getOrCreateSecretKey(): SecretKey? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -197,12 +195,12 @@ object DeveloperCredentialStore {
 
             val keyGenerator = KeyGenerator.getInstance("AES", KEYSTORE_PROVIDER)
             val spec =
-                android.security.keystore.KeyGenParameterSpec.Builder(
-                    AES_KEY_ALIAS,
-                    android.security.keystore.KeyProperties.PURPOSE_ENCRYPT or
-                        android.security.keystore.KeyProperties.PURPOSE_DECRYPT,
-                )
-                    .setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
+                android.security.keystore.KeyGenParameterSpec
+                    .Builder(
+                        AES_KEY_ALIAS,
+                        android.security.keystore.KeyProperties.PURPOSE_ENCRYPT or
+                            android.security.keystore.KeyProperties.PURPOSE_DECRYPT,
+                    ).setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
                     .setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
                     .setRandomizedEncryptionRequired(true)
                     .setKeySize(256)
@@ -213,12 +211,12 @@ object DeveloperCredentialStore {
             // 某些设备/ROM 可能不支持 256 bit AES，回退 128 bit
             val keyGenerator = KeyGenerator.getInstance("AES", KEYSTORE_PROVIDER)
             val spec =
-                android.security.keystore.KeyGenParameterSpec.Builder(
-                    AES_KEY_ALIAS,
-                    android.security.keystore.KeyProperties.PURPOSE_ENCRYPT or
-                        android.security.keystore.KeyProperties.PURPOSE_DECRYPT,
-                )
-                    .setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
+                android.security.keystore.KeyGenParameterSpec
+                    .Builder(
+                        AES_KEY_ALIAS,
+                        android.security.keystore.KeyProperties.PURPOSE_ENCRYPT or
+                            android.security.keystore.KeyProperties.PURPOSE_DECRYPT,
+                    ).setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
                     .setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
                     .setRandomizedEncryptionRequired(true)
                     .setKeySize(128)
@@ -251,7 +249,8 @@ object DeveloperCredentialStore {
         val end = Calendar.getInstance().apply { add(Calendar.YEAR, 30) }
 
         val spec =
-            KeyPairGeneratorSpec.Builder(context)
+            KeyPairGeneratorSpec
+                .Builder(context)
                 .setAlias(RSA_KEY_ALIAS)
                 .setSubject(X500Principal("CN=$RSA_KEY_ALIAS"))
                 .setSerialNumber(BigInteger.ONE)

@@ -11,7 +11,7 @@ import com.xyoye.common_component.extension.toMd5String
  * - 在风控命中后可强制刷新
  */
 class BilibiliRiskStateStore(
-    storageKey: String,
+    storageKey: String
 ) {
     private val kv: MMKV =
         MMKV.mmkvWithID("bilibili_risk_state_${storageKey.toMd5String()}")
@@ -33,4 +33,3 @@ class BilibiliRiskStateStore(
         private const val KEY_LAST_GAIA_ACTIVATE_AT = "last_gaia_activate_at"
     }
 }
-

@@ -16,7 +16,5 @@ class DeveloperMenuServiceImpl : DeveloperMenuService {
     override fun create(
         activity: AppCompatActivity,
         menu: Menu
-    ): DeveloperMenuService.Delegate =
-        DeveloperMenus.inflater(activity, menu)
+    ): DeveloperMenuService.Delegate = DeveloperMenus.inflater(activity, menu)
 }
-

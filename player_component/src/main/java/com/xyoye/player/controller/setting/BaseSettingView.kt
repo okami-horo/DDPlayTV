@@ -68,9 +68,7 @@ abstract class BaseSettingView<V : ViewDataBinding>
             }
         }
 
-        override fun isSettingShowing(): Boolean {
-            return settingShowing
-        }
+        override fun isSettingShowing(): Boolean = settingShowing
 
         private fun handleCenterVisibilityChanged(isVisible: Boolean) {
             if (isVisible) {

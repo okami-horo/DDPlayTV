@@ -10,4 +10,3 @@ package com.xyoye.common_component.playback.addon
 interface PlaybackAddonProvider {
     fun getPlaybackAddon(): PlaybackAddon?
 }
-

@@ -18,8 +18,7 @@ import com.xyoye.dandanplay.databinding.ActivityTvMainBinding
 import com.xyoye.dandanplay.databinding.ItemTvMainNavBinding
 import com.xyoye.dandanplay.ui.shell.BaseShellActivity
 
-class TvMainActivity :
-    BaseShellActivity<ActivityTvMainBinding>() {
+class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
     companion object {
         private const val TAG_FRAGMENT_MEDIA = "tag_fragment_tv_media"
         private const val TAG_FRAGMENT_PERSONAL = "tag_fragment_tv_personal"
@@ -189,6 +188,6 @@ class TvMainActivity :
         MEDIA(R.string.navigation_media, true),
         SEARCH(R.string.navigation_search, false),
         PERSONAL(R.string.navigation_personal, true),
-        SETTINGS(R.string.navigation_setting, false),
+        SETTINGS(R.string.navigation_setting, false)
     }
 }

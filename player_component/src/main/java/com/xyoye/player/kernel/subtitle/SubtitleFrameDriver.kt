@@ -34,7 +34,6 @@ interface SubtitleFrameDriver {
     enum class TimelineJumpReason {
         POSITION_DISCONTINUITY,
         SEEK,
-        TRACKS_CHANGED,
+        TRACKS_CHANGED
     }
 }
-

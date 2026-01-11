@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
 data class BilibiliQrcodeGenerateData(
     val url: String = "",
     @Json(name = "qrcode_key")
-    val qrcodeKey: String = "",
+    val qrcodeKey: String = ""
 )
 
 @JsonClass(generateAdapter = true)
@@ -19,6 +19,5 @@ data class BilibiliQrcodePollData(
     @Json(name = "code")
     val statusCode: Int? = null,
     @Json(name = "message")
-    val statusMessage: String? = null,
+    val statusMessage: String? = null
 )
-

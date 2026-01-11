@@ -3,9 +3,9 @@ package com.xyoye.storage_component.ui.activities.storage_file
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
+import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.toMedia3SourceType
-import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media3.Media3LaunchParams
@@ -103,7 +103,7 @@ class StorageFileViewModel : BaseViewModel() {
 
     private fun buildPlaybackFailureMessage(
         file: StorageFile,
-        throwable: Throwable,
+        throwable: Throwable
     ): String {
         if (file.storage.library.mediaType != MediaType.BILIBILI_STORAGE) {
             return "播放失败: ${throwable.message}"
@@ -130,7 +130,7 @@ class StorageFileViewModel : BaseViewModel() {
 
     private fun tryEmitBilibiliRiskVerify(
         file: StorageFile,
-        throwable: Throwable,
+        throwable: Throwable
     ): Boolean {
         if (file.storage.library.mediaType != MediaType.BILIBILI_STORAGE) {
             return false
@@ -238,7 +238,7 @@ class StorageFileViewModel : BaseViewModel() {
 
     data class BilibiliRiskVerifyPayload(
         val file: StorageFile,
-        val vVoucher: String,
+        val vVoucher: String
     )
 
     private companion object {
