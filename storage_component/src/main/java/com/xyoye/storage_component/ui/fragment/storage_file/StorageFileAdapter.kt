@@ -90,16 +90,23 @@ class StorageFileAdapter(
 
             addEmptyView(R.layout.layout_empty) {
                 initEmptyView {
-                    val isBilibiliHistory =
+                    val directoryPath = activity.directory?.filePath()
+                    val isBilibiliPagedDirectory =
                         activity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
-                            activity.directory?.filePath() == "/history/"
+                            BilibiliStorage.isBilibiliPagedDirectoryPath(directoryPath)
                     val requiresLogin =
-                        isBilibiliHistory && (activity.storage as? BilibiliStorage)?.isConnected() == false
+                        isBilibiliPagedDirectory && (activity.storage as? BilibiliStorage)?.isConnected() == false
 
                     itemBinding.emptyActionTv.isVisible = true
 
                     if (requiresLogin) {
-                        itemBinding.emptyTv.text = "需要登录才能查看历史记录"
+                        val directoryName =
+                            when (directoryPath) {
+                                BilibiliStorage.PATH_HISTORY_DIR -> "历史记录"
+                                BilibiliStorage.PATH_FOLLOW_LIVE_DIR -> "关注直播"
+                                else -> "当前目录"
+                            }
+                        itemBinding.emptyTv.text = "需要登录才能查看$directoryName"
                         itemBinding.emptyActionTv.text = "扫码登录"
                         itemBinding.emptyActionTv.setOnClickListener { onLoginRequested.invoke() }
                         return@initEmptyView
@@ -211,17 +218,22 @@ class StorageFileAdapter(
     private fun BaseViewHolderCreator<ItemStoragePagingBinding>.pagingItem() =
         { data: StoragePagingItem ->
             val isDataEmpty = data.isDataEmpty
+            val emptyTitle =
+                when (activity.directory?.filePath()) {
+                    BilibiliStorage.PATH_FOLLOW_LIVE_DIR -> "暂无直播"
+                    else -> "暂无历史记录"
+                }
             val title =
                 when (data.state) {
                     com.xyoye.common_component.storage.PagedStorage.State.LOADING -> "加载中…"
                     com.xyoye.common_component.storage.PagedStorage.State.ERROR -> "加载失败，按确认键重试"
                     com.xyoye.common_component.storage.PagedStorage.State.NO_MORE ->
-                        if (isDataEmpty) "暂无历史记录" else "没有更多了"
+                        if (isDataEmpty) emptyTitle else "没有更多了"
                     com.xyoye.common_component.storage.PagedStorage.State.IDLE ->
                         when {
-                            data.hasMore && isDataEmpty -> "暂无历史记录"
+                            data.hasMore && isDataEmpty -> emptyTitle
                             data.hasMore -> "加载更多"
-                            isDataEmpty -> "暂无历史记录"
+                            isDataEmpty -> emptyTitle
                             else -> "没有更多了"
                         }
                 }

@@ -32,6 +32,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateValidateData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
 import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuConnectInfo
+import com.xyoye.data_component.data.bilibili.BilibiliLiveFollowData
 import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
 import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
@@ -510,6 +511,27 @@ class BilibiliRepository(
             if (isFirstPage) {
                 writeCachedHistoryFirstPage(type, data)
             }
+        }
+    }
+
+    suspend fun liveFollow(
+        page: Int,
+        pageSize: Int = 9,
+        ignoreRecord: Int = 1,
+        hitAb: Boolean = true
+    ): Result<BilibiliLiveFollowData> {
+        val resolvedPage = page.coerceAtLeast(1)
+        val resolvedPageSize = pageSize.coerceIn(1, 10)
+        val params: RequestParams =
+            hashMapOf(
+                "page" to resolvedPage,
+                "page_size" to resolvedPageSize,
+                "ignoreRecord" to ignoreRecord,
+                "hit_ab" to hitAb,
+            )
+
+        return requestBilibiliAuthed(reason = "liveFollow") {
+            service.liveFollow(BASE_LIVE, params)
         }
     }
 

@@ -20,3 +20,8 @@
 - 不引入 `xfetter/GetWebList` 作为数据源或首屏加速（保持与 PiliPlus 对齐）。
 - 不新增长期缓存策略（最多允许短期内存节流，非必须）。
 - 不改变现有 `/history/` 行为与数据源。
+
+## 参考项目（遇到疑问时的优先来源）
+- 本变更涉及 Bilibili 接口/字段/行为的疑问时，优先从以下两个本机参考项目查证，而非联网搜索：
+  - `PiliPlus`：`/home/tzw/workspace/PiliPlus`（成熟第三方 Bilibili 客户端，实现策略/参数对齐的主要依据）
+  - `bilibili-API-collect`：`/home/tzw/workspace/bilibili-API-collect`（Bilibili API 文档与字段说明）

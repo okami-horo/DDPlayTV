@@ -8,6 +8,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateRegisterData
 import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateValidateData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliLiveFollowData
 import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
 import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
@@ -100,6 +101,12 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>
     ): BilibiliJsonModel<BilibiliHistoryCursorData>
+
+    @GET("/xlive/web-ucenter/user/following")
+    suspend fun liveFollow(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @QueryMap params: Map<String, @JvmSuppressWildcards Any>
+    ): BilibiliJsonModel<BilibiliLiveFollowData>
 
     @FormUrlEncoded
     @POST("/x/click-interface/web/heartbeat")

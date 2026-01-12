@@ -83,7 +83,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
 
                 if (storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
                     val bilibiliStorage = storage as? BilibiliStorage
-                    val requiresLogin = target.filePath() == "/history/"
+                    val requiresLogin = BilibiliStorage.isBilibiliPagedDirectoryPath(target.filePath())
                     if (requiresLogin && bilibiliStorage?.isConnected() == false) {
                         ToastCenter.showWarning("请先扫码登录")
                         _bilibiliLoginRequiredLiveData.postValue(storage.library)
@@ -494,7 +494,11 @@ class StorageFileFragmentViewModel : BaseViewModel() {
     private fun buildDisplayItems(files: List<StorageFile>): List<Any> {
         val items = files.toMutableList<Any>()
         val paged = storage as? PagedStorage
-        if (paged != null && storage.directory?.filePath() == "/history/") {
+        if (
+            paged != null &&
+            storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
+            BilibiliStorage.isBilibiliPagedDirectoryPath(storage.directory?.filePath())
+        ) {
             items.add(StoragePagingItem(paged.state, paged.hasMore(), files.isEmpty()))
         }
         return items

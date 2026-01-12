@@ -3,6 +3,8 @@
 
 `document/support/bilibili-follow-live-library.md` 提出对齐 PiliPlus：使用 `/xlive/web-ucenter/user/following` 接口分页获取关注列表，并过滤 `live_status == 1`。
 
+若遇到 Bilibili 接口/字段/边界行为的困惑，优先参考本机的 `PiliPlus`（`/home/tzw/workspace/PiliPlus`）与 `bilibili-API-collect`（`/home/tzw/workspace/bilibili-API-collect`），避免依赖联网搜索。
+
 ## Goals / Non-Goals
 - Goals
   - 在 Bilibili 媒体库根目录新增 `/follow_live/` 目录并支持分页。

@@ -90,6 +90,15 @@ class BilibiliStorageFile(
                 uniqueKey = "bilibili://dir/history",
             )
 
+        fun followLiveDirectory(storage: Storage): BilibiliStorageFile =
+            BilibiliStorageFile(
+                storage = storage,
+                path = "/follow_live/",
+                name = "关注直播",
+                isDir = true,
+                uniqueKey = "bilibili://dir/follow_live",
+            )
+
         fun archiveDirectory(
             storage: Storage,
             bvid: String,
@@ -140,6 +149,25 @@ class BilibiliStorageFile(
             BilibiliStorageFile(
                 storage = storage,
                 path = "/history/live/$roomId",
+                name = title,
+                isDir = false,
+                uniqueKey = BilibiliKeys.liveRoomKey(roomId),
+                coverUrl = coverUrl,
+                durationMs = 0L,
+                payload = payload,
+                playable = true,
+            )
+
+        fun followLiveRoomFile(
+            storage: Storage,
+            roomId: Long,
+            title: String,
+            coverUrl: String?,
+            payload: Any?
+        ): BilibiliStorageFile =
+            BilibiliStorageFile(
+                storage = storage,
+                path = "/follow_live/$roomId",
                 name = title,
                 isDir = false,
                 uniqueKey = BilibiliKeys.liveRoomKey(roomId),

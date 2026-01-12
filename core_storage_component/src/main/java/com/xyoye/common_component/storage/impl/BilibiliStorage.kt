@@ -16,6 +16,7 @@ import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursor
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
+import com.xyoye.data_component.data.bilibili.BilibiliLiveFollowItem
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
@@ -31,8 +32,28 @@ class BilibiliStorage(
 
     private var historyCursor: BilibiliHistoryCursor? = null
     private var historyHasMore: Boolean = true
+    private var historyState: PagedStorage.State = PagedStorage.State.IDLE
 
-    override var state: PagedStorage.State = PagedStorage.State.IDLE
+    private var followLivePage: Int = 1
+    private var followLiveLoadedCount: Int = 0
+    private var followLiveTotalLiveCount: Int = 0
+    private var followLiveHasMore: Boolean = true
+    private var followLiveState: PagedStorage.State = PagedStorage.State.IDLE
+
+    override var state: PagedStorage.State
+        get() =
+            when (currentPagedDirectory()) {
+                PagedDirectory.HISTORY -> historyState
+                PagedDirectory.FOLLOW_LIVE -> followLiveState
+                null -> PagedStorage.State.IDLE
+            }
+        set(value) {
+            when (currentPagedDirectory()) {
+                PagedDirectory.HISTORY -> historyState = value
+                PagedDirectory.FOLLOW_LIVE -> followLiveState = value
+                null -> Unit
+            }
+        }
 
     override var rootUri: Uri = Uri.parse(library.url)
 
@@ -44,14 +65,12 @@ class BilibiliStorage(
         file: StorageFile,
         refresh: Boolean
     ): List<StorageFile> {
-        if (file.filePath() == "/history/" && refresh) {
-            reset()
-        }
         directory = file
-        directoryFiles = listFilesInternal(file, refresh)
-        if (file.filePath() == "/history/") {
-            state = if (historyHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
+        if (refresh) {
+            resetCurrentPagingStateIfNeeded(file.filePath())
         }
+        directoryFiles = listFilesInternal(file, refresh)
+        syncStateToCurrentDirectory()
         return directoryFiles
     }
 
@@ -62,14 +81,19 @@ class BilibiliStorage(
         refresh: Boolean
     ): List<StorageFile> =
         when (file.filePath()) {
-            "/" -> listOf(BilibiliStorageFile.historyDirectory(this))
-            "/history/" -> listHistory(refresh)
+            PATH_ROOT ->
+                listOf(
+                    BilibiliStorageFile.historyDirectory(this),
+                    BilibiliStorageFile.followLiveDirectory(this),
+                )
+            PATH_HISTORY_DIR -> listHistory(refresh)
+            PATH_FOLLOW_LIVE_DIR -> listFollowLive(refresh)
             else -> {
-                if (file.filePath().startsWith("/history/") && file.isDirectory()) {
+                if (file.filePath().startsWith(PATH_HISTORY_DIR) && file.isDirectory()) {
                     val bvid =
                         file
                             .filePath()
-                            .removePrefix("/history/")
+                            .removePrefix(PATH_HISTORY_DIR)
                             .removeSuffix("/")
                             .substringBefore("/")
                     if (bvid.isNotBlank()) {
@@ -116,6 +140,54 @@ class BilibiliStorage(
 
             mapped.addAll(rawList.mapNotNull { item -> mapHistoryItem(item) })
             attempts++
+        }
+
+        return mapped
+    }
+
+    private suspend fun listFollowLive(refresh: Boolean): List<StorageFile> {
+        if (refresh) {
+            resetFollowLivePaging()
+        }
+
+        val mapped = mutableListOf<StorageFile>()
+        var attempts = 0
+
+        while (mapped.isEmpty() && followLiveHasMore && attempts < MAX_EMPTY_PAGE_ATTEMPTS) {
+            val currentPage = followLivePage
+            val data =
+                repository
+                    .liveFollow(
+                        page = currentPage,
+                        pageSize = FOLLOW_LIVE_PAGE_SIZE,
+                        ignoreRecord = 1,
+                        hitAb = true,
+                    ).getOrThrow()
+
+            followLivePage = currentPage + 1
+
+            followLiveTotalLiveCount = data.liveCount.coerceAtLeast(0)
+
+            val pageMapped =
+                data.list
+                    .asSequence()
+                    .filter { it.liveStatus == 1 }
+                    .mapNotNull(::mapFollowLiveItem)
+                    .toList()
+
+            mapped.addAll(pageMapped)
+            followLiveLoadedCount += pageMapped.size
+
+            followLiveHasMore =
+                followLiveTotalLiveCount > 0 &&
+                    followLiveLoadedCount < followLiveTotalLiveCount &&
+                    (data.totalPage <= 0 || followLivePage <= data.totalPage)
+
+            attempts++
+        }
+
+        if (mapped.isEmpty() && attempts >= MAX_EMPTY_PAGE_ATTEMPTS) {
+            followLiveHasMore = false
         }
 
         return mapped
@@ -215,6 +287,33 @@ class BilibiliStorage(
         }
     }
 
+    private fun mapFollowLiveItem(item: BilibiliLiveFollowItem): StorageFile? {
+        val roomId = item.roomId.takeIf { it > 0 } ?: return null
+        if (item.liveStatus != 1) return null
+
+        val uname = item.uname.takeIf { it.isNotBlank() }
+        val liveTitle = item.title.takeIf { it.isNotBlank() }
+        val title =
+            when {
+                uname != null && liveTitle != null -> "$uname - $liveTitle"
+                uname != null -> uname
+                liveTitle != null -> liveTitle
+                else -> roomId.toString()
+            }
+
+        val cover =
+            item.roomCover?.takeIf { it.isNotBlank() }
+                ?: item.face?.takeIf { it.isNotBlank() }
+
+        return BilibiliStorageFile.followLiveRoomFile(
+            storage = this,
+            roomId = roomId,
+            title = title,
+            coverUrl = cover,
+            payload = item,
+        )
+    }
+
     private suspend fun listPagelist(
         directory: StorageFile,
         bvid: String
@@ -263,10 +362,11 @@ class BilibiliStorage(
                 "/$path"
             }
         return when {
-            normalized == "/" -> BilibiliStorageFile.root(this)
-            normalized == "/history/" -> BilibiliStorageFile.historyDirectory(this)
-            normalized.startsWith("/history/live/") && !isDirectory -> {
-                val roomId = normalized.removePrefix("/history/live/").trim('/').toLongOrNull() ?: return null
+            normalized == PATH_ROOT -> BilibiliStorageFile.root(this)
+            normalized == PATH_HISTORY_DIR -> BilibiliStorageFile.historyDirectory(this)
+            normalized == PATH_FOLLOW_LIVE_DIR -> BilibiliStorageFile.followLiveDirectory(this)
+            normalized.startsWith(PATH_HISTORY_LIVE_PREFIX) && !isDirectory -> {
+                val roomId = normalized.removePrefix(PATH_HISTORY_LIVE_PREFIX).trim('/').toLongOrNull() ?: return null
                 if (roomId <= 0) return null
                 BilibiliStorageFile.liveRoomFile(
                     storage = this,
@@ -277,8 +377,20 @@ class BilibiliStorage(
                 )
             }
 
-            normalized.startsWith("/history/") && isDirectory -> {
-                val bvid = normalized.removePrefix("/history/").removeSuffix("/").substringBefore("/")
+            normalized.startsWith(PATH_FOLLOW_LIVE_PREFIX) && !isDirectory -> {
+                val roomId = normalized.removePrefix(PATH_FOLLOW_LIVE_PREFIX).trim('/').toLongOrNull() ?: return null
+                if (roomId <= 0) return null
+                BilibiliStorageFile.followLiveRoomFile(
+                    storage = this,
+                    roomId = roomId,
+                    title = roomId.toString(),
+                    coverUrl = null,
+                    payload = null,
+                )
+            }
+
+            normalized.startsWith(PATH_HISTORY_DIR) && isDirectory -> {
+                val bvid = normalized.removePrefix(PATH_HISTORY_DIR).removeSuffix("/").substringBefore("/")
                 if (bvid.isBlank()) return null
                 BilibiliStorageFile.archiveDirectory(
                     storage = this,
@@ -290,8 +402,8 @@ class BilibiliStorage(
                 )
             }
 
-            normalized.startsWith("/history/") && !isDirectory -> {
-                val segments = normalized.removePrefix("/history/").split("/")
+            normalized.startsWith(PATH_HISTORY_DIR) && !isDirectory -> {
+                val segments = normalized.removePrefix(PATH_HISTORY_DIR).split("/")
                 if (segments.size < 2) return null
                 val bvid = segments[0]
                 val cid = segments[1].toLongOrNull() ?: return null
@@ -332,17 +444,39 @@ class BilibiliStorage(
 
             is BilibiliKeys.LiveKey -> {
                 val roomId = parsed.roomId
-                val path = history.storagePath ?: "/history/live/$roomId"
-                BilibiliStorageFile
-                    .liveRoomFile(
-                        storage = this,
-                        roomId = roomId,
-                        title = history.videoName,
-                        coverUrl = null,
-                        payload = null,
-                    ).also {
-                        it.playHistory = history.copy(storagePath = path, playTime = history.playTime.takeIf { it.time > 0 } ?: Date())
+                val resolvedPath =
+                    when {
+                        history.storagePath?.startsWith(PATH_FOLLOW_LIVE_PREFIX) == true -> "$PATH_FOLLOW_LIVE_PREFIX$roomId"
+                        history.storagePath?.startsWith(PATH_HISTORY_LIVE_PREFIX) == true -> "$PATH_HISTORY_LIVE_PREFIX$roomId"
+                        else -> "$PATH_HISTORY_LIVE_PREFIX$roomId"
                     }
+
+                val file =
+                    if (resolvedPath.startsWith(PATH_FOLLOW_LIVE_PREFIX)) {
+                        BilibiliStorageFile.followLiveRoomFile(
+                            storage = this,
+                            roomId = roomId,
+                            title = history.videoName,
+                            coverUrl = null,
+                            payload = null,
+                        )
+                    } else {
+                        BilibiliStorageFile.liveRoomFile(
+                            storage = this,
+                            roomId = roomId,
+                            title = history.videoName,
+                            coverUrl = null,
+                            payload = null,
+                        )
+                    }
+
+                file.also {
+                    it.playHistory =
+                        history.copy(
+                            storagePath = resolvedPath,
+                            playTime = history.playTime.takeIf { it.time > 0 } ?: Date(),
+                        )
+                }
             }
 
             is BilibiliKeys.PgcEpisodeKey -> {
@@ -451,12 +585,13 @@ class BilibiliStorage(
     fun resetHistoryCursor() {
         historyCursor = null
         historyHasMore = true
+        historyState = PagedStorage.State.IDLE
     }
 
     fun hasMoreHistory(): Boolean = historyHasMore
 
     suspend fun loadMoreHistory(): Result<List<StorageFile>> {
-        if (directory?.filePath() != "/history/") {
+        if (directory?.filePath() != PATH_HISTORY_DIR) {
             return Result.success(emptyList())
         }
         if (!historyHasMore) {
@@ -467,28 +602,109 @@ class BilibiliStorage(
         }
     }
 
-    override fun hasMore(): Boolean = directory?.filePath() == "/history/" && historyHasMore
-
-    override suspend fun reset() {
-        resetHistoryCursor()
-        state = PagedStorage.State.IDLE
+    fun resetFollowLivePaging() {
+        followLivePage = 1
+        followLiveLoadedCount = 0
+        followLiveTotalLiveCount = 0
+        followLiveHasMore = true
+        followLiveState = PagedStorage.State.IDLE
     }
 
-    override suspend fun loadMore(): Result<List<StorageFile>> {
-        if (directory?.filePath() != "/history/") {
-            return Result.success(emptyList())
+    override fun hasMore(): Boolean =
+        when (directory?.filePath()) {
+            PATH_HISTORY_DIR -> historyHasMore
+            PATH_FOLLOW_LIVE_DIR -> followLiveHasMore
+            else -> false
         }
+
+    override suspend fun reset() {
+        when (directory?.filePath()) {
+            PATH_HISTORY_DIR -> resetHistoryCursor()
+            PATH_FOLLOW_LIVE_DIR -> resetFollowLivePaging()
+            else -> {
+                resetHistoryCursor()
+                resetFollowLivePaging()
+            }
+        }
+        syncStateToCurrentDirectory()
+    }
+
+    override suspend fun loadMore(): Result<List<StorageFile>> =
+        when (directory?.filePath()) {
+            PATH_HISTORY_DIR -> loadMoreHistoryInternal()
+            PATH_FOLLOW_LIVE_DIR -> loadMoreFollowLiveInternal()
+            else -> Result.success(emptyList())
+        }
+
+    private suspend fun loadMoreHistoryInternal(): Result<List<StorageFile>> {
         if (!historyHasMore) {
-            state = PagedStorage.State.NO_MORE
+            historyState = PagedStorage.State.NO_MORE
             return Result.success(emptyList())
         }
-        state = PagedStorage.State.LOADING
+        historyState = PagedStorage.State.LOADING
         return runCatching {
             listHistory(refresh = false)
         }.onSuccess {
-            state = if (historyHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
+            historyState = if (historyHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
         }.onFailure {
-            state = PagedStorage.State.ERROR
+            historyState = PagedStorage.State.ERROR
         }
+    }
+
+    private suspend fun loadMoreFollowLiveInternal(): Result<List<StorageFile>> {
+        if (!followLiveHasMore) {
+            followLiveState = PagedStorage.State.NO_MORE
+            return Result.success(emptyList())
+        }
+        followLiveState = PagedStorage.State.LOADING
+        return runCatching {
+            listFollowLive(refresh = false)
+        }.onSuccess {
+            followLiveState = if (followLiveHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
+        }.onFailure {
+            followLiveState = PagedStorage.State.ERROR
+        }
+    }
+
+    private fun syncStateToCurrentDirectory() {
+        when (directory?.filePath()) {
+            PATH_HISTORY_DIR -> historyState = if (historyHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
+            PATH_FOLLOW_LIVE_DIR -> followLiveState = if (followLiveHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
+            else -> Unit
+        }
+    }
+
+    private fun resetCurrentPagingStateIfNeeded(path: String) {
+        when (path) {
+            PATH_HISTORY_DIR -> resetHistoryCursor()
+            PATH_FOLLOW_LIVE_DIR -> resetFollowLivePaging()
+            else -> Unit
+        }
+    }
+
+    private fun currentPagedDirectory(): PagedDirectory? =
+        when (directory?.filePath()) {
+            PATH_HISTORY_DIR -> PagedDirectory.HISTORY
+            PATH_FOLLOW_LIVE_DIR -> PagedDirectory.FOLLOW_LIVE
+            else -> null
+        }
+
+    private enum class PagedDirectory {
+        HISTORY,
+        FOLLOW_LIVE,
+    }
+
+    companion object {
+        const val PATH_ROOT: String = "/"
+        const val PATH_HISTORY_DIR: String = "/history/"
+        const val PATH_FOLLOW_LIVE_DIR: String = "/follow_live/"
+        const val PATH_HISTORY_LIVE_PREFIX: String = "/history/live/"
+        const val PATH_FOLLOW_LIVE_PREFIX: String = "/follow_live/"
+
+        private const val MAX_EMPTY_PAGE_ATTEMPTS: Int = 5
+        private const val FOLLOW_LIVE_PAGE_SIZE: Int = 9
+
+        fun isBilibiliPagedDirectoryPath(path: String?): Boolean =
+            path == PATH_HISTORY_DIR || path == PATH_FOLLOW_LIVE_DIR
     }
 }

@@ -26,6 +26,7 @@ import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.common_component.utils.subtitle.SubtitleFontCacheHelper
@@ -276,7 +277,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (handleTvHistoryRefreshKey(event)) {
+        if (handleTvBilibiliPagedRefreshKey(event)) {
             return true
         }
         return super.dispatchKeyEvent(event)
@@ -328,13 +329,13 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         onDisplayFragmentChanged()
     }
 
-    private fun handleTvHistoryRefreshKey(event: KeyEvent): Boolean {
+    private fun handleTvBilibiliPagedRefreshKey(event: KeyEvent): Boolean {
         if (event.action != KeyEvent.ACTION_DOWN) return false
         if (event.repeatCount != 0) return false
 
         val library = storage.library
         if (library.mediaType != MediaType.BILIBILI_STORAGE) return false
-        if (currentRoute != "/history/") return false
+        if (!BilibiliStorage.isBilibiliPagedDirectoryPath(currentRoute)) return false
 
         val isRefreshKey =
             when (event.keyCode) {
@@ -347,7 +348,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
         val fragment = routeStack.lastOrNull()?.fragment
         if (fragment == null) {
-            LogFacade.w(LogModule.STORAGE, TAG, "history refresh ignored, fragment null keyCode=${event.keyCode}")
+            LogFacade.w(LogModule.STORAGE, TAG, "bilibili paged refresh ignored, fragment null keyCode=${event.keyCode}")
             return false
         }
 

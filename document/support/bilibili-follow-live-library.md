@@ -22,6 +22,10 @@
 
 ## 参考依据
 
+> 本分析优先参考以下两个本机项目（遇到 Bilibili 相关困惑时也以它们为准，而非联网搜索）：
+> - `PiliPlus`：`/home/tzw/workspace/PiliPlus`
+> - `bilibili-API-collect`：`/home/tzw/workspace/bilibili-API-collect`
+
 ### 1）PiliPlus 的实现（对齐目标）
 
 PiliPlus 侧使用的接口与参数（核心点）：

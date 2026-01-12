@@ -75,7 +75,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                 if (pagingItem != null) {
                     if (!tvHistoryHintShown &&
                         ownerActivity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
-                        ownerActivity.directory?.filePath() == "/history/"
+                        BilibiliStorage.isBilibiliPagedDirectoryPath(ownerActivity.directory?.filePath())
                     ) {
                         ToastCenter.showInfo("提示：按菜单键/设置键可刷新，列表底部可选择“加载更多/重试/刷新”")
                         tvHistoryHintShown = true
@@ -209,7 +209,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
 
         val isBilibiliHistory =
             ownerActivity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
-                directory?.filePath() == "/history/"
+                directory?.filePath() == com.xyoye.common_component.storage.impl.BilibiliStorage.PATH_HISTORY_DIR
 
         if (isBilibiliHistory) {
             // 历史列表刷新：刷新后聚焦第一项（最新）
@@ -283,10 +283,10 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             library = library,
             onLoginSuccess = { triggerTvRefresh() },
             onDismiss = {
-                val isHistoryPage = directory?.filePath() == "/history/"
+                val isBilibiliPagedDirectory = BilibiliStorage.isBilibiliPagedDirectoryPath(directory?.filePath())
                 val requiresLogin = (ownerActivity.storage as? BilibiliStorage)?.isConnected() == false
                 bindingOrNull?.let { binding ->
-                    if (!binding.storageFileRv.isInTouchMode && isHistoryPage && requiresLogin) {
+                    if (!binding.storageFileRv.isInTouchMode && isBilibiliPagedDirectory && requiresLogin) {
                         focusDelegate.setPendingFocus(index = 0)
                         binding.storageFileRv.post { requestFocus() }
                     }
