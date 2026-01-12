@@ -9,7 +9,7 @@
 
 ## 2. Validation
 - [x] 2.1 JVM 单测：为 follow live JSON model 解析补充测试（或在现有 bilibili_component 测试模块中新增针对映射/过滤的测试）
-- [ ] 2.2 本地验证：进入 Bilibili 媒体库根目录能看到两个目录；进入“关注直播”能分页加载并可播放
+- [x] 2.2 本地验证：进入 Bilibili 媒体库根目录能看到两个目录；进入“关注直播”能分页加载并可播放
 - [ ] 2.3 回归验证：`/history/` 分页、TV 刷新、登录提示行为不变
 - [ ] 2.4 切换目录验证：`/history/` 与 `/follow_live/` 间切换时分页 state/cursor 不串台
 - [ ] 2.5 播放历史验证：LiveKey 在 `storagePath=/follow_live/{roomId}` 与旧 `/history/live/{roomId}` 场景均可还原并播放
