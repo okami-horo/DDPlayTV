@@ -24,4 +24,4 @@
 - [x] 4.2 `./gradlew ktlintCheck`
 - [x] 4.3 `./gradlew testDebugUnitTest`
 - [x] 4.4 `./gradlew lint`（或按工程约定的 Debug lint 任务）
-- [ ] 4.5 若涉及播放链路：`./gradlew connectedDebugAndroidTest`（需要设备/模拟器；当前环境 `adb devices` 无设备）
+- [x] 4.5 若涉及播放链路：`./gradlew connectedDebugAndroidTest`（需要设备/模拟器；已在测试设备上验证）
