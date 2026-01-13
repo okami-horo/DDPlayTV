@@ -54,6 +54,24 @@ android {
             (dandanAppId.isNotBlank() && dandanAppSecret.isNotBlank()).toString(),
         )
 
+        val baiduPanClientId =
+            System.getenv("BAIDU_PAN_CLIENT_ID")
+                ?: project.findProperty("BAIDU_PAN_CLIENT_ID")?.toString()
+                ?: localProperties.getProperty("BAIDU_PAN_CLIENT_ID")
+                ?: ""
+        buildConfigField("String", "BAIDU_PAN_CLIENT_ID", buildConfigString(baiduPanClientId))
+
+        val baiduPanClientSecret =
+            System.getenv("BAIDU_PAN_CLIENT_SECRET")
+                ?: project.findProperty("BAIDU_PAN_CLIENT_SECRET")?.toString()
+                ?: localProperties.getProperty("BAIDU_PAN_CLIENT_SECRET")
+                ?: ""
+        buildConfigField(
+            "String",
+            "BAIDU_PAN_CLIENT_SECRET",
+            buildConfigString(baiduPanClientSecret),
+        )
+
         val media3FallbackFlag =
             project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
         buildConfigField("boolean", "MEDIA3_ENABLED_FALLBACK", media3FallbackFlag.toString())

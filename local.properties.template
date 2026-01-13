@@ -13,6 +13,12 @@ BUGLY_APP_ID=YOUR_BUGLY_APP_ID_HERE
 # 如果您需要使用弹弹play的API服务，请配置以下信息
 DANDAN_APP_ID=YOUR_DANDAN_APP_ID_HERE
 
+# 百度网盘开放平台配置
+# 1. 创建百度网盘开放平台应用（设备码模式）
+# 2. 将下列占位符替换为实际的 Client ID / Client Secret
+BAIDU_PAN_CLIENT_ID=YOUR_BAIDU_PAN_CLIENT_ID_HERE
+BAIDU_PAN_CLIENT_SECRET=YOUR_BAIDU_PAN_CLIENT_SECRET_HERE
+
 # 配置说明：
 # 1. 配置完成后，请重新编译项目
 # 2. 如果您只需要本地调试，Bugly ID是必需的
