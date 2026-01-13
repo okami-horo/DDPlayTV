@@ -8,6 +8,7 @@ import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
+import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -23,6 +24,15 @@ class StoragePlusViewModel : BaseViewModel() {
         newLibrary: MediaLibraryEntity
     ) {
         viewModelScope.launch(Dispatchers.IO) {
+            if (newLibrary.mediaType == MediaType.BAIDU_PAN_STORAGE) {
+                newLibrary.url = newLibrary.url.trim().removeSuffix("/")
+                val isValid = Regex("^baidupan://uk/\\d+$").matches(newLibrary.url)
+                if (!isValid) {
+                    ToastCenter.showWarning("保存失败，请先扫码授权")
+                    return@launch
+                }
+            }
+
             val duplicateLibrary =
                 DatabaseManager.instance
                     .getMediaLibraryDao()

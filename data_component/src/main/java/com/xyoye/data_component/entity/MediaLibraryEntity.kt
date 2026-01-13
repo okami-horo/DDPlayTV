@@ -104,6 +104,20 @@ data class MediaLibraryEntity(
     val disPlayDescribe
         get() =
             when (mediaType) {
+                MediaType.BAIDU_PAN_STORAGE -> {
+                    val uk =
+                        url
+                            .substringAfter("baidupan://uk/", missingDelimiterValue = "")
+                            .trim()
+                            .trimStart('/')
+                            .trimEnd('/')
+                    if (uk.isNotEmpty()) {
+                        "百度网盘（uk=$uk）"
+                    } else {
+                        "百度网盘"
+                    }
+                }
+
                 MediaType.STREAM_LINK,
                 MediaType.MAGNET_LINK,
                 MediaType.REMOTE_STORAGE,

@@ -54,20 +54,20 @@ description: "Task list for 百度网盘存储库在线播放"
 
 **Independent Test**: 使用包含至少 1 个视频文件的百度网盘账号：新增存储源 → 扫码授权 → 浏览到视频 → 点击播放，验证能进入播放器并成功开始播放（参考 `specs/001-baidu-pan-storage/quickstart.md`）
 
-- [ ] T011 [P] [US1] 新增 PanFile 适配 `core_storage_component/src/main/java/com/xyoye/common_component/storage/file/impl/BaiduPanStorageFile.kt`（`path=="/"` 根目录判定、`category==1` 视频判定 + 扩展名回退、payload 挂载）
-- [ ] T012 [P] [US1] 新增 dlink 缓存 `core_storage_component/src/main/java/com/xyoye/common_component/storage/baidupan/play/BaiduPanDlinkCache.kt`（按 `fsId` 缓存 `dlink/expiry/contentLength`，支持强制刷新回退旧值）
-- [ ] T013 [US1] 实现 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt`（extends `AbstractStorage`）：`getRootFile/openDirectory/pathFile/historyFile/openFile/createPlayUrl/getNetworkHeaders`，并在 mpv/VLC 分支用 `LocalProxy.wrapIfNeeded(...)` 注入 `User-Agent: pan.baidu.com`（依赖 T008/T010/T011/T012）
-- [ ] T014 [US1] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/StorageFactory.kt` 注册 `MediaType.BAIDU_PAN_STORAGE -> BaiduPanStorage`
-- [ ] T015 [P] [US1] 新增扫码授权对话框 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/BaiduPanLoginDialog.kt` + `storage_component/src/main/res/layout/dialog_baidu_pan_login.xml`（复用 `storage_component/src/main/java/com/xyoye/common_component/utils/QrCodeHelper.kt`，轮询 `/oauth/2.0/token` 状态并处理过期/取消/拒绝）
-- [ ] T016 [US1] 新增存储源编辑对话框 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/BaiduPanStorageEditDialog.kt` + `storage_component/src/main/res/layout/dialog_baidu_pan_storage.xml`（添加/编辑、展示名可编辑、集成 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/PlayerTypeOverrideBinder.kt`、触发扫码授权并写入 `MediaLibraryEntity` 的 `url=baidupan://uk/<uk>`）
-- [ ] T017 [US1] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_plus/StoragePlusActivity.kt` 增加 `MediaType.BAIDU_PAN_STORAGE -> BaiduPanStorageEditDialog`
-- [ ] T018 [P] [US1] 在 `local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaFragment.kt` 的 `launchMediaStorage` 分支加入 `MediaType.BAIDU_PAN_STORAGE` 打开 `RouteTable.Stream.StorageFile`
-- [ ] T019 [P] [US1] 在 `data_component/src/main/java/com/xyoye/data_component/entity/MediaLibraryEntity.kt` 的 `disPlayDescribe` 为 `BAIDU_PAN_STORAGE` 提供更友好描述，避免列表只展示 `baidupan://...`
-- [ ] T020 [US1] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_plus/StoragePlusViewModel.kt` 增加百度网盘保存前校验：未生成 `baidupan://uk/<uk>` 时拒绝保存并提示
-- [ ] T021 [US1] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt` 对不可播放文件给出明确失败（抛出带提示的异常或返回 null 并确保提示可见），与 `storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_file/StorageFileViewModel.kt` 的错误提示链路对齐
-- [ ] T022 [US1] 对照实现结果校对并更新 `specs/001-baidu-pan-storage/quickstart.md`（仅在实现与文档有偏差时修改）
+- [X] T011 [P] [US1] 新增 PanFile 适配 `core_storage_component/src/main/java/com/xyoye/common_component/storage/file/impl/BaiduPanStorageFile.kt`（`path=="/"` 根目录判定、`category==1` 视频判定 + 扩展名回退、payload 挂载）
+- [X] T012 [P] [US1] 新增 dlink 缓存 `core_storage_component/src/main/java/com/xyoye/common_component/storage/baidupan/play/BaiduPanDlinkCache.kt`（按 `fsId` 缓存 `dlink/expiry/contentLength`，支持强制刷新回退旧值）
+- [X] T013 [US1] 实现 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt`（extends `AbstractStorage`）：`getRootFile/openDirectory/pathFile/historyFile/openFile/createPlayUrl/getNetworkHeaders`，并在 mpv/VLC 分支用 `LocalProxy.wrapIfNeeded(...)` 注入 `User-Agent: pan.baidu.com`（依赖 T008/T010/T011/T012）
+- [X] T014 [US1] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/StorageFactory.kt` 注册 `MediaType.BAIDU_PAN_STORAGE -> BaiduPanStorage`
+- [X] T015 [P] [US1] 新增扫码授权对话框 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/BaiduPanLoginDialog.kt` + `storage_component/src/main/res/layout/dialog_baidu_pan_login.xml`（复用 `storage_component/src/main/java/com/xyoye/common_component/utils/QrCodeHelper.kt`，轮询 `/oauth/2.0/token` 状态并处理过期/取消/拒绝）
+- [X] T016 [US1] 新增存储源编辑对话框 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/BaiduPanStorageEditDialog.kt` + `storage_component/src/main/res/layout/dialog_baidu_pan_storage.xml`（添加/编辑、展示名可编辑、集成 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/PlayerTypeOverrideBinder.kt`、触发扫码授权并写入 `MediaLibraryEntity` 的 `url=baidupan://uk/<uk>`）
+- [X] T017 [US1] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_plus/StoragePlusActivity.kt` 增加 `MediaType.BAIDU_PAN_STORAGE -> BaiduPanStorageEditDialog`
+- [X] T018 [P] [US1] 在 `local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaFragment.kt` 的 `launchMediaStorage` 分支加入 `MediaType.BAIDU_PAN_STORAGE` 打开 `RouteTable.Stream.StorageFile`
+- [X] T019 [P] [US1] 在 `data_component/src/main/java/com/xyoye/data_component/entity/MediaLibraryEntity.kt` 的 `disPlayDescribe` 为 `BAIDU_PAN_STORAGE` 提供更友好描述，避免列表只展示 `baidupan://...`
+- [X] T020 [US1] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_plus/StoragePlusViewModel.kt` 增加百度网盘保存前校验：未生成 `baidupan://uk/<uk>` 时拒绝保存并提示
+- [X] T021 [US1] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt` 对不可播放文件给出明确失败（抛出带提示的异常或返回 null 并确保提示可见），与 `storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_file/StorageFileViewModel.kt` 的错误提示链路对齐
+- [X] T022 [US1] 对照实现结果校对并更新 `specs/001-baidu-pan-storage/quickstart.md`（仅在实现与文档有偏差时修改）
 - [ ] T023 [US1] 手动走通 P1 用例并记录关键结果（参考 `specs/001-baidu-pan-storage/quickstart.md`）
-- [ ] T024 [US1] 在仓库根目录运行 `./gradlew assembleDebug` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
+- [X] T024 [US1] 在仓库根目录运行 `./gradlew assembleDebug` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
 
 ---
 

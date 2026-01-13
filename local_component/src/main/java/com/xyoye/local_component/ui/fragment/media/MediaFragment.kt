@@ -128,6 +128,7 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
             MediaType.REMOTE_STORAGE,
             MediaType.EXTERNAL_STORAGE,
             MediaType.ALSIT_STORAGE,
+            MediaType.BAIDU_PAN_STORAGE,
             MediaType.BILIBILI_STORAGE -> {
                 ARouter
                     .getInstance()
