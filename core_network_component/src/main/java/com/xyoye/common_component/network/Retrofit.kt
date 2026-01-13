@@ -11,6 +11,7 @@ import com.xyoye.common_component.network.helper.ForbiddenErrorInterceptor
 import com.xyoye.common_component.network.helper.LoggerInterceptor
 import com.xyoye.common_component.network.helper.SignatureInterceptor
 import com.xyoye.common_component.network.service.AlistService
+import com.xyoye.common_component.network.service.BaiduPanService
 import com.xyoye.common_component.network.service.DanDanService
 import com.xyoye.common_component.network.service.ExtendedService
 import com.xyoye.common_component.network.service.MagnetService
@@ -34,6 +35,7 @@ class Retrofit private constructor() {
         val magnetService: MagnetService by lazy { Holder.instance.magnetService }
         val screencastService: ScreencastService by lazy { Holder.instance.screencastService }
         val alistService: AlistService by lazy { Holder.instance.alistService }
+        val baiduPanService: BaiduPanService by lazy { Holder.instance.baiduPanService }
 
         fun <T> createService(
             baseUrl: String,
@@ -145,5 +147,15 @@ class Retrofit private constructor() {
             .baseUrl(Api.PLACEHOLDER)
             .build()
             .create(AlistService::class.java)
+    }
+
+    private val baiduPanService: BaiduPanService by lazy {
+        Retrofit
+            .Builder()
+            .addConverterFactory(moshiConverterFactory)
+            .client(commonClient)
+            .baseUrl(Api.PLACEHOLDER)
+            .build()
+            .create(BaiduPanService::class.java)
     }
 }

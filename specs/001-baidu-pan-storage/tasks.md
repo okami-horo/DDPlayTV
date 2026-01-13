@@ -37,12 +37,12 @@ description: "Task list for 百度网盘存储库在线播放"
 
 **Purpose**: 百度网盘 API/鉴权/数据模型的通用基础设施；在完成前不应开始任何用户故事 UI/播放链路开发
 
-- [ ] T005 [P] 新增 OAuth 模型到 `data_component/src/main/java/com/xyoye/data_component/data/baidupan/oauth/BaiduPanOAuthModels.kt`（device_code/token/oauth error）
-- [ ] T006 [P] 新增 XPan 模型到 `data_component/src/main/java/com/xyoye/data_component/data/baidupan/xpan/BaiduPanXpanModels.kt`（uinfo/list/search/filemetas + errno/errmsg）
-- [ ] T007 [P] 新增 Retrofit Service `core_network_component/src/main/java/com/xyoye/common_component/network/service/BaiduPanService.kt` 并在 `core_network_component/src/main/java/com/xyoye/common_component/network/Retrofit.kt` 注册 `baiduPanService`
-- [ ] T008 实现 Baidu Pan 仓库层 `core_storage_component/src/main/java/com/xyoye/common_component/network/repository/BaiduPanRepository.kt`（封装 baseUrl、参数拼装、errno/OAuth error 映射与重试语义）
-- [ ] T009 [P] 实现授权态持久化 `core_storage_component/src/main/java/com/xyoye/common_component/storage/baidupan/auth/BaiduPanAuthStore.kt`（storageKey 规则、AuthState 读写/清理）
-- [ ] T010 实现 token 管理器 `core_storage_component/src/main/java/com/xyoye/common_component/storage/baidupan/auth/BaiduPanTokenManager.kt`（互斥刷新 + refresh_token 旋转 + 原子写入；刷新失败需清理并抛出“需要重新授权”的可识别异常）
+- [X] T005 [P] 新增 OAuth 模型到 `data_component/src/main/java/com/xyoye/data_component/data/baidupan/oauth/BaiduPanOAuthModels.kt`（device_code/token/oauth error）
+- [X] T006 [P] 新增 XPan 模型到 `data_component/src/main/java/com/xyoye/data_component/data/baidupan/xpan/BaiduPanXpanModels.kt`（uinfo/list/search/filemetas + errno/errmsg）
+- [X] T007 [P] 新增 Retrofit Service `core_network_component/src/main/java/com/xyoye/common_component/network/service/BaiduPanService.kt` 并在 `core_network_component/src/main/java/com/xyoye/common_component/network/Retrofit.kt` 注册 `baiduPanService`
+- [X] T008 实现 Baidu Pan 仓库层 `core_storage_component/src/main/java/com/xyoye/common_component/network/repository/BaiduPanRepository.kt`（封装 baseUrl、参数拼装、errno/OAuth error 映射与重试语义）
+- [X] T009 [P] 实现授权态持久化 `core_storage_component/src/main/java/com/xyoye/common_component/storage/baidupan/auth/BaiduPanAuthStore.kt`（storageKey 规则、AuthState 读写/清理）
+- [X] T010 实现 token 管理器 `core_storage_component/src/main/java/com/xyoye/common_component/storage/baidupan/auth/BaiduPanTokenManager.kt`（互斥刷新 + refresh_token 旋转 + 原子写入；刷新失败需清理并抛出“需要重新授权”的可识别异常）
 
 **Checkpoint**: Foundation ready（可开始 US1/US2/US3 的并行开发）
 
