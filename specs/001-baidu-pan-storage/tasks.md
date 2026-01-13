@@ -93,13 +93,13 @@ description: "Task list for 百度网盘存储库在线播放"
 
 **Independent Test**: 模拟授权失效/撤销：验证能检测并引导重新授权；验证移除存储源后授权信息被清理（参考 `specs/001-baidu-pan-storage/quickstart.md`）
 
-- [ ] T032 [P] [US3] 新增通用接口 `core_storage_component/src/main/java/com/xyoye/common_component/storage/AuthStorage.kt`（`isConnected()`/`requiresLogin(directory)`/`loginActionText(directory)`）
-- [ ] T033 [P] [US3] 让 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BilibiliStorage.kt` 实现 `AuthStorage`（用现有 `isConnected()` + `isBilibiliPagedDirectoryPath(...)` 实现 `requiresLogin`）
-- [ ] T034 [US3] 让 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt` 实现 `AuthStorage`（基于 `core_storage_component/src/main/java/com/xyoye/common_component/storage/baidupan/auth/BaiduPanAuthStore.kt` 判定连接；失效后 `requiresLogin=true`）
-- [ ] T035 [US3] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt` 用 `AuthStorage` 替换 bilibili 特判，并在捕获到“需要重新授权”异常时触发通用 loginRequired LiveData
-- [ ] T036 [US3] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragment.kt` 将 `bilibiliLoginRequiredLiveData` 改为通用 loginRequired 监听，并按 `mediaType` 分发到 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/BilibiliLoginDialog.kt` 或 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/BaiduPanLoginDialog.kt`
-- [ ] T037 [US3] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileAdapter.kt` 的空列表提示逻辑改为基于 `AuthStorage.requiresLogin/isConnected` 展示“扫码登录/授权”按钮
-- [ ] T038 [US3] 在 `local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaViewModel.kt` 删除媒体库时清理百度网盘授权数据（调用 `core_storage_component/src/main/java/com/xyoye/common_component/storage/baidupan/auth/BaiduPanAuthStore.kt`）
+- [X] T032 [P] [US3] 新增通用接口 `core_storage_component/src/main/java/com/xyoye/common_component/storage/AuthStorage.kt`（`isConnected()`/`requiresLogin(directory)`/`loginActionText(directory)`）
+- [X] T033 [P] [US3] 让 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BilibiliStorage.kt` 实现 `AuthStorage`（用现有 `isConnected()` + `isBilibiliPagedDirectoryPath(...)` 实现 `requiresLogin`）
+- [X] T034 [US3] 让 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt` 实现 `AuthStorage`（基于 `core_storage_component/src/main/java/com/xyoye/common_component/storage/baidupan/auth/BaiduPanAuthStore.kt` 判定连接；失效后 `requiresLogin=true`）
+- [X] T035 [US3] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt` 用 `AuthStorage` 替换 bilibili 特判，并在捕获到“需要重新授权”异常时触发通用 loginRequired LiveData
+- [X] T036 [US3] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragment.kt` 将 `bilibiliLoginRequiredLiveData` 改为通用 loginRequired 监听，并按 `mediaType` 分发到 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/BilibiliLoginDialog.kt` 或 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/BaiduPanLoginDialog.kt`
+- [X] T037 [US3] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileAdapter.kt` 的空列表提示逻辑改为基于 `AuthStorage.requiresLogin/isConnected` 展示“扫码登录/授权”按钮
+- [X] T038 [US3] 在 `local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaViewModel.kt` 删除媒体库时清理百度网盘授权数据（调用 `core_storage_component/src/main/java/com/xyoye/common_component/storage/baidupan/auth/BaiduPanAuthStore.kt`）
 - [ ] T039 [US3] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/BaiduPanStorageEditDialog.kt` 增加“断开连接/清除授权”入口（清理 AuthState + 退出播放器 + 可选删除媒体库），并手动验证 P3 用例（参考 `specs/001-baidu-pan-storage/quickstart.md`）
 
 ---

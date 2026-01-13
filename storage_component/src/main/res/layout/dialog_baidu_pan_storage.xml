@@ -109,6 +109,18 @@
             android:text="提示：百度网盘播放需要在访问直链时携带 User-Agent，若播放失败可尝试切换播放器内核"
             android:textColor="@color/text_gray"
             android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/disconnect_tv"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/background_button_corner_red"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="断开连接/清除授权"
+            android:textColor="@color/text_white"
+            android:textSize="14sp"
+            android:visibility="gone" />
     </LinearLayout>
 </layout>
-

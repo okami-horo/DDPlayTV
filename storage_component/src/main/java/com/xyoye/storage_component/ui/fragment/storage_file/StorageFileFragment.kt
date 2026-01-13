@@ -14,6 +14,8 @@ import com.xyoye.common_component.focus.RecyclerViewFocusDelegate
 import com.xyoye.common_component.focus.setDescendantFocusBlocked
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.storage.AuthStorage
+import com.xyoye.common_component.storage.baidupan.auth.BaiduPanAuthStore
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.weight.ToastCenter
@@ -23,6 +25,7 @@ import com.xyoye.storage_component.BR
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.FragmentStorageFileBinding
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
+import com.xyoye.storage_component.ui.dialog.BaiduPanLoginDialog
 import com.xyoye.storage_component.ui.dialog.BilibiliLoginDialog
 
 class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>() {
@@ -123,11 +126,8 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             }
         }
 
-        viewModel.bilibiliLoginRequiredLiveData.observe(this) { library ->
-            if (library.mediaType != com.xyoye.data_component.enums.MediaType.BILIBILI_STORAGE) {
-                return@observe
-            }
-            showBilibiliLoginDialog(library)
+        viewModel.loginRequiredLiveData.observe(this) { library ->
+            showLoginDialog(library)
         }
 
         viewModel.listFile(directory)
@@ -155,7 +155,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                     activity = ownerActivity,
                     viewModel = viewModel,
                     onRefreshRequested = { triggerTvRefresh() },
-                    onLoginRequested = { showBilibiliLoginDialog(ownerActivity.storage.library) },
+                    onLoginRequested = { showLoginDialog(ownerActivity.storage.library) },
                 ).create()
 
             addOnScrollListener(
@@ -277,16 +277,83 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
         viewModel.changeSortOption()
     }
 
+    private fun showLoginDialog(library: MediaLibraryEntity) {
+        when (library.mediaType) {
+            MediaType.BILIBILI_STORAGE -> showBilibiliLoginDialog(library)
+            MediaType.BAIDU_PAN_STORAGE -> showBaiduPanLoginDialog(library)
+            else -> Unit
+        }
+    }
+
     private fun showBilibiliLoginDialog(library: MediaLibraryEntity) {
         BilibiliLoginDialog(
             activity = ownerActivity,
             library = library,
             onLoginSuccess = { triggerTvRefresh() },
             onDismiss = {
-                val isBilibiliPagedDirectory = BilibiliStorage.isBilibiliPagedDirectoryPath(directory?.filePath())
-                val requiresLogin = (ownerActivity.storage as? BilibiliStorage)?.isConnected() == false
+                val authStorage = ownerActivity.storage as? AuthStorage
+                val requiresLogin =
+                    authStorage?.let { it.requiresLogin(directory) && !it.isConnected() } == true
                 bindingOrNull?.let { binding ->
-                    if (!binding.storageFileRv.isInTouchMode && isBilibiliPagedDirectory && requiresLogin) {
+                    if (!binding.storageFileRv.isInTouchMode && requiresLogin) {
+                        focusDelegate.setPendingFocus(index = 0)
+                        binding.storageFileRv.post { requestFocus() }
+                    }
+                }
+            },
+        ).show()
+    }
+
+    private fun showBaiduPanLoginDialog(library: MediaLibraryEntity) {
+        BaiduPanLoginDialog(
+            activity = ownerActivity,
+            onLoginSuccess = { token, uinfo ->
+                val uk = uinfo.uk ?: 0L
+                if (uk <= 0L) {
+                    ToastCenter.showError("授权失败：uk 无效")
+                    return@BaiduPanLoginDialog
+                }
+
+                val expectedUk =
+                    library.url
+                        .substringAfter("baidupan://uk/", missingDelimiterValue = "")
+                        .toLongOrNull()
+                        ?.takeIf { it > 0L }
+
+                if (expectedUk != null && expectedUk != uk) {
+                    ToastCenter.showError("授权账号与当前存储源不一致，请在编辑存储源中重新绑定")
+                    return@BaiduPanLoginDialog
+                }
+
+                val nowMs = System.currentTimeMillis()
+                val expiresAtMs = nowMs + token.expiresIn * 1000L
+                val storageKey = BaiduPanAuthStore.storageKey(library)
+
+                BaiduPanAuthStore.writeTokens(
+                    storageKey = storageKey,
+                    accessToken = token.accessToken,
+                    expiresAtMs = expiresAtMs,
+                    refreshToken = token.refreshToken,
+                    scope = token.scope,
+                    updatedAtMs = nowMs
+                )
+                BaiduPanAuthStore.writeProfile(
+                    storageKey = storageKey,
+                    uk = uk,
+                    netdiskName = uinfo.netdiskName,
+                    avatarUrl = uinfo.avatarUrl,
+                    updatedAtMs = nowMs
+                )
+
+                ToastCenter.showOriginalToast("授权成功")
+                triggerTvRefresh()
+            },
+            onDismiss = {
+                val authStorage = ownerActivity.storage as? AuthStorage
+                val requiresLogin =
+                    authStorage?.let { it.requiresLogin(directory) && !it.isConnected() } == true
+                bindingOrNull?.let { binding ->
+                    if (!binding.storageFileRv.isInTouchMode && requiresLogin) {
                         focusDelegate.setPendingFocus(index = 0)
                         binding.storageFileRv.post { requestFocus() }
                     }

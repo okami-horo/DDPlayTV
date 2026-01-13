@@ -8,12 +8,13 @@ import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.database.DatabaseManager
+import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageSortOption
+import com.xyoye.common_component.storage.baidupan.auth.BaiduPanReAuthRequiredException
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.payloadAs
-import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
@@ -45,8 +46,8 @@ class StorageFileFragmentViewModel : BaseViewModel() {
     private val _fileLiveData = MutableLiveData<List<Any>>()
     val fileLiveData: LiveData<List<Any>> = _fileLiveData
 
-    private val _bilibiliLoginRequiredLiveData = MutableLiveData<MediaLibraryEntity>()
-    val bilibiliLoginRequiredLiveData: LiveData<MediaLibraryEntity> = _bilibiliLoginRequiredLiveData
+    private val _loginRequiredLiveData = MutableLiveData<MediaLibraryEntity>()
+    val loginRequiredLiveData: LiveData<MediaLibraryEntity> = _loginRequiredLiveData
 
     lateinit var storage: Storage
 
@@ -73,6 +74,16 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             lastListError = null
             try {
+                val authStorage = storage as? AuthStorage
+                if (authStorage != null && authStorage.requiresLogin(directory) && !authStorage.isConnected()) {
+                    ToastCenter.showWarning("请先${authStorage.loginActionText(directory)}")
+                    _loginRequiredLiveData.postValue(storage.library)
+                    emptyList<Any>()
+                        .apply { _fileLiveData.postValue(this) }
+                        .also { filesSnapshot = it }
+                    return@launch
+                }
+
                 val target = directory ?: storage.getRootFile()
                 if (target == null) {
                     emptyList<Any>()
@@ -81,17 +92,13 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                     return@launch
                 }
 
-                if (storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
-                    val bilibiliStorage = storage as? BilibiliStorage
-                    val requiresLogin = BilibiliStorage.isBilibiliPagedDirectoryPath(target.filePath())
-                    if (requiresLogin && bilibiliStorage?.isConnected() == false) {
-                        ToastCenter.showWarning("请先扫码登录")
-                        _bilibiliLoginRequiredLiveData.postValue(storage.library)
-                        emptyList<Any>()
-                            .apply { _fileLiveData.postValue(this) }
-                            .also { filesSnapshot = it }
-                        return@launch
-                    }
+                if (authStorage != null && authStorage.requiresLogin(target) && !authStorage.isConnected()) {
+                    ToastCenter.showWarning("请先${authStorage.loginActionText(target)}")
+                    _loginRequiredLiveData.postValue(storage.library)
+                    emptyList<Any>()
+                        .apply { _fileLiveData.postValue(this) }
+                        .also { filesSnapshot = it }
+                    return@launch
                 }
 
                 refreshStorageLastPlay()
@@ -118,10 +125,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                     "加载文件列表失败: ${directory?.fileName() ?: "root"}",
                 )
 
-                if (e is BilibiliException && e.code == -101) {
-                    ToastCenter.showWarning("登录已失效，请重新扫码登录")
-                    _bilibiliLoginRequiredLiveData.postValue(storage.library)
-                    _fileLiveData.postValue(emptyList())
+                if (handleLoginRequiredIfNeeded(e, clearList = true)) {
                     return@launch
                 }
 
@@ -187,6 +191,9 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                             _fileLiveData.postValue(files.map { it as Any })
                         }
                 } catch (e: Exception) {
+                    if (handleLoginRequiredIfNeeded(e, clearList = true)) {
+                        return@launch
+                    }
                     ErrorReportHelper.postCatchedExceptionWithContext(
                         e,
                         "StorageFileFragmentViewModel",
@@ -316,8 +323,13 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             val current = _fileLiveData.value?.filterIsInstance<StorageFile>().orEmpty()
             val result = pagedStorage.loadMore()
             if (result.isFailure) {
+                val exception = result.exceptionOrNull()
+                if (exception != null && handleLoginRequiredIfNeeded(exception, clearList = false)) {
+                    _fileLiveData.postValue(buildDisplayItems(current))
+                    return@launch
+                }
                 if (showFailureToast) {
-                    ToastCenter.showError("加载更多失败: ${result.exceptionOrNull()?.message}")
+                    ToastCenter.showError("加载更多失败: ${exception?.message}")
                 }
                 _fileLiveData.postValue(buildDisplayItems(current))
                 return@launch
@@ -505,5 +517,35 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             items.add(StoragePagingItem(paged.state, paged.hasMore(), files.isEmpty()))
         }
         return items
+    }
+
+    private fun handleLoginRequiredIfNeeded(
+        throwable: Throwable,
+        clearList: Boolean
+    ): Boolean {
+        val authStorage = storage as? AuthStorage ?: return false
+
+        val message =
+            when (throwable) {
+                is BaiduPanReAuthRequiredException ->
+                    throwable.message?.takeIf { it.isNotBlank() }
+                        ?: "登录已失效，请重新${authStorage.loginActionText(storage.directory)}"
+                is BilibiliException -> {
+                    if (throwable.code != -101) return false
+                    "登录已失效，请重新${authStorage.loginActionText(storage.directory)}"
+                }
+                else -> return false
+            }
+
+        ToastCenter.showWarning(message)
+        _loginRequiredLiveData.postValue(storage.library)
+
+        if (clearList) {
+            val empty = emptyList<Any>()
+            _fileLiveData.postValue(empty)
+            filesSnapshot = empty
+        }
+
+        return true
     }
 }

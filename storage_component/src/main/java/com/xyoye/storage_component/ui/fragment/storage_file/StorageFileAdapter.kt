@@ -27,6 +27,7 @@ import com.xyoye.common_component.extension.toFile
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.common_component.extension.toResString
+import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.danmu
 import com.xyoye.common_component.storage.file.subtitle
@@ -90,24 +91,23 @@ class StorageFileAdapter(
 
             addEmptyView(R.layout.layout_empty) {
                 initEmptyView {
-                    val directoryPath = activity.directory?.filePath()
-                    val isBilibiliPagedDirectory =
-                        activity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
-                            BilibiliStorage.isBilibiliPagedDirectoryPath(directoryPath)
+                    val directory = activity.directory
+                    val authStorage = activity.storage as? AuthStorage
                     val requiresLogin =
-                        isBilibiliPagedDirectory && (activity.storage as? BilibiliStorage)?.isConnected() == false
+                        authStorage?.let { it.requiresLogin(directory) && !it.isConnected() } == true
 
                     itemBinding.emptyActionTv.isVisible = true
 
                     if (requiresLogin) {
                         val directoryName =
-                            when (directoryPath) {
+                            when (directory?.filePath()) {
                                 BilibiliStorage.PATH_HISTORY_DIR -> "历史记录"
                                 BilibiliStorage.PATH_FOLLOW_LIVE_DIR -> "关注直播"
                                 else -> "当前目录"
                             }
-                        itemBinding.emptyTv.text = "需要登录才能查看$directoryName"
-                        itemBinding.emptyActionTv.text = "扫码登录"
+                        val actionText = authStorage?.loginActionText(directory).orEmpty()
+                        itemBinding.emptyTv.text = "需要${actionText}才能查看$directoryName"
+                        itemBinding.emptyActionTv.text = actionText
                         itemBinding.emptyActionTv.setOnClickListener { onLoginRequested.invoke() }
                         return@initEmptyView
                     }

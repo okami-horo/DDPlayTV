@@ -3,6 +3,7 @@ package com.xyoye.common_component.storage.impl
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.repository.BaiduPanRepository
 import com.xyoye.common_component.network.repository.ResourceRepository
+import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.baidupan.auth.BaiduPanAuthStore
@@ -27,7 +28,8 @@ import java.util.concurrent.TimeUnit
 class BaiduPanStorage(
     library: MediaLibraryEntity
 ) : AbstractStorage(library),
-    PagedStorage {
+    PagedStorage,
+    AuthStorage {
     private val rangeUnsupportedRefreshLock = Any()
 
     private val storageKey = BaiduPanAuthStore.storageKey(library)
@@ -40,6 +42,12 @@ class BaiduPanStorage(
     private var pagingHasMore: Boolean = true
 
     override var state: PagedStorage.State = PagedStorage.State.IDLE
+
+    override fun isConnected(): Boolean = repository.isAuthorized()
+
+    override fun requiresLogin(directory: StorageFile?): Boolean = !isConnected()
+
+    override fun loginActionText(directory: StorageFile?): String = "扫码授权"
 
     override suspend fun getRootFile(): StorageFile? {
         if (!repository.isAuthorized()) {

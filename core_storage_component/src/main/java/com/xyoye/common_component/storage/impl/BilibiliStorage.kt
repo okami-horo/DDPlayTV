@@ -8,6 +8,7 @@ import com.xyoye.common_component.bilibili.net.BilibiliHeaders
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSessionStore
 import com.xyoye.common_component.bilibili.repository.BilibiliRepository
+import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.file.StorageFile
@@ -26,7 +27,8 @@ import java.util.Date
 class BilibiliStorage(
     library: MediaLibraryEntity
 ) : AbstractStorage(library),
-    PagedStorage {
+    PagedStorage,
+    AuthStorage {
     private val storageKey = BilibiliPlaybackPreferencesStore.storageKey(library)
     private val repository = BilibiliRepository(storageKey)
 
@@ -580,7 +582,12 @@ class BilibiliStorage(
         // do nothing
     }
 
-    fun isConnected(): Boolean = repository.isLoggedIn()
+    override fun isConnected(): Boolean = repository.isLoggedIn()
+
+    override fun requiresLogin(directory: StorageFile?): Boolean =
+        isBilibiliPagedDirectoryPath(directory?.filePath())
+
+    override fun loginActionText(directory: StorageFile?): String = "扫码登录"
 
     fun resetHistoryCursor() {
         historyCursor = null
