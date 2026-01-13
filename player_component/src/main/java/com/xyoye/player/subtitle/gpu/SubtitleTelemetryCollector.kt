@@ -1,12 +1,9 @@
-package com.xyoye.player_component.subtitle.gpu
+package com.xyoye.player.subtitle.gpu
 
 import com.xyoye.common_component.log.SubtitleTelemetryLogger
 import com.xyoye.data_component.bean.subtitle.TelemetrySample
 import com.xyoye.data_component.enums.SubtitleFrameStatus
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
@@ -15,8 +12,8 @@ import kotlinx.coroutines.launch
  */
 class SubtitleTelemetryCollector(
     private val pipelineController: SubtitlePipelineController,
-    private val loadSheddingPolicy: SubtitleLoadSheddingPolicy = SubtitleLoadSheddingPolicy(),
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val loadSheddingPolicy: SubtitleLoadSheddingPolicy,
+    private val scope: CoroutineScope
 ) {
     fun allowRender(): Boolean = loadSheddingPolicy.allowRender()
 
@@ -96,10 +93,6 @@ class SubtitleTelemetryCollector(
             return
         }
         scope.launch { pipelineController.submitTelemetry(sample) }
-    }
-
-    fun dispose() {
-        scope.coroutineContext[Job]?.cancel()
     }
 
     companion object {

@@ -1,10 +1,8 @@
-package com.xyoye.player_component.subtitle.gpu
+package com.xyoye.player.subtitle.gpu
 
 import com.xyoye.data_component.enums.SubtitlePipelineFallbackReason
 import com.xyoye.data_component.enums.SubtitlePipelineMode
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
@@ -16,7 +14,7 @@ class SubtitleRecoveryCoordinator(
     private val tracker: SubtitleOutputTargetTracker,
     private val fallbackController: SubtitleFallbackController,
     private val pipelineController: SubtitlePipelineController,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope: CoroutineScope
 ) {
     fun attemptRecovery(reason: SubtitlePipelineFallbackReason = SubtitlePipelineFallbackReason.UNKNOWN) {
         scope.launch {

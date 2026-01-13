@@ -1,4 +1,4 @@
-package com.xyoye.player_component.subtitle.gpu
+package com.xyoye.player.subtitle.gpu
 
 /**
  * Flushes native subtitle textures to avoid ghost frames when timeline jumps.

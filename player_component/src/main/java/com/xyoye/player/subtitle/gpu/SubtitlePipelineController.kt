@@ -1,12 +1,12 @@
-package com.xyoye.player_component.subtitle.gpu
+package com.xyoye.player.subtitle.gpu
 
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.SubtitleTelemetryLogger
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.network.subtitle.FallbackCommand
-import com.xyoye.common_component.network.subtitle.PipelineInitRequest
-import com.xyoye.common_component.network.subtitle.PipelineStatusResponse
-import com.xyoye.common_component.network.subtitle.SubtitlePipelineApi
+import com.xyoye.common_component.subtitle.pipeline.FallbackCommand
+import com.xyoye.common_component.subtitle.pipeline.PipelineInitRequest
+import com.xyoye.common_component.subtitle.pipeline.PipelineStatusResponse
+import com.xyoye.common_component.subtitle.pipeline.SubtitlePipelineApi
 import com.xyoye.data_component.bean.subtitle.SubtitleOutputTarget
 import com.xyoye.data_component.bean.subtitle.SubtitlePipelineState
 import com.xyoye.data_component.bean.subtitle.TelemetrySample

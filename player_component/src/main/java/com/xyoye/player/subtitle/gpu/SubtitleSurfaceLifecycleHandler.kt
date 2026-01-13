@@ -1,11 +1,9 @@
-package com.xyoye.player_component.subtitle.gpu
+package com.xyoye.player.subtitle.gpu
 
 import android.view.Surface
 import com.xyoye.data_component.enums.SubtitlePipelineFallbackReason
 import com.xyoye.data_component.enums.SubtitleViewType
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
@@ -16,7 +14,7 @@ class SubtitleSurfaceLifecycleHandler(
     private val renderer: AssGpuRenderer,
     private val tracker: SubtitleOutputTargetTracker,
     private val fallbackController: SubtitleFallbackController? = null,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope: CoroutineScope
 ) {
     fun onSurfaceAvailable(
         surface: Surface?,
@@ -80,7 +78,7 @@ class SubtitleSurfaceLifecycleHandler(
     }
 
     fun onSurfaceDestroyed() {
-        tracker.surfaceId()?.let { surfaceId ->
+        if (tracker.surfaceId() != null) {
             fallbackController?.let { controller ->
                 scope.launch { controller.forceFallback(SubtitlePipelineFallbackReason.SURFACE_LOST) }
             }

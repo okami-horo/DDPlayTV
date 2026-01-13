@@ -1,8 +1,6 @@
-package com.xyoye.player_component.subtitle.gpu
+package com.xyoye.player.subtitle.gpu
 
 import android.view.Surface
-import com.xyoye.common_component.log.LogFacade
-import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.data_component.bean.subtitle.SubtitleOutputTarget
 
 class AssGpuNativeBridge {
@@ -17,11 +15,10 @@ class AssGpuNativeBridge {
         init {
             System.loadLibrary("libass_bridge")
         }
-
-        private const val TAG = "AssGpuNativeBridge"
     }
 
     private var handle: Long = nativeCreate()
+    private val metricsBuffer = LongArray(3)
 
     val isReady: Boolean
         get() = handle != 0L
@@ -58,8 +55,21 @@ class AssGpuNativeBridge {
         if (!isReady) {
             return NativeRenderResult(rendered = false, renderLatencyMs = 0, uploadLatencyMs = 0, compositeLatencyMs = 0)
         }
-        val raw = nativeRender(handle, subtitlePtsMs, vsyncId, telemetryEnabled)
-        return decodeMetrics(raw)
+        return if (!telemetryEnabled) {
+            val rendered = nativeRender(handle, subtitlePtsMs, vsyncId, null)
+            NativeRenderResult(rendered = rendered, renderLatencyMs = 0, uploadLatencyMs = 0, compositeLatencyMs = 0)
+        } else {
+            metricsBuffer[0] = 0
+            metricsBuffer[1] = 0
+            metricsBuffer[2] = 0
+            val rendered = nativeRender(handle, subtitlePtsMs, vsyncId, metricsBuffer)
+            NativeRenderResult(
+                rendered = rendered,
+                renderLatencyMs = metricsBuffer[0],
+                uploadLatencyMs = metricsBuffer[1],
+                compositeLatencyMs = metricsBuffer[2],
+            )
+        }
     }
 
     fun setTelemetryEnabled(enabled: Boolean) {
@@ -120,19 +130,6 @@ class AssGpuNativeBridge {
         handle = 0
     }
 
-    private fun decodeMetrics(raw: LongArray?): NativeRenderResult {
-        if (raw == null || raw.size < 4) {
-            LogFacade.w(LogModule.PLAYER, TAG, "native metrics missing, using defaults")
-            return NativeRenderResult(rendered = false, renderLatencyMs = 0, uploadLatencyMs = 0, compositeLatencyMs = 0)
-        }
-        return NativeRenderResult(
-            rendered = raw[0] != 0L,
-            renderLatencyMs = raw[1],
-            uploadLatencyMs = raw[2],
-            compositeLatencyMs = raw[3],
-        )
-    }
-
     private external fun nativeCreate(): Long
 
     private external fun nativeDestroy(handle: Long)
@@ -155,8 +152,8 @@ class AssGpuNativeBridge {
         handle: Long,
         subtitlePtsMs: Long,
         vsyncId: Long,
-        telemetryEnabled: Boolean
-    ): LongArray?
+        metricsOut: LongArray?
+    ): Boolean
 
     private external fun nativeFlush(handle: Long)
 

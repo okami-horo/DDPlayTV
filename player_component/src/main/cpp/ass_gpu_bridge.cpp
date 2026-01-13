@@ -79,6 +79,7 @@ struct GpuContext {
         GLuint id = 0;
         int width = 0;
         int height = 0;
+        bool params_set = false;
     };
     std::vector<TextureEntry> texture_pool;
     size_t texture_pool_pos = 0;
@@ -546,15 +547,13 @@ bool EnsureSurface(GpuContext *context) {
     return EnsureProgram(context);
 }
 
-jlongArray BuildRenderMetrics(JNIEnv *env, bool rendered, jlong render_ms = 0,
-                              jlong upload_ms = 0, jlong composite_ms = 0) {
-    jlongArray array = env->NewLongArray(4);
-    if (array == nullptr) {
-        return nullptr;
+void WriteRenderMetrics(JNIEnv *env, jlongArray metrics_out, jlong render_ms, jlong upload_ms,
+                        jlong composite_ms) {
+    if (metrics_out == nullptr) {
+        return;
     }
-    jlong values[4] = {rendered ? 1 : 0, render_ms, upload_ms, composite_ms};
-    env->SetLongArrayRegion(array, 0, 4, values);
-    return array;
+    jlong values[3] = {render_ms, upload_ms, composite_ms};
+    env->SetLongArrayRegion(metrics_out, 0, 3, values);
 }
 
 void UpdateFrameSizeIfNeeded(GpuContext *context) {
@@ -573,15 +572,18 @@ GpuContext::TextureEntry &AcquireTexture(GpuContext *context, int width, int hei
     if (context->texture_pool_pos >= context->texture_pool.size()) {
         GLuint id = 0;
         glGenTextures(1, &id);
-        context->texture_pool.push_back({id, 0, 0});
+        context->texture_pool.push_back({id, 0, 0, false});
     }
     auto &entry = context->texture_pool[context->texture_pool_pos++];
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, entry.id);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    if (!entry.params_set) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        entry.params_set = true;
+    }
     if (entry.width != width || entry.height != height) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE,
                      nullptr);
@@ -593,7 +595,7 @@ GpuContext::TextureEntry &AcquireTexture(GpuContext *context, int width, int hei
 }  // namespace
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeCreate(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeCreate(
     JNIEnv *env, jobject /*thiz*/) {
     (void)env;
     auto *context = new (std::nothrow) GpuContext();
@@ -606,7 +608,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeCreate(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeDestroy(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeDestroy(
     JNIEnv *env, jobject /*thiz*/, jlong handle) {
     (void)env;
     auto *context = reinterpret_cast<GpuContext *>(handle);
@@ -624,7 +626,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeDestroy(
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeAttachSurface(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeAttachSurface(
     JNIEnv *env,
     jobject /*thiz*/,
     jlong handle,
@@ -666,7 +668,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeAttachSur
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeDetachSurface(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeDetachSurface(
     JNIEnv *env, jobject /*thiz*/, jlong handle) {
     (void)env;
     auto *context = reinterpret_cast<GpuContext *>(handle);
@@ -685,7 +687,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeDetachSur
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeLoadTrack(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeLoadTrack(
     JNIEnv *env,
     jobject /*thiz*/,
     jlong handle,
@@ -715,7 +717,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeLoadTrack
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeInitEmbeddedTrack(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeInitEmbeddedTrack(
     JNIEnv *env,
     jobject /*thiz*/,
     jlong handle,
@@ -754,7 +756,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeInitEmbed
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeAppendEmbeddedChunk(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeAppendEmbeddedChunk(
     JNIEnv *env,
     jobject /*thiz*/,
     jlong handle,
@@ -784,7 +786,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeAppendEmb
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeFlushEmbeddedEvents(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeFlushEmbeddedEvents(
     JNIEnv *env, jobject /*thiz*/, jlong handle) {
     (void)env;
     auto *context = reinterpret_cast<GpuContext *>(handle);
@@ -797,7 +799,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeFlushEmbe
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeClearEmbeddedTrack(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeClearEmbeddedTrack(
     JNIEnv *env, jobject /*thiz*/, jlong handle) {
     (void)env;
     auto *context = reinterpret_cast<GpuContext *>(handle);
@@ -809,38 +811,53 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeClearEmbe
     }
 }
 
-extern "C" JNIEXPORT jlongArray JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeRender(
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     JNIEnv *env,
     jobject /*thiz*/,
     jlong handle,
     jlong subtitle_pts_ms,
     jlong vsync_id,
-    jboolean telemetry_enabled) {
+    jlongArray metrics_out) {
     auto *context = reinterpret_cast<GpuContext *>(handle);
     if (context == nullptr) {
-        return BuildRenderMetrics(env, false);
+        return JNI_FALSE;
     }
     std::lock_guard<std::mutex> guard(context->mutex);
     context->last_vsync_id = vsync_id;
-    context->telemetry_enabled = telemetry_enabled == JNI_TRUE;
+    const bool collect_metrics = metrics_out != nullptr && context->telemetry_enabled;
     if (context->window == nullptr || context->renderer == nullptr || context->track == nullptr ||
         context->width <= 0 || context->height <= 0) {
-        return BuildRenderMetrics(env, false);
+        if (collect_metrics) {
+            WriteRenderMetrics(env, metrics_out, 0, 0, 0);
+        }
+        return JNI_FALSE;
     }
     UpdateFrameSizeIfNeeded(context);
     if (!EnsureSurface(context) || !MakeCurrent(context)) {
-        return BuildRenderMetrics(env, false);
+        if (collect_metrics) {
+            WriteRenderMetrics(env, metrics_out, 0, 0, 0);
+        }
+        return JNI_FALSE;
     }
 
     int change = 0;
-    auto render_start = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point render_start;
+    if (collect_metrics) {
+        render_start = std::chrono::steady_clock::now();
+    }
     ASS_Image *img = ass_render_frame(context->renderer, context->track,
                                       static_cast<int>(subtitle_pts_ms), &change);
-    auto render_end = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point render_end;
+    if (collect_metrics) {
+        render_end = std::chrono::steady_clock::now();
+    }
     if (change == 0 && !context->pending_invalidate) {
         // libass 表示当前时间戳无需重绘，直接复用上一帧，避免重复上传/绘制开销。
-        return BuildRenderMetrics(env, true, 0, 0, 0);
+        if (collect_metrics) {
+            WriteRenderMetrics(env, metrics_out, 0, 0, 0);
+        }
+        return JNI_TRUE;
     }
     context->pending_invalidate = false;
 
@@ -852,42 +869,55 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     double upload_ms = 0.0;
     double composite_ms = 0.0;
 
-	    for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
-	        if (cur->w <= 0 || cur->h <= 0) continue;
-	        const float base_alpha = static_cast<float>(AssAlphaToAndroid(cur->color)) / 255.0F;
-	        const float final_alpha = base_alpha * context->user_alpha;
-	        if (final_alpha <= 0.0F) continue;
+    glUseProgram(context->program);
+    glBindBuffer(GL_ARRAY_BUFFER, context->vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 16, nullptr, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
+                          reinterpret_cast<void *>(0));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
+                          reinterpret_cast<void *>(sizeof(float) * 2));
+    glEnableVertexAttribArray(1);
 
-	        const auto upload_start = std::chrono::steady_clock::now();
-	        AcquireTexture(context, cur->w, cur->h);
-	        if (context->gles_version >= 3 && cur->bitmap != nullptr && cur->stride > 0 &&
-	            cur->stride >= cur->w) {
-	            if (cur->stride != cur->w) {
-	                glPixelStorei(GL_UNPACK_ROW_LENGTH, cur->stride);
-	            }
-	            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h, GL_RED, GL_UNSIGNED_BYTE,
-	                            cur->bitmap);
-	            if (cur->stride != cur->w) {
-	                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-	            }
-	        } else {
-	            const size_t required = static_cast<size_t>(cur->w * cur->h);
-	            if (context->upload_buffer.size() < required) {
-	                context->upload_buffer.resize(required);
-	            }
-	            uint8_t *coverage = context->upload_buffer.data();
-	            for (int y = 0; y < cur->h; ++y) {
-	                const uint8_t *src_row = cur->bitmap + y * cur->stride;
-	                std::memcpy(coverage + static_cast<size_t>(y * cur->w), src_row,
-	                            static_cast<size_t>(cur->w));
-	            }
-	            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h, GL_RED, GL_UNSIGNED_BYTE,
-	                            coverage);
-	        }
-	        const auto upload_end = std::chrono::steady_clock::now();
-	        upload_ms += std::chrono::duration_cast<std::chrono::microseconds>(upload_end - upload_start)
-	                         .count() /
-	                     1000.0;
+    for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
+        if (cur->w <= 0 || cur->h <= 0) continue;
+        const float base_alpha = static_cast<float>(AssAlphaToAndroid(cur->color)) / 255.0F;
+        const float final_alpha = base_alpha * context->user_alpha;
+        if (final_alpha <= 0.0F) continue;
+
+        const std::chrono::steady_clock::time_point upload_start =
+            collect_metrics ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
+        AcquireTexture(context, cur->w, cur->h);
+        if (context->gles_version >= 3 && cur->bitmap != nullptr && cur->stride > 0 &&
+            cur->stride >= cur->w) {
+            if (cur->stride != cur->w) {
+                glPixelStorei(GL_UNPACK_ROW_LENGTH, cur->stride);
+            }
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h, GL_RED, GL_UNSIGNED_BYTE,
+                            cur->bitmap);
+            if (cur->stride != cur->w) {
+                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+            }
+        } else {
+            const size_t required = static_cast<size_t>(cur->w * cur->h);
+            if (context->upload_buffer.size() < required) {
+                context->upload_buffer.resize(required);
+            }
+            uint8_t *coverage = context->upload_buffer.data();
+            for (int y = 0; y < cur->h; ++y) {
+                const uint8_t *src_row = cur->bitmap + y * cur->stride;
+                std::memcpy(coverage + static_cast<size_t>(y * cur->w), src_row,
+                            static_cast<size_t>(cur->w));
+            }
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h, GL_RED, GL_UNSIGNED_BYTE,
+                            coverage);
+        }
+        if (collect_metrics) {
+            const auto upload_end = std::chrono::steady_clock::now();
+            upload_ms += std::chrono::duration_cast<std::chrono::microseconds>(upload_end - upload_start)
+                             .count() /
+                         1000.0;
+        }
 
         const float left = (static_cast<float>(cur->dst_x) / static_cast<float>(context->width)) *
                                2.0F -
@@ -903,8 +933,8 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeRender(
             1.0F - (static_cast<float>(cur->dst_y + cur->h) / static_cast<float>(context->height)) *
                        2.0F;
 
-        const auto draw_start = std::chrono::steady_clock::now();
-        glUseProgram(context->program);
+        const std::chrono::steady_clock::time_point draw_start =
+            collect_metrics ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
         const float red = static_cast<float>((cur->color >> 24) & 0xFF) / 255.0F;
         const float green = static_cast<float>((cur->color >> 16) & 0xFF) / 255.0F;
         const float blue = static_cast<float>((cur->color >> 8) & 0xFF) / 255.0F;
@@ -917,39 +947,38 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeRender(
             right, bottom, 1.0F, 1.0F   // right-bottom
         };
 
-        glBindBuffer(GL_ARRAY_BUFFER, context->vertex_buffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
-                              reinterpret_cast<void *>(0));
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
-                              reinterpret_cast<void *>(sizeof(float) * 2));
-        glEnableVertexAttribArray(1);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        const auto draw_end = std::chrono::steady_clock::now();
-        composite_ms += std::chrono::duration_cast<std::chrono::microseconds>(draw_end - draw_start)
-                            .count() /
-                        1000.0;
+        if (collect_metrics) {
+            const auto draw_end = std::chrono::steady_clock::now();
+            composite_ms += std::chrono::duration_cast<std::chrono::microseconds>(draw_end - draw_start)
+                                .count() /
+                            1000.0;
+        }
     }
 
-    auto swap_start = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point swap_start;
+    if (collect_metrics) {
+        swap_start = std::chrono::steady_clock::now();
+    }
     eglSwapBuffers(context->egl_display, context->egl_surface);
-    auto swap_end = std::chrono::steady_clock::now();
-    composite_ms +=
-        std::chrono::duration_cast<std::chrono::microseconds>(swap_end - swap_start).count() /
-        1000.0;
+    if (collect_metrics) {
+        const auto swap_end = std::chrono::steady_clock::now();
+        composite_ms +=
+            std::chrono::duration_cast<std::chrono::microseconds>(swap_end - swap_start).count() /
+            1000.0;
 
-    const auto render_latency =
-        std::chrono::duration_cast<std::chrono::microseconds>(render_end - render_start).count() /
-        1000;
-    return BuildRenderMetrics(env, true, render_latency,
-                              static_cast<jlong>(upload_ms),
-                              static_cast<jlong>(composite_ms));
+        const auto render_latency =
+            std::chrono::duration_cast<std::chrono::microseconds>(render_end - render_start).count() /
+            1000;
+        WriteRenderMetrics(env, metrics_out, render_latency, static_cast<jlong>(upload_ms),
+                           static_cast<jlong>(composite_ms));
+    }
+    return JNI_TRUE;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeFlush(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeFlush(
     JNIEnv *env, jobject /*thiz*/, jlong handle) {
     (void)env;
     auto *context = reinterpret_cast<GpuContext *>(handle);
@@ -968,7 +997,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeFlush(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeSetTelemetryEnabled(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeSetTelemetryEnabled(
     JNIEnv *env, jobject /*thiz*/, jlong handle, jboolean enabled) {
     (void)env;
     auto *context = reinterpret_cast<GpuContext *>(handle);
@@ -981,7 +1010,7 @@ Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeSetTeleme
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_xyoye_player_1component_subtitle_gpu_AssGpuNativeBridge_nativeSetGlobalOpacity(
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeSetGlobalOpacity(
     JNIEnv *env, jobject /*thiz*/, jlong handle, jint percent) {
     (void)env;
     auto *context = reinterpret_cast<GpuContext *>(handle);

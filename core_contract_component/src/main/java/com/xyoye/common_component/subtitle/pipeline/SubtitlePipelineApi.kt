@@ -1,4 +1,4 @@
-package com.xyoye.common_component.network.subtitle
+package com.xyoye.common_component.subtitle.pipeline
 
 import com.xyoye.data_component.bean.subtitle.FallbackEvent
 import com.xyoye.data_component.bean.subtitle.SubtitleOutputTarget
@@ -62,3 +62,4 @@ data class FallbackCommand(
         )
     }
 }
+

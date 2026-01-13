@@ -1,7 +1,7 @@
 package com.xyoye.player.subtitle.backend
 
 import androidx.media3.common.util.UnstableApi
-import com.xyoye.player_component.subtitle.gpu.AssGpuRenderer
+import com.xyoye.player.subtitle.gpu.AssGpuRenderer
 import java.util.concurrent.TimeUnit
 
 /**

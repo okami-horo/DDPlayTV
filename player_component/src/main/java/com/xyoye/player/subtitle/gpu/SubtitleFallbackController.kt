@@ -1,4 +1,4 @@
-package com.xyoye.player_component.subtitle.gpu
+package com.xyoye.player.subtitle.gpu
 
 import com.xyoye.common_component.log.SubtitleFallbackReporter
 import com.xyoye.data_component.bean.subtitle.SubtitlePipelineState
