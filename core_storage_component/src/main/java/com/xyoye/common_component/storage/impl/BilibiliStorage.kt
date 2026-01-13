@@ -610,6 +610,9 @@ class BilibiliStorage(
         followLiveState = PagedStorage.State.IDLE
     }
 
+    override fun shouldShowPagingItem(directory: StorageFile?): Boolean =
+        isBilibiliPagedDirectoryPath(directory?.filePath())
+
     override fun hasMore(): Boolean =
         when (directory?.filePath()) {
             PATH_HISTORY_DIR -> historyHasMore

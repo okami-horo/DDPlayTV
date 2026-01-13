@@ -19,6 +19,8 @@ interface PagedStorage {
 
     var state: State
 
+    fun shouldShowPagingItem(directory: StorageFile?): Boolean = true
+
     fun hasMore(): Boolean
 
     suspend fun reset()

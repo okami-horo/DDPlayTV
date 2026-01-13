@@ -167,6 +167,11 @@ class StorageFileFragmentViewModel : BaseViewModel() {
      * 搜索文件
      */
     fun searchByText(text: String) {
+        if (text.isEmpty()) {
+            _fileLiveData.postValue(filesSnapshot)
+            return
+        }
+
         // 媒体库支持文件搜索，由媒体库处理搜索
         if (storage.supportSearch()) {
             viewModelScope.launch(Dispatchers.IO) {
@@ -193,12 +198,6 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                     _fileLiveData.postValue(emptyList())
                 }
             }
-            return
-        }
-
-        // 搜索条件为空，返回文件列表快照
-        if (text.isEmpty()) {
-            _fileLiveData.postValue(filesSnapshot)
             return
         }
 
@@ -325,6 +324,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             }
 
             val appended = result.getOrNull().orEmpty()
+                .filter { isDisplayFile(it) }
             val existingKeys = current.map { it.uniqueKey() }.toHashSet()
             val merged =
                 current.toMutableList<StorageFile>().apply {
@@ -336,7 +336,14 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                     }
                 }
 
-            val items = buildDisplayItems(merged)
+            val displayFiles =
+                if (storage.library.mediaType == MediaType.BAIDU_PAN_STORAGE) {
+                    merged.sortedWith(StorageSortOption.comparator())
+                } else {
+                    merged
+                }
+
+            val items = buildDisplayItems(displayFiles)
             _fileLiveData.postValue(items)
             filesSnapshot = items
         }
@@ -494,11 +501,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
     private fun buildDisplayItems(files: List<StorageFile>): List<Any> {
         val items = files.toMutableList<Any>()
         val paged = storage as? PagedStorage
-        if (
-            paged != null &&
-            storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
-            BilibiliStorage.isBilibiliPagedDirectoryPath(storage.directory?.filePath())
-        ) {
+        if (paged != null && paged.shouldShowPagingItem(storage.directory)) {
             items.add(StoragePagingItem(paged.state, paged.hasMore(), files.isEmpty()))
         }
         return items

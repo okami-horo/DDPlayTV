@@ -77,12 +77,12 @@ description: "Task list for 百度网盘存储库在线播放"
 
 **Independent Test**: 使用包含多级目录和多文件类型的网盘：验证能正常浏览层级、刷新列表、排序、分页加载和搜索，且返回结果稳定（参考 `specs/001-baidu-pan-storage/quickstart.md`）
 
-- [ ] T025 [P] [US2] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/PagedStorage.kt` 增加默认方法 `shouldShowPagingItem(directory: StorageFile?): Boolean = true`（为非 Bilibili 的分页 UI 做准备）
-- [ ] T026 [US2] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt` 的 `buildDisplayItems` 改为基于 `PagedStorage.shouldShowPagingItem(...)` 展示分页条（移除仅 Bilibili 的限定）
-- [ ] T027 [US2] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BilibiliStorage.kt` 覆盖 `shouldShowPagingItem(...)`，保持仅在历史/关注目录显示分页条
-- [ ] T028 [US2] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt` 实现 `PagedStorage`：按当前 `dir` 维护 `start/limit/hasMore/state`，并在 `openDirectory(refresh=true)` 时重置分页
-- [ ] T029 [US2] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt` 的 `loadMore` 合并后，对 `MediaType.BAIDU_PAN_STORAGE` 重新按 `StorageSortOption.comparator()` 排序（保证排序/目录优先在分页场景下生效）
-- [ ] T030 [US2] 在 `core_storage_component/src/main/java/com/xyoye/common_component/network/repository/BaiduPanRepository.kt` 增加 `search` 封装，并在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt` 实现 `supportSearch/search(keyword)`（method=search，处理 recursion/分类过滤/错误码）
+- [X] T025 [P] [US2] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/PagedStorage.kt` 增加默认方法 `shouldShowPagingItem(directory: StorageFile?): Boolean = true`（为非 Bilibili 的分页 UI 做准备）
+- [X] T026 [US2] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt` 的 `buildDisplayItems` 改为基于 `PagedStorage.shouldShowPagingItem(...)` 展示分页条（移除仅 Bilibili 的限定）
+- [X] T027 [US2] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BilibiliStorage.kt` 覆盖 `shouldShowPagingItem(...)`，保持仅在历史/关注目录显示分页条
+- [X] T028 [US2] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt` 实现 `PagedStorage`：按当前 `dir` 维护 `start/limit/hasMore/state`，并在 `openDirectory(refresh=true)` 时重置分页
+- [X] T029 [US2] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt` 的 `loadMore` 合并后，对 `MediaType.BAIDU_PAN_STORAGE` 重新按 `StorageSortOption.comparator()` 排序（保证排序/目录优先在分页场景下生效）
+- [X] T030 [US2] 在 `core_storage_component/src/main/java/com/xyoye/common_component/network/repository/BaiduPanRepository.kt` 增加 `search` 封装，并在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt` 实现 `supportSearch/search(keyword)`（method=search，处理 recursion/分类过滤/错误码）
 - [ ] T031 [US2] 手动验证 P2 用例：刷新/排序/分页加载/搜索（参考 `specs/001-baidu-pan-storage/quickstart.md`）
 
 ---

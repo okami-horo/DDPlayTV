@@ -4,6 +4,7 @@ import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.repository.BaiduPanRepository
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.storage.AbstractStorage
+import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.baidupan.auth.BaiduPanAuthStore
 import com.xyoye.common_component.storage.baidupan.auth.BaiduPanReAuthRequiredException
 import com.xyoye.common_component.storage.baidupan.auth.BaiduPanTokenManager
@@ -25,13 +26,20 @@ import java.util.concurrent.TimeUnit
 
 class BaiduPanStorage(
     library: MediaLibraryEntity
-) : AbstractStorage(library) {
+) : AbstractStorage(library),
+    PagedStorage {
     private val rangeUnsupportedRefreshLock = Any()
 
     private val storageKey = BaiduPanAuthStore.storageKey(library)
     private val repository = BaiduPanRepository(storageKey)
     private val tokenManager = BaiduPanTokenManager(storageKey)
     private val dlinkCache = BaiduPanDlinkCache()
+
+    private var pagingDir: String? = null
+    private var pagingStart: Int = 0
+    private var pagingHasMore: Boolean = true
+
+    override var state: PagedStorage.State = PagedStorage.State.IDLE
 
     override suspend fun getRootFile(): StorageFile? {
         if (!repository.isAuthorized()) {
@@ -48,16 +56,37 @@ class BaiduPanStorage(
         file: StorageFile,
         refresh: Boolean
     ): List<StorageFile> {
-        this.directory = file
-        this.directoryFiles = listFiles(file)
+        directory = file
+        val dirPath = normalizePath(file.filePath())
+        if (refresh || pagingDir != dirPath) {
+            resetPaging(dirPath)
+        }
+
+        val response =
+            repository.xpanList(
+                dir = dirPath,
+                start = 0,
+                limit = DEFAULT_PAGE_LIMIT,
+            ).getOrThrow()
+
+        val items = response.list.orEmpty()
+        pagingStart = items.size
+        pagingHasMore = items.size >= DEFAULT_PAGE_LIMIT
+        state = if (pagingHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
+
+        directoryFiles = items.map { BaiduPanStorageFile(it, this) }
         return directoryFiles
     }
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> {
-        val dir = file.filePath().ifBlank { "/" }
-        val response = repository.xpanList(dir = dir).getOrThrow()
-        val items = response.list.orEmpty()
-        return items.map { BaiduPanStorageFile(it, this) }
+        val dirPath = normalizePath(file.filePath())
+        val response =
+            repository.xpanList(
+                dir = dirPath,
+                start = 0,
+                limit = DEFAULT_PAGE_LIMIT,
+            ).getOrThrow()
+        return response.list.orEmpty().map { BaiduPanStorageFile(it, this) }
     }
 
     override suspend fun pathFile(
@@ -70,14 +99,28 @@ class BaiduPanStorage(
         }
 
         val parentDir = normalized.substringBeforeLast('/', missingDelimiterValue = "/").ifBlank { "/" }
-        val response = repository.xpanList(dir = parentDir).getOrThrow()
-        val item =
-            response
-                .list
-                .orEmpty()
-                .firstOrNull { it.path == normalized && it.isdir == (if (isDirectory) 1 else 0) }
-                ?: return null
-        return BaiduPanStorageFile(item, this)
+
+        var start = 0
+        while (true) {
+            val response =
+                repository.xpanList(
+                    dir = parentDir,
+                    start = start,
+                    limit = DEFAULT_PAGE_LIMIT,
+                ).getOrThrow()
+
+            val items = response.list.orEmpty()
+            val item =
+                items.firstOrNull { it.path == normalized && it.isdir == (if (isDirectory) 1 else 0) }
+            if (item != null) {
+                return BaiduPanStorageFile(item, this)
+            }
+
+            if (items.size < DEFAULT_PAGE_LIMIT) {
+                return null
+            }
+            start += items.size
+        }
     }
 
     override suspend fun historyFile(history: PlayHistoryEntity): StorageFile? =
@@ -178,6 +221,69 @@ class BaiduPanStorage(
 
     override suspend fun test(): Boolean = runCatching { repository.xpanUinfo().getOrThrow() }.isSuccess
 
+    override fun supportSearch(): Boolean = true
+
+    override suspend fun search(keyword: String): List<StorageFile> {
+        val trimmed = keyword.trim()
+        if (trimmed.isEmpty()) {
+            return openDirectory(directory ?: getRootFile() ?: return emptyList(), refresh = false)
+        }
+        if (trimmed.length > MAX_SEARCH_KEYWORD_LENGTH) {
+            throw IllegalArgumentException("关键词过长（最多 $MAX_SEARCH_KEYWORD_LENGTH 字符）")
+        }
+
+        val dirPath = directory?.filePath()?.takeIf { it.isNotBlank() }
+        val items =
+            repository
+                .search(
+                    dir = dirPath,
+                    keyword = trimmed,
+                    recursion = true,
+                    category = SEARCH_CATEGORY_VIDEO,
+                ).getOrThrow()
+
+        return items.map { BaiduPanStorageFile(it, this) }
+    }
+
+    override fun hasMore(): Boolean = pagingHasMore
+
+    override suspend fun reset() {
+        val dirPath = directory?.filePath()?.takeIf { it.isNotBlank() }
+        resetPaging(dirPath?.let(::normalizePath))
+    }
+
+    override suspend fun loadMore(): Result<List<StorageFile>> {
+        val dirPath = directory?.filePath()?.takeIf { it.isNotBlank() }?.let(::normalizePath)
+            ?: "/"
+
+        if (pagingDir != dirPath) {
+            resetPaging(dirPath)
+        }
+        if (!pagingHasMore) {
+            state = PagedStorage.State.NO_MORE
+            return Result.success(emptyList())
+        }
+
+        state = PagedStorage.State.LOADING
+        return runCatching {
+            val response =
+                repository.xpanList(
+                    dir = dirPath,
+                    start = pagingStart,
+                    limit = DEFAULT_PAGE_LIMIT,
+                ).getOrThrow()
+
+            val items = response.list.orEmpty()
+            pagingStart += items.size
+            pagingHasMore = items.size >= DEFAULT_PAGE_LIMIT
+            items.map { BaiduPanStorageFile(it, this) }
+        }.onSuccess {
+            state = if (pagingHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
+        }.onFailure {
+            state = PagedStorage.State.ERROR
+        }
+    }
+
     override fun close() {
         // do nothing
     }
@@ -235,6 +341,13 @@ class BaiduPanStorage(
         return if (trimmed.startsWith("/")) trimmed else "/$trimmed"
     }
 
+    private fun resetPaging(dirPath: String?) {
+        pagingDir = dirPath
+        pagingStart = 0
+        pagingHasMore = true
+        state = PagedStorage.State.IDLE
+    }
+
     private fun withAccessToken(
         url: String,
         accessToken: String
@@ -257,6 +370,9 @@ class BaiduPanStorage(
 
     companion object {
         private const val HEADER_USER_AGENT = "User-Agent"
+        private const val DEFAULT_PAGE_LIMIT = 200
+        private const val MAX_SEARCH_KEYWORD_LENGTH = 30
+        private const val SEARCH_CATEGORY_VIDEO = 1
         private val BAIDU_PAN_HEADERS = mapOf(HEADER_USER_AGENT to "pan.baidu.com")
     }
 }

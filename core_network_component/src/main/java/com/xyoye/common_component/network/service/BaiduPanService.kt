@@ -59,6 +59,7 @@ interface BaiduPanService {
         @Query("dir") dir: String?,
         @Query("key") key: String,
         @Query("recursion") recursion: Int?,
+        @Query("category") category: Int?,
         @Query("web") web: Int?
     ): BaiduPanXpanSearchResponse
 

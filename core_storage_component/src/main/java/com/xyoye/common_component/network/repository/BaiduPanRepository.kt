@@ -16,6 +16,7 @@ import com.xyoye.data_component.data.baidupan.oauth.BaiduPanTokenResponse
 import com.xyoye.data_component.data.baidupan.xpan.BaiduPanErrnoResponse
 import com.xyoye.data_component.data.baidupan.xpan.BaiduPanFileMetasResponse
 import com.xyoye.data_component.data.baidupan.xpan.BaiduPanUinfoResponse
+import com.xyoye.data_component.data.baidupan.xpan.BaiduPanXpanFileItem
 import com.xyoye.data_component.data.baidupan.xpan.BaiduPanXpanListResponse
 import com.xyoye.data_component.data.baidupan.xpan.BaiduPanXpanSearchResponse
 import kotlinx.coroutines.Dispatchers
@@ -109,6 +110,7 @@ class BaiduPanRepository(
         dir: String?,
         key: String,
         recursion: Boolean = false,
+        category: Int? = null,
         web: Boolean = false
     ): Result<BaiduPanXpanSearchResponse> =
         requestXpan(reason = "xpanSearch") { accessToken ->
@@ -119,9 +121,25 @@ class BaiduPanRepository(
                 dir = dir,
                 key = key,
                 recursion = if (recursion) 1 else 0,
+                category = category,
                 web = if (web) 1 else 0,
             )
         }
+
+    suspend fun search(
+        dir: String?,
+        keyword: String,
+        recursion: Boolean = false,
+        category: Int? = null,
+        web: Boolean = false
+    ): Result<List<BaiduPanXpanFileItem>> =
+        xpanSearch(
+            dir = dir,
+            key = keyword,
+            recursion = recursion,
+            category = category,
+            web = web,
+        ).map { it.list.orEmpty() }
 
     suspend fun xpanFileMetas(
         fsIds: List<Long>,

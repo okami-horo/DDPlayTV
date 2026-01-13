@@ -219,9 +219,13 @@ class StorageFileAdapter(
         { data: StoragePagingItem ->
             val isDataEmpty = data.isDataEmpty
             val emptyTitle =
-                when (activity.directory?.filePath()) {
-                    BilibiliStorage.PATH_FOLLOW_LIVE_DIR -> "暂无直播"
-                    else -> "暂无历史记录"
+                if (activity.storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
+                    when (activity.directory?.filePath()) {
+                        BilibiliStorage.PATH_FOLLOW_LIVE_DIR -> "暂无直播"
+                        else -> "暂无历史记录"
+                    }
+                } else {
+                    R.string.text_empty_video.toResString(activity)
                 }
             val title =
                 when (data.state) {
