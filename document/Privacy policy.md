@@ -1,174 +1,129 @@
 # English
 
-# DDPlayTV Privacy Policy.
+# DDPlayTV Privacy Policy
 
-This privacy policy document is to provide information on what, how, and why personal data or information is collected, used, and disclosed, when this software is utilized, and the choices you have associated with that data. The objective of this policy document is to provide an open environment between developer and users of this software by openly stating what information the developer collects or not. By utilizing this software, it means you accept all the terms and conditions of the developer peculiar to only DDPlayTV software. This Policy applies to this software only, and the developer would not be held responsible for the content or privacy practices on any third party app not operated by the developer to which this software links or that links to this software, therefore it is advisable to read up the privacy policies of third party services that may be linked to this software.
+Last updated: 2026-01-14
 
+DDPlayTV is an open-source local media player. This document describes what this repository version does (and does not) collect when you use the app.
 
-## Permission and Access
+If you use third-party services (for example Bilibili, DandanPlay, Baidu Pan, Shooter subtitle service), your requests and data submitted to those services are governed by their own privacy policies.
 
-For better and enhanced utilization of DDPlayTV, the software is designed to request the provision of certain personally identifiable information and device permissions. These permissions need to be enabled for the software to work properly on the device on which the software's services are intended.
+## 1. Data We Store Locally
 
-The permissions are;
+DDPlayTV stores data on your device to provide features, for example:
+- App settings and preferences
+- Media library configurations
+- Playback history and related metadata
+- Login state (cookies/tokens) for third-party services you choose to log in to (e.g. Bilibili, Baidu Pan)
 
-- Storage
-- Telephone
+This local data is stored in the app’s private storage and is not uploaded automatically by DDPlayTV.
 
+## 2. Data Sent to Third-Party Services
 
-With the storage permission enabled, the app can;
+When you use online features, DDPlayTV may send data to third-party services, such as:
+- Network requests to obtain playback URLs, subtitles, danmaku, or remote storage file lists
+- Authentication cookies/tokens required by those services
 
-- modify or delete the contents of your SD card.
-- read the contents of your SD card.
+DDPlayTV does not operate a dedicated “account system” or a self-hosted analytics backend in this repository by default.
 
-With the telephone permission enabled, the app  can;
+## 3. Crash Reporting (Bugly)
 
-- read phone status and indentity.
+This project integrates Tencent Bugly for crash reporting. If Bugly is enabled/configured in the build, the app may send crash/ANR reports that can include:
+- Device model, OS version
+- App version and basic runtime information
+- Crash stack traces
 
+For the exact behavior, please refer to Bugly’s documentation and privacy policy.
 
-DDPlayTV has some other capabilities, which are functions the software can remotely effect on its own. They include;
+## 4. Permissions
 
+The app may request permissions to enable specific features. The declared permissions may include:
+- Network: `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`
+- Media access: `READ_MEDIA_VIDEO`, `READ_MEDIA_AUDIO`, `READ_MEDIA_VISUAL_USER_SELECTED` (Android 13+), and `READ_EXTERNAL_STORAGE` (Android 12 and below)
+- Storage compatibility: `WRITE_EXTERNAL_STORAGE` (legacy compatibility; behavior depends on Android version)
+- Install packages: `REQUEST_INSTALL_PACKAGES` (only used when you choose to install an APK from the app)
+- Background playback: `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`
+- Local network discovery: `CHANGE_WIFI_MULTICAST_STATE`
 
-- **have full network access**: The app is capable of creating network sockets and can use customized network protocols. This capability does not require the software to send data to the internet.
-- **view network connections**: This is the capability of the app to view information about network connections such as which networks exist and are connected.
-- **view Wi-Fi connections**: This capability allows the app to view information about wifi networking such as whether wifi is enabled and the name of connected wifi devices.
-- **prevent phone from sleeping**: Allows the app to prevent the phone from going to sleep.
+Some permissions may be disabled for TV adaptation builds (see the merged AndroidManifest at build time).
 
+## 5. Logs
 
-The information that may be collected with these permissions are stored locally on the device and the developer has access to that information. These permissions can be revoked when they are not needed, this is privy to only devices running Android 6.0 upward.
+If “developer logging” is enabled in the app, DDPlayTV can write local log files (for debugging) to `Download/DDPlayTV/logs/` by default. These logs are stored locally and are not uploaded automatically.
 
-## Types of Data Collected
+See `document/monitoring/logging-system.md` for the current log location and adb pull steps.
 
-### Personal Data
-The developer is able get all the videos that's available on the mobile phone where the app is installed. The developer has access to your registration details. When you send a feedback, the developer gets information about your phone model and Android version.
+## 6. Third-Party Libraries
 
-### Usage Data
-The developer doesn't collect usage data.
+See `document/Third_Party_Libraries.md` for the major third-party dependencies used by this project.
 
-### Installation Data
-The developer distributes this software via mediums where download counts are not maintained. Therefore, the developer has no knowledge or way to acquire knowledge about a user that has installed or is using this software.
+## 7. Contact
 
-## Crash reports
-
-DDPlayTV is stable and works fine but you may still experience a few errors and crashes. The information about these crashes is important to the developer so the issues can be fixed immediately and the software is running efficiently again. Although the developer is able to get reports when the app crashes, you can also speed up the process by informing the developer. If you encounter a bug during the use of this software, please open an [issue](https://github.com/okami-horo/DDPlayTV/issues/new?template=bug_report.md) on GitHub and it will be fixed in due time. When submitting a crash report, please provide a logcat to help the developer pinpoint the cause of the crash quickly and fix it accordingly.
-
-## Service Providers
-
-DDPlayTV depends on the services of third-party libraries to facilitate its utilization, and to perform service-related services, or, to assist in analyzing how the services of the software are used. These third parties may have access to your Personal Data but are used only to perform some tasks on the developer's behalf.
-
-Check out the third-party libraries [here](Third_Party_Libraries.md)
-
-
-## Transfer Of Data
-With these third-party libraries contained in the software, your information, including personal data, may be transferred to computers located outside of your state, province, country or other governmental jurisdiction where the data protection laws may differ than those from your jurisdiction. Your consent to this Privacy Policy followed by your submission of such information represents your agreement to that transfer.
-
-## Links To Other Sites
-
-DDPlayTV contains links to other services that are not directly operated by the developer. If you click on a third party library webpage or license URL, you will be directed to that third party's site. The developer has no control over and assumes no responsibility for the content, privacy policies or practices of any third party sites or services.
-
-
-## Children's policy
-
-This software is intended for general use and has no restrictions on utilization by children except otherwise stated in a law governing that locale.
-
-
-## Security Of Data
-
-The security of your data is important, but remember that no method of transmission over the Internet or method of electronic storage is 100% secure therefore the developer doesn't guarantee its absolute security.
-
-## Changes To This Privacy Policy
-
-The developer may update this policy as there will be further development of the software and these developments may not be consistent with this current policy. It is advisable to check this policy occasionally for any changes. Changes to this Privacy Policy are effective when they are made on this document.
-
-## Disclaimer
-
-DDPlayTV is developed in good faith and for general use. The developer will not be held accountable for how you decide to use this software and will not be liable for any losses and/or damages in connection with the use of the software.
-
-## Contact
-
-Contributions to this project are welcomed. Contributions, suggestions or bug reports and fixes can be made by opening an issue or creating pull requests. Read our contributor's guidelines [here]() to get started.
-If you have any questions about this Privacy Policy, or any other issue relating to DDPlayTV, please contact the developer [here](https://github.com/okami-horo/DDPlayTV) by opening an [issue](https://github.com/okami-horo/DDPlayTV/issues/new/choose).
+If you have questions or want to report an issue, please open an issue on GitHub:
+- https://github.com/okami-horo/DDPlayTV/issues/new/choose
 
 ---
 
 # 中文版
 
 # DDPlayTV 隐私政策
-本隐私政策文件旨在提供有关在使用时软件所收集、使用及披露的个人信息的内容、来源以及使用方式，使用时机，本文件的目的是通过公开开发人员收集或不收集的信息，在开发者和用户之间提供开放透明的环境。 通过使用该软件，这意味着您接受开发人员仅使用 DDPlayTV 软件所特有的所有条款和条件。 本政策仅适用于本软件，开发人员不对任何第三方应用程序的内容或隐私惯例负责，因此建议您阅读可能与此软件相关联的第三方服务的隐私政策。
 
-## 权限信息
+最后更新：2026-01-14
 
-为了更好的使用 DDPlayTV，软件会申请提供某些个人身份信息和设备权限。 需要启用这些权限才能使软件在软件服务所在的设备上正常工作。
+DDPlayTV 是一款开源的本地媒体播放器。本文用于说明**本仓库当前版本**在使用过程中会（或不会）收集/处理哪些数据。
 
-权限如下：
+如果你使用第三方服务（例如 Bilibili、弹弹 play、百度网盘、Shooter 字幕服务等），你提交给这些服务的请求与数据将受其各自隐私政策约束。
 
-- 存储权限
-- 手机状态身份权限
+## 1. 本地存储的数据
 
+为实现功能，DDPlayTV 会在你的设备本地存储一些数据，例如：
+- App 设置与偏好
+- 媒体库配置
+- 播放历史与相关元信息
+- 你主动登录的第三方服务登录态（Cookie/Token，例如 Bilibili、百度网盘）
 
-授予APP存储权限后，APP可以：
+上述数据默认仅保存在本地（应用私有目录/数据库/键值存储），DDPlayTV 不会自动上传。
 
-- 修改或删除您手机中存储的内容
-- 读取手机中存储的内容
+## 2. 可能发送给第三方服务的数据
 
-授予APP手机状态身份权限后，APP可以：
+当你使用联网功能时，DDPlayTV 可能会向第三方服务发送数据，例如：
+- 为获取播放链接/字幕/弹幕/远端存储列表等而发起的网络请求
+- 访问第三方服务所需的鉴权信息（Cookie/Token 等）
 
-- 读取手机状态和身份信息
+本仓库默认不提供自建账号系统，也不提供自建的埋点/分析后端。
 
+## 3. 崩溃上报（Bugly）
 
-DDPlayTV 还有一些其他权限，这些权限是软件自行申请获取的，它们包括：
+本项目集成了腾讯 Bugly 崩溃上报能力。若在构建时启用/配置了 Bugly，应用在发生崩溃/ANR 时可能会上报包含以下信息的报告：
+- 设备型号、系统版本
+- App 版本与基础运行态信息
+- 崩溃堆栈信息
 
-- **完整的网络访问权限**: 允许该应用创建网络套接字和使用自定义网络协议。浏览器和其他某些应用提供了向互联网发送数据的途径，因此应用无需该权限即可向互联网发送数据
-- **查看网络连接**: 允许应用程序查看有关网络连接的相关信息，例如存在和连接的网络
-- **查看Wi-Fi连接**: 允许应用程序查看有关WiFi网络的相关信息，例如是否启用了wifi以及连接的wifi设备的名称
-- **阻止手机休眠**: 允许应用阻止手机进入睡眠状态
+具体行为以 Bugly 的官方说明与隐私政策为准。
 
+## 4. 权限说明
 
-开发人员可以访问使用这些权限收集的信息本地存储在设备上的信息。 这些权限可以在不需要时撤消，这仅适用于运行Android 6.0及其以上版本的设备。
+应用会按功能需要声明/申请权限。当前工程声明的权限可能包括：
+- 网络：`INTERNET`、`ACCESS_NETWORK_STATE`、`ACCESS_WIFI_STATE`
+- 媒体读取：Android 13+ 的 `READ_MEDIA_VIDEO` / `READ_MEDIA_AUDIO` / `READ_MEDIA_VISUAL_USER_SELECTED`；Android 12 及以下的 `READ_EXTERNAL_STORAGE`
+- 存储兼容：`WRITE_EXTERNAL_STORAGE`（历史兼容；具体效果取决于系统版本与系统策略）
+- 安装 APK：`REQUEST_INSTALL_PACKAGES`（仅在你选择从应用内安装 APK 时使用）
+- 后台播放：`FOREGROUND_SERVICE`、`FOREGROUND_SERVICE_MEDIA_PLAYBACK`
+- 局域网发现：`CHANGE_WIFI_MULTICAST_STATE`
 
-## 数据收集
+部分权限可能会因 TV 适配而被禁用（以构建时合并后的 AndroidManifest 为准）。
 
-### 个人资料
-开发人员可以获取安装该应用程序的手机上可用的所有视频。 开发人员可以访问您的注册详细信息。 当您发送反馈时，开发人员会获取有关您的手机型号和Android版本的信息。
+## 5. 日志
 
-### 使用数据
-开发人员不收集使用数据。
+当你在应用内开启“开发者日志/调试日志写入”时，DDPlayTV 默认会把日志写入本地 `Download/DDPlayTV/logs/` 目录。日志默认仅本地保存，不会自动上传。
 
-### 应用安装数据
-开发者不保留用户App的来源信息。因此，开发者不会知道用户是从何处下载以及以何种方式使用这个软件。
+当前日志路径与 adb 拉取方式见：`document/monitoring/logging-system.md`。
 
-## 崩溃报告
-DDPlayTV 能正常稳定的运行，但你仍有可能遇到一些错误和崩溃。 有关这些崩溃的信息对开发人员很重要，这些信息可以帮助开发者解决问题并使软件重新正常运行。虽然开发人员能够在应用崩溃时获取报告，但您也可以通过反馈开发人员来加快流程。如果您在使用本软件时遇到错误，请在github上新增一个[issue](https://github.com/okami-horo/DDPlayTV/issues/new?template=bug_report.md)，开发人员将在合适的时间解决它。提交崩溃报告时，请提供一个logcat来帮助开发人员快速查明崩溃的原因并相应地进行修复。
+## 6. 第三方库
 
-## 服务供应者
+主要依赖清单见：`document/Third_Party_Libraries.md`（非穷举）。
 
-DDPlayTV 依赖于一些第三方库提供的服务，以此来增强功能或分析使用软件。仅但代表开发人员执行一些任务时，这些第三库可能访问您的个人数据。
+## 7. 联系方式
 
-查看完整的第三方库列表请点击 [这里](Third_Party_Libraries.md)。
-
-
-## 数据传输
-使用软件中包含的这些第三方库，您的信息（包括个人数据）可能会传输到位于其他政府管辖范围之外的计算机，这些计算机的数据保护法可能与您所在司法辖区的数据保护法不同。 您同意本隐私政策，然后您提交此类信息即表示您同意该数据的的传输。
-
-## 网站链接
-
-DDPlayTV 包含不由开发人员直接操作的其他服务的链接。 如果您单击第三方库网页或许可URL，您将被定向到该第三方的站点。 开发人员无法控制任何第三方网站或服务的内容，隐私政策和做法，也不承担任何责任。
-
-## 儿童政策
-
-该软件仅供一般使用，并且对儿童的使用没有限制，除非在管辖该地区的法律中另有说明。
-
-## 数据安全
-
-数据的安全性很重要，但请记住，通过Internet传输数据或电子存储数据的方式不是100％安全的，因此开发人员不保证其绝对的安全性。
-
-## 隐私政策的变更
-
-开发人员可能会在进一步开发软件时更新此政策，这些新的开发可能与当前的政策不一致。 建议偶尔检查此策略是否有任何更改。 本隐私政策的变更在本文档中生效。
-
-## 免责声明
-
-DDPlayTV 是出于善意和一般用途而开发的。 开发人员不会对您决定使用此软件的方式负责，也不对与使用该软件有关的任何损失和/或损害承担责任。
-
-## 联系
-
-欢迎对此项目提供贡献。贡献、建议或者反馈和修复问题可以通过打开一个新的issue或者创建pull requests.请阅读我们的[贡献者指南](Contributing.md)，以便开始使用。 如果您对本隐私政策或与 DDPlayTV 相关的任何其他问题有任何疑问，在[项目](https://github.com/okami-horo/DDPlayTV)打开新的[issue](https://github.com/okami-horo/DDPlayTV/issues/new/choose)。
+如有疑问或需要反馈问题，请在 GitHub 提交 issue：
+- https://github.com/okami-horo/DDPlayTV/issues/new/choose

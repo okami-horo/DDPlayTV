@@ -1,71 +1,47 @@
-# 第三库列表（Third Party Libraries） #
+# 第三方库清单（非穷举）
 
-## 1、播放器（Player） ##
+> 说明：本清单用于快速了解“项目主要依赖”。完整依赖以各模块 `build.gradle.kts` 与 Gradle 依赖树为准（例如 `./gradlew :app:dependencies`）。
 
-> 说明：历史版本使用过 IJKPlayer，现已从项目中移除且不再随包分发。
+## 1、播放器 / 渲染
 
-1）[Exoplayer](https://github.com/google/ExoPlayer)
-视频播放（video player）
+- AndroidX Media3（`androidx.media3:*`）：TYPE_EXO 播放内核、Session、Cast 等能力
+- libVLC（`org.videolan.android:libvlc-all`）：VLC 播放内核
+- libmpv（`mpv-android` 编译产物）：MPV 播放内核（见 `document/mpv-build-notes.md`）
+- DanmakuFlameMaster（`repository:danmaku`）：弹幕渲染库（AAR 封装）
+- VideoCache（`repository:video_cache`）：视频缓存相关库（AAR 封装）
+- PanelSwitchHelper（`repository:panel_switch`）：面板/键盘切换库（AAR 封装）
 
-2）[DanmakuFlameMaster](https://github.com/bilibili/DanmakuFlameMaster)
-弹幕播放（danmu player）
+## 2、网络 / 协议 / 解析
 
-## 2、网络（Network） ##
-1）[okhttp](https://github.com/square/okhttp)
+- OkHttp：HTTP 客户端
+- Retrofit：网络请求封装
+- Moshi：JSON 序列化/反序列化
+- Kotlin Coroutines：异步与并发
+- NanoHTTPD：本地 HTTP 服务/代理（例如播放代理）
+- SMBJ + dcerpc：SMB 协议访问
+- Apache Commons Net：FTP 等协议访问
+- jsoup：HTML/文本解析（部分站点能力）
 
-2）[okio](https://github.com/square/okio)
+## 3、数据 / 存储
 
-3）[retrofit](https://github.com/square/retrofit)
+- Room：SQLite ORM
+- MMKV：Key-Value 存储
+- SevenZip（`repository:seven_zip`）：7z 解压能力（AAR 封装）
+- Thunder（`repository:thunder`）：下载相关能力（AAR 封装）
 
-4）[jlibtorrent](https://github.com/frostwire/frostwire-jlibtorrent)
-种子下载（download torrent）
+## 4、UI / 基础设施
 
-5）[jsoup](https://github.com/jhy/jsoup)
-哔哩哔哩弹幕下载（download bilibili danmu file）
+- AndroidX（AppCompat/RecyclerView/Paging/Startup/Preference 等）
+- Material Components：Material UI 组件
+- Coil（含视频帧解码）：图片/封面加载
+- ARouter：组件化路由
+- ImmersionBar（`repository:immersion_bar`）：沉浸式状态栏（AAR 封装）
 
-6）[jcifs-ng](https://github.com/AgNO3/jcifs-ng)
-局域网连接（connect to local area network）
+## 5、质量 / 诊断
 
-## 3、工具（Tools） ##
+- Bugly：崩溃上报（若构建时配置相关参数）
+- LeakCanary：内存泄漏检测（debug）
 
-1）[Android-PickerView](https://github.com/Contrarywind/Android-PickerView)
-日期选择（date selection）
+## 6、已移除 / 不再使用（历史遗留说明）
 
-2）[AndroidUtilCode](https://github.com/Blankj/AndroidUtilCode)
-
-3）[banner](https://github.com/youth5201314/banner)
-首页轮播图（home page convenient banner）
-
-4）[BaseRecyclerViewAdapterHelper](https://github.com/CymChad/BaseRecyclerViewAdapterHelper)	
-recycler adapter
-
-5).[butterknife](https://github.com/JakeWharton/butterknife)
-视图绑定（Bind Android views ）
-
-6）[Fragmentation](https://github.com/YoKeyword/Fragmentation)
-fragment管理（manage Fragment）
-
-7）[glide](https://github.com/bumptech/glide)
-图片加载（image loading）
-
-8）[juniversalchardet](https://github.com/albfernandez/juniversalchardet)
-识别字幕文件编码格式（Identify subtitle file encoding）
-
-9）[RxJava](https://github.com/ReactiveX/RxJava)
-异步（asynchronous）
-
-10）[RxPermissions](https://github.com/tbruyelle/RxPermissions)
-权限检查（permission checker）
-
-11）[StatusBarUtil](https://github.com/laobie/StatusBarUtil)
-状态栏工具（statusbar tool）
-
-12）[Eventbus](https://github.com/greenrobot/EventBus)
-消息传递工具（message passing）
-
-## 4、其它（Other） ##
-1）[bugly](https://bugly.qq.com)
-崩溃信息收集（collect crash logs）
-
-2）[Sophix](https://help.aliyun.com/product/51340.html)
-热修复（hot fix）
+历史版本曾使用但当前仓库已不再依赖（以代码与 Gradle 为准）：IJKPlayer、RxJava、ButterKnife、Sophix 等。
