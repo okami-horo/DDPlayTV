@@ -184,3 +184,20 @@ data class Open115SearchResponse(
     val limit: Long? = null
 ) : Open115ProApiResponse
 
+@JsonClass(generateAdapter = true)
+data class Open115FolderInfoData(
+    @Json(name = "file_id")
+    val fileId: String? = null,
+    @Json(name = "parent_id")
+    val parentId: String? = null,
+    @Json(name = "file_name")
+    val fileName: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class Open115FolderInfoResponse(
+    override val state: Boolean = false,
+    override val code: Int = 0,
+    override val message: String? = null,
+    val data: Open115FolderInfoData? = null
+) : Open115ProApiResponse

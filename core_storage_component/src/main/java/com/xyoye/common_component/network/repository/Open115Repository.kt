@@ -10,8 +10,8 @@ import com.xyoye.common_component.storage.open115.auth.Open115TokenManager
 import com.xyoye.common_component.storage.open115.net.Open115Headers
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.data.open115.Open115DownUrlResponse
+import com.xyoye.data_component.data.open115.Open115FolderInfoResponse
 import com.xyoye.data_component.data.open115.Open115ListFilesResponse
-import com.xyoye.data_component.data.open115.Open115ProApiEnvelope
 import com.xyoye.data_component.data.open115.Open115ProApiResponse
 import com.xyoye.data_component.data.open115.Open115RefreshTokenResponse
 import com.xyoye.data_component.data.open115.Open115SearchResponse
@@ -100,7 +100,7 @@ class Open115Repository(
 
     suspend fun folderGetInfo(
         fileId: String
-    ): Result<Open115ProApiEnvelope> =
+    ): Result<Open115FolderInfoResponse> =
         requestProApi(
             reason = "folderGetInfo",
             extraInfo = "fileId=$fileId",
@@ -266,4 +266,3 @@ class Open115ProApiException(
         }
     }
 }
-

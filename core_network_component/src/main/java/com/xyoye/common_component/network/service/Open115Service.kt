@@ -2,8 +2,8 @@ package com.xyoye.common_component.network.service
 
 import com.xyoye.common_component.network.config.HeaderKey
 import com.xyoye.data_component.data.open115.Open115DownUrlResponse
+import com.xyoye.data_component.data.open115.Open115FolderInfoResponse
 import com.xyoye.data_component.data.open115.Open115ListFilesResponse
-import com.xyoye.data_component.data.open115.Open115ProApiEnvelope
 import com.xyoye.data_component.data.open115.Open115RefreshTokenResponse
 import com.xyoye.data_component.data.open115.Open115SearchResponse
 import com.xyoye.data_component.data.open115.Open115UserInfoResponse
@@ -66,6 +66,5 @@ interface Open115Service {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @Header(HeaderKey.AUTHORIZATION) authorization: String,
         @Query("file_id") fileId: String
-    ): Open115ProApiEnvelope
+    ): Open115FolderInfoResponse
 }
-

@@ -349,7 +349,8 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                 }
 
             val displayFiles =
-                if (storage.library.mediaType == MediaType.BAIDU_PAN_STORAGE) {
+                if (storage.library.mediaType == MediaType.BAIDU_PAN_STORAGE ||
+                    storage.library.mediaType == MediaType.OPEN_115_STORAGE) {
                     merged.sortedWith(StorageSortOption.comparator())
                 } else {
                     merged

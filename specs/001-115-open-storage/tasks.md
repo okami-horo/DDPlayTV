@@ -74,8 +74,8 @@ description: "Task list for 115 Open 存储库在线播放"
 
 **Independent Test**: 在已成功挂载 115 Open 的前提下：从列表点击一个视频文件 → 进入播放器 → 播放开始（出现画面或听到声音）；再切换 Media3/mpv/VLC 重复验证（参考 `specs/001-115-open-storage/quickstart.md` 3.2）
 
-- [ ] T020 [P] [US2] 新增 downurl 缓存 `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/play/Open115DownUrlCache.kt`（按 fid 缓存 url/userAgent/fileSize/updatedAt；短 TTL + forceRefresh 回退旧值，参考 `BaiduPanDlinkCache`）
-- [ ] T021 [US2] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/Open115Storage.kt` 实现播放链路：`createPlayUrl(...)` 调用 `Open115Repository.downUrl(pick_code)` 获取直链并注入 `User-Agent`；Media3 直接返回直链 + `getNetworkHeaders(file)`；mpv/VLC 使用 `LocalProxy.wrapIfNeeded(...)` + `HttpPlayServer`，并提供 Range 不支持时的“强制刷新 downurl” supplier，同时补齐 `openFile(file)` 用于字幕/弹幕下载（依赖 T020，满足 FR-005/FR-013）
+- [X] T020 [P] [US2] 新增 downurl 缓存 `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/play/Open115DownUrlCache.kt`（按 fid 缓存 url/userAgent/fileSize/updatedAt；短 TTL + forceRefresh 回退旧值，参考 `BaiduPanDlinkCache`）
+- [X] T021 [US2] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/Open115Storage.kt` 实现播放链路：`createPlayUrl(...)` 调用 `Open115Repository.downUrl(pick_code)` 获取直链并注入 `User-Agent`；Media3 直接返回直链 + `getNetworkHeaders(file)`；mpv/VLC 使用 `LocalProxy.wrapIfNeeded(...)` + `HttpPlayServer`，并提供 Range 不支持时的“强制刷新 downurl” supplier，同时补齐 `openFile(file)` 用于字幕/弹幕下载（依赖 T020，满足 FR-005/FR-013）
 
 **Checkpoint**: 此时 US2 可独立验收（点击视频即可播放，多内核一致可播）
 
@@ -87,9 +87,9 @@ description: "Task list for 115 Open 存储库在线播放"
 
 **Independent Test**: 使用包含多级目录和多文件类型的 115：验证能正常浏览层级、刷新列表、排序和搜索，并能稳定返回正确结果（参考 `specs/001-115-open-storage/quickstart.md` 3.3）
 
-- [ ] T022 [US3] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/Open115Storage.kt` 增加 `PagedStorage` 支持：目录列表按 `limit/offset` 逐页加载（默认 200），实现 `state/hasMore/reset/loadMore`，并在 `openDirectory(refresh=true)` 时重置 paging（对齐 FR-015 与 SC-002）
-- [ ] T023 [US3] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt` 的 `loadMore()` 合并逻辑中，将 `MediaType.OPEN_115_STORAGE` 纳入与 `MediaType.BAIDU_PAN_STORAGE` 同等的排序处理（`merged.sortedWith(StorageSortOption.comparator())`），确保加载更多后排序/目录优先仍稳定
-- [ ] T024 [US3] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/Open115Storage.kt` 实现 `supportSearch=true` 与 `search(keyword)`：调用 `Open115Repository.searchFiles(cid=<currentCid>, type=4, fc=2, limit=..., offset=0)`，仅返回可播放视频；关键词 trim/空值/长度上限处理与 `specs/001-115-open-storage/spec.md` Edge Cases 对齐
+- [X] T022 [US3] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/Open115Storage.kt` 增加 `PagedStorage` 支持：目录列表按 `limit/offset` 逐页加载（默认 200），实现 `state/hasMore/reset/loadMore`，并在 `openDirectory(refresh=true)` 时重置 paging（对齐 FR-015 与 SC-002）
+- [X] T023 [US3] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt` 的 `loadMore()` 合并逻辑中，将 `MediaType.OPEN_115_STORAGE` 纳入与 `MediaType.BAIDU_PAN_STORAGE` 同等的排序处理（`merged.sortedWith(StorageSortOption.comparator())`），确保加载更多后排序/目录优先仍稳定
+- [X] T024 [US3] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/Open115Storage.kt` 实现 `supportSearch=true` 与 `search(keyword)`：调用 `Open115Repository.searchFiles(cid=<currentCid>, type=4, fc=2, limit=..., offset=0)`，仅返回可播放视频；关键词 trim/空值/长度上限处理与 `specs/001-115-open-storage/spec.md` Edge Cases 对齐
 
 **Checkpoint**: 此时 US3 可独立验收（刷新/排序/搜索可用且不破坏浏览上下文）
 
