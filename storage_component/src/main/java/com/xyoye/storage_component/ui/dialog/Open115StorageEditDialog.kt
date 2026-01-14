@@ -11,6 +11,7 @@ import com.xyoye.common_component.network.repository.Open115ProApiException
 import com.xyoye.common_component.network.repository.Open115Repository
 import com.xyoye.common_component.storage.open115.auth.Open115AuthStore
 import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.data.open115.Open115UserInfoData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
@@ -60,6 +61,9 @@ class Open115StorageEditDialog(
         }
 
         binding.serverTestConnectTv.setOnClickListener { testConnection() }
+
+        binding.disconnectTv.isVisible = isEditMode && editLibrary.id > 0
+        binding.disconnectTv.setOnClickListener { showDisconnectConfirmDialog() }
 
         setPositiveListener { saveLibrary() }
         setNegativeListener { activity.finish() }
@@ -159,6 +163,45 @@ class Open115StorageEditDialog(
 
             activity.addStorage(editLibrary)
         }
+    }
+
+    private fun showDisconnectConfirmDialog() {
+        val libraryId = editLibrary.id
+        if (libraryId <= 0) return
+
+        CommonDialog
+            .Builder(activity)
+            .apply {
+                tips = "提示"
+                content =
+                    "确认断开连接并清除授权？\n\n将清除：115 Open 授权信息（access_token/refresh_token、账号信息缓存）。\n\n清除后需要重新填写 token 才能继续浏览/播放。"
+                addPositive(positiveText = "确认清除") { dialog ->
+                    dialog.dismiss()
+                    activity.lifecycleScope.launch {
+                        withContext(Dispatchers.IO) {
+                            val dao = DatabaseManager.instance.getMediaLibraryDao()
+                            val storedLibrary = dao.getById(libraryId)
+                            val storedKey = storedLibrary?.let { Open115AuthStore.storageKey(it) }
+                            val currentKey = Open115AuthStore.storageKey(editLibrary)
+
+                            if (!storedKey.isNullOrBlank()) {
+                                Open115AuthStore.clear(storedKey)
+                            }
+                            if (currentKey != storedKey) {
+                                Open115AuthStore.clear(currentKey)
+                            }
+                        }
+
+                        lastResolved = null
+                        binding.accessTokenEt.setText("")
+                        binding.refreshTokenEt.setText("")
+                        refreshTestStatus(null)
+                        ToastCenter.showOriginalToast("已清除授权")
+                    }
+                }
+                addNegative()
+            }.build()
+            .show()
     }
 
     private fun applyResolved(resolved: ResolvedAuth) {

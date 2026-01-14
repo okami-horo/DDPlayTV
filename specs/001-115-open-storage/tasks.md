@@ -101,10 +101,10 @@ description: "Task list for 115 Open 存储库在线播放"
 
 **Independent Test**: 模拟鉴权失效：access_token 过期但 refresh_token 可用时应自动恢复；refresh_token 也失效时应提示并引导更新 token；移除存储源后授权信息被清理（参考 `specs/001-115-open-storage/quickstart.md` 3.4）
 
-- [ ] T025 [US4] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt` 的 `handleLoginRequiredIfNeeded()` 增加 `Open115ReAuthRequiredException` 分支：提示“授权失效/需要更新 token”，并触发通用 loginRequiredLiveData（不在日志/Toast 输出完整 token）
-- [ ] T026 [US4] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragment.kt` 的 `showLoginDialog()` 增加 `MediaType.OPEN_115_STORAGE`：导航到 `RouteTable.Stream.StoragePlus`（携带 `mediaType` + `editData`），保存成功后触发 `triggerTvRefresh()` 重新加载当前目录
-- [ ] T027 [US4] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/Open115StorageEditDialog.kt` 增加“断开连接/清除授权”入口（包含二次确认）：调用 `Open115AuthStore.clear(storageKey)`，并刷新 UI 状态/允许重新填写 token（满足 FR-007/FR-016）
-- [ ] T028 [US4] 在 `local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaViewModel.kt` 删除媒体库时清理 115 Open 授权数据（调用 `Open115AuthStore.clear(Open115AuthStore.storageKey(data))`，满足 FR-007/FR-016）
+- [X] T025 [US4] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragmentViewModel.kt` 的 `handleLoginRequiredIfNeeded()` 增加 `Open115ReAuthRequiredException` 分支：提示“授权失效/需要更新 token”，并触发通用 loginRequiredLiveData（不在日志/Toast 输出完整 token）
+- [X] T026 [US4] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragment.kt` 的 `showLoginDialog()` 增加 `MediaType.OPEN_115_STORAGE`：导航到 `RouteTable.Stream.StoragePlus`（携带 `mediaType` + `editData`），保存成功后触发 `triggerTvRefresh()` 重新加载当前目录
+- [X] T027 [US4] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/Open115StorageEditDialog.kt` 增加“断开连接/清除授权”入口（包含二次确认）：调用 `Open115AuthStore.clear(storageKey)`，并刷新 UI 状态/允许重新填写 token（满足 FR-007/FR-016）
+- [X] T028 [US4] 在 `local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaViewModel.kt` 删除媒体库时清理 115 Open 授权数据（调用 `Open115AuthStore.clear(Open115AuthStore.storageKey(data))`，满足 FR-007/FR-016）
 
 **Checkpoint**: 此时 US4 可独立验收（自动刷新可用、失败可恢复、移除可清理）
 

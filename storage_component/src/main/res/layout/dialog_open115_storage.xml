@@ -146,6 +146,18 @@
                 android:textColor="@color/text_black"
                 android:textSize="14sp" />
         </FrameLayout>
+
+        <TextView
+            android:id="@+id/disconnect_tv"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/background_button_corner_red"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="断开连接/清除授权"
+            android:textColor="@color/text_white"
+            android:textSize="14sp"
+            android:visibility="gone" />
     </LinearLayout>
 </layout>
-

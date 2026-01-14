@@ -67,6 +67,7 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
 
     private fun initObserver() {
         viewModel.exitLiveData.observe(this) {
+            setResult(RESULT_OK)
             finish()
         }
 
