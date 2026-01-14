@@ -1,6 +1,8 @@
 package com.xyoye.common_component.network.repository
 
 import com.xyoye.common_component.config.BaiduPanOpenApiConfig
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.network.config.Api
 import com.xyoye.common_component.network.request.PassThroughException
@@ -36,7 +38,7 @@ class BaiduPanRepository(
     suspend fun oauthDeviceCode(
         scope: String = DEFAULT_SCOPE
     ): Result<BaiduPanDeviceCodeResponse> =
-        requestOAuth(reason = "oauthDeviceCode") {
+        requestOAuth(reason = "oauthDeviceCode", extraInfo = "scope=$scope") {
             ensureConfigured()
             Retrofit.baiduPanService.oauthDeviceCode(
                 baseUrl = Api.BAIDU_OAUTH,
@@ -49,7 +51,10 @@ class BaiduPanRepository(
     suspend fun oauthTokenByDeviceCode(
         deviceCode: String
     ): Result<BaiduPanTokenResponse> =
-        requestOAuth(reason = "oauthTokenByDeviceCode") {
+        requestOAuth(
+            reason = "oauthTokenByDeviceCode",
+            extraInfo = "deviceCodeLength=${deviceCode.length}",
+        ) {
             ensureConfigured()
             Retrofit.baiduPanService.oauthToken(
                 baseUrl = Api.BAIDU_OAUTH,
@@ -64,7 +69,7 @@ class BaiduPanRepository(
     suspend fun xpanUinfo(
         vipVersion: String? = "v2"
     ): Result<BaiduPanUinfoResponse> =
-        requestXpan(reason = "xpanUinfo") { accessToken ->
+        requestXpan(reason = "xpanUinfo", extraInfo = "vipVersion=$vipVersion") { accessToken ->
             Retrofit.baiduPanService.xpanUinfo(
                 baseUrl = Api.BAIDU_PAN,
                 method = "uinfo",
@@ -92,7 +97,10 @@ class BaiduPanRepository(
         desc: Boolean? = null,
         web: Boolean = false
     ): Result<BaiduPanXpanListResponse> =
-        requestXpan(reason = "xpanList") { accessToken ->
+        requestXpan(
+            reason = "xpanList",
+            extraInfo = "dir=$dir start=${start ?: -1} limit=${limit ?: -1} order=$order desc=${desc ?: false} web=$web",
+        ) { accessToken ->
             Retrofit.baiduPanService.xpanFileList(
                 baseUrl = Api.BAIDU_PAN,
                 method = "list",
@@ -113,7 +121,10 @@ class BaiduPanRepository(
         category: Int? = null,
         web: Boolean = false
     ): Result<BaiduPanXpanSearchResponse> =
-        requestXpan(reason = "xpanSearch") { accessToken ->
+        requestXpan(
+            reason = "xpanSearch",
+            extraInfo = "dir=$dir keyLength=${key.length} recursion=$recursion category=${category ?: -1} web=$web",
+        ) { accessToken ->
             Retrofit.baiduPanService.xpanFileSearch(
                 baseUrl = Api.BAIDU_PAN,
                 method = "search",
@@ -147,7 +158,10 @@ class BaiduPanRepository(
         needMedia: Boolean = false,
         detail: Boolean = false
     ): Result<BaiduPanFileMetasResponse> =
-        requestXpan(reason = "xpanFileMetas") { accessToken ->
+        requestXpan(
+            reason = "xpanFileMetas",
+            extraInfo = "fsIds=${fsIds.size} dlink=$dlink needMedia=$needMedia detail=$detail",
+        ) { accessToken ->
             Retrofit.baiduPanService.xpanFileMetas(
                 baseUrl = Api.BAIDU_PAN,
                 method = "filemetas",
@@ -161,6 +175,7 @@ class BaiduPanRepository(
 
     private suspend inline fun <reified T> requestOAuth(
         reason: String,
+        extraInfo: String = "",
         crossinline call: suspend () -> Response<ResponseBody>
     ): Result<T> =
         withContext(Dispatchers.IO) {
@@ -179,17 +194,29 @@ class BaiduPanRepository(
                 JsonHelper.parseJson<T>(payload)
                     ?: throw IllegalStateException("Unexpected oauth payload: code=${response.code()} payload=$payload")
             }.onFailure { t ->
+                LogFacade.e(
+                    LogModule.STORAGE,
+                    LOG_TAG,
+                    "oauth request failed: $reason",
+                    mapOf(
+                        "storageKey" to storageKey,
+                        "extraInfo" to extraInfo,
+                        "exception" to t::class.java.simpleName,
+                    ),
+                    t,
+                )
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     t,
                     "BaiduPanRepository",
                     reason,
-                    "storageKey=$storageKey",
+                    "storageKey=$storageKey $extraInfo",
                 )
             }
         }
 
     private suspend fun <T : BaiduPanErrnoResponse> requestXpan(
         reason: String,
+        extraInfo: String = "",
         call: suspend (accessToken: String) -> T
     ): Result<T> =
         withContext(Dispatchers.IO) {
@@ -208,13 +235,35 @@ class BaiduPanRepository(
                     }
 
                     if (!authRetried && response.errno in AUTH_ERRNOS) {
+                        LogFacade.w(
+                            LogModule.STORAGE,
+                            LOG_TAG,
+                            "xpan auth errno=${response.errno}, refresh access token",
+                            mapOf(
+                                "reason" to reason,
+                                "storageKey" to storageKey,
+                                "extraInfo" to extraInfo,
+                            ),
+                        )
                         authRetried = true
                         accessToken = tokenManager.refreshAccessToken(forceRefresh = true)
                         continue
                     }
 
                     if (response.errno in RATE_LIMIT_ERRNOS && rateRetried < MAX_RATE_RETRIES) {
-                        delay(rateDelayMs(rateRetried))
+                        val delayMs = rateDelayMs(rateRetried)
+                        LogFacade.w(
+                            LogModule.STORAGE,
+                            LOG_TAG,
+                            "xpan rate limited errno=${response.errno}, retry after ${delayMs}ms",
+                            mapOf(
+                                "reason" to reason,
+                                "storageKey" to storageKey,
+                                "extraInfo" to extraInfo,
+                                "retry" to rateRetried.toString(),
+                            ),
+                        )
+                        delay(delayMs)
                         rateRetried++
                         continue
                     }
@@ -224,11 +273,22 @@ class BaiduPanRepository(
 
                 Result.success(success ?: throw IllegalStateException("Unreachable"))
             } catch (t: Throwable) {
+                LogFacade.e(
+                    LogModule.STORAGE,
+                    LOG_TAG,
+                    "xpan request failed: $reason",
+                    mapOf(
+                        "storageKey" to storageKey,
+                        "extraInfo" to extraInfo,
+                        "exception" to t::class.java.simpleName,
+                    ),
+                    t,
+                )
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     t,
                     "BaiduPanRepository",
                     reason,
-                    "storageKey=$storageKey",
+                    "storageKey=$storageKey $extraInfo",
                 )
                 Result.failure(t)
             }
@@ -253,6 +313,7 @@ class BaiduPanRepository(
     }
 
     companion object {
+        private const val LOG_TAG = "baidu_pan_repo"
         private const val DEFAULT_SCOPE = "basic,netdisk"
 
         private val AUTH_ERRNOS: Set<Int> = setOf(-6, 31045)

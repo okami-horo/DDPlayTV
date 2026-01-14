@@ -1,6 +1,8 @@
 package com.xyoye.common_component.storage.impl
 
 import com.xyoye.common_component.config.PlayerConfig
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.repository.BaiduPanRepository
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.storage.AuthStorage
@@ -15,6 +17,7 @@ import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.BaiduPanStorageFile
 import com.xyoye.common_component.storage.file.payloadAs
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.baidupan.xpan.BaiduPanXpanFileItem
@@ -51,11 +54,30 @@ class BaiduPanStorage(
 
     override suspend fun getRootFile(): StorageFile? {
         if (!repository.isAuthorized()) {
+            LogFacade.i(
+                LogModule.STORAGE,
+                LOG_TAG,
+                "getRootFile requires authorization",
+                mapOf(
+                    "storageId" to library.id.toString(),
+                    "storageKey" to storageKey,
+                ),
+            )
             throw BaiduPanReAuthRequiredException("请先扫码授权")
         }
 
         // 校验授权态 + 刷新用户信息（便于后续 UI 展示/诊断）
-        repository.xpanUinfo().getOrThrow()
+        runCatching {
+            repository.xpanUinfo().getOrThrow()
+        }.onFailure { t ->
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                t,
+                "BaiduPanStorage",
+                "getRootFile",
+                "storageId=${library.id} storageKey=$storageKey",
+            )
+            throw t
+        }
 
         return BaiduPanStorageFile.root(this)
     }
@@ -141,13 +163,24 @@ class BaiduPanStorage(
             return null
         }
 
-        val upstream = resolveUpstream(file, forceRefresh = false)
-        return ResourceRepository
-            .getResourceResponseBody(
-                url = upstream.url,
-                headers = getNetworkHeaders(file).orEmpty(),
-            ).getOrNull()
-            ?.byteStream()
+        return runCatching {
+            val upstream = resolveUpstream(file, forceRefresh = false)
+            ResourceRepository
+                .getResourceResponseBody(
+                    url = upstream.url,
+                    headers = getNetworkHeaders(file).orEmpty(),
+                ).getOrNull()
+                ?.byteStream()
+        }.getOrElse { t ->
+            val fsId = file.payloadAs<BaiduPanXpanFileItem>()?.fsId ?: -1L
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                t,
+                "BaiduPanStorage",
+                "openFile",
+                "storageId=${library.id} storageKey=$storageKey filePath=${runCatching { file.filePath() }.getOrNull()} fsId=$fsId",
+            )
+            throw t
+        }
     }
 
     override suspend fun createPlayUrl(file: StorageFile): String? =
@@ -164,45 +197,77 @@ class BaiduPanStorage(
         file: StorageFile,
         profile: PlaybackProfile
     ): String? {
-        if (!file.isVideoFile()) {
-            throw IllegalStateException("该文件不是视频，无法播放")
-        }
-
-        val upstream = resolveUpstream(file, forceRefresh = false)
-
         val playerType = profile.playerType
-        if (playerType != PlayerType.TYPE_MPV_PLAYER && playerType != PlayerType.TYPE_VLC_PLAYER) {
-            return upstream.url
-        }
-
-        val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
-
-        val (mode, interval) =
-            when (playerType) {
-                PlayerType.TYPE_MPV_PLAYER ->
-                    PlayerConfig.getMpvLocalProxyMode() to PlayerConfig.getMpvProxyRangeMinIntervalMs().toLong()
-                PlayerType.TYPE_VLC_PLAYER ->
-                    PlayerConfig.getVlcLocalProxyMode() to PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong()
-                else -> return upstream.url
+        return runCatching {
+            if (!file.isVideoFile()) {
+                throw IllegalStateException("该文件不是视频，无法播放")
             }
 
-        return LocalProxy.wrapIfNeeded(
-            playerType = playerType,
-            modeValue = mode,
-            upstreamUrl = upstream.url,
-            upstreamHeaders = getNetworkHeaders(file),
-            contentLength = upstream.contentLength,
-            prePlayRangeMinIntervalMs = interval,
-            fileName = fileName,
-            autoEnabled = true,
-            onRangeUnsupported = buildRangeUnsupportedRefreshSupplier(file),
-        )
+            val upstream = resolveUpstream(file, forceRefresh = false)
+
+            if (playerType != PlayerType.TYPE_MPV_PLAYER && playerType != PlayerType.TYPE_VLC_PLAYER) {
+                return@runCatching upstream.url
+            }
+
+            val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
+
+            val (mode, interval) =
+                when (playerType) {
+                    PlayerType.TYPE_MPV_PLAYER ->
+                        PlayerConfig.getMpvLocalProxyMode() to PlayerConfig.getMpvProxyRangeMinIntervalMs().toLong()
+                    PlayerType.TYPE_VLC_PLAYER ->
+                        PlayerConfig.getVlcLocalProxyMode() to PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong()
+                    else -> return@runCatching upstream.url
+                }
+
+            LogFacade.d(
+                LogModule.STORAGE,
+                LOG_TAG,
+                "createPlayUrl use local proxy",
+                mapOf(
+                    "storageId" to library.id.toString(),
+                    "playerType" to playerType.name,
+                    "mode" to mode.toString(),
+                    "contentLength" to upstream.contentLength.toString(),
+                ),
+            )
+
+            LocalProxy.wrapIfNeeded(
+                playerType = playerType,
+                modeValue = mode,
+                upstreamUrl = upstream.url,
+                upstreamHeaders = getNetworkHeaders(file),
+                contentLength = upstream.contentLength,
+                prePlayRangeMinIntervalMs = interval,
+                fileName = fileName,
+                autoEnabled = true,
+                onRangeUnsupported = buildRangeUnsupportedRefreshSupplier(file),
+            )
+        }.getOrElse { t ->
+            val fsId = file.payloadAs<BaiduPanXpanFileItem>()?.fsId ?: -1L
+            ErrorReportHelper.postCatchedExceptionWithContext(
+                t,
+                "BaiduPanStorage",
+                "createPlayUrl",
+                "storageId=${library.id} storageKey=$storageKey filePath=${runCatching { file.filePath() }.getOrNull()} fsId=$fsId playerType=$playerType",
+            )
+            throw t
+        }
     }
 
     private fun buildRangeUnsupportedRefreshSupplier(file: StorageFile): () -> HttpPlayServer.UpstreamSource? =
         {
             synchronized(rangeUnsupportedRefreshLock) {
                 runCatching {
+                    LogFacade.w(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "upstream range unsupported, refresh dlink",
+                        mapOf(
+                            "storageId" to library.id.toString(),
+                            "storageKey" to storageKey,
+                        ),
+                    )
                     runBlocking {
                         val upstream = resolveUpstream(file, forceRefresh = true)
                         HttpPlayServer.UpstreamSource(
@@ -210,6 +275,14 @@ class BaiduPanStorage(
                             contentLength = upstream.contentLength,
                         )
                     }
+                }.onFailure { t ->
+                    val fsId = file.payloadAs<BaiduPanXpanFileItem>()?.fsId ?: -1L
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        t,
+                        "BaiduPanStorage",
+                        "rangeUnsupportedRefresh",
+                        "storageId=${library.id} storageKey=$storageKey filePath=${runCatching { file.filePath() }.getOrNull()} fsId=$fsId",
+                    )
                 }.getOrNull()
             }
         }
@@ -310,6 +383,18 @@ class BaiduPanStorage(
             throw IllegalStateException("无效文件ID")
         }
 
+        if (forceRefresh) {
+            LogFacade.i(
+                LogModule.STORAGE,
+                LOG_TAG,
+                "resolveUpstream force refresh",
+                mapOf(
+                    "storageId" to library.id.toString(),
+                    "fsId" to payload.fsId.toString(),
+                ),
+            )
+        }
+
         val cachedLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
 
         val entry =
@@ -377,6 +462,7 @@ class BaiduPanStorage(
     }
 
     companion object {
+        private const val LOG_TAG = "baidu_pan_storage"
         private const val HEADER_USER_AGENT = "User-Agent"
         private const val DEFAULT_PAGE_LIMIT = 200
         private const val MAX_SEARCH_KEYWORD_LENGTH = 30

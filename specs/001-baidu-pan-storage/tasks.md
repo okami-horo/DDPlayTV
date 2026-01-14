@@ -108,10 +108,10 @@ description: "Task list for 百度网盘存储库在线播放"
 
 **Purpose**: 跨用户故事的稳定性、可观测性与发布前门禁
 
-- [ ] T040 [P] 为关键链路补充日志与错误上下文（优先在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt` 与 `core_storage_component/src/main/java/com/xyoye/common_component/network/repository/BaiduPanRepository.kt` 使用 `LogFacade`/`ErrorReportHelper`）
-- [ ] T041 在仓库根目录运行 `./gradlew verifyModuleDependencies` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
-- [ ] T042 在仓库根目录运行 `./gradlew lint` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
-- [ ] T043 在仓库根目录运行 `./gradlew assembleRelease` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
+- [X] T040 [P] 为关键链路补充日志与错误上下文（优先在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BaiduPanStorage.kt` 与 `core_storage_component/src/main/java/com/xyoye/common_component/network/repository/BaiduPanRepository.kt` 使用 `LogFacade`/`ErrorReportHelper`）
+- [X] T041 在仓库根目录运行 `./gradlew verifyModuleDependencies` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
+- [X] T042 在仓库根目录运行 `./gradlew lint` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
+- [X] T043 在仓库根目录运行 `./gradlew assembleRelease` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
 - [ ] T044 最终对照 `specs/001-baidu-pan-storage/quickstart.md` 走通 P1-P3 用例并在 `specs/001-baidu-pan-storage/checklists/` 留存验收记录（文字/截图均可）
 
 ---
