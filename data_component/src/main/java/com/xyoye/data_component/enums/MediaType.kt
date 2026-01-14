@@ -84,6 +84,12 @@ enum class MediaType(
         cover = R.drawable.ic_baidu_pan_storage,
     ),
 
+    OPEN_115_STORAGE(
+        "open_115_storage",
+        "115 Open 存储库",
+        cover = R.drawable.ic_open_115_storage,
+    ),
+
     BILIBILI_STORAGE(
         "bilibili_storage",
         "Bilibili媒体库",
@@ -104,6 +110,7 @@ enum class MediaType(
                 "external_storage" -> EXTERNAL_STORAGE
                 "alist_storage" -> ALSIT_STORAGE
                 "baidu_pan_storage" -> BAIDU_PAN_STORAGE
+                "open_115_storage" -> OPEN_115_STORAGE
                 "bilibili_storage" -> BILIBILI_STORAGE
                 else -> OTHER_STORAGE
             }

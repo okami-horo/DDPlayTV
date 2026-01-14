@@ -118,6 +118,20 @@ data class MediaLibraryEntity(
                     }
                 }
 
+                MediaType.OPEN_115_STORAGE -> {
+                    val uid =
+                        url
+                            .substringAfter("115open://uid/", missingDelimiterValue = "")
+                            .trim()
+                            .trimStart('/')
+                            .trimEnd('/')
+                    if (uid.isNotEmpty()) {
+                        "115 Open（uid=$uid）"
+                    } else {
+                        "115 Open"
+                    }
+                }
+
                 MediaType.STREAM_LINK,
                 MediaType.MAGNET_LINK,
                 MediaType.REMOTE_STORAGE,

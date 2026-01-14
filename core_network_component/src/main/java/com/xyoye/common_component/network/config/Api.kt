@@ -23,6 +23,12 @@ object Api {
     // 百度网盘 OpenAPI（xpan 等）
     const val BAIDU_PAN = "https://pan.baidu.com/"
 
+    // 115 Open API（proapi）
+    const val OPEN_115_PRO_API = "https://proapi.115.com/"
+
+    // 115 Open OAuth/刷新（passportapi）
+    const val OPEN_115_PASSPORT_API = "https://passportapi.115.com/"
+
     // Thunder字幕
     const val THUNDER_SUB = "http://sub.xmp.sandai.net:8000/subxl/"
 
