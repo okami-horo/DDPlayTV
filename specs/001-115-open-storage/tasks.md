@@ -37,13 +37,13 @@ description: "Task list for 115 Open 存储库在线播放"
 
 **Purpose**: 115 Open API/鉴权/授权态持久化的通用基础设施；在完成前不应开始任何用户故事 UI/浏览/播放开发
 
-- [ ] T005 [P] 新增 115 Open API Moshi 模型 `data_component/src/main/java/com/xyoye/data_component/data/open115/Open115Models.kt`（按 `specs/001-115-open-storage/contracts/115-open-openapi.yaml` 覆盖 ProApiEnvelope/PassportEnvelope/UserInfo/ListFiles/Search/DownUrl/RefreshToken）
-- [ ] T006 [P] 新增 Retrofit Service `core_network_component/src/main/java/com/xyoye/common_component/network/service/Open115Service.kt` 并在 `core_network_component/src/main/java/com/xyoye/common_component/network/Retrofit.kt` 注册 `open115Service`（使用 `HeaderKey.BASE_URL` 动态切域；proapi Bearer；refreshToken/downurl 用 form-url-encoded）
-- [ ] T007 [P] 新增 115 Open Header 约定 `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/net/Open115Headers.kt`（OpenList 风格 UA 常量、`Authorization: Bearer` 拼装、token 脱敏工具）
-- [ ] T008 [P] 新增授权态持久化 `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/auth/Open115AuthStore.kt`（storageKey 规则按 `data-model.md`：`${mediaType.value}:${url.trim().removeSuffix("/")}`；读写 access/refresh/expiresAt/uid/userName/avatar；清理）
-- [ ] T009 [P] 新增可识别异常 `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/auth/Open115AuthExceptions.kt`（`Open115ReAuthRequiredException`/`Open115NotConfiguredException` 实现 `PassThroughException`，错误文案不含 token）
-- [ ] T010 实现 token 管理器 `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/auth/Open115TokenManager.kt`（按 storageKey 互斥刷新、refresh_token 旋转原子写入、到期前刷新阈值；proapi `code==99|401xxxx` 触发刷新并重试一次；刷新失败抛 `Open115ReAuthRequiredException`）
-- [ ] T011 实现 115 Open 仓库层 `core_storage_component/src/main/java/com/xyoye/common_component/network/repository/Open115Repository.kt`（统一封装：鉴权注入、ProApiEnvelope state/code 错误映射、自动刷新 + 重试一次语义；提供 `userInfo/listFiles/search/downUrl/refreshToken/folderGetInfo` 方法）
+- [X] T005 [P] 新增 115 Open API Moshi 模型 `data_component/src/main/java/com/xyoye/data_component/data/open115/Open115Models.kt`（按 `specs/001-115-open-storage/contracts/115-open-openapi.yaml` 覆盖 ProApiEnvelope/PassportEnvelope/UserInfo/ListFiles/Search/DownUrl/RefreshToken）
+- [X] T006 [P] 新增 Retrofit Service `core_network_component/src/main/java/com/xyoye/common_component/network/service/Open115Service.kt` 并在 `core_network_component/src/main/java/com/xyoye/common_component/network/Retrofit.kt` 注册 `open115Service`（使用 `HeaderKey.BASE_URL` 动态切域；proapi Bearer；refreshToken/downurl 用 form-url-encoded）
+- [X] T007 [P] 新增 115 Open Header 约定 `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/net/Open115Headers.kt`（OpenList 风格 UA 常量、`Authorization: Bearer` 拼装、token 脱敏工具）
+- [X] T008 [P] 新增授权态持久化 `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/auth/Open115AuthStore.kt`（storageKey 规则按 `data-model.md`：`${mediaType.value}:${url.trim().removeSuffix("/")}`；读写 access/refresh/expiresAt/uid/userName/avatar；清理）
+- [X] T009 [P] 新增可识别异常 `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/auth/Open115AuthExceptions.kt`（`Open115ReAuthRequiredException`/`Open115NotConfiguredException` 实现 `PassThroughException`，错误文案不含 token）
+- [X] T010 实现 token 管理器 `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/auth/Open115TokenManager.kt`（按 storageKey 互斥刷新、refresh_token 旋转原子写入、到期前刷新阈值；proapi `code==99|401xxxx` 触发刷新并重试一次；刷新失败抛 `Open115ReAuthRequiredException`）
+- [X] T011 实现 115 Open 仓库层 `core_storage_component/src/main/java/com/xyoye/common_component/network/repository/Open115Repository.kt`（统一封装：鉴权注入、ProApiEnvelope state/code 错误映射、自动刷新 + 重试一次语义；提供 `userInfo/listFiles/search/downUrl/refreshToken/folderGetInfo` 方法）
 
 **Checkpoint**: Foundation ready（可开始 US1/US2/US3/US4 的并行开发）
 
