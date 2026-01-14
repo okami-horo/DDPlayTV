@@ -1,4 +1,4 @@
-# 项目上下文（DanDanPlayForAndroid）
+# 项目上下文（DDPlayTV）
 
 ## 项目目标（Purpose）
 

@@ -2,8 +2,8 @@
 
 本文档从 `spec.md` 的实体与需求出发，整理“需要持久化/需要在内存中流转”的核心数据结构、字段约束与状态机。实现时如需对照官方字段与调用顺序，可结合：
 
-- `spec.md`：`/home/tzw/workspace/DanDanPlayForAndroid/specs/001-baidu-pan-storage/spec.md`
-- Baidu OpenAPI 摘要：`/home/tzw/workspace/DanDanPlayForAndroid/specs/001-baidu-pan-storage/baidu-pan-openapi.md`
+- `spec.md`：`spec.md`
+- Baidu OpenAPI 摘要：`baidu-pan-openapi.md`
 
 ## 1. 实体总览
 
@@ -137,4 +137,3 @@ Refreshing
 缓存策略建议：
 
 - `createPlayUrl` 时优先使用未过期缓存；失败时强制刷新并回退到旧值（参考 `AlistStorage` 的“优先新直链，失败回退旧直链”策略）。
-

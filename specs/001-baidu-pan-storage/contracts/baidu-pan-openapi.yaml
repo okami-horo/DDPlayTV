@@ -4,10 +4,10 @@ info:
   version: 0.1.0
   description: |
     说明：
-    - 本文件是为 DanDanPlayForAndroid 的“百度网盘存储源：浏览 + 在线播放（dlink）”整理的 OpenAPI 子集契约，便于后续实现与联调。
+    - 本文件是为 DDPlayTV 的“百度网盘存储源：浏览 + 在线播放（dlink）”整理的 OpenAPI 子集契约，便于后续实现与联调。
     - 仅覆盖 MVP 必需的授权、用户信息、目录列表、搜索、filemetas（dlink）等接口。
     - 关键字段与调用顺序的中文说明见：
-      - /home/tzw/workspace/DanDanPlayForAndroid/specs/001-baidu-pan-storage/baidu-pan-openapi.md
+      - specs/001-baidu-pan-storage/baidu-pan-openapi.md
     - 文档原文来源（百度网盘开放平台）：
       - 设备码模式授权：https://pan.baidu.com/union/doc/fl1x114ti
       - 授权码模式授权：https://pan.baidu.com/union/doc/al0rwqzzl
@@ -455,4 +455,3 @@ components:
           type: integer
           description: seconds（needmedia=1）
       required: [fs_id]
-

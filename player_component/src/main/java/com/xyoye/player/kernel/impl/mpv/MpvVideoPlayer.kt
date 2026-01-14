@@ -119,7 +119,7 @@ class MpvVideoPlayer(
                 shouldInjectUserAgent ->
                     runCatching {
                         Util.getUserAgent(appContext, appContext.applicationInfo.name ?: appContext.packageName)
-                    }.getOrElse { "DanDanPlayForAndroid" }
+                    }.getOrElse { "DDPlayTV" }
                 else -> null
             }
 

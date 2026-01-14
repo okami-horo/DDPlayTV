@@ -56,7 +56,7 @@ bilibili-API-collect 明确记录了该接口的请求方式/参数/响应字段
 
 > 说明：同文档中还记录了 `xfetter/GetWebList`（直接返回正在直播列表），但本分析选择“对齐 PiliPlus”，因此以 `user/following` 作为实现基准。
 
-## 当前工程能力现状（DanDanPlayForAndroid）
+## 当前工程能力现状（DDPlayTV）
 
 ### 1）Bilibili 媒体库目录结构
 

@@ -1,13 +1,13 @@
 # English
 
-# DanDanPlayForAndroid Privacy Policy.
+# DDPlayTV Privacy Policy.
 
-This privacy policy document is to provide information on what, how, and why personal data or information is collected, used, and disclosed, when this software is utilized, and the choices you have associated with that data. The objective of this policy document is to provide an open environment between developer and users of this software by openly stating what information the developer collects or not. By utilizing this software, it means you accept all the terms and conditions of the developer peculiar to only DanDanPlayForAndroid software. This Policy applies to this software only, and the developer would not be held responsible for the content or privacy practices on any third party app not operated by the developer to which this software links or that links to this software, therefore it is advisable to read up the privacy policies of third party services that may be linked to this software.
+This privacy policy document is to provide information on what, how, and why personal data or information is collected, used, and disclosed, when this software is utilized, and the choices you have associated with that data. The objective of this policy document is to provide an open environment between developer and users of this software by openly stating what information the developer collects or not. By utilizing this software, it means you accept all the terms and conditions of the developer peculiar to only DDPlayTV software. This Policy applies to this software only, and the developer would not be held responsible for the content or privacy practices on any third party app not operated by the developer to which this software links or that links to this software, therefore it is advisable to read up the privacy policies of third party services that may be linked to this software.
 
 
 ## Permission and Access
 
-For better and enhanced utilization of DanDanPlayForAndroid, the software is designed to request the provision of certain personally identifiable information and device permissions. These permissions need to be enabled for the software to work properly on the device on which the software's services are intended.
+For better and enhanced utilization of DDPlayTV, the software is designed to request the provision of certain personally identifiable information and device permissions. These permissions need to be enabled for the software to work properly on the device on which the software's services are intended.
 
 The permissions are;
 
@@ -25,7 +25,7 @@ With the telephone permission enabled, the app  can;
 - read phone status and indentity.
 
 
-DanDanPlayForAndroid has some other capabilities, which are functions the software can remotely effect on its own. They include;
+DDPlayTV has some other capabilities, which are functions the software can remotely effect on its own. They include;
 
 
 - **have full network access**: The app is capable of creating network sockets and can use customized network protocols. This capability does not require the software to send data to the internet.
@@ -49,13 +49,13 @@ The developer distributes this software via mediums where download counts are no
 
 ## Crash reports
 
-DanDanPlayForAndroid is stable and works fine but you may still experience a few errors and crashes. The information about these crashes is important to the developer so the issues can be fixed immediately and the software is running efficiently again. Although the developer is able to get reports when the app crashes, you can also speed up the process by informing the developer. If you encounter a bug during the use of this software, please open an [issue](https://github.com/xyoye/DanDanPlayForAndroid/issues/new?template=bug_report.md) on GitHub and it will be fixed in due time. When submitting a crash report, please provide a logcat to help the developer pinpoint the cause of the crash quickly and fix it accordingly.
+DDPlayTV is stable and works fine but you may still experience a few errors and crashes. The information about these crashes is important to the developer so the issues can be fixed immediately and the software is running efficiently again. Although the developer is able to get reports when the app crashes, you can also speed up the process by informing the developer. If you encounter a bug during the use of this software, please open an [issue](https://github.com/okami-horo/DDPlayTV/issues/new?template=bug_report.md) on GitHub and it will be fixed in due time. When submitting a crash report, please provide a logcat to help the developer pinpoint the cause of the crash quickly and fix it accordingly.
 
 ## Service Providers
 
-DanDanPlayForAndroid depends on the services of third-party libraries to facilitate its utilization, and to perform service-related services, or, to assist in analyzing how the services of the software are used. These third parties may have access to your Personal Data but are used only to perform some tasks on the developer's behalf.
+DDPlayTV depends on the services of third-party libraries to facilitate its utilization, and to perform service-related services, or, to assist in analyzing how the services of the software are used. These third parties may have access to your Personal Data but are used only to perform some tasks on the developer's behalf.
 
-Check out the third-party libraries [here](https://github.com/xyoye/DanDanPlayForAndroid/blob/master/THIRD_PARTY_LIBRARIES.md)
+Check out the third-party libraries [here](Third_Party_Libraries.md)
 
 
 ## Transfer Of Data
@@ -63,7 +63,7 @@ With these third-party libraries contained in the software, your information, in
 
 ## Links To Other Sites
 
-DanDanPlayForAndroid contains links to other services that are not directly operated by the developer. If you click on a third party library webpage or license URL, you will be directed to that third party's site. The developer has no control over and assumes no responsibility for the content, privacy policies or practices of any third party sites or services.
+DDPlayTV contains links to other services that are not directly operated by the developer. If you click on a third party library webpage or license URL, you will be directed to that third party's site. The developer has no control over and assumes no responsibility for the content, privacy policies or practices of any third party sites or services.
 
 
 ## Children's policy
@@ -81,23 +81,23 @@ The developer may update this policy as there will be further development of the
 
 ## Disclaimer
 
-DanDanPlayForAndroid is developed in good faith and for general use. The developer will not be held accountable for how you decide to use this software and will not be liable for any losses and/or damages in connection with the use of the software.
+DDPlayTV is developed in good faith and for general use. The developer will not be held accountable for how you decide to use this software and will not be liable for any losses and/or damages in connection with the use of the software.
 
 ## Contact
 
 Contributions to this project are welcomed. Contributions, suggestions or bug reports and fixes can be made by opening an issue or creating pull requests. Read our contributor's guidelines [here]() to get started.
-If you have any questions about this Privacy Policy, or any other issue relating to DanDanPlayForAndroid, please contact the developer [here](https://github.com/xyoye/DanDanPlayForAndroid) by opening an [issue](https://github.com/xyoye/DanDanPlayForAndroid/issues/new/choose).
+If you have any questions about this Privacy Policy, or any other issue relating to DDPlayTV, please contact the developer [here](https://github.com/okami-horo/DDPlayTV) by opening an [issue](https://github.com/okami-horo/DDPlayTV/issues/new/choose).
 
 ---
 
 # 中文版
 
-# DanDanPlayForAndroid 隐私政策
-本隐私政策文件旨在提供有关在使用时软件所收集、使用及披露的个人信息的内容、来源以及使用方式，使用时机，本文件的目的是通过公开开发人员收集或不收集的信息，在开发者和用户之间提供开放透明的环境。 通过使用该软件，这意味着您接受开发人员仅使用DanDanPlayForAndroid软件所特有的所有条款和条件。 本政策仅适用于本软件，开发人员不对任何第三方应用程序的内容或隐私惯例负责，因此建议您阅读可能与此软件相关联的第三方服务的隐私政策。
+# DDPlayTV 隐私政策
+本隐私政策文件旨在提供有关在使用时软件所收集、使用及披露的个人信息的内容、来源以及使用方式，使用时机，本文件的目的是通过公开开发人员收集或不收集的信息，在开发者和用户之间提供开放透明的环境。 通过使用该软件，这意味着您接受开发人员仅使用 DDPlayTV 软件所特有的所有条款和条件。 本政策仅适用于本软件，开发人员不对任何第三方应用程序的内容或隐私惯例负责，因此建议您阅读可能与此软件相关联的第三方服务的隐私政策。
 
 ## 权限信息
 
-为了更好的使用DanDanPlayForAndroid，软件会申请提供某些个人身份信息和设备权限。 需要启用这些权限才能使软件在软件服务所在的设备上正常工作。
+为了更好的使用 DDPlayTV，软件会申请提供某些个人身份信息和设备权限。 需要启用这些权限才能使软件在软件服务所在的设备上正常工作。
 
 权限如下：
 
@@ -115,7 +115,7 @@ If you have any questions about this Privacy Policy, or any other issue relating
 - 读取手机状态和身份信息
 
 
-DanDanPlayForAndroid还有一些其他权限，这些权限是软件自行申请获取的，它们包括：
+DDPlayTV 还有一些其他权限，这些权限是软件自行申请获取的，它们包括：
 
 - **完整的网络访问权限**: 允许该应用创建网络套接字和使用自定义网络协议。浏览器和其他某些应用提供了向互联网发送数据的途径，因此应用无需该权限即可向互联网发送数据
 - **查看网络连接**: 允许应用程序查看有关网络连接的相关信息，例如存在和连接的网络
@@ -137,13 +137,13 @@ DanDanPlayForAndroid还有一些其他权限，这些权限是软件自行申请
 开发者不保留用户App的来源信息。因此，开发者不会知道用户是从何处下载以及以何种方式使用这个软件。
 
 ## 崩溃报告
-DanDanPlayForAndroid 能正常稳定的运行，但你仍有可能遇到一些错误和崩溃。 有关这些崩溃的信息对开发人员很重要，这些信息可以帮助开发者解决问题并使软件重新正常运行。虽然开发人员能够在应用崩溃时获取报告，但您也可以通过反馈开发人员来加快流程。如果您在使用本软件时遇到错误，请在github上新增一个[issue](https://github.com/xyoye/DanDanPlayForAndroid/issues/new?template=bug_report.md)，开发人员将在合适的时间解决它。提交崩溃报告时，请提供一个logcat来帮助开发人员快速查明崩溃的原因并相应地进行修复。
+DDPlayTV 能正常稳定的运行，但你仍有可能遇到一些错误和崩溃。 有关这些崩溃的信息对开发人员很重要，这些信息可以帮助开发者解决问题并使软件重新正常运行。虽然开发人员能够在应用崩溃时获取报告，但您也可以通过反馈开发人员来加快流程。如果您在使用本软件时遇到错误，请在github上新增一个[issue](https://github.com/okami-horo/DDPlayTV/issues/new?template=bug_report.md)，开发人员将在合适的时间解决它。提交崩溃报告时，请提供一个logcat来帮助开发人员快速查明崩溃的原因并相应地进行修复。
 
 ## 服务供应者
 
-DanDanPlayForAndroid 依赖于一些第三方库提供的服务，以此来增强功能或分析使用软件。仅但代表开发人员执行一些任务时，这些第三库可能访问您的个人数据。
+DDPlayTV 依赖于一些第三方库提供的服务，以此来增强功能或分析使用软件。仅但代表开发人员执行一些任务时，这些第三库可能访问您的个人数据。
 
-查看完整的第三方库列表请点击 [这里](https://github.com/xyoye/DanDanPlayForAndroid/blob/master/Third_Party_Libraries.md)。
+查看完整的第三方库列表请点击 [这里](Third_Party_Libraries.md)。
 
 
 ## 数据传输
@@ -151,7 +151,7 @@ DanDanPlayForAndroid 依赖于一些第三方库提供的服务，以此来增�
 
 ## 网站链接
 
-DanDanPlayForAndroid 包含不由开发人员直接操作的其他服务的链接。 如果您单击第三方库网页或许可URL，您将被定向到该第三方的站点。 开发人员无法控制任何第三方网站或服务的内容，隐私政策和做法，也不承担任何责任。
+DDPlayTV 包含不由开发人员直接操作的其他服务的链接。 如果您单击第三方库网页或许可URL，您将被定向到该第三方的站点。 开发人员无法控制任何第三方网站或服务的内容，隐私政策和做法，也不承担任何责任。
 
 ## 儿童政策
 
@@ -167,8 +167,8 @@ DanDanPlayForAndroid 包含不由开发人员直接操作的其他服务的链�
 
 ## 免责声明
 
-DanDanPlayForAndroid是出于善意和一般用途而开发的。 开发人员不会对您决定使用此软件的方式负责，也不对与使用该软件有关的任何损失和/或损害承担责任。
+DDPlayTV 是出于善意和一般用途而开发的。 开发人员不会对您决定使用此软件的方式负责，也不对与使用该软件有关的任何损失和/或损害承担责任。
 
 ## 联系
 
-欢迎对此项目提供贡献。贡献、建议或者反馈和修复问题可以通过打开一个新的issue或者创建pull requests.请阅读我们的[贡献者指南](https://github.com/xyoye/DanDanPlayForAndroid/blob/master/Contributing.md)，以便开始使用。 如果您对本隐私政策或与DanDanPlayForAndroid相关的任何其他问题有任何疑问，在[项目](https://github.com/xyoye/DanDanPlayForAndroid)打开新的[issue](https://github.com/xyoye/DanDanPlayForAndroid/issues/new/choose)。
+欢迎对此项目提供贡献。贡献、建议或者反馈和修复问题可以通过打开一个新的issue或者创建pull requests.请阅读我们的[贡献者指南](Contributing.md)，以便开始使用。 如果您对本隐私政策或与 DDPlayTV 相关的任何其他问题有任何疑问，在[项目](https://github.com/okami-horo/DDPlayTV)打开新的[issue](https://github.com/okami-horo/DDPlayTV/issues/new/choose)。

@@ -44,7 +44,7 @@
     <string name="action_add_extend_folder">添加文件夹</string>
     <string name="action_select_url">选择Url</string>
     <string name="text_app_name">弹弹play 概念版</string>
-    <string name="text_github_project_name">Github：DanDanPlayForAndroid</string>
+    <string name="text_github_project_name">Github：DDPlayTV</string>
     <string name="text_official_address">官网：www.dandanplay.com</string>
     <string name="action_save_theme">完成</string>
     <string name="subtitle_renderer_backend_title">字幕渲染后端</string>

@@ -1,4 +1,4 @@
-# [DanDanPlayForAndroid](https://github.com/xyoye/DanDanPlayForAndroid)
+# [DDPlayTV](https://github.com/okami-horo/DDPlayTV)
 
 ## 简介
 
@@ -8,9 +8,9 @@
 
 安卓平台: 
 
-[1.正式版本](https://github.com/xyoye/DanDanPlayForAndroid/releases)
+[1.正式版本](https://github.com/okami-horo/DDPlayTV/releases)
 
-[2.最新测试版本](https://github.com/xyoye/DanDanPlayForAndroid/releases)
+[2.最新测试版本](https://github.com/okami-horo/DDPlayTV/releases)
 
 其他平台: 
 

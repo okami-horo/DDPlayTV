@@ -1,4 +1,4 @@
-# 模块依赖治理规范（v2）（面向 DanDanPlayForAndroid）
+# 模块依赖治理规范（v2）（面向 DDPlayTV）
 
 > 说明：本文件曾位于 `TODOs/`，现作为长期维护的依赖治理文档存放于 `document/architecture/`。
 

@@ -1,7 +1,7 @@
 # Implementation Plan: 百度网盘存储库在线播放
 
-**Branch**: `[001-baidu-pan-storage]` | **Date**: 2026-01-13 | **Spec**: `/home/tzw/workspace/DanDanPlayForAndroid/specs/001-baidu-pan-storage/spec.md`  
-**Input**: Feature specification from `/home/tzw/workspace/DanDanPlayForAndroid/specs/001-baidu-pan-storage/spec.md`
+**Branch**: `[001-baidu-pan-storage]` | **Date**: 2026-01-13 | **Spec**: `specs/001-baidu-pan-storage/spec.md`  
+**Input**: Feature specification from `specs/001-baidu-pan-storage/spec.md`
 
 **Note**: 本模板由 `/speckit.plan` 生成与维护；如需校验前置条件，可参考 `.specify/scripts/bash/check-prerequisites.sh`。
 

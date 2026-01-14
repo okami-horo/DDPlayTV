@@ -2,8 +2,8 @@
 
 本文档用于把实现所需的关键事实、约束与技术决策一次讲清，并尽量标注百度网盘开放平台的原文链接，便于后续实现时直接对照官方说明。
 
-- Feature spec：`/home/tzw/workspace/DanDanPlayForAndroid/specs/001-baidu-pan-storage/spec.md`
-- Baidu OpenAPI 摘要整理（已由项目内先行整理）：`/home/tzw/workspace/DanDanPlayForAndroid/specs/001-baidu-pan-storage/baidu-pan-openapi.md`
+- Feature spec：`spec.md`
+- Baidu OpenAPI 摘要整理（已由项目内先行整理）：`baidu-pan-openapi.md`
 
 ## 关键结论（TL;DR）
 
@@ -127,4 +127,3 @@
 - **Rationale**：把“对外契约（Storage 接口）”与“对内实现（Baidu OpenAPI）”隔离，避免 UI/播放器直接依赖 Baidu 细节，从而降低耦合与未来替换成本。
 - **Alternatives considered**：
   - 新建独立模块 `:baidu_component`：分层更清晰但会引入新的模块治理与依赖矩阵调整；首期不做，但保留演进空间。
-

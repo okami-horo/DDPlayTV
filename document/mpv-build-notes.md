@@ -1,4 +1,4 @@
-# DanDanPlayForAndroid mpv/libmpv 本地编译记录
+# DDPlayTV mpv/libmpv 本地编译记录
 
 本记录用于复现当前在 `.tmp/mpv-android` 下编译出的 `libmpv.so`，并说明关键参数与产物位置，方便后续排查或重新打包。
 
