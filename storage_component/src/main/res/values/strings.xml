@@ -25,6 +25,9 @@
     <string name="text_smb_v1">SMB 1</string>
     <string name="action_remote_scan">扫码快捷录入</string>
     <string name="action_test_server">测试</string>
+    <string name="hint_open115_access_token">access_token（必填）</string>
+    <string name="hint_open115_refresh_token">refresh_token（必填）</string>
+    <string name="tips_open115_no_password">无需账号密码，仅需填写 token</string>
 
     <string name="tips_parse_mode">数据解析</string>
     <string name="strict_parse_mode">严格模式</string>

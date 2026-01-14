@@ -15,6 +15,7 @@ import com.xyoye.storage_component.ui.dialog.BaiduPanStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.BilibiliStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.ExternalStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.FTPStorageEditDialog
+import com.xyoye.storage_component.ui.dialog.Open115StorageEditDialog
 import com.xyoye.storage_component.ui.dialog.RemoteStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.ScreencastStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.SmbStorageEditDialog
@@ -87,6 +88,7 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
                 MediaType.SCREEN_CAST -> ScreencastStorageEditDialog(this, editData)
                 MediaType.ALSIT_STORAGE -> AlistStorageEditDialog(this, editData)
                 MediaType.BAIDU_PAN_STORAGE -> BaiduPanStorageEditDialog(this, editData)
+                MediaType.OPEN_115_STORAGE -> Open115StorageEditDialog(this, editData)
                 MediaType.BILIBILI_STORAGE -> BilibiliStorageEditDialog(this, editData)
                 else -> {
                     finish()

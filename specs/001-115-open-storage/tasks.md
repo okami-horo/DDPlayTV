@@ -55,14 +55,14 @@ description: "Task list for 115 Open 存储库在线播放"
 
 **Independent Test**: 使用一个包含至少 1 个目录与 1 个视频文件的 115 账号：新增存储源 → 看到根目录列表 → 进入子目录并返回，验证列表内容正确且可持续操作（参考 `specs/001-115-open-storage/quickstart.md` 3.1）
 
-- [ ] T012 [P] [US1] 新增文件项适配 `core_storage_component/src/main/java/com/xyoye/common_component/storage/file/impl/Open115StorageFile.kt`（根目录 `filePath="/"`；目录/文件判定；`isv==1` 视频判定 + 扩展名兜底；`fileUrl=115open://file/<fid>`；payload 挂载）
-- [ ] T013 [US1] 新增基础 Storage 实现 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/Open115Storage.kt`（extends `AbstractStorage` + implements `AuthStorage`）：实现 `getRootFile/openDirectory/listFiles/pathFile/historyFile/test/getNetworkHeaders`（先完成“浏览闭环”，播放相关留到 US2；依赖 T008/T010/T011/T012）
-- [ ] T014 [US1] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/StorageFactory.kt` 注册 `MediaType.OPEN_115_STORAGE -> Open115Storage`
-- [ ] T015 [US1] 在 `local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaFragment.kt` 的 `launchMediaStorage()` 增加 `MediaType.OPEN_115_STORAGE` 分支（打开 `RouteTable.Stream.StorageFile`）
-- [ ] T016 [P] [US1] 新增存储源编辑对话框 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/Open115StorageEditDialog.kt` + `storage_component/src/main/res/layout/dialog_open115_storage.xml`（token 输入项、默认脱敏/可切换可见、提示“无需账号密码”、集成 `PlayerTypeOverrideBinder`、提供“测试连接”状态位）
-- [ ] T017 [US1] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_plus/StoragePlusActivity.kt` 接入 `MediaType.OPEN_115_STORAGE -> Open115StorageEditDialog`
-- [ ] T018 [US1] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/Open115StorageEditDialog.kt` 实现“测试连接/保存”逻辑：校验 access_token；若鉴权失效则先 `refreshToken` 再重试；成功后构造 `url=115open://uid/<uid>` 并默认 displayName=user_name（可编辑）；用 `Open115AuthStore` 按 storageKey 写入 tokens/profile（不写入 `MediaLibraryEntity.account/password/describe`）；保存前用 `DatabaseManager.getMediaLibraryDao().getByUrl(...)` 防止同 uid 重复添加/覆盖 token
-- [ ] T019 [US1] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_plus/StoragePlusViewModel.kt` 增加 `MediaType.OPEN_115_STORAGE` 保存前校验（url 必须匹配 `^115open://uid/\\d+$`；失败提示“请先测试连接/保存”），避免产生无效库记录
+- [X] T012 [P] [US1] 新增文件项适配 `core_storage_component/src/main/java/com/xyoye/common_component/storage/file/impl/Open115StorageFile.kt`（根目录 `filePath="/"`；目录/文件判定；`isv==1` 视频判定 + 扩展名兜底；`fileUrl=115open://file/<fid>`；payload 挂载）
+- [X] T013 [US1] 新增基础 Storage 实现 `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/Open115Storage.kt`（extends `AbstractStorage` + implements `AuthStorage`）：实现 `getRootFile/openDirectory/listFiles/pathFile/historyFile/test/getNetworkHeaders`（先完成“浏览闭环”，播放相关留到 US2；依赖 T008/T010/T011/T012）
+- [X] T014 [US1] 在 `core_storage_component/src/main/java/com/xyoye/common_component/storage/StorageFactory.kt` 注册 `MediaType.OPEN_115_STORAGE -> Open115Storage`
+- [X] T015 [US1] 在 `local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaFragment.kt` 的 `launchMediaStorage()` 增加 `MediaType.OPEN_115_STORAGE` 分支（打开 `RouteTable.Stream.StorageFile`）
+- [X] T016 [P] [US1] 新增存储源编辑对话框 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/Open115StorageEditDialog.kt` + `storage_component/src/main/res/layout/dialog_open115_storage.xml`（token 输入项、默认脱敏/可切换可见、提示“无需账号密码”、集成 `PlayerTypeOverrideBinder`、提供“测试连接”状态位）
+- [X] T017 [US1] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_plus/StoragePlusActivity.kt` 接入 `MediaType.OPEN_115_STORAGE -> Open115StorageEditDialog`
+- [X] T018 [US1] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/Open115StorageEditDialog.kt` 实现“测试连接/保存”逻辑：校验 access_token；若鉴权失效则先 `refreshToken` 再重试；成功后构造 `url=115open://uid/<uid>` 并默认 displayName=user_name（可编辑）；用 `Open115AuthStore` 按 storageKey 写入 tokens/profile（不写入 `MediaLibraryEntity.account/password/describe`）；保存前用 `DatabaseManager.getMediaLibraryDao().getByUrl(...)` 防止同 uid 重复添加/覆盖 token
+- [X] T019 [US1] 在 `storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_plus/StoragePlusViewModel.kt` 增加 `MediaType.OPEN_115_STORAGE` 保存前校验（url 必须匹配 `^115open://uid/\\d+$`；失败提示“请先测试连接/保存”），避免产生无效库记录
 
 **Checkpoint**: 此时 US1 应可独立完成并验收（新增/编辑 → 根目录列表 → 目录进出）
 
