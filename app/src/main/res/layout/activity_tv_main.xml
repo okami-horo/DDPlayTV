@@ -5,11 +5,11 @@
 
     <data>
 
-        <import type="com.xyoye.dandanplay.ui.shell.ShellViewModel" />
+        <import type="com.okamihoro.ddplaytv.ui.shell.ShellViewModel" />
 
         <variable
             name="viewModel"
-            type="com.xyoye.dandanplay.ui.shell.ShellViewModel" />
+            type="com.okamihoro.ddplaytv.ui.shell.ShellViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

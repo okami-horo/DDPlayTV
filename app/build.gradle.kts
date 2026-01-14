@@ -18,7 +18,7 @@ val subtitleTelemetryFallbackFlag =
     project.findProperty("subtitle_telemetry_enabled")?.toString()?.equals("true", true) ?: true
 
 android {
-    namespace = "com.xyoye.dandanplay"
+    namespace = Versions.applicationId
     compileSdk = Versions.compileSdkVersion
     defaultConfig {
         applicationId = Versions.applicationId

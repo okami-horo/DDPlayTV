@@ -1,5 +1,5 @@
 object Versions {
-    const val applicationId = "com.xyoye.dandanplay"
+    const val applicationId = "com.okamihoro.ddplaytv"
     const val compileSdkVersion = 35
     const val minSdkVersion = 21
     const val targetSdkVersion = 35

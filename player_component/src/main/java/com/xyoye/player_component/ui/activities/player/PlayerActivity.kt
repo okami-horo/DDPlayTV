@@ -89,7 +89,7 @@ class PlayerActivity :
     SubtitleFallbackDispatcher {
     companion object {
         private const val MEDIA3_SESSION_SERVICE =
-            "com.xyoye.dandanplay.app.service.Media3SessionService"
+            "com.okamihoro.ddplaytv.app.service.Media3SessionService"
         private const val TAG_ACTIVITY = "PlayerActivity"
         private const val TAG_SOURCE = "PlayerSource"
         private const val TAG_PLAYBACK = "PlayerPlayback"
