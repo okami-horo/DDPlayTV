@@ -1,6 +1,7 @@
 package com.xyoye.storage_component.ui.dialog
 
 import android.app.Activity
+import android.net.Uri
 import android.os.SystemClock
 import androidx.core.view.isVisible
 import com.xyoye.common_component.config.BaiduPanOpenApiConfig
@@ -73,16 +74,17 @@ class BaiduPanLoginDialog(
                 binding.statusTv.text = "正在获取二维码…"
 
                 val deviceCode = fetchDeviceCode().getOrNull()
-                if (deviceCode == null || deviceCode.deviceCode.isBlank() || deviceCode.qrcodeUrl.isBlank()) {
+                if (deviceCode == null || deviceCode.deviceCode.isBlank() || deviceCode.userCode.isBlank()) {
                     binding.loadingPb.isVisible = false
                     binding.statusTv.text = "获取二维码失败，请稍后重试"
                     return@launch
                 }
 
+                val qrContent = buildQrCodeContent(deviceCode)
                 val qrCode =
                     QrCodeHelper.createQrCode(
                         context = activity,
-                        content = deviceCode.qrcodeUrl,
+                        content = qrContent,
                         sizePx = dp2px(220),
                         logoResId = R.mipmap.ic_logo,
                         bitmapColor = com.xyoye.core_ui_component.R.color.text_black.toResColor(activity),
@@ -94,6 +96,18 @@ class BaiduPanLoginDialog(
 
                 pollUntilDone(deviceCode)
             }
+    }
+
+    private fun buildQrCodeContent(deviceCode: BaiduPanDeviceCodeResponse): String {
+        val userCode = deviceCode.userCode.trim()
+        val verificationUrl = deviceCode.verificationUrl?.trim()
+        val baseUrl = verificationUrl?.takeIf { it.isNotEmpty() } ?: "https://openapi.baidu.com/device"
+        return Uri.parse(baseUrl)
+            .buildUpon()
+            .appendQueryParameter("display", "mobile")
+            .appendQueryParameter("code", userCode)
+            .build()
+            .toString()
     }
 
     private suspend fun pollUntilDone(deviceCode: BaiduPanDeviceCodeResponse) {

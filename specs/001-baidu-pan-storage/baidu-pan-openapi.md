@@ -53,7 +53,7 @@
   - `device_code`：后续换取 token 的票据
   - `user_code`：用户码
   - `verification_url`：输入 user_code 的网页
-  - `qrcode_url`：二维码 url（用于生成二维码图片）
+  - `qrcode_url`：二维码图片的 URL（建议直接加载图片展示；**不要把该 URL 再编码成二维码**，否则会出现“扫出来还是二维码”的二次扫码问题）
   - `expires_in`：device_code 过期时间（秒）
   - `interval`：轮询间隔（秒，通常 5，且不应低于 5s）
 
