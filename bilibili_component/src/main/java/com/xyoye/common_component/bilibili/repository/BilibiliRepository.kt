@@ -381,8 +381,8 @@ class BilibiliRepository(
             }
         }
 
-    suspend fun loginQrCodeGenerate(): Result<BilibiliLoginQrCode> =
-        when (currentApiType()) {
+    suspend fun loginQrCodeGenerate(apiType: BilibiliApiType = currentApiType()): Result<BilibiliLoginQrCode> =
+        when (apiType) {
             BilibiliApiType.WEB -> {
                 qrcodeGenerate().mapCatching { data ->
                     if (data.url.isBlank() || data.qrcodeKey.isBlank()) {
@@ -420,8 +420,11 @@ class BilibiliRepository(
             }
         }
 
-    suspend fun loginQrCodePoll(qrcodeKey: String): Result<BilibiliLoginPollResult> =
-        when (currentApiType()) {
+    suspend fun loginQrCodePoll(
+        qrcodeKey: String,
+        apiType: BilibiliApiType = currentApiType()
+    ): Result<BilibiliLoginPollResult> =
+        when (apiType) {
             BilibiliApiType.WEB -> {
                 qrcodePoll(qrcodeKey).mapCatching { data ->
                     when (data.statusCode) {
