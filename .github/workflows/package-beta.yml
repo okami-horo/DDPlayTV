@@ -58,6 +58,8 @@ jobs:
           BUGLY_APP_ID: ${{ secrets.BUGLY_APP_ID }}
           DANDAN_APP_ID: ${{ secrets.DANDAN_APP_ID }}
           DANDAN_APP_SECRET: ${{ secrets.DANDAN_APP_SECRET }}
+          BAIDU_PAN_CLIENT_ID: ${{ secrets.BAIDU_PAN_CLIENT_ID }}
+          BAIDU_PAN_CLIENT_SECRET: ${{ secrets.BAIDU_PAN_CLIENT_SECRET }}
           ALIYUN_SECRET: ${{ secrets.ALIYUN_SECRET }}
         run: |
           echo "✅ Secrets injected for beta build"
@@ -96,6 +98,8 @@ jobs:
           BUGLY_APP_ID: ${{ secrets.BUGLY_APP_ID }}
           DANDAN_APP_ID: ${{ secrets.DANDAN_APP_ID }}
           DANDAN_APP_SECRET: ${{ secrets.DANDAN_APP_SECRET }}
+          BAIDU_PAN_CLIENT_ID: ${{ secrets.BAIDU_PAN_CLIENT_ID }}
+          BAIDU_PAN_CLIENT_SECRET: ${{ secrets.BAIDU_PAN_CLIENT_SECRET }}
           ALIYUN_SECRET: ${{ secrets.ALIYUN_SECRET }}
         run: chmod +x gradlew &&./gradlew clean assemble${{ env.BUILD_TYPE }} --stacktrace
 
