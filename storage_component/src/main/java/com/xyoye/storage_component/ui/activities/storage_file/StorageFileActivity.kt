@@ -88,6 +88,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     companion object {
         private const val TAG = "StorageFileActivity"
         private const val REQUEST_CODE_BILIBILI_RISK_VERIFY = 3301
+        internal const val REQUEST_CODE_OPEN115_REAUTH = 3302
     }
 
     var shareStorageFile: StorageFile? = null
@@ -258,6 +259,11 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
             if (resultCode == RESULT_OK && file != null) {
                 openFile(file)
+            }
+        }
+        if (requestCode == REQUEST_CODE_OPEN115_REAUTH) {
+            if (resultCode == RESULT_OK) {
+                routeStack.lastOrNull()?.fragment?.triggerTvRefresh()
             }
         }
         super.onActivityResult(requestCode, resultCode, data)

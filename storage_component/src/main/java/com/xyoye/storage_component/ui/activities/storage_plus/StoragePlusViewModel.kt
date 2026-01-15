@@ -27,6 +27,15 @@ class StoragePlusViewModel : BaseViewModel() {
         newLibrary: MediaLibraryEntity
     ) {
         viewModelScope.launch(Dispatchers.IO) {
+            if (newLibrary.mediaType == MediaType.OPEN_115_STORAGE) {
+                newLibrary.url = newLibrary.url.trim().removeSuffix("/")
+                val isValid = Regex("^115open://uid/\\d+$").matches(newLibrary.url)
+                if (!isValid) {
+                    ToastCenter.showWarning("请先测试连接/保存")
+                    return@launch
+                }
+            }
+
             if (newLibrary.mediaType == MediaType.BAIDU_PAN_STORAGE) {
                 newLibrary.url = newLibrary.url.trim().removeSuffix("/")
                 val isValid = Regex("^baidupan://uk/\\d+$").matches(newLibrary.url)

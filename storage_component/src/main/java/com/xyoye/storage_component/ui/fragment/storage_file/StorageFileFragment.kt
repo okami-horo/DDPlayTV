@@ -4,8 +4,10 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.base.BaseFragment
+import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.FocusTarget
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.toResString
@@ -281,6 +283,14 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
         when (library.mediaType) {
             MediaType.BILIBILI_STORAGE -> showBilibiliLoginDialog(library)
             MediaType.BAIDU_PAN_STORAGE -> showBaiduPanLoginDialog(library)
+            MediaType.OPEN_115_STORAGE -> {
+                ARouter
+                    .getInstance()
+                    .build(RouteTable.Stream.StoragePlus)
+                    .withSerializable("mediaType", library.mediaType)
+                    .withParcelable("editData", library)
+                    .navigation(ownerActivity, StorageFileActivity.REQUEST_CODE_OPEN115_REAUTH)
+            }
             else -> Unit
         }
     }

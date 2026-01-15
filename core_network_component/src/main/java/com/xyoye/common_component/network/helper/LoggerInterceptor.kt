@@ -243,10 +243,14 @@ class LoggerInterceptor(
         // JSON-style tokens
         sanitized =
             sanitized.replace("(?i)(\"refresh_token\"\\s*:\\s*\")([^\"]+)(\")".toRegex(), "$1<redacted>$3")
+        sanitized =
+            sanitized.replace("(?i)(\"access_token\"\\s*:\\s*\")([^\"]+)(\")".toRegex(), "$1<redacted>$3")
 
         // Query / form-style tokens
         sanitized =
             sanitized.replace("(?i)(refresh_token=)([^&\\s]+)".toRegex(), "$1<redacted>")
+        sanitized =
+            sanitized.replace("(?i)(access_token=)([^&\\s]+)".toRegex(), "$1<redacted>")
 
         return sanitized
     }

@@ -1,0 +1,464 @@
+openapi: 3.0.3
+info:
+  title: 115 OpenAPI (Subset for DDPlayTV)
+  version: 0.1.0
+  description: |
+    说明：
+    - 本文件是为 DDPlayTV 的“115 Open 存储源：浏览 + 在线播放（downurl）”整理的 OpenAPI 子集契约，便于后续实现与联调。
+    - 仅覆盖 MVP 必需的：用户信息、目录列表、搜索、downurl 直链、refreshToken 等接口。
+    - 关键字段、调用顺序与坑点说明见：
+      - specs/001-115-open-storage/115-open-openapi.md
+      - specs/001-115-open-storage/research.md
+    - 证据来源（实现参考）：
+      - OpenList driver：OpenList/drivers/115_open/driver.go
+      - 115-sdk-go：OpenListTeam/115-sdk-go（v0.2.2）
+
+servers:
+  - url: https://proapi.115.com
+    description: Open API endpoints (files/user)
+  - url: https://passportapi.115.com
+    description: Auth endpoints (refresh token)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    ProApiEnvelope:
+      type: object
+      required: [state, code, message]
+      properties:
+        state:
+          type: boolean
+          description: proapi 业务成功标记；false 表示失败（即使 HTTP 为 200）
+        code:
+          type: integer
+          description: 业务错误码；`99` 或 `401xxxx` 代表鉴权失效（需刷新 token）
+        message:
+          type: string
+          description: 错误信息（失败时）
+        data:
+          nullable: true
+          description: 业务数据（不同接口结构不同）
+
+    PassportEnvelope:
+      type: object
+      required: [state, code, message, errno, error]
+      properties:
+        state:
+          type: integer
+          description: passportapi 状态（示例中为 1）
+        code:
+          type: integer
+          description: code!=0 表示失败
+        message:
+          type: string
+        errno:
+          type: integer
+        error:
+          type: string
+        data:
+          nullable: true
+
+    RefreshTokenData:
+      type: object
+      required: [access_token, refresh_token, expires_in]
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_in:
+          type: integer
+          description: access_token 有效期（秒）
+
+    RefreshTokenResponse:
+      allOf:
+        - $ref: "#/components/schemas/PassportEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/RefreshTokenData"
+
+    UserInfoData:
+      type: object
+      properties:
+        user_id:
+          type: string
+        user_name:
+          type: string
+        user_face_s:
+          type: string
+        user_face_m:
+          type: string
+        user_face_l:
+          type: string
+        rt_space_info:
+          type: object
+          properties:
+            all_total:
+              type: object
+              properties:
+                size:
+                  type: string
+            all_use:
+              type: object
+              properties:
+                size:
+                  type: string
+            all_remain:
+              type: object
+              properties:
+                size:
+                  type: string
+        vip_info:
+          type: object
+          properties:
+            level_name:
+              type: string
+            expire:
+              type: string
+
+    UserInfoResponse:
+      allOf:
+        - $ref: "#/components/schemas/ProApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/UserInfoData"
+
+    FileItem:
+      type: object
+      properties:
+        fid:
+          type: string
+        pid:
+          type: string
+        fc:
+          type: string
+          description: "0 目录 / 1 文件"
+        fn:
+          type: string
+        pc:
+          type: string
+          description: pick_code（downurl 用）
+        sha1:
+          type: string
+        fs:
+          type: integer
+          format: int64
+        upt:
+          type: integer
+          format: int64
+        uet:
+          type: integer
+          format: int64
+        uppt:
+          type: integer
+          format: int64
+        isv:
+          type: integer
+          format: int64
+          description: 是否视频（1/0）
+        ico:
+          type: string
+        thumb:
+          type: string
+
+    ListFilesData:
+      type: array
+      items:
+        $ref: "#/components/schemas/FileItem"
+
+    ListFilesResponse:
+      allOf:
+        - $ref: "#/components/schemas/ProApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/ListFilesData"
+            count:
+              type: integer
+              format: int64
+              description: 当前目录总数
+            offset:
+              type: integer
+              format: int64
+            limit:
+              type: integer
+
+    DownUrlItem:
+      type: object
+      properties:
+        file_name:
+          type: string
+        file_size:
+          type: integer
+          format: int64
+        pick_code:
+          type: string
+        sha1:
+          type: string
+        url:
+          type: object
+          properties:
+            url:
+              type: string
+
+    DownUrlData:
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/DownUrlItem"
+      description: 以 fid 为 key 的 map
+
+    DownUrlResponse:
+      allOf:
+        - $ref: "#/components/schemas/ProApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/DownUrlData"
+
+    SearchItem:
+      type: object
+      properties:
+        file_id:
+          type: string
+        parent_id:
+          type: string
+        file_name:
+          type: string
+        file_size:
+          type: string
+        pick_code:
+          type: string
+        file_category:
+          type: string
+          description: "1 文件 / 0 文件夹"
+        ico:
+          type: string
+
+    SearchData:
+      type: array
+      items:
+        $ref: "#/components/schemas/SearchItem"
+
+    SearchResponse:
+      allOf:
+        - $ref: "#/components/schemas/ProApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/SearchData"
+            count:
+              type: integer
+              format: int64
+            limit:
+              type: integer
+              format: int64
+            offset:
+              type: integer
+              format: int64
+
+paths:
+  /open/user/info:
+    get:
+      operationId: userInfo
+      summary: 获取用户信息（用于：测试 token / 多账号标识）
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInfoResponse"
+
+  /open/ufile/files:
+    get:
+      operationId: listFiles
+      summary: 列目录（分页）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: cid
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 当前目录 ID（根目录通常为 0）
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1150
+        - name: offset
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - name: asc
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["0", "1"]
+          description: "1 升序 / 0 降序"
+        - name: o
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [file_name, file_size, user_utime, file_type]
+          description: 排序字段
+        - name: show_dir
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["0", "1"]
+          description: "1 显示目录"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListFilesResponse"
+
+  /open/ufile/search:
+    get:
+      operationId: searchFiles
+      summary: 搜索（建议用于：当前目录递归范围内定位视频）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search_value
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: cid
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 目标目录；cid=-1 表示不返回列表任何内容（见 SDK 注释）
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["1", "2", "3", "4", "5", "6"]
+          description: 一级分类（4=视频）
+        - name: fc
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["1", "2"]
+          description: 1 只显示文件夹，2 只显示文件
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            description: 默认 20；offset+limit 最大不超过 10000
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+
+  /open/ufile/downurl:
+    post:
+      operationId: downUrl
+      summary: 获取下载/播放直链（downurl）
+      description: |
+        获取直链时建议显式设置 User-Agent（OpenList 会把 UA 作为 Link header 返回给调用方）。
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: User-Agent
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [pick_code]
+              properties:
+                pick_code:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DownUrlResponse"
+
+  /open/refreshToken:
+    post:
+      operationId: refreshToken
+      summary: 刷新 token
+      description: |
+        注意：该接口不依赖 Bearer；只携带 refresh_token 表单字段。
+        刷新成功会返回新的 refresh_token（旋转），实现侧需要原子持久化并避免并发刷新。
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshTokenResponse"
+
+  /open/folder/get_info:
+    get:
+      operationId: folderGetInfo
+      summary: 获取文件夹信息（可选，用于：构造搜索结果稳定路径/面包屑）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: file_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProApiEnvelope"
+

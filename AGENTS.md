@@ -233,6 +233,7 @@ Recent history uses the `<type>: <summary>` pattern (`fix: ...`, `refactor: ...`
 Sensitive tokens belong in `local.properties` or Gradle properties; never hard-code keys. Toggle `IS_DEBUG_MODE` and `IS_APPLICATION_RUN` in `gradle.properties` when enabling verbose logs or single-module runs, then rebuild so the flags propagate. Follow `BUGLY_CONFIG.md` for crash reporting credentials, and remember the `user_component` ships with remote APIs disabled—avoid re-enabling interfaces without coordinator approval to keep builds distributable.
 
 ## Recent Changes
+- 001-115-open-storage: Added Kotlin 1.9.25（JVM target 1.8），Android Gradle Plugin 8.7.2 + AndroidX、Kotlin Coroutines、Retrofit+OkHttp、Moshi、Room、MMKV、Media3、NanoHTTPD（本地代理）、ARouter
 - 001-baidu-pan-storage: Added Kotlin 1.9.25（JVM target 1.8），Android Gradle Plugin 8.7.2 + AndroidX、Kotlin Coroutines、Retrofit+OkHttp、Moshi、Room、MMKV、Media3、NanoHTTPD（本地代理）、ARouter
 
 ## TV/Remote UX
@@ -243,3 +244,4 @@ Sensitive tokens belong in `local.properties` or Gradle properties; never hard-c
 - Room（SQLite）+ MMKV（Key-Value）+ 本地缓存文件（用于临时 mpd/二维码图片等） (003-add-bilibili-history)
 - Kotlin 1.9.25（JVM target 1.8），Android Gradle Plugin 8.7.2 + AndroidX、Kotlin Coroutines、Retrofit+OkHttp、Moshi、Room、MMKV、Media3、NanoHTTPD（本地代理）、ARouter (001-baidu-pan-storage)
 - Room（`media_library` 等表）+ MMKV（偏好/登录态存储）+ 本地缓存文件（字幕/弹幕/临时清单等） (001-baidu-pan-storage)
+- Room（`media_library` 等表）+ MMKV（偏好/授权态隔离存储）+ 本地缓存文件（字幕/弹幕/临时清单等） (001-115-open-storage)

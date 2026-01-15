@@ -15,6 +15,7 @@ import com.xyoye.common_component.storage.StorageSortOption
 import com.xyoye.common_component.storage.baidupan.auth.BaiduPanReAuthRequiredException
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.payloadAs
+import com.xyoye.common_component.storage.open115.auth.Open115ReAuthRequiredException
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
@@ -349,7 +350,8 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                 }
 
             val displayFiles =
-                if (storage.library.mediaType == MediaType.BAIDU_PAN_STORAGE) {
+                if (storage.library.mediaType == MediaType.BAIDU_PAN_STORAGE ||
+                    storage.library.mediaType == MediaType.OPEN_115_STORAGE) {
                     merged.sortedWith(StorageSortOption.comparator())
                 } else {
                     merged
@@ -530,6 +532,8 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                 is BaiduPanReAuthRequiredException ->
                     throwable.message?.takeIf { it.isNotBlank() }
                         ?: "登录已失效，请重新${authStorage.loginActionText(storage.directory)}"
+                is Open115ReAuthRequiredException ->
+                    "授权已失效，请更新 token"
                 is BilibiliException -> {
                     if (throwable.code != -101) return false
                     "登录已失效，请重新${authStorage.loginActionText(storage.directory)}"

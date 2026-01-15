@@ -6,6 +6,19 @@
         android:key="player_type"
         android:title="播放器类型" />
     <SeekBarPreference
+        android:key="exo_proxy_range_interval_ms"
+        android:max="2000"
+        android:title="Media3 Range 限速间隔（ms）"
+        android:summary="本地 HTTP 代理转发 Range 请求的最小间隔。数值越大越不易触发风控，但拖动进度可能更慢。"
+        app:min="0"
+        app:seekBarIncrement="100"
+        app:updatesContinuously="true"
+        app:showSeekBarValue="true" />
+    <ListPreference
+        android:key="exo_local_proxy_mode"
+        android:title="Media3 本地防风控代理"
+        android:summary="关闭：不使用本地代理；自动：仅对部分上游启用；强制：尽量对可寻址的 HTTP(S) 直链启用（可能带来额外开销）" />
+    <SeekBarPreference
         android:key="mpv_proxy_range_interval_ms"
         android:max="2000"
         android:title="MPV Range 限速间隔（ms）"
