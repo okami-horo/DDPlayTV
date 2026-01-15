@@ -1,5 +1,7 @@
 package com.xyoye.common_component.network.repository
 
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.network.config.Api
 import com.xyoye.common_component.network.request.PassThroughException
@@ -132,6 +134,16 @@ class Open115Repository(
                     }
 
                     if (!authRetried && isAuthExpiredCode(response.code)) {
+                        LogFacade.w(
+                            LogModule.STORAGE,
+                            LOG_TAG,
+                            "proapi auth code=${response.code}, refresh access token",
+                            mapOf(
+                                "reason" to reason,
+                                "storageKey" to storageKey,
+                                "extraInfo" to extraInfo,
+                            ),
+                        )
                         authRetried = true
                         accessToken = tokenManager.refreshAccessToken(forceRefresh = true)
                         continue
@@ -142,6 +154,18 @@ class Open115Repository(
 
                 Result.success(success ?: throw IllegalStateException("Unreachable"))
             } catch (t: Throwable) {
+                LogFacade.e(
+                    LogModule.STORAGE,
+                    LOG_TAG,
+                    "proapi request failed: $reason",
+                    buildMap {
+                        put("storageKey", storageKey)
+                        put("extraInfo", extraInfo)
+                        put("exception", t::class.java.simpleName)
+                        (t as? Open115ProApiException)?.let { put("code", it.code.toString()) }
+                    },
+                    t,
+                )
                 ErrorReportHelper.postCatchedExceptionWithContext(
                     t,
                     "Open115Repository",
@@ -175,6 +199,17 @@ class Open115Repository(
 
                     response
                 }.onFailure { t ->
+                    LogFacade.e(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "userInfo request failed",
+                        buildMap {
+                            put("accessToken", Open115Headers.redactToken(accessToken))
+                            put("exception", t::class.java.simpleName)
+                            (t as? Open115ProApiException)?.let { put("code", it.code.toString()) }
+                        },
+                        t,
+                    )
                     ErrorReportHelper.postCatchedExceptionWithContext(
                         t,
                         "Open115Repository",
@@ -215,6 +250,16 @@ class Open115Repository(
 
                     response
                 }.onFailure { t ->
+                    LogFacade.e(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "refreshToken request failed",
+                        buildMap {
+                            put("refreshToken", Open115Headers.redactToken(refreshToken))
+                            put("exception", t::class.java.simpleName)
+                        },
+                        t,
+                    )
                     ErrorReportHelper.postCatchedExceptionWithContext(
                         t,
                         "Open115Repository",
@@ -223,6 +268,8 @@ class Open115Repository(
                     )
                 }
             }
+
+        private const val LOG_TAG = "open115_repo"
 
         fun isAuthExpiredCode(code: Int): Boolean = code == 99 || code.toString().startsWith("401")
     }

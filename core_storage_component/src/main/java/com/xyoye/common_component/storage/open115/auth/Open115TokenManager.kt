@@ -1,8 +1,11 @@
 package com.xyoye.common_component.storage.open115.auth
 
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.network.config.Api
 import com.xyoye.common_component.network.request.PassThroughException
+import com.xyoye.common_component.storage.open115.net.Open115Headers
 import com.xyoye.common_component.utils.ErrorReportHelper
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -13,6 +16,8 @@ class Open115TokenManager(
     private val storageKey: String
 ) {
     companion object {
+        private const val LOG_TAG = "open115_token"
+
         private val mutexMap: MutableMap<String, Mutex> = ConcurrentHashMap()
         private val refreshAheadMs: Long = TimeUnit.MINUTES.toMillis(10)
 
@@ -50,9 +55,30 @@ class Open115TokenManager(
 
                 val refreshToken =
                     state.refreshToken?.takeIf { it.isNotBlank() }
-                        ?: throw Open115NotConfiguredException("请先配置 115 Open token")
+                        ?: run {
+                            LogFacade.w(
+                                LogModule.STORAGE,
+                                LOG_TAG,
+                                "refresh token missing",
+                                mapOf(
+                                    "storageKey" to storageKey,
+                                    "forceRefresh" to forceRefresh.toString(),
+                                ),
+                            )
+                            throw Open115NotConfiguredException("请先配置 115 Open token")
+                        }
 
                 runCatching {
+                    LogFacade.i(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "refresh access token",
+                        mapOf(
+                            "storageKey" to storageKey,
+                            "forceRefresh" to forceRefresh.toString(),
+                            "refreshToken" to Open115Headers.redactToken(refreshToken),
+                        ),
+                    )
                     val response =
                         Retrofit.open115Service.refreshToken(
                             baseUrl = Api.OPEN_115_PASSPORT_API,
@@ -60,6 +86,16 @@ class Open115TokenManager(
                         )
 
                     if (response.code != 0) {
+                        LogFacade.w(
+                            LogModule.STORAGE,
+                            LOG_TAG,
+                            "refresh token rejected code=${response.code}",
+                            mapOf(
+                                "storageKey" to storageKey,
+                                "forceRefresh" to forceRefresh.toString(),
+                                "refreshToken" to Open115Headers.redactToken(refreshToken),
+                            ),
+                        )
                         val detail =
                             response.error?.takeIf { it.isNotBlank() }
                                 ?: response.message?.takeIf { it.isNotBlank() }
@@ -83,8 +119,32 @@ class Open115TokenManager(
                         updatedAtMs = updatedAtMs,
                     )
 
+                    LogFacade.i(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "refresh access token success",
+                        mapOf(
+                            "storageKey" to storageKey,
+                            "expiresAtMs" to expiresAtMs.toString(),
+                            "accessToken" to Open115Headers.redactToken(token.accessToken),
+                            "refreshToken" to Open115Headers.redactToken(token.refreshToken),
+                        ),
+                    )
+
                     token.accessToken
                 }.getOrElse { t ->
+                    LogFacade.e(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "refresh access token failed",
+                        buildMap {
+                            put("storageKey", storageKey)
+                            put("forceRefresh", forceRefresh.toString())
+                            put("refreshToken", Open115Headers.redactToken(refreshToken))
+                            put("exception", t::class.java.simpleName)
+                        },
+                        t,
+                    )
                     ErrorReportHelper.postCatchedExceptionWithContext(
                         t,
                         "Open115TokenManager",
@@ -101,4 +161,3 @@ class Open115TokenManager(
                 }
             }
 }
-

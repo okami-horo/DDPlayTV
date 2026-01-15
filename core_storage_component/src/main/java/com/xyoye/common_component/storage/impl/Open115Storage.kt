@@ -1,6 +1,8 @@
 package com.xyoye.common_component.storage.impl
 
 import com.xyoye.common_component.config.PlayerConfig
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.network.repository.Open115Repository
 import com.xyoye.common_component.storage.AuthStorage
@@ -75,6 +77,19 @@ class Open115Storage(
                 ?.byteStream()
         }.getOrElse { t ->
             val fid = file.payloadAs<Open115FileItem>()?.fid.orEmpty()
+            LogFacade.e(
+                LogModule.STORAGE,
+                LOG_TAG,
+                "open file failed",
+                mapOf(
+                    "storageId" to library.id.toString(),
+                    "storageKey" to storageKey,
+                    "filePath" to runCatching { file.filePath() }.getOrNull().orEmpty(),
+                    "fid" to fid,
+                    "exception" to t::class.java.simpleName,
+                ),
+                t,
+            )
             ErrorReportHelper.postCatchedExceptionWithContext(
                 t,
                 "Open115Storage",
@@ -276,6 +291,20 @@ class Open115Storage(
             )
         }.getOrElse { t ->
             val fid = file.payloadAs<Open115FileItem>()?.fid.orEmpty()
+            LogFacade.e(
+                LogModule.STORAGE,
+                LOG_TAG,
+                "create play url failed",
+                mapOf(
+                    "storageId" to library.id.toString(),
+                    "storageKey" to storageKey,
+                    "filePath" to runCatching { file.filePath() }.getOrNull().orEmpty(),
+                    "fid" to fid,
+                    "playerType" to playerType.name,
+                    "exception" to t::class.java.simpleName,
+                ),
+                t,
+            )
             ErrorReportHelper.postCatchedExceptionWithContext(
                 t,
                 "Open115Storage",
@@ -290,6 +319,18 @@ class Open115Storage(
         {
             synchronized(rangeUnsupportedRefreshLock) {
                 runCatching {
+                    val fid = file.payloadAs<Open115FileItem>()?.fid.orEmpty()
+                    LogFacade.w(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "range unsupported, refresh upstream",
+                        mapOf(
+                            "storageId" to library.id.toString(),
+                            "storageKey" to storageKey,
+                            "filePath" to runCatching { file.filePath() }.getOrNull().orEmpty(),
+                            "fid" to fid,
+                        ),
+                    )
                     runBlocking {
                         val upstream = resolveUpstream(file, forceRefresh = true)
                         HttpPlayServer.UpstreamSource(
@@ -300,6 +341,19 @@ class Open115Storage(
                     }
                 }.onFailure { t ->
                     val fid = file.payloadAs<Open115FileItem>()?.fid.orEmpty()
+                    LogFacade.e(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "range unsupported refresh failed",
+                        mapOf(
+                            "storageId" to library.id.toString(),
+                            "storageKey" to storageKey,
+                            "filePath" to runCatching { file.filePath() }.getOrNull().orEmpty(),
+                            "fid" to fid,
+                            "exception" to t::class.java.simpleName,
+                        ),
+                        t,
+                    )
                     ErrorReportHelper.postCatchedExceptionWithContext(
                         t,
                         "Open115Storage",
@@ -423,15 +477,46 @@ class Open115Storage(
         }
 
         val cachedLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
+        val nowMs = System.currentTimeMillis()
 
+        if (!forceRefresh) {
+            downUrlCache.getValid(fid = fid, nowMs = nowMs)?.let { entry ->
+                LogFacade.d(
+                    LogModule.STORAGE,
+                    LOG_TAG,
+                    "downurl cache hit",
+                    mapOf(
+                        "storageKey" to storageKey,
+                        "fid" to fid,
+                    ),
+                )
+                return Upstream(
+                    url = entry.url,
+                    contentLength = (entry.fileSize.takeIf { it > 0 } ?: cachedLength).coerceAtLeast(-1L),
+                )
+            }
+        }
+
+        val cachedAny = downUrlCache.getAny(fid)
         val entry =
-            downUrlCache.resolve(
-                fid = fid,
-                forceRefresh = forceRefresh,
-            ) {
+            runCatching {
+                if (forceRefresh) {
+                    LogFacade.d(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "downurl force refresh",
+                        mapOf(
+                            "storageKey" to storageKey,
+                            "fid" to fid,
+                        ),
+                    )
+                }
+
                 val response = repository.downUrl(pickCode = pickCode).getOrThrow()
-                val item = response.data?.get(fid) ?: response.data?.values?.firstOrNull()
-                    ?: throw IllegalStateException("获取播放链接失败")
+                val item =
+                    response.data?.get(fid)
+                        ?: response.data?.values?.firstOrNull()
+                        ?: throw IllegalStateException("获取播放链接失败")
 
                 val url = item.url?.url?.trim().orEmpty()
                 if (url.isBlank()) {
@@ -446,8 +531,42 @@ class Open115Storage(
                     url = url,
                     userAgent = Open115Headers.USER_AGENT,
                     fileSize = length,
-                    updatedAtMs = System.currentTimeMillis(),
+                    updatedAtMs = nowMs,
                 )
+            }.onSuccess { fresh ->
+                downUrlCache.put(fresh)
+                LogFacade.d(
+                    LogModule.STORAGE,
+                    LOG_TAG,
+                    "downurl fetched",
+                    mapOf(
+                        "storageKey" to storageKey,
+                        "fid" to fid,
+                        "pickCodeLength" to pickCode.length.toString(),
+                        "fileSize" to fresh.fileSize.toString(),
+                    ),
+                )
+            }.getOrElse { t ->
+                if (cachedAny != null) {
+                    LogFacade.w(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "downurl fetch failed, fallback cache",
+                        mapOf(
+                            "storageKey" to storageKey,
+                            "fid" to fid,
+                            "forceRefresh" to forceRefresh.toString(),
+                            "exception" to t::class.java.simpleName,
+                        ),
+                        t,
+                    )
+                    return Upstream(
+                        url = cachedAny.url,
+                        contentLength = (cachedAny.fileSize.takeIf { it > 0 } ?: cachedLength).coerceAtLeast(-1L),
+                    )
+                }
+
+                throw t
             }
 
         return Upstream(
@@ -457,6 +576,8 @@ class Open115Storage(
     }
 
     companion object {
+        private const val LOG_TAG = "open115_storage"
+
         const val ROOT_CID: String = "0"
         private const val DEFAULT_PAGE_LIMIT: Int = 200
         private const val PATH_RESOLVE_PAGE_LIMIT: Int = 1150

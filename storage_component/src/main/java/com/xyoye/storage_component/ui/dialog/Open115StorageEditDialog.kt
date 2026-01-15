@@ -7,9 +7,13 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.setTextColorRes
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.repository.Open115ProApiException
 import com.xyoye.common_component.network.repository.Open115Repository
 import com.xyoye.common_component.storage.open115.auth.Open115AuthStore
+import com.xyoye.common_component.storage.open115.net.Open115Headers
+import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.data.open115.Open115UserInfoData
@@ -38,6 +42,15 @@ class Open115StorageEditDialog(
         this.binding = binding
 
         val isEditMode = originalLibrary != null
+        LogFacade.d(
+            LogModule.STORAGE,
+            LOG_TAG,
+            "init view",
+            mapOf(
+                "isEditMode" to isEditMode.toString(),
+                "libraryId" to (originalLibrary?.id ?: 0).toString(),
+            ),
+        )
         setTitle(if (isEditMode) "编辑115 Open存储库" else "添加115 Open存储库")
 
         editLibrary =
@@ -78,6 +91,17 @@ class Open115StorageEditDialog(
     private fun testConnection() {
         val (accessToken, refreshToken) = readTokensOrWarn() ?: return
 
+        LogFacade.d(
+            LogModule.STORAGE,
+            LOG_TAG,
+            "test connection",
+            mapOf(
+                "isEditMode" to (originalLibrary != null).toString(),
+                "libraryId" to editLibrary.id.toString(),
+                "accessToken" to Open115Headers.redactToken(accessToken),
+                "refreshToken" to Open115Headers.redactToken(refreshToken),
+            ),
+        )
         refreshTestStatus(TestStatus.Testing)
         activity.lifecycleScope.launch {
             val result =
@@ -89,6 +113,27 @@ class Open115StorageEditDialog(
             if (resolved == null) {
                 lastResolved = null
                 refreshTestStatus(TestStatus.Failed)
+                result.exceptionOrNull()?.let { t ->
+                    LogFacade.e(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "test connection failed",
+                        buildMap {
+                            put("isEditMode", (originalLibrary != null).toString())
+                            put("libraryId", editLibrary.id.toString())
+                            put("accessToken", Open115Headers.redactToken(accessToken))
+                            put("refreshToken", Open115Headers.redactToken(refreshToken))
+                            put("exception", t::class.java.simpleName)
+                        },
+                        t,
+                    )
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        t,
+                        "Open115StorageEditDialog",
+                        "testConnection",
+                        "isEditMode=${originalLibrary != null} libraryId=${editLibrary.id} accessToken=${Open115Headers.redactToken(accessToken)} refreshToken=${Open115Headers.redactToken(refreshToken)}",
+                    )
+                }
                 val message = result.exceptionOrNull()?.message?.takeIf { it.isNotBlank() } ?: "连接失败"
                 ToastCenter.showError(message)
                 return@launch
@@ -97,12 +142,33 @@ class Open115StorageEditDialog(
             lastResolved = resolved
             applyResolved(resolved)
             refreshTestStatus(TestStatus.Success)
+            LogFacade.i(
+                LogModule.STORAGE,
+                LOG_TAG,
+                "test connection success",
+                mapOf(
+                    "isEditMode" to (originalLibrary != null).toString(),
+                    "libraryId" to editLibrary.id.toString(),
+                    "uid" to resolved.uid,
+                ),
+            )
         }
     }
 
     private fun saveLibrary() {
         val (accessToken, refreshToken) = readTokensOrWarn() ?: return
 
+        LogFacade.d(
+            LogModule.STORAGE,
+            LOG_TAG,
+            "save library",
+            mapOf(
+                "isEditMode" to (originalLibrary != null).toString(),
+                "libraryId" to editLibrary.id.toString(),
+                "accessToken" to Open115Headers.redactToken(accessToken),
+                "refreshToken" to Open115Headers.redactToken(refreshToken),
+            ),
+        )
         refreshTestStatus(TestStatus.Testing)
         activity.lifecycleScope.launch {
             val resolved =
@@ -115,6 +181,15 @@ class Open115StorageEditDialog(
             if (resolved == null) {
                 lastResolved = null
                 refreshTestStatus(TestStatus.Failed)
+                LogFacade.w(
+                    LogModule.STORAGE,
+                    LOG_TAG,
+                    "save library failed: resolve auth null",
+                    mapOf(
+                        "isEditMode" to (originalLibrary != null).toString(),
+                        "libraryId" to editLibrary.id.toString(),
+                    ),
+                )
                 ToastCenter.showError("保存失败，token 校验未通过")
                 return@launch
             }
@@ -126,6 +201,16 @@ class Open115StorageEditDialog(
                 }
             if (duplicate != null && duplicate.id != editLibrary.id) {
                 refreshTestStatus(TestStatus.Success)
+                LogFacade.w(
+                    LogModule.STORAGE,
+                    LOG_TAG,
+                    "duplicate library detected",
+                    mapOf(
+                        "libraryId" to editLibrary.id.toString(),
+                        "duplicateId" to duplicate.id.toString(),
+                        "uid" to resolved.uid,
+                    ),
+                )
                 ToastCenter.showError("保存失败，该账号已存在，请使用编辑更新 token")
                 return@launch
             }
@@ -161,6 +246,16 @@ class Open115StorageEditDialog(
                 )
             }
 
+            LogFacade.i(
+                LogModule.STORAGE,
+                LOG_TAG,
+                "save library success",
+                mapOf(
+                    "libraryId" to editLibrary.id.toString(),
+                    "storageKey" to storageKey,
+                    "uid" to resolved.uid,
+                ),
+            )
             activity.addStorage(editLibrary)
         }
     }
@@ -192,6 +287,14 @@ class Open115StorageEditDialog(
                             }
                         }
 
+                        LogFacade.i(
+                            LogModule.STORAGE,
+                            LOG_TAG,
+                            "auth cleared",
+                            mapOf(
+                                "libraryId" to libraryId.toString(),
+                            ),
+                        )
                         lastResolved = null
                         binding.accessTokenEt.setText("")
                         binding.refreshTokenEt.setText("")
@@ -267,6 +370,16 @@ class Open115StorageEditDialog(
                 Open115Repository.userInfo(accessToken).getOrThrow()
             }.getOrElse { t ->
                 if (t is Open115ProApiException && Open115Repository.isAuthExpiredCode(t.code)) {
+                    LogFacade.w(
+                        LogModule.STORAGE,
+                        LOG_TAG,
+                        "access token expired, refresh token and retry",
+                        mapOf(
+                            "accessToken" to Open115Headers.redactToken(accessToken),
+                            "refreshToken" to Open115Headers.redactToken(refreshToken),
+                            "code" to t.code.toString(),
+                        ),
+                    )
                     val refreshed = Open115Repository.refreshToken(refreshToken).getOrThrow()
                     val token = refreshed.data ?: throw IllegalStateException("refresh_token 返回为空")
                     val refreshedAtMs = System.currentTimeMillis()
@@ -354,4 +467,8 @@ class Open115StorageEditDialog(
         val refreshToken: String,
         val expiresAtMs: Long
     )
+
+    companion object {
+        private const val LOG_TAG = "open115_storage_edit"
+    }
 }

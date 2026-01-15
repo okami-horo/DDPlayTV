@@ -114,10 +114,10 @@ description: "Task list for 115 Open 存储库在线播放"
 
 **Purpose**: 跨用户故事的稳定性、可观测性与发布前门禁
 
-- [ ] T029 为关键链路补充日志与错误上下文（且必须脱敏 token）：`core_storage_component/src/main/java/com/xyoye/common_component/network/repository/Open115Repository.kt` + `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/auth/Open115TokenManager.kt` + `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/Open115Storage.kt` + `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/Open115StorageEditDialog.kt`（使用 `LogFacade`/`ErrorReportHelper`，并用 `Open115Headers` 的脱敏工具）
-- [ ] T030 在仓库根目录运行 `./gradlew verifyModuleDependencies` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
-- [ ] T031 在仓库根目录运行 `./gradlew lint` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
-- [ ] T032 在仓库根目录运行 `./gradlew assembleRelease` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
+- [X] T029 为关键链路补充日志与错误上下文（且必须脱敏 token）：`core_storage_component/src/main/java/com/xyoye/common_component/network/repository/Open115Repository.kt` + `core_storage_component/src/main/java/com/xyoye/common_component/storage/open115/auth/Open115TokenManager.kt` + `core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/Open115Storage.kt` + `storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/Open115StorageEditDialog.kt`（使用 `LogFacade`/`ErrorReportHelper`，并用 `Open115Headers` 的脱敏工具）
+- [X] T030 在仓库根目录运行 `./gradlew verifyModuleDependencies` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
+- [X] T031 在仓库根目录运行 `./gradlew lint` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
+- [X] T032 在仓库根目录运行 `./gradlew assembleRelease` 并确认输出末尾为 `BUILD SUCCESSFUL`（`./gradlew`）
 - [ ] T033 最终对照 `specs/001-115-open-storage/quickstart.md` 走通 P1-P4 用例并在 `specs/001-115-open-storage/checklists/acceptance.md` 留存验收记录（文字/截图/关键日志均可）
 
 ---
