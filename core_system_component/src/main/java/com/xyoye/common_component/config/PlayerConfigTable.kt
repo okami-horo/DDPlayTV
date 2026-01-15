@@ -69,6 +69,14 @@ object PlayerConfigTable {
     @MMKVFiled
     val vlcLocalProxyMode = LocalProxyMode.AUTO.value
 
+    // Media3(Exo) 本地 HTTP 代理：Range 请求最小间隔（毫秒），用于降低上游风控触发概率
+    @MMKVFiled
+    val exoProxyRangeMinIntervalMs = 200
+
+    // Media3(Exo) 本地 HTTP 代理：开关策略（关闭 / 自动 / 强制）
+    @MMKVFiled
+    val exoLocalProxyMode = LocalProxyMode.AUTO.value
+
     // MPV 视频输出（vo）：gpu / gpu-next / mediacodec_embed
     @MMKVFiled
     val mpvVideoOutput = "gpu"

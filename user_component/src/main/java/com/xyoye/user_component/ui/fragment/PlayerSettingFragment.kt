@@ -60,6 +60,12 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                 "vlc_local_proxy_mode",
             )
 
+        val exoPreference =
+            arrayOf(
+                "exo_proxy_range_interval_ms",
+                "exo_local_proxy_mode",
+            )
+
         val mpvPreference =
             arrayOf(
                 "mpv_proxy_range_interval_ms",
@@ -118,6 +124,7 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
     ) {
         preferenceManager.preferenceDataStore = PlayerSettingDataStore()
         addPreferencesFromResource(R.xml.preference_player_setting)
+        setupRangeIntervalPreference("exo_proxy_range_interval_ms")
         setupRangeIntervalPreference("mpv_proxy_range_interval_ms")
         setupRangeIntervalPreference("vlc_proxy_range_interval_ms")
     }
@@ -255,6 +262,23 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         }
 
+        // Media3 本地防风控代理（HttpPlayServer）
+        findPreference<ListPreference>("exo_local_proxy_mode")?.apply {
+            entries = localProxyMode.keys.toTypedArray()
+            entryValues = localProxyMode.values.toTypedArray()
+            val stored = PlayerConfig.getExoLocalProxyMode()
+            val safeValue = LocalProxyMode.from(stored).value.toString()
+            val resolved =
+                value?.takeIf { localProxyMode.containsValue(it) }
+                    ?: safeValue.takeIf { localProxyMode.containsValue(it) }
+                    ?: DEFAULT_LOCAL_PROXY_MODE
+            if (value != resolved) {
+                value = resolved
+                PlayerConfig.putExoLocalProxyMode(resolved.toInt())
+            }
+            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
+        }
+
         super.onViewCreated(view, savedInstanceState)
     }
 
@@ -293,14 +317,17 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
             PlayerType.TYPE_VLC_PLAYER.value.toString() -> {
                 vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
                 mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
+                exoPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
             }
             PlayerType.TYPE_MPV_PLAYER.value.toString() -> {
                 vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
                 mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
+                exoPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
             }
             else -> {
                 vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
                 mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
+                exoPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
             }
         }
     }
@@ -383,6 +410,14 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                         }
                         safeValue
                     }
+                    "exo_local_proxy_mode" -> {
+                        val current = PlayerConfig.getExoLocalProxyMode()
+                        val safeValue = LocalProxyMode.from(current).value.toString()
+                        if (current.toString() != safeValue) {
+                            PlayerConfig.putExoLocalProxyMode(safeValue.toInt())
+                        }
+                        safeValue
+                    }
                     else -> super.getString(key, defValue)
                 }
             } catch (e: Exception) {
@@ -445,6 +480,10 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                             val safeValue = LocalProxyMode.from(value.toIntOrNull()).value
                             PlayerConfig.putVlcLocalProxyMode(safeValue)
                         }
+                        "exo_local_proxy_mode" -> {
+                            val safeValue = LocalProxyMode.from(value.toIntOrNull()).value
+                            PlayerConfig.putExoLocalProxyMode(safeValue)
+                        }
                         else -> super.putString(key, value)
                     }
                 } else {
@@ -470,6 +509,8 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                         normalizeMpvRangeInterval(PlayerConfig.getMpvProxyRangeMinIntervalMs())
                     "vlc_proxy_range_interval_ms" ->
                         normalizeMpvRangeInterval(PlayerConfig.getVlcProxyRangeMinIntervalMs())
+                    "exo_proxy_range_interval_ms" ->
+                        normalizeMpvRangeInterval(PlayerConfig.getExoProxyRangeMinIntervalMs())
                     else -> super.getInt(key, defValue)
                 }
             } catch (e: Exception) {
@@ -493,6 +534,9 @@ class PlayerSettingFragment : PreferenceFragmentCompat() {
                     }
                     "vlc_proxy_range_interval_ms" -> {
                         PlayerConfig.putVlcProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
+                    }
+                    "exo_proxy_range_interval_ms" -> {
+                        PlayerConfig.putExoProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
                     }
                     else -> super.putInt(key, value)
                 }

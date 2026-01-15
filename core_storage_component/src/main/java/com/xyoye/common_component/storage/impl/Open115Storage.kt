@@ -263,10 +263,6 @@ class Open115Storage(
 
             val upstream = resolveUpstream(file, forceRefresh = false)
 
-            if (playerType != PlayerType.TYPE_MPV_PLAYER && playerType != PlayerType.TYPE_VLC_PLAYER) {
-                return@runCatching upstream.url
-            }
-
             val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifBlank { "video" }
 
             val (mode, interval) =
@@ -275,8 +271,24 @@ class Open115Storage(
                         PlayerConfig.getMpvLocalProxyMode() to PlayerConfig.getMpvProxyRangeMinIntervalMs().toLong()
                     PlayerType.TYPE_VLC_PLAYER ->
                         PlayerConfig.getVlcLocalProxyMode() to PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong()
+                    PlayerType.TYPE_EXO_PLAYER ->
+                        PlayerConfig.getExoLocalProxyMode() to PlayerConfig.getExoProxyRangeMinIntervalMs().toLong()
                     else -> return@runCatching upstream.url
                 }
+
+            LogFacade.d(
+                LogModule.STORAGE,
+                LOG_TAG,
+                "createPlayUrl local proxy policy",
+                mapOf(
+                    "storageId" to library.id.toString(),
+                    "storageKey" to storageKey,
+                    "playerType" to playerType.name,
+                    "mode" to mode.toString(),
+                    "intervalMs" to interval.toString(),
+                    "contentLength" to upstream.contentLength.toString(),
+                ),
+            )
 
             LocalProxy.wrapIfNeeded(
                 playerType = playerType,
