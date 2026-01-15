@@ -2,6 +2,7 @@ package com.xyoye.data_component.data.open115
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.xyoye.data_component.helper.moshi.EmptyArrayToNull
 
 interface Open115ProApiResponse {
     val state: Boolean
@@ -52,6 +53,7 @@ data class Open115RefreshTokenResponse(
     override val message: String? = null,
     override val errno: Int = 0,
     override val error: String? = null,
+    @EmptyArrayToNull
     val data: Open115RefreshTokenData? = null
 ) : Open115PassportResponse
 
@@ -100,6 +102,7 @@ data class Open115UserInfoResponse(
     override val state: Boolean = false,
     override val code: Int = 0,
     override val message: String? = null,
+    @EmptyArrayToNull
     val data: Open115UserInfoData? = null
 ) : Open115ProApiResponse
 
@@ -153,6 +156,7 @@ data class Open115DownUrlResponse(
     override val state: Boolean = false,
     override val code: Int = 0,
     override val message: String? = null,
+    @EmptyArrayToNull
     val data: Map<String, Open115DownUrlItem>? = null
 ) : Open115ProApiResponse
 
@@ -199,5 +203,6 @@ data class Open115FolderInfoResponse(
     override val state: Boolean = false,
     override val code: Int = 0,
     override val message: String? = null,
+    @EmptyArrayToNull
     val data: Open115FolderInfoData? = null
 ) : Open115ProApiResponse
