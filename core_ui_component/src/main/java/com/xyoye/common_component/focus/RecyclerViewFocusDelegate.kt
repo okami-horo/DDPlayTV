@@ -38,7 +38,9 @@ class RecyclerViewFocusDelegate(
     fun installVerticalDpadKeyNavigation(
         focusTargetProvider: (RecyclerView) -> FocusTarget = { defaultFocusTarget() },
         onMenuKeyDown: (() -> Unit)? = null,
-        onSettingsKeyDown: (() -> Unit)? = onMenuKeyDown
+        onSettingsKeyDown: (() -> Unit)? = onMenuKeyDown,
+        consumeDownKeyWhenBottom: Boolean = false,
+        consumeUpKeyWhenTop: Boolean = false
     ) {
         recyclerView.setOnKeyListener { _, keyCode, event ->
             if (event?.action != KeyEvent.ACTION_DOWN) {
@@ -49,11 +51,11 @@ class RecyclerViewFocusDelegate(
             }
 
             val rvAdapter = recyclerView.adapter ?: return@setOnKeyListener false
-            val focusedChild = recyclerView.focusedChild ?: return@setOnKeyListener false
-            val currentIndex = recyclerView.getChildAdapterPosition(focusedChild)
-            if (currentIndex == RecyclerView.NO_POSITION) {
+            val itemCount = rvAdapter.itemCount
+            if (itemCount <= 0) {
                 return@setOnKeyListener false
             }
+            val currentIndex = resolveCurrentIndex(itemCount)
 
             when (keyCode) {
                 KeyEvent.KEYCODE_MENU -> {
@@ -66,25 +68,56 @@ class RecyclerViewFocusDelegate(
                     true
                 }
 
-                KeyEvent.KEYCODE_DPAD_DOWN ->
-                    moveFocusBy(
-                        offset = 1,
-                        itemCount = rvAdapter.itemCount,
-                        currentIndex = currentIndex,
-                        focusTarget = focusTargetProvider(recyclerView),
-                    )
+                KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    if (currentIndex >= itemCount - 1) {
+                        consumeDownKeyWhenBottom
+                    } else {
+                        moveFocusBy(
+                            offset = 1,
+                            itemCount = itemCount,
+                            currentIndex = currentIndex,
+                            focusTarget = focusTargetProvider(recyclerView),
+                        )
+                    }
+                }
 
-                KeyEvent.KEYCODE_DPAD_UP ->
-                    moveFocusBy(
-                        offset = -1,
-                        itemCount = rvAdapter.itemCount,
-                        currentIndex = currentIndex,
-                        focusTarget = focusTargetProvider(recyclerView),
-                    )
+                KeyEvent.KEYCODE_DPAD_UP -> {
+                    if (currentIndex <= 0) {
+                        consumeUpKeyWhenTop
+                    } else {
+                        moveFocusBy(
+                            offset = -1,
+                            itemCount = itemCount,
+                            currentIndex = currentIndex,
+                            focusTarget = focusTargetProvider(recyclerView),
+                        )
+                    }
+                }
 
                 else -> false
             }
         }
+    }
+
+    private fun resolveCurrentIndex(itemCount: Int): Int {
+        val focusedChild = recyclerView.focusedChild
+        val focusedIndex =
+            if (focusedChild != null) recyclerView.getChildAdapterPosition(focusedChild) else RecyclerView.NO_POSITION
+        if (focusedIndex != RecyclerView.NO_POSITION) {
+            return focusedIndex.coerceIn(0, itemCount - 1)
+        }
+
+        val lastIndex = lastFocusedIndex
+        if (lastIndex != RecyclerView.NO_POSITION && lastIndex in 0 until itemCount) {
+            return lastIndex
+        }
+
+        val pendingIndex = pendingFocusIndex
+        if (pendingIndex != RecyclerView.NO_POSITION && pendingIndex in 0 until itemCount) {
+            return pendingIndex
+        }
+
+        return 0
     }
 
     fun setChildrenFocusable(

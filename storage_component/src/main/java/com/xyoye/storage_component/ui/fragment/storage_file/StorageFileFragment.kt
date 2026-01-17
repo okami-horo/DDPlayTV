@@ -187,6 +187,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                 focusTargetProvider = { rv -> rv.resolveVerticalMoveFocusTarget() },
                 onMenuKeyDown = { triggerTvRefresh() },
                 onSettingsKeyDown = { triggerTvRefresh() },
+                consumeDownKeyWhenBottom = true
             )
         }
     }

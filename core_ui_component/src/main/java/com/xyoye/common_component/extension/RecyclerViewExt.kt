@@ -110,9 +110,39 @@ fun RecyclerView.requestIndexChildFocus(
     }
 
     alignPosition(index, layoutManager, useKeylineAlignment)
-    post {
-        tryRequestFocus()
+    val tokenKey = R.id.recycler_view_request_focus_token
+    val runnableKey = R.id.recycler_view_request_focus_runnable
+    val token = ((getTag(tokenKey) as? Long) ?: 0L) + 1L
+    setTag(tokenKey, token)
+
+    (getTag(runnableKey) as? Runnable)?.let { old ->
+        removeCallbacks(old)
     }
+
+    val focusRunnable =
+        object : Runnable {
+            private var attempts = 0
+
+            override fun run() {
+                val currentToken = getTag(tokenKey) as? Long
+                if (currentToken != token) {
+                    return
+                }
+                if (tryRequestFocus()) {
+                    setTag(runnableKey, null)
+                    return
+                }
+
+                attempts++
+                if (attempts < 10) {
+                    postOnAnimation(this)
+                } else {
+                    setTag(runnableKey, null)
+                }
+            }
+        }
+    setTag(runnableKey, focusRunnable)
+    post(focusRunnable)
     return true
 }
 
