@@ -14,10 +14,12 @@ interface PagedStorage {
         IDLE,
         LOADING,
         ERROR,
-        NO_MORE,
+        NO_MORE
     }
 
     var state: State
+
+    fun shouldShowPagingItem(directory: StorageFile?): Boolean = true
 
     fun hasMore(): Boolean
 
@@ -25,4 +27,3 @@ interface PagedStorage {
 
     suspend fun loadMore(): Result<List<StorageFile>>
 }
-

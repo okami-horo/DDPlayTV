@@ -1,9 +1,10 @@
 package com.xyoye.common_component.source.media
 
+import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackAddon
+import com.xyoye.common_component.playback.addon.PlaybackAddon
+import com.xyoye.common_component.playback.addon.PlaybackIdentity
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
-import com.xyoye.common_component.bilibili.BilibiliKeys
-import com.xyoye.common_component.bilibili.net.BilibiliHeaders
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
 import com.xyoye.common_component.utils.getFileName
@@ -11,6 +12,7 @@ import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.enums.MediaType
+import com.xyoye.data_component.enums.PlayerType
 
 /**
  * Created by xyoye on 2023/1/2.
@@ -24,10 +26,13 @@ class StorageVideoSource(
     private var subtitlePath: String?,
     private var audioPath: String?,
     private val playbackProfile: PlaybackProfile,
+    private val playbackAddon: PlaybackAddon? = createDefaultPlaybackAddon(playUrl, file, playbackProfile)
 ) : BaseVideoSource(
         videoSources.indexOfFirst { it.uniqueKey() == file.uniqueKey() },
         videoSources,
     ) {
+    override fun getPlaybackAddon(): PlaybackAddon? = playbackAddon
+
     override fun getDanmu(): LocalDanmuBean? = danmu
 
     override fun setDanmu(danmu: LocalDanmuBean?) {
@@ -67,22 +72,7 @@ class StorageVideoSource(
 
     override fun getUniqueKey(): String = file.uniqueKey()
 
-    override fun getHttpHeader(): Map<String, String>? {
-        val headers = file.storage.getNetworkHeaders() ?: return null
-        val bilibiliKey = BilibiliKeys.parse(file.uniqueKey()) ?: return headers
-
-        val referer =
-            when (bilibiliKey) {
-                is BilibiliKeys.ArchiveKey -> "https://www.bilibili.com/video/${bilibiliKey.bvid}"
-                is BilibiliKeys.PgcEpisodeKey -> "https://www.bilibili.com/bangumi/play/ep${bilibiliKey.epId}"
-                is BilibiliKeys.LiveKey -> "https://live.bilibili.com/${bilibiliKey.roomId}"
-                is BilibiliKeys.PgcSeasonKey -> null
-            } ?: return headers
-
-        return headers.toMutableMap().apply {
-            this[BilibiliHeaders.HEADER_REFERER] = referer
-        }
-    }
+    override fun getHttpHeader(): Map<String, String>? = file.storage.getNetworkHeaders(file)
 
     override fun getStorageId(): Int = file.storage.library.id
 
@@ -114,4 +104,28 @@ class StorageVideoSource(
     fun indexStorageFile(index: Int): StorageFile = videoSources[index]
 
     fun getPlaybackProfile(): PlaybackProfile = playbackProfile
+
+    private companion object {
+        fun createDefaultPlaybackAddon(
+            playUrl: String,
+            file: StorageFile,
+            playbackProfile: PlaybackProfile
+        ): PlaybackAddon? =
+            if (file.storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
+                BilibiliPlaybackAddon(
+                    identity =
+                        PlaybackIdentity(
+                            storageId = file.storage.library.id,
+                            uniqueKey = file.uniqueKey(),
+                            mediaType = file.storage.library.mediaType,
+                            storagePath = file.storagePath(),
+                            videoTitle = file.fileName(),
+                            videoUrl = playUrl,
+                        ),
+                    supportsSeamlessPreferenceSwitch = playbackProfile.playerType == PlayerType.TYPE_EXO_PLAYER,
+                )
+            } else {
+                null
+            }
+    }
 }

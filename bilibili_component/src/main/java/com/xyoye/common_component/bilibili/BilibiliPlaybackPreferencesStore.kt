@@ -1,7 +1,7 @@
 package com.xyoye.common_component.bilibili
 
-import com.xyoye.common_component.bilibili.cdn.BilibiliCdnService
 import com.tencent.mmkv.MMKV
+import com.xyoye.common_component.bilibili.cdn.BilibiliCdnService
 import com.xyoye.data_component.entity.MediaLibraryEntity
 
 /**
@@ -23,8 +23,7 @@ object BilibiliPlaybackPreferencesStore {
     private const val KEY_CDN_SERVICE = "cdn_service"
     private const val KEY_HEARTBEAT_REPORT = "heartbeat_report"
 
-    fun storageKey(library: MediaLibraryEntity): String =
-        "${library.mediaType.value}:${library.url.trim().removeSuffix("/")}"
+    fun storageKey(library: MediaLibraryEntity): String = "${library.mediaType.value}:${library.url.trim().removeSuffix("/")}"
 
     fun read(library: MediaLibraryEntity): BilibiliPlaybackPreferences = read(storageKey(library))
 

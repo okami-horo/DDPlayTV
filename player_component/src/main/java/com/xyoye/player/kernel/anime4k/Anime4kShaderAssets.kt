@@ -29,4 +29,3 @@ object Anime4kShaderAssets {
             "Anime4K_Upscale_CNN_x2_M.glsl",
         )
 }
-

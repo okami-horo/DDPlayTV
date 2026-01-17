@@ -20,4 +20,3 @@ interface DeveloperMenuService : IProvider {
         menu: Menu
     ): Delegate
 }
-

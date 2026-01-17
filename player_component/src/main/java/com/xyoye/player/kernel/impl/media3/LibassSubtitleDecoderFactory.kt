@@ -11,7 +11,6 @@ import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 class LibassSubtitleDecoderFactory(
     private val sinkProvider: () -> EmbeddedSubtitleSink?
 ) : SubtitleDecoderFactory {
-
     private val defaultFactory = SubtitleDecoderFactory.DEFAULT
 
     override fun supportsFormat(format: Format): Boolean {
@@ -22,13 +21,12 @@ class LibassSubtitleDecoderFactory(
         return defaultFactory.supportsFormat(format)
     }
 
-    override fun createDecoder(format: Format): SubtitleDecoder {
-        return if (sinkProvider() != null && isSsaMime(format.sampleMimeType)) {
+    override fun createDecoder(format: Format): SubtitleDecoder =
+        if (sinkProvider() != null && isSsaMime(format.sampleMimeType)) {
             LibassSsaStreamDecoder(format, sinkProvider)
         } else {
             defaultFactory.createDecoder(format)
         }
-    }
 
     private fun isSsaMime(mimeType: String?): Boolean {
         if (mimeType == null) {

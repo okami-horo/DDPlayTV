@@ -6,10 +6,9 @@ import com.squareup.moshi.JsonClass
 data class BilibiliResultJsonModel<T>(
     val code: Int = 0,
     val message: String = "",
-    val result: T? = null,
+    val result: T? = null
 ) {
     val isSuccess: Boolean get() = code == 0
 
     val successData: T? get() = if (isSuccess) result else null
 }
-

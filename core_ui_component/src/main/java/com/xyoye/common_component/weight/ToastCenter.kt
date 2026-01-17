@@ -14,10 +14,10 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.databinding.DataBindingUtil
-import com.xyoye.core_ui_component.R
 import com.xyoye.common_component.base.app.BaseApplication
-import com.xyoye.core_ui_component.databinding.LayoutLevelToastBinding
 import com.xyoye.common_component.extension.isNightMode
+import com.xyoye.core_ui_component.R
+import com.xyoye.core_ui_component.databinding.LayoutLevelToastBinding
 
 /**
  * Created by xyoye on 2020/9/7.

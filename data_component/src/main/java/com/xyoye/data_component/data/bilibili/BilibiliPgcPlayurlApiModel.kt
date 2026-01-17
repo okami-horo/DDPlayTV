@@ -12,6 +12,5 @@ data class BilibiliPgcPlayurlApiModel(
     val code: Int = 0,
     val message: String = "",
     val dash: BilibiliDashData? = null,
-    val durl: List<BilibiliDurlData> = emptyList(),
+    val durl: List<BilibiliDurlData> = emptyList()
 )
-

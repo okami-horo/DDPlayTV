@@ -12,14 +12,13 @@ import com.xyoye.common_component.extension.nextItemIndex
 import com.xyoye.common_component.extension.previousItemIndex
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
+import com.xyoye.common_component.playback.addon.PlaybackSettingsAddon
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
-import com.xyoye.common_component.bilibili.BilibiliKeys
+import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
-import com.xyoye.data_component.enums.PlayerType
-import com.xyoye.data_component.enums.MediaType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingAction
 import com.xyoye.player.info.SettingActionType
@@ -214,15 +213,13 @@ class PlayerSettingView(
         val disabledActions =
             mutableSetOf(
                 SettingAction.SCREEN_SHOT,
-                SettingAction.BACKGROUND_PLAY
+                SettingAction.BACKGROUND_PLAY,
             )
 
         val source = mControlWrapper.getVideoSource()
-        val isBilibiliPlayable =
-            source.getMediaType() == MediaType.BILIBILI_STORAGE &&
-                (BilibiliKeys.parse(source.getUniqueKey()) !is BilibiliKeys.LiveKey)
-        if (!isBilibiliPlayable) {
-            disabledActions.add(SettingAction.BILIBILI_PLAYBACK)
+        val canShowPlaybackSetting = source.getPlaybackAddon() is PlaybackSettingsAddon
+        if (!canShowPlaybackSetting) {
+            disabledActions.add(SettingAction.PLAYBACK_ADDON_SETTING)
         }
 
         if (PlayerInitializer.playerType != PlayerType.TYPE_EXO_PLAYER ||
@@ -263,58 +260,8 @@ class PlayerSettingView(
         var selected = false
 
         when (item.action) {
-            SettingAction.AUDIO_TRACK -> {
-                selected = mControlWrapper.getVideoSource().getAudioPath()?.isNotEmpty() == true
-            }
-
-            SettingAction.VIDEO_ASPECT -> {
-                selected = PlayerInitializer.screenScale != VideoScreenScale.SCREEN_SCALE_DEFAULT
-            }
-
-            SettingAction.VIDEO_SPEED -> {
-                selected = PlayerInitializer.Player.videoSpeed != PlayerInitializer.Player.DEFAULT_SPEED ||
-                    PlayerInitializer.Player.pressVideoSpeed != PlayerInitializer.Player.DEFAULT_PRESS_SPEED
-            }
-
-            SettingAction.ANIME4K -> {
-                selected = mControlWrapper.getAnime4kMode() != Anime4kMode.MODE_OFF
-            }
-
             SettingAction.BACKGROUND_PLAY -> {
                 selected = PlayerConfig.isBackgroundPlay()
-            }
-
-            SettingAction.DANMU_TRACK -> {
-                selected = mControlWrapper.getVideoSource().getDanmu() != null
-            }
-
-            SettingAction.DANMU_STYLE -> {
-                selected = PlayerInitializer.Danmu.size != PlayerInitializer.Danmu.DEFAULT_SIZE ||
-                    PlayerInitializer.Danmu.alpha != PlayerInitializer.Danmu.DEFAULT_ALPHA ||
-                    PlayerInitializer.Danmu.stoke != PlayerInitializer.Danmu.DEFAULT_STOKE ||
-                    PlayerInitializer.Danmu.speed != PlayerInitializer.Danmu.DEFAULT_SPEED
-            }
-
-            SettingAction.DANMU_TIME -> {
-                selected =
-                    PlayerInitializer.Danmu.offsetPosition != PlayerInitializer.Danmu.DEFAULT_POSITION
-            }
-
-            SettingAction.SUBTITLE_TRACK -> {
-                selected = mControlWrapper.getVideoSource().getSubtitlePath() != null
-            }
-
-            SettingAction.SUBTITLE_STYLE -> {
-                selected =
-                    PlayerInitializer.Subtitle.textSize != PlayerInitializer.Subtitle.DEFAULT_SIZE ||
-                    PlayerInitializer.Subtitle.strokeWidth != PlayerInitializer.Subtitle.DEFAULT_STROKE ||
-                    PlayerInitializer.Subtitle.textColor != PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR ||
-                    PlayerInitializer.Subtitle.strokeColor != PlayerInitializer.Subtitle.DEFAULT_STROKE_COLOR
-            }
-
-            SettingAction.SUBTITLE_TIME -> {
-                selected =
-                    PlayerInitializer.Subtitle.offsetPosition != PlayerInitializer.Subtitle.DEFAULT_POSITION
             }
 
             SettingAction.SCREEN_ORIENTATION -> {
@@ -357,8 +304,8 @@ class PlayerSettingView(
                 onSettingVisibilityChanged(false)
             }
 
-            SettingAction.BILIBILI_PLAYBACK -> {
-                mControlWrapper.showSettingView(SettingViewType.BILIBILI_PLAYBACK)
+            SettingAction.PLAYBACK_ADDON_SETTING -> {
+                mControlWrapper.showSettingView(SettingViewType.PLAYBACK_ADDON_SETTING)
                 onSettingVisibilityChanged(false)
             }
 

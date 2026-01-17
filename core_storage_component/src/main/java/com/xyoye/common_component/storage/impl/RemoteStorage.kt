@@ -61,19 +61,19 @@ class RemoteStorage(
             ?.also { it.playHistory = history }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String {
-        return createPlayUrl(
+    override suspend fun createPlayUrl(file: StorageFile): String =
+        createPlayUrl(
             file = file,
-            profile = PlaybackProfile(
-                playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
-                source = PlaybackProfileSource.GLOBAL,
-            ),
+            profile =
+                PlaybackProfile(
+                    playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
+                    source = PlaybackProfileSource.GLOBAL,
+                ),
         )
-    }
 
     override suspend fun createPlayUrl(
         file: StorageFile,
-        profile: PlaybackProfile,
+        profile: PlaybackProfile
     ): String {
         val playerType = profile.playerType
         val fileUrl = (file as RemoteStorageFile).fileUrl()

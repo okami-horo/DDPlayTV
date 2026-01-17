@@ -1,37 +1,73 @@
 package com.xyoye.player.subtitle.backend
 
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.Looper
 import android.os.SystemClock
 import android.view.Choreographer
 import android.view.Surface
 import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.subtitle.SubtitleFontManager
+import com.xyoye.data_component.enums.SubtitleFallbackReason
+import com.xyoye.data_component.enums.SubtitlePipelineFallbackReason
+import com.xyoye.data_component.enums.SubtitlePipelineMode
 import com.xyoye.data_component.enums.SubtitleViewType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.subtitle.ui.SubtitleSurfaceOverlay
-import com.xyoye.player_component.subtitle.gpu.AssGpuRenderer
-import com.xyoye.player_component.subtitle.gpu.LocalSubtitlePipelineApi
-import com.xyoye.player_component.subtitle.gpu.SubtitleFallbackController
-import com.xyoye.player_component.subtitle.gpu.SubtitleOutputTargetTracker
-import com.xyoye.player_component.subtitle.gpu.SubtitlePipelineController
-import com.xyoye.player_component.subtitle.gpu.SubtitleRecoveryCoordinator
-import com.xyoye.player_component.subtitle.gpu.SubtitleSurfaceLifecycleHandler
+import com.xyoye.player.subtitle.gpu.AssGpuRenderer
+import com.xyoye.player.subtitle.gpu.LocalSubtitlePipelineApi
+import com.xyoye.player.subtitle.gpu.SubtitleFallbackController
+import com.xyoye.player.subtitle.gpu.SubtitleOutputTargetTracker
+import com.xyoye.player.subtitle.gpu.SubtitlePipelineController
+import com.xyoye.player.subtitle.gpu.SubtitleRecoveryCoordinator
+import com.xyoye.player.subtitle.gpu.SubtitleSurfaceLifecycleHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
 @UnstableApi
 internal class LibassGpuSubtitleSession(
     private val environment: SubtitleRenderEnvironment,
-    private val kernelBridge: SubtitleKernelBridge?,
+    private val kernelBridge: SubtitleKernelBridge?
 ) : SubtitleFrameDriver.Callback {
+    private val sessionScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val renderThread = HandlerThread("LibassGpuSubtitleRender").apply { start() }
+    private val renderHandler = Handler(renderThread.looper)
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val fallbackDispatched = AtomicBoolean(false)
+
     private val pipelineApi = LocalSubtitlePipelineApi()
     private val pipelineController = SubtitlePipelineController(pipelineApi)
-    private val gpuRenderer = AssGpuRenderer(pipelineController)
+    private val gpuRenderer =
+        AssGpuRenderer(
+            pipelineController = pipelineController,
+            renderHandler = renderHandler,
+            scope = sessionScope,
+            pipelineErrorListener = ::onPipelineError,
+        )
     private val fallbackController = SubtitleFallbackController(pipelineController)
     private val tracker = SubtitleOutputTargetTracker()
-    private val lifecycleHandler = SubtitleSurfaceLifecycleHandler(gpuRenderer, tracker, fallbackController)
+    private val lifecycleHandler =
+        SubtitleSurfaceLifecycleHandler(
+            renderer = gpuRenderer,
+            tracker = tracker,
+            fallbackController = fallbackController,
+            scope = sessionScope,
+        )
     private val recoveryCoordinator =
-        SubtitleRecoveryCoordinator(gpuRenderer, tracker, fallbackController, pipelineController)
+        SubtitleRecoveryCoordinator(
+            renderer = gpuRenderer,
+            tracker = tracker,
+            fallbackController = fallbackController,
+            pipelineController = pipelineController,
+            scope = sessionScope,
+        )
 
     private var overlay: SubtitleSurfaceOverlay? = null
     private var embeddedSink: EmbeddedSubtitleSink? = null
@@ -59,6 +95,9 @@ internal class LibassGpuSubtitleSession(
         }
         overlay = null
         runCatching { gpuRenderer.release() }
+        runCatching { renderThread.quitSafely() }
+        runCatching { renderThread.join(1500) }
+        sessionScope.cancel()
         environment.clearUiReferences()
     }
 
@@ -142,6 +181,33 @@ internal class LibassGpuSubtitleSession(
         if (!choreographerRunning) return
         choreographerRunning = false
         choreographer?.removeFrameCallback(frameCallback)
+    }
+
+    private fun onPipelineError(
+        reason: SubtitlePipelineFallbackReason,
+        error: Throwable?
+    ) {
+        sessionScope.launch {
+            if (fallbackController.currentState()?.mode == SubtitlePipelineMode.FALLBACK_CPU) {
+                return@launch
+            }
+            fallbackController.forceFallback(reason)
+        }
+
+        val backendReason =
+            when (reason) {
+                SubtitlePipelineFallbackReason.SURFACE_LOST -> null
+                SubtitlePipelineFallbackReason.UNSUPPORTED_GPU,
+                SubtitlePipelineFallbackReason.INIT_TIMEOUT -> SubtitleFallbackReason.INIT_FAIL
+                SubtitlePipelineFallbackReason.GL_ERROR,
+                SubtitlePipelineFallbackReason.UNKNOWN -> SubtitleFallbackReason.RENDER_FAIL
+            } ?: return
+
+        if (!fallbackDispatched.compareAndSet(false, true)) {
+            return
+        }
+        val dispatcher = environment.fallbackDispatcher ?: return
+        mainHandler.post { dispatcher.onSubtitleBackendFallback(backendReason, error) }
     }
 
     private val frameCallback =

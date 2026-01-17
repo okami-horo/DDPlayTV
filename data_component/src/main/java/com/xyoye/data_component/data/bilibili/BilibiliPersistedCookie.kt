@@ -12,5 +12,5 @@ data class BilibiliPersistedCookie(
     val secure: Boolean,
     val httpOnly: Boolean,
     val hostOnly: Boolean,
-    val persistent: Boolean,
+    val persistent: Boolean
 )

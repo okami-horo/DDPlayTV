@@ -17,7 +17,7 @@ object BilibiliPlayurlPreferencesMapper {
 
     fun archivePrimaryParams(
         preferences: BilibiliPlaybackPreferences,
-        apiType: BilibiliApiType,
+        apiType: BilibiliApiType
     ): RequestParams =
         when (apiType) {
             BilibiliApiType.WEB ->
@@ -43,7 +43,7 @@ object BilibiliPlayurlPreferencesMapper {
 
     fun archiveFallbackParamsOrNull(
         preferences: BilibiliPlaybackPreferences,
-        apiType: BilibiliApiType,
+        apiType: BilibiliApiType
     ): RequestParams? =
         if (preferences.playMode != BilibiliPlayMode.AUTO) {
             null
@@ -56,7 +56,7 @@ object BilibiliPlayurlPreferencesMapper {
 
     fun pgcPrimaryParams(
         preferences: BilibiliPlaybackPreferences,
-        apiType: BilibiliApiType,
+        apiType: BilibiliApiType
     ): RequestParams =
         when (apiType) {
             BilibiliApiType.WEB ->
@@ -88,7 +88,7 @@ object BilibiliPlayurlPreferencesMapper {
 
     fun pgcFallbackParamsOrNull(
         preferences: BilibiliPlaybackPreferences,
-        apiType: BilibiliApiType,
+        apiType: BilibiliApiType
     ): RequestParams? =
         if (preferences.playMode != BilibiliPlayMode.AUTO) {
             null
@@ -101,21 +101,19 @@ object BilibiliPlayurlPreferencesMapper {
 
     fun primaryParams(
         preferences: BilibiliPlaybackPreferences,
-        apiType: BilibiliApiType,
-    ): RequestParams =
-        archivePrimaryParams(preferences, apiType)
+        apiType: BilibiliApiType
+    ): RequestParams = archivePrimaryParams(preferences, apiType)
 
     fun fallbackParamsOrNull(
         preferences: BilibiliPlaybackPreferences,
-        apiType: BilibiliApiType,
-    ): RequestParams? =
-        archiveFallbackParamsOrNull(preferences, apiType)
+        apiType: BilibiliApiType
+    ): RequestParams? = archiveFallbackParamsOrNull(preferences, apiType)
 
     private fun buildDashParams(
         preferences: BilibiliPlaybackPreferences,
         platform: String?,
         includeCodecid: Boolean,
-        fnvalOverride: Int? = null,
+        fnvalOverride: Int? = null
     ): RequestParams {
         val params: RequestParams = hashMapOf()
         params["fnver"] = 0
@@ -141,7 +139,7 @@ object BilibiliPlayurlPreferencesMapper {
 
     private fun buildMp4Params(
         preferences: BilibiliPlaybackPreferences,
-        platform: String?,
+        platform: String?
     ): RequestParams {
         val params: RequestParams = hashMapOf()
         params["fnver"] = 0

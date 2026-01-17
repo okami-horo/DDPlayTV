@@ -24,31 +24,28 @@ object BilibiliPlaybackErrorReporter {
         val uniqueKey: String,
         val videoTitle: String,
         val videoUrl: String,
-        val httpHeader: Map<String, String>?,
+        val httpHeader: Map<String, String>?
     )
 
-    fun isBilibiliSource(mediaType: MediaType?): Boolean =
-        mediaType == MediaType.BILIBILI_STORAGE
+    fun isBilibiliSource(mediaType: MediaType?): Boolean = mediaType == MediaType.BILIBILI_STORAGE
 
-    fun isBilibiliSource(source: SourceSnapshot?): Boolean =
-        isBilibiliSource(source?.mediaType)
+    fun isBilibiliSource(source: SourceSnapshot?): Boolean = isBilibiliSource(source?.mediaType)
 
     fun isBilibiliLive(
         mediaType: MediaType?,
-        uniqueKey: String?,
+        uniqueKey: String?
     ): Boolean =
         isBilibiliSource(mediaType) &&
             uniqueKey != null &&
             (BilibiliKeys.parse(uniqueKey) is BilibiliKeys.LiveKey)
 
-    fun isBilibiliLive(source: SourceSnapshot?): Boolean =
-        source != null && isBilibiliLive(source.mediaType, source.uniqueKey)
+    fun isBilibiliLive(source: SourceSnapshot?): Boolean = source != null && isBilibiliLive(source.mediaType, source.uniqueKey)
 
     fun reportPlaybackError(
         source: SourceSnapshot,
         throwable: Throwable?,
         scene: String,
-        extra: Map<String, String> = emptyMap(),
+        extra: Map<String, String> = emptyMap()
     ) {
         val info = buildReportInfo(source, scene, extra)
         LogFacade.e(LogModule.PLAYER, TAG, "report error scene=$scene $info")
@@ -73,7 +70,7 @@ object BilibiliPlaybackErrorReporter {
     fun reportUnexpectedCompletion(
         source: SourceSnapshot,
         scene: String,
-        extra: Map<String, String> = emptyMap(),
+        extra: Map<String, String> = emptyMap()
     ) {
         val info = buildReportInfo(source, scene, extra)
         LogFacade.w(LogModule.PLAYER, TAG, "report completion scene=$scene $info")
@@ -90,7 +87,7 @@ object BilibiliPlaybackErrorReporter {
     private fun buildReportInfo(
         source: SourceSnapshot,
         scene: String,
-        extra: Map<String, String>,
+        extra: Map<String, String>
     ): String {
         val headers = source.httpHeader.orEmpty()
         val headerKeys = headers.keys.sorted().joinToString(separator = ",")
@@ -108,7 +105,8 @@ object BilibiliPlaybackErrorReporter {
 
         val sanitizedUrl = sanitizeUrl(source.videoUrl)
         val authenticationDiagnosis =
-            extra["httpResponseCode"]?.toIntOrNull()
+            extra["httpResponseCode"]
+                ?.toIntOrNull()
                 ?.takeIf { it == 403 }
                 ?.let { AuthenticationHelper.getAuthenticationDiagnosis() }
 
@@ -140,7 +138,7 @@ object BilibiliPlaybackErrorReporter {
 
     private fun sanitizeValue(
         key: String,
-        value: String,
+        value: String
     ): String {
         if (value.isBlank()) return value
         if (key.contains("cookie", ignoreCase = true) || key.contains("authorization", ignoreCase = true)) {

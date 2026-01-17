@@ -1,8 +1,8 @@
 package com.xyoye.common_component.config
 
+import com.xyoye.core_system_component.BuildConfig
 import com.xyoye.data_component.entity.media3.Media3RolloutSource
 import com.xyoye.data_component.entity.media3.RolloutToggleSnapshot
-import com.xyoye.core_system_component.BuildConfig
 import java.util.UUID
 
 object Media3ToggleProvider {

@@ -33,7 +33,6 @@ import com.xyoye.player_component.R
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.videolan.libvlc.util.VLCVideoLayout
-import java.io.File
 import java.util.Date
 
 /**
@@ -110,16 +109,16 @@ object PlayRecorder {
             val bitmap =
                 try {
                     generateRenderImage(view)
-            } catch (e: Exception) {
-                ErrorReportHelper.postCatchedExceptionWithContext(
-                    e,
-                    "PlayRecorder",
-                    "recordImage",
-                    "Failed to generate render image for key: $key",
-                )
-                e.printStackTrace()
-                null
-            } ?: return@launch
+                } catch (e: Exception) {
+                    ErrorReportHelper.postCatchedExceptionWithContext(
+                        e,
+                        "PlayRecorder",
+                        "recordImage",
+                        "Failed to generate render image for key: $key",
+                    )
+                    e.printStackTrace()
+                    null
+                } ?: return@launch
 
             val bitmapFile = PathHelper.getVideoCoverFile(key)
             MediaUtils.saveImage(bitmapFile, bitmap)

@@ -13,7 +13,7 @@ object BilibiliMpdGenerator {
         videos: List<BilibiliDashMediaData>,
         audios: List<BilibiliDashMediaData> = emptyList(),
         cdnHostOverride: String? = null,
-        cdnHostBlacklist: Set<String> = emptySet(),
+        cdnHostBlacklist: Set<String> = emptySet()
     ): File {
         if (outputFile.parentFile?.exists() != true) {
             outputFile.parentFile?.mkdirs()
@@ -29,7 +29,7 @@ object BilibiliMpdGenerator {
         video: BilibiliDashMediaData,
         audio: BilibiliDashMediaData?,
         cdnHostOverride: String? = null,
-        cdnHostBlacklist: Set<String> = emptySet(),
+        cdnHostBlacklist: Set<String> = emptySet()
     ): File =
         writeDashMpd(
             outputFile = outputFile,
@@ -45,7 +45,7 @@ object BilibiliMpdGenerator {
         videos: List<BilibiliDashMediaData>,
         audios: List<BilibiliDashMediaData>,
         cdnHostOverride: String?,
-        cdnHostBlacklist: Set<String>,
+        cdnHostBlacklist: Set<String>
     ): String {
         val duration = dash.duration.takeIf { it > 0 } ?: 0
         val mpdDuration = "PT${duration}S"
@@ -101,7 +101,7 @@ object BilibiliMpdGenerator {
     private fun buildUniqueRepresentationId(
         prefix: String,
         media: BilibiliDashMediaData,
-        usedIds: MutableSet<String>,
+        usedIds: MutableSet<String>
     ): String {
         val baseId =
             buildString {
@@ -138,7 +138,7 @@ object BilibiliMpdGenerator {
         representationId: String,
         media: BilibiliDashMediaData,
         cdnHostOverride: String?,
-        cdnHostBlacklist: Set<String>,
+        cdnHostBlacklist: Set<String>
     ) {
         val codecs = media.codecs?.takeIf { it.isNotBlank() }
         val width = media.width?.takeIf { it > 0 }
@@ -198,7 +198,8 @@ object BilibiliMpdGenerator {
     }
 
     private fun escape(input: String?): String =
-        input.orEmpty()
+        input
+            .orEmpty()
             .replace("&", "&amp;")
             .replace("<", "&lt;")
             .replace(">", "&gt;")

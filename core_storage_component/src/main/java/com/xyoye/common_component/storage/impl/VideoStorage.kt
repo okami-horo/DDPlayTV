@@ -5,8 +5,8 @@ import com.xyoye.common_component.extension.toFile
 import com.xyoye.common_component.resolver.MediaResolver
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.file.impl.VideoStorageFile
+import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.utils.getFileName
 import com.xyoye.common_component.utils.getFileNameNoExtension
 import com.xyoye.common_component.utils.isDanmuFile

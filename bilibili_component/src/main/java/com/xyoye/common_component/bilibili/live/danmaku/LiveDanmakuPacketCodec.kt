@@ -27,7 +27,7 @@ object LiveDanmakuPacketCodec {
         operation: Int,
         protocolVer: Int,
         sequence: Int,
-        body: ByteArray,
+        body: ByteArray
     ): ByteArray {
         val headerLen = HEADER_SIZE
         val packetLen = headerLen + body.size
@@ -50,7 +50,7 @@ object LiveDanmakuPacketCodec {
 
     private fun decodeAllInternal(
         packetBytes: ByteArray,
-        depth: Int,
+        depth: Int
     ): List<LiveDanmakuPacket> {
         if (depth > 2) return emptyList()
         val packets = decodeRaw(packetBytes)
@@ -149,4 +149,3 @@ object LiveDanmakuPacketCodec {
         }
     }
 }
-

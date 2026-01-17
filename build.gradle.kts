@@ -1,3 +1,5 @@
+import governance.VerifyLegacyPagerApisTask
+import governance.VerifyModuleDependenciesTask
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 buildscript {
@@ -45,6 +47,15 @@ tasks {
         delete(buildDir)
     }
 
+    register<VerifyModuleDependenciesTask>("verifyModuleDependencies")
+    register<VerifyLegacyPagerApisTask>("verifyLegacyPagerApis")
+
+    register("verifyArchitectureGovernance") {
+        group = "verification"
+        description =
+            "Runs the recommended local/CI verification set for architecture governance (dependency, style, tests, lint)."
+    }
+
     //检查依赖库更新
     //gradlew dependencyUpdates
     dependencyUpdates {
@@ -55,6 +66,25 @@ tasks {
         outputFormatter = "html"
         outputDir = "build/dependencyUpdates"
         reportfileName = "report"
+    }
+}
+
+gradle.projectsEvaluated {
+    tasks.named("verifyArchitectureGovernance").configure {
+        dependsOn(tasks.named("verifyModuleDependencies"))
+        dependsOn(tasks.named("verifyLegacyPagerApis"))
+
+        val ktlintTasks = allprojects.mapNotNull { it.tasks.findByName("ktlintCheck") }
+        dependsOn(ktlintTasks)
+
+        val unitTestTasks = allprojects.mapNotNull { it.tasks.findByName("testDebugUnitTest") }
+        dependsOn(unitTestTasks)
+
+        val lintTasks =
+            allprojects.mapNotNull { project ->
+                project.tasks.findByName("lint") ?: project.tasks.findByName("lintDebug")
+            }
+        dependsOn(lintTasks)
     }
 }
 

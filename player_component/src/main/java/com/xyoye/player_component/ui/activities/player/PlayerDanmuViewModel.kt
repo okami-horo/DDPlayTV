@@ -2,17 +2,13 @@ package com.xyoye.player_component.ui.activities.player
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.xyoye.common_component.bilibili.BilibiliKeys
-import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
-import com.xyoye.common_component.bilibili.danmaku.BilibiliDanmakuDownloader
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.utils.danmu.DanmuFinder
+import com.xyoye.common_component.utils.danmu.StorageDanmuMatcher
 import com.xyoye.common_component.utils.danmu.source.DanmuSourceFactory
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.DanmuTrackResource
-import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.Dispatchers
@@ -30,36 +26,9 @@ class PlayerDanmuViewModel : BaseViewModel() {
     fun matchDanmu(videoSource: BaseVideoSource) {
         viewModelScope.launch(Dispatchers.IO) {
             if (videoSource.getMediaType() == MediaType.BILIBILI_STORAGE) {
-                val parsed = BilibiliKeys.parse(videoSource.getUniqueKey())
-                val cid =
-                    when (parsed) {
-                        is BilibiliKeys.ArchiveKey -> parsed.cid
-                        is BilibiliKeys.PgcEpisodeKey -> parsed.cid
-                        else -> null
-                    }
-                if (cid != null) {
-                    val library = DatabaseManager.instance.getMediaLibraryDao().getById(videoSource.getStorageId())
-                    if (library != null) {
-                        val storageKey = BilibiliPlaybackPreferencesStore.storageKey(library)
-                        val danmu = BilibiliDanmakuDownloader.getOrDownload(storageKey, cid)
-                        if (danmu != null) {
-                            loadDanmuLiveData.postValue(videoSource.getVideoUrl() to DanmuTrackResource.LocalFile(danmu))
-                        }
-                    }
-                }
-
-                val roomId = (parsed as? BilibiliKeys.LiveKey)?.roomId
-                if (roomId != null) {
-                    val library = DatabaseManager.instance.getMediaLibraryDao().getById(videoSource.getStorageId())
-                    if (library != null) {
-                        val storageKey = BilibiliPlaybackPreferencesStore.storageKey(library)
-                        loadDanmuLiveData.postValue(
-                            videoSource.getVideoUrl() to DanmuTrackResource.BilibiliLive(
-                                storageKey = storageKey,
-                                roomId = roomId,
-                            ),
-                        )
-                    }
+                val matched = StorageDanmuMatcher.matchDanmu(videoSource)
+                if (matched != null) {
+                    loadDanmuLiveData.postValue(videoSource.getVideoUrl() to matched)
                 }
                 return@launch
             }

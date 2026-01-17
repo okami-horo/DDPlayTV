@@ -9,13 +9,13 @@ import coil.ImageLoaderFactory
 import coil.decode.VideoFrameDecoder
 import com.alibaba.android.arouter.launcher.ARouter
 import com.tencent.mmkv.MMKV
-import com.xyoye.core_system_component.BuildConfig
 import com.xyoye.common_component.log.BuglyReporter
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.notification.Notifications
 import com.xyoye.common_component.utils.ActivityHelper
 import com.xyoye.common_component.utils.SecurityHelperConfig
+import com.xyoye.core_system_component.BuildConfig
 
 /**
  * Created by xyoye on 2020/4/13.
@@ -31,8 +31,7 @@ open class BaseApplication :
         @Volatile
         private var mMainHandler: Handler? = null
 
-        fun getAppContext(): Context =
-            (APPLICATION_CONTEXT ?: resolveApplicationContext()).applicationContext
+        fun getAppContext(): Context = (APPLICATION_CONTEXT ?: resolveApplicationContext()).applicationContext
 
         fun getMainHandler(): Handler =
             mMainHandler ?: synchronized(this) {

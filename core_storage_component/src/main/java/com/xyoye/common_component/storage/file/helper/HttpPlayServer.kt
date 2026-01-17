@@ -7,9 +7,8 @@ import com.xyoye.common_component.network.Retrofit
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.RangeUtils
 import fi.iki.elonen.NanoHTTPD
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.InputStream
 import java.net.URLEncoder
 import kotlin.random.Random
@@ -21,12 +20,17 @@ import kotlin.random.Random
 class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
     private val logTag = "HttpPlayServer"
 
+    private val startMutex = Mutex()
+    private val rangeRetryLock = Any()
+
     private var upstreamUrl: String? = null
     private var upstreamHeaders: Map<String, String> = emptyMap()
     private var contentType: String = "application/octet-stream"
     private var contentLength: Long = -1L
+
     @Volatile
     private var prePlayRangeMinIntervalMs: Long = 1000L
+
     @Volatile
     private var rangeRetryDone: Boolean = false
     private var rangeRetrySupplier: (() -> UpstreamSource?)? = null
@@ -174,14 +178,18 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
 
         if (isRangeRequest && (response.code() != 206 || upstreamContentRangeHeader == null)) {
             if (allowRetry && !rangeRetryDone) {
-                val refreshed = runCatching { rangeRetrySupplier?.invoke() }.getOrNull()
-                if (refreshed != null) {
-                    rangeRetryDone = true
-                    upstreamUrl = refreshed.url
-                    upstreamHeaders = refreshed.headers
-                    contentType = refreshed.contentType
-                    contentLength = refreshed.contentLength
-                    return serveInternal(session, allowRetry = false)
+                synchronized(rangeRetryLock) {
+                    if (!rangeRetryDone) {
+                        val refreshed = runCatching { rangeRetrySupplier?.invoke() }.getOrNull()
+                        if (refreshed != null) {
+                            rangeRetryDone = true
+                            upstreamUrl = refreshed.url
+                            upstreamHeaders = refreshed.headers
+                            contentType = refreshed.contentType
+                            contentLength = refreshed.contentLength
+                            return serveInternal(session, allowRetry = false)
+                        }
+                    }
                 }
             }
             val upstreamBodyLength = body.contentLength()
@@ -273,7 +281,8 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
             val nowMs = nowMs()
             if (suspiciousUpstream || shouldLogRange(nowMs)) {
                 val logFn = if (suspiciousUpstream) LogFacade::w else LogFacade::d
-                val context = mutableMapOf(
+                val context =
+                    mutableMapOf(
                         "urlHash" to urlHash,
                         "rangeHeader" to (rangeHeader ?: "null"),
                         "requestedRange" to formatRange(requestedRange),
@@ -337,19 +346,16 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         return start to end
     }
 
-    private fun formatRange(range: Pair<Long, Long>?): String {
-        return range?.let { "${it.first}-${it.second}" } ?: "null"
-    }
+    private fun formatRange(range: Pair<Long, Long>?): String = range?.let { "${it.first}-${it.second}" } ?: "null"
 
     private fun peekUpstreamBodySample(
         response: retrofit2.Response<okhttp3.ResponseBody>,
         maxBytes: Long
-    ): String? {
-        return runCatching {
+    ): String? =
+        runCatching {
             val peeked = response.raw().peekBody(maxBytes)
             sanitizeBodySample(peeked.string())
         }.getOrNull()?.takeIf { it.isNotBlank() }
-    }
 
     private fun sanitizeBodySample(sample: String): String {
         if (sample.isBlank()) return sample
@@ -446,19 +452,17 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
     private fun fetchUpstream(
         url: String,
         headers: Map<String, String>
-    ): retrofit2.Response<okhttp3.ResponseBody>? {
-        return runBlocking {
-            runCatching { Retrofit.extendedService.getResourceResponse(url, headers) }
-                .getOrElse { throwable ->
-                    ErrorReportHelper.postCatchedException(
-                        throwable,
-                        "HttpPlayServer",
-                        "上游请求失败 url=$url headers=${headers.keys.joinToString()}",
-                    )
-                    return@runBlocking null
-                }
+    ): retrofit2.Response<okhttp3.ResponseBody>? =
+        runCatching {
+            Retrofit.extendedService.getResourceResponseCall(url, headers).execute()
+        }.getOrElse { throwable ->
+            ErrorReportHelper.postCatchedException(
+                throwable,
+                "HttpPlayServer",
+                "上游请求失败 url=$url headers=${headers.keys.joinToString()}",
+            )
+            null
         }
-    }
 
     private fun throttleUpstreamRange() {
         val now = nowMs()
@@ -479,27 +483,25 @@ class HttpPlayServer private constructor() : NanoHTTPD(randomPort()) {
     private fun nowMs(): Long = System.nanoTime() / 1_000_000L
 
     suspend fun startSync(timeoutMs: Long = 5000): Boolean {
-        if (wasStarted()) {
-            return true
-        }
-        return try {
-            withTimeout(timeoutMs) {
-                start()
-                while (isActive) {
-                    if (wasStarted()) {
-                        return@withTimeout true
-                    }
-                }
-                stop()
-                return@withTimeout false
+        return startMutex.withLock {
+            if (wasStarted()) {
+                return@withLock true
             }
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedException(
-                e,
-                "HttpPlayServer",
-                "启动播放服务器失败: timeout=${timeoutMs}ms",
-            )
-            false
+            return@withLock try {
+                start()
+                val started = awaitCondition(timeoutMs = timeoutMs) { wasStarted() }
+                if (!started) {
+                    stop()
+                }
+                started
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedException(
+                    e,
+                    "HttpPlayServer",
+                    "启动播放服务器失败: timeout=${timeoutMs}ms",
+                )
+                false
+            }
         }
     }
 

@@ -22,10 +22,10 @@ class LibassSsaStreamDecoder(
     private val format: Format,
     private val sinkProvider: () -> EmbeddedSubtitleSink?
 ) : SimpleDecoder<SubtitleInputBuffer, SubtitleOutputBuffer, SubtitleDecoderException>(
-    INPUT_BUFFER_POOL,
-    OUTPUT_BUFFER_POOL
-), SubtitleDecoder {
-
+        INPUT_BUFFER_POOL,
+        OUTPUT_BUFFER_POOL,
+    ),
+    SubtitleDecoder {
     private val decoderName = "LibassSsaStreamDecoder"
 
     init {
@@ -43,9 +43,8 @@ class LibassSsaStreamDecoder(
 
     override fun createOutputBuffer(): SubtitleOutputBuffer = createDecoderOutputBuffer()
 
-    override fun createUnexpectedDecodeException(error: Throwable): SubtitleDecoderException {
-        return SubtitleDecoderException("Unexpected decode error", error)
-    }
+    override fun createUnexpectedDecodeException(error: Throwable): SubtitleDecoderException =
+        SubtitleDecoderException("Unexpected decode error", error)
 
     override fun decode(
         inputBuffer: SubtitleInputBuffer,
@@ -108,15 +107,18 @@ class LibassSsaStreamDecoder(
             return null
         }
         val hours = digit(payload[offset]) ?: return null
-        val minutes = digit(payload[offset + 2])?.let { tens ->
-            digit(payload[offset + 3])?.let { ones -> tens * 10 + ones }
-        } ?: return null
-        val seconds = digit(payload[offset + 5])?.let { tens ->
-            digit(payload[offset + 6])?.let { ones -> tens * 10 + ones }
-        } ?: return null
-        val centiseconds = digit(payload[offset + 8])?.let { tens ->
-            digit(payload[offset + 9])?.let { ones -> tens * 10 + ones }
-        } ?: return null
+        val minutes =
+            digit(payload[offset + 2])?.let { tens ->
+                digit(payload[offset + 3])?.let { ones -> tens * 10 + ones }
+            } ?: return null
+        val seconds =
+            digit(payload[offset + 5])?.let { tens ->
+                digit(payload[offset + 6])?.let { ones -> tens * 10 + ones }
+            } ?: return null
+        val centiseconds =
+            digit(payload[offset + 8])?.let { tens ->
+                digit(payload[offset + 9])?.let { ones -> tens * 10 + ones }
+            } ?: return null
         val totalSeconds = hours * 3600L + minutes * 60L + seconds
         return totalSeconds * C.MICROS_PER_SECOND + centiseconds * SSA_TIMECODE_LAST_VALUE_SCALING_FACTOR
     }
@@ -183,21 +185,21 @@ class LibassSsaStreamDecoder(
         private val NEWLINE = "\n".toByteArray(Charsets.UTF_8)
 
         private val INPUT_BUFFER_POOL = Array(BUFFER_POOL_SIZE) { SubtitleInputBuffer() }
-        private val OUTPUT_BUFFER_POOL = Array(BUFFER_POOL_SIZE) {
-            // Placeholder entries; they are replaced in SimpleDecoder's constructor via createOutputBuffer().
-            object : SubtitleOutputBuffer() {
-                override fun release() {
-                    clear()
+        private val OUTPUT_BUFFER_POOL =
+            Array(BUFFER_POOL_SIZE) {
+                // Placeholder entries; they are replaced in SimpleDecoder's constructor via createOutputBuffer().
+                object : SubtitleOutputBuffer() {
+                    override fun release() {
+                        clear()
+                    }
                 }
             }
-        }
     }
 
-    private fun createDecoderOutputBuffer(): SubtitleOutputBuffer {
-        return object : SubtitleOutputBuffer() {
+    private fun createDecoderOutputBuffer(): SubtitleOutputBuffer =
+        object : SubtitleOutputBuffer() {
             override fun release() {
                 this@LibassSsaStreamDecoder.releaseOutputBuffer(this)
             }
         }
-    }
 }

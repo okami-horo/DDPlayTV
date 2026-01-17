@@ -14,7 +14,7 @@ object QrCodeHelper {
         sizePx: Int,
         logoResId: Int? = null,
         bitmapColor: Int? = null,
-        errorContext: String? = null,
+        errorContext: String? = null
     ): Bitmap? {
         try {
             val logo =
@@ -52,4 +52,3 @@ object QrCodeHelper {
         return null
     }
 }
-

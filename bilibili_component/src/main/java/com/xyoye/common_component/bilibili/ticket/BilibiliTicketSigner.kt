@@ -15,7 +15,7 @@ object BilibiliTicketSigner {
     data class SignedParams(
         val keyId: String,
         val timestampSec: Long,
-        val hexsign: String,
+        val hexsign: String
     )
 
     fun sign(timestampSec: Long = System.currentTimeMillis() / 1000): SignedParams {
@@ -30,7 +30,7 @@ object BilibiliTicketSigner {
 
     private fun hmacSha256Hex(
         key: String,
-        message: String,
+        message: String
     ): String {
         val mac = Mac.getInstance("HmacSHA256")
         mac.init(SecretKeySpec(key.toByteArray(Charsets.UTF_8), "HmacSHA256"))
@@ -38,4 +38,3 @@ object BilibiliTicketSigner {
         return bytes.joinToString(separator = "") { "%02x".format(it) }
     }
 }
-

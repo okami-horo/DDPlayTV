@@ -11,7 +11,7 @@ import com.xyoye.storage_component.databinding.LayoutPlayerTypeOverrideBinding
 object PlayerTypeOverrideBinder {
     fun bind(
         binding: LayoutPlayerTypeOverrideBinding,
-        library: MediaLibraryEntity,
+        library: MediaLibraryEntity
     ) {
         val (supportedPlayerTypes, preferredPlayerType) = resolvePolicy(library)
         val allowFollowGlobal = supportedPlayerTypes.size > 1
@@ -71,7 +71,7 @@ object PlayerTypeOverrideBinder {
     private fun updateFixedLabelsIfNeeded(
         binding: LayoutPlayerTypeOverrideBinding,
         supportedPlayerTypes: Set<PlayerType>,
-        allowFollowGlobal: Boolean,
+        allowFollowGlobal: Boolean
     ) {
         val fixedSuffix = binding.root.context.getString(R.string.text_player_fixed_suffix)
         val isFixed = !allowFollowGlobal && supportedPlayerTypes.size == 1
@@ -96,7 +96,7 @@ object PlayerTypeOverrideBinder {
 
     private fun preferredOverrideValue(
         supportedPlayerTypes: Set<PlayerType>,
-        preferredPlayerType: PlayerType,
+        preferredPlayerType: PlayerType
     ): Int {
         val supported = supportedPlayerTypes.ifEmpty { setOf(preferredPlayerType) }
         val preferred = preferredPlayerType.takeIf { it in supported } ?: supported.first()
@@ -107,7 +107,7 @@ object PlayerTypeOverrideBinder {
         value: Int,
         allowFollowGlobal: Boolean,
         supportedPlayerTypes: Set<PlayerType>,
-        preferredPlayerType: PlayerType,
+        preferredPlayerType: PlayerType
     ): Int {
         if (value == 0) {
             return if (allowFollowGlobal) 0 else preferredOverrideValue(supportedPlayerTypes, preferredPlayerType)
@@ -130,7 +130,7 @@ object PlayerTypeOverrideBinder {
         overrideValue: Int,
         allowFollowGlobal: Boolean,
         supportedPlayerTypes: Set<PlayerType>,
-        preferredPlayerType: PlayerType,
+        preferredPlayerType: PlayerType
     ) {
         val normalized =
             normalizeOverrideValue(

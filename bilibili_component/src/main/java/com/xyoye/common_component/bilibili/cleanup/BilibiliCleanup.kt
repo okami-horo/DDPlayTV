@@ -5,6 +5,7 @@ import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.bilibili.auth.BilibiliAuthStore
 import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
+import com.xyoye.common_component.bilibili.playback.BilibiliLivePlaybackSessionStore
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSessionStore
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.utils.ErrorReportHelper
@@ -15,9 +16,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 object BilibiliCleanup {
-    suspend fun cleanup(
-        library: MediaLibraryEntity,
-    ) {
+    suspend fun cleanup(library: MediaLibraryEntity) {
         val storageId = library.id
         if (storageId <= 0) return
 
@@ -37,6 +36,7 @@ object BilibiliCleanup {
                 BilibiliAuthStore.clear(storageKey)
                 BilibiliCookieJarStore(storageKey).clear()
                 BilibiliPlaybackSessionStore.clearStorage(storageId)
+                BilibiliLivePlaybackSessionStore.clearStorage(storageId)
                 deleteBilibiliMpdFiles()
             }.onFailure { e ->
                 ErrorReportHelper.postCatchedExceptionWithContext(
@@ -67,7 +67,8 @@ object BilibiliCleanup {
         runCatching {
             val dir = PathHelper.getPlayCacheDirectory()
             val files =
-                dir.listFiles()
+                dir
+                    .listFiles()
                     ?.filter { it.isFile && it.name.startsWith("bilibili_") && it.name.endsWith(".mpd") }
                     .orEmpty()
             files.forEach { it.delete() }

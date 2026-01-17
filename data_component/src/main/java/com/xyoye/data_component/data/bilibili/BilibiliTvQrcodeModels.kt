@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
 data class BilibiliTvQrcodeAuthCodeData(
     val url: String = "",
     @Json(name = "auth_code")
-    val authCode: String = "",
+    val authCode: String = ""
 )
 
 /**
@@ -19,7 +19,7 @@ data class BilibiliTvQrcodePollModel(
     val code: Int = 0,
     val message: String = "",
     val ttl: Int? = null,
-    val data: BilibiliTvQrcodePollData? = null,
+    val data: BilibiliTvQrcodePollData? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -32,13 +32,13 @@ data class BilibiliTvQrcodePollData(
     @Json(name = "expires_in")
     val expiresIn: Long? = null,
     @Json(name = "cookie_info")
-    val cookieInfo: BilibiliTvCookieInfo? = null,
+    val cookieInfo: BilibiliTvCookieInfo? = null
 )
 
 @JsonClass(generateAdapter = true)
 data class BilibiliTvCookieInfo(
     val cookies: List<BilibiliTvCookieItem> = emptyList(),
-    val domains: List<String> = emptyList(),
+    val domains: List<String> = emptyList()
 )
 
 @JsonClass(generateAdapter = true)
@@ -48,6 +48,5 @@ data class BilibiliTvCookieItem(
     @Json(name = "http_only")
     val httpOnly: Int? = null,
     val expires: Long? = null,
-    val secure: Int? = null,
+    val secure: Int? = null
 )
-

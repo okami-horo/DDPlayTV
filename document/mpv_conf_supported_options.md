@@ -1,4 +1,4 @@
-# DanDanPlayForAndroid：项目实际设置/暴露的 `mpv.conf` 配置项清单
+# DDPlayTV：项目实际设置/暴露的 `mpv.conf` 配置项清单
 
 ## 先说明：当前项目默认不会读取 `mpv.conf`
 

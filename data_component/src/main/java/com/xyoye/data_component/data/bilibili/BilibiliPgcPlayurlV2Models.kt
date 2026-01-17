@@ -6,6 +6,5 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class BilibiliPgcPlayurlV2Result(
     @Json(name = "video_info")
-    val videoInfo: BilibiliPlayurlData? = null,
+    val videoInfo: BilibiliPlayurlData? = null
 )
-

@@ -34,4 +34,3 @@ object CacheKeyMapper {
         return messageDigest.digest().toHexString()
     }
 }
-

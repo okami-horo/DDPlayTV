@@ -3,10 +3,10 @@ package com.xyoye.user_component.ui.activities.scan_manager
 import android.view.Menu
 import android.view.MenuItem
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
-import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.alibaba.android.arouter.facade.annotation.Route
+import com.google.android.material.tabs.TabLayoutMediator
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.user_component.BR
@@ -20,6 +20,7 @@ import com.xyoye.user_component.ui.fragment.scan_filter.ScanFilterFragment
 class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManagerBinding>() {
     private var extensionSettingItem: MenuItem? = null
     private var extensionSettingDialog: VideoExtensionSupportSettingDialog? = null
+    private val pageAdapter by lazy { ScanManagerFragmentAdapter() }
 
     override fun initViewModel() =
         ViewModelInit(
@@ -32,15 +33,18 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
     override fun initView() {
         title = "扫描目录管理"
 
-        dataBinding.tabLayout.setupWithViewPager(dataBinding.viewpager)
         dataBinding.viewpager.apply {
-            adapter = ScanManagerFragmentAdapter(supportFragmentManager)
+            adapter = pageAdapter
             offscreenPageLimit = 2
             currentItem = 0
         }
 
-        dataBinding.viewpager.addOnPageChangeListener(
-            object : ViewPager.SimpleOnPageChangeListener() {
+        TabLayoutMediator(dataBinding.tabLayout, dataBinding.viewpager) { tab, position ->
+            tab.text = pageAdapter.getItemTitle(position)
+        }.attach()
+
+        dataBinding.viewpager.registerOnPageChangeCallback(
+            object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     extensionSettingItem?.isVisible = position == 0
                 }
@@ -51,6 +55,7 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_scan_manager, menu)
         extensionSettingItem = menu.findItem(R.id.item_video_extension_support_setting)
+        extensionSettingItem?.isVisible = dataBinding.viewpager.currentItem == 0
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -71,20 +76,18 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
             }
     }
 
-    inner class ScanManagerFragmentAdapter(
-        fragmentManager: FragmentManager
-    ) : FragmentPagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
+    inner class ScanManagerFragmentAdapter : FragmentStateAdapter(this@ScanManagerActivity) {
         private var titles = arrayOf("扫描", "屏蔽")
 
-        override fun getItem(position: Int): Fragment =
+        override fun getItemCount(): Int = titles.size
+
+        override fun createFragment(position: Int): Fragment =
             when (position) {
                 0 -> ScanExtendFragment.newInstance()
                 1 -> ScanFilterFragment.newInstance()
                 else -> throw IllegalArgumentException()
             }
 
-        override fun getCount() = titles.size
-
-        override fun getPageTitle(position: Int): CharSequence = titles[position]
+        fun getItemTitle(position: Int): String = titles.getOrNull(position).orEmpty()
     }
 }

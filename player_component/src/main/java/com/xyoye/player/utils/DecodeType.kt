@@ -4,6 +4,5 @@ enum class DecodeType(
     val label: String
 ) {
     HW("HW"),
-    SW("SW"),
+    SW("SW")
 }
-

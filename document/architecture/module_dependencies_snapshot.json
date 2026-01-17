@@ -1,0 +1,581 @@
+{
+  "module_count": 21,
+  "modules": [
+    {
+      "build_file": "app/build.gradle.kts",
+      "dir": "app",
+      "name": ":app",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_ui_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":player_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":anime_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":user_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":local_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":storage_component",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "local_component/build.gradle.kts",
+      "dir": "local_component",
+      "name": ":local_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":core_ui_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_network_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_database_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_storage_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":bilibili_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "anime_component/build.gradle.kts",
+      "dir": "anime_component",
+      "name": ":anime_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":core_ui_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_network_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_database_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_storage_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "user_component/build.gradle.kts",
+      "dir": "user_component",
+      "name": ":user_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":core_ui_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_network_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_database_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_storage_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":bilibili_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "storage_component/build.gradle.kts",
+      "dir": "storage_component",
+      "name": ":storage_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":core_ui_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_network_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_database_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_storage_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":bilibili_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "player_component/build.gradle.kts",
+      "dir": "player_component",
+      "name": ":player_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":core_ui_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_network_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_database_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_storage_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":repository:panel_switch",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":repository:danmaku",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":repository:video_cache",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "data_component/build.gradle.kts",
+      "dir": "data_component",
+      "name": ":data_component",
+      "project_dependencies": []
+    },
+    {
+      "build_file": "core_contract_component/build.gradle.kts",
+      "dir": "core_contract_component",
+      "name": ":core_contract_component",
+      "project_dependencies": [
+        {
+          "configuration": "api",
+          "module": ":data_component",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "core_log_component/build.gradle.kts",
+      "dir": "core_log_component",
+      "name": ":core_log_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "core_system_component/build.gradle.kts",
+      "dir": "core_system_component",
+      "name": ":core_system_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "core_network_component/build.gradle.kts",
+      "dir": "core_network_component",
+      "name": ":core_network_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "testImplementation",
+          "module": ":core_contract_component",
+          "scope": "test"
+        }
+      ]
+    },
+    {
+      "build_file": "core_database_component/build.gradle.kts",
+      "dir": "core_database_component",
+      "name": ":core_database_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "core_storage_component/build.gradle.kts",
+      "dir": "core_storage_component",
+      "name": ":core_storage_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_network_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_database_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":bilibili_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":repository:seven_zip",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":repository:thunder",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "core_ui_component/build.gradle.kts",
+      "dir": "core_ui_component",
+      "name": ":core_ui_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "api",
+          "module": ":repository:immersion_bar",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "bilibili_component/build.gradle.kts",
+      "dir": "bilibili_component",
+      "name": ":bilibili_component",
+      "project_dependencies": [
+        {
+          "configuration": "implementation",
+          "module": ":core_contract_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_network_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_log_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_system_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":core_database_component",
+          "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":data_component",
+          "scope": "main"
+        }
+      ]
+    },
+    {
+      "build_file": "repository/danmaku/build.gradle.kts",
+      "dir": "repository/danmaku",
+      "name": ":repository:danmaku",
+      "project_dependencies": []
+    },
+    {
+      "build_file": "repository/immersion_bar/build.gradle.kts",
+      "dir": "repository/immersion_bar",
+      "name": ":repository:immersion_bar",
+      "project_dependencies": []
+    },
+    {
+      "build_file": "repository/panel_switch/build.gradle.kts",
+      "dir": "repository/panel_switch",
+      "name": ":repository:panel_switch",
+      "project_dependencies": []
+    },
+    {
+      "build_file": "repository/seven_zip/build.gradle.kts",
+      "dir": "repository/seven_zip",
+      "name": ":repository:seven_zip",
+      "project_dependencies": []
+    },
+    {
+      "build_file": "repository/thunder/build.gradle.kts",
+      "dir": "repository/thunder",
+      "name": ":repository:thunder",
+      "project_dependencies": []
+    },
+    {
+      "build_file": "repository/video_cache/build.gradle.kts",
+      "dir": "repository/video_cache",
+      "name": ":repository:video_cache",
+      "project_dependencies": []
+    }
+  ],
+  "settings_file": "settings.gradle.kts"
+}

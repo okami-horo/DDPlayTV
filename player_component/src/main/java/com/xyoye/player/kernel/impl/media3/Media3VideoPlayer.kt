@@ -35,20 +35,19 @@ import androidx.media3.exoplayer.util.EventLogger
 import androidx.media3.ui.DefaultTrackNameProvider
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.extension.mapByLength
+import com.xyoye.common_component.storage.file.helper.HttpPlayServer
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
+import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.anime4k.Anime4kMode
+import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper.getMediaSource
 import com.xyoye.player.kernel.impl.media3.effect.Anime4kPerformanceGlEffect
 import com.xyoye.player.kernel.impl.media3.effect.Anime4kQualityGlEffect
-import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
-import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper.getMediaSource
-import com.xyoye.player.kernel.impl.media3.AggressiveMediaCodecSelector
-import com.xyoye.player.kernel.impl.media3.LibassAwareRenderersFactory
-import com.xyoye.player.kernel.inter.AbstractVideoPlayer
-import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
+import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.subtitle.MixedSubtitle
 import com.xyoye.subtitle.SubtitleType
 import java.util.concurrent.atomic.AtomicReference
@@ -136,7 +135,7 @@ class Media3VideoPlayer(
             LibassAwareRenderersFactory(
                 appContext,
                 AggressiveMediaCodecSelector(),
-                embeddedSinkProvider = { embeddedSinkRef.get() }
+                embeddedSinkProvider = { embeddedSinkRef.get() },
             ).apply {
                 setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             }
@@ -167,6 +166,12 @@ class Media3VideoPlayer(
         currentDataSource = path
         currentDataSourceHeaders = headers
         anime4kFallbackTriggered = false
+        runCatching {
+            val playServer = HttpPlayServer.getInstance()
+            if (playServer.isServingUrl(path)) {
+                playServer.setSeekEnabled(false)
+            }
+        }
         mediaSource = getMediaSource(path, headers)
         videoOverrideApplied = false
         videoDecoderRecoveryCount = 0
@@ -549,6 +554,15 @@ class Media3VideoPlayer(
     override fun onRenderedFirstFrame() {
         mPlayerEventListener.onInfo(PlayerConstant.MEDIA_INFO_VIDEO_RENDERING_START, 0)
         isPreparing = false
+        val path = currentDataSource
+        if (!path.isNullOrBlank()) {
+            runCatching {
+                val playServer = HttpPlayServer.getInstance()
+                if (playServer.isServingUrl(path)) {
+                    playServer.setSeekEnabled(true)
+                }
+            }
+        }
     }
 
     override fun onPlaybackStateChanged(state: Int) {

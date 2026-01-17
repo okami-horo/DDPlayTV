@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 object BilibiliPlaybackSessionStore {
     data class Key(
         val storageId: Int,
-        val uniqueKey: String,
+        val uniqueKey: String
     )
 
     private val sessions = ConcurrentHashMap<Key, BilibiliPlaybackSession>()
@@ -16,12 +16,12 @@ object BilibiliPlaybackSessionStore {
 
     fun get(
         storageId: Int,
-        uniqueKey: String,
+        uniqueKey: String
     ): BilibiliPlaybackSession? = sessions[Key(storageId, uniqueKey)]
 
     fun remove(
         storageId: Int,
-        uniqueKey: String,
+        uniqueKey: String
     ) {
         sessions.remove(Key(storageId, uniqueKey))
         BilibiliPlaybackHeartbeat.clear(storageId, uniqueKey)

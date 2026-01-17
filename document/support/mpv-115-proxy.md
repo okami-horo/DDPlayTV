@@ -3,7 +3,7 @@
 ## 背景
 在 `mpv/libmpv` 播放 Alist 存储库挂载的 115 网盘视频时，播放器在真正开始播放前会进行高频、随机的 `Range` 读取（尤其是 mkv 容器为了读取 cues/索引会跳到文件尾部或大偏移）。该行为容易触发 115 风控，上游直接返回 `403 Forbidden`，导致 `mpv` 打开/探测阶段失败，表现为“无法播放/秒退/无音视频数据播放”。
 
-为兼容此类上游，项目引入了本地轻量 HTTP 代理：`common_component/src/main/java/com/xyoye/common_component/storage/file/helper/HttpPlayServer.kt`，由 `AlistStorage` 在 MPV 播放时生成本地播放 URL：`common_component/src/main/java/com/xyoye/common_component/storage/impl/AlistStorage.kt`。
+为兼容此类上游，项目引入了本地轻量 HTTP 代理：`core_storage_component/src/main/java/com/xyoye/common_component/storage/file/helper/HttpPlayServer.kt`，由 `AlistStorage` 在 MPV 播放时生成本地播放 URL：`core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/AlistStorage.kt`。
 
 ## 问题现象
 常见日志关键词（仅示例，实际以 `.tmp/log.txt` 为准）：
@@ -62,10 +62,10 @@
 - 语义：**播放前**（`seekEnabled=false`）Range 转发到上游的最小间隔；数值越大越保守（更不易触发风控），但可能降低探测/seek 速度。
 
 实现位置：
-- 配置字段：`common_component/src/main/java/com/xyoye/common_component/config/PlayerConfigTable.kt`
+- 配置字段：`core_system_component/src/main/java/com/xyoye/common_component/config/PlayerConfigTable.kt`
 - 设置 UI：`user_component/src/main/res/xml/preference_player_setting.xml`
 - 仅 MPV 显示与读写：`user_component/src/main/java/com/xyoye/user_component/ui/fragment/PlayerSettingFragment.kt`
-- 代理读取：`common_component/src/main/java/com/xyoye/common_component/storage/file/helper/HttpPlayServer.kt`
+- 代理读取：`core_storage_component/src/main/java/com/xyoye/common_component/storage/file/helper/HttpPlayServer.kt`
 
 ## 已知限制与权衡
 1) **“能播”与“快 seek”不可同时极致**
@@ -88,4 +88,3 @@
 
 3) 调整配置项进行 A/B 验证
 - `MPV Range 限速间隔（ms）`：从 200ms 开始逐步上调；若上调后“直接不能播”，说明是“首个大 Range 触发 403”而不是频率问题，需要依赖 Range 裁剪/降级逻辑。
-

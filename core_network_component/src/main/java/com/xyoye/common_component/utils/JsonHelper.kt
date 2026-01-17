@@ -4,6 +4,7 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.xyoye.common_component.utils.moshi.EmptyArrayToNullAdapterFactory
 import com.xyoye.common_component.utils.moshi.NullToEmptyStringAdapter
 import com.xyoye.common_component.utils.moshi.NullToIntZeroAdapter
 import com.xyoye.common_component.utils.moshi.NullToLongZeroAdapter
@@ -17,6 +18,7 @@ object JsonHelper {
     val MO_SHI: Moshi =
         Moshi
             .Builder()
+            .add(EmptyArrayToNullAdapterFactory)
             .add(NullToEmptyStringAdapter)
             .add(NullToLongZeroAdapter)
             .add(NullToIntZeroAdapter)

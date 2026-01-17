@@ -48,11 +48,11 @@ class PlayerPopupControlView(
         }
 
         viewBinding.ivDanmuControl.setOnCheckedChangeListener { _, isChecked ->
-             val isDanmuVisible = mControlWrapper.isUserDanmuVisible()
-             if (isChecked != isDanmuVisible) {
-                 mControlWrapper.toggleDanmuVisible()
-                 syncDanmuToggleState()
-             }
+            val isDanmuVisible = mControlWrapper.isUserDanmuVisible()
+            if (isChecked != isDanmuVisible) {
+                mControlWrapper.toggleDanmuVisible()
+                syncDanmuToggleState()
+            }
         }
 
         viewBinding.ivExpand.setOnClickListener {

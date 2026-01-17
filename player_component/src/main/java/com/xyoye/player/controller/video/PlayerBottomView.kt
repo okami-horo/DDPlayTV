@@ -13,18 +13,18 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
-import com.xyoye.common_component.focus.applyDpadFocusable
-import com.xyoye.common_component.focus.requestDefaultFocus
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
+import com.xyoye.common_component.focus.applyDpadFocusable
+import com.xyoye.common_component.focus.requestDefaultFocus
 import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.controller.action.PlayerAction
+import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.formatDuration
 import com.xyoye.player.wrapper.ControlWrapper
-import com.xyoye.player.utils.DecodeType
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutPlayerBottomBinding
 

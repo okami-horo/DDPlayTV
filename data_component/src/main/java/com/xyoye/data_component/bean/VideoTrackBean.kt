@@ -36,9 +36,7 @@ data class VideoTrackBean(
             return VideoTrackBean(name = name, type = TrackType.SUBTITLE, trackResource = subtitlePath)
         }
 
-        fun danmu(danmu: LocalDanmuBean): VideoTrackBean {
-            return danmu(DanmuTrackResource.LocalFile(danmu))
-        }
+        fun danmu(danmu: LocalDanmuBean): VideoTrackBean = danmu(DanmuTrackResource.LocalFile(danmu))
 
         fun danmu(resource: DanmuTrackResource): VideoTrackBean {
             val name =

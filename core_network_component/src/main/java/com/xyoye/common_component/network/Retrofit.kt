@@ -11,9 +11,11 @@ import com.xyoye.common_component.network.helper.ForbiddenErrorInterceptor
 import com.xyoye.common_component.network.helper.LoggerInterceptor
 import com.xyoye.common_component.network.helper.SignatureInterceptor
 import com.xyoye.common_component.network.service.AlistService
+import com.xyoye.common_component.network.service.BaiduPanService
 import com.xyoye.common_component.network.service.DanDanService
 import com.xyoye.common_component.network.service.ExtendedService
 import com.xyoye.common_component.network.service.MagnetService
+import com.xyoye.common_component.network.service.Open115Service
 import com.xyoye.common_component.network.service.RemoteService
 import com.xyoye.common_component.network.service.ScreencastService
 import com.xyoye.common_component.utils.JsonHelper
@@ -34,11 +36,13 @@ class Retrofit private constructor() {
         val magnetService: MagnetService by lazy { Holder.instance.magnetService }
         val screencastService: ScreencastService by lazy { Holder.instance.screencastService }
         val alistService: AlistService by lazy { Holder.instance.alistService }
+        val baiduPanService: BaiduPanService by lazy { Holder.instance.baiduPanService }
+        val open115Service: Open115Service by lazy { Holder.instance.open115Service }
 
         fun <T> createService(
             baseUrl: String,
             client: OkHttpClient,
-            service: Class<T>,
+            service: Class<T>
         ): T =
             retrofit2.Retrofit
                 .Builder()
@@ -145,5 +149,25 @@ class Retrofit private constructor() {
             .baseUrl(Api.PLACEHOLDER)
             .build()
             .create(AlistService::class.java)
+    }
+
+    private val baiduPanService: BaiduPanService by lazy {
+        Retrofit
+            .Builder()
+            .addConverterFactory(moshiConverterFactory)
+            .client(commonClient)
+            .baseUrl(Api.PLACEHOLDER)
+            .build()
+            .create(BaiduPanService::class.java)
+    }
+
+    private val open115Service: Open115Service by lazy {
+        Retrofit
+            .Builder()
+            .addConverterFactory(moshiConverterFactory)
+            .client(commonClient)
+            .baseUrl(Api.PLACEHOLDER)
+            .build()
+            .create(Open115Service::class.java)
     }
 }

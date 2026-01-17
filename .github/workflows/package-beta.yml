@@ -7,6 +7,9 @@ on:
       - develop
   workflow_dispatch:  # 允许手动触发
 
+permissions:
+  contents: read
+
 jobs:
   package:
     name: Generate Beta APK
@@ -58,6 +61,8 @@ jobs:
           BUGLY_APP_ID: ${{ secrets.BUGLY_APP_ID }}
           DANDAN_APP_ID: ${{ secrets.DANDAN_APP_ID }}
           DANDAN_APP_SECRET: ${{ secrets.DANDAN_APP_SECRET }}
+          BAIDU_PAN_CLIENT_ID: ${{ secrets.BAIDU_PAN_CLIENT_ID }}
+          BAIDU_PAN_CLIENT_SECRET: ${{ secrets.BAIDU_PAN_CLIENT_SECRET }}
           ALIYUN_SECRET: ${{ secrets.ALIYUN_SECRET }}
         run: |
           echo "✅ Secrets injected for beta build"
@@ -79,7 +84,7 @@ jobs:
         run: |
           # 提取分支名，移除 refs/heads/ 前缀
           branch_name=${GITHUB_REF#refs/heads/}
-          # 将特殊字符替换为 - ，确保tag名称有效
+          # 将特殊字符替换为 - ，确保产物文件名/Artifact 名称有效
           safe_branch_name=$(echo "$branch_name" | sed 's/[^a-zA-Z0-9._-]/-/g')
           echo "BRANCH_NAME=$safe_branch_name" >> $GITHUB_ENV
           echo "原始分支名: $branch_name"
@@ -96,6 +101,8 @@ jobs:
           BUGLY_APP_ID: ${{ secrets.BUGLY_APP_ID }}
           DANDAN_APP_ID: ${{ secrets.DANDAN_APP_ID }}
           DANDAN_APP_SECRET: ${{ secrets.DANDAN_APP_SECRET }}
+          BAIDU_PAN_CLIENT_ID: ${{ secrets.BAIDU_PAN_CLIENT_ID }}
+          BAIDU_PAN_CLIENT_SECRET: ${{ secrets.BAIDU_PAN_CLIENT_SECRET }}
           ALIYUN_SECRET: ${{ secrets.ALIYUN_SECRET }}
         run: chmod +x gradlew &&./gradlew clean assemble${{ env.BUILD_TYPE }} --stacktrace
 
@@ -118,22 +125,14 @@ jobs:
             mv app/build/outputs/apk/${{ env.BUILD_TYPE }}/${original_name} ${new_name}
           done
 
-      # 8.创建Release
-      - name: generate release
-        id: generate_release
-        uses: softprops/action-gh-release@v1
+      # 8.上传构建产物（仅 Actions 结果可下载，不发布到 Release）
+      - name: upload apk artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: 弹弹play概念版 v${{ env.BUILD_VERSION }} Beta (${{ env.BRANCH_NAME }})
-          tag_name: dandanplay-v${{ env.BUILD_VERSION }}-beta-${{ env.BRANCH_NAME }}
-          body: |
-            🚀 最新测试包 - 分支: ${{ env.BRANCH_NAME }}
-            📅 构建时间: ${{ github.event.head_commit.timestamp }}
-            📝 最新提交: ${{ github.event.head_commit.message }}
-            👤 提交者: ${{ github.event.head_commit.author.name }}
-          prerelease: true
-          files: |
+          name: ddplaytv-beta-v${{ env.BUILD_VERSION }}-${{ env.BRANCH_NAME }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
             ddplaytv_v${{ env.BUILD_VERSION }}_arm64-v8a-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
             ddplaytv_v${{ env.BUILD_VERSION }}_armeabi-v7a-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
             ddplaytv_v${{ env.BUILD_VERSION }}_universal-${{ env.BUILD_TYPE }}-${{ env.BRANCH_NAME }}.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

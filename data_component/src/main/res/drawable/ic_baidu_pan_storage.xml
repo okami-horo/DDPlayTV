@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/icon_baidu_pan_storage_bg_color"
+        android:pathData="M12,2C6.477,2 2,6.477 2,12s4.477,10 10,10 10,-4.477 10,-10S17.523,2 12,2Z" />
+
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M6.5,12C6.5,8 10,8 12,12C14,16 17.5,16 17.5,12C17.5,8 14,8 12,12C10,16 6.5,16 6.5,12"
+        android:strokeWidth="2.3"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

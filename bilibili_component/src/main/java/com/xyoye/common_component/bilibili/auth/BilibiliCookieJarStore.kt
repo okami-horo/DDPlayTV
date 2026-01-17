@@ -90,7 +90,7 @@ class BilibiliCookieJarStore(
                 val name: String,
                 val domain: String,
                 val path: String,
-                val hostOnly: Boolean,
+                val hostOnly: Boolean
             )
 
             cleanedAll
@@ -122,7 +122,7 @@ class BilibiliCookieJarStore(
 
     fun isCookiePresent(
         name: String,
-        domainSuffix: String = "bilibili.com",
+        domainSuffix: String = "bilibili.com"
     ): Boolean =
         hasCookieName(
             name = name,
@@ -131,7 +131,7 @@ class BilibiliCookieJarStore(
 
     fun getCookieOrNull(
         name: String,
-        domainSuffix: String = "bilibili.com",
+        domainSuffix: String = "bilibili.com"
     ): Cookie? =
         synchronized(lock) {
             val now = System.currentTimeMillis()
@@ -161,9 +161,7 @@ class BilibiliCookieJarStore(
                 ?.toCookie()
         }
 
-    fun exportCookieHeader(
-        domainSuffix: String = "bilibili.com"
-    ): String? =
+    fun exportCookieHeader(domainSuffix: String = "bilibili.com"): String? =
         synchronized(lock) {
             val now = System.currentTimeMillis()
             val cookies =
@@ -181,7 +179,7 @@ class BilibiliCookieJarStore(
 
     fun upsertCookie(
         cookie: Cookie,
-        bucketHost: String = cookie.domain,
+        bucketHost: String = cookie.domain
     ) {
         synchronized(lock) {
             val now = System.currentTimeMillis()

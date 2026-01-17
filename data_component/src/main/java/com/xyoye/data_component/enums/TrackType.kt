@@ -30,9 +30,7 @@ enum class TrackType {
         return null
     }
 
-    fun getDanmu(value: Any?): LocalDanmuBean? {
-        return getDanmuResource(value)?.let { (it as? DanmuTrackResource.LocalFile)?.danmu }
-    }
+    fun getDanmu(value: Any?): LocalDanmuBean? = getDanmuResource(value)?.let { (it as? DanmuTrackResource.LocalFile)?.danmu }
 
     fun getDanmuResource(value: Any?): DanmuTrackResource? {
         if (this != DANMU || value == null) return null

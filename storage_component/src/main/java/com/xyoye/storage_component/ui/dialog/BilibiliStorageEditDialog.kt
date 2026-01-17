@@ -1,13 +1,17 @@
 package com.xyoye.storage_component.ui.dialog
 
+import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.bilibili.BilibiliApiPreferences
 import com.xyoye.common_component.bilibili.BilibiliApiPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliApiType
 import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferences
 import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferencesStore
+import com.xyoye.common_component.bilibili.BilibiliPlayMode
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferences
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
-import com.xyoye.common_component.bilibili.BilibiliPlayMode
+import com.xyoye.common_component.bilibili.auth.BilibiliAuthStore
+import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
 import com.xyoye.common_component.bilibili.BilibiliQuality
 import com.xyoye.common_component.bilibili.BilibiliVideoCodec
 import com.xyoye.common_component.bilibili.cdn.BilibiliCdnService
@@ -15,8 +19,8 @@ import com.xyoye.common_component.bilibili.cleanup.BilibiliCleanup
 import com.xyoye.common_component.config.PlayerActions
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.network.config.Api
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.BottomActionDialog
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -24,8 +28,6 @@ import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.DialogBilibiliStorageBinding
 import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivity
-import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 class BilibiliStorageEditDialog(
@@ -63,7 +65,9 @@ class BilibiliStorageEditDialog(
         preferences = BilibiliPlaybackPreferencesStore.read(editLibrary)
         danmakuBlockPreferences = BilibiliDanmakuBlockPreferencesStore.read(editLibrary)
         refreshPreferenceViews()
+        refreshAuthViews()
 
+        binding.authActionTv.setOnClickListener { showLoginDialog() }
         binding.apiTypeActionTv.setOnClickListener { showApiTypeDialog() }
         binding.playModeActionTv.setOnClickListener { showPlayModeDialog() }
         binding.qualityActionTv.setOnClickListener { showQualityDialog() }
@@ -109,6 +113,13 @@ class BilibiliStorageEditDialog(
         }
 
         setPositiveListener {
+            normalizeLibraryUrl()
+            if (!isLoggedIn()) {
+                ToastCenter.showWarning("保存失败，请先扫码登录")
+                refreshAuthViews()
+                return@setPositiveListener
+            }
+
             if (editLibrary.displayName.isBlank()) {
                 editLibrary.displayName = "Bilibili媒体库"
             }
@@ -132,6 +143,46 @@ class BilibiliStorageEditDialog(
 
     override fun onTestResult(result: Boolean) {
         // Bilibili 媒体库当前不走通用 testStorage 测试流程，保持空实现
+    }
+
+    private fun normalizeLibraryUrl() {
+        if (editLibrary.url.isBlank()) {
+            editLibrary.url = Api.BILI_BILI_API
+        }
+        editLibrary.url = editLibrary.url.trim().removeSuffix("/")
+    }
+
+    private fun isLoggedIn(): Boolean {
+        val storageKey = BilibiliPlaybackPreferencesStore.storageKey(editLibrary)
+        return BilibiliCookieJarStore(storageKey).isLoginCookiePresent()
+    }
+
+    private fun showLoginDialog() {
+        normalizeLibraryUrl()
+        BilibiliLoginDialog(
+            activity = activity,
+            library = editLibrary,
+            apiType = apiPreferences.apiType,
+            onLoginSuccess = { refreshAuthViews() },
+            onDismiss = { refreshAuthViews() },
+        ).show()
+    }
+
+    private fun refreshAuthViews() {
+        normalizeLibraryUrl()
+
+        val storageKey = BilibiliPlaybackPreferencesStore.storageKey(editLibrary)
+        val isLoggedIn = BilibiliCookieJarStore(storageKey).isLoginCookiePresent()
+        val mid = BilibiliAuthStore.read(storageKey).mid?.takeIf { it > 0L }
+
+        binding.authStatusTv.text =
+            if (isLoggedIn) {
+                "已登录" + (mid?.let { "（mid=$it）" } ?: "")
+            } else {
+                "未登录"
+            }
+        binding.authActionTv.text = if (isLoggedIn) "重新登录" else "扫码登录"
+        binding.uidValueTv.text = mid?.let { "mid=$it" } ?: if (isLoggedIn) "已登录" else "未登录"
     }
 
     private fun updateAllow4k(enabled: Boolean) {

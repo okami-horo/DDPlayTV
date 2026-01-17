@@ -106,9 +106,7 @@ class ControlWrapper(
         mVideoPlayer.setRotation(rotation)
     }
 
-    override fun getAnime4kMode(): Int {
-        return mVideoPlayer.getAnime4kMode()
-    }
+    override fun getAnime4kMode(): Int = mVideoPlayer.getAnime4kMode()
 
     override fun setAnime4kMode(mode: Int) {
         mVideoPlayer.setAnime4kMode(mode)
@@ -306,9 +304,7 @@ class ControlWrapper(
         mDanmuController.setUserDanmuVisible(visible)
     }
 
-    override fun isUserDanmuVisible(): Boolean {
-        return mDanmuController.isUserDanmuVisible()
-    }
+    override fun isUserDanmuVisible(): Boolean = mDanmuController.isUserDanmuVisible()
 
     override fun allowSendDanmu(): Boolean = mDanmuController.allowSendDanmu()
 

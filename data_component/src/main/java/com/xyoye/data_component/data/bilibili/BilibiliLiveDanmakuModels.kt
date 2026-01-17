@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
 data class BilibiliLiveDanmuInfoData(
     val token: String = "",
     @Json(name = "host_list")
-    val hostList: List<BilibiliLiveDanmuHost> = emptyList(),
+    val hostList: List<BilibiliLiveDanmuHost> = emptyList()
 )
 
 @JsonClass(generateAdapter = true)
@@ -17,13 +17,13 @@ data class BilibiliLiveDanmuHost(
     @Json(name = "wss_port")
     val wssPort: Int = 0,
     @Json(name = "ws_port")
-    val wsPort: Int = 0,
+    val wsPort: Int = 0
 )
 
 data class BilibiliLiveDanmuConnectInfo(
     val roomId: Long,
     val token: String,
-    val hostList: List<BilibiliLiveDanmuHost>,
+    val hostList: List<BilibiliLiveDanmuHost>
 )
 
 sealed interface LiveDanmakuEvent {
@@ -34,16 +34,16 @@ sealed interface LiveDanmakuEvent {
         val timestampMs: Long,
         val recommendScore: Int = 0,
         val userId: Long = 0,
-        val userName: String = "",
+        val userName: String = ""
     ) : LiveDanmakuEvent
 
     data class Popularity(
-        val value: Long,
+        val value: Long
     ) : LiveDanmakuEvent
 
     enum class DanmakuMode {
         SCROLL,
         TOP,
-        BOTTOM,
+        BOTTOM
     }
 }

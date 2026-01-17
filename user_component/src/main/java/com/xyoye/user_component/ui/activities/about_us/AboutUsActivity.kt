@@ -38,7 +38,7 @@ class AboutUsActivity : BaseActivity<AboutUsViewModel, ActivityAboutUsBinding>()
         }
 
         dataBinding.sourceAddressTv.setOnClickListener {
-            startUrlActivity("https://github.com/xyoye/DanDanPlayForAndroid")
+            startUrlActivity("https://github.com/okami-horo/DDPlayTV")
         }
     }
 }

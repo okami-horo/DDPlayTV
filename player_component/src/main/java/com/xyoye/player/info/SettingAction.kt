@@ -15,7 +15,7 @@ enum class SettingAction(
 
     VIDEO_SPEED(SettingActionType.VIDEO, "倍速", R.drawable.ic_setting_video_speed),
 
-    BILIBILI_PLAYBACK(SettingActionType.VIDEO, "B站画质/编码", R.drawable.ic_setting_video_aspect),
+    PLAYBACK_ADDON_SETTING(SettingActionType.VIDEO, "播放源设置", R.drawable.ic_setting_video_aspect),
 
     ANIME4K(SettingActionType.VIDEO, "Anime4K", R.drawable.ic_setting_style),
 

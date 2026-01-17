@@ -19,7 +19,7 @@ object BilibiliApiPreferencesStore {
 
     fun write(
         library: MediaLibraryEntity,
-        preferences: BilibiliApiPreferences,
+        preferences: BilibiliApiPreferences
     ) = write(storageKey(library), preferences)
 
     fun clear(library: MediaLibraryEntity) = clear(storageKey(library))
@@ -28,7 +28,8 @@ object BilibiliApiPreferencesStore {
         val kv = mmkv()
         val type =
             runCatching {
-                kv.decodeString(namespacedKey(storageKey, KEY_API_TYPE))
+                kv
+                    .decodeString(namespacedKey(storageKey, KEY_API_TYPE))
                     ?.let { BilibiliApiType.valueOf(it) }
             }.getOrNull() ?: BilibiliApiType.WEB
         return BilibiliApiPreferences(apiType = type)
@@ -36,7 +37,7 @@ object BilibiliApiPreferencesStore {
 
     fun write(
         storageKey: String,
-        preferences: BilibiliApiPreferences,
+        preferences: BilibiliApiPreferences
     ) {
         val kv = mmkv()
         kv.encode(namespacedKey(storageKey, KEY_API_TYPE), preferences.apiType.name)
@@ -47,14 +48,12 @@ object BilibiliApiPreferencesStore {
         kv.removeValueForKey(namespacedKey(storageKey, KEY_API_TYPE))
     }
 
-    private fun storageKey(library: MediaLibraryEntity): String =
-        BilibiliPlaybackPreferencesStore.storageKey(library)
+    private fun storageKey(library: MediaLibraryEntity): String = BilibiliPlaybackPreferencesStore.storageKey(library)
 
     private fun mmkv(): MMKV = MMKV.mmkvWithID(MMKV_ID)
 
     private fun namespacedKey(
         storageKey: String,
-        fieldKey: String,
+        fieldKey: String
     ): String = "$storageKey.$fieldKey"
 }
-

@@ -5,9 +5,9 @@ import android.util.AttributeSet
 import android.view.FocusFinder
 import android.view.Gravity
 import android.view.KeyEvent
-import android.view.inputmethod.EditorInfo
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import com.xyoye.common_component.utils.hideKeyboard
@@ -175,7 +175,7 @@ class KeywordBlockView(
                 return true
             }
         }
-        
+
         if (viewBinding.keywordBlockAddEt.hasFocus()) {
             if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
                 viewBinding.keywordLabelsView.getChildAt(0)?.requestFocus()
@@ -194,7 +194,7 @@ class KeywordBlockView(
                     viewBinding.keywordLabelsView
                         .getChildAt(0)
                         ?.requestFocus()
-                 KeyEvent.KEYCODE_DPAD_UP -> viewBinding.ivClose.requestFocus()
+                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.ivClose.requestFocus()
             }
             return true
         }
@@ -208,7 +208,8 @@ class KeywordBlockView(
                 ?: return false
         val direction = keyCodeToDirection(keyCode) ?: return false
         val next =
-            FocusFinder.getInstance()
+            FocusFinder
+                .getInstance()
                 .findNextFocus(viewBinding.keywordLabelsView, focusedChild, direction)
 
         if (next != null) {
@@ -237,15 +238,14 @@ class KeywordBlockView(
         return true
     }
 
-    private fun keyCodeToDirection(keyCode: Int): Int? {
-        return when (keyCode) {
+    private fun keyCodeToDirection(keyCode: Int): Int? =
+        when (keyCode) {
             KeyEvent.KEYCODE_DPAD_LEFT -> View.FOCUS_LEFT
             KeyEvent.KEYCODE_DPAD_RIGHT -> View.FOCUS_RIGHT
             KeyEvent.KEYCODE_DPAD_UP -> View.FOCUS_UP
             KeyEvent.KEYCODE_DPAD_DOWN -> View.FOCUS_DOWN
             else -> null
         }
-    }
 
     private fun closeSettingView() {
         mControlWrapper.hideSettingView()

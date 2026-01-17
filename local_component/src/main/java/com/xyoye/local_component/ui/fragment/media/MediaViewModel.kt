@@ -9,6 +9,8 @@ import com.xyoye.common_component.extension.aesEncode
 import com.xyoye.common_component.extension.authorizationValue
 import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.ScreencastRepository
+import com.xyoye.common_component.storage.baidupan.auth.BaiduPanAuthStore
+import com.xyoye.common_component.storage.open115.auth.Open115AuthStore
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.getFileName
 import com.xyoye.common_component.weight.ToastCenter
@@ -85,6 +87,12 @@ class MediaViewModel : BaseViewModel() {
             try {
                 if (data.mediaType == MediaType.BILIBILI_STORAGE) {
                     BilibiliPlaybackPreferencesStore.clear(data)
+                }
+                if (data.mediaType == MediaType.BAIDU_PAN_STORAGE) {
+                    BaiduPanAuthStore.clear(BaiduPanAuthStore.storageKey(data))
+                }
+                if (data.mediaType == MediaType.OPEN_115_STORAGE) {
+                    Open115AuthStore.clear(Open115AuthStore.storageKey(data))
                 }
                 DatabaseManager.instance
                     .getMediaLibraryDao()

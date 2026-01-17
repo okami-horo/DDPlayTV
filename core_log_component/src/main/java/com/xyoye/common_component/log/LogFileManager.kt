@@ -320,12 +320,11 @@ open class LogFileManager(
         )
     }
 
-    private fun scanMediaStoreLogFiles(): List<LogFileMeta> {
-        return listOfNotNull(
+    private fun scanMediaStoreLogFiles(): List<LogFileMeta> =
+        listOfNotNull(
             queryMediaStoreEntry(LogPaths.CURRENT_LOG_FILE_NAME)?.toLogFileMeta(),
             queryMediaStoreEntry(LogPaths.PREVIOUS_LOG_FILE_NAME)?.toLogFileMeta(),
         ).sortedBy { it.fileName }
-    }
 
     private fun queryMediaStoreSize(
         uri: Uri,
@@ -399,8 +398,7 @@ open class LogFileManager(
         throw IllegalStateException("MediaStore requires Android Q+")
     }
 
-    private fun shouldUseMediaStore(): Boolean =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && LogPaths.downloadRootOverride == null
+    private fun shouldUseMediaStore(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && LogPaths.downloadRootOverride == null
 
     private fun cachedUri(displayName: String): Uri? =
         when (displayName) {
@@ -419,8 +417,7 @@ open class LogFileManager(
         }
     }
 
-    private fun normalizeRelativePath(path: String): String =
-        path.trimEnd('/').trimEnd('\\')
+    private fun normalizeRelativePath(path: String): String = path.trimEnd('/').trimEnd('\\')
 
     private data class MediaStoreEntry(
         val uri: Uri,

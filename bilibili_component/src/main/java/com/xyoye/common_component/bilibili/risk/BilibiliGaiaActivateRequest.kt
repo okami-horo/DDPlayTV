@@ -6,6 +6,5 @@ package com.xyoye.common_component.bilibili.risk
  * 对应：`POST /x/internal/gaia-gateway/ExClimbWuzhi`
  */
 data class BilibiliGaiaActivateRequest(
-    val payload: String,
+    val payload: String
 )
-

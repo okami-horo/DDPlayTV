@@ -66,9 +66,7 @@ class DanmuController(
         danmuView.setUserVisible(visible)
     }
 
-    override fun isUserDanmuVisible(): Boolean {
-        return danmuView.isUserVisible()
-    }
+    override fun isUserDanmuVisible(): Boolean = danmuView.isUserVisible()
 
     override fun allowSendDanmu(): Boolean = danmuView.isDanmuLoaded()
 

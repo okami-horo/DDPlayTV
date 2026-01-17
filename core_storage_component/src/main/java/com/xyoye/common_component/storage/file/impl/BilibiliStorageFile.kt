@@ -15,7 +15,7 @@ class BilibiliStorageFile(
     private val durationMs: Long = 0L,
     private val childCount: Int = 0,
     private val payload: Any? = null,
-    private val playable: Boolean = false,
+    private val playable: Boolean = false
 ) : StorageFile {
     override var playHistory: PlayHistoryEntity? = null
 
@@ -90,13 +90,22 @@ class BilibiliStorageFile(
                 uniqueKey = "bilibili://dir/history",
             )
 
+        fun followLiveDirectory(storage: Storage): BilibiliStorageFile =
+            BilibiliStorageFile(
+                storage = storage,
+                path = "/follow_live/",
+                name = "关注直播",
+                isDir = true,
+                uniqueKey = "bilibili://dir/follow_live",
+            )
+
         fun archiveDirectory(
             storage: Storage,
             bvid: String,
             title: String,
             coverUrl: String?,
             childCount: Int,
-            payload: Any?,
+            payload: Any?
         ): BilibiliStorageFile =
             BilibiliStorageFile(
                 storage = storage,
@@ -116,7 +125,7 @@ class BilibiliStorageFile(
             title: String,
             coverUrl: String?,
             durationMs: Long,
-            payload: Any?,
+            payload: Any?
         ): BilibiliStorageFile =
             BilibiliStorageFile(
                 storage = storage,
@@ -135,11 +144,30 @@ class BilibiliStorageFile(
             roomId: Long,
             title: String,
             coverUrl: String?,
-            payload: Any?,
+            payload: Any?
         ): BilibiliStorageFile =
             BilibiliStorageFile(
                 storage = storage,
                 path = "/history/live/$roomId",
+                name = title,
+                isDir = false,
+                uniqueKey = BilibiliKeys.liveRoomKey(roomId),
+                coverUrl = coverUrl,
+                durationMs = 0L,
+                payload = payload,
+                playable = true,
+            )
+
+        fun followLiveRoomFile(
+            storage: Storage,
+            roomId: Long,
+            title: String,
+            coverUrl: String?,
+            payload: Any?
+        ): BilibiliStorageFile =
+            BilibiliStorageFile(
+                storage = storage,
+                path = "/follow_live/$roomId",
                 name = title,
                 isDir = false,
                 uniqueKey = BilibiliKeys.liveRoomKey(roomId),
@@ -158,7 +186,7 @@ class BilibiliStorageFile(
             title: String,
             coverUrl: String?,
             durationMs: Long,
-            payload: Any?,
+            payload: Any?
         ): BilibiliStorageFile {
             val resolvedSeasonId = seasonId?.takeIf { it > 0 } ?: 0
             return BilibiliStorageFile(

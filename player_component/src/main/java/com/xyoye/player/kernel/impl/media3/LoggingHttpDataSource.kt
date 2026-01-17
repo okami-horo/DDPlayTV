@@ -38,8 +38,8 @@ class LoggingHttpDataSourceFactory : HttpDataSource.Factory {
 private class LoggingHttpDataSource(
     private val upstream: HttpDataSource
 ) : HttpDataSource by upstream {
-    override fun open(dataSpec: DataSpec): Long {
-        return try {
+    override fun open(dataSpec: DataSpec): Long =
+        try {
             val length = upstream.open(dataSpec)
             logOpen(
                 uri = dataSpec.uri,
@@ -58,12 +58,11 @@ private class LoggingHttpDataSource(
             Media3Diagnostics.logHttpOpen(dataSpec.uri?.toString(), null, null)
             throw e
         }
-    }
 
     private fun logOpen(
         uri: Uri?,
         responseCode: Int?,
-        headers: Map<String, List<String>>?,
+        headers: Map<String, List<String>>?
     ) {
         val resolvedHeaders = headers.orEmpty()
         val contentType =

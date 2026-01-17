@@ -4,8 +4,8 @@ import android.content.Context
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.utils.PathHelper
-import com.xyoye.player.kernel.anime4k.Anime4kShaderAssets
 import com.xyoye.player.kernel.anime4k.Anime4kMode
+import com.xyoye.player.kernel.anime4k.Anime4kShaderAssets
 import java.io.File
 import java.io.FileOutputStream
 
@@ -62,7 +62,7 @@ internal object Anime4kShaderManager {
                     LogFacade.w(
                         LogModule.PLAYER,
                         TAG,
-                        "failed to create shader directory: $absolutePath"
+                        "failed to create shader directory: $absolutePath",
                     )
                     return null
                 }
@@ -92,7 +92,7 @@ internal object Anime4kShaderManager {
             LogFacade.i(
                 LogModule.PLAYER,
                 TAG,
-                "shader copied: $assetPath -> ${target.absolutePath}"
+                "shader copied: $assetPath -> ${target.absolutePath}",
             )
         }.onFailure { error ->
             target.delete()
@@ -100,7 +100,7 @@ internal object Anime4kShaderManager {
                 LogModule.PLAYER,
                 TAG,
                 "copy shader failed: $assetPath, reason=${error.message}",
-                throwable = error
+                throwable = error,
             )
         }.getOrNull()
     }

@@ -18,4 +18,3 @@ object Anime4kMode {
             else -> MODE_OFF
         }
 }
-

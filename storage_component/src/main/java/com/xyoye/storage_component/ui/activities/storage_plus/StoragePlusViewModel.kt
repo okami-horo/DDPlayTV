@@ -4,10 +4,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
+import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
+import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.storage.StorageFactory
+import com.xyoye.common_component.network.config.Api
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
+import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -23,6 +27,37 @@ class StoragePlusViewModel : BaseViewModel() {
         newLibrary: MediaLibraryEntity
     ) {
         viewModelScope.launch(Dispatchers.IO) {
+            if (newLibrary.mediaType == MediaType.OPEN_115_STORAGE) {
+                newLibrary.url = newLibrary.url.trim().removeSuffix("/")
+                val isValid = Regex("^115open://uid/\\d+$").matches(newLibrary.url)
+                if (!isValid) {
+                    ToastCenter.showWarning("请先测试连接/保存")
+                    return@launch
+                }
+            }
+
+            if (newLibrary.mediaType == MediaType.BAIDU_PAN_STORAGE) {
+                newLibrary.url = newLibrary.url.trim().removeSuffix("/")
+                val isValid = Regex("^baidupan://uk/\\d+$").matches(newLibrary.url)
+                if (!isValid) {
+                    ToastCenter.showWarning("保存失败，请先扫码授权")
+                    return@launch
+                }
+            }
+
+            if (newLibrary.mediaType == MediaType.BILIBILI_STORAGE) {
+                if (newLibrary.url.isBlank()) {
+                    newLibrary.url = Api.BILI_BILI_API
+                }
+                newLibrary.url = newLibrary.url.trim().removeSuffix("/")
+                val storageKey = BilibiliPlaybackPreferencesStore.storageKey(newLibrary)
+                val isLoggedIn = BilibiliCookieJarStore(storageKey).isLoginCookiePresent()
+                if (!isLoggedIn) {
+                    ToastCenter.showWarning("保存失败，请先扫码登录")
+                    return@launch
+                }
+            }
+
             val duplicateLibrary =
                 DatabaseManager.instance
                     .getMediaLibraryDao()

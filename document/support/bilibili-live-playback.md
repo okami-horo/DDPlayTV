@@ -33,7 +33,7 @@
 
 - `bilibili://archive/{bvid}?cid={cid}`
 
-对应实现：`common_component/.../bilibili/BilibiliKeys.kt`
+对应实现：`bilibili_component/src/main/java/com/xyoye/common_component/bilibili/BilibiliKeys.kt`
 
 ### 2）扩展历史记录数据模型（History Models）
 
@@ -44,7 +44,7 @@
 
 因此需要在模型中补充 `oid`（以及少量直播相关字段，便于未来扩展）。
 
-对应实现：`data_component/.../bilibili/BilibiliHistoryModels.kt`
+对应实现：`data_component/src/main/java/com/xyoye/data_component/data/bilibili/BilibiliHistoryModels.kt`
 
 ### 3）历史目录取数策略
 
@@ -55,7 +55,7 @@
 
 并加入「空页跳过」逻辑：当某一页全部是暂不支持的业务类型（例如 `article/pgc`）导致映射结果为空时，会自动再取下一页（最多 5 次），避免首屏/翻页出现“加载成功但没有新增条目”的体验问题。
 
-对应实现：`common_component/.../storage/impl/BilibiliStorage.kt`
+对应实现：`core_storage_component/src/main/java/com/xyoye/common_component/storage/impl/BilibiliStorage.kt`
 
 ### 4）直播取流（Live playUrl）
 
@@ -67,13 +67,13 @@
 
 2. 直播流地址
    - `https://api.live.bilibili.com/room/v1/Room/playUrl?cid={roomId}&platform=h5`
-   - `platform=h5` 返回 HLS（m3u8），更利于 Media3/ExoPlayer 兼容
+   - `platform=h5` 返回 HLS（m3u8），更利于播放器兼容
 
 对应实现：
 
-- Retrofit 接口：`common_component/.../network/service/BilibiliService.kt`
-- Repository：`common_component/.../bilibili/repository/BilibiliRepository.kt`
-- 数据模型：`data_component/.../bilibili/BilibiliLiveModels.kt`
+- Retrofit 接口：`bilibili_component/src/main/java/com/xyoye/common_component/network/service/BilibiliService.kt`
+- Repository：`bilibili_component/src/main/java/com/xyoye/common_component/bilibili/repository/BilibiliRepository.kt`
+- 数据模型：`data_component/src/main/java/com/xyoye/data_component/data/bilibili/BilibiliLiveModels.kt`
 
 ### 5）弹幕处理
 
@@ -81,7 +81,7 @@
 
 本次适配仅保证直播 **可播放**，播放页弹幕逻辑在检测到 `bilibili://live/{roomId}` 时不会尝试按 `cid` 下载点播弹幕。
 
-对应实现：`player_component/.../PlayerDanmuViewModel.kt`
+对应实现：`player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerDanmuViewModel.kt`
 
 ## 数据流与关键路径
 
@@ -99,10 +99,8 @@
 ## 已知限制与后续可扩展点
 
 - 直播弹幕（WS/WSS）暂未接入，仅播放视频流。
-- 直播流 URL 具有时效性；长时间暂停/后台可能需要重新取流（目前由重新进入播放触发）。
+- 直播流 URL 具有时效性；当 URL 过期或线路不可用导致播放失败时，会触发播放页「自动恢复」：重取流并在必要时切换线路（直播不 seek）。
 - 历史记录 `type=all` 仍会包含 `pgc/article` 等业务类型，目前选择忽略；如需支持，可在 `mapHistoryItem()` 中扩展映射与取流策略。
-
-直播实时弹幕接入的 TODO 见：`TODOs/bilibili_live_danmaku.md`。
 
 ## 手动验证步骤（建议）
 
@@ -111,5 +109,6 @@
 3. 点击直播条目，确认：
    - 能正常开始播放
    - 网络请求不出现 403/404
+   - 长时间播放（约 1h+）后如遇过期/断流，能自动恢复
 4. 对普通稿件（archive）回归验证：
    - 单 P 与多 P 播放/分页列表正常

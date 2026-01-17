@@ -73,7 +73,7 @@ interface Storage {
 
     suspend fun createPlayUrl(
         file: StorageFile,
-        profile: PlaybackProfile,
+        profile: PlaybackProfile
     ): String? = createPlayUrl(file)
 
     /**
@@ -100,6 +100,13 @@ interface Storage {
      * 获取网络请求头
      */
     fun getNetworkHeaders(): Map<String, String>?
+
+    /**
+     * 获取网络请求头（按文件细化）。
+     *
+     * 默认实现回落到 [getNetworkHeaders]，以兼容未实现细化能力的 Storage。
+     */
+    fun getNetworkHeaders(file: StorageFile): Map<String, String>? = getNetworkHeaders()
 
     /**
      * 是否支持搜索

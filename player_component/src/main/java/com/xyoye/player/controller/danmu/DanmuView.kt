@@ -6,10 +6,9 @@ import android.graphics.Point
 import android.util.AttributeSet
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
-import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferences
-import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferencesStore
-import com.xyoye.common_component.bilibili.live.danmaku.LiveDanmakuSocketClient
 import com.xyoye.common_component.config.DanmuConfig
+import com.xyoye.common_component.utils.danmu.live.LiveDanmakuClient
+import com.xyoye.common_component.utils.danmu.live.LiveDanmakuClientFactory
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.danmaku.BiliDanmakuLoader
 import com.xyoye.danmaku.BiliDanmakuParser
@@ -93,7 +92,7 @@ class DanmuView(
 
     private var danmuResource: DanmuTrackResource? = null
 
-    private var liveDanmakuClient: LiveDanmakuSocketClient? = null
+    private var liveDanmakuClient: LiveDanmakuClient? = null
     private var liveDanmakuScope: CoroutineScope? = null
     private var liveDanmakuRenderJob: Job? = null
     private var liveDanmakuChannel: Channel<LiveDanmakuEvent.Danmaku>? = null
@@ -101,8 +100,6 @@ class DanmuView(
     private var liveRestrictedHintShown = false
     private var lastLiveStatusAt = 0L
     private var lastLiveStatusMsg: String? = null
-
-    private var liveDanmakuBlockPreferences: BilibiliDanmakuBlockPreferences? = null
 
     init {
         showFPS(DanmuConfig.isDanmuDebug())
@@ -277,9 +274,7 @@ class DanmuView(
         syncLiveDanmakuConnection()
     }
 
-    fun isUserVisible(): Boolean {
-        return userVisible
-    }
+    fun isUserVisible(): Boolean = userVisible
 
     private fun setDanmuVisible(visible: Boolean) {
         if (visible) {
@@ -295,7 +290,7 @@ class DanmuView(
 
     private fun addLocalTrack(
         track: VideoTrackBean,
-        resource: DanmuTrackResource.LocalFile,
+        resource: DanmuTrackResource.LocalFile
     ): Boolean {
         val danmu = resource.danmu
         val danmuFile = File(danmu.danmuPath)
@@ -328,7 +323,7 @@ class DanmuView(
 
     private fun addBilibiliLiveTrack(
         track: VideoTrackBean,
-        resource: DanmuTrackResource.BilibiliLive,
+        resource: DanmuTrackResource.BilibiliLive
     ): Boolean {
         // 释放上一次加载的弹幕
         release()
@@ -371,7 +366,6 @@ class DanmuView(
 
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         liveDanmakuScope = scope
-        liveDanmakuBlockPreferences = BilibiliDanmakuBlockPreferencesStore.read(resource.storageKey)
         liveDanmakuChannel =
             Channel(
                 capacity = 200,
@@ -381,21 +375,21 @@ class DanmuView(
         startLiveRenderLoop(scope)
 
         liveDanmakuClient =
-            LiveDanmakuSocketClient(
-                storageKey = resource.storageKey,
-                roomId = resource.roomId,
-                scope = scope,
-                listener =
-                    object : LiveDanmakuSocketClient.Listener {
-                        override fun onStateChanged(state: LiveDanmakuSocketClient.LiveDanmakuState) {
-                            handleLiveState(state)
-                        }
+            LiveDanmakuClientFactory
+                .create(
+                    resource = resource,
+                    scope = scope,
+                    listener =
+                        object : LiveDanmakuClient.Listener {
+                            override fun onStateChanged(state: LiveDanmakuClient.LiveDanmakuState) {
+                                handleLiveState(state)
+                            }
 
-                        override fun onEvent(event: LiveDanmakuEvent) {
-                            handleLiveEvent(event)
-                        }
-                    },
-            ).also { it.start() }
+                            override fun onEvent(event: LiveDanmakuEvent) {
+                                handleLiveEvent(event)
+                            }
+                        },
+                )?.also { it.start() }
     }
 
     private fun startLiveRenderLoop(scope: CoroutineScope) {
@@ -433,14 +427,14 @@ class DanmuView(
             }
     }
 
-    private fun handleLiveState(state: LiveDanmakuSocketClient.LiveDanmakuState) {
+    private fun handleLiveState(state: LiveDanmakuClient.LiveDanmakuState) {
         val message =
             when (state) {
-                LiveDanmakuSocketClient.LiveDanmakuState.Connecting -> "直播弹幕：连接中"
-                is LiveDanmakuSocketClient.LiveDanmakuState.Connected -> "直播弹幕：已连接"
-                is LiveDanmakuSocketClient.LiveDanmakuState.Reconnecting -> "直播弹幕：断开重连（${state.attempt}）"
-                is LiveDanmakuSocketClient.LiveDanmakuState.Disconnected -> "直播弹幕：已断开"
-                is LiveDanmakuSocketClient.LiveDanmakuState.Error -> "直播弹幕：${state.message}"
+                LiveDanmakuClient.LiveDanmakuState.Connecting -> "直播弹幕：连接中"
+                is LiveDanmakuClient.LiveDanmakuState.Connected -> "直播弹幕：已连接"
+                is LiveDanmakuClient.LiveDanmakuState.Reconnecting -> "直播弹幕：断开重连（${state.attempt}）"
+                is LiveDanmakuClient.LiveDanmakuState.Disconnected -> "直播弹幕：已断开"
+                is LiveDanmakuClient.LiveDanmakuState.Error -> "直播弹幕：${state.message}"
             }
         showLiveStatus(message)
     }
@@ -448,13 +442,6 @@ class DanmuView(
     private fun handleLiveEvent(event: LiveDanmakuEvent) {
         when (event) {
             is LiveDanmakuEvent.Danmaku -> {
-                val prefs = liveDanmakuBlockPreferences
-                if (prefs != null && prefs.aiSwitch) {
-                    val effectiveLevel = if (prefs.aiLevel == 0) 3 else prefs.aiLevel
-                    if (event.recommendScore < effectiveLevel) {
-                        return
-                    }
-                }
                 if (!liveRestrictedHintShown && event.userId == 0L && event.userName.contains('*')) {
                     liveRestrictedHintShown = true
                     showLiveStatus("直播弹幕：游客态昵称已打码，可登录 Bilibili 媒体库解除")
@@ -496,7 +483,6 @@ class DanmuView(
         liveDanmakuScope?.cancel()
         liveDanmakuScope = null
         liveDanmakuChannel = null
-        liveDanmakuBlockPreferences = null
     }
 
     private fun initDanmuContext() {

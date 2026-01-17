@@ -3,11 +3,11 @@ package com.xyoye.common_component.weight.dialog
 import android.text.InputType
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import com.xyoye.core_ui_component.R
-import com.xyoye.core_ui_component.databinding.DialogCommonEditBinding
 import com.xyoye.common_component.utils.hideKeyboard
 import com.xyoye.common_component.utils.showKeyboard
 import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.core_ui_component.R
+import com.xyoye.core_ui_component.databinding.DialogCommonEditBinding
 import com.xyoye.data_component.bean.EditBean
 
 /**

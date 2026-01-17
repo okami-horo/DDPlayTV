@@ -5,4 +5,3 @@ package com.xyoye.common_component.network.request
  * instead of being wrapped into [NetworkException].
  */
 interface PassThroughException
-

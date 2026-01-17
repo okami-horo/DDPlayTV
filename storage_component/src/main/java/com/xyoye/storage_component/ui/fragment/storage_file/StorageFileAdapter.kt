@@ -17,9 +17,6 @@ import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.adapter.setupVerticalAnimation
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.core_ui_component.databinding.ItemStorageFolderBinding
-import com.xyoye.core_ui_component.databinding.ItemStorageVideoBinding
-import com.xyoye.core_ui_component.databinding.ItemStorageVideoTagBinding
 import com.xyoye.common_component.extension.dp
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.isInvalid
@@ -30,10 +27,11 @@ import com.xyoye.common_component.extension.toFile
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.common_component.extension.toResString
-import com.xyoye.common_component.storage.impl.BilibiliStorage
+import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.danmu
 import com.xyoye.common_component.storage.file.subtitle
+import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.utils.PlayHistoryUtils
 import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.common_component.utils.getRecognizableFileName
@@ -41,6 +39,9 @@ import com.xyoye.common_component.utils.view.ItemDecorationOrientation
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.FileManagerDialog
+import com.xyoye.core_ui_component.databinding.ItemStorageFolderBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageVideoBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageVideoTagBinding
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.bean.VideoTagBean
 import com.xyoye.data_component.enums.FileManagerAction
@@ -58,7 +59,7 @@ class StorageFileAdapter(
     private val activity: StorageFileActivity,
     private val viewModel: StorageFileFragmentViewModel,
     private val onRefreshRequested: () -> Unit,
-    private val onLoginRequested: () -> Unit,
+    private val onLoginRequested: () -> Unit
 ) {
     private enum class ManageAction(
         val title: String,
@@ -90,17 +91,23 @@ class StorageFileAdapter(
 
             addEmptyView(R.layout.layout_empty) {
                 initEmptyView {
-                    val isBilibiliHistory =
-                        activity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
-                            activity.directory?.filePath() == "/history/"
+                    val directory = activity.directory
+                    val authStorage = activity.storage as? AuthStorage
                     val requiresLogin =
-                        isBilibiliHistory && (activity.storage as? BilibiliStorage)?.isConnected() == false
+                        authStorage?.let { it.requiresLogin(directory) && !it.isConnected() } == true
 
                     itemBinding.emptyActionTv.isVisible = true
 
                     if (requiresLogin) {
-                        itemBinding.emptyTv.text = "需要登录才能查看历史记录"
-                        itemBinding.emptyActionTv.text = "扫码登录"
+                        val directoryName =
+                            when (directory?.filePath()) {
+                                BilibiliStorage.PATH_HISTORY_DIR -> "历史记录"
+                                BilibiliStorage.PATH_FOLLOW_LIVE_DIR -> "关注直播"
+                                else -> "当前目录"
+                            }
+                        val actionText = authStorage?.loginActionText(directory).orEmpty()
+                        itemBinding.emptyTv.text = "需要${actionText}才能查看$directoryName"
+                        itemBinding.emptyActionTv.text = actionText
                         itemBinding.emptyActionTv.setOnClickListener { onLoginRequested.invoke() }
                         return@initEmptyView
                     }
@@ -211,17 +218,26 @@ class StorageFileAdapter(
     private fun BaseViewHolderCreator<ItemStoragePagingBinding>.pagingItem() =
         { data: StoragePagingItem ->
             val isDataEmpty = data.isDataEmpty
+            val emptyTitle =
+                if (activity.storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
+                    when (activity.directory?.filePath()) {
+                        BilibiliStorage.PATH_FOLLOW_LIVE_DIR -> "暂无直播"
+                        else -> "暂无历史记录"
+                    }
+                } else {
+                    R.string.text_empty_video.toResString(activity)
+                }
             val title =
                 when (data.state) {
                     com.xyoye.common_component.storage.PagedStorage.State.LOADING -> "加载中…"
                     com.xyoye.common_component.storage.PagedStorage.State.ERROR -> "加载失败，按确认键重试"
                     com.xyoye.common_component.storage.PagedStorage.State.NO_MORE ->
-                        if (isDataEmpty) "暂无历史记录" else "没有更多了"
+                        if (isDataEmpty) emptyTitle else "没有更多了"
                     com.xyoye.common_component.storage.PagedStorage.State.IDLE ->
                         when {
-                            data.hasMore && isDataEmpty -> "暂无历史记录"
+                            data.hasMore && isDataEmpty -> emptyTitle
                             data.hasMore -> "加载更多"
-                            isDataEmpty -> "暂无历史记录"
+                            isDataEmpty -> emptyTitle
                             else -> "没有更多了"
                         }
                 }

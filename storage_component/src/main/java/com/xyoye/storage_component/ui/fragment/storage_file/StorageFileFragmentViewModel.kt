@@ -5,20 +5,22 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
+import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.database.DatabaseManager
-import com.xyoye.common_component.storage.Storage
+import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.PagedStorage
+import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageSortOption
+import com.xyoye.common_component.storage.baidupan.auth.BaiduPanReAuthRequiredException
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.payloadAs
-import com.xyoye.common_component.storage.impl.BilibiliStorage
+import com.xyoye.common_component.storage.open115.auth.Open115ReAuthRequiredException
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.common_component.bilibili.error.BilibiliException
-import com.xyoye.data_component.entity.PlayHistoryEntity
-import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
+import com.xyoye.data_component.entity.MediaLibraryEntity
+import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.TrackType
 import kotlinx.coroutines.Dispatchers
@@ -45,8 +47,8 @@ class StorageFileFragmentViewModel : BaseViewModel() {
     private val _fileLiveData = MutableLiveData<List<Any>>()
     val fileLiveData: LiveData<List<Any>> = _fileLiveData
 
-    private val _bilibiliLoginRequiredLiveData = MutableLiveData<MediaLibraryEntity>()
-    val bilibiliLoginRequiredLiveData: LiveData<MediaLibraryEntity> = _bilibiliLoginRequiredLiveData
+    private val _loginRequiredLiveData = MutableLiveData<MediaLibraryEntity>()
+    val loginRequiredLiveData: LiveData<MediaLibraryEntity> = _loginRequiredLiveData
 
     lateinit var storage: Storage
 
@@ -73,6 +75,16 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             lastListError = null
             try {
+                val authStorage = storage as? AuthStorage
+                if (authStorage != null && authStorage.requiresLogin(directory) && !authStorage.isConnected()) {
+                    ToastCenter.showWarning("请先${authStorage.loginActionText(directory)}")
+                    _loginRequiredLiveData.postValue(storage.library)
+                    emptyList<Any>()
+                        .apply { _fileLiveData.postValue(this) }
+                        .also { filesSnapshot = it }
+                    return@launch
+                }
+
                 val target = directory ?: storage.getRootFile()
                 if (target == null) {
                     emptyList<Any>()
@@ -81,17 +93,13 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                     return@launch
                 }
 
-                if (storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
-                    val bilibiliStorage = storage as? BilibiliStorage
-                    val requiresLogin = target.filePath() == "/history/"
-                    if (requiresLogin && bilibiliStorage?.isConnected() == false) {
-                        ToastCenter.showWarning("请先扫码登录")
-                        _bilibiliLoginRequiredLiveData.postValue(storage.library)
-                        emptyList<Any>()
-                            .apply { _fileLiveData.postValue(this) }
-                            .also { filesSnapshot = it }
-                        return@launch
-                    }
+                if (authStorage != null && authStorage.requiresLogin(target) && !authStorage.isConnected()) {
+                    ToastCenter.showWarning("请先${authStorage.loginActionText(target)}")
+                    _loginRequiredLiveData.postValue(storage.library)
+                    emptyList<Any>()
+                        .apply { _fileLiveData.postValue(this) }
+                        .also { filesSnapshot = it }
+                    return@launch
                 }
 
                 refreshStorageLastPlay()
@@ -105,8 +113,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                         } else {
                             files.sortedWith(StorageSortOption.comparator())
                         }
-                    }
-                    .onEach { it.playHistory = getHistory(it) }
+                    }.onEach { it.playHistory = getHistory(it) }
                     .let { buildDisplayItems(it) }
                     .apply { _fileLiveData.postValue(this) }
                     .also { filesSnapshot = it }
@@ -119,10 +126,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                     "加载文件列表失败: ${directory?.fileName() ?: "root"}",
                 )
 
-                if (e is BilibiliException && e.code == -101) {
-                    ToastCenter.showWarning("登录已失效，请重新扫码登录")
-                    _bilibiliLoginRequiredLiveData.postValue(storage.library)
-                    _fileLiveData.postValue(emptyList())
+                if (handleLoginRequiredIfNeeded(e, clearList = true)) {
                     return@launch
                 }
 
@@ -168,6 +172,11 @@ class StorageFileFragmentViewModel : BaseViewModel() {
      * 搜索文件
      */
     fun searchByText(text: String) {
+        if (text.isEmpty()) {
+            _fileLiveData.postValue(filesSnapshot)
+            return
+        }
+
         // 媒体库支持文件搜索，由媒体库处理搜索
         if (storage.supportSearch()) {
             viewModelScope.launch(Dispatchers.IO) {
@@ -183,6 +192,9 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                             _fileLiveData.postValue(files.map { it as Any })
                         }
                 } catch (e: Exception) {
+                    if (handleLoginRequiredIfNeeded(e, clearList = true)) {
+                        return@launch
+                    }
                     ErrorReportHelper.postCatchedExceptionWithContext(
                         e,
                         "StorageFileFragmentViewModel",
@@ -194,12 +206,6 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                     _fileLiveData.postValue(emptyList())
                 }
             }
-            return
-        }
-
-        // 搜索条件为空，返回文件列表快照
-        if (text.isEmpty()) {
-            _fileLiveData.postValue(filesSnapshot)
             return
         }
 
@@ -280,20 +286,20 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             refreshStorageLastPlay()
             val updated =
                 fileList
-                .map {
-                    val history = getHistory(it)
-                    val isSameHistory =
-                        if (it.isFile()) {
-                            it.playHistory == history && it.playHistory?.isLastPlay == history?.isLastPlay
-                        } else {
-                            it.playHistory?.id == history?.id
+                    .map {
+                        val history = getHistory(it)
+                        val isSameHistory =
+                            if (it.isFile()) {
+                                it.playHistory == history && it.playHistory?.isLastPlay == history?.isLastPlay
+                            } else {
+                                it.playHistory?.id == history?.id
+                            }
+                        if (isSameHistory) {
+                            return@map it
                         }
-                    if (isSameHistory) {
-                        return@map it
+                        // 历史记录不一致时，返回拷贝的新对象
+                        it.clone().apply { playHistory = history }
                     }
-                    // 历史记录不一致时，返回拷贝的新对象
-                    it.clone().apply { playHistory = history }
-                }
             val items = buildDisplayItems(updated)
             _fileLiveData.postValue(items)
             filesSnapshot = items
@@ -318,14 +324,20 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             val current = _fileLiveData.value?.filterIsInstance<StorageFile>().orEmpty()
             val result = pagedStorage.loadMore()
             if (result.isFailure) {
+                val exception = result.exceptionOrNull()
+                if (exception != null && handleLoginRequiredIfNeeded(exception, clearList = false)) {
+                    _fileLiveData.postValue(buildDisplayItems(current))
+                    return@launch
+                }
                 if (showFailureToast) {
-                    ToastCenter.showError("加载更多失败: ${result.exceptionOrNull()?.message}")
+                    ToastCenter.showError("加载更多失败: ${exception?.message}")
                 }
                 _fileLiveData.postValue(buildDisplayItems(current))
                 return@launch
             }
 
             val appended = result.getOrNull().orEmpty()
+                .filter { isDisplayFile(it) }
             val existingKeys = current.map { it.uniqueKey() }.toHashSet()
             val merged =
                 current.toMutableList<StorageFile>().apply {
@@ -337,7 +349,15 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                     }
                 }
 
-            val items = buildDisplayItems(merged)
+            val displayFiles =
+                if (storage.library.mediaType == MediaType.BAIDU_PAN_STORAGE ||
+                    storage.library.mediaType == MediaType.OPEN_115_STORAGE) {
+                    merged.sortedWith(StorageSortOption.comparator())
+                } else {
+                    merged
+                }
+
+            val items = buildDisplayItems(displayFiles)
             _fileLiveData.postValue(items)
             filesSnapshot = items
         }
@@ -354,8 +374,10 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             return null
         }
 
-        val bilibiliRemoteHistory = file.payloadAs<BilibiliHistoryItem>()
-            .takeIf { storage.library.mediaType == MediaType.BILIBILI_STORAGE }
+        val bilibiliRemoteHistory =
+            file
+                .payloadAs<BilibiliHistoryItem>()
+                .takeIf { storage.library.mediaType == MediaType.BILIBILI_STORAGE }
 
         var history: PlayHistoryEntity? =
             DatabaseManager.instance
@@ -407,13 +429,14 @@ class StorageFileFragmentViewModel : BaseViewModel() {
 
             if (remoteNewer && (positionChanged || durationChanged)) {
                 val updated =
-                    local.copy(
-                        videoPosition = remotePositionMs,
-                        videoDuration = if (remoteDurationMs > 0) remoteDurationMs else local.videoDuration,
-                        playTime = Date(remoteViewAtMs),
-                    ).also {
-                        it.isLastPlay = local.isLastPlay
-                    }
+                    local
+                        .copy(
+                            videoPosition = remotePositionMs,
+                            videoDuration = if (remoteDurationMs > 0) remoteDurationMs else local.videoDuration,
+                            playTime = Date(remoteViewAtMs),
+                        ).also {
+                            it.isLastPlay = local.isLastPlay
+                        }
                 DatabaseManager.instance.getPlayHistoryDao().insert(updated)
                 history = updated
             }
@@ -424,7 +447,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
 
     private fun normalizeRemoteProgress(
         progressSec: Long,
-        durationSec: Long,
+        durationSec: Long
     ): Long {
         if (progressSec <= 0) return 0
         if (durationSec > 0 && progressSec >= durationSec) return 0
@@ -492,9 +515,41 @@ class StorageFileFragmentViewModel : BaseViewModel() {
     private fun buildDisplayItems(files: List<StorageFile>): List<Any> {
         val items = files.toMutableList<Any>()
         val paged = storage as? PagedStorage
-        if (paged != null && storage.directory?.filePath() == "/history/") {
+        if (paged != null && paged.shouldShowPagingItem(storage.directory)) {
             items.add(StoragePagingItem(paged.state, paged.hasMore(), files.isEmpty()))
         }
         return items
+    }
+
+    private fun handleLoginRequiredIfNeeded(
+        throwable: Throwable,
+        clearList: Boolean
+    ): Boolean {
+        val authStorage = storage as? AuthStorage ?: return false
+
+        val message =
+            when (throwable) {
+                is BaiduPanReAuthRequiredException ->
+                    throwable.message?.takeIf { it.isNotBlank() }
+                        ?: "登录已失效，请重新${authStorage.loginActionText(storage.directory)}"
+                is Open115ReAuthRequiredException ->
+                    "授权已失效，请更新 token"
+                is BilibiliException -> {
+                    if (throwable.code != -101) return false
+                    "登录已失效，请重新${authStorage.loginActionText(storage.directory)}"
+                }
+                else -> return false
+            }
+
+        ToastCenter.showWarning(message)
+        _loginRequiredLiveData.postValue(storage.library)
+
+        if (clearList) {
+            val empty = emptyList<Any>()
+            _fileLiveData.postValue(empty)
+            filesSnapshot = empty
+        }
+
+        return true
     }
 }

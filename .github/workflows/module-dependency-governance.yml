@@ -1,0 +1,53 @@
+name: architecture governance
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Verify architecture governance
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout source code
+        uses: actions/checkout@v4
+
+      - name: set up JDK for sdkmanager
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: adopt
+
+      # 为了让 AGP 能正确配置（compileSdk/buildTools），这里安装最小必需的 SDK 包
+      - name: install Android 35 SDK
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$(command -v sdkmanager || true)"
+          if [[ -z "$SDKMANAGER" ]]; then
+            SDKMANAGER="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}/cmdline-tools/latest/bin/sdkmanager"
+          fi
+          if [[ ! -x "$SDKMANAGER" ]]; then
+            echo "sdkmanager not found" >&2
+            exit 1
+          fi
+          if ! yes | "$SDKMANAGER" --licenses > /dev/null; then
+            status=${PIPESTATUS[1]}
+            if [[ ${status:-1} -ne 0 ]]; then
+              exit "$status"
+            fi
+          fi
+          if ! yes | "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"; then
+            status=${PIPESTATUS[1]}
+            if [[ ${status:-1} -ne 0 ]]; then
+              exit "$status"
+            fi
+          fi
+
+      - name: ensure JDK 17 for Gradle
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: adopt
+
+      - name: verify architecture governance
+        run: chmod +x gradlew && ./gradlew verifyArchitectureGovernance --stacktrace

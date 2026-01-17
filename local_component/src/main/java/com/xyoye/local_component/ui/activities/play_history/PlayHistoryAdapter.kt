@@ -10,8 +10,6 @@ import com.xyoye.common_component.adapter.addEmptyView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
-import com.xyoye.core_ui_component.databinding.ItemStorageVideoBinding
-import com.xyoye.core_ui_component.databinding.ItemStorageVideoTagBinding
 import com.xyoye.common_component.extension.addToClipboard
 import com.xyoye.common_component.extension.dp
 import com.xyoye.common_component.extension.horizontal
@@ -26,6 +24,8 @@ import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.common_component.utils.view.ItemDecorationOrientation
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.core_ui_component.databinding.ItemStorageVideoBinding
+import com.xyoye.core_ui_component.databinding.ItemStorageVideoTagBinding
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.bean.VideoTagBean
 import com.xyoye.data_component.entity.PlayHistoryEntity

@@ -103,7 +103,9 @@ class BilibiliRiskVerifyActivity : BaseActivity<BilibiliRiskVerifyViewModel, Act
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                android.webkit.CookieManager
+                    .getInstance()
+                    .setAcceptThirdPartyCookies(this, true)
             }
 
             webViewClient =
@@ -165,15 +167,14 @@ class BilibiliRiskVerifyActivity : BaseActivity<BilibiliRiskVerifyViewModel, Act
         dataBinding.webView.evaluateJavascript(js, null)
     }
 
-    private fun jsString(value: String): String =
-        "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
+    private fun jsString(value: String): String = "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
 
     private inner class GeetestBridge {
         @JavascriptInterface
         fun onSuccess(
             challenge: String?,
             validate: String?,
-            seccode: String?,
+            seccode: String?
         ) {
             val realValidate = validate?.takeIf { it.isNotBlank() }
             val realSeccode = seccode?.takeIf { it.isNotBlank() }
@@ -208,4 +209,3 @@ class BilibiliRiskVerifyActivity : BaseActivity<BilibiliRiskVerifyViewModel, Act
         private const val ASSET_GEETEST_PAGE = "bilibili/geetest_voucher.html"
     }
 }
-

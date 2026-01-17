@@ -1,10 +1,10 @@
 # English
 
-# Contributor's Guidelines for DanDanPlayForAndroid.
+# Contributor's Guidelines for DDPlayTV.
 
-This is the contributor's guide for DanDanPlayForAndroid. In the event that this document was opened intentionally by you, it means you are keen on adding value to DanDanPlayForAndroid, and that is extremely stunning!.
+This is the contributor's guide for DDPlayTV. In the event that this document was opened intentionally by you, it means you are keen on adding value to DDPlayTV, and that is extremely stunning!.
 
-DanDanPlayForAndroid is a completely opensource project. This means that our source code is available to anyone to use, modify, and redistribute within the confines of the [license](https://github.com/xyoye/DanDanPlayForAndroid/blob/master/LICENSE). 
+DDPlayTV is a completely opensource project. This means that our source code is available to anyone to use, modify, and redistribute within the confines of the [license](../LICENSE).
 Furthermore, being an open source project means it is available for collaborative development, and we are more than excited to have you contribute towards the advancement of this project any way you can.
 
 We are always excited to receive contributions ranging from use-cases, documentation, code, patches, bug reports, feature requests & enhancements, etc. We do not restrict contributions to programmers, therefore, you do not need to be a programmer to share your ideas about the project. We consider every contribution valuable.
@@ -19,7 +19,7 @@ This document will entail the processes and guidelines for contributing to this 
 ### Submitting Feature Requests
 
 If you wish to make suggestions or feature requests, please check the issue tracker to ascertain if the feature hasn't already been requested before by another user. If the feature has already been requested, but it is a closed issue that hasn't been marked as "wontfix", feel free to reopen the issue or create yours. 
-To request a new feature you should [open an issue](https://github.com/xyoye/DanDanPlayForAndroid/issues/new?template=feature_request.md).
+To request a new feature you should [open an issue](https://github.com/okami-horo/DDPlayTV/issues/new?template=feature_request.md).
 
 In order to help the developer understand the feature request;
 
@@ -46,7 +46,7 @@ Before filing a bug report,
 - Ensure you're running the latest version of the software
 - Confirm if it's actually a bug and not an error caused by a plugin on your system. Test with other systems to verify
 - If the same issue persists after testing on other devices then it is indeed a bug. 
-- Check the issue tracker if the bug hasn't been reported by other users. If it has been reported before it is likely to be in [opened issues](https://github.com/xyoye/DanDanPlayForAndroid/issues?q=is%3Aopen+is%3Aissue). Also, check [closed issues](https://github.com/xyoye/DanDanPlayForAndroid/issues?q=is%3Aissue+is%3Aclosed) too.
+- Check the issue tracker if the bug hasn't been reported by other users. If it has been reported before it is likely to be in [opened issues](https://github.com/okami-horo/DDPlayTV/issues?q=is%3Aopen+is%3Aissue). Also, check [closed issues](https://github.com/okami-horo/DDPlayTV/issues?q=is%3Aissue+is%3Aclosed) too.
 
 The most important aspect of a bug report is the details. The more concise the details, the easier it'll be for the developer or someone else to tackle the bug.
 
@@ -129,7 +129,7 @@ Here's a detailed content on how to [Create a pull request](https://help.github.
 
 Simply put, the way to create a Pull request is first; 
 
-1. Fork the repository of the project which in this case is [DanDanPlayForAndroid](https://github.com/xyoye/DanDanPlayForAndroid)
+1. Fork the repository of the project which in this case is [DDPlayTV](https://github.com/okami-horo/DDPlayTV)
 2. Commit modifications and changes to your fork
 3. Send a [pull request](https://help.github.com/articles/creating-a-pull-request) to the original repository you forked your repository from in step 1
 
@@ -137,19 +137,19 @@ Simply put, the way to create a Pull request is first;
 
 ## Contact.
 
-For further inquiries, you can contact the developer by opening an [issue](https://github.com/xyoye/DanDanPlayForAndroid/issues/new/choose) on the repository. You can also check out the developer's profile [here](https://github.com/xyoye).
+For further inquiries, you can contact the developer by opening an [issue](https://github.com/okami-horo/DDPlayTV/issues/new/choose) on the repository. You can also check out the developer's profile [here](https://github.com/okami-horo).
 
-Thank you for your interest in contributing to DanDanPlayForAndroid. I appreciate all the help with finding and fixing bugs, making performance improvements, and other tasks. Every contribution is helpful and I thank you for your effort.
+Thank you for your interest in contributing to DDPlayTV. I appreciate all the help with finding and fixing bugs, making performance improvements, and other tasks. Every contribution is helpful and I thank you for your effort.
 
 ---
 
 # 中文版
 
-# DanDanPlayForAndroid的贡献者指南
+# DDPlayTV 的贡献者指南
 
-这是一份DanDanPlayForAndroid的贡献者指南。如果您有意打开此文档，则意味着您愿意为DanDanPlayForAndroid增加价值，这真是太棒了！
+这是一份 DDPlayTV 的贡献者指南。如果您有意打开此文档，则意味着您愿意为 DDPlayTV 增加价值，这真是太棒了！
 
-DanDanPlayForAndroid是一个完全开源的项目。这意味着任何人都可以在[license](https://github.com/xyoye/DanDanPlayForAndroid/blob/master/LICENSE)的范围内使用，修改和重新分发我们的源代码。
+DDPlayTV 是一个完全开源的项目。这意味着任何人都可以在[license](../LICENSE)的范围内使用，修改和重新分发我们的源代码。
 此外，作为一个开源项目意味着它可用于协作开发，我们非常高兴能让您以任何方式为该项目的进步做出贡献。
 
 我们总是很高兴收到用例，文档，代码，补丁，错误报告，功能请求和增强等方面的贡献。我们不限制对程序员的贡献，因此，您不需要成为程序员来分享您的关于该项目的想法。我们认为每一项贡献都是有价值的。自由的发布相关建议、错误崩溃信息、项目代码的评论以及或许只是看起来不够完美的问题，它们都应该成为GitHub上的一个issue。
@@ -162,7 +162,7 @@ DanDanPlayForAndroid是一个完全开源的项目。这意味着任何人都可
 ### 提交功能请求
 
 如果您想提出建议或功能请求，请检查issue，以确定该需求是否已被其他用户提交。如果已经请求了该需求，但这是一个尚未标记为“wontfix”的已关闭问题，请随时重新打开该问题或创建您的问题。
-要申请新功能，您应该[创建一个issue](https://github.com/xyoye/DanDanPlayForAndroid/issues/new?template=feature_request.md)。
+要申请新功能，您应该[创建一个issue](https://github.com/okami-horo/DDPlayTV/issues/new?template=feature_request.md)。
 
 为了帮助开发人员理解功能请求;
 
@@ -189,7 +189,7 @@ DanDanPlayForAndroid是一个完全开源的项目。这意味着任何人都可
  - 确保您运行的是最新版本的软件
  - 确认它是否真的是一个错误而不是由系统上的插件引起的错误。与其他系统一起测试以验证
  - 如果在其他设备上测试后问题仍然存在，则确实存在错误。
- - 确认该问题未被其他用户反馈。请检查issue列表，如果已经被反馈，它可能在[已开启的问题](https://github.com/xyoye/DanDanPlayForAndroid/issues?q=is%3Aopen+is%3Aissue)或[已结束的问题](https://github.com/xyoye/DanDanPlayForAndroid/issues?q=is%3Aissue+is%3Aclosed)中。
+ - 确认该问题未被其他用户反馈。请检查issue列表，如果已经被反馈，它可能在[已开启的问题](https://github.com/okami-horo/DDPlayTV/issues?q=is%3Aopen+is%3Aissue)或[已结束的问题](https://github.com/okami-horo/DDPlayTV/issues?q=is%3Aissue+is%3Aclosed)中。
 
 错误报告最重要的是报告的内容。内容越是简洁明了，开发人员或其他人就越容易解决这个问题。
 
@@ -270,7 +270,7 @@ DanDanPlayForAndroid是一个完全开源的项目。这意味着任何人都可
 
 简单地说，创建Pull Request的方法是：
 
-1.fork项目的存储库，在本例中是[DanDanPlayForAndroid](https://github.com/xyoye/DanDanPlayForAndroid)
+1.fork项目的存储库，在本例中是[DDPlayTV](https://github.com/okami-horo/DDPlayTV)
 2.对fork进行修改和更改
 3.将[Pull Request](https://help.github.com/articles/creating-a-pull-request)发送到您在步骤1中分叉存储库的原始存储库
 
@@ -278,6 +278,6 @@ DanDanPlayForAndroid是一个完全开源的项目。这意味着任何人都可
 
 ## 联系。
 
-如需进一步咨询，您可以通过在存储库上打开[issue](https://github.com/xyoye/DanDanPlayForAndroid/issues/new/choose)来联系开发人员。您还可以查看[开发人员的个人资料](https://github.com/xyoye)。
+如需进一步咨询，您可以通过在存储库上打开[issue](https://github.com/okami-horo/DDPlayTV/issues/new/choose)来联系开发人员。您还可以查看[开发人员的个人资料](https://github.com/okami-horo)。
 
-感谢您有兴趣为DanDanPlayForAndroid做出贡献。我非常感谢查找和修复错误，改进性能以及其他任务的所有帮助。每一个贡献都是有帮助的，我感谢您的努力。
+感谢您有兴趣为 DDPlayTV 做出贡献。我非常感谢查找和修复错误，改进性能以及其他任务的所有帮助。每一个贡献都是有帮助的，我感谢您的努力。

@@ -1,4 +1,4 @@
-# 将 Bilibili 作为网络媒体库接入的可行性评估（面向 DanDanPlayForAndroid）
+# 将 Bilibili 作为网络媒体库接入的可行性评估（面向 DDPlayTV）
 
 本文基于当前仓库实现（`Storage/StorageFile` 抽象、播放器内核、已接入的 Alist/FTP/WebDav/SMB 等）与 `.tmp/bilibili-API-collect` 项目整理的 API 文档，对“把 Bilibili 作为一个网络媒体库接入（类似 Alist/FTP）”进行可行性与工作量评估，并给出推荐的最小可行方案（MVP）与演进路径。
 

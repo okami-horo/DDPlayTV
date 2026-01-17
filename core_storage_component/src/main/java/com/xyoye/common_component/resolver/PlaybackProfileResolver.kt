@@ -14,7 +14,7 @@ object PlaybackProfileResolver {
         globalPlayerType: PlayerType,
         mediaType: MediaType,
         supportedPlayerTypes: Set<PlayerType>,
-        preferredPlayerType: PlayerType,
+        preferredPlayerType: PlayerType
     ): PlaybackProfile {
         val overrideValue = library?.playerTypeOverride ?: 0
 

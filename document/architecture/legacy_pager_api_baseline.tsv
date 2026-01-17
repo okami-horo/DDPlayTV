@@ -1,0 +1,12 @@
+# Baseline for legacy pager APIs (upper bounds per file)
+# Format: <relative-path>\t<FragmentPagerAdapter-count>\t<ViewPager-count>
+anime_component/src/main/java/com/xyoye/anime_component/ui/activities/search/SearchActivity.kt	2	2
+anime_component/src/main/java/com/xyoye/anime_component/ui/fragment/home/HomeFragment.kt	2	0
+anime_component/src/main/res/layout-land/fragment_home.xml	0	1
+anime_component/src/main/res/layout/activity_search.xml	0	1
+anime_component/src/main/res/layout/fragment_home.xml	0	1
+user_component/src/main/java/com/xyoye/user_component/ui/activities/scan_manager/ScanManagerActivity.kt	2	2
+user_component/src/main/java/com/xyoye/user_component/ui/activities/setting_player/SettingPlayerActivity.kt	2	0
+user_component/src/main/res/layout/activity_scan_manager.xml	0	1
+user_component/src/main/res/layout/activity_setting_player.xml	0	1
+

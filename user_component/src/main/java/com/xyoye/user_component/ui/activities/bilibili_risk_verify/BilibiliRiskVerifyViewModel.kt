@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 class BilibiliRiskVerifyViewModel : BaseViewModel() {
     data class GeetestConfig(
         val gt: String,
-        val challenge: String,
+        val challenge: String
     )
 
     val geetestConfigLiveData = MutableLiveData<GeetestConfig>()
@@ -24,7 +24,7 @@ class BilibiliRiskVerifyViewModel : BaseViewModel() {
 
     fun start(
         storageKey: String,
-        vVoucher: String,
+        vVoucher: String
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             showLoading("加载验证码中…")
@@ -33,7 +33,8 @@ class BilibiliRiskVerifyViewModel : BaseViewModel() {
                 repository = repo
 
                 val data =
-                    repo.gaiaVgateRegister(vVoucher)
+                    repo
+                        .gaiaVgateRegister(vVoucher)
                         .getOrElse { throwable ->
                             throw throwable
                         }
@@ -74,7 +75,7 @@ class BilibiliRiskVerifyViewModel : BaseViewModel() {
     fun submitGeetestResult(
         challengeFromJs: String?,
         validate: String,
-        seccode: String,
+        seccode: String
     ) {
         val repo = repository
         val token = registerToken
@@ -91,14 +92,15 @@ class BilibiliRiskVerifyViewModel : BaseViewModel() {
             showLoading("提交验证中…")
             try {
                 val griskId =
-                    repo.gaiaVgateValidate(
-                        challenge = challenge,
-                        token = token,
-                        validate = validate,
-                        seccode = seccode,
-                    ).getOrElse { throwable ->
-                        throw throwable
-                    }
+                    repo
+                        .gaiaVgateValidate(
+                            challenge = challenge,
+                            token = token,
+                            validate = validate,
+                            seccode = seccode,
+                        ).getOrElse { throwable ->
+                            throw throwable
+                        }
                 verifySuccessLiveData.postValue(griskId)
             } catch (e: Exception) {
                 errorLiveData.postValue(e.message ?: "验证失败")
@@ -108,4 +110,3 @@ class BilibiliRiskVerifyViewModel : BaseViewModel() {
         }
     }
 }
-

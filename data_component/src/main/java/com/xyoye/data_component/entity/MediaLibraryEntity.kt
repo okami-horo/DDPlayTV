@@ -104,6 +104,34 @@ data class MediaLibraryEntity(
     val disPlayDescribe
         get() =
             when (mediaType) {
+                MediaType.BAIDU_PAN_STORAGE -> {
+                    val uk =
+                        url
+                            .substringAfter("baidupan://uk/", missingDelimiterValue = "")
+                            .trim()
+                            .trimStart('/')
+                            .trimEnd('/')
+                    if (uk.isNotEmpty()) {
+                        "百度网盘（uk=$uk）"
+                    } else {
+                        "百度网盘"
+                    }
+                }
+
+                MediaType.OPEN_115_STORAGE -> {
+                    val uid =
+                        url
+                            .substringAfter("115open://uid/", missingDelimiterValue = "")
+                            .trim()
+                            .trimStart('/')
+                            .trimEnd('/')
+                    if (uid.isNotEmpty()) {
+                        "115 Open（uid=$uid）"
+                    } else {
+                        "115 Open"
+                    }
+                }
+
                 MediaType.STREAM_LINK,
                 MediaType.MAGNET_LINK,
                 MediaType.REMOTE_STORAGE,

@@ -1,6 +1,7 @@
 package setup.utils
 
 import com.android.build.gradle.internal.dsl.SigningConfig
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import java.io.File
 import java.io.FileInputStream
@@ -22,12 +23,34 @@ object SignConfig {
 
     fun release(project: Project, config: SigningConfig) {
         val keystoreFile = project.getAssembleFile("dandanplay.jks")
-        config.apply {
-            storeFile = keystoreFile
-            storePassword(System.getenv("KEYSTORE_PASS"))
-            keyAlias(System.getenv("ALIAS_NAME"))
-            keyPassword(System.getenv("ALIAS_PASS"))
+        val storePassword = System.getenv("KEYSTORE_PASS")?.takeIf { it.isNotBlank() }
+        val aliasName = System.getenv("ALIAS_NAME")?.takeIf { it.isNotBlank() }
+        val aliasPassword = System.getenv("ALIAS_PASS")?.takeIf { it.isNotBlank() }
+
+        if (keystoreFile.exists() && storePassword != null && aliasName != null && aliasPassword != null) {
+            config.apply {
+                storeFile = keystoreFile
+                storePassword(storePassword)
+                keyAlias(aliasName)
+                keyPassword(aliasPassword)
+            }
+            return
         }
+
+        val isCi =
+            System.getenv("CI")?.equals("true", ignoreCase = true) == true ||
+                System.getenv("GITHUB_ACTIONS")?.equals("true", ignoreCase = true) == true
+
+        if (isCi) {
+            throw GradleException(
+                "Release signing config not ready in CI: keystoreFileExists=${keystoreFile.exists()} env(KEYSTORE_PASS/ALIAS_NAME/ALIAS_PASS)=${storePassword != null}/${aliasName != null}/${aliasPassword != null}",
+            )
+        }
+
+        project.logger.warn(
+            "Release signing config not ready (missing keystore or env), fallback to debug signing config",
+        )
+        debug(project, config)
     }
 
     private fun loadProperties(project: Project): Properties? {

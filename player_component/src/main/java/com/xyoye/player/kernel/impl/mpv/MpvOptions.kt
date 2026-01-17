@@ -14,14 +14,11 @@ internal object MpvOptions {
         }
     }
 
-    fun isGpuVideoOutput(configured: String?): Boolean {
-        return when (resolveVideoOutput(configured)) {
+    fun isGpuVideoOutput(configured: String?): Boolean =
+        when (resolveVideoOutput(configured)) {
             VO_GPU, VO_GPU_NEXT -> true
             else -> false
         }
-    }
 
-    fun isAnime4kSupportedVideoOutput(configured: String?): Boolean {
-        return resolveVideoOutput(configured) == VO_GPU
-    }
+    fun isAnime4kSupportedVideoOutput(configured: String?): Boolean = resolveVideoOutput(configured) == VO_GPU
 }

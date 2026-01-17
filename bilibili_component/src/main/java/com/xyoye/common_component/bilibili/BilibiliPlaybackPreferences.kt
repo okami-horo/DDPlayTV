@@ -22,7 +22,7 @@ data class BilibiliPlaybackPreferences(
      *
      * 注意：该能力依赖 Cookie + csrf；失败不会影响本地播放。
      */
-    val enableHeartbeatReport: Boolean = false,
+    val enableHeartbeatReport: Boolean = false
 )
 
 enum class BilibiliPlayMode(
@@ -41,7 +41,7 @@ enum class BilibiliPlayMode(
     /**
      * 强制使用 MP4（兼容优先，画质受限）。
      */
-    MP4("MP4（兼容优先）"),
+    MP4("MP4（兼容优先）")
 }
 
 enum class BilibiliVideoCodec(
@@ -54,12 +54,11 @@ enum class BilibiliVideoCodec(
     AUTO(null, "自动"),
     AVC(7, "AVC/H.264"),
     HEVC(12, "HEVC/H.265"),
-    AV1(13, "AV1"),
+    AV1(13, "AV1")
     ;
 
     companion object {
-        fun fromCodecid(codecid: Int?): BilibiliVideoCodec? =
-            entries.firstOrNull { it.codecid != null && it.codecid == codecid }
+        fun fromCodecid(codecid: Int?): BilibiliVideoCodec? = entries.firstOrNull { it.codecid != null && it.codecid == codecid }
     }
 }
 
@@ -75,7 +74,7 @@ enum class BilibiliQuality(
     QN_1080P(80, "1080P"),
     QN_1080P_PLUS(112, "1080P+"),
 
-    QN_4K(120, "4K"),
+    QN_4K(120, "4K")
     ;
 
     companion object {

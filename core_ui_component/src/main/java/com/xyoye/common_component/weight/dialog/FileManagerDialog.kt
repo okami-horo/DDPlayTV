@@ -2,14 +2,10 @@ package com.xyoye.common_component.weight.dialog
 
 import android.app.Activity
 import android.os.Environment
-import com.xyoye.core_ui_component.R
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupVerticalAnimation
 import com.xyoye.common_component.config.AppConfig
-import com.xyoye.core_ui_component.databinding.DialogFileManagerBinding
-import com.xyoye.core_ui_component.databinding.ItemFileManagerBinding
-import com.xyoye.core_ui_component.databinding.ItemFileManagerPathBinding
 import com.xyoye.common_component.extension.filterHiddenFile
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.setData
@@ -27,6 +23,10 @@ import com.xyoye.common_component.utils.isSubtitleFile
 import com.xyoye.common_component.utils.isTorrentFile
 import com.xyoye.common_component.utils.isVideoFile
 import com.xyoye.common_component.utils.view.FilePathItemDecoration
+import com.xyoye.core_ui_component.R
+import com.xyoye.core_ui_component.databinding.DialogFileManagerBinding
+import com.xyoye.core_ui_component.databinding.ItemFileManagerBinding
+import com.xyoye.core_ui_component.databinding.ItemFileManagerPathBinding
 import com.xyoye.data_component.bean.FileManagerBean
 import com.xyoye.data_component.bean.FilePathBean
 import com.xyoye.data_component.enums.FileManagerAction

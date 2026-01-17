@@ -1,5 +1,6 @@
 package com.xyoye.storage_component.ui.dialog
 
+import android.app.Activity
 import android.os.SystemClock
 import androidx.core.view.isVisible
 import com.xyoye.common_component.bilibili.BilibiliApiPreferencesStore
@@ -14,7 +15,6 @@ import com.xyoye.common_component.weight.dialog.BaseBottomDialog
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.DialogBilibiliLoginBinding
-import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -24,10 +24,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class BilibiliLoginDialog(
-    private val activity: StorageFileActivity,
+    private val activity: Activity,
     private val library: MediaLibraryEntity,
+    private val apiType: BilibiliApiType = BilibiliApiPreferencesStore.read(library).apiType,
     private val onLoginSuccess: () -> Unit,
-    private val onDismiss: (() -> Unit)? = null,
+    private val onDismiss: (() -> Unit)? = null
 ) : BaseBottomDialog<DialogBilibiliLoginBinding>(activity) {
     private lateinit var binding: DialogBilibiliLoginBinding
 
@@ -36,7 +37,6 @@ class BilibiliLoginDialog(
 
     private val storageKey = BilibiliPlaybackPreferencesStore.storageKey(library)
     private val repository = BilibiliRepository(storageKey)
-    private val apiType = BilibiliApiPreferencesStore.read(library).apiType
 
     override fun getChildLayoutId(): Int = R.layout.dialog_bilibili_login
 
@@ -67,7 +67,7 @@ class BilibiliLoginDialog(
                 binding.loadingPb.isVisible = true
                 binding.statusTv.text = "正在获取二维码…"
 
-                val generate = repository.loginQrCodeGenerate()
+                val generate = repository.loginQrCodeGenerate(apiType)
                 val data = generate.getOrNull()
                 if (data == null || data.url.isBlank() || data.qrcodeKey.isBlank()) {
                     binding.loadingPb.isVisible = false
@@ -81,7 +81,9 @@ class BilibiliLoginDialog(
                         content = data.url,
                         sizePx = dp2px(220),
                         logoResId = R.mipmap.ic_logo,
-                        bitmapColor = com.xyoye.core_ui_component.R.color.text_black.toResColor(activity),
+                        bitmapColor =
+                            com.xyoye.core_ui_component.R.color.text_black
+                                .toResColor(activity),
                         errorContext = "生成 Bilibili 登录二维码失败",
                     )
                 binding.qrCodeIv.setImageBitmap(qrCode)
@@ -95,7 +97,7 @@ class BilibiliLoginDialog(
     private suspend fun pollUntilDone(qrcodeKey: String) {
         val start = SystemClock.elapsedRealtime()
         while (scope.coroutineContext[Job]?.isActive == true) {
-            val poll = repository.loginQrCodePoll(qrcodeKey)
+            val poll = repository.loginQrCodePoll(qrcodeKey, apiType)
             val result = poll.getOrNull()
             if (result == null) {
                 binding.statusTv.text = "登录状态获取失败，请检查网络后重试"

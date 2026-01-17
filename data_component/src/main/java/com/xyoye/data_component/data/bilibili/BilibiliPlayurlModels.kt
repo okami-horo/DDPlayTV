@@ -8,7 +8,7 @@ data class BilibiliPlayurlData(
     val dash: BilibiliDashData? = null,
     val durl: List<BilibiliDurlData> = emptyList(),
     @Json(name = "v_voucher")
-    val vVoucher: String? = null,
+    val vVoucher: String? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -17,7 +17,7 @@ data class BilibiliDashData(
     @Json(name = "min_buffer_time")
     val minBufferTime: Double? = null,
     val video: List<BilibiliDashMediaData> = emptyList(),
-    val audio: List<BilibiliDashMediaData> = emptyList(),
+    val audio: List<BilibiliDashMediaData> = emptyList()
 )
 
 @JsonClass(generateAdapter = true)
@@ -41,14 +41,14 @@ data class BilibiliDashMediaData(
     @Json(name = "start_with_sap")
     val startWithSap: Int? = null,
     @Json(name = "segment_base")
-    val segmentBase: BilibiliSegmentBaseData? = null,
+    val segmentBase: BilibiliSegmentBaseData? = null
 )
 
 @JsonClass(generateAdapter = true)
 data class BilibiliSegmentBaseData(
     val initialization: String? = null,
     @Json(name = "index_range")
-    val indexRange: String? = null,
+    val indexRange: String? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -59,5 +59,5 @@ data class BilibiliDurlData(
     @Json(name = "url")
     val url: String = "",
     @Json(name = "backup_url")
-    val backupUrl: List<String> = emptyList(),
+    val backupUrl: List<String> = emptyList()
 )

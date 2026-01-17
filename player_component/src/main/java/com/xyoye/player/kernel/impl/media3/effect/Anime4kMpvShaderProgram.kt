@@ -21,16 +21,18 @@ import kotlin.math.roundToInt
 open class Anime4kMpvShaderProgram(
     context: Context,
     private val outputSizeProvider: () -> Size?,
-    private val shaderFiles: List<String>,
+    private val shaderFiles: List<String>
 ) : BaseGlShaderProgram(
-        /* useHighPrecisionColorComponents= */ false,
-        /* texturePoolCapacity= */ 2,
+        // useHighPrecisionColorComponents=
+        false,
+        // texturePoolCapacity=
+        2,
     ) {
     private val appContext = context.applicationContext
 
     private data class PingPongTextureSet(
         var first: GlTextureInfo,
-        var second: GlTextureInfo,
+        var second: GlTextureInfo
     )
 
     private data class ShaderPass(
@@ -42,7 +44,7 @@ open class Anime4kMpvShaderProgram(
         val heightExpr: String?,
         val whenExpr: String?,
         val components: Int?,
-        val code: String,
+        val code: String
     ) {
         fun requiredSamplers(): List<String> {
             val required = LinkedHashSet<String>()
@@ -61,26 +63,26 @@ open class Anime4kMpvShaderProgram(
     private data class PassProgram(
         val pass: ShaderPass,
         val glProgram: GlProgram,
-        val requiredSamplers: List<String>,
+        val requiredSamplers: List<String>
     )
 
     private data class BoundTexture(
         val texId: Int,
         val width: Int,
-        val height: Int,
+        val height: Int
     )
 
     private data class ConfiguredPass(
         val program: PassProgram,
         val active: Boolean,
-        val outputSize: Size,
+        val outputSize: Size
     )
 
     private data class EvalContext(
         val mainSize: Size,
         val nativeSize: Size,
         val outputSize: Size,
-        val savedSizes: Map<String, Size>,
+        val savedSizes: Map<String, Size>
     ) {
         fun resolve(token: String): Float? {
             val dim = token.substringAfterLast('.', missingDelimiterValue = "")
@@ -144,10 +146,11 @@ open class Anime4kMpvShaderProgram(
                 )
             }
         copyProgram = GlProgram(VERTEX_SHADER, COPY_FRAGMENT_SHADER)
-        allPrograms = buildList {
-            pipelinePrograms.forEach { add(it.glProgram) }
-            add(copyProgram)
-        }
+        allPrograms =
+            buildList {
+                pipelinePrograms.forEach { add(it.glProgram) }
+                add(copyProgram)
+            }
     }
 
     @Throws(VideoFrameProcessingException::class)
@@ -371,7 +374,7 @@ open class Anime4kMpvShaderProgram(
                 }
                 program.bindAttributesAndUniforms()
 
-                GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, /* first= */ 0, /* count= */ 4)
+                GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
                 GlUtil.checkGlError()
 
                 val produced =
@@ -401,9 +404,9 @@ open class Anime4kMpvShaderProgram(
                 return
             }
             copyProgram.use()
-            copyProgram.setSamplerTexIdUniform("MAIN", currentTexture.texId, /* texUnitIndex= */ 0)
+            copyProgram.setSamplerTexIdUniform("MAIN", currentTexture.texId, 0)
             copyProgram.bindAttributesAndUniforms()
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, /* first= */ 0, /* count= */ 4)
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
             GlUtil.checkGlError()
         } catch (_: Exception) {
             // Ignore and let ExoPlayer handle video frame processing errors upstream.
@@ -413,9 +416,9 @@ open class Anime4kMpvShaderProgram(
     private fun renderCopy(inputTexId: Int) {
         try {
             copyProgram.use()
-            copyProgram.setSamplerTexIdUniform("MAIN", inputTexId, /* texUnitIndex= */ 0)
+            copyProgram.setSamplerTexIdUniform("MAIN", inputTexId, 0)
             copyProgram.bindAttributesAndUniforms()
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, /* first= */ 0, /* count= */ 4)
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
             GlUtil.checkGlError()
         } catch (_: Exception) {
             // Ignore and let ExoPlayer handle video frame processing errors upstream.
@@ -450,10 +453,10 @@ open class Anime4kMpvShaderProgram(
     @Throws(VideoFrameProcessingException::class)
     private fun createHalfFloatTexture(
         width: Int,
-        height: Int,
+        height: Int
     ): GlTextureInfo {
         try {
-            val texId = GlUtil.createTexture(width, height, /* useHighPrecisionColorComponents= */ true)
+            val texId = GlUtil.createTexture(width, height, true)
             val fboId = GlUtil.createFboForTexture(texId)
             return GlTextureInfo(texId, fboId, C.INDEX_UNSET, width, height)
         } catch (e: GlUtil.GlException) {
@@ -481,7 +484,10 @@ open class Anime4kMpvShaderProgram(
 
     private fun readAssetText(path: String): String =
         try {
-            appContext.assets.open(path).bufferedReader().use { it.readText() }
+            appContext.assets
+                .open(path)
+                .bufferedReader()
+                .use { it.readText() }
         } catch (e: IOException) {
             throw VideoFrameProcessingException(e)
         }
@@ -533,7 +539,7 @@ open class Anime4kMpvShaderProgram(
     }
 
     private class ShaderPassBuilder(
-        private val description: String,
+        private val description: String
     ) {
         var hookStage: String? = null
         val binds = mutableListOf<String>()
@@ -595,7 +601,7 @@ open class Anime4kMpvShaderProgram(
 
     private fun buildConfiguredPasses(
         inputSize: Size,
-        outputControlSize: Size,
+        outputControlSize: Size
     ): List<ConfiguredPass> {
         val configured = ArrayList<ConfiguredPass>(pipelinePrograms.size)
         val savedSizes = HashMap<String, Size>()
@@ -686,7 +692,7 @@ open class Anime4kMpvShaderProgram(
 
     private fun ensureNamedTexture(
         name: String,
-        size: Size,
+        size: Size
     ): GlTextureInfo {
         val existing = namedTextures[name]
         if (existing != null && existing.width == size.width && existing.height == size.height) {
@@ -700,7 +706,7 @@ open class Anime4kMpvShaderProgram(
 
     private fun ensurePingPongTextureSet(
         name: String,
-        size: Size,
+        size: Size
     ): PingPongTextureSet {
         val existing = pingPongTextures[name]
         if (
@@ -747,7 +753,7 @@ open class Anime4kMpvShaderProgram(
 
     private fun evalRpn(
         expression: String,
-        ctx: EvalContext,
+        ctx: EvalContext
     ): Float? {
         val stack = ArrayDeque<Float>()
         val tokens = expression.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
@@ -836,4 +842,3 @@ open class Anime4kMpvShaderProgram(
             """.trimIndent()
     }
 }
-

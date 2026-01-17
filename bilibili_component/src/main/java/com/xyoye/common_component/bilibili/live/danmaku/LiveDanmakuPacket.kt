@@ -6,6 +6,5 @@ data class LiveDanmakuPacket(
     val protocolVer: Int,
     val operation: Int,
     val sequence: Int,
-    val body: ByteArray,
+    val body: ByteArray
 )
-

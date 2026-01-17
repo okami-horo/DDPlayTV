@@ -6,9 +6,8 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.RangeUtils
 import com.xyoye.common_component.utils.getFileExtension
 import fi.iki.elonen.NanoHTTPD
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.net.URLEncoder
 import kotlin.random.Random
 
@@ -17,6 +16,8 @@ import kotlin.random.Random
  */
 
 class FtpPlayServer private constructor() : NanoHTTPD(randomPort()) {
+    private val startMutex = Mutex()
+
     // FTP暂时无法处理range
     private val skipEnable = false
 
@@ -43,6 +44,7 @@ class FtpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         fun getInstance() = Holder.instance
     }
 
+    @Synchronized
     override fun serve(session: IHTTPSession): Response {
         val storage = mStorage ?: return resourceNotFound
         val storageFile = mStorageFile ?: return resourceNotFound
@@ -65,13 +67,16 @@ class FtpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         }
     }
 
-    private fun getInputStream(
+    /**
+     * Threading model:
+     * - Called from NanoHTTPD request thread (NOT main thread).
+     * - Serialized by [serve] so the underlying FTP connection isn't accessed concurrently.
+     */
+    private fun openInputStreamBlocking(
         storage: FtpStorage,
         file: FtpStorageFile,
         offset: Long = -1
-    ) = runBlocking {
-        storage.openFile(file, offset)
-    }
+    ) = storage.openFileBlocking(file, offset)
 
     private fun getPartialResponse(
         storage: FtpStorage,
@@ -80,7 +85,7 @@ class FtpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         sourceLength: Long
     ): Response {
         val inputStream =
-            getInputStream(storage, storageFile, rangeArray[0])
+            openInputStreamBlocking(storage, storageFile, rangeArray[0])
                 ?: return resourceOpenFailed
         // 响应内容
         val response =
@@ -103,7 +108,7 @@ class FtpPlayServer private constructor() : NanoHTTPD(randomPort()) {
         storageFile: FtpStorageFile
     ): Response {
         val inputStream =
-            getInputStream(storage, storageFile)
+            openInputStreamBlocking(storage, storageFile)
                 ?: return resourceOpenFailed
         return newChunkedResponse(
             Response.Status.OK,
@@ -135,26 +140,25 @@ class FtpPlayServer private constructor() : NanoHTTPD(randomPort()) {
     }
 
     suspend fun startSync(timeoutMs: Long = 5000): Boolean {
-        if (wasStarted()) {
-            return true
-        }
-        return try {
-            withTimeout(timeoutMs) {
-                start()
-                while (isActive) {
-                    if (wasStarted()) {
-                        return@withTimeout true
-                    }
-                }
-                stop()
-                return@withTimeout false
+        return startMutex.withLock {
+            if (wasStarted()) {
+                return@withLock true
             }
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedException(e, "FTPPlayServer", "启动播放服务器失败: timeout=${timeoutMs}ms")
-            false
+            return@withLock try {
+                start()
+                val started = awaitCondition(timeoutMs = timeoutMs) { wasStarted() }
+                if (!started) {
+                    stop()
+                }
+                started
+            } catch (e: Exception) {
+                ErrorReportHelper.postCatchedException(e, "FTPPlayServer", "启动播放服务器失败: timeout=${timeoutMs}ms")
+                false
+            }
         }
     }
 
+    @Synchronized
     fun generatePlayUrl(
         storage: FtpStorage,
         storageFile: FtpStorageFile

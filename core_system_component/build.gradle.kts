@@ -1,8 +1,7 @@
 import setup.moduleSetup
 import java.util.Properties
 
-fun buildConfigString(value: String): String =
-    "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+fun buildConfigString(value: String): String = "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 plugins {
     id("com.android.library")
@@ -55,6 +54,24 @@ android {
             (dandanAppId.isNotBlank() && dandanAppSecret.isNotBlank()).toString(),
         )
 
+        val baiduPanClientId =
+            System.getenv("BAIDU_PAN_CLIENT_ID")
+                ?: project.findProperty("BAIDU_PAN_CLIENT_ID")?.toString()
+                ?: localProperties.getProperty("BAIDU_PAN_CLIENT_ID")
+                ?: ""
+        buildConfigField("String", "BAIDU_PAN_CLIENT_ID", buildConfigString(baiduPanClientId))
+
+        val baiduPanClientSecret =
+            System.getenv("BAIDU_PAN_CLIENT_SECRET")
+                ?: project.findProperty("BAIDU_PAN_CLIENT_SECRET")?.toString()
+                ?: localProperties.getProperty("BAIDU_PAN_CLIENT_SECRET")
+                ?: ""
+        buildConfigField(
+            "String",
+            "BAIDU_PAN_CLIENT_SECRET",
+            buildConfigString(baiduPanClientSecret),
+        )
+
         val media3FallbackFlag =
             project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
         buildConfigField("boolean", "MEDIA3_ENABLED_FALLBACK", media3FallbackFlag.toString())
@@ -72,7 +89,11 @@ kapt {
 }
 
 dependencies {
-    api(project(":core_contract_component"))
+    // Avoid leaking contract transitively; consumers should declare :core_contract_component explicitly.
+    implementation(project(":core_contract_component"))
+    implementation(project(":data_component"))
+
+    // core_system_component acts as runtime/boot orchestrator; it depends on log for early crash/log pipeline init.
     implementation(project(":core_log_component"))
 
     // BaseApplication is part of public API; expose Coil types to consumers.

@@ -4,13 +4,13 @@ import android.content.Context
 import android.content.Intent
 
 object PlayerActions {
-    const val ACTION_EXIT_PLAYER = "com.xyoye.dandanplay.action.EXIT_PLAYER"
+    const val ACTION_EXIT_PLAYER = "com.okamihoro.ddplaytv.action.EXIT_PLAYER"
 
     const val EXTRA_STORAGE_ID = "extra_storage_id"
 
     fun sendExitPlayer(
         context: Context,
-        storageId: Int,
+        storageId: Int
     ) {
         context.sendBroadcast(
             Intent(ACTION_EXIT_PLAYER)

@@ -31,6 +31,7 @@ object RouteTable {
 
     object User {
         const val PersonalFragment = "/user/personal_fragment"
+        const val UserSessionService = "/user/user_session_service"
         const val UserLogin = "/user/login"
         const val UserInfo = "/user/info"
         const val SettingPlayer = "/user/setting_player"
@@ -49,6 +50,7 @@ object RouteTable {
     object Player {
         const val Player = "/player/player_interceptor"
         const val PlayerCenter = "/player/player"
+        const val CloudDanmuBlockService = "/player/cloud_danmu_block_service"
         const val Media3CapabilityProvider = "/player/media3_capability_provider"
     }
 

@@ -1,10 +1,12 @@
 package com.xyoye.common_component.storage
 
 import com.xyoye.common_component.storage.impl.AlistStorage
+import com.xyoye.common_component.storage.impl.BaiduPanStorage
 import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.impl.DocumentFileStorage
 import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.storage.impl.LinkStorage
+import com.xyoye.common_component.storage.impl.Open115Storage
 import com.xyoye.common_component.storage.impl.RemoteStorage
 import com.xyoye.common_component.storage.impl.ScreencastStorage
 import com.xyoye.common_component.storage.impl.SmbStorage
@@ -32,6 +34,8 @@ object StorageFactory {
             MediaType.OTHER_STORAGE -> LinkStorage(library)
             MediaType.SCREEN_CAST -> ScreencastStorage(library)
             MediaType.ALSIT_STORAGE -> AlistStorage(library)
+            MediaType.BAIDU_PAN_STORAGE -> BaiduPanStorage(library)
+            MediaType.OPEN_115_STORAGE -> Open115Storage(library)
             MediaType.BILIBILI_STORAGE -> BilibiliStorage(library)
             else -> null
         }

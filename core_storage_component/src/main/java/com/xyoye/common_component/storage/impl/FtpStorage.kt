@@ -53,12 +53,27 @@ class FtpStorage(
     }
 
     override suspend fun openFile(file: StorageFile): InputStream? {
-        if (file !is FtpStorageFile) {
-            return null
-        }
+        if (file !is FtpStorageFile) return null
+        return openFileBlocking(file)
+    }
+
+    suspend fun openFile(
+        file: StorageFile,
+        offset: Long
+    ): InputStream? {
+        if (file !is FtpStorageFile) return null
+        return openFileBlocking(file, offset)
+    }
+
+    internal fun openFileBlocking(
+        file: FtpStorageFile,
+        offset: Long = -1
+    ): InputStream? {
         if (checkConnection().not()) {
             return null
         }
+
+        mFtpClient.restartOffset = offset.coerceAtLeast(0)
         try {
             playingInputStream = mFtpClient.retrieveFileStream(file.filePath())
         } catch (e: Exception) {
@@ -67,16 +82,6 @@ class FtpStorage(
             close()
         }
         return playingInputStream
-    }
-
-    suspend fun openFile(
-        file: StorageFile,
-        offset: Long
-    ): InputStream? {
-        if (offset > 0) {
-            mFtpClient.restartOffset = offset
-        }
-        return openFile(file)
     }
 
     override suspend fun pathFile(

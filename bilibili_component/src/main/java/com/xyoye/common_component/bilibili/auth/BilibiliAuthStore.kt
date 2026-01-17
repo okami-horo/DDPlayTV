@@ -33,7 +33,7 @@ object BilibiliAuthStore {
         val appRefreshToken: String? = null,
         val csrf: String? = null,
         val mid: Long? = null,
-        val updatedAt: Long = 0L,
+        val updatedAt: Long = 0L
     )
 
     fun read(storageKey: String): AuthState {
@@ -61,7 +61,7 @@ object BilibiliAuthStore {
         appRefreshToken: String? = null,
         csrf: String? = null,
         mid: Long? = null,
-        updatedAt: Long = System.currentTimeMillis(),
+        updatedAt: Long = System.currentTimeMillis()
     ) {
         val kv = mmkv()
         webRefreshToken?.let { kv.encode(namespacedKey(storageKey, KEY_WEB_REFRESH_TOKEN), it) }
@@ -75,7 +75,7 @@ object BilibiliAuthStore {
     fun updateFromCookies(
         storageKey: String,
         cookieJarStore: BilibiliCookieJarStore,
-        webRefreshToken: String? = null,
+        webRefreshToken: String? = null
     ) {
         val cookieHeader = cookieJarStore.exportCookieHeader() ?: ""
         val csrf = extractCookie(cookieHeader, "bili_jct")
@@ -93,7 +93,7 @@ object BilibiliAuthStore {
         storageKey: String,
         accessToken: String?,
         refreshToken: String?,
-        updatedAt: Long = System.currentTimeMillis(),
+        updatedAt: Long = System.currentTimeMillis()
     ) {
         write(
             storageKey = storageKey,
@@ -122,7 +122,7 @@ object BilibiliAuthStore {
 
     private fun extractCookie(
         cookieHeader: String,
-        name: String,
+        name: String
     ): String? {
         val token = "$name="
         val index = cookieHeader.indexOf(token)

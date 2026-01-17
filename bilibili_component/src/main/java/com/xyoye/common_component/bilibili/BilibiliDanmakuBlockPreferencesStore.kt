@@ -20,7 +20,7 @@ object BilibiliDanmakuBlockPreferencesStore {
 
     fun write(
         library: MediaLibraryEntity,
-        preferences: BilibiliDanmakuBlockPreferences,
+        preferences: BilibiliDanmakuBlockPreferences
     ) = write(storageKey(library), preferences)
 
     fun clear(library: MediaLibraryEntity) = clear(storageKey(library))
@@ -37,7 +37,7 @@ object BilibiliDanmakuBlockPreferencesStore {
 
     fun write(
         storageKey: String,
-        preferences: BilibiliDanmakuBlockPreferences,
+        preferences: BilibiliDanmakuBlockPreferences
     ) {
         val kv = mmkv()
         kv.encode(namespacedKey(storageKey, KEY_AI_SWITCH), preferences.aiSwitch)
@@ -50,14 +50,12 @@ object BilibiliDanmakuBlockPreferencesStore {
         kv.removeValueForKey(namespacedKey(storageKey, KEY_AI_LEVEL))
     }
 
-    private fun storageKey(library: MediaLibraryEntity): String =
-        BilibiliPlaybackPreferencesStore.storageKey(library)
+    private fun storageKey(library: MediaLibraryEntity): String = BilibiliPlaybackPreferencesStore.storageKey(library)
 
     private fun mmkv(): MMKV = MMKV.mmkvWithID(MMKV_ID)
 
     private fun namespacedKey(
         storageKey: String,
-        fieldKey: String,
+        fieldKey: String
     ): String = "$storageKey.$fieldKey"
 }
-

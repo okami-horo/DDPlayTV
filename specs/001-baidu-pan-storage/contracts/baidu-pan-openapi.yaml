@@ -1,0 +1,457 @@
+openapi: 3.0.3
+info:
+  title: Baidu Netdisk OpenAPI (Subset for DanDanPlay)
+  version: 0.1.0
+  description: |
+    说明：
+    - 本文件是为 DDPlayTV 的“百度网盘存储源：浏览 + 在线播放（dlink）”整理的 OpenAPI 子集契约，便于后续实现与联调。
+    - 仅覆盖 MVP 必需的授权、用户信息、目录列表、搜索、filemetas（dlink）等接口。
+    - 关键字段与调用顺序的中文说明见：
+      - specs/001-baidu-pan-storage/baidu-pan-openapi.md
+    - 文档原文来源（百度网盘开放平台）：
+      - 设备码模式授权：https://pan.baidu.com/union/doc/fl1x114ti
+      - 授权码模式授权：https://pan.baidu.com/union/doc/al0rwqzzl
+      - uinfo：https://pan.baidu.com/union/doc/pksg0s9ns
+      - list：https://pan.baidu.com/union/doc/nksg0sat9
+      - search：https://pan.baidu.com/union/doc/zksg0sb9z
+      - filemetas：https://pan.baidu.com/union/doc/Fksg0sbcm
+      - dlink 下载/播放：https://pan.baidu.com/union/doc/pkuo3snyp
+      - 错误码总表：https://pan.baidu.com/union/doc/okumlx17r
+
+servers:
+  - url: https://openapi.baidu.com
+    description: OAuth2 endpoints
+  - url: https://pan.baidu.com
+    description: XPan OpenAPI endpoints
+
+paths:
+  /oauth/2.0/device/code:
+    get:
+      operationId: oauthDeviceCode
+      summary: OAuth2 设备码模式 - 获取 device_code / qrcode_url
+      description: |
+        获取 device_code、qrcode_url 与轮询间隔。
+        - scope：官方文档中为固定值 basic,netdisk
+      parameters:
+        - name: response_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [device_code]
+          description: 固定为 device_code
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: AppKey
+        - name: scope
+          in: query
+          required: true
+          schema:
+            type: string
+            example: basic,netdisk
+          description: 固定为 basic,netdisk（见官方文档）
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceCodeResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OAuthError"
+
+  /oauth/2.0/token:
+    get:
+      operationId: oauthToken
+      summary: OAuth2 - 换取/刷新 token
+      description: |
+        统一入口：
+        - grant_type=device_token：轮询换取 access_token/refresh_token
+        - grant_type=refresh_token：刷新 access_token（会返回新的 refresh_token，旧的立即失效）
+      parameters:
+        - name: grant_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [device_token, refresh_token]
+        - name: code
+          in: query
+          required: false
+          schema:
+            type: string
+          description: grant_type=device_token 时必填，对应 device_code
+        - name: refresh_token
+          in: query
+          required: false
+          schema:
+            type: string
+          description: grant_type=refresh_token 时必填
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: client_secret
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/TokenResponse"
+                  - $ref: "#/components/schemas/OAuthError"
+
+  /rest/2.0/xpan/nas:
+    get:
+      operationId: xpanUinfo
+      summary: 获取用户信息（uinfo）
+      parameters:
+        - name: method
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [uinfo]
+        - name: access_token
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: vip_version
+          in: query
+          required: false
+          schema:
+            type: string
+            example: v2
+          description: 可选；返回更完整信息（见官方文档）
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UinfoResponse"
+
+  /rest/2.0/xpan/file:
+    get:
+      operationId: xpanFileGet
+      summary: 文件相关（list/search/streaming）
+      description: |
+        本项目 MVP 主要使用：
+        - method=list：目录列表（分页 start/limit）
+        - method=search：关键词搜索（官方限制固定返回量）
+        其他 method（如 streaming）不在 MVP 强依赖范围内。
+      parameters:
+        - name: method
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [list, search, streaming]
+        - name: access_token
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: dir
+          in: query
+          required: false
+          schema:
+            type: string
+            example: /
+          description: method=list/search 时可用；目录绝对路径（含中文需 UrlEncode）
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [name, time, size]
+        - name: desc
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [0, 1]
+        - name: start
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+        - name: web
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [0, 1]
+          description: web=1 时可能返回缩略图 thumbs 等字段
+        - name: key
+          in: query
+          required: false
+          schema:
+            type: string
+          description: method=search 时必填，关键词
+        - name: recursion
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [0, 1]
+          description: search 是否递归
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: 分类过滤（1 视频 / 2 音频 / ...）
+      responses:
+        "200":
+          description: OK（根据 method 返回不同结构；本契约只建模 list/search 关键字段）
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/XpanListResponse"
+                  - $ref: "#/components/schemas/XpanSearchResponse"
+                  - $ref: "#/components/schemas/XpanError"
+
+  /rest/2.0/xpan/multimedia:
+    get:
+      operationId: xpanMultimedia
+      summary: 多媒体接口（filemetas 等）
+      parameters:
+        - name: method
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [filemetas]
+        - name: access_token
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: fsids
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "[123456789]"
+          description: JSON 数组字符串，最多 100 个 fsid
+        - name: dlink
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [0, 1]
+          description: dlink=1 返回 dlink 字段
+        - name: needmedia
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [0, 1]
+          description: needmedia=1 返回 duration 等字段
+        - name: detail
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [0, 1]
+          description: detail=1 返回 media_info
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/FileMetasResponse"
+                  - $ref: "#/components/schemas/XpanError"
+
+components:
+  schemas:
+    DeviceCodeResponse:
+      type: object
+      properties:
+        device_code:
+          type: string
+        user_code:
+          type: string
+        verification_url:
+          type: string
+        qrcode_url:
+          type: string
+        expires_in:
+          type: integer
+          description: seconds
+        interval:
+          type: integer
+          description: seconds; 建议不低于 5
+      required: [device_code, user_code, qrcode_url, expires_in, interval]
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_in:
+          type: integer
+          description: seconds; 官方文档示例为 2592000（30 天）
+        scope:
+          type: string
+      required: [access_token, refresh_token, expires_in]
+
+    OAuthError:
+      type: object
+      description: OAuth2 标准错误返回（字段以实际为准）
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string
+        error_uri:
+          type: string
+
+    UinfoResponse:
+      type: object
+      properties:
+        errno:
+          type: integer
+        errmsg:
+          type: string
+        uk:
+          type: integer
+          format: int64
+        netdisk_name:
+          type: string
+        baidu_name:
+          type: string
+        avatar_url:
+          type: string
+        vip_type:
+          type: integer
+      required: [errno]
+
+    XpanError:
+      type: object
+      properties:
+        errno:
+          type: integer
+        errmsg:
+          type: string
+      required: [errno]
+
+    XpanListResponse:
+      type: object
+      properties:
+        errno:
+          type: integer
+        errmsg:
+          type: string
+        list:
+          type: array
+          items:
+            $ref: "#/components/schemas/XpanFileItem"
+      required: [errno]
+
+    XpanSearchResponse:
+      type: object
+      properties:
+        errno:
+          type: integer
+        errmsg:
+          type: string
+        list:
+          type: array
+          items:
+            $ref: "#/components/schemas/XpanFileItem"
+      required: [errno]
+
+    XpanFileItem:
+      type: object
+      properties:
+        fs_id:
+          type: integer
+          format: int64
+        path:
+          type: string
+        server_filename:
+          type: string
+        isdir:
+          type: integer
+          enum: [0, 1]
+        size:
+          type: integer
+          format: int64
+        server_ctime:
+          type: integer
+          format: int64
+        server_mtime:
+          type: integer
+          format: int64
+        category:
+          type: integer
+          description: 1=视频, 2=音频, 3=图片, ...
+      required: [fs_id, path, server_filename, isdir]
+
+    FileMetasResponse:
+      type: object
+      properties:
+        errno:
+          type: integer
+        errmsg:
+          type: string
+        list:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileMetaItem"
+      required: [errno]
+
+    FileMetaItem:
+      type: object
+      properties:
+        fs_id:
+          type: integer
+          format: int64
+        path:
+          type: string
+        filename:
+          type: string
+        size:
+          type: integer
+          format: int64
+        dlink:
+          type: string
+          description: |
+            下载/播放直链（有效期约 8 小时）。
+            使用时需要：
+            - 拼接 access_token（query）
+            - Header: User-Agent=pan.baidu.com
+            - 可能存在 302 跳转与 Range 请求（详见官方文档）。
+        duration:
+          type: integer
+          description: seconds（needmedia=1）
+      required: [fs_id]
