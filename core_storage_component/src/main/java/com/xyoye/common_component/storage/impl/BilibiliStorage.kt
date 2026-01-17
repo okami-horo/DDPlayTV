@@ -3,8 +3,9 @@ package com.xyoye.common_component.storage.impl
 import android.net.Uri
 import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
-import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.bilibili.net.BilibiliHeaders
+import com.xyoye.common_component.bilibili.playback.BilibiliLivePlaybackSession
+import com.xyoye.common_component.bilibili.playback.BilibiliLivePlaybackSessionStore
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSessionStore
 import com.xyoye.common_component.bilibili.repository.BilibiliRepository
@@ -507,15 +508,19 @@ class BilibiliStorage(
         val parsed = BilibiliKeys.parse(file.uniqueKey()) ?: return null
         try {
             if (parsed is BilibiliKeys.LiveKey) {
-                val info = repository.liveRoomInfo(parsed.roomId).getOrThrow()
-                val roomId = info.roomId.takeIf { it > 0 } ?: parsed.roomId
-                val playUrl = repository.livePlayUrl(roomId).getOrThrow()
-                playUrl.durl
-                    .firstOrNull()
-                    ?.url
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { return it }
-                throw BilibiliException.from(-1, "取流失败")
+                val session =
+                    BilibiliLivePlaybackSession(
+                        storageId = library.id,
+                        uniqueKey = file.uniqueKey(),
+                        repository = repository,
+                        roomId = parsed.roomId
+                    )
+                BilibiliLivePlaybackSessionStore.put(session)
+                return session
+                    .prepare()
+                    .onFailure {
+                        BilibiliLivePlaybackSessionStore.remove(library.id, file.uniqueKey())
+                    }.getOrThrow()
             }
 
             val session =

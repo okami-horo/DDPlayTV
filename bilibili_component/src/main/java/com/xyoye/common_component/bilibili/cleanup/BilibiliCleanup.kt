@@ -5,6 +5,7 @@ import com.xyoye.common_component.bilibili.BilibiliDanmakuBlockPreferencesStore
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.bilibili.auth.BilibiliAuthStore
 import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
+import com.xyoye.common_component.bilibili.playback.BilibiliLivePlaybackSessionStore
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSessionStore
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.utils.ErrorReportHelper
@@ -35,6 +36,7 @@ object BilibiliCleanup {
                 BilibiliAuthStore.clear(storageKey)
                 BilibiliCookieJarStore(storageKey).clear()
                 BilibiliPlaybackSessionStore.clearStorage(storageId)
+                BilibiliLivePlaybackSessionStore.clearStorage(storageId)
                 deleteBilibiliMpdFiles()
             }.onFailure { e ->
                 ErrorReportHelper.postCatchedExceptionWithContext(

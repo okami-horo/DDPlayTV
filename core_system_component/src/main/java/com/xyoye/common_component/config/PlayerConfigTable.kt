@@ -15,7 +15,7 @@ object PlayerConfigTable {
 
     // 是否使用surface view
     @MMKVFiled
-    const val useSurfaceView = false
+    const val useSurfaceView = true
 
     // 使用播放器类型
     @MMKVFiled

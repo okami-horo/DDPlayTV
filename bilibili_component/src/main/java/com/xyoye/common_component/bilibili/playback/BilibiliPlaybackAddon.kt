@@ -41,6 +41,7 @@ class BilibiliPlaybackAddon(
 
     override fun onRelease() {
         BilibiliPlaybackSessionStore.remove(storageId, uniqueKey)
+        BilibiliLivePlaybackSessionStore.remove(storageId, uniqueKey)
     }
 
     override suspend fun getSettingSpec(): Result<PlaybackSettingSpec?> =
@@ -88,8 +89,24 @@ class BilibiliPlaybackAddon(
         if (!canHandle(request.identity.mediaType, request.identity.storageId, request.identity.uniqueKey)) {
             return Result.success(null)
         }
-        if (isLiveKey) return Result.success(null)
         if (identity.mediaType != MediaType.BILIBILI_STORAGE) return Result.success(null)
+
+        if (isLiveKey) {
+            val session =
+                BilibiliLivePlaybackSessionStore.get(storageId, uniqueKey)
+                    ?: return Result.failure(IllegalStateException("未获取到B站直播会话"))
+
+            val playUrl =
+                session
+                    .recover(
+                        failure = request.toFailureContext()
+                    ).getOrElse { return Result.failure(it) }
+
+            if (playUrl.isBlank()) {
+                return Result.success(null)
+            }
+            return Result.success(playUrl)
+        }
 
         val session =
             BilibiliPlaybackSessionStore.get(storageId, uniqueKey)

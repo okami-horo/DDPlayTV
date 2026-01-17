@@ -24,5 +24,7 @@ data class BilibiliLivePlayUrlData(
 @JsonClass(generateAdapter = true)
 data class BilibiliLivePlayUrlDurl(
     val url: String = "",
-    val order: Int = 0
+    val order: Int = 0,
+    @Json(name = "backup_url")
+    val backupUrl: List<String> = emptyList()
 )

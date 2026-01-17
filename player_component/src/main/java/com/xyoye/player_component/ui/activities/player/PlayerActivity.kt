@@ -950,6 +950,7 @@ class PlayerActivity :
         playbackRecoveryAttempts += 1
 
         val positionMs = danDanPlayer.getCurrentPosition()
+        val shouldSeek = !danDanPlayer.isLive()
         val request =
             PlaybackRecoveryRequest(
                 identity = buildPlaybackIdentity(source),
@@ -973,7 +974,7 @@ class PlayerActivity :
                         }
 
                         val newSource = rebuildStorageVideoSource(storageSource, playUrl)
-                        pendingSeekPositionMs = positionMs
+                        pendingSeekPositionMs = positionMs.takeIf { shouldSeek }
                         playbackRecoveryAttempts = 0
                         videoController.showMessage("已自动恢复播放")
                         applyPlaySource(newSource)
