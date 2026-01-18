@@ -35,6 +35,9 @@ constexpr jint kEventError = 5;
 constexpr jint kEventBufferingStart = 6;
 constexpr jint kEventBufferingEnd = 7;
 constexpr jint kEventLogMessage = 8;
+constexpr jint kEventSubtitleAssFull = 9;
+constexpr jint kEventSubtitleAssExtradata = 10;
+constexpr jint kEventSubtitleSid = 11;
 constexpr jint kTrackVideo = 0;
 constexpr jint kTrackAudio = 1;
 constexpr jint kTrackSubtitle = 2;
@@ -414,6 +417,9 @@ void observeProperties(mpv_handle* handle) {
         return;
     }
     mpv_observe_property(handle, 0, "paused-for-cache", MPV_FORMAT_FLAG);
+    mpv_observe_property(handle, 0, "sub-text/ass-full", MPV_FORMAT_STRING);
+    mpv_observe_property(handle, 0, "sub-ass-extradata", MPV_FORMAT_STRING);
+    mpv_observe_property(handle, 0, "sid", MPV_FORMAT_STRING);
 }
 
 void destroyRenderContext(MpvSession* session) {
@@ -763,6 +769,45 @@ void eventLoop(MpvSession* session) {
                         0,
                         nullptr
                     );
+                    break;
+                }
+                if (prop->format == MPV_FORMAT_STRING && strcmp(prop->name, "sub-text/ass-full") == 0) {
+                    const char* value = static_cast<char*>(prop->data);
+                    if (value != nullptr) {
+                        std::string copy = value;
+                        dispatchEvent(env, session->event_callback, kEventSubtitleAssFull, 0, 0, copy.c_str());
+                    } else {
+                        dispatchEvent(env, session->event_callback, kEventSubtitleAssFull, 0, 0, nullptr);
+                    }
+                    if (prop->data != nullptr) {
+                        mpv_free(prop->data);
+                    }
+                    break;
+                }
+                if (prop->format == MPV_FORMAT_STRING && strcmp(prop->name, "sub-ass-extradata") == 0) {
+                    const char* value = static_cast<char*>(prop->data);
+                    if (value != nullptr) {
+                        std::string copy = value;
+                        dispatchEvent(env, session->event_callback, kEventSubtitleAssExtradata, 0, 0, copy.c_str());
+                    } else {
+                        dispatchEvent(env, session->event_callback, kEventSubtitleAssExtradata, 0, 0, nullptr);
+                    }
+                    if (prop->data != nullptr) {
+                        mpv_free(prop->data);
+                    }
+                    break;
+                }
+                if (prop->format == MPV_FORMAT_STRING && strcmp(prop->name, "sid") == 0) {
+                    const char* value = static_cast<char*>(prop->data);
+                    if (value != nullptr) {
+                        std::string copy = value;
+                        dispatchEvent(env, session->event_callback, kEventSubtitleSid, 0, 0, copy.c_str());
+                    } else {
+                        dispatchEvent(env, session->event_callback, kEventSubtitleSid, 0, 0, nullptr);
+                    }
+                    if (prop->data != nullptr) {
+                        mpv_free(prop->data);
+                    }
                     break;
                 }
                 break;

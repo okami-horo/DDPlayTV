@@ -18,6 +18,7 @@ import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
+import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.PlayerConstant
 import java.io.File
@@ -43,6 +44,7 @@ class MpvVideoPlayer(
     private var looping = PlayerInitializer.isLooping
     private var initializationError: Exception? = null
     private var anime4kMode: Int = Anime4kShaderManager.MODE_OFF
+    private val embeddedSubtitleBridge = MpvEmbeddedSubtitleBridge()
 
     private fun failInitialization(
         message: String,
@@ -332,6 +334,7 @@ class MpvVideoPlayer(
     }
 
     override fun release() {
+        embeddedSubtitleBridge.release()
         clearPlayerEventListener()
         stop()
         nativeBridge.clearEventListener()
@@ -344,6 +347,9 @@ class MpvVideoPlayer(
 
     override fun seekTo(timeMs: Long) {
         if (!isPrepared) return
+        if (canStartGpuSubtitlePipeline()) {
+            embeddedSubtitleBridge.resetForTimelineChange()
+        }
         if (!proxySeekEnabled) {
             val path = dataSource
             if (!path.isNullOrEmpty()) {
@@ -380,7 +386,10 @@ class MpvVideoPlayer(
 
     override fun setSubtitleOffset(offsetMs: Long) {
         if (!isPrepared) return
-        nativeBridge.setSubtitleDelay(offsetMs)
+        nativeBridge.setSubtitleDelay(-offsetMs)
+        if (canStartGpuSubtitlePipeline()) {
+            embeddedSubtitleBridge.resetForTimelineChange()
+        }
     }
 
     override fun isPlaying(): Boolean = isPrepared && isPlaying
@@ -448,12 +457,18 @@ class MpvVideoPlayer(
     override fun selectTrack(track: VideoTrackBean) {
         if (!isPrepared) return
         if (track.disable) {
+            if (canStartGpuSubtitlePipeline()) {
+                embeddedSubtitleBridge.resetForTimelineChange()
+            }
             nativeBridge.deselectTrack(MpvNativeBridge.TRACK_TYPE_SUBTITLE)
             return
         }
         val ids = track.id?.split(":") ?: return
         val nativeType = ids.getOrNull(0)?.toIntOrNull() ?: return
         val trackId = ids.getOrNull(1)?.toIntOrNull() ?: return
+        if (track.type == TrackType.SUBTITLE && canStartGpuSubtitlePipeline()) {
+            embeddedSubtitleBridge.resetForTimelineChange()
+        }
         nativeBridge.selectTrack(nativeType, trackId)
     }
 
@@ -465,6 +480,9 @@ class MpvVideoPlayer(
                 TrackType.AUDIO -> MpvNativeBridge.TRACK_TYPE_AUDIO
                 else -> return
             }
+        if (type == TrackType.SUBTITLE && canStartGpuSubtitlePipeline()) {
+            embeddedSubtitleBridge.resetForTimelineChange()
+        }
         nativeBridge.deselectTrack(nativeType)
     }
 
@@ -559,6 +577,21 @@ class MpvVideoPlayer(
             is MpvNativeBridge.Event.VideoSize -> {
                 videoSize = Point(event.width, event.height)
                 mPlayerEventListener.onVideoSizeChange(event.width, event.height)
+            }
+            is MpvNativeBridge.Event.SubtitleAssExtradata -> {
+                if (canStartGpuSubtitlePipeline()) {
+                    embeddedSubtitleBridge.onAssExtradata(event.value)
+                }
+            }
+            is MpvNativeBridge.Event.SubtitleAssFull -> {
+                if (canStartGpuSubtitlePipeline()) {
+                    embeddedSubtitleBridge.onAssFull(event.value)
+                }
+            }
+            is MpvNativeBridge.Event.SubtitleSid -> {
+                if (canStartGpuSubtitlePipeline()) {
+                    embeddedSubtitleBridge.onSid(event.value)
+                }
             }
         }
     }
@@ -719,7 +752,12 @@ class MpvVideoPlayer(
         return details.joinToString(" | ").ifEmpty { "mpv playback error" }
     }
 
-    override fun canStartGpuSubtitlePipeline(): Boolean = false
+    override fun canStartGpuSubtitlePipeline(): Boolean =
+        MpvOptions.resolveVideoOutput(PlayerConfig.getMpvVideoOutput()) == MpvOptions.VO_MEDIACODEC_EMBED
+
+    override fun setEmbeddedSubtitleSink(sink: EmbeddedSubtitleSink?) {
+        embeddedSubtitleBridge.setSink(sink)
+    }
 }
 
 private class MpvPlaybackException(
