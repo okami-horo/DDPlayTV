@@ -66,6 +66,10 @@ class PlayerGestureView(
 
     override fun onStartSlide() {
         removeCallbacks(mFadeGestureOut)
+        ViewCompat
+            .animate(viewBinding.gestureContainer)
+            .setListener(object : ViewPropertyAnimatorListenerAdapter() {})
+            .cancel()
         mControlWrapper.hideController()
         viewBinding.gestureContainer.isVisible = true
         viewBinding.gestureContainer.alpha = 1f
