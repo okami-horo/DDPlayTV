@@ -117,7 +117,7 @@ jobs:
         id: generate_release
         uses: softprops/action-gh-release@v1
         with:
-          name: 弹弹play概念版 v${{ env.BUILD_VERSION }}
+          name: DDPlayTV v${{ env.BUILD_VERSION }}
           tag_name: ${{ env.BUILD_TAG }}
           body_path: change/dandanplay-v${{ env.BUILD_VERSION }}.txt
           prerelease: false
