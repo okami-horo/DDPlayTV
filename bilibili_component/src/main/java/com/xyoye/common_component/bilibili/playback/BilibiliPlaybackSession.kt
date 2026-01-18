@@ -68,6 +68,9 @@ class BilibiliPlaybackSession(
     private val cdnBlacklistTtlMs = TimeUnit.MINUTES.toMillis(10)
     private val cdnHostBlacklist = LinkedHashMap<String, Long>()
 
+    private val expiresMarginMs = TimeUnit.MINUTES.toMillis(1)
+    private var selectedExpiresAtMs: Long? = null
+
     private val pgcSession: String? =
         if (key is BilibiliKeys.PgcEpisodeKey) {
             UUID.randomUUID().toString().replace("-", "")
@@ -120,20 +123,29 @@ class BilibiliPlaybackSession(
             lastPositionMs = positionMs
             cleanupBlacklistIfNeeded()
 
-            val blacklisted = failure.failingUrl?.let { blacklistHost(it) } == true
-            val forceRefresh = shouldForceRefresh(failure) || (failure.failingUrl.isNullOrBlank() && dash != null)
-
             if (failure.isDecoderError) {
                 if (tryFallbackCodec() || tryFallbackQuality()) {
                     return@runCatching buildPlayableOrThrow()
                 }
             }
 
+            val forceRefresh =
+                shouldForceRefresh(failure) ||
+                    isSelectedUrlExpiredSoon() ||
+                    (failure.failingUrl.isNullOrBlank() && dash != null)
+
+            val blacklisted = failure.failingUrl?.let { blacklistHost(it) } == true
+
+            if (forceRefresh) {
+                ensureStreams(forceRefresh = true)
+                return@runCatching buildPlayableOrThrow()
+            }
+
             if (blacklisted) {
                 return@runCatching rebuildWithBlacklistOrRefresh(forceRefresh = false)
             }
 
-            rebuildWithBlacklistOrRefresh(forceRefresh = forceRefresh)
+            rebuildWithBlacklistOrRefresh(forceRefresh = false)
         }
 
     suspend fun applyPreferenceUpdate(
@@ -165,6 +177,28 @@ class BilibiliPlaybackSession(
     private fun shouldForceRefresh(failure: FailureContext): Boolean {
         val code = failure.httpResponseCode ?: return false
         return code == 403 || code == 404 || code == 410
+    }
+
+    private fun isSelectedUrlExpiredSoon(): Boolean {
+        val expiresAtMs = selectedExpiresAtMs ?: return false
+        return System.currentTimeMillis() >= (expiresAtMs - expiresMarginMs)
+    }
+
+    private fun parseExpiresAtMs(url: String?): Long? {
+        val httpUrl = url?.toHttpUrlOrNull() ?: return null
+        val raw =
+            httpUrl.queryParameter("deadline")
+                ?: httpUrl.queryParameter("expires")
+                ?: httpUrl.queryParameter("expire")
+                ?: return null
+        val value = raw.toLongOrNull() ?: return null
+        if (value <= 0) return null
+
+        return if (value > 10_000_000_000L) {
+            value
+        } else {
+            value * 1000
+        }
     }
 
     private fun blacklistHost(url: String): Boolean {
@@ -437,6 +471,16 @@ class BilibiliPlaybackSession(
             val selectedVideo = selectedVideo ?: throw BilibiliException.from(-1, "取流失败：无可用视频流")
             val blacklist = cdnHostBlacklist.keys
 
+            selectedExpiresAtMs =
+                buildList {
+                    add(parseExpiresAtMs(selectedVideo.baseUrl))
+                    selectedVideo.backupUrl.forEach { add(parseExpiresAtMs(it)) }
+                    selectedAudio?.let { audio ->
+                        add(parseExpiresAtMs(audio.baseUrl))
+                        audio.backupUrl.forEach { add(parseExpiresAtMs(it)) }
+                    }
+                }.filterNotNull().minOrNull()
+
             withContext(Dispatchers.IO) {
                 BilibiliMpdGenerator.writeDashMpd(
                     outputFile = mpdFile,
@@ -479,6 +523,7 @@ class BilibiliPlaybackSession(
                     .getOrNull(safeIndex)
                     ?: selectedDurlCandidates.firstOrNull()
             if (!candidate.isNullOrBlank()) {
+                selectedExpiresAtMs = parseExpiresAtMs(candidate)
                 updateSnapshot(
                     dashAvailable = false,
                     selectedQualityQn = preferences.preferredQualityQn,
