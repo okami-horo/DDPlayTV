@@ -3,6 +3,8 @@ package com.xyoye.storage_component.ui.dialog
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import androidx.core.view.isGone
+import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
 import com.hierynomus.smbj.SMBClient
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.weight.ToastCenter
@@ -44,32 +46,55 @@ class SmbStorageEditDialog(
         setSmbV2(serverData.smbV2)
         setAnonymous(serverData.isAnonymous)
         binding.serverData = serverData
-        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, serverData)
+        val autoSaveHelper =
+            StorageAutoSaveHelper(
+                coroutineScope = activity.lifecycleScope,
+                buildLibrary = { buildLibraryIfValid(serverData, showToast = false) },
+                onSave = { saveStorage(it, showToast = false) },
+            )
+        registerAutoSaveHelper(autoSaveHelper)
+
+        PlayerTypeOverrideBinder.bind(
+            binding.playerTypeOverrideLayout,
+            serverData,
+            onChanged = { autoSaveHelper.requestSave() },
+        )
+        autoSaveHelper.markSaved(buildLibraryIfValid(serverData, showToast = false))
+
+        binding.addressEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.portEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.displayNameEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.pathEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.accountEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.passwordEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
 
         binding.serverTestConnectTv.setOnClickListener {
-            if (checkParams(serverData)) {
-                activity.testStorage(serverData)
-            }
+            val testLibrary = buildLibraryIfValid(serverData, showToast = true) ?: return@setOnClickListener
+            activity.testStorage(testLibrary)
         }
 
         binding.anonymousTv.setOnClickListener {
             serverData.isAnonymous = true
             setAnonymous(true)
+            autoSaveHelper.requestSave()
         }
 
         binding.accountTv.setOnClickListener {
             serverData.isAnonymous = false
             setAnonymous(false)
+            autoSaveHelper.requestSave()
         }
 
         binding.smbV2Tv.setOnClickListener {
             serverData.smbV2 = true
             setSmbV2(true)
+            autoSaveHelper.requestSave()
         }
 
         binding.smbV1Tv.setOnClickListener {
             serverData.smbV2 = false
             setSmbV2(false)
+            autoSaveHelper.requestSave()
         }
 
         binding.passwordToggleIv.setOnClickListener {
@@ -83,20 +108,6 @@ class SmbStorageEditDialog(
                     HideReturnsTransformationMethod.getInstance()
             }
         }
-
-        setPositiveListener {
-            if (checkParams(serverData)) {
-                if (serverData.displayName.isEmpty()) {
-                    serverData.displayName = "SMB媒体库"
-                }
-                serverData.describe = "smb://${serverData.url}"
-                activity.addStorage(serverData)
-            }
-        }
-
-        setNegativeListener {
-            activity.finish()
-        }
     }
 
     override fun onTestResult(result: Boolean) {
@@ -109,23 +120,41 @@ class SmbStorageEditDialog(
         }
     }
 
-    private fun checkParams(serverData: MediaLibraryEntity): Boolean {
-        if (serverData.url.isEmpty()) {
-            ToastCenter.showWarning("请填写IP地址")
-            return false
+    private fun buildLibraryIfValid(
+        serverData: MediaLibraryEntity,
+        showToast: Boolean,
+    ): MediaLibraryEntity? {
+        val host = serverData.url.trim()
+        if (host.isEmpty()) {
+            if (showToast) {
+                ToastCenter.showWarning("请填写IP地址")
+            }
+            return null
         }
 
         if (!serverData.isAnonymous) {
             if (serverData.account.isNullOrEmpty()) {
-                ToastCenter.showWarning("请填写帐号")
-                return false
+                if (showToast) {
+                    ToastCenter.showWarning("请填写帐号")
+                }
+                return null
             }
             if (serverData.password.isNullOrEmpty()) {
-                ToastCenter.showWarning("请填写密码")
-                return false
+                if (showToast) {
+                    ToastCenter.showWarning("请填写密码")
+                }
+                return null
             }
         }
-        return true
+
+        val port = serverData.port.takeIf { it > 0 } ?: SMBClient.DEFAULT_PORT
+        val displayName = serverData.displayName.ifEmpty { "SMB媒体库" }
+        return serverData.copy(
+            displayName = displayName,
+            url = host,
+            port = port,
+            describe = "smb://$host",
+        )
     }
 
     private fun setAnonymous(isAnonymous: Boolean) {

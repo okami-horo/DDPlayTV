@@ -1,6 +1,7 @@
 package com.xyoye.storage_component.ui.dialog
 
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.bilibili.BilibiliApiPreferences
 import com.xyoye.common_component.bilibili.BilibiliApiPreferencesStore
@@ -40,6 +41,7 @@ class BilibiliStorageEditDialog(
     private var apiPreferences = BilibiliApiPreferences()
     private var preferences = BilibiliPlaybackPreferences()
     private var danmakuBlockPreferences = BilibiliDanmakuBlockPreferences()
+    private lateinit var autoSaveHelper: StorageAutoSaveHelper
 
     override fun getChildLayoutId() = R.layout.dialog_bilibili_storage
 
@@ -59,7 +61,21 @@ class BilibiliStorageEditDialog(
             editLibrary.url = Api.BILI_BILI_API
         }
         binding.library = editLibrary
-        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, editLibrary)
+        autoSaveHelper =
+            StorageAutoSaveHelper(
+                coroutineScope = activity.lifecycleScope,
+                buildLibrary = { buildLibraryForAutoSave() },
+                onSave = { saveStorage(it, showToast = false) },
+            )
+        registerAutoSaveHelper(autoSaveHelper)
+
+        PlayerTypeOverrideBinder.bind(
+            binding.playerTypeOverrideLayout,
+            editLibrary,
+            onChanged = { autoSaveHelper.requestSave() },
+        )
+        binding.displayNameEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        autoSaveHelper.markSaved(buildLibraryForAutoSave())
 
         apiPreferences = BilibiliApiPreferencesStore.read(editLibrary)
         preferences = BilibiliPlaybackPreferencesStore.read(editLibrary)
@@ -81,9 +97,10 @@ class BilibiliStorageEditDialog(
         binding.aiBlockOffTv.setOnClickListener { updateAiBlock(false) }
         binding.aiLevelActionTv.setOnClickListener { showAiLevelDialog() }
 
-        binding.disconnectTv.isVisible = isEditMode && editLibrary.id > 0
+        binding.disconnectTv.isVisible = (activity.editData?.id ?: editLibrary.id) > 0
         binding.disconnectTv.setOnClickListener {
-            val libraryId = editLibrary.id
+            val library = activity.editData ?: editLibrary
+            val libraryId = library.id
             if (libraryId <= 0) return@setOnClickListener
             CommonDialog
                 .Builder(activity)
@@ -94,7 +111,7 @@ class BilibiliStorageEditDialog(
                     addPositive { dialog ->
                         dialog.dismiss()
                         activity.lifecycleScope.launch {
-                            BilibiliCleanup.cleanup(editLibrary)
+                            BilibiliCleanup.cleanup(library)
                             PlayerActions.sendExitPlayer(activity, libraryId)
                             ToastCenter.showOriginalToast("已断开并清除数据")
                             dismiss()
@@ -109,35 +126,8 @@ class BilibiliStorageEditDialog(
             apiPreferences = BilibiliApiPreferences()
             preferences = BilibiliPlaybackPreferences()
             danmakuBlockPreferences = BilibiliDanmakuBlockPreferences()
+            persistAllPreferences()
             refreshPreferenceViews()
-        }
-
-        setPositiveListener {
-            normalizeLibraryUrl()
-            if (!isLoggedIn()) {
-                ToastCenter.showWarning("保存失败，请先扫码登录")
-                refreshAuthViews()
-                return@setPositiveListener
-            }
-
-            if (editLibrary.displayName.isBlank()) {
-                editLibrary.displayName = "Bilibili媒体库"
-            }
-            if (editLibrary.url.isBlank()) {
-                editLibrary.url = Api.BILI_BILI_API
-            }
-            if (preferences.preferredQualityQn == BilibiliQuality.QN_4K.qn && !preferences.allow4k) {
-                preferences = preferences.copy(allow4k = true)
-                refreshPreferenceViews()
-            }
-            BilibiliApiPreferencesStore.write(editLibrary, apiPreferences)
-            BilibiliPlaybackPreferencesStore.write(editLibrary, preferences)
-            BilibiliDanmakuBlockPreferencesStore.write(editLibrary, danmakuBlockPreferences)
-            activity.addStorage(editLibrary)
-        }
-
-        setNegativeListener {
-            activity.finish()
         }
     }
 
@@ -163,7 +153,20 @@ class BilibiliStorageEditDialog(
             activity = activity,
             library = editLibrary,
             apiType = apiPreferences.apiType,
-            onLoginSuccess = { refreshAuthViews() },
+            onLoginSuccess = onLoginSuccess@{
+                persistAllPreferences()
+                refreshAuthViews()
+                val libraryToSave = buildLibraryForLoginSave()
+                if (libraryToSave == null) {
+                    return@onLoginSuccess
+                }
+                val saveJob = saveStorage(libraryToSave)
+                activity.lifecycleScope.launch {
+                    saveJob.join()
+                    binding.disconnectTv.isVisible = (activity.editData?.id ?: editLibrary.id) > 0
+                    autoSaveHelper.markSaved(buildLibraryForAutoSave())
+                }
+            },
             onDismiss = { refreshAuthViews() },
         ).show()
     }
@@ -187,11 +190,13 @@ class BilibiliStorageEditDialog(
 
     private fun updateAllow4k(enabled: Boolean) {
         preferences = preferences.copy(allow4k = enabled)
+        persistPlaybackPreferences()
         refreshPreferenceViews()
     }
 
     private fun updateHeartbeatReport(enabled: Boolean) {
         preferences = preferences.copy(enableHeartbeatReport = enabled)
+        persistPlaybackPreferences()
         refreshPreferenceViews()
     }
 
@@ -225,6 +230,7 @@ class BilibiliStorageEditDialog(
         BottomActionDialog(activity, actions, "API类型") {
             val selected = it.actionId as? BilibiliApiType ?: return@BottomActionDialog false
             apiPreferences = apiPreferences.copy(apiType = selected)
+            persistApiPreferences()
             refreshPreferenceViews()
             true
         }.show()
@@ -248,6 +254,7 @@ class BilibiliStorageEditDialog(
 
     private fun updateAiBlock(enabled: Boolean) {
         danmakuBlockPreferences = danmakuBlockPreferences.copy(aiSwitch = enabled)
+        persistDanmakuPreferences()
         refreshPreferenceViews()
     }
 
@@ -270,6 +277,7 @@ class BilibiliStorageEditDialog(
         BottomActionDialog(activity, actions, "屏蔽等级") {
             val selected = it.actionId as? Int ?: return@BottomActionDialog false
             danmakuBlockPreferences = danmakuBlockPreferences.copy(aiLevel = selected.coerceIn(0, 10))
+            persistDanmakuPreferences()
             refreshPreferenceViews()
             true
         }.show()
@@ -293,6 +301,7 @@ class BilibiliStorageEditDialog(
         BottomActionDialog(activity, actions, "取流模式") {
             val selected = it.actionId as? BilibiliPlayMode ?: return@BottomActionDialog false
             preferences = preferences.copy(playMode = selected)
+            persistPlaybackPreferences()
             refreshPreferenceViews()
             true
         }.show()
@@ -321,6 +330,7 @@ class BilibiliStorageEditDialog(
                 next = next.copy(allow4k = true)
             }
             preferences = next
+            persistPlaybackPreferences()
             refreshPreferenceViews()
             true
         }.show()
@@ -345,6 +355,7 @@ class BilibiliStorageEditDialog(
         BottomActionDialog(activity, actions, "视频编码") {
             val selected = it.actionId as? BilibiliVideoCodec ?: return@BottomActionDialog false
             preferences = preferences.copy(preferredVideoCodec = selected)
+            persistPlaybackPreferences()
             refreshPreferenceViews()
             true
         }.show()
@@ -368,8 +379,73 @@ class BilibiliStorageEditDialog(
         BottomActionDialog(activity, actions, "CDN节点") {
             val selected = it.actionId as? BilibiliCdnService ?: return@BottomActionDialog false
             preferences = preferences.copy(cdnService = selected)
+            persistPlaybackPreferences()
             refreshPreferenceViews()
             true
         }.show()
+    }
+
+    private fun buildLibraryForLoginSave(): MediaLibraryEntity? {
+        normalizeLibraryUrl()
+        if (!isLoggedIn()) {
+            ToastCenter.showWarning("保存失败，请先扫码登录")
+            refreshAuthViews()
+            return null
+        }
+
+        val url = editLibrary.url.trim().removeSuffix("/").ifBlank { Api.BILI_BILI_API.trim().removeSuffix("/") }
+        val displayName = editLibrary.displayName.trim().ifEmpty { "Bilibili媒体库" }
+
+        if (preferences.preferredQualityQn == BilibiliQuality.QN_4K.qn && !preferences.allow4k) {
+            preferences = preferences.copy(allow4k = true)
+            persistPlaybackPreferences()
+            refreshPreferenceViews()
+        }
+
+        editLibrary.url = url
+        editLibrary.displayName = displayName
+        return editLibrary.copy(
+            url = url,
+            displayName = displayName,
+        )
+    }
+
+    private fun buildLibraryForAutoSave(): MediaLibraryEntity? {
+        val currentId = activity.editData?.id ?: editLibrary.id
+        if (currentId <= 0) {
+            return null
+        }
+        if (!isLoggedIn()) {
+            return null
+        }
+
+        normalizeLibraryUrl()
+        val url = editLibrary.url.trim().removeSuffix("/")
+        if (url.isBlank()) {
+            return null
+        }
+        val displayName = editLibrary.displayName.trim().ifEmpty { "Bilibili媒体库" }
+        return editLibrary.copy(
+            displayName = displayName,
+            url = url,
+        )
+    }
+
+    private fun persistAllPreferences() {
+        persistApiPreferences()
+        persistPlaybackPreferences()
+        persistDanmakuPreferences()
+    }
+
+    private fun persistApiPreferences() {
+        BilibiliApiPreferencesStore.write(editLibrary, apiPreferences)
+    }
+
+    private fun persistPlaybackPreferences() {
+        BilibiliPlaybackPreferencesStore.write(editLibrary, preferences)
+    }
+
+    private fun persistDanmakuPreferences() {
+        BilibiliDanmakuBlockPreferencesStore.write(editLibrary, danmakuBlockPreferences)
     }
 }

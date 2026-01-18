@@ -3,6 +3,8 @@ package com.xyoye.storage_component.ui.dialog
 import android.content.Intent
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.common_component.utils.ErrorReportHelper
@@ -26,8 +28,7 @@ class ExternalStorageEditDialog(
     private var mDocumentFile: DocumentFile? = null
 
     private lateinit var editLibrary: MediaLibraryEntity
-    private var originalDisplayName: String? = null
-    private var originalPlayerTypeOverride: Int? = null
+    private lateinit var autoSaveHelper: StorageAutoSaveHelper
 
     private val documentTreeLauncher = DocumentTreeLauncher(activity, onResult())
 
@@ -56,9 +57,20 @@ class ExternalStorageEditDialog(
                 R.drawable.background_button_corner_disable.toResDrawable(activity)
         }
 
-        originalDisplayName = editLibrary.displayName
-        originalPlayerTypeOverride = editLibrary.playerTypeOverride
-        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, editLibrary)
+        autoSaveHelper =
+            StorageAutoSaveHelper(
+                coroutineScope = activity.lifecycleScope,
+                buildLibrary = { buildLibraryIfValid(showToast = false) },
+                onSave = { saveStorage(it) },
+            )
+        registerAutoSaveHelper(autoSaveHelper)
+
+        PlayerTypeOverrideBinder.bind(
+            binding.playerTypeOverrideLayout,
+            editLibrary,
+            onChanged = { autoSaveHelper.requestSave() },
+        )
+        autoSaveHelper.markSaved(buildLibraryIfValid(showToast = false))
 
         initListener()
     }
@@ -75,65 +87,45 @@ class ExternalStorageEditDialog(
         ) {
             binding.displayNameEt.setText(getDisplayName(documentFile))
         }
+        autoSaveHelper.flush()
     }
 
     private fun initListener() {
         binding.selectRootTv.setOnClickListener {
             documentTreeLauncher.launch()
         }
+        binding.displayNameEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+    }
 
-        setPositiveListener {
-            if (library != null) {
-                val newLibrary = updateLibrary(library)
-                if (newLibrary != null) {
-                    activity.addStorage(newLibrary)
-                }
-                return@setPositiveListener
+    private fun buildLibraryIfValid(showToast: Boolean): MediaLibraryEntity? {
+        if (library != null) {
+            val displayName = getDisplayNameByEdit(library)
+            return library.copy(
+                displayName = displayName,
+                playerTypeOverride = editLibrary.playerTypeOverride,
+            )
+        }
+
+        val documentFile = mDocumentFile
+        if (documentFile == null) {
+            if (showToast) {
+                ToastCenter.showError("请选择设备存储库文件夹")
             }
-
-            val newLibrary =
-                createLibrary()
-                    ?: return@setPositiveListener
-            activity.addStorage(newLibrary)
-        }
-
-        setNegativeListener {
-            activity.finish()
-        }
-    }
-
-    private fun updateLibrary(library: MediaLibraryEntity): MediaLibraryEntity? {
-        val newDisplayName = getDisplayNameByEdit(library)
-        val oldDisplayName = originalDisplayName ?: library.displayName
-        val oldOverride = originalPlayerTypeOverride ?: library.playerTypeOverride
-        val hasChanged = newDisplayName != oldDisplayName || library.playerTypeOverride != oldOverride
-        if (!hasChanged) {
             return null
         }
 
-        library.displayName = getDisplayNameByEdit(library)
-        return library
-    }
+        val displayName =
+            binding.displayNameEt.text
+                ?.toString()
+                .orEmpty()
+                .ifEmpty { getDisplayName(documentFile) }
 
-    private fun createLibrary(): MediaLibraryEntity? {
-        if (mDocumentFile == null) {
-            ToastCenter.showError("请选择设备存储库文件夹")
-            return null
-        }
-        val documentFile = mDocumentFile!!
-
-        var displayName = binding.displayNameEt.text?.toString()
-        if (displayName.isNullOrEmpty()) {
-            displayName = getDisplayName(documentFile)
-        }
         return MediaLibraryEntity(
             displayName = displayName,
             url = documentFile.uri.toString(),
             describe = getDescribe(documentFile),
             mediaType = MediaType.EXTERNAL_STORAGE,
-        ).apply {
-            playerTypeOverride = editLibrary.playerTypeOverride
-        }
+        ).apply { playerTypeOverride = editLibrary.playerTypeOverride }
     }
 
     private fun getDisplayNameByEdit(storage: MediaLibraryEntity): String {

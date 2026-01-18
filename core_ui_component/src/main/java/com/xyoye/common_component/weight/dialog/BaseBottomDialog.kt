@@ -98,6 +98,10 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
         rootViewBinding.negativeBt.isVisible = visible
     }
 
+    protected fun setBottomActionVisible(visible: Boolean) {
+        rootViewBinding.bottomActionLl.isVisible = visible
+    }
+
     protected fun removeParentPadding() {
         rootViewBinding.containerFl.setPadding(0)
     }

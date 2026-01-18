@@ -13,47 +13,63 @@ import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class StoragePlusViewModel : BaseViewModel() {
     private val _testLiveData = MutableLiveData<Boolean>()
     var testLiveData: LiveData<Boolean> = _testLiveData
 
-    private val _exitLiveData = MutableLiveData<Any>()
-    var exitLiveData: LiveData<Any> = _exitLiveData
+    private val _storageSavedLiveData = MutableLiveData<MediaLibraryEntity>()
+    var storageSavedLiveData: LiveData<MediaLibraryEntity> = _storageSavedLiveData
+
+    private var editingLibraryId: Int? = null
 
     fun addStorage(
         oldLibrary: MediaLibraryEntity?,
-        newLibrary: MediaLibraryEntity
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (newLibrary.mediaType == MediaType.OPEN_115_STORAGE) {
-                newLibrary.url = newLibrary.url.trim().removeSuffix("/")
-                val isValid = Regex("^115open://uid/\\d+$").matches(newLibrary.url)
+        newLibrary: MediaLibraryEntity,
+        showToast: Boolean = true,
+    ): Job {
+        return viewModelScope.launch(Dispatchers.IO) {
+            if (oldLibrary != null) {
+                editingLibraryId = oldLibrary.id
+            }
+            val oldLibraryId = oldLibrary?.id ?: editingLibraryId
+            val upsertLibrary = newLibrary.copy()
+            if (upsertLibrary.mediaType == MediaType.OPEN_115_STORAGE) {
+                upsertLibrary.url = upsertLibrary.url.trim().removeSuffix("/")
+                val isValid = Regex("^115open://uid/\\d+$").matches(upsertLibrary.url)
                 if (!isValid) {
-                    ToastCenter.showWarning("请先测试连接/保存")
+                    if (showToast) {
+                        ToastCenter.showWarning("请先测试连接/保存")
+                    }
                     return@launch
                 }
             }
 
-            if (newLibrary.mediaType == MediaType.BAIDU_PAN_STORAGE) {
-                newLibrary.url = newLibrary.url.trim().removeSuffix("/")
-                val isValid = Regex("^baidupan://uk/\\d+$").matches(newLibrary.url)
+            if (upsertLibrary.mediaType == MediaType.BAIDU_PAN_STORAGE) {
+                upsertLibrary.url = upsertLibrary.url.trim().removeSuffix("/")
+                val isValid = Regex("^baidupan://uk/\\d+$").matches(upsertLibrary.url)
                 if (!isValid) {
-                    ToastCenter.showWarning("保存失败，请先扫码授权")
+                    if (showToast) {
+                        ToastCenter.showWarning("保存失败，请先扫码授权")
+                    }
                     return@launch
                 }
             }
 
-            if (newLibrary.mediaType == MediaType.BILIBILI_STORAGE) {
-                if (newLibrary.url.isBlank()) {
-                    newLibrary.url = Api.BILI_BILI_API
+            if (upsertLibrary.mediaType == MediaType.BILIBILI_STORAGE) {
+                if (upsertLibrary.url.isBlank()) {
+                    upsertLibrary.url = Api.BILI_BILI_API
                 }
-                newLibrary.url = newLibrary.url.trim().removeSuffix("/")
-                val storageKey = BilibiliPlaybackPreferencesStore.storageKey(newLibrary)
+                upsertLibrary.url = upsertLibrary.url.trim().removeSuffix("/")
+                val storageKey = BilibiliPlaybackPreferencesStore.storageKey(upsertLibrary)
                 val isLoggedIn = BilibiliCookieJarStore(storageKey).isLoginCookiePresent()
                 if (!isLoggedIn) {
-                    ToastCenter.showWarning("保存失败，请先扫码登录")
+                    if (showToast) {
+                        ToastCenter.showWarning("保存失败，请先扫码登录")
+                    }
                     return@launch
                 }
             }
@@ -61,15 +77,27 @@ class StoragePlusViewModel : BaseViewModel() {
             val duplicateLibrary =
                 DatabaseManager.instance
                     .getMediaLibraryDao()
-                    .getByUrl(newLibrary.url, newLibrary.mediaType)
-            if (duplicateLibrary != null && duplicateLibrary.id != oldLibrary?.id) {
-                ToastCenter.showError("保存失败，媒体库地址已存在")
+                    .getByUrl(upsertLibrary.url, upsertLibrary.mediaType)
+            if (duplicateLibrary != null && duplicateLibrary.id != oldLibraryId) {
+                if (showToast) {
+                    ToastCenter.showError("保存失败，媒体库地址已存在")
+                }
                 return@launch
             }
 
-            newLibrary.id = oldLibrary?.id ?: 0
-            DatabaseManager.instance.getMediaLibraryDao().insert(newLibrary)
-            _exitLiveData.postValue(Any())
+            upsertLibrary.id = oldLibraryId ?: upsertLibrary.id
+            DatabaseManager.instance.getMediaLibraryDao().insert(upsertLibrary)
+            val savedLibrary =
+                DatabaseManager.instance
+                    .getMediaLibraryDao()
+                    .getByUrl(upsertLibrary.url, upsertLibrary.mediaType)
+                    ?: upsertLibrary
+            if (savedLibrary.id != 0) {
+                editingLibraryId = savedLibrary.id
+            }
+            withContext(Dispatchers.Main) {
+                _storageSavedLiveData.value = savedLibrary
+            }
         }
     }
 

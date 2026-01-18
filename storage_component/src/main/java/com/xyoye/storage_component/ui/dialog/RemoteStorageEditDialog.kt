@@ -1,6 +1,8 @@
 package com.xyoye.storage_component.ui.dialog
 
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -45,13 +47,30 @@ class RemoteStorageEditDialog(
         setTitle(if (isEditStorage) "编辑PC端媒体库帐号" else "添加PC端媒体库帐号")
         binding.remoteData = remoteData
 
-        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, remoteData)
-
         setGroupMode(remoteData.remoteAnimeGrouping)
 
         // TV 端移除扫码入口，隐藏按钮并保留原实现注释
         binding.scanLl.isVisible = false
         binding.scanLl.setOnClickListener(null)
+
+        val autoSaveHelper =
+            StorageAutoSaveHelper(
+                coroutineScope = activity.lifecycleScope,
+                buildLibrary = { buildLibraryIfValid(remoteData, showToast = false) },
+                onSave = { saveStorage(it, showToast = false) },
+            )
+        registerAutoSaveHelper(autoSaveHelper)
+
+        PlayerTypeOverrideBinder.bind(
+            binding.playerTypeOverrideLayout,
+            remoteData,
+            onChanged = { autoSaveHelper.requestSave() },
+        )
+        autoSaveHelper.markSaved(buildLibraryIfValid(remoteData, showToast = false))
+
+        binding.addressEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.displayNameEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.secretEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
 
         /*
         binding.scanLl.setOnClickListener {
@@ -67,33 +86,20 @@ class RemoteStorageEditDialog(
          */
 
         binding.serverTestConnectTv.setOnClickListener {
-            if (checkParams(remoteData)) {
-                activity.testStorage(remoteData)
-            }
+            val testLibrary = buildLibraryIfValid(remoteData, showToast = true) ?: return@setOnClickListener
+            activity.testStorage(testLibrary)
         }
 
         binding.tvGroupByFile.setOnClickListener {
             remoteData.remoteAnimeGrouping = false
             setGroupMode(false)
+            autoSaveHelper.requestSave()
         }
 
         binding.tvGroupByAnime.setOnClickListener {
             remoteData.remoteAnimeGrouping = true
             setGroupMode(true)
-        }
-
-        setPositiveListener {
-            if (checkParams(remoteData)) {
-                if (remoteData.displayName.isEmpty()) {
-                    remoteData.displayName = "PC端媒体库"
-                }
-                remoteData.describe = remoteData.url
-                activity.addStorage(remoteData)
-            }
-        }
-
-        setNegativeListener {
-            activity.finish()
+            autoSaveHelper.requestSave()
         }
     }
 
@@ -107,27 +113,39 @@ class RemoteStorageEditDialog(
         }
     }
 
-    private fun checkParams(remoteData: MediaLibraryEntity): Boolean {
-        if (remoteData.url.isEmpty()) {
-            ToastCenter.showWarning("请填写服务器地址")
-            return false
+    private fun buildLibraryIfValid(
+        remoteData: MediaLibraryEntity,
+        showToast: Boolean,
+    ): MediaLibraryEntity? {
+        val url = remoteData.url.trim()
+        if (url.isEmpty()) {
+            if (showToast) {
+                ToastCenter.showWarning("请填写服务器地址")
+            }
+            return null
         }
 
-        if (!remoteData.url.endsWith("/")) {
-            remoteData.url = "${remoteData.url}/"
-        }
-
-        val serverUrl = remoteData.url
-        if (!serverUrl.startsWith("http://") && !serverUrl.startsWith("https://")) {
-            ToastCenter.showWarning("请填写服务器协议：http或https")
-            return false
+        val normalizedUrl = if (url.endsWith("/")) url else "$url/"
+        if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
+            if (showToast) {
+                ToastCenter.showWarning("请填写服务器协议：http或https")
+            }
+            return null
         }
 
         if (tokenRequired && remoteData.remoteSecret.isNullOrEmpty()) {
-            ToastCenter.showWarning("请填写API密钥")
-            return false
+            if (showToast) {
+                ToastCenter.showWarning("请填写API密钥")
+            }
+            return null
         }
-        return true
+
+        val displayName = remoteData.displayName.ifEmpty { "PC端媒体库" }
+        return remoteData.copy(
+            displayName = displayName,
+            url = normalizedUrl,
+            describe = normalizedUrl,
+        )
     }
 
     private fun setGroupMode(isGroupByAnime: Boolean) {

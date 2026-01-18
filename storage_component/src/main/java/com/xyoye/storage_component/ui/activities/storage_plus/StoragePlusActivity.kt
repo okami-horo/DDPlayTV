@@ -21,6 +21,7 @@ import com.xyoye.storage_component.ui.dialog.ScreencastStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.SmbStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.StorageEditDialog
 import com.xyoye.storage_component.ui.dialog.WebDavStorageEditDialog
+import kotlinx.coroutines.Job
 
 @Route(path = RouteTable.Stream.StoragePlus)
 class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePlusBinding>() {
@@ -66,9 +67,9 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
     }
 
     private fun initObserver() {
-        viewModel.exitLiveData.observe(this) {
+        viewModel.storageSavedLiveData.observe(this) {
+            editData = it
             setResult(RESULT_OK)
-            finish()
         }
 
         viewModel.testLiveData.observe(this) {
@@ -101,8 +102,15 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
         storageEditDialog = dialog
     }
 
-    fun addStorage(library: MediaLibraryEntity) {
-        viewModel.addStorage(editData, library)
+    fun addStorage(library: MediaLibraryEntity): Job {
+        return viewModel.addStorage(editData, library)
+    }
+
+    fun addStorage(
+        library: MediaLibraryEntity,
+        showToast: Boolean,
+    ): Job {
+        return viewModel.addStorage(editData, library, showToast)
     }
 
     fun testStorage(library: MediaLibraryEntity) {

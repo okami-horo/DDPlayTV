@@ -1,6 +1,7 @@
 package com.xyoye.storage_component.ui.dialog
 
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.config.PlayerActions
 import com.xyoye.common_component.database.DatabaseManager
@@ -24,6 +25,8 @@ class BaiduPanStorageEditDialog(
 ) : StorageEditDialog<DialogBaiduPanStorageBinding>(activity) {
     private lateinit var binding: DialogBaiduPanStorageBinding
     private lateinit var editLibrary: MediaLibraryEntity
+    private lateinit var autoSaveHelper: StorageAutoSaveHelper
+    private var allowAutoSave: Boolean = true
 
     override fun getChildLayoutId() = R.layout.dialog_baidu_pan_storage
 
@@ -41,24 +44,27 @@ class BaiduPanStorageEditDialog(
                 mediaType = MediaType.BAIDU_PAN_STORAGE,
             )
         binding.library = editLibrary
-        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, editLibrary)
+        autoSaveHelper =
+            StorageAutoSaveHelper(
+                coroutineScope = activity.lifecycleScope,
+                buildLibrary = { buildLibraryIfValid(showToast = false) },
+                onSave = { saveStorage(it) },
+            )
+        registerAutoSaveHelper(autoSaveHelper)
+
+        PlayerTypeOverrideBinder.bind(
+            binding.playerTypeOverrideLayout,
+            editLibrary,
+            onChanged = { autoSaveHelper.requestSave() },
+        )
+        binding.displayNameEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+
+        autoSaveHelper.markSaved(buildLibraryIfValid(showToast = false))
 
         binding.authActionTv.setOnClickListener { showLoginDialog() }
 
-        binding.disconnectTv.isVisible = isEditMode && editLibrary.id > 0
+        binding.disconnectTv.isVisible = (activity.editData?.id ?: editLibrary.id) > 0
         binding.disconnectTv.setOnClickListener { showDisconnectDialog() }
-
-        setPositiveListener {
-            if (editLibrary.displayName.isBlank()) {
-                editLibrary.displayName = "百度网盘"
-            }
-            editLibrary.url = editLibrary.url.trim().removeSuffix("/")
-            activity.addStorage(editLibrary)
-        }
-
-        setNegativeListener {
-            activity.finish()
-        }
 
         refreshAuthViews()
     }
@@ -68,7 +74,7 @@ class BaiduPanStorageEditDialog(
     }
 
     private fun showDisconnectDialog() {
-        val libraryId = editLibrary.id
+        val libraryId = activity.editData?.id ?: editLibrary.id
         if (libraryId <= 0) return
 
         val actions =
@@ -93,7 +99,7 @@ class BaiduPanStorageEditDialog(
     }
 
     private fun showDisconnectConfirmDialog(action: DisconnectAction) {
-        val libraryId = editLibrary.id
+        val libraryId = activity.editData?.id ?: editLibrary.id
         if (libraryId <= 0) return
 
         val deleteLibrary = action == DisconnectAction.CLEAR_AUTH_AND_DELETE_LIBRARY
@@ -134,6 +140,7 @@ class BaiduPanStorageEditDialog(
                         PlayerActions.sendExitPlayer(activity, libraryId)
 
                         if (deleteLibrary) {
+                            allowAutoSave = false
                             ToastCenter.showOriginalToast("已清除授权并删除媒体库")
                             dismiss()
                             activity.finish()
@@ -192,7 +199,14 @@ class BaiduPanStorageEditDialog(
                 }
 
                 ToastCenter.showOriginalToast("授权成功")
+                val saveJob = autoSaveHelper.flush()
                 refreshAuthViews()
+                if (saveJob != null) {
+                    activity.lifecycleScope.launch {
+                        saveJob.join()
+                        refreshAuthViews()
+                    }
+                }
             },
             onDismiss = { refreshAuthViews() },
         ).show()
@@ -218,10 +232,33 @@ class BaiduPanStorageEditDialog(
         binding.authActionTv.text = if (isAuthorized) "重新授权" else "扫码授权"
 
         binding.hintTv.isVisible = true
+
+        binding.disconnectTv.isVisible = (activity.editData?.id ?: editLibrary.id) > 0
     }
 
     private enum class DisconnectAction {
         CLEAR_AUTH,
         CLEAR_AUTH_AND_DELETE_LIBRARY
+    }
+
+    private fun buildLibraryIfValid(showToast: Boolean): MediaLibraryEntity? {
+        if (!allowAutoSave) {
+            return null
+        }
+
+        val url = editLibrary.url.trim().removeSuffix("/")
+        val isValid = Regex("^baidupan://uk/\\d+$").matches(url)
+        if (!isValid) {
+            if (showToast) {
+                ToastCenter.showWarning("保存失败，请先扫码授权")
+            }
+            return null
+        }
+
+        val displayName = editLibrary.displayName.trim().ifEmpty { "百度网盘" }
+        return editLibrary.copy(
+            displayName = displayName,
+            url = url,
+        )
     }
 }

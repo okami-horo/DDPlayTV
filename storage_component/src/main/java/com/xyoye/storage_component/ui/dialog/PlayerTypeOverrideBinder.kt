@@ -11,7 +11,8 @@ import com.xyoye.storage_component.databinding.LayoutPlayerTypeOverrideBinding
 object PlayerTypeOverrideBinder {
     fun bind(
         binding: LayoutPlayerTypeOverrideBinding,
-        library: MediaLibraryEntity
+        library: MediaLibraryEntity,
+        onChanged: (() -> Unit)? = null,
     ) {
         val (supportedPlayerTypes, preferredPlayerType) = resolvePolicy(library)
         val allowFollowGlobal = supportedPlayerTypes.size > 1
@@ -39,24 +40,28 @@ object PlayerTypeOverrideBinder {
             if (!allowFollowGlobal) return@setOnClickListener
             library.playerTypeOverride = 0
             render(binding, 0, allowFollowGlobal, supportedPlayerTypes, preferredPlayerType)
+            onChanged?.invoke()
         }
         binding.media3Tv.setOnClickListener {
             if (!supportedPlayerTypes.contains(PlayerType.TYPE_EXO_PLAYER)) return@setOnClickListener
             val value = PlayerType.TYPE_EXO_PLAYER.value
             library.playerTypeOverride = value
             render(binding, value, allowFollowGlobal, supportedPlayerTypes, preferredPlayerType)
+            onChanged?.invoke()
         }
         binding.vlcTv.setOnClickListener {
             if (!supportedPlayerTypes.contains(PlayerType.TYPE_VLC_PLAYER)) return@setOnClickListener
             val value = PlayerType.TYPE_VLC_PLAYER.value
             library.playerTypeOverride = value
             render(binding, value, allowFollowGlobal, supportedPlayerTypes, preferredPlayerType)
+            onChanged?.invoke()
         }
         binding.mpvTv.setOnClickListener {
             if (!supportedPlayerTypes.contains(PlayerType.TYPE_MPV_PLAYER)) return@setOnClickListener
             val value = PlayerType.TYPE_MPV_PLAYER.value
             library.playerTypeOverride = value
             render(binding, value, allowFollowGlobal, supportedPlayerTypes, preferredPlayerType)
+            onChanged?.invoke()
         }
     }
 

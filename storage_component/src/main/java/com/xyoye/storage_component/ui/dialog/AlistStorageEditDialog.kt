@@ -2,6 +2,8 @@ package com.xyoye.storage_component.ui.dialog
 
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
+import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -36,12 +38,29 @@ class AlistStorageEditDialog(
                 MediaType.ALSIT_STORAGE,
             )
         binding.library = editLibrary
-        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, editLibrary)
+        val autoSaveHelper =
+            StorageAutoSaveHelper(
+                coroutineScope = activity.lifecycleScope,
+                buildLibrary = { buildLibraryIfValid(editLibrary, showToast = false) },
+                onSave = { saveStorage(it, showToast = false) },
+            )
+        registerAutoSaveHelper(autoSaveHelper)
+
+        PlayerTypeOverrideBinder.bind(
+            binding.playerTypeOverrideLayout,
+            editLibrary,
+            onChanged = { autoSaveHelper.requestSave() },
+        )
+        autoSaveHelper.markSaved(buildLibraryIfValid(editLibrary, showToast = false))
+
+        binding.addressEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.displayNameEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.accountEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.passwordEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
 
         binding.serverTestConnectTv.setOnClickListener {
-            if (checkParams(editLibrary)) {
-                activity.testStorage(editLibrary)
-            }
+            val testLibrary = buildLibraryIfValid(editLibrary, showToast = true) ?: return@setOnClickListener
+            activity.testStorage(testLibrary)
         }
 
         binding.passwordToggleIv.setOnClickListener {
@@ -55,20 +74,6 @@ class AlistStorageEditDialog(
                     HideReturnsTransformationMethod.getInstance()
             }
         }
-
-        setPositiveListener {
-            if (checkParams(editLibrary)) {
-                if (editLibrary.displayName.isEmpty()) {
-                    editLibrary.displayName = "Alist媒体库"
-                }
-                editLibrary.describe = editLibrary.url
-                activity.addStorage(editLibrary)
-            }
-        }
-
-        setNegativeListener {
-            activity.finish()
-        }
     }
 
     override fun onTestResult(result: Boolean) {
@@ -81,28 +86,43 @@ class AlistStorageEditDialog(
         }
     }
 
-    private fun checkParams(serverData: MediaLibraryEntity): Boolean {
-        if (serverData.url.isEmpty()) {
-            ToastCenter.showWarning("请填写服务器地址")
-            return false
+    private fun buildLibraryIfValid(
+        serverData: MediaLibraryEntity,
+        showToast: Boolean,
+    ): MediaLibraryEntity? {
+        val url = serverData.url.trim()
+        if (url.isEmpty()) {
+            if (showToast) {
+                ToastCenter.showWarning("请填写服务器地址")
+            }
+            return null
         }
-        if (!serverData.url.endsWith("/")) {
-            serverData.url = "${serverData.url}/"
+        val normalizedUrl = if (url.endsWith("/")) url else "$url/"
+        if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
+            if (showToast) {
+                ToastCenter.showWarning("请填写服务器协议：http或https")
+            }
+            return null
         }
 
-        val serverUrl = serverData.url
-        if (!serverUrl.startsWith("http://") && !serverUrl.startsWith("https://")) {
-            ToastCenter.showWarning("请填写服务器协议：http或https")
-            return false
-        }
         if (serverData.account.isNullOrEmpty()) {
-            ToastCenter.showWarning("请填写帐号")
-            return false
+            if (showToast) {
+                ToastCenter.showWarning("请填写帐号")
+            }
+            return null
         }
         if (serverData.password.isNullOrEmpty()) {
-            ToastCenter.showWarning("请填写密码")
-            return false
+            if (showToast) {
+                ToastCenter.showWarning("请填写密码")
+            }
+            return null
         }
-        return true
+
+        val displayName = serverData.displayName.ifEmpty { "Alist媒体库" }
+        return serverData.copy(
+            displayName = displayName,
+            url = normalizedUrl,
+            describe = normalizedUrl,
+        )
     }
 }
