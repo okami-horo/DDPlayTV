@@ -4,6 +4,7 @@ import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.database.DatabaseManager
 import com.xyoye.common_component.extension.setTextColorRes
@@ -35,6 +36,7 @@ class Open115StorageEditDialog(
 
     private lateinit var editLibrary: MediaLibraryEntity
     private var lastResolved: ResolvedAuth? = null
+    private lateinit var autoSaveHelper: StorageAutoSaveHelper
 
     override fun getChildLayoutId() = R.layout.dialog_open115_storage
 
@@ -62,7 +64,21 @@ class Open115StorageEditDialog(
             )
 
         binding.library = editLibrary
-        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, editLibrary)
+        autoSaveHelper =
+            StorageAutoSaveHelper(
+                coroutineScope = activity.lifecycleScope,
+                buildLibrary = { buildLibraryForAutoSave() },
+                onSave = { saveStorage(it, showToast = false) },
+            )
+        registerAutoSaveHelper(autoSaveHelper)
+
+        PlayerTypeOverrideBinder.bind(
+            binding.playerTypeOverrideLayout,
+            editLibrary,
+            onChanged = { autoSaveHelper.requestSave() },
+        )
+        binding.displayNameEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        autoSaveHelper.markSaved(buildLibraryForAutoSave())
 
         bindTokenToggle(binding.accessTokenEt, binding.accessTokenToggleIv)
         bindTokenToggle(binding.refreshTokenEt, binding.refreshTokenToggleIv)
@@ -75,11 +91,8 @@ class Open115StorageEditDialog(
 
         binding.serverTestConnectTv.setOnClickListener { testConnection() }
 
-        binding.disconnectTv.isVisible = isEditMode && editLibrary.id > 0
+        binding.disconnectTv.isVisible = (activity.editData?.id ?: editLibrary.id) > 0
         binding.disconnectTv.setOnClickListener { showDisconnectConfirmDialog() }
-
-        setPositiveListener { saveLibrary() }
-        setNegativeListener { activity.finish() }
 
         refreshTestStatus(null)
     }
@@ -152,116 +165,100 @@ class Open115StorageEditDialog(
                     "uid" to resolved.uid,
                 ),
             )
+            saveResolved(resolved)
         }
     }
 
-    private fun saveLibrary() {
-        val (accessToken, refreshToken) = readTokensOrWarn() ?: return
-
-        LogFacade.d(
-            LogModule.STORAGE,
-            LOG_TAG,
-            "save library",
-            mapOf(
-                "isEditMode" to (originalLibrary != null).toString(),
-                "libraryId" to editLibrary.id.toString(),
-                "accessToken" to Open115Headers.redactToken(accessToken),
-                "refreshToken" to Open115Headers.redactToken(refreshToken),
-            ),
-        )
-        refreshTestStatus(TestStatus.Testing)
-        activity.lifecycleScope.launch {
-            val resolved =
-                lastResolved
-                    ?.takeIf { it.accessToken == accessToken && it.refreshToken == refreshToken }
-                    ?: withContext(Dispatchers.IO) {
-                        runCatching { resolveAuth(accessToken, refreshToken) }.getOrNull()
-                    }
-
-            if (resolved == null) {
-                lastResolved = null
-                refreshTestStatus(TestStatus.Failed)
-                LogFacade.w(
-                    LogModule.STORAGE,
-                    LOG_TAG,
-                    "save library failed: resolve auth null",
-                    mapOf(
-                        "isEditMode" to (originalLibrary != null).toString(),
-                        "libraryId" to editLibrary.id.toString(),
-                    ),
-                )
-                ToastCenter.showError("保存失败，token 校验未通过")
-                return@launch
-            }
-
-            val url = buildLibraryUrl(resolved.uid)
-            val duplicate =
-                withContext(Dispatchers.IO) {
-                    DatabaseManager.instance.getMediaLibraryDao().getByUrl(url, MediaType.OPEN_115_STORAGE)
-                }
-            if (duplicate != null && duplicate.id != editLibrary.id) {
-                refreshTestStatus(TestStatus.Success)
-                LogFacade.w(
-                    LogModule.STORAGE,
-                    LOG_TAG,
-                    "duplicate library detected",
-                    mapOf(
-                        "libraryId" to editLibrary.id.toString(),
-                        "duplicateId" to duplicate.id.toString(),
-                        "uid" to resolved.uid,
-                    ),
-                )
-                ToastCenter.showError("保存失败，该账号已存在，请使用编辑更新 token")
-                return@launch
-            }
-
-            val previousKey = originalLibrary?.let { Open115AuthStore.storageKey(it) }
-
-            editLibrary.mediaType = MediaType.OPEN_115_STORAGE
-            editLibrary.url = url
-            editLibrary.account = null
-            editLibrary.password = null
-            editLibrary.describe = null
-            if (editLibrary.displayName.isBlank()) {
-                editLibrary.displayName = resolved.userName?.takeIf { it.isNotBlank() } ?: "115 Open"
-            }
-
-            val storageKey = Open115AuthStore.storageKey(editLibrary)
+    private suspend fun saveResolved(resolved: ResolvedAuth) {
+        val url = buildLibraryUrl(resolved.uid)
+        val currentId = activity.editData?.id ?: editLibrary.id
+        val duplicate =
             withContext(Dispatchers.IO) {
-                if (!previousKey.isNullOrBlank() && previousKey != storageKey) {
-                    Open115AuthStore.clear(previousKey)
-                }
-
-                Open115AuthStore.writeTokens(
-                    storageKey = storageKey,
-                    accessToken = resolved.accessToken,
-                    expiresAtMs = resolved.expiresAtMs,
-                    refreshToken = resolved.refreshToken
-                )
-                Open115AuthStore.writeProfile(
-                    storageKey = storageKey,
-                    uid = resolved.uid,
-                    userName = resolved.userName,
-                    avatarUrl = resolved.avatarUrl
-                )
+                DatabaseManager.instance.getMediaLibraryDao().getByUrl(url, MediaType.OPEN_115_STORAGE)
             }
-
-            LogFacade.i(
+        if (duplicate != null && duplicate.id != currentId) {
+            LogFacade.w(
                 LogModule.STORAGE,
                 LOG_TAG,
-                "save library success",
+                "duplicate library detected",
                 mapOf(
-                    "libraryId" to editLibrary.id.toString(),
-                    "storageKey" to storageKey,
+                    "libraryId" to currentId.toString(),
+                    "duplicateId" to duplicate.id.toString(),
                     "uid" to resolved.uid,
                 ),
             )
-            activity.addStorage(editLibrary)
+            ToastCenter.showError("保存失败，该账号已存在，请使用编辑更新 token")
+            return
         }
+
+        val previousKey = originalLibrary?.let { Open115AuthStore.storageKey(it) }
+
+        editLibrary.mediaType = MediaType.OPEN_115_STORAGE
+        editLibrary.url = url
+        editLibrary.account = null
+        editLibrary.password = null
+        editLibrary.describe = null
+        if (editLibrary.displayName.isBlank()) {
+            editLibrary.displayName = resolved.userName?.takeIf { it.isNotBlank() } ?: "115 Open"
+        }
+
+        val storageKey = Open115AuthStore.storageKey(editLibrary)
+        withContext(Dispatchers.IO) {
+            if (!previousKey.isNullOrBlank() && previousKey != storageKey) {
+                Open115AuthStore.clear(previousKey)
+            }
+
+            Open115AuthStore.writeTokens(
+                storageKey = storageKey,
+                accessToken = resolved.accessToken,
+                expiresAtMs = resolved.expiresAtMs,
+                refreshToken = resolved.refreshToken
+            )
+            Open115AuthStore.writeProfile(
+                storageKey = storageKey,
+                uid = resolved.uid,
+                userName = resolved.userName,
+                avatarUrl = resolved.avatarUrl
+            )
+        }
+
+        LogFacade.i(
+            LogModule.STORAGE,
+            LOG_TAG,
+            "save library success",
+            mapOf(
+                "libraryId" to editLibrary.id.toString(),
+                "storageKey" to storageKey,
+                "uid" to resolved.uid,
+            ),
+        )
+        val saveJob = saveStorage(editLibrary)
+        saveJob.join()
+        binding.disconnectTv.isVisible = (activity.editData?.id ?: editLibrary.id) > 0
+        autoSaveHelper.markSaved(buildLibraryForAutoSave())
+    }
+
+    private fun buildLibraryForAutoSave(): MediaLibraryEntity? {
+        val currentId = activity.editData?.id ?: editLibrary.id
+        if (currentId <= 0) {
+            return null
+        }
+
+        val url = editLibrary.url.trim().removeSuffix("/")
+        val isValid = Regex("^115open://uid/\\d+$").matches(url)
+        if (!isValid) {
+            return null
+        }
+
+        val displayName = editLibrary.displayName.trim().ifEmpty { "115 Open" }
+        return editLibrary.copy(
+            displayName = displayName,
+            url = url,
+        )
     }
 
     private fun showDisconnectConfirmDialog() {
-        val libraryId = editLibrary.id
+        val libraryId = activity.editData?.id ?: editLibrary.id
         if (libraryId <= 0) return
 
         CommonDialog

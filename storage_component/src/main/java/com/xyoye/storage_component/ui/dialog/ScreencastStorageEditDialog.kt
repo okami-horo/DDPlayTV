@@ -33,6 +33,7 @@ class ScreencastStorageEditDialog(
 ) : StorageEditDialog<DialogScreencastConnectBinding>(activity) {
     private lateinit var binding: DialogScreencastConnectBinding
     private var isEditStorage: Boolean = false
+    private lateinit var serverData: MediaLibraryEntity
 
     private val scanDevices = mutableListOf<UDPDeviceBean>()
     private var scanDeviceJob: Job? = null
@@ -59,9 +60,16 @@ class ScreencastStorageEditDialog(
                 "",
                 MediaType.SCREEN_CAST,
             )
+        this.serverData = serverData
         binding.serverData = serverData
         PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, serverData)
-        binding.ipEt.setText(serverData.url.split(":").getOrNull(0))
+        val host =
+            serverData.screencastAddress.ifBlank {
+                serverData.url
+                    .substringAfter("://", serverData.url)
+                    .substringBefore(":", "")
+            }
+        binding.ipEt.setText(host)
 
         initListener()
 
@@ -75,18 +83,6 @@ class ScreencastStorageEditDialog(
     }
 
     private fun initListener() {
-        setPositiveListener {
-            val displayName = binding.displayNameEt.text.toString()
-            val host = binding.ipEt.text.toString()
-            val port = binding.portEt.text.toString()
-            val password = binding.passwordEt.text.toString()
-            connect(host, port, displayName, password)
-        }
-
-        setNegativeListener {
-            activity.finish()
-        }
-
         binding.tvAutoConnect.setOnClickListener {
             switchStyle(editMode = false)
         }
@@ -112,13 +108,8 @@ class ScreencastStorageEditDialog(
         }
          */
 
-        binding.passwordConnectTv.setOnClickListener {
-            switchStyle(needPassword = true)
-        }
-
-        binding.directConnectTv.setOnClickListener {
-            switchStyle(needPassword = false)
-        }
+        binding.passwordConnectTv.setOnClickListener { connectByInputMode(needPassword = true) }
+        binding.directConnectTv.setOnClickListener { connectByInputMode(needPassword = false) }
 
         binding.passwordToggleIv.setOnClickListener {
             if (binding.passwordToggleIv.isSelected) {
@@ -138,7 +129,7 @@ class ScreencastStorageEditDialog(
             return
         }
         if (result) {
-            activity.addStorage(testLibrary!!)
+            saveStorage(testLibrary!!)
         }
     }
 
@@ -198,7 +189,6 @@ class ScreencastStorageEditDialog(
 
         binding.tvInputConnect.isSelected = editMode
         binding.inputLl.isVisible = editMode
-        rootViewBinding.positiveBt.isVisible = editMode
 
         binding.passwordEt.isEnabled = needPassword
         binding.passwordToggleIv.isEnabled = needPassword
@@ -209,6 +199,15 @@ class ScreencastStorageEditDialog(
         if (needPassword.not()) {
             binding.passwordEt.setText("")
         }
+    }
+
+    private fun connectByInputMode(needPassword: Boolean) {
+        switchStyle(editMode = true, needPassword = needPassword)
+        val displayName = binding.displayNameEt.text.toString()
+        val host = binding.ipEt.text.toString()
+        val port = binding.portEt.text.toString()
+        val password = if (needPassword) binding.passwordEt.text.toString() else ""
+        connect(host, port, displayName, password)
     }
 
     /**
@@ -271,7 +270,7 @@ class ScreencastStorageEditDialog(
                 port = device.httpPort,
                 password = password,
                 mediaType = MediaType.SCREEN_CAST,
-            )
+            ).apply { playerTypeOverride = serverData.playerTypeOverride }
         testLibrary = library
         activity.testStorage(library)
     }

@@ -3,6 +3,8 @@ package com.xyoye.storage_component.ui.dialog
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import androidx.core.view.isGone
+import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -42,7 +44,6 @@ class FTPStorageEditDialog(
                 21,
             )
         binding.serverData = serverData
-        PlayerTypeOverrideBinder.bind(binding.playerTypeOverrideLayout, serverData)
 
         // 编辑模式下，选中匿名
         if (isEditStorage && originalStorage!!.isAnonymous) {
@@ -52,30 +53,55 @@ class FTPStorageEditDialog(
         }
         setActive(serverData.isActiveFTP)
 
+        val autoSaveHelper =
+            StorageAutoSaveHelper(
+                coroutineScope = activity.lifecycleScope,
+                buildLibrary = { buildLibraryIfValid(serverData, showToast = false) },
+                onSave = { saveStorage(it, showToast = false) },
+            )
+        registerAutoSaveHelper(autoSaveHelper)
+
+        PlayerTypeOverrideBinder.bind(
+            binding.playerTypeOverrideLayout,
+            serverData,
+            onChanged = { autoSaveHelper.requestSave() },
+        )
+        autoSaveHelper.markSaved(buildLibraryIfValid(serverData, showToast = false))
+
+        binding.addressEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.portEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.displayNameEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.encodingEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.accountEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+        binding.passwordEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
+
         binding.serverTestConnectTv.setOnClickListener {
-            if (checkParams(serverData)) {
-                activity.testStorage(serverData)
-            }
+            val testLibrary = buildLibraryIfValid(serverData, showToast = true) ?: return@setOnClickListener
+            activity.testStorage(testLibrary)
         }
 
         binding.anonymousTv.setOnClickListener {
             serverData.isAnonymous = true
             setAnonymous(true)
+            autoSaveHelper.requestSave()
         }
 
         binding.accountTv.setOnClickListener {
             serverData.isAnonymous = false
             setAnonymous(false)
+            autoSaveHelper.requestSave()
         }
 
         binding.activeTv.setOnClickListener {
             serverData.isActiveFTP = true
             setActive(true)
+            autoSaveHelper.requestSave()
         }
 
         binding.passiveTv.setOnClickListener {
             serverData.isActiveFTP = false
             setActive(false)
+            autoSaveHelper.requestSave()
         }
 
         binding.passwordToggleIv.setOnClickListener {
@@ -89,26 +115,6 @@ class FTPStorageEditDialog(
                     HideReturnsTransformationMethod.getInstance()
             }
         }
-
-        setPositiveListener {
-            if (checkParams(serverData)) {
-                if (serverData.displayName.isEmpty()) {
-                    serverData.displayName = "FTP媒体库"
-                }
-                serverData.url =
-                    if (serverData.ftpAddress.contains("//")) {
-                        "${serverData.ftpAddress}:${serverData.port}"
-                    } else {
-                        "ftp://${serverData.ftpAddress}:${serverData.port}"
-                    }
-
-                activity.addStorage(serverData)
-            }
-        }
-
-        setNegativeListener {
-            activity.finish()
-        }
     }
 
     override fun onTestResult(result: Boolean) {
@@ -121,33 +127,64 @@ class FTPStorageEditDialog(
         }
     }
 
-    private fun checkParams(serverData: MediaLibraryEntity): Boolean {
-        if (serverData.ftpAddress.isEmpty()) {
-            ToastCenter.showWarning("请填写FTP地址")
-            return false
+    private fun buildLibraryIfValid(
+        serverData: MediaLibraryEntity,
+        showToast: Boolean,
+    ): MediaLibraryEntity? {
+        val address = serverData.ftpAddress.trim()
+        if (address.isEmpty()) {
+            if (showToast) {
+                ToastCenter.showWarning("请填写FTP地址")
+            }
+            return null
         }
 
-        if (serverData.ftpEncoding.isEmpty()) {
-            ToastCenter.showWarning("请填写编码格式")
-            return false
+        val encoding = serverData.ftpEncoding.trim()
+        if (encoding.isEmpty()) {
+            if (showToast) {
+                ToastCenter.showWarning("请填写编码格式")
+            }
+            return null
         }
 
-        if (!Charset.isSupported(serverData.ftpEncoding)) {
-            ToastCenter.showWarning("不支持的编码格式")
-            return false
+        if (!Charset.isSupported(encoding)) {
+            if (showToast) {
+                ToastCenter.showWarning("不支持的编码格式")
+            }
+            return null
         }
 
         if (!serverData.isAnonymous) {
             if (serverData.account.isNullOrEmpty()) {
-                ToastCenter.showWarning("请填写帐号")
-                return false
+                if (showToast) {
+                    ToastCenter.showWarning("请填写帐号")
+                }
+                return null
             }
             if (serverData.password.isNullOrEmpty()) {
-                ToastCenter.showWarning("请填写密码")
-                return false
+                if (showToast) {
+                    ToastCenter.showWarning("请填写密码")
+                }
+                return null
             }
         }
-        return true
+
+        val port = serverData.port.takeIf { it > 0 } ?: 21
+        val displayName = serverData.displayName.ifEmpty { "FTP媒体库" }
+        val url =
+            if (address.contains("//")) {
+                "$address:$port"
+            } else {
+                "ftp://$address:$port"
+            }
+
+        return serverData.copy(
+            displayName = displayName,
+            url = url,
+            port = port,
+            ftpAddress = address,
+            ftpEncoding = encoding,
+        )
     }
 
     private fun setAnonymous(isAnonymous: Boolean) {
