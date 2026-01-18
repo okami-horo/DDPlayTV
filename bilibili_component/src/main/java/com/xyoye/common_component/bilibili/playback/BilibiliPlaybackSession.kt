@@ -15,6 +15,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliDashData
 import com.xyoye.data_component.data.bilibili.BilibiliDashMediaData
 import com.xyoye.data_component.data.bilibili.BilibiliDurlData
 import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
+import com.xyoye.data_component.enums.PlayerType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -27,7 +28,8 @@ class BilibiliPlaybackSession(
     val uniqueKey: String,
     private val storageKey: String,
     private val repository: BilibiliRepository,
-    private val key: BilibiliKeys.Key
+    private val key: BilibiliKeys.Key,
+    private val playerType: PlayerType
 ) {
     data class AudioOption(
         val id: Int,
@@ -36,6 +38,7 @@ class BilibiliPlaybackSession(
 
     data class Snapshot(
         val playMode: BilibiliPlayMode,
+        val playModeOptions: List<BilibiliPlayMode>,
         val dashAvailable: Boolean,
         val selectedQualityQn: Int,
         val selectedVideoCodec: BilibiliVideoCodec,
@@ -80,7 +83,7 @@ class BilibiliPlaybackSession(
 
     private var lastPositionMs: Long = 0
 
-    private var preferences: BilibiliPlaybackPreferences = BilibiliPlaybackPreferencesStore.read(storageKey)
+    private var preferences: BilibiliPlaybackPreferences = coercePreferencesForPlayer(BilibiliPlaybackPreferencesStore.read(storageKey))
     private var playurl: BilibiliPlayurlData? = null
     private var dash: BilibiliDashData? = null
     private var durl: List<BilibiliDurlData> = emptyList()
@@ -110,7 +113,7 @@ class BilibiliPlaybackSession(
 
     suspend fun prepare(): Result<String> =
         runCatching {
-            preferences = BilibiliPlaybackPreferencesStore.read(storageKey)
+            preferences = coercePreferencesForPlayer(BilibiliPlaybackPreferencesStore.read(storageKey))
             ensureStreams(forceRefresh = true)
             buildPlayableOrThrow()
         }
@@ -157,13 +160,13 @@ class BilibiliPlaybackSession(
             val latest = BilibiliPlaybackPreferencesStore.read(storageKey)
             val updated =
                 latest.copy(
-                    playMode = update.playMode ?: latest.playMode,
+                    playMode = if (playerType == PlayerType.TYPE_MPV_PLAYER) latest.playMode else update.playMode ?: latest.playMode,
                     preferredQualityQn = update.qualityQn ?: latest.preferredQualityQn,
                     preferredVideoCodec = update.videoCodec ?: latest.preferredVideoCodec,
                     preferredAudioQualityId = update.audioQualityId ?: latest.preferredAudioQualityId,
                 )
             BilibiliPlaybackPreferencesStore.write(storageKey, updated)
-            preferences = updated
+            preferences = coercePreferencesForPlayer(updated)
 
             if (playurl == null) {
                 ensureStreams(forceRefresh = true)
@@ -592,6 +595,7 @@ class BilibiliPlaybackSession(
         snapshot =
             Snapshot(
                 playMode = preferences.playMode,
+                playModeOptions = playModeOptionsForPlayer(),
                 dashAvailable = dashAvailable,
                 selectedQualityQn = selectedQualityQn,
                 selectedVideoCodec = selectedVideoCodec,
@@ -602,4 +606,18 @@ class BilibiliPlaybackSession(
                 lastPositionMs = lastPositionMs,
             )
     }
+
+    private fun playModeOptionsForPlayer(): List<BilibiliPlayMode> =
+        if (playerType == PlayerType.TYPE_MPV_PLAYER) {
+            listOf(BilibiliPlayMode.MP4)
+        } else {
+            BilibiliPlayMode.entries
+        }
+
+    private fun coercePreferencesForPlayer(preferences: BilibiliPlaybackPreferences): BilibiliPlaybackPreferences =
+        if (playerType == PlayerType.TYPE_MPV_PLAYER && preferences.playMode != BilibiliPlayMode.MP4) {
+            preferences.copy(playMode = BilibiliPlayMode.MP4)
+        } else {
+            preferences
+        }
 }

@@ -278,7 +278,7 @@ class BilibiliPlaybackAddon(
                         settingId = SETTING_ID_PLAY_MODE,
                         title = "播放模式",
                         options =
-                            BilibiliPlayMode.entries.map { mode ->
+                            snapshot.playModeOptions.map { mode ->
                                 PlaybackSettingSpec.Option(
                                     optionId = mode.name,
                                     label = mode.label,

@@ -9,6 +9,7 @@ import com.xyoye.common_component.bilibili.playback.BilibiliLivePlaybackSessionS
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSessionStore
 import com.xyoye.common_component.bilibili.repository.BilibiliRepository
+import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.PagedStorage
@@ -16,6 +17,8 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.BilibiliStorageFile
 import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.data_component.bean.PlaybackProfile
+import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursor
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
 import com.xyoye.data_component.data.bilibili.BilibiliLiveFollowItem
@@ -504,7 +507,20 @@ class BilibiliStorage(
         }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String? {
+    override suspend fun createPlayUrl(file: StorageFile): String? =
+        createPlayUrl(
+            file = file,
+            profile =
+                PlaybackProfile(
+                    playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
+                    source = PlaybackProfileSource.GLOBAL,
+                ),
+        )
+
+    override suspend fun createPlayUrl(
+        file: StorageFile,
+        profile: PlaybackProfile
+    ): String? {
         val parsed = BilibiliKeys.parse(file.uniqueKey()) ?: return null
         try {
             if (parsed is BilibiliKeys.LiveKey) {
@@ -530,6 +546,7 @@ class BilibiliStorage(
                     storageKey = storageKey,
                     repository = repository,
                     key = parsed,
+                    playerType = profile.playerType,
                 )
             BilibiliPlaybackSessionStore.put(session)
             return session
