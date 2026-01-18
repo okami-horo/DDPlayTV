@@ -772,41 +772,41 @@ void eventLoop(MpvSession* session) {
                     break;
                 }
                 if (prop->format == MPV_FORMAT_STRING && strcmp(prop->name, "sub-text/ass-full") == 0) {
-                    const char* value = static_cast<char*>(prop->data);
+                    const char* value = nullptr;
+                    if (prop->data != nullptr) {
+                        value = *static_cast<const char**>(prop->data);
+                    }
                     if (value != nullptr) {
                         std::string copy = value;
                         dispatchEvent(env, session->event_callback, kEventSubtitleAssFull, 0, 0, copy.c_str());
                     } else {
                         dispatchEvent(env, session->event_callback, kEventSubtitleAssFull, 0, 0, nullptr);
                     }
-                    if (prop->data != nullptr) {
-                        mpv_free(prop->data);
-                    }
                     break;
                 }
                 if (prop->format == MPV_FORMAT_STRING && strcmp(prop->name, "sub-ass-extradata") == 0) {
-                    const char* value = static_cast<char*>(prop->data);
+                    const char* value = nullptr;
+                    if (prop->data != nullptr) {
+                        value = *static_cast<const char**>(prop->data);
+                    }
                     if (value != nullptr) {
                         std::string copy = value;
                         dispatchEvent(env, session->event_callback, kEventSubtitleAssExtradata, 0, 0, copy.c_str());
                     } else {
                         dispatchEvent(env, session->event_callback, kEventSubtitleAssExtradata, 0, 0, nullptr);
                     }
-                    if (prop->data != nullptr) {
-                        mpv_free(prop->data);
-                    }
                     break;
                 }
                 if (prop->format == MPV_FORMAT_STRING && strcmp(prop->name, "sid") == 0) {
-                    const char* value = static_cast<char*>(prop->data);
+                    const char* value = nullptr;
+                    if (prop->data != nullptr) {
+                        value = *static_cast<const char**>(prop->data);
+                    }
                     if (value != nullptr) {
                         std::string copy = value;
                         dispatchEvent(env, session->event_callback, kEventSubtitleSid, 0, 0, copy.c_str());
                     } else {
                         dispatchEvent(env, session->event_callback, kEventSubtitleSid, 0, 0, nullptr);
-                    }
-                    if (prop->data != nullptr) {
-                        mpv_free(prop->data);
                     }
                     break;
                 }
