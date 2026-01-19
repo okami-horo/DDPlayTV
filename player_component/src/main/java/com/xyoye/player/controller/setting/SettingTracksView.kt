@@ -229,15 +229,7 @@ class SettingTracksView
          * 刷新轨道列表
          */
         private fun refreshTracks() {
-            val realTracks = mControlWrapper.getTracks(mTrackType)
-            // 轨道列表不为空，但所有轨道都未选中，则视为禁用轨道
-            val disabled = realTracks.isNotEmpty() && realTracks.all { it.selected.not() }
-
             tracks.clear()
-            // 当轨道列表不为空时，添加禁用轨道
-            if (realTracks.isNotEmpty() && mTrackType != TrackType.VIDEO) {
-                tracks.add(VideoTrackBean.disable(mTrackType, disabled))
-            }
             tracks.addAll(mControlWrapper.getTracks(mTrackType))
             viewBinding.rvTrack.setData(tracks)
 

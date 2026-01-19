@@ -464,24 +464,17 @@ class MpvVideoPlayer(
 
     override fun getTracks(type: TrackType): List<VideoTrackBean> {
         if (!isPrepared) return emptyList()
-        val tracks =
-            nativeBridge
-                .listTracks()
-                .filter { it.type == type }
-                .map {
-                    VideoTrackBean.internal(
-                        id = "${it.nativeType}:${it.id}",
-                        name = it.title,
-                        type = type,
-                        selected = it.selected,
-                    )
-                }
-        if (type != TrackType.SUBTITLE) {
-            return tracks
-        }
-        val hasSelected = tracks.any { it.selected }
-        val disableTrack = VideoTrackBean.disable(type, selected = !hasSelected)
-        return listOf(disableTrack) + tracks
+        return nativeBridge
+            .listTracks()
+            .filter { it.type == type }
+            .map {
+                VideoTrackBean.internal(
+                    id = "${it.nativeType}:${it.id}",
+                    name = it.title,
+                    type = type,
+                    selected = it.selected
+                )
+            }
     }
 
     override fun selectTrack(track: VideoTrackBean) {

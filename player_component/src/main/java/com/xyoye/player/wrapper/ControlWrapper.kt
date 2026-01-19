@@ -143,17 +143,29 @@ class ControlWrapper(
     }
 
     override fun getTracks(type: TrackType): List<VideoTrackBean> {
-        // 如果视频播放器支持添加轨道，则直接获取播放器的轨道
-        if (mVideoPlayer.supportAddTrack(type)) {
-            return mVideoPlayer.getTracks(type)
-        }
+        val tracks =
+            if (mVideoPlayer.supportAddTrack(type)) {
+                // 如果视频播放器支持添加轨道，则直接获取播放器的轨道
+                mVideoPlayer.getTracks(type)
+            } else {
+                // 获取播放器的轨道和控制器的轨道
+                mVideoPlayer
+                    .getTracks(type)
+                    .toMutableList()
+                    .apply {
+                        if (type == TrackType.SUBTITLE) {
+                            addAll(mSubtitleController.getTracks(type))
+                        } else if (type == TrackType.DANMU) {
+                            addAll(mDanmuController.getTracks(type))
+                        }
+                    }
+            }
 
-        // 获取播放器的轨道和控制器的轨道
-        val tracks = mVideoPlayer.getTracks(type).toMutableList()
-        if (type == TrackType.SUBTITLE) {
-            tracks.addAll(mSubtitleController.getTracks(type))
-        } else if (type == TrackType.DANMU) {
-            tracks.addAll(mDanmuController.getTracks(type))
+        // 当轨道列表不为空时（且不是视频轨），添加“禁用”轨道用于显式取消选择
+        if (type != TrackType.VIDEO && tracks.isNotEmpty()) {
+            val hasSelected = tracks.any { it.selected }
+            val disableTrack = VideoTrackBean.disable(type = type, selected = !hasSelected)
+            return listOf(disableTrack) + tracks
         }
         return tracks
     }
