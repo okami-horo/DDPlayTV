@@ -56,7 +56,7 @@
 
 | 选项 | 本项目设置值/来源 | 含义 | 备注（项目语义） |
 | --- | --- | --- | --- |
-| `vo` | `gpu` / `gpu-next` / `mediacodec_embed`（播放器设置 `mpv_video_output`） | 选择视频输出后端 | UI：`gpu（默认）`/`gpu-next（实验）`/`mediacodec_embed（系统硬件渲染）`；当选择 `mediacodec_embed` 时，mpv 自带字幕/OSD 不可用，项目改用自研 libass 管线渲染软字幕 |
+| `vo` | `gpu` / `gpu-next` / `mediacodec_embed`（播放器设置 `mpv_video_output`） | 选择视频输出后端 | UI：`gpu（默认）`/`gpu-next（实验）`/`mediacodec_embed（Android embed，系统硬件渲染，字幕由自研 libass 渲染）`；注意：`mediacodec_embed` 下 mpv 自带字幕/OSD 不可用，项目使用自研 libass 管线叠加渲染字幕 |
 | `android-surface-size` | `${width}x${height}` | 设置 Android `gpu-context` 渲染 surface 的尺寸 | 旋转/尺寸变化时需要更新 |
 | `user-agent` | 来自请求头或默认 `"libmpv-android"` | HTTP 流媒体请求使用的 UA | 仅对 `http/https` 注入 |
 | `http-header-fields` | 来自 `setDataSource()` 的 header map | 为 HTTP 请求追加自定义 Header 字段 | 用于鉴权/Referer/Cookie 等（按需传入） |
