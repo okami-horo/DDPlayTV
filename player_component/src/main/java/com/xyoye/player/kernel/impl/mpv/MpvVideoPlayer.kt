@@ -28,6 +28,11 @@ class MpvVideoPlayer(
     private val context: Context
 ) : AbstractVideoPlayer(),
     SubtitleKernelBridge {
+    private data class PendingExternalTrack(
+        val type: TrackType,
+        val path: String,
+    )
+
     private val appContext: Context = context.applicationContext
     private val nativeBridge = MpvNativeBridge()
     private var dataSource: String? = null
@@ -45,6 +50,7 @@ class MpvVideoPlayer(
     private var initializationError: Exception? = null
     private var anime4kMode: Int = Anime4kShaderManager.MODE_OFF
     private val embeddedSubtitleBridge = MpvEmbeddedSubtitleBridge()
+    private val pendingExternalTracks = mutableListOf<PendingExternalTrack>()
 
     private fun failInitialization(
         message: String,
@@ -99,6 +105,7 @@ class MpvVideoPlayer(
     ) {
         setAnime4kMode(Anime4kShaderManager.MODE_OFF)
         dataSource = path
+        pendingExternalTracks.clear()
         runCatching {
             val playServer = HttpPlayServer.getInstance()
             if (playServer.isServingUrl(path)) {
@@ -325,6 +332,7 @@ class MpvVideoPlayer(
         nativeBridge.stop()
         dataSource = null
         headers = emptyMap()
+        pendingExternalTracks.clear()
         isPrepared = false
         isPreparing = false
         isPlaying = false
@@ -335,6 +343,7 @@ class MpvVideoPlayer(
 
     override fun release() {
         embeddedSubtitleBridge.release()
+        pendingExternalTracks.clear()
         clearPlayerEventListener()
         stop()
         nativeBridge.clearEventListener()
@@ -429,7 +438,28 @@ class MpvVideoPlayer(
 
     override fun addTrack(track: VideoTrackBean): Boolean {
         val path = track.trackResource as? String ?: return false
-        return nativeBridge.addExternalTrack(track.type, path)
+        if (path.isBlank()) return false
+        val added = nativeBridge.addExternalTrack(track.type, path)
+        if (added) {
+            pendingExternalTracks.removeAll { it.type == track.type }
+            return true
+        }
+        if (isPrepared) {
+            LogFacade.w(
+                LogModule.PLAYER,
+                "MpvVideoPlayer",
+                "addExternalTrack failed: type=${track.type} path=$path reason=${nativeBridge.lastError().orEmpty()}",
+            )
+            return false
+        }
+        pendingExternalTracks.removeAll { it.type == track.type }
+        pendingExternalTracks.add(PendingExternalTrack(track.type, path))
+        LogFacade.d(
+            LogModule.PLAYER,
+            "MpvVideoPlayer",
+            "addExternalTrack deferred until prepared: type=${track.type} path=$path",
+        )
+        return true
     }
 
     override fun getTracks(type: TrackType): List<VideoTrackBean> {
@@ -553,11 +583,13 @@ class MpvVideoPlayer(
             is MpvNativeBridge.Event.Prepared -> {
                 isPrepared = true
                 isPreparing = false
+                flushPendingExternalTracks()
                 mPlayerEventListener.onPrepared()
             }
             is MpvNativeBridge.Event.RenderingStart -> {
                 isPlaying = true
                 refreshDecodeTypeFromNative()
+                flushPendingExternalTracks()
                 val path = dataSource
                 if (!path.isNullOrEmpty()) {
                     runCatching {
@@ -592,6 +624,25 @@ class MpvVideoPlayer(
                 if (canStartGpuSubtitlePipeline()) {
                     embeddedSubtitleBridge.onSid(event.value)
                 }
+            }
+        }
+    }
+
+    private fun flushPendingExternalTracks() {
+        if (!nativeBridge.isAvailable) return
+        if (!isPrepared) return
+        if (pendingExternalTracks.isEmpty()) return
+
+        val pending = pendingExternalTracks.toList()
+        pendingExternalTracks.clear()
+        pending.forEach { track ->
+            val added = nativeBridge.addExternalTrack(track.type, track.path)
+            if (!added) {
+                LogFacade.w(
+                    LogModule.PLAYER,
+                    "MpvVideoPlayer",
+                    "flushExternalTrack failed: type=${track.type} path=${track.path} reason=${nativeBridge.lastError().orEmpty()}",
+                )
             }
         }
     }
