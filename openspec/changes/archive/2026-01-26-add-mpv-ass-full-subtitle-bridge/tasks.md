@@ -39,7 +39,7 @@
 
 - [x] 4.1 运行单测：`./gradlew :player_component:testDebugUnitTest`
 - [x] 4.2 运行依赖治理校验：`./gradlew verifyModuleDependencies`（需确认输出尾部为 `BUILD SUCCESSFUL`）
-- [ ] 4.3 手工验收（建议准备一条含内封 ASS/SSA 的样例视频）：
+- [x] 4.3 手工验收（建议准备一条含内封 ASS/SSA 的样例视频）：
   - mpv + `vo=mediacodec_embed`：字幕可见、随播放更新
   - seek 前进/后退：字幕不残留、不重复
   - 切换字幕轨道 / 关闭字幕（`sid=no`）：立即清屏与恢复

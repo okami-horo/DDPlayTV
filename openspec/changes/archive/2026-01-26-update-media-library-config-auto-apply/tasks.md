@@ -26,7 +26,7 @@
 - [x] 4.1 编译验证：`./gradlew :storage_component:assembleDebug`（确认输出尾部为 `BUILD SUCCESSFUL`）
 - [x] 4.2 静态检查：`./gradlew lint`（或按仓库约定运行 `lintDebug`）
 - [x] 4.3 依赖治理校验：`./gradlew verifyModuleDependencies`（确认输出尾部为 `BUILD SUCCESSFUL`）
-- [ ] 4.4 手工验收（TV + 移动端）：
+- [x] 4.4 手工验收（TV + 移动端）：
   - 进入媒体库 → 长按存储源 → 编辑：修改后直接返回，重新进入仍保持修改
   - 新增存储源：输入未完成直接返回不产生记录；完成登录/测试后自动新增
   - Bilibili/BaiduPan/Open115：登录/授权/测试成功后不点确定也能生效并触发必要刷新

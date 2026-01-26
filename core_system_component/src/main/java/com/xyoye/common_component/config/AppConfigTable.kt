@@ -38,7 +38,7 @@ object AppConfigTable {
 
     // 深色模式状态
     @MMKVFiled
-    var darkMode: Int = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+    var darkMode: Int = AppCompatDelegate.MODE_NIGHT_YES
 
     // 常用目录1
     @MMKVFiled
