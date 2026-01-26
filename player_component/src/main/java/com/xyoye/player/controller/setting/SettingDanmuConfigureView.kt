@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import androidx.core.view.isVisible
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.utils.hideKeyboard
 import com.xyoye.data_component.enums.DanmakuLanguage
@@ -24,6 +25,7 @@ class SettingDanmuConfigureView(
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingDanmuConfigureBinding>(context, attrs, defStyleAttr) {
     private var settingMode = BaseDanmaku.TYPE_SCROLL_RL
+    private val isTvUiMode: Boolean = context.isTelevisionUiMode()
 
     init {
         initView()
@@ -68,6 +70,14 @@ class SettingDanmuConfigureView(
     }
 
     private fun initView() {
+        viewBinding.groupLineLimitTv.isVisible = isTvUiMode
+        viewBinding.groupLineLimitInput.isVisible = isTvUiMode.not()
+        if (isTvUiMode) {
+            // Defensive: even if a device/skin toggles visibility unexpectedly, avoid EditText focus traps.
+            viewBinding.etMaxLine.isFocusable = false
+            viewBinding.etMaxLine.isFocusableInTouchMode = false
+        }
+
         viewBinding.tvLanguageOrigin.setOnClickListener {
             updateLanguage(DanmakuLanguage.ORIGINAL)
             mControlWrapper.setLanguage(DanmakuLanguage.ORIGINAL)
@@ -118,6 +128,11 @@ class SettingDanmuConfigureView(
 
         viewBinding.switchDanmuEnable.setOnCheckedChangeListener { _, isChecked ->
             updateDanmuEnable(isChecked)
+        }
+
+        viewBinding.groupLineLimitTv.setOnClickListener {
+            // Keep DPAD-left/right as the primary interaction; click increments as a convenience.
+            stepTvMaxLine(+1)
         }
 
         viewBinding.tvLineNoLimit.setOnClickListener {
@@ -194,13 +209,7 @@ class SettingDanmuConfigureView(
         viewBinding.tvDanmuEnableTips.text = context.getString(R.string.tips_enable_scroll_danmu)
         viewBinding.groupScreenLimit.isVisible = true
         viewBinding.switchDanmuEnable.isChecked = PlayerInitializer.Danmu.mobileDanmu
-        if (PlayerInitializer.Danmu.maxScrollLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
-            viewBinding.tvLineNoLimit.isSelected = true
-            viewBinding.etMaxLine.setText("")
-        } else {
-            viewBinding.tvLineNoLimit.isSelected = false
-            viewBinding.etMaxLine.setText(PlayerInitializer.Danmu.maxScrollLine.toString())
-        }
+        applyMaxLineView(PlayerInitializer.Danmu.maxScrollLine)
 
         when (PlayerInitializer.Danmu.maxNum) {
             PlayerInitializer.Danmu.DEFAULT_MAX_NUM -> {
@@ -226,13 +235,7 @@ class SettingDanmuConfigureView(
         viewBinding.tvDanmuEnableTips.text = context.getString(R.string.tips_enable_top_danmu)
         viewBinding.groupScreenLimit.isVisible = false
         viewBinding.switchDanmuEnable.isChecked = PlayerInitializer.Danmu.topDanmu
-        if (PlayerInitializer.Danmu.maxTopLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
-            viewBinding.tvLineNoLimit.isSelected = true
-            viewBinding.etMaxLine.setText("")
-        } else {
-            viewBinding.tvLineNoLimit.isSelected = false
-            viewBinding.etMaxLine.setText(PlayerInitializer.Danmu.maxTopLine.toString())
-        }
+        applyMaxLineView(PlayerInitializer.Danmu.maxTopLine)
     }
 
     private fun applyBottomDanmuConfigure() {
@@ -240,13 +243,7 @@ class SettingDanmuConfigureView(
         viewBinding.tvDanmuEnableTips.text = context.getString(R.string.tips_enable_bottom_danmu)
         viewBinding.groupScreenLimit.isVisible = false
         viewBinding.switchDanmuEnable.isChecked = PlayerInitializer.Danmu.bottomDanmu
-        if (PlayerInitializer.Danmu.maxBottomLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
-            viewBinding.tvLineNoLimit.isSelected = true
-            viewBinding.etMaxLine.setText("")
-        } else {
-            viewBinding.tvLineNoLimit.isSelected = false
-            viewBinding.etMaxLine.setText(PlayerInitializer.Danmu.maxBottomLine.toString())
-        }
+        applyMaxLineView(PlayerInitializer.Danmu.maxBottomLine)
     }
 
     private fun updateDanmuEnable(enable: Boolean) {
@@ -358,7 +355,24 @@ class SettingDanmuConfigureView(
                         BaseDanmaku.TYPE_FIX_BOTTOM -> viewBinding.llBottomDanmu.requestFocus()
                     }
                 }
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.tvLineNoLimit.requestFocus()
+                KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    if (isTvUiMode) {
+                        viewBinding.groupLineLimitTv.requestFocus()
+                    } else {
+                        viewBinding.tvLineNoLimit.requestFocus()
+                    }
+                }
+            }
+        } else if (viewBinding.groupLineLimitTv.hasFocus()) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.switchDanmuEnable.requestFocus()
+                KeyEvent.KEYCODE_DPAD_LEFT -> stepTvMaxLine(-1)
+                KeyEvent.KEYCODE_DPAD_RIGHT -> stepTvMaxLine(+1)
+                KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    if (settingMode == BaseDanmaku.TYPE_SCROLL_RL) {
+                        viewBinding.tvScreenNoLimit.requestFocus()
+                    }
+                }
             }
         } else if (viewBinding.tvLineNoLimit.hasFocus()) {
             when (keyCode) {
@@ -381,12 +395,24 @@ class SettingDanmuConfigureView(
             }
         } else if (viewBinding.tvScreenNoLimit.hasFocus()) {
             when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.tvLineNoLimit.requestFocus()
+                KeyEvent.KEYCODE_DPAD_UP -> {
+                    if (isTvUiMode) {
+                        viewBinding.groupLineLimitTv.requestFocus()
+                    } else {
+                        viewBinding.tvLineNoLimit.requestFocus()
+                    }
+                }
                 KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.tvScreenAutoLimit.requestFocus()
             }
         } else if (viewBinding.tvScreenAutoLimit.hasFocus()) {
             when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.tvLineNoLimit.requestFocus()
+                KeyEvent.KEYCODE_DPAD_UP -> {
+                    if (isTvUiMode) {
+                        viewBinding.groupLineLimitTv.requestFocus()
+                    } else {
+                        viewBinding.tvLineNoLimit.requestFocus()
+                    }
+                }
                 KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.tvScreenNoLimit.requestFocus()
                 KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.etScreenMaxNum.requestFocus()
             }
@@ -396,6 +422,58 @@ class SettingDanmuConfigureView(
             }
         } else {
             viewBinding.llScrollDanmu.requestFocus()
+        }
+    }
+
+    private fun applyMaxLineView(maxLine: Int) {
+        val normalizedMaxLine =
+            if (maxLine <= PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
+                PlayerInitializer.Danmu.DEFAULT_MAX_LINE
+            } else {
+                maxLine
+            }
+
+        if (isTvUiMode) {
+            val tvMaxLine = normalizedMaxLine.coerceIn(PlayerInitializer.Danmu.DEFAULT_MAX_LINE, TV_MAX_LINE_LIMIT)
+            viewBinding.groupLineLimitTv.isSelected = tvMaxLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE
+            viewBinding.tvLineLimitValue.text =
+                if (tvMaxLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
+                    context.getString(R.string.text_danmu_line_unlimited)
+                } else {
+                    tvMaxLine.toString()
+                }
+
+            // Keep TV UI range and actual behavior consistent.
+            if (tvMaxLine != normalizedMaxLine) {
+                updateMaxLine(tvMaxLine)
+            }
+        } else {
+            if (normalizedMaxLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
+                viewBinding.tvLineNoLimit.isSelected = true
+                viewBinding.etMaxLine.setText("")
+            } else {
+                viewBinding.tvLineNoLimit.isSelected = false
+                viewBinding.etMaxLine.setText(normalizedMaxLine.toString())
+            }
+        }
+    }
+
+    private fun stepTvMaxLine(delta: Int) {
+        if (isTvUiMode.not()) {
+            return
+        }
+
+        val currentMaxLine =
+            when (settingMode) {
+                BaseDanmaku.TYPE_SCROLL_RL -> PlayerInitializer.Danmu.maxScrollLine
+                BaseDanmaku.TYPE_FIX_TOP -> PlayerInitializer.Danmu.maxTopLine
+                BaseDanmaku.TYPE_FIX_BOTTOM -> PlayerInitializer.Danmu.maxBottomLine
+                else -> PlayerInitializer.Danmu.maxScrollLine
+            }
+        val tvCurrent = currentMaxLine.coerceIn(PlayerInitializer.Danmu.DEFAULT_MAX_LINE, TV_MAX_LINE_LIMIT)
+        val tvNext = (tvCurrent + delta).coerceIn(PlayerInitializer.Danmu.DEFAULT_MAX_LINE, TV_MAX_LINE_LIMIT)
+        if (tvNext != tvCurrent) {
+            updateMaxLine(tvNext)
         }
     }
 
@@ -414,4 +492,8 @@ class SettingDanmuConfigureView(
             DanmakuLanguage.SC -> viewBinding.tvLanguageSc
             DanmakuLanguage.TC -> viewBinding.tvLanguageTc
         }
+
+    private companion object {
+        private const val TV_MAX_LINE_LIMIT = 12
+    }
 }

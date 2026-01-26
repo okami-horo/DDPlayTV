@@ -279,6 +279,43 @@
                     android:textSize="13sp" />
 
                 <LinearLayout
+                    android:id="@+id/group_line_limit_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:background="@drawable/background_player_setting_text"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_seek_back"
+                        app:tint="#88FFFFFF" />
+
+                    <TextView
+                        android:id="@+id/tv_line_limit_value"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:textColor="@color/text_white_immutable"
+                        android:textSize="13sp"
+                        tools:text="无限制" />
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_seek_forward"
+                        app:tint="#88FFFFFF" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/group_line_limit_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
