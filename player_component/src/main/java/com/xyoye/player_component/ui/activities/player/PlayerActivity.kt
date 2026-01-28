@@ -40,6 +40,7 @@ import com.xyoye.common_component.playback.addon.PlaybackUrlRecoverableAddon
 import com.xyoye.common_component.receiver.HeadsetBroadcastReceiver
 import com.xyoye.common_component.receiver.PlayerReceiverListener
 import com.xyoye.common_component.receiver.ScreenBroadcastReceiver
+import com.xyoye.common_component.service.Media3SessionServiceProvider
 import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
@@ -88,8 +89,6 @@ class PlayerActivity :
     ScreencastHandler,
     SubtitleFallbackDispatcher {
     companion object {
-        private const val MEDIA3_SESSION_SERVICE =
-            "com.okamihoro.ddplaytv.app.service.Media3SessionService"
         private const val TAG_ACTIVITY = "PlayerActivity"
         private const val TAG_SOURCE = "PlayerSource"
         private const val TAG_PLAYBACK = "PlayerPlayback"
@@ -138,6 +137,9 @@ class PlayerActivity :
     private var batteryHelper = BatteryHelper()
      */
     private var media3SessionClient: Media3SessionClient? = null
+    private val media3SessionServiceProvider: Media3SessionServiceProvider? by lazy {
+        ARouter.getInstance().navigation(Media3SessionServiceProvider::class.java)
+    }
     private var media3ServiceBound = false
     private var media3BackgroundModes: Set<Media3BackgroundMode> = emptySet()
     private var media3BackgroundJob: Job? = null
@@ -239,7 +241,11 @@ class PlayerActivity :
 
     override fun onStart() {
         super.onStart()
-        val intent = Intent().setClassName(this, MEDIA3_SESSION_SERVICE)
+        val intent = media3SessionServiceProvider?.createBindIntent(this)
+        if (intent == null) {
+            LogFacade.w(LogModule.PLAYER, TAG_ACTIVITY, "Media3SessionServiceProvider not found")
+            return
+        }
         try {
             bindService(intent, media3ServiceConnection, Context.BIND_AUTO_CREATE)
         } catch (e: Exception) {

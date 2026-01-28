@@ -52,6 +52,7 @@ object RouteTable {
         const val PlayerCenter = "/player/player"
         const val CloudDanmuBlockService = "/player/cloud_danmu_block_service"
         const val Media3CapabilityProvider = "/player/media3_capability_provider"
+        const val Media3SessionServiceProvider = "/player/media3_session_service_provider"
     }
 
     object Stream {
@@ -61,7 +62,7 @@ object RouteTable {
         const val ScreencastReceive = "/stream/screencast_receive"
 
         const val StorageFile = "/stream/storage_file"
-        const val StorageFileProvider = "/stream/storage_file/provider"
+        const val StorageFileProvider = "/stream/storage_file_provider"
         const val StoragePlus = "/stream/storage_plus"
     }
 }
