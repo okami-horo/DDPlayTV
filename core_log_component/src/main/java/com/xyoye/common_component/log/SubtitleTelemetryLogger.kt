@@ -56,11 +56,14 @@ object SubtitleTelemetryLogger {
 
     fun logFallback(event: FallbackEvent) {
         if (!shouldLog()) return
-        LogFacade.w(
-            LogModule.SUBTITLE,
-            TAG,
-            "fallback from=${event.fromMode.name} to=${event.toMode.name} reason=${event.reason.name} recoverable=${event.recoverable} surface=${event.surfaceId}",
-        )
+        val message =
+            "${if (event.toMode == com.xyoye.data_component.enums.SubtitlePipelineMode.GPU_GL) "recovery_pending" else "degraded"} " +
+                "from=${event.fromMode.name} to=${event.toMode.name} reason=${event.reason.name} recoverable=${event.recoverable} surface=${event.surfaceId}"
+        if (event.toMode == com.xyoye.data_component.enums.SubtitlePipelineMode.GPU_GL) {
+            LogFacade.i(LogModule.SUBTITLE, TAG, message)
+        } else {
+            LogFacade.w(LogModule.SUBTITLE, TAG, message)
+        }
     }
 
     fun logState(state: SubtitlePipelineState) {

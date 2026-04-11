@@ -1,5 +1,8 @@
 package com.xyoye.player.kernel.impl.mpv
 
+import java.util.LinkedHashMap
+import kotlin.math.max
+
 internal class MpvAssFullSubtitleParser {
     internal data class Sample(
         val timecodeMs: Long,
@@ -7,25 +10,49 @@ internal class MpvAssFullSubtitleParser {
         val data: ByteArray
     )
 
-    private val readOrderMap = HashMap<String, Int>()
+    private data class DedupEntry(
+        var readOrder: Int,
+        var endTimeMs: Long,
+        var lastSeenSnapshot: Long
+    )
+
+    private data class ParsedEvent(
+        val endTimeMs: Long,
+        val sample: Sample?
+    )
+
+    private val readOrderMap = LinkedHashMap<String, DedupEntry>(MAX_DEDUP_ENTRIES, 0.75f, true)
     private var nextReadOrder = 0
+    private var snapshotCounter = 0L
 
     fun reset() {
         readOrderMap.clear()
         nextReadOrder = 0
+        snapshotCounter = 0L
     }
 
     fun parse(assFull: String?): List<Sample> {
         if (assFull.isNullOrBlank()) return emptyList()
         val samples = ArrayList<Sample>()
+        snapshotCounter++
+        var latestEndTimeMs = Long.MIN_VALUE
         for (line in assFull.lineSequence()) {
-            val sample = parseLine(line) ?: continue
-            samples.add(sample)
+            val parsed = parseLine(line, snapshotCounter) ?: continue
+            latestEndTimeMs = max(latestEndTimeMs, parsed.endTimeMs)
+            parsed.sample?.let(samples::add)
+        }
+        if (latestEndTimeMs != Long.MIN_VALUE) {
+            pruneHistory(latestEndTimeMs)
         }
         return samples
     }
 
-    private fun parseLine(line: String): Sample? {
+    internal fun historySize(): Int = readOrderMap.size
+
+    private fun parseLine(
+        line: String,
+        snapshotId: Long
+    ): ParsedEvent? {
         val trimmed = line.trim()
         if (!trimmed.startsWith(DIALOGUE_PREFIX)) return null
         val payload = trimmed.substring(DIALOGUE_PREFIX.length).trimStart()
@@ -70,11 +97,18 @@ internal class MpvAssFullSubtitleParser {
 
         val existing = readOrderMap[eventKey]
         if (existing != null) {
-            return null
+            existing.endTimeMs = max(existing.endTimeMs, endMs)
+            existing.lastSeenSnapshot = snapshotId
+            return ParsedEvent(endMs, null)
         }
 
         val readOrder = nextReadOrder++
-        readOrderMap[eventKey] = readOrder
+        readOrderMap[eventKey] =
+            DedupEntry(
+                readOrder = readOrder,
+                endTimeMs = endMs,
+                lastSeenSnapshot = snapshotId,
+            )
         val eventFields =
             buildString {
                 append(readOrder)
@@ -96,7 +130,43 @@ internal class MpvAssFullSubtitleParser {
                 append(text)
             }
 
-        return Sample(startMs, durationMs, eventFields.toByteArray(Charsets.UTF_8))
+        return ParsedEvent(
+            endTimeMs = endMs,
+            sample = Sample(startMs, durationMs, eventFields.toByteArray(Charsets.UTF_8)),
+        )
+    }
+
+    private fun pruneHistory(latestEndTimeMs: Long) {
+        val staleCutoffMs = latestEndTimeMs - STALE_HISTORY_WINDOW_MS
+        val iterator = readOrderMap.entries.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next().value
+            val staleByTime = entry.endTimeMs < staleCutoffMs
+            val staleBySnapshots = snapshotCounter - entry.lastSeenSnapshot > STALE_SNAPSHOT_WINDOW
+            if (staleByTime && staleBySnapshots) {
+                iterator.remove()
+            }
+        }
+        while (readOrderMap.size > MAX_DEDUP_ENTRIES) {
+            val oldestKey = readOrderMap.entries.iterator().next().key
+            readOrderMap.remove(oldestKey)
+        }
+        reindexReadOrdersIfNeeded()
+    }
+
+    private fun reindexReadOrdersIfNeeded() {
+        if (readOrderMap.isEmpty()) {
+            nextReadOrder = 0
+            return
+        }
+        if (nextReadOrder < READ_ORDER_REINDEX_THRESHOLD) {
+            return
+        }
+        var next = 0
+        readOrderMap.values.forEach { entry ->
+            entry.readOrder = next++
+        }
+        nextReadOrder = next
     }
 
     private fun splitAssFields(payload: String): List<String>? {
@@ -137,5 +207,9 @@ internal class MpvAssFullSubtitleParser {
         private const val DIALOGUE_PREFIX = "Dialogue:"
         private const val ASS_DIALOGUE_FIELDS = 10
         private const val ASS_DIALOGUE_DELIMITERS = 9
+        private const val MAX_DEDUP_ENTRIES = 512
+        private const val STALE_HISTORY_WINDOW_MS = 60_000L
+        private const val STALE_SNAPSHOT_WINDOW = 2L
+        private const val READ_ORDER_REINDEX_THRESHOLD = 100_000
     }
 }

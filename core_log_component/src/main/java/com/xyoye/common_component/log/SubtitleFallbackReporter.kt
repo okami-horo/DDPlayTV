@@ -11,7 +11,7 @@ import com.xyoye.data_component.enums.SubtitlePipelineMode
 object SubtitleFallbackReporter {
     private const val TAG = "SUB-FALLBACK"
 
-    fun onFallback(
+    fun onDegraded(
         reason: SubtitlePipelineFallbackReason,
         surfaceId: String?,
         recoverable: Boolean
@@ -19,20 +19,34 @@ object SubtitleFallbackReporter {
         LogFacade.w(
             LogModule.SUBTITLE,
             TAG,
-            "fallback reason=${reason.name} recoverable=$recoverable surface=$surfaceId",
+            "degraded reason=${reason.name} recoverable=$recoverable surface=$surfaceId",
         )
     }
 
-    fun onRecoveryAttempt(
+    fun onRecoveryPending(
         reason: SubtitlePipelineFallbackReason?,
-        succeeded: Boolean,
         surfaceId: String?,
         targetMode: SubtitlePipelineMode = SubtitlePipelineMode.GPU_GL
     ) {
         LogFacade.i(
             LogModule.SUBTITLE,
             TAG,
-            "recovery target=${targetMode.name} success=$succeeded reason=${reason?.name} surface=$surfaceId",
+            "recovery_pending target=${targetMode.name} trigger=${reason?.name} surface=$surfaceId",
         )
+    }
+
+    fun onRecoveryOutcome(
+        reason: SubtitlePipelineFallbackReason?,
+        succeeded: Boolean,
+        surfaceId: String?,
+        targetMode: SubtitlePipelineMode = SubtitlePipelineMode.GPU_GL
+    ) {
+        val message =
+            "recovery_result target=${targetMode.name} success=$succeeded trigger=${reason?.name} surface=$surfaceId"
+        if (succeeded) {
+            LogFacade.i(LogModule.SUBTITLE, TAG, message)
+        } else {
+            LogFacade.w(LogModule.SUBTITLE, TAG, message)
+        }
     }
 }

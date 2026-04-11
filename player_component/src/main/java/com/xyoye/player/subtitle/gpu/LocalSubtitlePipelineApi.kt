@@ -11,6 +11,7 @@ import com.xyoye.data_component.media3.telemetry.subtitle.SubtitleOutputTarget
 import com.xyoye.data_component.media3.telemetry.subtitle.SubtitlePipelineState
 import com.xyoye.data_component.media3.telemetry.subtitle.TelemetrySample
 import com.xyoye.data_component.media3.telemetry.subtitle.TelemetrySnapshot
+import com.xyoye.data_component.enums.SubtitlePipelineFallbackReason
 import com.xyoye.data_component.enums.SubtitlePipelineMode
 import com.xyoye.data_component.enums.SubtitlePipelineStatus
 
@@ -24,6 +25,7 @@ class LocalSubtitlePipelineApi(
     private var outputTarget: SubtitleOutputTarget? = null
 
     override suspend fun init(request: PipelineInitRequest): SubtitlePipelineState {
+        val previous = state
         outputTarget =
             SubtitleOutputTarget(
                 viewType = request.viewType,
@@ -42,6 +44,7 @@ class LocalSubtitlePipelineApi(
                 surfaceId = request.surfaceId,
                 fallbackReason = null,
                 lastError = null,
+                lastRecoverAt = previous?.lastRecoverAt,
                 telemetryEnabled = request.telemetryEnabled,
             )
         state = newState
@@ -54,6 +57,16 @@ class LocalSubtitlePipelineApi(
 
     override suspend fun fallback(command: FallbackCommand): SubtitlePipelineState {
         val previous = state
+        val fallbackReason =
+            when (command.targetMode) {
+                SubtitlePipelineMode.GPU_GL -> previous?.fallbackReason ?: command.reason
+                SubtitlePipelineMode.FALLBACK_CPU -> command.reason
+            }
+        val recoverable =
+            when (command.targetMode) {
+                SubtitlePipelineMode.GPU_GL -> true
+                SubtitlePipelineMode.FALLBACK_CPU -> command.reason != SubtitlePipelineFallbackReason.UNSUPPORTED_GPU
+            }
         val updated =
             (
                 previous ?: SubtitlePipelineState(
@@ -68,11 +81,9 @@ class LocalSubtitlePipelineApi(
                         SubtitlePipelineMode.GPU_GL -> SubtitlePipelineStatus.Initializing
                         SubtitlePipelineMode.FALLBACK_CPU -> SubtitlePipelineStatus.Degraded
                     },
-                fallbackReason = command.reason,
+                fallbackReason = fallbackReason,
                 lastRecoverAt =
-                    if (command.targetMode ==
-                        SubtitlePipelineMode.GPU_GL
-                    ) {
+                    if (command.targetMode == SubtitlePipelineMode.GPU_GL) {
                         System.currentTimeMillis()
                     } else {
                         previous?.lastRecoverAt
@@ -88,7 +99,7 @@ class LocalSubtitlePipelineApi(
                     toMode = command.targetMode,
                     reason = reason,
                     surfaceId = previous?.surfaceId,
-                    recoverable = command.targetMode == SubtitlePipelineMode.GPU_GL,
+                    recoverable = recoverable,
                 )
             telemetryRepository.recordFallback(event)
             SubtitleTelemetryLogger.logFallback(event)

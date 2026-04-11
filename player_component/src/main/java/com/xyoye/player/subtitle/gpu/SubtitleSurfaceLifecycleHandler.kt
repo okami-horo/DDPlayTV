@@ -14,6 +14,7 @@ class SubtitleSurfaceLifecycleHandler(
     private val renderer: AssGpuRenderer,
     private val tracker: SubtitleOutputTargetTracker,
     private val fallbackController: SubtitleFallbackController? = null,
+    private val recoveryCoordinator: SubtitleRecoveryCoordinator? = null,
     private val scope: CoroutineScope
 ) {
     fun onSurfaceAvailable(
@@ -42,9 +43,10 @@ class SubtitleSurfaceLifecycleHandler(
                 vsyncId = vsyncId,
             )
         val surfaceId = tracker.surfaceId() ?: buildFallbackId()
-        renderer.bindSurface(surfaceId, surface, target, telemetryEnabled)
-        fallbackController?.let { controller ->
-            scope.launch { controller.resumeGpu(SubtitlePipelineFallbackReason.SURFACE_LOST) }
+        val attemptedRecovery =
+            recoveryCoordinator?.attemptRecovery(SubtitlePipelineFallbackReason.SURFACE_LOST) == true
+        if (!attemptedRecovery) {
+            renderer.bindSurface(surfaceId, surface, target, telemetryEnabled)
         }
     }
 
@@ -72,15 +74,19 @@ class SubtitleSurfaceLifecycleHandler(
                 supportsHardwareBuffer = supportsHardwareBuffer,
                 vsyncId = vsyncId,
             )
-        tracker.surfaceId()?.let {
-            renderer.bindSurface(it, surface, target, telemetryEnabled)
+        tracker.surfaceId()?.let { surfaceId ->
+            val attemptedRecovery =
+                recoveryCoordinator?.attemptRecovery(SubtitlePipelineFallbackReason.SURFACE_LOST) == true
+            if (!attemptedRecovery) {
+                renderer.bindSurface(surfaceId, surface, target, telemetryEnabled)
+            }
         }
     }
 
     fun onSurfaceDestroyed() {
         if (tracker.surfaceId() != null) {
             fallbackController?.let { controller ->
-                scope.launch { controller.forceFallback(SubtitlePipelineFallbackReason.SURFACE_LOST) }
+                scope.launch { controller.enterDegraded(SubtitlePipelineFallbackReason.SURFACE_LOST) }
             }
         }
         tracker.onSurfaceDestroyed()

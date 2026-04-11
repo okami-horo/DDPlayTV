@@ -72,6 +72,10 @@ class LibassRendererBackend(
         session?.updateFontScaleOffset(offsetPercent)
     }
 
+    override fun updateVerticalOffset(offsetPercent: Int) {
+        session?.updateVerticalOffset(offsetPercent)
+    }
+
     override fun onSeek(positionMs: Long) {
         session?.onSeek(positionMs)
     }

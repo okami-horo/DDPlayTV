@@ -12,6 +12,7 @@ import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.data_component.enums.SubtitlePipelineFallbackReason
 import com.xyoye.data_component.enums.SubtitlePipelineMode
+import com.xyoye.data_component.enums.SubtitlePipelineStatus
 import com.xyoye.data_component.enums.SubtitleViewType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
@@ -50,22 +51,24 @@ internal class LibassGpuSubtitleSession(
             renderHandler = renderHandler,
             scope = sessionScope,
             pipelineErrorListener = ::onPipelineError,
+            pipelineRecoveryListener = ::onRecoveryResult,
         )
     private val fallbackController = SubtitleFallbackController(pipelineController)
     private val tracker = SubtitleOutputTargetTracker()
-    private val lifecycleHandler =
-        SubtitleSurfaceLifecycleHandler(
-            renderer = gpuRenderer,
-            tracker = tracker,
-            fallbackController = fallbackController,
-            scope = sessionScope,
-        )
     private val recoveryCoordinator =
         SubtitleRecoveryCoordinator(
             renderer = gpuRenderer,
             tracker = tracker,
             fallbackController = fallbackController,
             pipelineController = pipelineController,
+            scope = sessionScope,
+        )
+    private val lifecycleHandler =
+        SubtitleSurfaceLifecycleHandler(
+            renderer = gpuRenderer,
+            tracker = tracker,
+            fallbackController = fallbackController,
+            recoveryCoordinator = recoveryCoordinator,
             scope = sessionScope,
         )
 
@@ -81,6 +84,7 @@ internal class LibassGpuSubtitleSession(
         attachOverlay()
         gpuRenderer.updateOpacity(PlayerInitializer.Subtitle.alpha)
         gpuRenderer.updateFontScale(offsetPercentToScale(PlayerInitializer.Subtitle.fontScaleOffsetPercent))
+        gpuRenderer.updateVerticalOffset(PlayerInitializer.Subtitle.verticalOffset)
         registerEmbeddedSink()
         startFrameDriver()
     }
@@ -110,6 +114,7 @@ internal class LibassGpuSubtitleSession(
         val defaultFont = SubtitleFontManager.getDefaultFontPath(environment.context)
         gpuRenderer.loadTrack(path, fonts, defaultFont)
         gpuRenderer.frameCleaner.onTrackChanged()
+        recoveryCoordinator.attemptRecovery(SubtitlePipelineFallbackReason.TRACK_CHANGED)
         val positionMs = environment.playerView?.getCurrentPosition() ?: 0L
         renderOnceIfPaused(positionMs)
     }
@@ -120,6 +125,7 @@ internal class LibassGpuSubtitleSession(
         // Re-register the sink to replay cached embedded ASS data when supported (e.g. mpv bridge).
         kernelBridge?.setEmbeddedSubtitleSink(embeddedSink)
         gpuRenderer.frameCleaner.onTrackChanged()
+        recoveryCoordinator.attemptRecovery(SubtitlePipelineFallbackReason.TRACK_CHANGED)
         val positionMs = environment.playerView?.getCurrentPosition() ?: 0L
         renderOnceIfPaused(positionMs)
     }
@@ -134,8 +140,15 @@ internal class LibassGpuSubtitleSession(
         renderOnceIfPaused(positionMs)
     }
 
+    fun updateVerticalOffset(offsetPercent: Int) {
+        gpuRenderer.updateVerticalOffset(offsetPercent)
+        val positionMs = environment.playerView?.getCurrentPosition() ?: 0L
+        renderOnceIfPaused(positionMs)
+    }
+
     fun onSeek(positionMs: Long) {
         gpuRenderer.frameCleaner.onSeek()
+        recoveryCoordinator.attemptRecovery(SubtitlePipelineFallbackReason.SEEK)
         renderOnceIfPaused(positionMs)
     }
 
@@ -163,6 +176,13 @@ internal class LibassGpuSubtitleSession(
             SubtitleFrameDriver.TimelineJumpReason.TRACKS_CHANGED -> gpuRenderer.frameCleaner.onTrackChanged()
             else -> gpuRenderer.frameCleaner.onSeek()
         }
+        val recoveryTrigger =
+            when (reason) {
+                SubtitleFrameDriver.TimelineJumpReason.SEEK -> SubtitlePipelineFallbackReason.SEEK
+                SubtitleFrameDriver.TimelineJumpReason.TRACKS_CHANGED -> SubtitlePipelineFallbackReason.TRACK_CHANGED
+                SubtitleFrameDriver.TimelineJumpReason.POSITION_DISCONTINUITY -> SubtitlePipelineFallbackReason.TIMELINE_JUMP
+            }
+        recoveryCoordinator.attemptRecovery(recoveryTrigger)
         if (!playing) {
             renderOnce(positionMs)
         }
@@ -208,10 +228,10 @@ internal class LibassGpuSubtitleSession(
         error: Throwable?
     ) {
         sessionScope.launch {
-            if (fallbackController.currentState()?.mode == SubtitlePipelineMode.FALLBACK_CPU) {
+            if (fallbackController.currentState()?.status == SubtitlePipelineStatus.Degraded) {
                 return@launch
             }
-            fallbackController.forceFallback(reason)
+            fallbackController.enterDegraded(reason)
         }
 
         val backendReason =
@@ -220,7 +240,10 @@ internal class LibassGpuSubtitleSession(
                 SubtitlePipelineFallbackReason.UNSUPPORTED_GPU,
                 SubtitlePipelineFallbackReason.INIT_TIMEOUT -> SubtitleFallbackReason.INIT_FAIL
                 SubtitlePipelineFallbackReason.GL_ERROR,
-                SubtitlePipelineFallbackReason.UNKNOWN -> SubtitleFallbackReason.RENDER_FAIL
+                SubtitlePipelineFallbackReason.UNKNOWN,
+                SubtitlePipelineFallbackReason.SEEK,
+                SubtitlePipelineFallbackReason.TRACK_CHANGED,
+                SubtitlePipelineFallbackReason.TIMELINE_JUMP -> SubtitleFallbackReason.RENDER_FAIL
             } ?: return
 
         if (!fallbackDispatched.compareAndSet(false, true)) {
@@ -228,6 +251,19 @@ internal class LibassGpuSubtitleSession(
         }
         val dispatcher = environment.fallbackDispatcher ?: return
         mainHandler.post { dispatcher.onSubtitleBackendFallback(backendReason, error) }
+    }
+
+    private fun onRecoveryResult(
+        reason: SubtitlePipelineFallbackReason,
+        succeeded: Boolean
+    ) {
+        fallbackController.reportRecoveryOutcome(reason = reason, succeeded = succeeded)
+        if (!succeeded) {
+            return
+        }
+        fallbackDispatched.set(false)
+        val positionMs = environment.playerView?.getCurrentPosition() ?: 0L
+        renderOnceIfPaused(positionMs)
     }
 
     private val frameCallback =

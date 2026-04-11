@@ -5,6 +5,7 @@ package com.xyoye.data_component.enums
  */
 enum class SubtitlePipelineMode {
     GPU_GL,
+    // Compatibility label for degraded sessions; it does not imply a CPU subtitle renderer is active.
     FALLBACK_CPU;
 
     companion object {

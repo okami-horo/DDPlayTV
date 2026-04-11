@@ -87,6 +87,11 @@ class AssGpuNativeBridge {
         nativeSetFontScale(handle, scale)
     }
 
+    fun setVerticalOffsetPercent(percent: Int) {
+        if (!isReady) return
+        nativeSetVerticalOffsetPercent(handle, percent)
+    }
+
     fun loadTrack(
         path: String,
         fontDirs: List<String>,
@@ -175,6 +180,11 @@ class AssGpuNativeBridge {
     private external fun nativeSetFontScale(
         handle: Long,
         scale: Float
+    )
+
+    private external fun nativeSetVerticalOffsetPercent(
+        handle: Long,
+        percent: Int
     )
 
     private external fun nativeLoadTrack(

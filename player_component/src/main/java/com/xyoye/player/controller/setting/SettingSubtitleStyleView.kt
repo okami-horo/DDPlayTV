@@ -290,6 +290,7 @@ class SettingSubtitleStyleView(
         SubtitleConfig.putVerticalOffset(clampedOffset)
         PlayerInitializer.Subtitle.verticalOffset = clampedOffset
         mControlWrapper.updateVerticalOffset()
+        SubtitleRendererRegistry.current()?.updateVerticalOffset(clampedOffset)
         onConfigChanged()
     }
 

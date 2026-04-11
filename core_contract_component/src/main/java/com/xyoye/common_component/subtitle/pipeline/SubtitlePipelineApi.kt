@@ -58,7 +58,11 @@ data class FallbackCommand(
             toMode = targetMode,
             reason = resolvedReason,
             surfaceId = surfaceId,
-            recoverable = targetMode == SubtitlePipelineMode.GPU_GL,
+            recoverable =
+                when (targetMode) {
+                    SubtitlePipelineMode.GPU_GL -> true
+                    SubtitlePipelineMode.FALLBACK_CPU -> resolvedReason != SubtitlePipelineFallbackReason.UNSUPPORTED_GPU
+                },
         )
     }
 }

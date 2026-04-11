@@ -46,6 +46,10 @@ interface SubtitleRenderer {
         // default no-op
     }
 
+    fun updateVerticalOffset(offsetPercent: Int) {
+        // default no-op
+    }
+
     /**
      * Notifies the renderer that the playback position has jumped (seek/discontinuity).
      */

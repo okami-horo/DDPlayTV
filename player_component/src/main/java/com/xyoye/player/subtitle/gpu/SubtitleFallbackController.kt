@@ -13,16 +13,30 @@ class SubtitleFallbackController(
     private val pipelineController: SubtitlePipelineController,
     private val reporter: SubtitleFallbackReporter = SubtitleFallbackReporter
 ) {
-    suspend fun forceFallback(reason: SubtitlePipelineFallbackReason): SubtitlePipelineState? {
+    suspend fun enterDegraded(reason: SubtitlePipelineFallbackReason): SubtitlePipelineState? {
         val state = pipelineController.fallback(SubtitlePipelineMode.FALLBACK_CPU, reason)
-        state?.let { reporter.onFallback(reason, it.surfaceId, recoverable = false) }
+        state?.let {
+            reporter.onDegraded(
+                reason = reason,
+                surfaceId = it.surfaceId,
+                recoverable = reason != SubtitlePipelineFallbackReason.UNSUPPORTED_GPU,
+            )
+        }
         return state
     }
 
-    suspend fun resumeGpu(reason: SubtitlePipelineFallbackReason = SubtitlePipelineFallbackReason.UNKNOWN): SubtitlePipelineState? {
+    suspend fun markRecoveryPending(reason: SubtitlePipelineFallbackReason = SubtitlePipelineFallbackReason.UNKNOWN): SubtitlePipelineState? {
         val state = pipelineController.fallback(SubtitlePipelineMode.GPU_GL, reason)
-        state?.let { reporter.onRecoveryAttempt(reason, succeeded = true, surfaceId = it.surfaceId) }
+        state?.let { reporter.onRecoveryPending(reason = reason, surfaceId = it.surfaceId) }
         return state
+    }
+
+    fun reportRecoveryOutcome(
+        reason: SubtitlePipelineFallbackReason?,
+        succeeded: Boolean,
+        surfaceId: String? = currentState()?.surfaceId
+    ) {
+        reporter.onRecoveryOutcome(reason = reason, succeeded = succeeded, surfaceId = surfaceId)
     }
 
     fun currentState(): SubtitlePipelineState? = pipelineController.currentState()

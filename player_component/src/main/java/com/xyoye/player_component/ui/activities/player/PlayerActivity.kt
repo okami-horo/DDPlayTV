@@ -372,10 +372,10 @@ class PlayerActivity :
         reason: SubtitleFallbackReason,
         error: Throwable?
     ) {
-        // Legacy backend switching is disabled; keep libass active.
+        // Legacy backend switching is disabled; report the degraded libass state until recovery succeeds.
         val message =
-            error?.message?.let { detail -> "libass fallback ignored: $reason ($detail)" }
-                ?: "libass fallback ignored: $reason"
+            error?.message?.let { detail -> "libass subtitles degraded, recovery pending: $reason ($detail)" }
+                ?: "libass subtitles degraded, recovery pending: $reason"
         LogFacade.w(LogModule.PLAYER, TAG_SUBTITLE, message)
     }
 

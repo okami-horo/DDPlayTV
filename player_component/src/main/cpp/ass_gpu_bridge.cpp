@@ -75,6 +75,7 @@ struct GpuContext {
     ASS_Track *track = nullptr;
     float user_alpha = 1.0F;
     double user_font_scale = 1.0;
+    int user_vertical_offset_percent = 0;
     bool pending_invalidate = false;
     struct TextureEntry {
         GLuint id = 0;
@@ -881,6 +882,12 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
                           reinterpret_cast<void *>(sizeof(float) * 2));
     glEnableVertexAttribArray(1);
 
+    const float vertical_offset_px =
+        context->height <= 0
+            ? 0.0F
+            : static_cast<float>(context->height) *
+                  (static_cast<float>(context->user_vertical_offset_percent) / 100.0F);
+
     for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
         if (cur->w <= 0 || cur->h <= 0) continue;
         const float base_alpha = static_cast<float>(AssAlphaToAndroid(cur->color)) / 255.0F;
@@ -926,14 +933,16 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
                            1.0F;
         const float right = (static_cast<float>(cur->dst_x + cur->w) /
                              static_cast<float>(context->width)) *
-                                2.0F -
-                            1.0F;
+                                 2.0F -
+                             1.0F;
+        const float adjusted_dst_y = static_cast<float>(cur->dst_y) - vertical_offset_px;
         const float top = 1.0F -
-                          (static_cast<float>(cur->dst_y) / static_cast<float>(context->height)) *
-                              2.0F;
+                          (adjusted_dst_y / static_cast<float>(context->height)) *
+                               2.0F;
         const float bottom =
-            1.0F - (static_cast<float>(cur->dst_y + cur->h) / static_cast<float>(context->height)) *
-                       2.0F;
+            1.0F -
+            ((adjusted_dst_y + static_cast<float>(cur->h)) / static_cast<float>(context->height)) *
+                2.0F;
 
         const std::chrono::steady_clock::time_point draw_start =
             collect_metrics ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
@@ -1044,6 +1053,22 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeSetFontScale(
         if (context->renderer != nullptr) {
             ass_set_font_scale(context->renderer, context->user_font_scale);
         }
+        context->pending_invalidate = true;
+    }
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeSetVerticalOffsetPercent(
+    JNIEnv *env, jobject /*thiz*/, jlong handle, jint percent) {
+    (void)env;
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr) {
+        return;
+    }
+    const int clamped = std::max(-100, std::min(100, static_cast<int>(percent)));
+    std::lock_guard<std::mutex> guard(context->mutex);
+    if (context->user_vertical_offset_percent != clamped) {
+        context->user_vertical_offset_percent = clamped;
         context->pending_invalidate = true;
     }
 }

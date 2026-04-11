@@ -26,7 +26,8 @@ class AssGpuRenderer(
     private val loadSheddingPolicy: SubtitleLoadSheddingPolicy = SubtitleLoadSheddingPolicy(),
     private val scope: CoroutineScope,
     nativeBridgeFactory: () -> AssGpuNativeBridge = { AssGpuNativeBridge() },
-    private val pipelineErrorListener: ((SubtitlePipelineFallbackReason, Throwable?) -> Unit)? = null
+    private val pipelineErrorListener: ((SubtitlePipelineFallbackReason, Throwable?) -> Unit)? = null,
+    private val pipelineRecoveryListener: ((SubtitlePipelineFallbackReason, Boolean) -> Unit)? = null
 ) {
     private val nativeBridge: AssGpuNativeBridge by lazy(LazyThreadSafetyMode.NONE) { nativeBridgeFactory() }
     private val telemetryCollector =
@@ -76,7 +77,8 @@ class AssGpuRenderer(
         surfaceId: String,
         surface: Surface?,
         target: SubtitleOutputTarget,
-        telemetryEnabled: Boolean = true
+        telemetryEnabled: Boolean = true,
+        recoveryTrigger: SubtitlePipelineFallbackReason? = null
     ) {
         if (released) return
         renderHandler.postAtFrontOfQueue {
@@ -85,14 +87,26 @@ class AssGpuRenderer(
             this.telemetryEnabled = telemetryEnabled
             if (!nativeBridge.attachSurface(surface, target)) {
                 blockedByFailure = true
+                recoveryTrigger?.let { trigger ->
+                    pipelineRecoveryListener?.invoke(trigger, false)
+                }
                 pipelineErrorListener?.invoke(SubtitlePipelineFallbackReason.UNSUPPORTED_GPU, null)
+                return@postAtFrontOfQueue
             }
             initJob?.cancel()
             initJob =
                 scope.launch {
                     runCatching { pipelineController.init(surfaceId, target, telemetryEnabled) }
+                        .onSuccess {
+                            recoveryTrigger?.let { trigger ->
+                                pipelineRecoveryListener?.invoke(trigger, true)
+                            }
+                        }
                         .onFailure { error ->
                             LogFacade.e(LogModule.PLAYER, TAG, "init pipeline failed: ${error.message}")
+                            recoveryTrigger?.let { trigger ->
+                                pipelineRecoveryListener?.invoke(trigger, false)
+                            }
                             pipelineErrorListener?.invoke(SubtitlePipelineFallbackReason.INIT_TIMEOUT, error)
                         }
                 }
@@ -135,6 +149,14 @@ class AssGpuRenderer(
         renderHandler.postAtFrontOfQueue {
             if (released) return@postAtFrontOfQueue
             nativeBridge.setFontScale(clampedScale)
+        }
+    }
+
+    fun updateVerticalOffset(offsetPercent: Int) {
+        if (released) return
+        renderHandler.postAtFrontOfQueue {
+            if (released) return@postAtFrontOfQueue
+            nativeBridge.setVerticalOffsetPercent(offsetPercent)
         }
     }
 
@@ -249,7 +271,7 @@ class AssGpuRenderer(
     ) {
         if (blockedByFailure) return
         val state = pipelineController.currentState()
-        if (state?.mode == SubtitlePipelineMode.FALLBACK_CPU) return
+        if (state?.status == SubtitlePipelineStatus.Degraded) return
 
         if (!telemetryCollector.allowRender()) {
             telemetryCollector.recordSkippedFrame(subtitlePtsMs, vsyncId)

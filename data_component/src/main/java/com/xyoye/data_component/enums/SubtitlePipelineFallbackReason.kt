@@ -8,6 +8,9 @@ enum class SubtitlePipelineFallbackReason {
     SURFACE_LOST,
     UNSUPPORTED_GPU,
     INIT_TIMEOUT,
+    SEEK,
+    TRACK_CHANGED,
+    TIMELINE_JUMP,
     UNKNOWN;
 
     companion object {
