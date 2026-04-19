@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.xyoye.common_component.log.http.HttpLogServerManager
 import com.xyoye.common_component.log.http.HttpLogServerState
-import com.xyoye.common_component.log.tcp.TcpLogServerManager
 import com.xyoye.common_component.log.model.DebugToggleState
 import com.xyoye.common_component.log.model.LogEvent
 import com.xyoye.common_component.log.model.LogLevel
@@ -26,8 +25,6 @@ object LogSystem {
     private val defaultWriterFactory: ((LogEvent) -> Unit) -> LogWriter = { httpSink ->
         LogWriter(
             httpLogSink = httpSink,
-            tcpLogEnabledProvider = { TcpLogServerManager.isRunning() },
-            tcpLogSink = { line -> TcpLogServerManager.tryEmit(line) },
         )
     }
 
@@ -60,7 +57,6 @@ object LogSystem {
         synchronized(initLock) {
             if (initialized) return
             HttpLogServerManager.init(context)
-            TcpLogServerManager.applyFromStorage()
             policyRepository = policyRepositoryFactory(defaultPolicy)
             val initialState = policyRepository.loadFromStorage()
             stateRef.set(initialState)
@@ -69,7 +65,6 @@ object LogSystem {
                     { event -> HttpLogServerManager.ingestAppEvent(event) },
                 ).also { it.updateRuntimeState(initialState) }
             HttpLogServerManager.applyFromStorage()
-            TcpLogServerManager.applyFromStorage()
             initialized = true
         }
     }
@@ -190,7 +185,6 @@ object LogSystem {
         stateRef.set(state)
         writer?.updateRuntimeState(state)
         SubtitleTelemetryLogger.updateFromRuntime(state)
-        TcpLogServerManager.applyFromStorage()
         return state
     }
 
@@ -203,7 +197,6 @@ object LogSystem {
             policyRepositoryFactory = defaultPolicyRepositoryFactory
             writerFactory = defaultWriterFactory
             HttpLogServerManager.resetForTests()
-            TcpLogServerManager.resetForTests()
             policyRepository = policyRepositoryFactory(LogPolicy.defaultReleasePolicy())
             stateRef.set(
                 LogRuntimeState(

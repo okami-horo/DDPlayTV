@@ -9,8 +9,6 @@ import com.xyoye.common_component.log.model.LogRuntimeState
 import com.xyoye.common_component.log.model.LogEvent
 import com.xyoye.common_component.log.http.HttpLogServerManager
 import com.xyoye.common_component.log.http.HttpLogServerConfig
-import com.xyoye.common_component.log.tcp.TcpLogServerConfig
-import com.xyoye.common_component.log.tcp.TcpLogServerManager
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
@@ -28,7 +26,6 @@ class LogFacadeTest {
     fun setUp() {
         LogSystem.resetForTests()
         HttpLogServerManager.config = InMemoryHttpLogConfig()
-        TcpLogServerManager.config = InMemoryTcpLogConfig()
         LogSystem.policyRepositoryFactory = { defaultPolicy ->
             LogPolicyRepository(defaultPolicy, storage = NoopLogConfigStorage())
         }
@@ -120,24 +117,4 @@ private class InMemoryHttpLogConfig : HttpLogServerConfig {
     override fun putHttpLogRetentionDays(days: Int) {
         retentionDays = days
     }
-}
-
-private class InMemoryTcpLogConfig : TcpLogServerConfig {
-    private var enabled: Boolean = false
-    private var port: Int = 17010
-    private var debugSessionEnabled: Boolean = false
-
-    override fun isTcpLogServerEnabled(): Boolean = enabled
-
-    override fun putTcpLogServerEnabled(enabled: Boolean) {
-        this.enabled = enabled
-    }
-
-    override fun getTcpLogServerPort(): Int = port
-
-    override fun putTcpLogServerPort(port: Int) {
-        this.port = port
-    }
-
-    override fun isDebugSessionEnabled(): Boolean = debugSessionEnabled
 }

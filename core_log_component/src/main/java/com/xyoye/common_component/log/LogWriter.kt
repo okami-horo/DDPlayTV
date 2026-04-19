@@ -15,8 +15,6 @@ class LogWriter(
     private val formatter: LogFormatter = LogFormatter(),
     private val sampler: LogSampler = LogSampler(),
     private val httpLogSink: (LogEvent) -> Unit = {},
-    private val tcpLogEnabledProvider: () -> Boolean = { false },
-    private val tcpLogSink: (String) -> Unit = {},
 ) {
     private val stateRef =
         AtomicReference(
@@ -48,10 +46,6 @@ class LogWriter(
         }
         writeToLogcat(event)
         runCatching { httpLogSink(event) }
-        if (tcpLogEnabledProvider()) {
-            val line = formatter.format(event)
-            runCatching { tcpLogSink(line) }
-        }
     }
 
     private fun shouldEmit(
