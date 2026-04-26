@@ -12,6 +12,7 @@ import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliLiveFollowData
 import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
 import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
+import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomPlayInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
 import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
 import com.xyoye.data_component.data.bilibili.BilibiliPgcPlayurlApiModel
@@ -132,6 +133,12 @@ interface BilibiliService {
         @Header(HeaderKey.BASE_URL) baseUrl: String,
         @QueryMap params: Map<String, @JvmSuppressWildcards Any>
     ): BilibiliJsonModel<BilibiliLivePlayUrlData>
+
+    @GET("/xlive/web-room/v2/index/getRoomPlayInfo")
+    suspend fun liveRoomPlayInfo(
+        @Header(HeaderKey.BASE_URL) baseUrl: String,
+        @QueryMap params: Map<String, @JvmSuppressWildcards Any>
+    ): BilibiliJsonModel<BilibiliLiveRoomPlayInfoData>
 
     @GET("/xlive/web-room/v1/index/getDanmuInfo")
     suspend fun liveDanmuInfo(

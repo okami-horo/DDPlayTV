@@ -4,6 +4,14 @@ import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.data_component.data.bilibili.BilibiliDashData
 import com.xyoye.data_component.data.bilibili.BilibiliDashMediaData
 import com.xyoye.data_component.data.bilibili.BilibiliDurlData
+import com.xyoye.data_component.data.bilibili.BilibiliLiveCodecData
+import com.xyoye.data_component.data.bilibili.BilibiliLiveFormatData
+import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
+import com.xyoye.data_component.data.bilibili.BilibiliLivePlayurlInfoData
+import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomPlayurlPayloadData
+import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomPlayInfoData
+import com.xyoye.data_component.data.bilibili.BilibiliLiveStreamData
+import com.xyoye.data_component.data.bilibili.BilibiliLiveUrlInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliPlayurlData
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -141,6 +149,86 @@ class BilibiliRepositoryCoreInternalLogicTest {
         assertTrue(invokeBoolean("isRiskControlError", risk))
         assertFalse(invokeBoolean("isRiskControlError", notRisk))
     }
+
+    @Test
+    fun buildLivePlayUrlDataSelectsRequestedQualityAndCombinesUrls() {
+        val data =
+            liveRoomPlayInfoData(
+                BilibiliLiveCodecData(
+                    currentQn = 400,
+                    baseUrl = "/live/blue.flv",
+                    urlInfo = listOf(BilibiliLiveUrlInfoData(host = "https://blue.example.com", extra = "?token=blue")),
+                ),
+                BilibiliLiveCodecData(
+                    currentQn = 10000,
+                    baseUrl = "/live/original.flv",
+                    urlInfo =
+                        listOf(
+                            BilibiliLiveUrlInfoData(host = "https://origin-a.example.com", extra = "?token=origin"),
+                            BilibiliLiveUrlInfoData(host = "https://origin-b.example.com/", extra = "?token=origin"),
+                        ),
+                ),
+            )
+
+        val result = invokeAny("buildLivePlayUrlData", data, 10000) as BilibiliLivePlayUrlData
+
+        assertEquals("https://origin-a.example.com/live/original.flv?token=origin", result.durl.first().url)
+        assertEquals(listOf("https://origin-b.example.com/live/original.flv?token=origin"), result.durl.first().backupUrl)
+    }
+
+    @Test
+    fun buildLivePlayUrlDataFallsBackToClosestLowerQuality() {
+        val data =
+            liveRoomPlayInfoData(
+                BilibiliLiveCodecData(
+                    currentQn = 150,
+                    baseUrl = "/live/high.flv",
+                    urlInfo = listOf(BilibiliLiveUrlInfoData(host = "https://high.example.com", extra = "?token=high")),
+                ),
+                BilibiliLiveCodecData(
+                    currentQn = 400,
+                    baseUrl = "/live/blue.flv",
+                    urlInfo = listOf(BilibiliLiveUrlInfoData(host = "https://blue.example.com", extra = "?token=blue")),
+                ),
+            )
+
+        val result = invokeAny("buildLivePlayUrlData", data, 10000) as BilibiliLivePlayUrlData
+
+        assertEquals("https://blue.example.com/live/blue.flv?token=blue", result.durl.first().url)
+    }
+
+    @Test
+    fun buildLivePlayUrlDataThrowsWhenLiveRoomIsClosed() {
+        val data = BilibiliLiveRoomPlayInfoData(liveStatus = 0)
+
+        val throwable =
+            assertThrows(InvocationTargetException::class.java) {
+                invokeAny("buildLivePlayUrlData", data, 10000)
+            }
+
+        val cause = throwable.cause as BilibiliException
+        assertEquals(-1, cause.code)
+    }
+
+    private fun liveRoomPlayInfoData(vararg codecs: BilibiliLiveCodecData): BilibiliLiveRoomPlayInfoData =
+        BilibiliLiveRoomPlayInfoData(
+            liveStatus = 1,
+            playurlInfo =
+                BilibiliLivePlayurlInfoData(
+                    playurl =
+                        BilibiliLiveRoomPlayurlPayloadData(
+                            stream =
+                                listOf(
+                                    BilibiliLiveStreamData(
+                                        format =
+                                            listOf(
+                                                BilibiliLiveFormatData(codec = codecs.toList()),
+                                            ),
+                                    ),
+                                ),
+                        ),
+                ),
+        )
 
     private fun invokeAny(
         methodName: String,

@@ -164,7 +164,7 @@ class BilibiliPlaybackSession(
             val latest = BilibiliPlaybackPreferencesStore.read(storageKey)
             val updated =
                 latest.copy(
-                    playMode = if (playerType == PlayerType.TYPE_MPV_PLAYER) latest.playMode else update.playMode ?: latest.playMode,
+                    playMode = update.playMode ?: latest.playMode,
                     preferredQualityQn = update.qualityQn ?: latest.preferredQualityQn,
                     preferredVideoCodec = update.videoCodec ?: latest.preferredVideoCodec,
                     preferredAudioQualityId = update.audioQualityId ?: latest.preferredAudioQualityId,
@@ -612,16 +612,7 @@ class BilibiliPlaybackSession(
     }
 
     private fun playModeOptionsForPlayer(): List<BilibiliPlayMode> =
-        if (playerType == PlayerType.TYPE_MPV_PLAYER) {
-            listOf(BilibiliPlayMode.MP4)
-        } else {
-            BilibiliPlayMode.entries
-        }
+        BilibiliPlayMode.entries
 
-    private fun coercePreferencesForPlayer(preferences: BilibiliPlaybackPreferences): BilibiliPlaybackPreferences =
-        if (playerType == PlayerType.TYPE_MPV_PLAYER && preferences.playMode != BilibiliPlayMode.MP4) {
-            preferences.copy(playMode = BilibiliPlayMode.MP4)
-        } else {
-            preferences
-        }
+    private fun coercePreferencesForPlayer(preferences: BilibiliPlaybackPreferences): BilibiliPlaybackPreferences = preferences
 }

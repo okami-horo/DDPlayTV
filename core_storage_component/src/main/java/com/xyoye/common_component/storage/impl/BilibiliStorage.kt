@@ -528,6 +528,7 @@ class BilibiliStorage(
                     BilibiliLivePlaybackSession(
                         storageId = library.id,
                         uniqueKey = file.uniqueKey(),
+                        storageKey = storageKey,
                         repository = repository,
                         roomId = parsed.roomId,
                     )

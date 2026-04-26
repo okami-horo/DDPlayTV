@@ -395,7 +395,8 @@ class BilibiliStorageEditDialog(
             BilibiliVideoCodec.entries.map {
                 val describe =
                     when (it) {
-                        BilibiliVideoCodec.AVC -> "兼容性最好（推荐默认）"
+                        BilibiliVideoCodec.AUTO -> "默认推荐，优先更高清/高效编码并自动回退"
+                        BilibiliVideoCodec.AVC -> "兼容性最好，但码率/清晰度可能低于新编码"
                         BilibiliVideoCodec.HEVC -> "更省带宽，但设备需支持 H.265"
                         BilibiliVideoCodec.AV1 -> "更省带宽，但设备需支持 AV1"
                         else -> null

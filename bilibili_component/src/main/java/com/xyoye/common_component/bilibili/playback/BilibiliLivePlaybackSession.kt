@@ -1,5 +1,7 @@
 package com.xyoye.common_component.bilibili.playback
 
+import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
+import com.xyoye.common_component.bilibili.BilibiliQuality
 import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.bilibili.repository.BilibiliRepository
 import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
@@ -10,6 +12,7 @@ import java.util.concurrent.TimeUnit
 class BilibiliLivePlaybackSession(
     val storageId: Int,
     val uniqueKey: String,
+    private val storageKey: String,
     private val repository: BilibiliRepository,
     private val roomId: Long
 ) {
@@ -65,13 +68,27 @@ class BilibiliLivePlaybackSession(
 
     private suspend fun refreshPlayUrl() {
         val cid = resolveRoomId()
-        val playUrl = repository.livePlayUrl(cid).getOrThrow()
+        val playUrl = repository.livePlayUrl(cid, qn = preferredLiveQn()).getOrThrow()
         urlCandidates = buildUrlCandidates(playUrl)
         selectedIndex = -1
         selectedExpiresAtMs = null
 
         if (urlCandidates.isEmpty()) {
             throw BilibiliException.from(-1, "取流失败")
+        }
+    }
+
+    private fun preferredLiveQn(): Int {
+        val preferences = BilibiliPlaybackPreferencesStore.read(storageKey)
+        return when (preferences.preferredQualityQn) {
+            BilibiliQuality.QN_4K.qn -> LIVE_QN_4K
+            BilibiliQuality.QN_1080P_PLUS.qn,
+            BilibiliQuality.QN_1080P.qn,
+            BilibiliQuality.AUTO.qn -> LIVE_QN_ORIGINAL
+            BilibiliQuality.QN_720P.qn -> LIVE_QN_BLUERAY
+            BilibiliQuality.QN_480P.qn -> LIVE_QN_HIGH
+            BilibiliQuality.QN_360P.qn -> LIVE_QN_FLUENT
+            else -> LIVE_QN_ORIGINAL
         }
     }
 
@@ -184,5 +201,13 @@ class BilibiliLivePlaybackSession(
                 iterator.remove()
             }
         }
+    }
+
+    private companion object {
+        private const val LIVE_QN_FLUENT = 80
+        private const val LIVE_QN_HIGH = 150
+        private const val LIVE_QN_BLUERAY = 400
+        private const val LIVE_QN_ORIGINAL = 10000
+        private const val LIVE_QN_4K = 20000
     }
 }

@@ -34,10 +34,13 @@ import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateRegisterData
 import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateValidateData
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursorData
 import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
+import com.xyoye.data_component.data.bilibili.BilibiliLiveCodecData
 import com.xyoye.data_component.data.bilibili.BilibiliLiveDanmuConnectInfo
 import com.xyoye.data_component.data.bilibili.BilibiliLiveFollowData
 import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlData
+import com.xyoye.data_component.data.bilibili.BilibiliLivePlayUrlDurl
 import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomInfoData
+import com.xyoye.data_component.data.bilibili.BilibiliLiveRoomPlayInfoData
 import com.xyoye.data_component.data.bilibili.BilibiliNavData
 import com.xyoye.data_component.data.bilibili.BilibiliPagelistItem
 import com.xyoye.data_component.data.bilibili.BilibiliPgcPlayurlV2Result
@@ -663,8 +666,14 @@ internal class BilibiliRepositoryCore(
 
     suspend fun livePlayUrl(
         roomId: Long,
-        platform: String = "h5"
+        platform: String = "h5",
+        qn: Int? = LIVE_QN_ORIGINAL
     ): Result<BilibiliLivePlayUrlData> {
+        val highQualityResult = liveRoomPlayInfo(roomId, qn)
+        if (highQualityResult.isSuccess) {
+            return highQualityResult
+        }
+
         val params: RequestParams = hashMapOf()
         params["cid"] = roomId
         params["platform"] = platform
@@ -672,6 +681,118 @@ internal class BilibiliRepositoryCore(
         return requestBilibiliAuthed(reason = "livePlayUrl") {
             service.livePlayUrl(BASE_LIVE, params)
         }.recoverTimeout(MSG_PLAYURL_TIMEOUT)
+    }
+
+    private suspend fun liveRoomPlayInfo(
+        roomId: Long,
+        qn: Int?
+    ): Result<BilibiliLivePlayUrlData> {
+        val params: RequestParams =
+            hashMapOf(
+                "room_id" to roomId,
+                "protocol" to "0,1",
+                "format" to "0,1,2",
+                "codec" to "0,1,2",
+                "platform" to "web",
+                "ptype" to 8,
+                "dolby" to 5,
+                "panorama" to 1,
+                "web_location" to 444.8,
+            )
+        qn?.takeIf { it > 0 }?.let {
+            params["qn"] = it
+        }
+
+        val signed =
+            BilibiliWbiSigner.sign(params) {
+                fetchWbiKeys()
+            }
+
+        return requestBilibiliAuthed(reason = "liveRoomPlayInfo") {
+            service.liveRoomPlayInfo(BASE_LIVE, signed)
+        }.recoverTimeout(MSG_PLAYURL_TIMEOUT)
+            .mapCatching { data -> buildLivePlayUrlData(data, qn ?: LIVE_QN_ORIGINAL) }
+    }
+
+    private fun buildLivePlayUrlData(
+        data: BilibiliLiveRoomPlayInfoData,
+        requestedQn: Int
+    ): BilibiliLivePlayUrlData {
+        if (data.liveStatus != 1) {
+            throw BilibiliException.from(code = -1, message = "取流失败：当前直播间未开播")
+        }
+
+        val codecs =
+            data
+                .playurlInfo
+                ?.playurl
+                ?.stream
+                .orEmpty()
+                .flatMap { it.format }
+                .flatMap { it.codec }
+                .filter { it.baseUrl.isNotBlank() && it.urlInfo.isNotEmpty() }
+
+        val selected =
+            selectLiveCodec(codecs, requestedQn)
+                ?: throw BilibiliException.from(code = -1, message = MSG_PLAYURL_EMPTY_STREAM)
+        val urls = buildLiveCodecUrls(selected)
+        if (urls.isEmpty()) {
+            throw BilibiliException.from(code = -1, message = MSG_PLAYURL_EMPTY_STREAM)
+        }
+
+        return BilibiliLivePlayUrlData(
+            durl =
+                listOf(
+                    BilibiliLivePlayUrlDurl(
+                        url = urls.first(),
+                        order = 1,
+                        backupUrl = urls.drop(1),
+                    ),
+                ),
+        )
+    }
+
+    private fun selectLiveCodec(
+        codecs: List<BilibiliLiveCodecData>,
+        requestedQn: Int
+    ): BilibiliLiveCodecData? {
+        if (codecs.isEmpty()) return null
+        requestedQn.takeIf { it > 0 }?.let { qn ->
+            codecs.firstOrNull { it.currentQn == qn }?.let { return it }
+            codecs
+                .filter { it.currentQn in 1..qn }
+                .maxByOrNull { it.currentQn }
+                ?.let { return it }
+        }
+        return codecs.maxByOrNull { it.currentQn }
+    }
+
+    private fun buildLiveCodecUrls(codec: BilibiliLiveCodecData): List<String> {
+        val urls = LinkedHashSet<String>()
+        codec.urlInfo.forEach { info ->
+            val url = buildLiveCodecUrl(info.host, codec.baseUrl, info.extra)
+            if (url.isNotBlank()) {
+                urls.add(url)
+            }
+        }
+        return urls.toList()
+    }
+
+    private fun buildLiveCodecUrl(
+        host: String,
+        baseUrl: String,
+        extra: String
+    ): String {
+        val base = baseUrl.trim()
+        if (base.isBlank()) return ""
+        val prefix = host.trim()
+        val path =
+            if (prefix.isBlank() || base.startsWith("http://") || base.startsWith("https://")) {
+                base
+            } else {
+                prefix.trimEnd('/') + "/" + base.trimStart('/')
+            }
+        return path + extra.trim()
     }
 
     suspend fun liveDanmuInfo(roomId: Long): Result<BilibiliLiveDanmuConnectInfo> {
@@ -1721,6 +1842,8 @@ internal class BilibiliRepositoryCore(
         private const val MSG_PLAYURL_TIMEOUT = "取流超时，请检查网络后重试"
         private const val MSG_PLAYURL_EMPTY_STREAM = "取流失败：响应无可用流"
         private const val MSG_LOGIN_EXPIRED_SCAN_AGAIN = "登录已失效，请重新扫码登录"
+
+        private const val LIVE_QN_ORIGINAL = 10000
 
         private const val RISK_REASON_PGC_PLAYURL_TV = "pgcPlayurl(tv)"
         private const val RISK_REASON_PGC_PLAYURL_TV_FALLBACK = "pgcPlayurlFallback(tv)"

@@ -25,8 +25,9 @@ class BilibiliLiveRepository internal constructor(
 
     suspend fun livePlayUrl(
         roomId: Long,
-        platform: String = "h5"
-    ): Result<BilibiliLivePlayUrlData> = core.livePlayUrl(roomId, platform)
+        platform: String = "h5",
+        qn: Int? = 10000
+    ): Result<BilibiliLivePlayUrlData> = core.livePlayUrl(roomId, platform, qn)
 
     suspend fun liveDanmuInfo(roomId: Long): Result<BilibiliLiveDanmuConnectInfo> = core.liveDanmuInfo(roomId)
 }

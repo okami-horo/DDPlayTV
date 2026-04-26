@@ -49,7 +49,7 @@ object BilibiliPlaybackPreferencesStore {
         val codec =
             runCatching {
                 kv.decodeString(namespacedKey(storageKey, KEY_VIDEO_CODEC))?.let { BilibiliVideoCodec.valueOf(it) }
-            }.getOrNull() ?: BilibiliVideoCodec.AVC
+            }.getOrNull() ?: BilibiliVideoCodec.AUTO
         val audioQualityId = kv.decodeInt(namespacedKey(storageKey, KEY_AUDIO_QUALITY_ID), 0)
         val allow4k = kv.decodeBool(namespacedKey(storageKey, KEY_ALLOW_4K), false)
         val cdnService =

@@ -10,7 +10,7 @@ import com.xyoye.common_component.bilibili.cdn.BilibiliCdnService
 data class BilibiliPlaybackPreferences(
     val playMode: BilibiliPlayMode = BilibiliPlayMode.AUTO,
     val preferredQualityQn: Int = BilibiliQuality.QN_720P.qn,
-    val preferredVideoCodec: BilibiliVideoCodec = BilibiliVideoCodec.AVC,
+    val preferredVideoCodec: BilibiliVideoCodec = BilibiliVideoCodec.AUTO,
     /**
      * 对应 playurl 返回的 dash.audio[].id，0 表示自动选择（当前实现为带宽最大）。
      */

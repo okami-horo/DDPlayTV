@@ -102,8 +102,9 @@ class BilibiliRepository(
 
     suspend fun livePlayUrl(
         roomId: Long,
-        platform: String = "h5"
-    ): Result<BilibiliLivePlayUrlData> = live.livePlayUrl(roomId, platform)
+        platform: String = "h5",
+        qn: Int? = 10000
+    ): Result<BilibiliLivePlayUrlData> = live.livePlayUrl(roomId, platform, qn)
 
     suspend fun liveDanmuInfo(roomId: Long): Result<BilibiliLiveDanmuConnectInfo> = live.liveDanmuInfo(roomId)
 
