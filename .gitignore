@@ -22,7 +22,9 @@ dadanplay.jks
 keystore.properties
 .tmp/
 .windsurf/
-.codex/
+# DDPlayTV HTTP 日志 skill 的本地配置（只保留在个人机器上）
+.codex/skills/ddplaytv-http-logs/.env
+.codex/skills/ddplaytv-http-logs/.env.local
 .DS_Store
 Thumbs.db
 *.tmp

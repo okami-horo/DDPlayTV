@@ -1,0 +1,4 @@
+interface:
+  display_name: "DDPlayTV HTTP Logs"
+  short_description: "Collect DDPlayTV HTTP logs over adb"
+  default_prompt: "Use $ddplaytv-http-logs to collect DDPlayTV HTTP logs from the connected projection device for debugging."
