@@ -63,6 +63,7 @@ powershell -ExecutionPolicy Bypass -File .codex\skills\ddplaytv-http-logs\script
 	- 未配置直连地址：使用 adb forward，并要求 `adb devices -l` 中存在且只存在一个 `device` 状态设备，或显式配置 `DDPLAYTV_ADB_SERIAL`。
 	- HTTP 失败且可用 adb 序列号存在：尝试 `adb exec-out run-as com.okamihoro.ddplaytv ...` 兜底。
 9. token 暂时拿不到时可让 `.env` 中 `DDPLAYTV_HTTP_LOG_TOKEN` 保持空值，脚本会跳过认证 HTTP 端点；只有 adb 可用时才尝试 `run-as` 兜底。该兜底只适用于可 `run-as` 的调试包；正式包或不可调试包通常会失败。
+10. 如果你想把缓存固定在项目目录内，推荐设置 `DDPLAYTV_HTTP_LOG_OUTPUT_DIR=Temp/ddplaytv-http-logs`；脚本会把它解析到仓库根目录下的 `Temp`，并自动追加时间戳子目录。
 
 ## .env 字段
 
@@ -74,12 +75,13 @@ powershell -ExecutionPolicy Bypass -File .codex\skills\ddplaytv-http-logs\script
 - `DDPLAYTV_HTTP_LOG_REMOTE_PORT`：设备侧 HTTP 日志服务端口，默认 `17010`；直连 `HOST` 模式也会使用该端口。
 - `DDPLAYTV_PACKAGE_NAME`：应用包名，默认 `com.okamihoro.ddplaytv`。
 - `DDPLAYTV_HTTP_LOG_OUTPUT_DIR`：输出目录；留空时写入 `artifacts/ddplaytv-http-logs/<timestamp>/`。
+- `DDPLAYTV_HTTP_LOG_OUTPUT_DIR`：输出目录；留空时写入项目根目录下 `Temp/ddplaytv-http-logs/<timestamp>/`，也可以显式设置为 `Temp/ddplaytv-http-logs` 作为项目内基目录，脚本会自动追加时间戳。
 - `DDPLAYTV_HTTP_LOG_KEEP_FORWARD`：设为 `true` 时采集后保留 adb forward。
 - `DDPLAYTV_HTTP_LOG_SKIP_DIRECT_FALLBACK`：设为 `true` 时 HTTP 失败后不尝试 `run-as` 兜底。
 
 ## 输出文件
 
-脚本默认写入 `artifacts/ddplaytv-http-logs/<timestamp>/`：
+脚本默认写入 `Temp/ddplaytv-http-logs/<timestamp>/`：
 
 - `collection-info.txt`：设备、包名、端口、采集时间、是否使用 token 等元信息；不要写入 token。
 - `segments.json`：日志段索引。

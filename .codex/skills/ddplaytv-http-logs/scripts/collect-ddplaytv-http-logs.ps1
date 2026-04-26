@@ -164,6 +164,27 @@ function Resolve-AdbPath {
     throw "adb was not found in PATH, ANDROID_SDK_ROOT, or ANDROID_HOME."
 }
 
+function Resolve-ProjectRoot {
+    return (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path
+}
+
+function Resolve-OutputDirectory {
+    param([string]$RequestedOutputDir)
+
+    $projectRoot = Resolve-ProjectRoot
+    if ($RequestedOutputDir -and $RequestedOutputDir.Trim().Length -gt 0) {
+        if ([System.IO.Path]::IsPathRooted($RequestedOutputDir)) {
+            return $RequestedOutputDir
+        }
+
+        $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+        return (Join-Path (Join-Path $projectRoot $RequestedOutputDir) $timestamp)
+    }
+
+    $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    return (Join-Path $projectRoot "Temp\ddplaytv-http-logs\$timestamp")
+}
+
 function Resolve-HttpBaseUri {
     param(
         [string]$ConfiguredBaseUri,
@@ -431,10 +452,7 @@ if ($usesAdbForward) {
     Write-Host "Using direct HTTP log server: $baseUri"
 }
 
-if (-not $OutputDir) {
-    $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $OutputDir = Join-Path (Get-Location) "artifacts\ddplaytv-http-logs\$timestamp"
-}
+$OutputDir = Resolve-OutputDirectory -RequestedOutputDir $OutputDir
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
 @(
@@ -447,6 +465,7 @@ New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
     "packageName=$PackageName",
     "packagePid=$packagePid",
     "envFile=$resolvedEnvFile",
+    "outputDir=$OutputDir",
     "localPort=$LocalPort",
     "remotePort=$RemotePort",
     "baseUri=$baseUri",
