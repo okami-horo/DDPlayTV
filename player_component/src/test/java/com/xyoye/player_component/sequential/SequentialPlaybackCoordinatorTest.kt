@@ -1,6 +1,7 @@
 package com.xyoye.player_component.sequential
 
 import com.xyoye.common_component.source.base.BaseVideoSource
+import com.xyoye.player.BilibiliCompletionTrust
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayerType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -60,6 +61,127 @@ class SequentialPlaybackCoordinatorTest {
 
             coordinator.onSourceApplied(sources.first(), PlayerType.TYPE_EXO_PLAYER)
             coordinator.onPlaybackStable()
+            advanceUntilIdle()
+
+            assertTrue(adapter.queueRequests.isEmpty())
+        }
+
+    @Test
+    fun queuesShortBilibiliSourceAfterProgressConfirmsShortDuration() =
+        runTest {
+            val dispatcher = StandardTestDispatcher(testScheduler)
+            val adapter = RecordingBackendAdapter(supportsSeamlessPlayback = true)
+            val coordinator =
+                SequentialPlaybackCoordinator(
+                    scope = this,
+                    backendAdapterProvider = { adapter },
+                    stateApplier = RecordingStateApplier(),
+                    fallbackSwitcher = RecordingFallbackSwitcher(),
+                    isAutoPlayNextEnabled = { true },
+                    workerDispatcher = dispatcher,
+                )
+            val sources = createSources(MediaType.BILIBILI_STORAGE, "episode-1", "episode-2")
+
+            coordinator.onSourceApplied(sources.first(), PlayerType.TYPE_EXO_PLAYER)
+            coordinator.onPlaybackStable()
+            coordinator.onPlaybackProgress(
+                durationMs = 5 * 60_000L,
+                positionMs = 30_000L,
+                isLive = false,
+            )
+            advanceUntilIdle()
+
+            assertEquals(1, adapter.queueRequests.size)
+        }
+
+    @Test
+    fun queuesBilibiliSourceAtTenMinuteThreshold() =
+        runTest {
+            val dispatcher = StandardTestDispatcher(testScheduler)
+            val adapter = RecordingBackendAdapter(supportsSeamlessPlayback = true)
+            val coordinator =
+                SequentialPlaybackCoordinator(
+                    scope = this,
+                    backendAdapterProvider = { adapter },
+                    stateApplier = RecordingStateApplier(),
+                    fallbackSwitcher = RecordingFallbackSwitcher(),
+                    isAutoPlayNextEnabled = { true },
+                    workerDispatcher = dispatcher,
+                )
+            val sources = createSources(MediaType.BILIBILI_STORAGE, "episode-1", "episode-2")
+
+            coordinator.onSourceApplied(sources.first(), PlayerType.TYPE_EXO_PLAYER)
+            coordinator.onPlaybackStable()
+            coordinator.onPlaybackProgress(
+                durationMs = BilibiliCompletionTrust.LONG_VIDEO_MIN_DURATION_MS,
+                positionMs = 30_000L,
+                isLive = false,
+            )
+            advanceUntilIdle()
+
+            assertEquals(1, adapter.queueRequests.size)
+        }
+
+    @Test
+    fun waitsToQueueLongBilibiliSourceUntilTailWindow() =
+        runTest {
+            val dispatcher = StandardTestDispatcher(testScheduler)
+            val adapter = RecordingBackendAdapter(supportsSeamlessPlayback = true)
+            val coordinator =
+                SequentialPlaybackCoordinator(
+                    scope = this,
+                    backendAdapterProvider = { adapter },
+                    stateApplier = RecordingStateApplier(),
+                    fallbackSwitcher = RecordingFallbackSwitcher(),
+                    isAutoPlayNextEnabled = { true },
+                    workerDispatcher = dispatcher,
+                )
+            val sources = createSources(MediaType.BILIBILI_STORAGE, "episode-1", "episode-2")
+
+            coordinator.onSourceApplied(sources.first(), PlayerType.TYPE_EXO_PLAYER)
+            coordinator.onPlaybackStable()
+            coordinator.onPlaybackProgress(
+                durationMs = 20 * 60_000L,
+                positionMs = 5 * 60_000L,
+                isLive = false,
+            )
+            advanceUntilIdle()
+
+            assertTrue(adapter.queueRequests.isEmpty())
+
+            coordinator.onPlaybackProgress(
+                durationMs = 20 * 60_000L,
+                positionMs = 20 * 60_000L - BilibiliCompletionTrust.COMPLETION_TRUST_WINDOW_MS + 1_000L,
+                isLive = false,
+            )
+            advanceUntilIdle()
+
+            assertEquals(1, adapter.queueRequests.size)
+        }
+
+    @Test
+    fun doesNotQueueLiveBilibiliSource() =
+        runTest {
+            val dispatcher = StandardTestDispatcher(testScheduler)
+            val adapter = RecordingBackendAdapter(supportsSeamlessPlayback = true)
+            val coordinator =
+                SequentialPlaybackCoordinator(
+                    scope = this,
+                    backendAdapterProvider = { adapter },
+                    stateApplier = RecordingStateApplier(),
+                    fallbackSwitcher = RecordingFallbackSwitcher(),
+                    isAutoPlayNextEnabled = { true },
+                    workerDispatcher = dispatcher,
+                )
+            val sources = createSources(MediaType.BILIBILI_STORAGE, "episode-1", "episode-2")
+
+            coordinator.onSourceApplied(sources.first(), PlayerType.TYPE_EXO_PLAYER)
+            coordinator.onPlaybackStable()
+            coordinator.onPlaybackProgress(
+                durationMs = -1L,
+                positionMs = 5 * 60_000L,
+                isLive = true,
+            )
             advanceUntilIdle()
 
             assertTrue(adapter.queueRequests.isEmpty())
@@ -282,6 +404,7 @@ class SequentialPlaybackCoordinatorTest {
     private class FakeVideoSource(
         private val ids: List<String>,
         private val index: Int,
+        private val mediaType: MediaType,
         private var currentPositionMs: Long = 0L,
     ) : BaseVideoSource(index, ids) {
         lateinit var resolver: (Int) -> FakeVideoSource?
@@ -296,16 +419,22 @@ class SequentialPlaybackCoordinatorTest {
 
         override fun getCurrentPosition(): Long = currentPositionMs
 
-        override fun getMediaType(): MediaType = MediaType.LOCAL_STORAGE
+        override fun getMediaType(): MediaType = mediaType
 
         override fun getUniqueKey(): String = ids[index]
 
         override fun getStorageId(): Int = 1
     }
 
-    private fun createSources(vararg ids: String): List<FakeVideoSource> {
+    private fun createSources(vararg ids: String): List<FakeVideoSource> =
+        createSources(MediaType.LOCAL_STORAGE, *ids)
+
+    private fun createSources(
+        mediaType: MediaType,
+        vararg ids: String
+    ): List<FakeVideoSource> {
         lateinit var sources: List<FakeVideoSource>
-        sources = ids.mapIndexed { index, _ -> FakeVideoSource(ids.toList(), index) }
+        sources = ids.mapIndexed { index, _ -> FakeVideoSource(ids.toList(), index, mediaType) }
         sources.forEach { source ->
             source.resolver = { targetIndex -> sources.getOrNull(targetIndex) }
         }

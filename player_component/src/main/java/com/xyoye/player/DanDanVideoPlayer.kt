@@ -19,6 +19,7 @@ import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.source.base.BaseVideoSource
+import com.xyoye.common_component.utils.danmu.StorageDanmuMatcher
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayState
@@ -250,6 +251,9 @@ class DanDanVideoPlayer(
     }
 
     override fun isLive(): Boolean {
+        if (this::videoSource.isInitialized && StorageDanmuMatcher.isBilibiliLive(videoSource)) {
+            return true
+        }
         val exoPlayer = exoPlayerOrNull()
         return exoPlayer?.isCurrentMediaItemLive ?: false
     }

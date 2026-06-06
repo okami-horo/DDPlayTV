@@ -1,6 +1,8 @@
 package com.xyoye.player_component.sequential
 
 import com.xyoye.common_component.source.base.BaseVideoSource
+import com.xyoye.player.BilibiliCompletionTrust
+import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayerType
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +26,8 @@ class SequentialPlaybackCoordinator(
     private var prepareRequestedGeneration: Long? = null
     private var generationCounter: Long = 0L
     private var queueItemCounter: Long = 0L
+    private var isPlaybackStable: Boolean = false
+    private var playbackSnapshot: PlaybackSnapshot? = null
 
     fun onSourceApplied(
         source: BaseVideoSource,
@@ -31,6 +35,8 @@ class SequentialPlaybackCoordinator(
     ) {
         invalidateActiveSession()
         currentSource = source
+        isPlaybackStable = false
+        playbackSnapshot = null
 
         val adapter = backendAdapterProvider()
         adapter.setEventListener(this)
@@ -42,10 +48,35 @@ class SequentialPlaybackCoordinator(
     }
 
     fun onPlaybackStable() {
+        isPlaybackStable = true
+        considerQueueNextSource()
+    }
+
+    fun onPlaybackProgress(
+        durationMs: Long,
+        positionMs: Long,
+        isLive: Boolean,
+    ) {
+        playbackSnapshot =
+            PlaybackSnapshot(
+                durationMs = durationMs,
+                positionMs = positionMs,
+                isLive = isLive,
+            )
+        considerQueueNextSource()
+    }
+
+    private fun considerQueueNextSource() {
         val adapter = activeAdapter ?: return
         val sessionToken = activeSessionToken ?: return
         val source = currentSource ?: return
+        if (!isPlaybackStable) {
+            return
+        }
         if (!adapter.supportsSeamlessPlayback || !isAutoPlayNextEnabled() || !source.hasNextSource()) {
+            return
+        }
+        if (!shouldQueueSeamlessly(source, playbackSnapshot)) {
             return
         }
         if (prepareRequestedGeneration == sessionToken.generation) {
@@ -79,6 +110,8 @@ class SequentialPlaybackCoordinator(
         prepareJob = null
         prepareRequestedGeneration = null
         preparedTarget = null
+        isPlaybackStable = false
+        playbackSnapshot = null
 
         activeSessionToken?.let { token ->
             activeAdapter?.invalidateSession(token)
@@ -168,10 +201,42 @@ class SequentialPlaybackCoordinator(
             playerType = playerType,
         )
 
+    private fun shouldQueueSeamlessly(
+        source: BaseVideoSource,
+        snapshot: PlaybackSnapshot?,
+    ): Boolean {
+        if (source.getMediaType() != MediaType.BILIBILI_STORAGE) {
+            return true
+        }
+
+        val currentSnapshot = snapshot ?: return false
+        if (currentSnapshot.isLive) {
+            return false
+        }
+
+        val durationMs = currentSnapshot.durationMs.coerceAtLeast(0L)
+        if (durationMs <= 0L) {
+            return false
+        }
+        if (durationMs <= BilibiliCompletionTrust.LONG_VIDEO_MIN_DURATION_MS) {
+            return true
+        }
+
+        val remainingMs =
+            (durationMs - currentSnapshot.positionMs.coerceAtLeast(0L)).coerceAtLeast(0L)
+        return remainingMs <= BilibiliCompletionTrust.COMPLETION_TRUST_WINDOW_MS
+    }
+
     private data class PreparedTarget(
         val sessionToken: SequentialPlaybackSessionToken,
         val queueItemId: SequentialPlaybackQueueItemId,
         val source: BaseVideoSource,
         val index: Int,
+    )
+
+    private data class PlaybackSnapshot(
+        val durationMs: Long,
+        val positionMs: Long,
+        val isLive: Boolean,
     )
 }

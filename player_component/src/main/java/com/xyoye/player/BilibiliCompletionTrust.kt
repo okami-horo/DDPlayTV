@@ -15,12 +15,16 @@ internal object BilibiliCompletionTrust {
             return true
         }
 
+        val positionMs = context.positionMs.coerceAtLeast(0L)
         val durationMs = context.durationMs.coerceAtLeast(0L)
-        if (durationMs <= 0L || durationMs < LONG_VIDEO_MIN_DURATION_MS) {
+        if (durationMs <= 0L) {
+            return positionMs > LONG_VIDEO_MIN_DURATION_MS
+        }
+        if (durationMs <= LONG_VIDEO_MIN_DURATION_MS) {
             return false
         }
 
-        val remainingMs = (durationMs - context.positionMs.coerceAtLeast(0L)).coerceAtLeast(0L)
+        val remainingMs = (durationMs - positionMs).coerceAtLeast(0L)
         return remainingMs > COMPLETION_TRUST_WINDOW_MS
     }
 }

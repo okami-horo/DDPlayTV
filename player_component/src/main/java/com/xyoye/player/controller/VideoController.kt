@@ -68,6 +68,7 @@ class VideoController(
     private var switchVideoSourceBlock: ((Int) -> Unit)? = null
     private var autoPlayNextBlock: ((Int) -> Unit)? = null
     private var trackAddedBlock: ((VideoTrackBean) -> Unit)? = null
+    private var playbackProgressBlock: ((Long, Long, Boolean) -> Unit)? = null
 
     init {
         addControlComponent(mDanmuController.getView())
@@ -141,6 +142,14 @@ class VideoController(
             }
             mPlayCompletionBlock?.invoke()
         }
+    }
+
+    override fun onProgressChanged(
+        duration: Long,
+        position: Long,
+    ) {
+        super.onProgressChanged(duration, position)
+        playbackProgressBlock?.invoke(duration, position, mControlWrapper.isLive())
     }
 
     override fun onBackPressed(): Boolean {
@@ -258,6 +267,10 @@ class VideoController(
 
     fun observerAutoPlayNext(block: (Int) -> Unit) {
         autoPlayNextBlock = block
+    }
+
+    fun observerPlaybackProgress(block: (Long, Long, Boolean) -> Unit) {
+        playbackProgressBlock = block
     }
 
     fun clearSourceScopedState() {

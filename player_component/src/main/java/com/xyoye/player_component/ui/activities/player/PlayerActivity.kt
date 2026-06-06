@@ -524,6 +524,9 @@ class PlayerActivity :
                 val source = videoSource ?: return@observerTrackAdded
                 viewModel.storeTrackAdded(source, it)
             }
+            observerPlaybackProgress { durationMs, positionMs, isLive ->
+                sequentialPlaybackCoordinator.onPlaybackProgress(durationMs, positionMs, isLive)
+            }
             observerAutoPlayNext { nextIndex ->
                 sequentialPlaybackCoordinator.onPlaybackCompletionRequested(nextIndex)
             }

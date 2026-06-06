@@ -53,4 +53,52 @@ class BilibiliCompletionTrustTest {
 
         assertFalse(BilibiliCompletionTrust.isUnexpectedCompletion(context))
     }
+
+    @Test
+    fun shouldTreatUnknownDurationPlaybackAtThresholdAsTrusted() {
+        val context =
+            BilibiliCompletionContext(
+                isLive = false,
+                positionMs = BilibiliCompletionTrust.LONG_VIDEO_MIN_DURATION_MS,
+                durationMs = 0L,
+            )
+
+        assertFalse(BilibiliCompletionTrust.isUnexpectedCompletion(context))
+    }
+
+    @Test
+    fun shouldTreatUnknownDurationPlaybackAboveThresholdAsUnexpected() {
+        val context =
+            BilibiliCompletionContext(
+                isLive = false,
+                positionMs = BilibiliCompletionTrust.LONG_VIDEO_MIN_DURATION_MS + 1L,
+                durationMs = 0L,
+            )
+
+        assertTrue(BilibiliCompletionTrust.isUnexpectedCompletion(context))
+    }
+
+    @Test
+    fun shouldTreatKnownDurationPlaybackAtThresholdAsTrusted() {
+        val context =
+            BilibiliCompletionContext(
+                isLive = false,
+                positionMs = 1_000L,
+                durationMs = BilibiliCompletionTrust.LONG_VIDEO_MIN_DURATION_MS,
+            )
+
+        assertFalse(BilibiliCompletionTrust.isUnexpectedCompletion(context))
+    }
+
+    @Test
+    fun shouldKeepUnknownDurationShortPlaybackBehaviorUnchanged() {
+        val context =
+            BilibiliCompletionContext(
+                isLive = false,
+                positionMs = 5 * 60_000L,
+                durationMs = 0L,
+            )
+
+        assertFalse(BilibiliCompletionTrust.isUnexpectedCompletion(context))
+    }
 }
