@@ -20,4 +20,6 @@ sealed class PlayerAction {
     object OpenSourceList : PlayerAction()
 
     object ToggleDanmu : PlayerAction()
+
+    object ToggleSubtitle : PlayerAction()
 }

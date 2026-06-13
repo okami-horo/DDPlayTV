@@ -48,6 +48,21 @@ interface InterSubtitleController : InterVideoTrack {
     fun updateShadow()
 
     /**
+     * 改变字幕显示状态
+     */
+    fun toggleSubtitleVisible()
+
+    /**
+     * 显式设置字幕显示状态，供 UI 与状态恢复使用
+     */
+    fun setUserSubtitleVisible(visible: Boolean)
+
+    /**
+     * 当前用户层面的字幕显示状态
+     */
+    fun isUserSubtitleVisible(): Boolean
+
+    /**
      * 字幕输出
      */
     fun onSubtitleTextOutput(subtitle: MixedSubtitle)

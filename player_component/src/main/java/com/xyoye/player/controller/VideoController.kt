@@ -375,6 +375,7 @@ class VideoController(
                 }
             }
             PlayerAction.ToggleDanmu -> mControlWrapper.toggleDanmuVisible()
+            PlayerAction.ToggleSubtitle -> mControlWrapper.toggleSubtitleVisible()
         }
     }
 }

@@ -21,6 +21,9 @@ class SubtitleController(
     private val subtitleImageView = SubtitleImageView(context)
     private val externalSubtitleView = ExternalSubtitleView(context)
 
+    private var userSubtitleVisible = true
+    private var lastSubtitle: MixedSubtitle? = null
+
     private val subtitleViews: Array<InterControllerView> =
         arrayOf(
             subtitleTextView,
@@ -60,7 +63,47 @@ class SubtitleController(
         subtitleTextView.updateShadow()
     }
 
+    override fun toggleSubtitleVisible() {
+        setUserSubtitleVisible(userSubtitleVisible.not())
+    }
+
+    override fun setUserSubtitleVisible(visible: Boolean) {
+        if (userSubtitleVisible == visible) {
+            return
+        }
+        userSubtitleVisible = visible
+        if (visible) {
+            restoreLastSubtitle()
+        } else {
+            clearSubtitleViews()
+        }
+    }
+
+    override fun isUserSubtitleVisible(): Boolean = userSubtitleVisible
+
     override fun onSubtitleTextOutput(subtitle: MixedSubtitle) {
+        lastSubtitle = subtitle
+        if (userSubtitleVisible.not()) {
+            clearSubtitleViews()
+            return
+        }
+        applySubtitle(subtitle)
+    }
+
+    private fun restoreLastSubtitle() {
+        lastSubtitle?.let { applySubtitle(it) }
+    }
+
+    private fun clearSubtitleViews() {
+        if (!subtitleTextView.isEmptySubtitle()) {
+            subtitleTextView.setSubtitle(null)
+        }
+        if (!subtitleImageView.isEmptySubtitle()) {
+            subtitleImageView.setSubtitle(null)
+        }
+    }
+
+    private fun applySubtitle(subtitle: MixedSubtitle) {
         when (subtitle.type) {
             SubtitleType.TEXT -> {
                 // 显示文字字幕前，清空图片字幕
