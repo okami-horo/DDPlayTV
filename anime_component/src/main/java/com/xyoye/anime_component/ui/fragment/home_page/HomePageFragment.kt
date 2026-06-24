@@ -9,6 +9,10 @@ import com.xyoye.common_component.extension.gridEmpty
 import com.xyoye.common_component.extension.isLandScreen
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.toResColor
+import com.xyoye.common_component.focus.DpadDirection
+import com.xyoye.common_component.focus.DpadFocusOwner
+import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
+import com.xyoye.common_component.focus.DpadRecyclerOrientation
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationDrawable
 import com.xyoye.data_component.data.BangumiAnimeData
@@ -17,7 +21,18 @@ import com.xyoye.data_component.data.BangumiAnimeData
  * Created by xyoye on 2020/7/30.
  */
 
-class HomePageFragment : BaseAppFragment<FragmentHomePageBinding>() {
+class HomePageFragment : BaseAppFragment<FragmentHomePageBinding>(), DpadFocusOwner {
+    private var spanCount: Int = 1
+
+    private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
+        DpadRecyclerFocusDelegate(
+            recyclerView = dataBinding.pageAnimeRv,
+            orientation = DpadRecyclerOrientation.Grid,
+            spanCountProvider = { spanCount },
+            boundaryHandler = { direction -> onDpadFocusBoundary(direction) },
+        )
+    }
+
     companion object {
         fun newInstance(weeklyAnimeData: BangumiAnimeData): HomePageFragment {
             val homePageFragment = HomePageFragment()
@@ -31,7 +46,7 @@ class HomePageFragment : BaseAppFragment<FragmentHomePageBinding>() {
     override fun getLayoutId() = R.layout.fragment_home_page
 
     override fun initView() {
-        val spanCount = if (mAttachActivity.isLandScreen()) 4 else 3
+        spanCount = if (mAttachActivity.isLandScreen()) 4 else 3
 
         dataBinding.pageAnimeRv.apply {
             layoutManager = gridEmpty(spanCount)
@@ -41,6 +56,7 @@ class HomePageFragment : BaseAppFragment<FragmentHomePageBinding>() {
             val pxValue = dp2px(10)
             val spaceColor = R.color.item_bg_color.toResColor(mAttachActivity)
             addItemDecoration(ItemDecorationDrawable(pxValue, pxValue, spaceColor))
+            focusDelegate.install()
         }
 
         arguments?.run {
@@ -49,4 +65,14 @@ class HomePageFragment : BaseAppFragment<FragmentHomePageBinding>() {
             }
         }
     }
+
+    override fun requestDefaultDpadFocus(): Boolean = focusDelegate.requestDefaultFocus()
+
+    override fun saveDpadFocus() {
+        focusDelegate.saveFocus()
+    }
+
+    override fun restoreDpadFocus(): Boolean = focusDelegate.restoreFocus()
+
+    override fun onDpadFocusBoundary(direction: DpadDirection): Boolean = false
 }

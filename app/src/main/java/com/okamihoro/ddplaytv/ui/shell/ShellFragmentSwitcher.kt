@@ -14,6 +14,8 @@ class ShellFragmentSwitcher(
     private var currentTag: String? = null
     private var previousFragment: Fragment? = null
 
+    fun currentFragment(): Fragment? = previousFragment
+
     fun switchFragment(
         tag: String,
         fragmentPath: String

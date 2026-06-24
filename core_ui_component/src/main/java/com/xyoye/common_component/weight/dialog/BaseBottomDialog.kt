@@ -18,6 +18,7 @@ import androidx.databinding.ViewDataBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.xyoye.common_component.extension.toResColor
+import com.xyoye.common_component.focus.DpadDialogFocusController
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.core_ui_component.R
 import com.xyoye.core_ui_component.databinding.DialogBaseBottomDialogBinding
@@ -27,9 +28,27 @@ import com.xyoye.core_ui_component.databinding.DialogBaseBottomDialogBinding
  */
 
 abstract class BaseBottomDialog<T : ViewDataBinding>(
-    activity: Activity
+    private val activity: Activity
 ) : BottomSheetDialog(activity, R.style.Bottom_Sheet_Dialog) {
     protected lateinit var rootViewBinding: DialogBaseBottomDialogBinding
+
+    private val focusController by lazy(LazyThreadSafetyMode.NONE) {
+        DpadDialogFocusController(
+            activity = activity,
+            rootProvider = { rootViewBinding.root },
+        )
+    }
+
+    override fun show() {
+        focusController.captureHostFocus()
+        super.show()
+        focusController.requestDialogFocus()
+    }
+
+    override fun dismiss() {
+        super.dismiss()
+        activity.window?.decorView?.post { focusController.restoreHostFocus() }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -19,7 +19,9 @@
  - TV-specific structural differences may use separate activities/pages.
  - Small same-screen differences should branch at runtime with `isTelevisionUiMode()`.
  - Pure visual TV differences should use resource qualifiers/selectors.
- - RecyclerView/grid focus should use shared focus helpers when available, including `RecyclerViewFocusDelegate`, `FocusPolicy`, and `FocusTarget` conventions.
+ - RecyclerView/grid focus should use shared focus helpers when available, including `RecyclerViewFocusDelegate`, `DpadRecyclerFocusDelegate`, `FocusPolicy`, and `FocusTarget` conventions.
+ - TV DPAD focus ownership should be explicit for migrated screens via `DpadFocusOwner`; shell/page/dialog/overlay transitions should save focus, restore focus, and provide a default fallback instead of relying on Android default focus search.
+ - Dialog focus restore should be centralized through `BaseBottomDialog`/`DpadDialogFocusController` where possible, with TV/non-touch checks to avoid changing mobile behavior.
 
  ## Bilibili Pattern
  - Before changing Bilibili media/library logic, inspect `E:\Project\PiliPlus\lib` for relevant repository/service/provider/controller behavior.

@@ -10,7 +10,10 @@ import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.deletable
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
-import com.xyoye.common_component.focus.RecyclerViewFocusDelegate
+import com.xyoye.common_component.focus.DpadDirection
+import com.xyoye.common_component.focus.DpadFocusOwner
+import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
+import com.xyoye.common_component.focus.DpadRecyclerOrientation
 import com.xyoye.common_component.focus.requestDefaultFocus
 import com.xyoye.common_component.media3.Media3SessionStore
 import com.xyoye.common_component.weight.BottomActionDialog
@@ -30,12 +33,25 @@ import com.xyoye.local_component.databinding.ItemMediaLibraryBinding
  */
 
 @Route(path = RouteTable.Local.MediaFragment)
-class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
+class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>(), DpadFocusOwner {
     private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
-        RecyclerViewFocusDelegate(
+        DpadRecyclerFocusDelegate(
             recyclerView = dataBinding.mediaLibRv,
+            orientation = DpadRecyclerOrientation.Vertical,
             uniqueKeyProvider = { item ->
                 (item as? MediaLibraryEntity)?.let { "${it.mediaType.name}|${it.url}" }
+            },
+            boundaryHandler = { direction -> onDpadFocusBoundary(direction) },
+            fallbackFocusProvider = { dataBinding.addMediaStorageBt },
+            extraKeyHandler = { keyCode, _ ->
+                when (keyCode) {
+                    android.view.KeyEvent.KEYCODE_MENU,
+                    android.view.KeyEvent.KEYCODE_SETTINGS -> {
+                        showAddStorageDialog()
+                        true
+                    }
+                    else -> false
+                }
             },
         )
     }
@@ -113,19 +129,26 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>() {
                     }
                 }
 
-            focusDelegate.installVerticalDpadKeyNavigation(
-                onMenuKeyDown = { showAddStorageDialog() },
-                onSettingsKeyDown = { showAddStorageDialog() },
-            )
+            focusDelegate.install()
         }
     }
+
+    override fun requestDefaultDpadFocus(): Boolean = focusDelegate.requestDefaultFocus()
+
+    override fun saveDpadFocus() {
+        focusDelegate.saveFocus()
+    }
+
+    override fun restoreDpadFocus(): Boolean = focusDelegate.restoreFocus()
+
+    override fun onDpadFocusBoundary(direction: DpadDirection): Boolean = false
 
     private fun requestDefaultFocusIfNeeded(allowFallback: Boolean) {
         val binding = bindingOrNull ?: return
         if (binding.root.isInTouchMode) return
         if (binding.root.findFocus() != null) return
 
-        val moved = focusDelegate.requestFocus()
+        val moved = focusDelegate.restoreFocus()
         if (!moved && allowFallback) {
             binding.addMediaStorageBt.requestDefaultFocus()
         }

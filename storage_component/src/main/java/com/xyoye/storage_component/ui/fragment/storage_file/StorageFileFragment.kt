@@ -12,7 +12,10 @@ import com.xyoye.common_component.extension.FocusTarget
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.extension.vertical
-import com.xyoye.common_component.focus.RecyclerViewFocusDelegate
+import com.xyoye.common_component.focus.DpadDirection
+import com.xyoye.common_component.focus.DpadFocusOwner
+import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
+import com.xyoye.common_component.focus.DpadRecyclerOrientation
 import com.xyoye.common_component.focus.setDescendantFocusBlocked
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
@@ -30,14 +33,27 @@ import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivit
 import com.xyoye.storage_component.ui.dialog.BaiduPanLoginDialog
 import com.xyoye.storage_component.ui.dialog.BilibiliLoginDialog
 
-class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>() {
+class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>(), DpadFocusOwner {
     private val directory: StorageFile? by lazy { ownerActivity.directory }
     private var tvHistoryHintShown = false
     private var lastPagingHintState: com.xyoye.common_component.storage.PagedStorage.State? = null
     private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
-        RecyclerViewFocusDelegate(
+        DpadRecyclerFocusDelegate(
             recyclerView = dataBinding.storageFileRv,
+            orientation = DpadRecyclerOrientation.Vertical,
             uniqueKeyProvider = { item -> (item as? StorageFile)?.uniqueKey() },
+            focusTargetProvider = { rv -> rv.resolveVerticalMoveFocusTarget() },
+            boundaryHandler = { direction -> onDpadFocusBoundary(direction) },
+            extraKeyHandler = { keyCode, _ ->
+                when (keyCode) {
+                    android.view.KeyEvent.KEYCODE_MENU,
+                    android.view.KeyEvent.KEYCODE_SETTINGS -> {
+                        triggerTvRefresh()
+                        true
+                    }
+                    else -> false
+                }
+            },
         )
     }
 
@@ -183,12 +199,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                 },
             )
 
-            focusDelegate.installVerticalDpadKeyNavigation(
-                focusTargetProvider = { rv -> rv.resolveVerticalMoveFocusTarget() },
-                onMenuKeyDown = { triggerTvRefresh() },
-                onSettingsKeyDown = { triggerTvRefresh() },
-                consumeDownKeyWhenBottom = true,
-            )
+            focusDelegate.install()
         }
     }
 
@@ -201,6 +212,16 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             FocusTarget.Tag(R.string.focusable_item.toResString())
         }
     }
+
+    override fun requestDefaultDpadFocus(): Boolean = focusDelegate.requestDefaultFocus()
+
+    override fun saveDpadFocus() {
+        focusDelegate.saveFocus()
+    }
+
+    override fun restoreDpadFocus(): Boolean = focusDelegate.restoreFocus()
+
+    override fun onDpadFocusBoundary(direction: DpadDirection): Boolean = direction == DpadDirection.Down
 
     fun triggerTvRefresh() {
         val binding = bindingOrNull ?: return

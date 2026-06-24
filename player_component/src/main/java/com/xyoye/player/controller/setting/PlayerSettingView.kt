@@ -12,6 +12,10 @@ import com.xyoye.common_component.extension.nextItemIndex
 import com.xyoye.common_component.extension.previousItemIndex
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
+import com.xyoye.common_component.focus.DpadDirection
+import com.xyoye.common_component.focus.DpadFocusOwner
+import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
+import com.xyoye.common_component.focus.DpadRecyclerOrientation
 import com.xyoye.common_component.playback.addon.PlaybackSettingsAddon
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
@@ -36,9 +40,18 @@ class PlayerSettingView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : BaseSettingView<LayoutPlayerSettingBinding>(context, attrs, defStyleAttr) {
+) : BaseSettingView<LayoutPlayerSettingBinding>(context, attrs, defStyleAttr), DpadFocusOwner {
     // 操作项集合（每次展示时根据运行态重建）
     private var settingItems: List<Any> = emptyList()
+
+    private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
+        DpadRecyclerFocusDelegate(
+            recyclerView = viewBinding.settingRv,
+            orientation = DpadRecyclerOrientation.Grid,
+            spanCountProvider = { 4 },
+            boundaryHandler = { direction -> onDpadFocusBoundary(direction) },
+        )
+    }
 
     init {
         initRv()
@@ -55,6 +68,9 @@ class PlayerSettingView(
             .filter { it is SettingItem }
             .forEach { applyItemStatus(it as SettingItem) }
         viewBinding.settingRv.setData(settingItems)
+        viewBinding.settingRv.post {
+            requestDefaultDpadFocus()
+        }
     }
 
     override fun onViewHide() {
@@ -129,6 +145,23 @@ class PlayerSettingView(
                 }
         }
     }
+
+    override fun requestDefaultDpadFocus(): Boolean {
+        val firstIndex = settingItems.indexOfFirst { it is SettingItem }
+        if (firstIndex != -1) {
+            focusDelegate.setPendingFocus(index = firstIndex)
+            return focusDelegate.restoreFocus()
+        }
+        return false
+    }
+
+    override fun saveDpadFocus() {
+        focusDelegate.saveFocus()
+    }
+
+    override fun restoreDpadFocus(): Boolean = focusDelegate.restoreFocus()
+
+    override fun onDpadFocusBoundary(direction: DpadDirection): Boolean = false
 
     /**
      * 处理KeyCode事件

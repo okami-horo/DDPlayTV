@@ -12,7 +12,6 @@ import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.findAndRemoveFragment
-import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 
@@ -33,6 +32,15 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
     private val navItems = TvNavItem.entries.toList()
     private var selectedSection: TvNavItem = TvNavItem.MEDIA
 
+    private val focusCoordinator by lazy(LazyThreadSafetyMode.NONE) {
+        TvShellFocusCoordinator(
+            navRecyclerView = dataBinding.tvNavRv,
+            contentRoot = dataBinding.fragmentContainer,
+            selectedNavIndexProvider = { navItems.indexOf(selectedSection) },
+            currentFragmentProvider = { fragmentSwitcher.currentFragment() },
+        )
+    }
+
     override fun getLayoutId() = R.layout.activity_tv_main
 
     override fun initView() {
@@ -46,7 +54,7 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
         // 默认显示媒体库页面
         switchSection(TvNavItem.MEDIA)
         dataBinding.tvNavRv.post {
-            dataBinding.tvNavRv.requestIndexChildFocus(navItems.indexOf(selectedSection))
+            focusCoordinator.requestNavFocus()
         }
 
         initShell()
@@ -56,6 +64,9 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
         keyCode: Int,
         event: KeyEvent?
     ): Boolean {
+        if (focusCoordinator.onContentKeyDown(keyCode)) {
+            return true
+        }
         when (keyCode) {
             KeyEvent.KEYCODE_MENU,
             KeyEvent.KEYCODE_SETTINGS -> {
@@ -88,6 +99,10 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
                     }
                 }
             setData(navItems)
+            setOnKeyListener { _, keyCode, event ->
+                if (event?.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
+                focusCoordinator.onNavKeyDown(keyCode)
+            }
         }
     }
 
@@ -96,6 +111,7 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
         position: Int
     ) {
         if (item.isSection) {
+            focusCoordinator.saveContentFocus()
             val oldIndex = navItems.indexOf(selectedSection)
             selectedSection = item
             dataBinding.tvNavRv.adapter?.notifyItemChanged(oldIndex)
