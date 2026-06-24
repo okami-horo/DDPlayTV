@@ -4,13 +4,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.source.base.BaseVideoSource
+import com.xyoye.common_component.utils.danmu.DanmuMatchCoordinator
 import com.xyoye.common_component.utils.danmu.DanmuFinder
-import com.xyoye.common_component.utils.danmu.StorageDanmuMatcher
-import com.xyoye.common_component.utils.danmu.source.DanmuSourceFactory
+import com.xyoye.common_component.utils.danmu.MatchOutcome
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.DanmuTrackResource
 import com.xyoye.data_component.data.DanmuEpisodeData
-import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -23,23 +22,17 @@ class PlayerDanmuViewModel : BaseViewModel() {
     val danmuSearchLiveData = MutableLiveData<List<DanmuEpisodeData>>()
     val downloadDanmuLiveData = MutableLiveData<DanmuTrackResource>()
 
+    private val coordinator = DanmuMatchCoordinator()
+
     fun matchDanmu(videoSource: BaseVideoSource) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (videoSource.getMediaType() == MediaType.BILIBILI_STORAGE) {
-                val matched = StorageDanmuMatcher.matchDanmu(videoSource)
-                if (matched != null) {
-                    loadDanmuLiveData.postValue(videoSource.getVideoUrl() to matched)
+            when (val outcome = coordinator.match(videoSource, DanmuMatchCoordinator.MatchMode.AUTO)) {
+                is MatchOutcome.Success -> {
+                    loadDanmuLiveData.postValue(videoSource.getVideoUrl() to outcome.resource)
                 }
-                return@launch
+                is MatchOutcome.Candidates -> Unit
+                is MatchOutcome.NotFound -> Unit
             }
-
-            DanmuSourceFactory
-                .build(videoSource)
-                ?.let {
-                    DanmuFinder.instance.downloadMatched(it)
-                }?.let {
-                    loadDanmuLiveData.postValue(videoSource.getVideoUrl() to DanmuTrackResource.LocalFile(it))
-                }
         }
     }
 

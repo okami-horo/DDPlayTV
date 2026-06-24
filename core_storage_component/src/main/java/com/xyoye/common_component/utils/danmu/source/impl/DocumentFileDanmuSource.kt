@@ -15,6 +15,16 @@ import java.io.InputStream
 class DocumentFileDanmuSource(
     private val uri: Uri
 ) : AbstractDanmuSource() {
+    override suspend fun fileName(): String? {
+        val documentFile = getDocumentFile() ?: return null
+        return documentFile.name?.substringBeforeLast(".")
+    }
+
+    override suspend fun fileSize(): Long? {
+        val documentFile = getDocumentFile() ?: return null
+        return documentFile.length().takeIf { it > 0 }
+    }
+
     override suspend fun getStream(): InputStream? {
         val documentFile = getDocumentFile() ?: return null
         return try {

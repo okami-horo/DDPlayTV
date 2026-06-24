@@ -15,5 +15,9 @@ abstract class AbstractDanmuSource : DanmuSource {
             ?.use { DanmuHashCalculator.calculate(it) }
             .also { hash = it }
 
+    override suspend fun fileName(): String? = null
+
+    override suspend fun fileSize(): Long? = null
+
     abstract suspend fun getStream(): InputStream?
 }

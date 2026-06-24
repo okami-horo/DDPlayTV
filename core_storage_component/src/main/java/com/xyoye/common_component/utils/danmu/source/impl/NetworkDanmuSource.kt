@@ -1,10 +1,14 @@
 package com.xyoye.common_component.utils.danmu.source.impl
 
+import android.net.Uri
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.utils.danmu.source.AbstractDanmuSource
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.InputStream
 import java.io.InterruptedIOException
+import java.net.URI
+import java.net.URLDecoder
 import java.net.SocketException
 import java.net.SocketTimeoutException
 
@@ -16,6 +20,20 @@ class NetworkDanmuSource(
     private val url: String,
     private val headers: Map<String, String> = emptyMap()
 ) : AbstractDanmuSource() {
+    override suspend fun hash(): String? =
+        withTimeoutOrNull(NETWORK_HASH_TIMEOUT_MS) {
+            super.hash()
+        }
+
+    override suspend fun fileName(): String? {
+        val segment = Uri.parse(url)?.lastPathSegment ?: URI(url).path?.substringAfterLast("/") ?: return null
+        return URLDecoder.decode(segment, "UTF-8")
+            .substringBeforeLast(".")
+            .ifBlank { null }
+    }
+
+    override suspend fun fileSize(): Long? = null
+
     override suspend fun getStream(): InputStream? =
         retryWithBackoff {
             ResourceRepository
@@ -63,5 +81,9 @@ class NetworkDanmuSource(
         }
 
         return null
+    }
+
+    companion object {
+        private const val NETWORK_HASH_TIMEOUT_MS = 30_000L
     }
 }

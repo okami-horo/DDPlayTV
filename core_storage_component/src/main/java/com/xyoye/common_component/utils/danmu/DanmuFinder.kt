@@ -6,6 +6,7 @@ import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.data.DanmuRelatedUrlData
+import com.xyoye.data_component.data.MatchResult
 import java.io.InputStream
 
 /**
@@ -22,7 +23,7 @@ interface DanmuFinder {
     /**
      * 获取弹幕匹配数据
      */
-    suspend fun getMatched(source: DanmuSource): DanmuAnimeData?
+    suspend fun getMatched(source: DanmuSource): MatchResult?
 
     /**
      * 获取弹幕匹配数据，并下载

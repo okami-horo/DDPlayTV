@@ -20,9 +20,6 @@ object DanmuHashCalculator {
     // 计算Hash每次读取的数据大小
     private const val HASH_BUFFER_SIZE = 256 * 1024
 
-    // MD5计算器
-    private val MD5 = MessageDigest.getInstance("MD5")
-
     /**
      * 读取InputStream的前16M数据，生成hash值
      */
@@ -37,22 +34,22 @@ object DanmuHashCalculator {
         var target = buffer.size
 
         return try {
+            val md5 = MessageDigest.getInstance("MD5")
             // 检查流是否已关闭或不可用
             if (inputStream.available() < 0) {
                 return null
             }
 
-            MD5.reset()
             while (
                 inputStream.read(buffer, 0, target).also { current = it } != -1 &&
                 total < HASH_CALCULATE_SIZE
             ) {
-                MD5.update(buffer, 0, current)
+                md5.update(buffer, 0, current)
 
                 total += current
                 target = minOf(HASH_CALCULATE_SIZE - total, bufferSize)
             }
-            MD5.digest().toHexString()
+            md5.digest().toHexString()
         } catch (e: SocketException) {
             // 专门处理Socket异常，避免重复上报
             null

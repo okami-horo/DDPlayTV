@@ -692,19 +692,13 @@ class PlayerActivity :
             LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "load history cid=${historyDanmu.episodeId}")
             videoController.addExtendTrack(VideoTrackBean.danmu(historyDanmu))
         } else {
-            val isBilibiliLive = StorageDanmuMatcher.isBilibiliLive(source)
-            if (
-                isBilibiliLive &&
-                DanmuConfig.isAutoEnableBilibiliLiveDanmaku() &&
-                popupManager.isShowing().not()
-            ) {
-                LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto live danmaku start title=${source.getVideoTitle()}")
-                danmuViewModel.matchDanmu(source)
-            } else if (
-                DanmuConfig.isAutoMatchDanmu() &&
-                source.getMediaType() != MediaType.FTP_SERVER &&
-                popupManager.isShowing().not()
-            ) {
+            val shouldAutoMatchDanmu =
+                if (StorageDanmuMatcher.isBilibiliLive(source)) {
+                    DanmuConfig.isAutoEnableBilibiliLiveDanmaku()
+                } else {
+                    DanmuConfig.isAutoMatchDanmu() && source.getMediaType() != MediaType.FTP_SERVER
+                }
+            if (shouldAutoMatchDanmu && popupManager.isShowing().not()) {
                 LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto match start title=${source.getVideoTitle()}")
                 danmuViewModel.matchDanmu(source)
             }

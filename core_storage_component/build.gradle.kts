@@ -4,6 +4,7 @@ plugins {
     id("com.android.library")
     id("kotlin-parcelize")
     kotlin("android")
+    kotlin("kapt")
 }
 
 moduleSetup()
@@ -37,6 +38,8 @@ dependencies {
     implementation(Dependencies.Apache.commons_net)
 
     implementation(Dependencies.Tencent.mmkv)
+    implementation(Dependencies.Square.moshi)
+    kapt(Dependencies.Square.moshi_codegen)
 }
 
 android {

@@ -10,13 +10,19 @@ object ResourceRepository : BaseRepository() {
     /**
      * 匹配弹幕
      */
-    suspend fun matchDanmu(hash: String) =
+    suspend fun matchDanmu(
+        fileHash: String,
+        fileName: String,
+        fileSize: Long,
+        videoDuration: Int = 0,
+        matchMode: String = "hashAndFileName"
+    ) =
         request()
-            .param("fileHash", hash)
-            .param("fileName", "empty")
-            .param("fileSize", 0)
-            .param("videoDuration", 0)
-            .param("matchMode", "hashOnly")
+            .param("fileHash", fileHash)
+            .param("fileName", fileName)
+            .param("fileSize", fileSize)
+            .param("videoDuration", videoDuration)
+            .param("matchMode", matchMode)
             .doPost {
                 RetrofitManager.danDanService.matchDanmu(it)
             }

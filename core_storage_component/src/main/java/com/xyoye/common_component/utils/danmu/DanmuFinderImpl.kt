@@ -9,6 +9,7 @@ import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.data.DanmuRelatedUrlData
+import com.xyoye.data_component.data.MatchResult
 import org.apache.commons.io.FileUtils
 import java.io.InputStream
 
@@ -19,27 +20,21 @@ import java.io.InputStream
 class DanmuFinderImpl(
     private val danmuQuery: DanmuQuery
 ) : DanmuFinder {
-    override suspend fun getMatched(source: DanmuSource): DanmuAnimeData? {
-        val hash =
-            source.hash()
-                ?: return null
-
-        val episode =
-            danmuQuery.match(hash)
-                ?: return null
-
-        return DanmuAnimeData(episode.animeId, episode.animeTitle, listOf(episode))
+    override suspend fun getMatched(source: DanmuSource): MatchResult? {
+        val hash = source.hash() ?: return null
+        val result = danmuQuery.match(
+            hash = hash,
+            fileName = source.fileName(),
+            fileSize = source.fileSize() ?: 0L,
+            videoDuration = ((source.durationMs() ?: 0L) / 1000).toInt(),
+        )
+        return if (result.episodes.isEmpty()) null else result
     }
 
     override suspend fun downloadMatched(source: DanmuSource): LocalDanmuBean? {
-        val hash =
-            source.hash()
-                ?: return null
-
-        val episode =
-            danmuQuery.match(hash)
-                ?: return null
-
+        val result = getMatched(source) ?: return null
+        if (result.isMatched.not()) return null
+        val episode = result.episodes.firstOrNull() ?: return null
         return downloadEpisode(episode)
     }
 

@@ -8,6 +8,9 @@ import com.xyoye.data_component.bean.DanmuTrackResource
 import com.xyoye.data_component.enums.MediaType
 
 object StorageDanmuMatcher {
+    fun isSupported(source: BaseVideoSource): Boolean =
+        source.getMediaType() == MediaType.BILIBILI_STORAGE
+
     fun isBilibiliLive(source: BaseVideoSource): Boolean {
         if (source.getMediaType() != MediaType.BILIBILI_STORAGE) return false
         return BilibiliKeys.parse(source.getUniqueKey()) is BilibiliKeys.LiveKey

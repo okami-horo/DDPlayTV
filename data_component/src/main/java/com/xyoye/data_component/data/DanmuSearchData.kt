@@ -37,6 +37,7 @@ data class DanmuEpisodeData(
     val animeTitle: String = "",
     val episodeId: String = "",
     val episodeTitle: String = "",
+    val shift: Double = 0.0,
     @Json(ignore = true)
     val isRecommend: Boolean = false,
     @Json(ignore = true)

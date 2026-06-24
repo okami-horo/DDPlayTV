@@ -135,6 +135,7 @@ abstract class TvVideoController(
                 }
                 PlayerAction.OpenSourceList -> mControlWrapper.showSettingView(SettingViewType.SWITCH_VIDEO_SOURCE)
                 PlayerAction.ToggleDanmu -> mControlWrapper.toggleDanmuVisible()
+                PlayerAction.ToggleSubtitle -> mControlWrapper.toggleSubtitleVisible()
             }
         }
     }

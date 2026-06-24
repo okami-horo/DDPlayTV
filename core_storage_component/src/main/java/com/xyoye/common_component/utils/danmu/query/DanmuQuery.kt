@@ -4,6 +4,7 @@ import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuContentData
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.data.DanmuRelatedUrlData
+import com.xyoye.data_component.data.MatchResult
 
 /**
  * Created by xyoye on 2024/1/14.
@@ -19,7 +20,12 @@ interface DanmuQuery {
     /**
      * 匹配弹幕
      */
-    suspend fun match(hash: String): DanmuEpisodeData?
+    suspend fun match(
+        hash: String,
+        fileName: String?,
+        fileSize: Long,
+        videoDuration: Int = 0
+    ): MatchResult
 
     /**
      * 搜索弹幕

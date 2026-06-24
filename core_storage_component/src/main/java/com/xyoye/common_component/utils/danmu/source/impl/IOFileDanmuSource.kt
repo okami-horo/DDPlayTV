@@ -15,6 +15,16 @@ import java.io.InputStream
 class IOFileDanmuSource(
     private val path: String
 ) : AbstractDanmuSource() {
+    override suspend fun fileName(): String? {
+        val file = File(path)
+        return if (file.exists() && !file.isDirectory) file.nameWithoutExtension else null
+    }
+
+    override suspend fun fileSize(): Long? {
+        val file = File(path)
+        return if (file.exists() && !file.isDirectory) file.length() else null
+    }
+
     override suspend fun getStream(): InputStream? {
         val file = getIOFile() ?: return null
         return try {

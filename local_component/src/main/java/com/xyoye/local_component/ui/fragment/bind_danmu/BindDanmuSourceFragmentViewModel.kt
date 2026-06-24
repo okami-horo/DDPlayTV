@@ -75,10 +75,18 @@ class BindDanmuSourceFragmentViewModel : BaseViewModel() {
                 val matched = DanmuFinder.instance.getMatched(danmuSource)
                 hideLoading()
 
-                // 保存匹配结果
-                _matchedAnimeFlow.emit(matched)
-                // 选中匹配结果
-                _selectedAnimeFlow.emit(matched)
+                if (matched != null && matched.episodes.isNotEmpty()) {
+                    val first = matched.episodes.first()
+                    val anime = DanmuAnimeData(
+                        animeId = first.animeId,
+                        animeTitle = first.animeTitle,
+                        episodes = matched.episodes,
+                        isRecommend = matched.isMatched,
+                        isSelected = true,
+                    )
+                    _matchedAnimeFlow.emit(anime)
+                    _selectedAnimeFlow.emit(anime)
+                }
             } catch (e: Exception) {
                 hideLoading()
                 ErrorReportHelper.postCatchedExceptionWithContext(

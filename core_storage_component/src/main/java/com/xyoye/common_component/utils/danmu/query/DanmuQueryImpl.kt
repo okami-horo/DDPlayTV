@@ -5,21 +5,34 @@ import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuContentData
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.data.DanmuRelatedUrlData
+import com.xyoye.data_component.data.MatchMethod
+import com.xyoye.data_component.data.MatchResult
 
 /**
  * Created by xyoye on 2024/1/14.
  */
 
 class DanmuQueryImpl : DanmuQuery {
-    override suspend fun match(hash: String): DanmuEpisodeData? {
+    override suspend fun match(
+        hash: String,
+        fileName: String?,
+        fileSize: Long,
+        videoDuration: Int
+    ): MatchResult {
+        val normalizedFileName = fileName?.takeIf { it.isNotBlank() }
+        val requestFileName = normalizedFileName ?: "empty"
+        val matchMode = if (normalizedFileName == null) "hashOnly" else "hashAndFileName"
         val result =
-            ResourceRepository.matchDanmu(hash).getOrNull()
-                ?: return null
+            ResourceRepository
+                .matchDanmu(hash, requestFileName, fileSize, videoDuration, matchMode)
+                .getOrNull()
+                ?: return MatchResult(false, emptyList(), MatchMethod.HASH)
 
-        if (result.isMatched.not()) {
-            return null
+        return if (result.isMatched) {
+            MatchResult(true, result.matches, MatchMethod.HASH)
+        } else {
+            MatchResult(false, result.matches, MatchMethod.FILE_NAME)
         }
-        return result.matches.firstOrNull()
     }
 
     override suspend fun search(text: String): List<DanmuAnimeData> =
