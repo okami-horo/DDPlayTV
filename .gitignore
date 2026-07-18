@@ -64,3 +64,5 @@ hs_err_pid*
 specs/
 nul
 artifacts/ddplaytv-http-logs/
+# CocoIndex Code (ccc)
+/.cocoindex_code/

@@ -1,7 +1,7 @@
  # Active Context
 
 ## Current Focus
-Ready for next task. Current workspace is on branch `feat/tv-dpad-focus-architecture` with uncommitted TV DPAD focus architecture changes; durable status is recorded in `progress.md`.
+Ready for next task. Current workspace is on branch `feat/tv-dpad-focus-architecture`; TV DPAD focus architecture was committed as `35b477674`. TV-mode instrumentation remains pending because the available `35165da0` device is non-TV tablet mode and `emulator-5554` is offline.
 
  ## Active Decisions
  - Communication is in caveman mode until user requests normal mode.

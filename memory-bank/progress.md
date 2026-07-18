@@ -4,7 +4,7 @@
 - Memory Bank core structure exists and was refreshed for the 2026-06-13 session.
 - Player subtitle quick toggle implementation is complete in `:player_component` and remains uncommitted.
 - Danmu match optimization implementation is complete and uncommitted.
-- TV DPAD focus architecture work is implemented on branch `feat/tv-dpad-focus-architecture` and remains uncommitted.
+- TV DPAD focus architecture work is implemented and committed on branch `feat/tv-dpad-focus-architecture` as `35b477674 feat(tv): 建立 DPAD 焦点架构`.
 
 ## What Works
 - Project rules define module layout, dependency governance, TV UX rules, testing expectations, and Bilibili reference workflow.
@@ -20,7 +20,7 @@
 ## Remaining
 - Optional: run a hands-on player DPAD smoke test with a known subtitle-bearing media item.
 - Optional: run a hands-on danmu auto-match smoke test with a known local video and Dandanplay match.
-- Optional: run `connectedDebugAndroidTest` on a TV-mode device/emulator for the new DPAD smoke tests; current ADB inventory showed one physical `device` and one `emulator-5554 offline`, but no TV-mode instrumentation run was completed.
+- Optional: run `connectedDebugAndroidTest` on a TV-mode device/emulator for the new DPAD smoke tests; current ADB inventory shows `35165da0` as a non-TV tablet (`mCurUiMode=0x11`, `ro.build.characteristics=tablet`) and `emulator-5554 offline`, so no TV-mode instrumentation run was completed.
 - Continue P2/P3 migration list for remaining RecyclerViews/dialogs/`clearFocus()` call sites not covered by the first TV DPAD focus pass.
 
 ## Known Issues
