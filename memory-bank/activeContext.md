@@ -1,7 +1,7 @@
  # Active Context
 
 ## Current Focus
-Ready for next task. Current workspace is on branch `feat/tv-dpad-focus-architecture`; TV DPAD focus architecture was committed as `35b477674`. TV-mode instrumentation remains pending because the available `35165da0` device is non-TV tablet mode and `emulator-5554` is offline.
+Playback handoff architecture design is approved and awaiting written-spec review. The current workspace is on `master`, ahead of `origin/master` by 11 commits. The design is stored at `docs/superpowers/designs/2026-07-18-playback-handoff-design.md`.
 
  ## Active Decisions
  - Communication is in caveman mode until user requests normal mode.
@@ -13,9 +13,10 @@ Ready for next task. Current workspace is on branch `feat/tv-dpad-focus-architec
 - Completed work history is archived in `progress.md`.
 
 ## Next Steps
-- For next task, read all Memory Bank core files first.
-- If task touches Bilibili media/library logic, inspect `E:\Project\PiliPlus` before editing DDPlayTV.
-- Run Gradle verification suited to changed scope and inspect output tail before reporting.
+- Ask the user to review the tracked playback handoff design before implementation planning.
+- After written-spec approval, use the writing-plans workflow before implementation.
+- If implementation touches Bilibili playback recovery, preserve the prior PiliPlus mapping and replace message-regex voucher parsing with structured recovery data before migrating that entry.
 
- ## Open Considerations
- - Several implementation branches/changes are uncommitted; inspect git status before starting new work.
+## Open Considerations
+- Several implementation branches/changes are uncommitted; inspect git status before starting new work.
+- No playback handoff implementation has started and no Gradle verification was required for the documentation-only design step.
