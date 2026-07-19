@@ -1,9 +1,11 @@
 # 播放启动交接与活动会话深化设计
 
 > 日期：2026-07-18  
-> 状态：设计已确认，等待书面规格复核  
+> 修订：2026-07-19  
+> 状态：修订设计已确认，等待书面规格复核  
 > 范围：播放请求提交、来源恢复、播放器路由、前台切换、进程恢复与敏感临时数据  
-> 不包含：完整播放器 source transition 重构、Media3 会话统一、Bilibili 账号会话重构、存储浏览状态重构
+> 不包含：完整播放器 source transition 重构、Media3 会话统一、Bilibili 账号会话重构、存储浏览状态重构  
+> 前置依赖：`2026-07-19-playback-transport-leases-design.md`
 
 ## 1. 背景
 
@@ -40,6 +42,8 @@ feature ViewModel
 
 本设计不以增加一次 `clear()` 为目标，而是重新建立播放请求和活动播放会话的所有权。
 
+2026-07-19 的源码级复核进一步确认：HTTP、SMB、FTP、Thunder 和 Bilibili 播放 Session 当前使用共享可变资源，在准备候选来源时可能破坏旧播放。因此本设计拆为两个独立子项目：先完成传输资源租约，再实施播放请求与活动会话。本文只描述后者，且假设所有 `PreparedPlayback` 已获得独立、可释放的 `PlaybackTransportLease`。
+
 ## 2. 设计目标
 
 ### 2.1 功能目标
@@ -54,6 +58,8 @@ feature ViewModel
 8. 新来源解析或校验失败时保留旧播放；新来源准备成功后才切换。
 9. URL Header、Cookie、投屏 Header 等敏感数据不以明文进入 Intent、SavedState、MMKV 或日志。
 10. 删除透明的 `PlayerInterceptorActivity` 和旧 `VideoSourceManager`。
+11. 所有跨身份内部切源必须更新活动描述、租约和会话快照。
+12. 同身份画质或 URL 恢复必须替换自己的传输/Bilibili token，不能覆盖全局当前资源。
 
 ### 2.2 架构目标
 
@@ -76,6 +82,7 @@ feature ViewModel
 - 不把完整 `BaseVideoSource`、`StorageFile` 或 `MediaLibraryEntity` 序列化；
 - 不新增跨 feature 的 Gradle 依赖；
 - 不改变 TV DPAD focus 架构和播放器控制条交互。
+- 不保证旧画面持续到新来源首帧；切换边界是 `PreparedPlayback` 与传输租约全部就绪。
 
 ## 4. 备选方案与决策
 
@@ -194,6 +201,7 @@ feature ViewModel
 - 执行磁链/下载兼容校验；
 - 调用 `StorageVideoSourceFactory`；
 - 生成 `PreparedPlayback`；
+- 获取前置项目定义的独立 `PlaybackTransportLease`；
 - 将异常转换为结构化准备失败；
 - 在结果过期或被替换时释放已经创建的资源。
 
@@ -206,6 +214,8 @@ feature ViewModel
 - 投屏 Adapter。
 
 Bilibili 媒体库项目由媒体库 Adapter 进入，但其协议身份和重新取流逻辑仍由 Bilibili Storage/播放实现负责。
+
+来源解析不得直接修改全局代理、Server、Thunder task 或 Bilibili 当前 Session；所有传输资源必须通过租约 Adapter 获得。
 
 ### 6.3 `player_component`：活动播放会话 Module
 
@@ -264,6 +274,22 @@ PlaybackRequest
 请求 ID 使用不可预测的随机 UUID。路由仅传请求 ID。
 
 请求和活动快照使用 Moshi 序列化。`schemaVersion` 初始值为 1；由于 pending TTL 为 15 分钟、活动快照 TTL 为 24 小时，不为临时记录设计长期迁移链。遇到不支持的版本时清理记录并返回 `InvalidDescriptor`。
+
+活动会话快照逻辑字段如下：
+
+```text
+PlaybackSessionSnapshot
+  schemaVersion: Int
+  sessionId: String
+  descriptor: PlaybackDescriptor
+  launchOptions: Media3LaunchParams?
+  queueContext: PlaybackQueueContext?
+  positionMs: Long
+  updatedAtMs: Long
+  expiresAtMs: Long
+```
+
+快照必须保存激活时的 Media3 启动选项。否则 pending 请求在激活后删除，进程恢复会丢失 `mediaId`、`sourceType`、能力请求和 autoplay 语义。
 
 ### 7.2 播放描述分类
 
@@ -343,13 +369,15 @@ ScreencastDescriptor
 - 当前选中项身份；
 - 有界的文件身份快照。
 
-解析优先重新加载目录并应用相同排序/过滤。协议不支持稳定目录恢复时，可使用有界身份快照。快照只保存身份，不保存 `StorageFile` 对象或短期播放 URL。
+解析优先重新加载目录并应用相同排序/过滤。协议不支持稳定目录恢复时，可使用有界身份快照。身份快照最多保存 200 项，始终包含当前项，并围绕当前项截取前后窗口。快照只保存身份，不保存 `StorageFile` 对象或短期播放 URL。
 
 ## 8. 持久化与安全
 
 ### 8.1 存储 Adapter
 
-使用独立 MMKV 文件保存待消费请求和活动会话快照。整个请求/快照正文使用 `KeystoreAesGcmCrypto` 加密，不只加密已知敏感字段，以避免未来新增字段被遗漏。
+使用独立 MMKV 文件保存一个完整的加密 `PlaybackHandoffState` blob，其中同时包含 pending 请求、验证状态和活动会话快照。所有更新在进程内 Mutex 中执行 read-modify-write，并通过单个 MMKV value 替换，避免多 key 写入产生部分状态。MMKV 不提供 ACID transaction，因此本文只承诺单进程串行更新和单值替换。
+
+整个 state 正文使用 `KeystoreAesGcmCrypto` 加密，不只加密已知敏感字段，以避免未来新增字段被遗漏。
 
 使用独立 KeyStore alias，例如：
 
@@ -368,6 +396,8 @@ dandanplay.playback.handoff.aes
 - 日志只记录 ID、来源枚举、MediaType 和脱敏指纹；
 - 不记录 Header、Cookie、完整 URL query、磁链或本地完整路径；
 - 记录被替换、激活、失败或过期后立即删除不再需要的密文。
+
+此处“删除”指逻辑记录删除。MMKV mmap 文件不保证旧页面在物理介质上立即安全擦除；安全性依赖整体 AES-GCM 加密和 KeyStore 密钥保护，文档与日志不得宣称物理 secure erase。
 
 ### 8.3 TTL
 
@@ -390,8 +420,15 @@ Created
 
 Resolving
   -> Prepared
+  -> AwaitingInteractiveVerification
   -> Failed
   -> Superseded
+
+AwaitingInteractiveVerification
+  -> Resolving
+  -> Replaced
+  -> Expired
+  -> Failed
 
 Prepared
   -> Active
@@ -400,14 +437,16 @@ Prepared
 
 规则：
 
-1. `submit()` 以一个存储事务替换当前 pending 请求；
+1. `submit()` 在同一个 Mutex 临界区内通过单加密 blob 替换当前 pending 请求；
 2. 替换后立即清理旧请求的密文和临时资源引用；
 3. PlayerActivity 加载请求时不立即删除记录；
 4. 解析完成后再次检查当前 pending request ID；
 5. ID 不匹配说明请求已被更新请求取代，必须释放解析结果；
 6. 激活成功时原子写入活动快照并删除 pending 请求；
 7. 失败时删除对应 pending 请求；
-8. 重复路由同一 request ID 不得重复激活。
+8. 重复路由同一 request ID 不得重复激活；
+9. 交互验证不是普通失败；请求进入 `AwaitingInteractiveVerification` 并保留加密 descriptor；
+10. 验证成功后重试同一 request ID；取消、替换或过期后才删除请求和验证数据。
 
 ### 9.2 前台替换
 
@@ -438,6 +477,7 @@ Active(old)
 - 凭据可读取；
 - 协议可以创建有效播放 URL；
 - 磁链兼容校验允许播放；
+- 独立 Transport Lease 已成功创建；
 - 播放配置和 Media3 启动参数已经生成。
 
 它不保证已经渲染首帧。首帧失败继续使用现有播放器错误恢复机制；完整 source transition 的事务化属于后续深化项。
@@ -520,10 +560,10 @@ UI 根据“初始播放”或“替换播放”选择行为：
 
 - 初始播放失败：错误对话框 + 退出；
 - 替换播放失败：提示 + 保留旧播放；
-- 需要登录/风控验证：发起现有路由流程，返回后重新提交稳定请求；
+- 需要风控验证：请求进入 `AwaitingInteractiveVerification`，验证页只接收不透明 `verificationId`，成功后重试同一 request ID；
 - 失败信息不得依赖正则解析错误文案。
 
-Bilibili `v_voucher` 的结构化建模属于相邻架构项，但 Bilibili 播放入口迁移到新交接前必须先提供结构化验证 payload，不能把当前错误文案正则带入新 Module。
+Bilibili `v_voucher` 必须由 Bilibili 层结构化提供，不能进入异常文案或 Intent。验证 payload 与 requestId 一起保存在整体加密记录中。Bilibili 播放 Session 必须使用身份 + sessionToken 的代次所有权；旧 Addon 释放只能删除自己的 token。
 
 ## 12. 资源所有权
 
@@ -543,9 +583,21 @@ Bilibili `v_voucher` 的结构化建模属于相邻架构项，但 Bilibili 播�
 - `PlaybackReleasableAddon.onRelease()`；
 - `StorageFile.close()`；
 - `Storage.close()`；
-- 来源解析期间创建的临时资源。
+- 来源解析期间创建的临时资源；
+- `PlaybackTransportLease.release()`。
 
 调用必须幂等，防止切源和 Activity 销毁重复释放。
+
+### 12.1 内部切源所有权
+
+所有播放器内部来源变化必须接入活动播放会话：
+
+- 手动下一集和传统自动下一集：按新身份生成稳定描述、PreparedPlayback 和租约，激活后更新快照；
+- Media3 seamless transition：成功后 adoption 新描述、Media3 启动选项和队列位置；
+- Bilibili 画质/编码切换和 URL 恢复：身份保持不变，但替换具体 transport/Bilibili sessionToken；
+- 播放内核回退：复用当前租约，只更新运行时 playback profile，不误改全局设置。
+
+任何内部切源不得继续通过 `VideoSourceManager` 或裸 `StorageVideoSourceFactory.create()` 绕过活动会话。
 
 ## 13. feature 调用方式
 
@@ -582,6 +634,10 @@ openPlayer(requestId)
 - 验证 Intent/SavedState 不包含敏感字段；
 - 验证日志脱敏。
 
+### 前置阶段：传输租约
+
+必须先完成 `2026-07-19-playback-transport-leases-design.md`，验证 HTTP、SMB、FTP、Thunder 和 Bilibili Session 新旧资源可以短暂并存。未完成该前置项目时，不得宣称 replacement 失败能普遍保留旧播放。
+
 ### 阶段 2：播放描述、加密存储和解析 Adapter
 
 - 建立请求模型与 store；
@@ -589,6 +645,7 @@ openPlayer(requestId)
 - 建立 `PreparedPlayback` 和释放动作；
 - 将 `DownloadValidator` 的核心兼容校验下沉到 `core_storage_component`；
 - 覆盖媒体库、历史、磁链、外部 URL、投屏和 Bilibili 媒体库文件。
+- 建立 `AwaitingInteractiveVerification` 加密状态和 opaque verification ID。
 
 ### 阶段 3：PlayerActivity 接入
 
@@ -610,6 +667,14 @@ openPlayer(requestId)
 3. `AnimeEpisodeFragmentViewModel`；
 4. `PlayerIntentViewModel`；
 5. `ScreencastReceiveService`。
+
+### 阶段 4.1：内部切源迁移
+
+- 手动/传统下一集；
+- Media3 seamless transition；
+- Bilibili 画质和 URL 恢复；
+- 播放内核回退；
+- 每次成功变化后更新 canonical descriptor、launch options、队列位置和活动快照。
 
 ### 阶段 5：删除旧 Implementation
 
@@ -660,6 +725,10 @@ openPlayer(requestId)
 - 快照恢复使用正确播放位置；
 - 显式退出删除活动快照；
 - 普通冷启动不读取活动快照。
+- 手动下一集后恢复到新集；
+- seamless transition 后恢复到新集；
+- 同身份画质/URL 恢复只替换对应 token；
+- 内核回退复用当前 transport lease。
 
 ### 15.2 Robolectric 或 Activity 测试
 
