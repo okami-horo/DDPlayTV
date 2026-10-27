@@ -4,6 +4,10 @@ import android.net.Uri
 import com.xyoye.common_component.database.DatabaseProvider
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.network.repository.ScreencastRepository
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
+import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.ScreencastStorageFile
@@ -27,9 +31,16 @@ import java.io.InputStream
  * Created by xyoye on 2023/4/12
  */
 
-class ScreencastStorage(
-    library: MediaLibraryEntity
-) : AbstractStorage(library) {
+class ScreencastStorage internal constructor(
+    library: MediaLibraryEntity,
+    private val loadHistory: suspend (String, Int) -> PlayHistoryEntity?,
+    private val saveHistory: suspend (PlayHistoryEntity) -> Unit
+) : AbstractStorage(library), PlaybackTransportProvider {
+    constructor(library: MediaLibraryEntity) : this(
+        library,
+        { key, id -> DatabaseProvider.instance.getPlayHistoryDao().getPlayHistory(key, id) },
+        { DatabaseProvider.instance.getPlayHistoryDao().insert(it) }
+    )
     private var screencastData: ScreencastData? = null
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> = directoryFiles
@@ -72,10 +83,14 @@ class ScreencastStorage(
             ).apply {
                 ip = uri.host
             }
-        return ScreencastStorageFile(this, screencastData, videoData)
+        this.screencastData = screencastData
+        val file = ScreencastStorageFile(this, screencastData, videoData).also { it.playHistory = history }
+        directoryFiles = listOf(file)
+        return file
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String = file.fileUrl()
+    override suspend fun acquirePlaybackTransport(file: StorageFile, profile: PlaybackProfile): PlaybackTransportLease =
+        directPlaybackTransport(file.fileUrl())
 
     override fun getNetworkHeaders(): Map<String, String>? = screencastData?.httpHeader
 
@@ -171,10 +186,7 @@ class ScreencastStorage(
      * 寻找视频的播放记录
      */
     private suspend fun findPlayHistory(videoData: ScreencastVideoData): PlayHistoryEntity? {
-        val playHistory =
-            DatabaseProvider.instance
-                .getPlayHistoryDao()
-                .getPlayHistory(videoData.uniqueKey, library.id)
+        val playHistory = loadHistory(videoData.uniqueKey, library.id)
 
         // 播放进度优先级，投屏资源进度 > 历史记录进度
         if (videoData.position == 0L && videoData.duration == 0L) {
@@ -195,7 +207,7 @@ class ScreencastStorage(
                 videoPosition = videoData.position,
                 videoDuration = videoData.duration,
             ).also {
-                DatabaseProvider.instance.getPlayHistoryDao().insert(it)
+                saveHistory(it)
             }
     }
 }

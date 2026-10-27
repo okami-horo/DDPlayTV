@@ -1,69 +1,31 @@
 package com.okamihoro.ddplaytv.app.service
 
-import com.xyoye.data_component.media3.entity.Media3BackgroundMode
+import com.xyoye.common_component.playback.handoff.PlaybackAction
+import com.xyoye.common_component.playback.handoff.PlaybackCommand
+import com.xyoye.common_component.playback.handoff.PlaybackOperationResult
+import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
+import com.xyoye.common_component.playback.handoff.PlaybackStateView
 import com.xyoye.data_component.media3.entity.Media3Capability
-import com.xyoye.data_component.media3.entity.PlayerCapabilityContract
 
-/**
- * Calculates which MediaSession commands and background modes should be exposed based on the
- * latest Media3 capability contract coming from the backend.
- */
+/** Platform policy is an additional guard; the player remains the authority for all commands. */
 class Media3BackgroundCoordinator(
     private val bridge: MediaSessionCommandBridge
 ) {
-    private var lastCommands: Set<String> = emptySet()
-    private var lastModes: Set<Media3BackgroundMode> = emptySet()
-
-    fun sync(
-        contract: PlayerCapabilityContract?,
+    suspend fun dispatch(
+        command: PlaybackCommand,
+        state: PlaybackStateView?,
         isTelevisionUiMode: Boolean
-    ) {
-        if (isTelevisionUiMode) {
-            // TV adaptation: 禁用后台播放与画中画，同步时强制清空能力指令
-            emitCommands(emptySet())
-            emitModes(emptySet())
-            return
-        }
-
-        if (contract == null) {
-            emitCommands(emptySet())
-            emitModes(emptySet())
-            return
-        }
-
-        val commands =
-            buildSet {
-                addAll(contract.sessionCommands)
-                if (contract.capabilities.contains(Media3Capability.BACKGROUND)) {
-                    add(COMMAND_BACKGROUND_RESUME)
-                }
-                if (
-                    contract.capabilities.contains(Media3Capability.PIP) &&
-                    contract.backgroundModes.contains(Media3BackgroundMode.PIP)
-                ) {
-                    add(COMMAND_ENTER_PIP)
-                }
+    ): PlaybackOperationResult {
+        if (state?.version != command.expected) return PlaybackOperationResult.Rejected(PlaybackPreparationFailure.RequestSuperseded)
+        val capability =
+            when (command.action) {
+                PlaybackAction.EnterBackground -> Media3Capability.BACKGROUND
+                PlaybackAction.EnterPictureInPicture -> Media3Capability.PIP
+                else -> null
             }
-
-        val modes = contract.backgroundModes.toSet()
-        emitCommands(commands)
-        emitModes(modes)
-    }
-
-    private fun emitCommands(commands: Set<String>) {
-        if (commands == lastCommands) return
-        lastCommands = commands
-        bridge.updateSessionCommands(commands)
-    }
-
-    private fun emitModes(modes: Set<Media3BackgroundMode>) {
-        if (modes == lastModes) return
-        lastModes = modes
-        bridge.updateBackgroundModes(modes)
-    }
-
-    companion object {
-        const val COMMAND_BACKGROUND_RESUME = "media3.background.resume"
-        const val COMMAND_ENTER_PIP = "media3.pip.enter"
+        if (capability != null && (isTelevisionUiMode || capability !in state.capabilities)) {
+            return PlaybackOperationResult.Rejected(PlaybackPreparationFailure.UnsupportedSource)
+        }
+        return bridge.dispatch(command)
     }
 }

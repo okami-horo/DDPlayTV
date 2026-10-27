@@ -1,157 +1,136 @@
 package com.xyoye.common_component.bilibili.playback
+
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
+import kotlin.coroutines.coroutineContext
 
 object BilibiliPlaybackHeartbeat {
-    private const val TAG_HEARTBEAT = "bilibili_heartbeat"
-
-    private val reportIntervalMs: Long = TimeUnit.SECONDS.toMillis(5)
-    private val failureLogIntervalMs: Long = TimeUnit.MINUTES.toMillis(1)
-
-    private data class State(
-        var lastSentAtMs: Long = 0L,
-        var lastFailureLogAtMs: Long = 0L,
-        var lastSkipLogAtMs: Long = 0L,
-        var lastSkipReason: String? = null,
-    )
-
-    private val states = ConcurrentHashMap<BilibiliPlaybackSessionStore.Key, State>()
+    private val dispatcher =
+        BilibiliHeartbeatDispatcher(
+            scope = SupervisorScope.IO,
+            isActive = { BilibiliPlaybackSessionStore.get(it.storageId, it.uniqueKey, it.token) != null },
+            report = { key, playedTimeSec, state ->
+                val session = BilibiliPlaybackSessionStore.get(key.storageId, key.uniqueKey, key.token)
+                if (session != null) {
+                    val decision = session.heartbeatDecision()
+                    coroutineContext.ensureActive()
+                    val now = System.currentTimeMillis()
+                    if (!decision.allowed) {
+                        val reason = decision.skipReason?.logLabel.orEmpty()
+                        if (reason.isNotBlank() && (reason != state.lastSkipReason || now - state.lastSkipLogAtMs >= 60_000)) {
+                            state.lastSkipReason = reason
+                            state.lastSkipLogAtMs = now
+                            LogFacade.i(
+                                LogModule.NETWORK,
+                                "bilibili_heartbeat",
+                                "heartbeat skipped storageId=${key.storageId} reason=$reason playedTimeSec=$playedTimeSec"
+                            )
+                        }
+                    } else {
+                        state.lastSkipReason = null
+                        val result = session.reportPlaybackHeartbeat(playedTimeSec)
+                        coroutineContext.ensureActive()
+                        result.onFailure { failure ->
+                            if (now - state.lastFailureLogAtMs >= 60_000) {
+                                state.lastFailureLogAtMs = now
+                                LogFacade.w(
+                                    LogModule.NETWORK,
+                                    "bilibili_heartbeat",
+                                    "heartbeat failed storageId=${key.storageId} playedTimeSec=$playedTimeSec",
+                                    throwable = failure
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        )
 
     fun clear(
         storageId: Int,
-        uniqueKey: String
-    ) {
-        states.remove(BilibiliPlaybackSessionStore.Key(storageId = storageId, uniqueKey = uniqueKey))
-    }
-
-    fun clearStorage(storageId: Int) {
-        val iterator = states.entries.iterator()
-        while (iterator.hasNext()) {
-            val entry = iterator.next()
-            if (entry.key.storageId == storageId) {
-                iterator.remove()
-            }
-        }
-    }
-
-    fun clearAll() {
-        states.clear()
-    }
+        uniqueKey: String,
+        token: String
+    ) = dispatcher.clear(BilibiliPlaybackSessionStore.Key(storageId, uniqueKey, token))
 
     fun onProgress(
         storageId: Int,
         uniqueKey: String,
+        token: String,
         mediaType: MediaType,
         positionMs: Long,
         isPlaying: Boolean,
         nowMs: Long = System.currentTimeMillis()
     ) {
-        if (mediaType != MediaType.BILIBILI_STORAGE) return
-        if (!isPlaying) return
-
-        val session = BilibiliPlaybackSessionStore.get(storageId, uniqueKey) ?: return
-        val key = BilibiliPlaybackSessionStore.Key(storageId = storageId, uniqueKey = uniqueKey)
-
-        val playedTimeSec = (positionMs / 1000L).coerceAtLeast(0L)
-        if (playedTimeSec <= 0L) return
-
-        val state = states.getOrPut(key) { State() }
-        if (nowMs - state.lastSentAtMs < reportIntervalMs) return
-        state.lastSentAtMs = nowMs
-
-        send(session, key, playedTimeSec, state)
+        if (mediaType == MediaType.BILIBILI_STORAGE && isPlaying && positionMs >= 1000) {
+            dispatcher.send(BilibiliPlaybackSessionStore.Key(storageId, uniqueKey, token), positionMs / 1000, nowMs)
+        }
     }
 
     fun onPlayStateChanged(
         storageId: Int,
         uniqueKey: String,
+        token: String,
         mediaType: MediaType,
         playState: PlayState,
         positionMs: Long,
         nowMs: Long = System.currentTimeMillis()
     ) {
         if (mediaType != MediaType.BILIBILI_STORAGE) return
-
-        val session = BilibiliPlaybackSessionStore.get(storageId, uniqueKey)
-        val key = BilibiliPlaybackSessionStore.Key(storageId = storageId, uniqueKey = uniqueKey)
+        val key = BilibiliPlaybackSessionStore.Key(storageId, uniqueKey, token)
         when (playState) {
-            PlayState.STATE_PAUSED -> {
-                if (session == null) return
-                val state = states.getOrPut(key) { State() }
-                val playedTimeSec = (positionMs / 1000L).coerceAtLeast(0L)
-                if (playedTimeSec <= 0L) return
-                state.lastSentAtMs = nowMs
-                send(session, key, playedTimeSec, state)
-            }
-
-            PlayState.STATE_COMPLETED -> {
-                if (session == null) {
-                    states.remove(key)
-                    return
-                }
-                val state = states.getOrPut(key) { State() }
-                state.lastSentAtMs = nowMs
-                send(session, key, -1L, state)
-                states.remove(key)
-            }
-
-            PlayState.STATE_IDLE,
-            PlayState.STATE_START_ABORT
-            -> {
-                states.remove(key)
-            }
-
+            PlayState.STATE_PAUSED -> if (positionMs >= 1000) dispatcher.send(key, positionMs / 1000, nowMs, force = true)
+            PlayState.STATE_COMPLETED -> dispatcher.send(key, -1, nowMs, force = true)
+            PlayState.STATE_IDLE, PlayState.STATE_START_ABORT -> dispatcher.clear(key)
             else -> Unit
         }
     }
+}
 
-    private fun send(
-        session: BilibiliPlaybackSession,
+/** The registry lock covers admission and retirement, never network I/O. */
+internal class BilibiliHeartbeatDispatcher(
+    private val scope: CoroutineScope,
+    private val isActive: (BilibiliPlaybackSessionStore.Key) -> Boolean,
+    private val report: suspend (BilibiliPlaybackSessionStore.Key, Long, State) -> Unit
+) {
+    internal class State(
+        val job: Job
+    ) {
+        var lastSentAtMs: Long? = null
+        var lastFailureLogAtMs: Long = 0
+        var lastSkipLogAtMs: Long = 0
+        var lastSkipReason: String? = null
+    }
+
+    private val states = mutableMapOf<BilibiliPlaybackSessionStore.Key, State>()
+
+    fun send(
         key: BilibiliPlaybackSessionStore.Key,
         playedTimeSec: Long,
-        state: State
+        nowMs: Long,
+        force: Boolean = false
     ) {
-        SupervisorScope.IO.launch {
-            val decision = session.heartbeatDecision()
-            if (!decision.allowed) {
-                val skipReason = decision.skipReason?.logLabel.orEmpty()
-                val nowMs = System.currentTimeMillis()
-                if (
-                    skipReason.isNotBlank() &&
-                    (skipReason != state.lastSkipReason || nowMs - state.lastSkipLogAtMs >= failureLogIntervalMs)
-                ) {
-                    state.lastSkipReason = skipReason
-                    state.lastSkipLogAtMs = nowMs
-                    LogFacade.i(
-                        LogModule.NETWORK,
-                        TAG_HEARTBEAT,
-                        "heartbeat skipped storageId=${key.storageId} reason=$skipReason playedTimeSec=$playedTimeSec",
-                    )
-                }
-                return@launch
+        val state =
+            synchronized(states) {
+                if (!isActive(key)) return
+                val state = states.getOrPut(key) { State(SupervisorJob(scope.coroutineContext[Job])) }
+                if (!force && state.lastSentAtMs?.let { nowMs - it < 5000 } == true) return
+                state.lastSentAtMs = nowMs
+                state
             }
-            state.lastSkipReason = null
+        // A concurrent clear cancels this parent even if launch has not run yet.
+        CoroutineScope(scope.coroutineContext + state.job).launch { report(key, playedTimeSec, state) }
+    }
 
-            session
-                .reportPlaybackHeartbeat(playedTimeSec)
-                .onFailure { t ->
-                    val failureNowMs = System.currentTimeMillis()
-                    if (failureNowMs - state.lastFailureLogAtMs >= failureLogIntervalMs) {
-                        state.lastFailureLogAtMs = failureNowMs
-                        LogFacade.w(
-                            LogModule.NETWORK,
-                            TAG_HEARTBEAT,
-                            "heartbeat failed storageId=${key.storageId} playedTimeSec=$playedTimeSec",
-                            throwable = t,
-                        )
-                    }
-                }
-        }
+    fun clear(key: BilibiliPlaybackSessionStore.Key) {
+        val state = synchronized(states) { states.remove(key) }
+        state?.job?.cancel()
     }
 }

@@ -7,41 +7,8 @@ import org.junit.Test
 
 class StorageFileActivityQualityTest {
     private companion object {
-        private const val REQUEST_CODE_BILIBILI_RISK_VERIFY = 3301
         private const val REQUEST_CODE_OPEN115_REAUTH = 3302
         private const val REQUEST_CODE_CLOUD115_REAUTH = 3303
-    }
-
-    @Test
-    fun shouldResumeRiskPlaybackOnlyWhenRequestResultAndPendingFileAreValid() {
-        assertTrue(
-            StorageFileActivity.shouldResumeRiskPlayback(
-                requestCode = REQUEST_CODE_BILIBILI_RISK_VERIFY,
-                resultCode = Activity.RESULT_OK,
-                hasPendingFile = true,
-            ),
-        )
-        assertFalse(
-            StorageFileActivity.shouldResumeRiskPlayback(
-                requestCode = REQUEST_CODE_BILIBILI_RISK_VERIFY,
-                resultCode = Activity.RESULT_CANCELED,
-                hasPendingFile = true,
-            ),
-        )
-        assertFalse(
-            StorageFileActivity.shouldResumeRiskPlayback(
-                requestCode = REQUEST_CODE_BILIBILI_RISK_VERIFY,
-                resultCode = Activity.RESULT_OK,
-                hasPendingFile = false,
-            ),
-        )
-        assertFalse(
-            StorageFileActivity.shouldResumeRiskPlayback(
-                requestCode = REQUEST_CODE_OPEN115_REAUTH,
-                resultCode = Activity.RESULT_OK,
-                hasPendingFile = true,
-            ),
-        )
     }
 
     @Test

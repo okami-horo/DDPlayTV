@@ -4,18 +4,16 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.database.repository.MediaLibraryRepository
 import com.xyoye.common_component.database.repository.PlayHistoryRepository
-import com.xyoye.common_component.source.VideoSourceManager
-import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
-import com.xyoye.common_component.storage.StorageFactory
-import com.xyoye.common_component.storage.impl.LinkStorage
+import com.xyoye.common_component.playback.PlaybackEntryRequests
+import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
+import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
+import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
+import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.common_component.utils.thunder.ThunderManager
-import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
+import com.xyoye.data_component.media3.entity.Media3SourceType
 import com.xyoye.local_component.utils.HistorySortOption
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,7 +21,8 @@ import kotlinx.coroutines.launch
 class PlayHistoryViewModel : BaseViewModel() {
     private val _historyLiveData = MutableLiveData<List<PlayHistoryEntity>>()
     val historyLiveData: LiveData<List<PlayHistoryEntity>> = _historyLiveData
-    val playLiveData = MutableLiveData<Any>()
+    private val requests = PlaybackEntryRequests(viewModelScope, { loading -> if (loading) showLoading() else hideLoading() })
+    val playEvents = requests.outcomes
 
     // 文件排序选项
     private var sortOption = HistorySortOption()
@@ -45,7 +44,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     e,
                     "PlayHistoryViewModel",
                     "updatePlayHistory",
-                    "mediaType" to mediaType.name,
+                    "mediaType" to mediaType.name
                 )
             }
         }
@@ -62,7 +61,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     "PlayHistoryViewModel",
                     "removeHistory",
                     "historyId" to history.id,
-                    "url" to history.url,
+                    "url" to history.url
                 )
             }
         }
@@ -82,7 +81,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     e,
                     "PlayHistoryViewModel",
                     "clearHistory",
-                    "mediaType" to mediaType.name,
+                    "mediaType" to mediaType.name
                 )
             }
         }
@@ -105,7 +104,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     e,
                     "PlayHistoryViewModel",
                     "changeSortOption",
-                    "sortOption" to option.javaClass.simpleName,
+                    "sortOption" to option.javaClass.simpleName
                 )
             }
         }
@@ -123,7 +122,7 @@ class PlayHistoryViewModel : BaseViewModel() {
                     "PlayHistoryViewModel",
                     "unbindDanmu",
                     "historyId" to history.id,
-                    "url" to history.url,
+                    "url" to history.url
                 )
             }
         }
@@ -141,130 +140,22 @@ class PlayHistoryViewModel : BaseViewModel() {
                     "PlayHistoryViewModel",
                     "unbindSubtitle",
                     "historyId" to history.id,
-                    "url" to history.url,
+                    "url" to history.url
                 )
             }
         }
     }
 
     fun openHistory(history: PlayHistoryEntity) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                if (setupHistorySource(history)) {
-                    playLiveData.postValue(Any())
-                }
-            } catch (e: Exception) {
-                ErrorReportHelper.postCatchedExceptionWithContext(
-                    e,
-                    "PlayHistoryViewModel",
-                    "openHistory",
-                    "historyId" to history.id,
-                    "url" to history.url,
-                )
-            }
-        }
+        val descriptor = PlayHistoryDescriptor(history.id, history.uniqueKey, history.storageId)
+        requests.submit { PlaybackRequestInput(descriptor, null, PlaybackRequestOrigin.PLAY_HISTORY) }
     }
 
     fun openStreamLink(
         link: String,
         headers: Map<String, String>?
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                if (setupLinkSource(link, headers)) {
-                    playLiveData.postValue(Any())
-                }
-            } catch (e: Exception) {
-                ErrorReportHelper.postCatchedExceptionWithContext(
-                    e,
-                    "PlayHistoryViewModel",
-                    "openStreamLink",
-                    "url" to link,
-                )
-            }
-        }
-    }
-
-    private suspend fun setupHistorySource(history: PlayHistoryEntity): Boolean {
-        return try {
-            showLoading()
-            val library =
-                history.storageId
-                    ?.run { MediaLibraryRepository.getById(this) }
-            if (library == null) {
-                hideLoading()
-                ToastCenter.showError("播放失败，找不到播放资源")
-                return false
-            }
-
-            if (library.mediaType == MediaType.MAGNET_LINK) {
-                val errorMessage = ThunderManager.ensureInitializedOrErrorMessage()
-                if (errorMessage != null) {
-                    hideLoading()
-                    ToastCenter.showError(errorMessage)
-                    return false
-                }
-            }
-
-            val mediaSource =
-                StorageFactory
-                    .createStorage(library)
-                    ?.run { historyFile(history) }
-                    ?.run { StorageVideoSourceFactory.create(this) }
-            hideLoading()
-
-            if (mediaSource == null) {
-                ToastCenter.showError("播放失败，找不到播放资源")
-                return false
-            }
-            VideoSourceManager.getInstance().setSource(mediaSource)
-            true
-        } catch (e: Exception) {
-            hideLoading()
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "PlayHistoryViewModel",
-                "setupHistorySource",
-                "historyId" to history.id,
-                "storageId" to history.storageId,
-            )
-            ToastCenter.showError("播放失败，找不到播放资源")
-            false
-        }
-    }
-
-    private suspend fun setupLinkSource(
-        link: String,
-        headers: Map<String, String>?
-    ): Boolean {
-        return try {
-            showLoading()
-            val mediaSource =
-                MediaLibraryEntity.STREAM
-                    .copy(url = link)
-                    .run { StorageFactory.createStorage(this) }
-                    ?.run { this as? LinkStorage }
-                    ?.apply { this.setupHttpHeader(headers) }
-                    ?.run { getRootFile() }
-                    ?.run { StorageVideoSourceFactory.create(this) }
-            hideLoading()
-
-            if (mediaSource == null) {
-                ToastCenter.showError("播放失败，找不到播放资源")
-                return false
-            }
-            VideoSourceManager.getInstance().setSource(mediaSource)
-            true
-        } catch (e: Exception) {
-            hideLoading()
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "PlayHistoryViewModel",
-                "setupLinkSource",
-                "url" to link,
-            )
-            ToastCenter.showError("播放失败，找不到播放资源")
-            false
-        }
+        val descriptor = ExternalUriDescriptor(link, Media3SourceType.STREAM, headers = headers.orEmpty().toMap())
+        requests.submit { PlaybackRequestInput(descriptor, null, PlaybackRequestOrigin.PLAY_HISTORY) }
     }
 }

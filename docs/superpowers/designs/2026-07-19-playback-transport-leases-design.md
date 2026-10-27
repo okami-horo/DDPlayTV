@@ -1,9 +1,14 @@
 # 播放传输资源租约设计
 
 > 日期：2026-07-19  
-> 状态：设计已确认，等待书面规格复核  
+> 修订：2026-10-27  
+> 状态：租约实施计划的 9 个任务、37 项检查已完成；验证范围与限制见计划，后续交接会话重构正在实施  
 > 范围：HTTP 代理、SMB、FTP、Thunder 与 Bilibili 播放 Session 的并存、代次和释放所有权  
 > 后续依赖：`2026-07-18-playback-handoff-design.md`
+
+> 进度与验证以[租约实施计划](../plans/2026-07-19-playback-transport-leases.md)为准；基础测试通过不代表 HTTP/SMB/FTP/Thunder/Bilibili 的实际并存已经验收。
+
+> 修订依据：[播放重构方案与参考项目源码复核](../../../document/architecture/2026-10-27-playback-refactor-reference-review.md) F1、F3。租约 factory 负责独立播放连接的获取，来源统一释放 Addon/lease，PreparedPlayback 仅委托来源释放；测试必须经过实际 acquisition/factory 路径。
 
 ## 1. 背景
 
@@ -82,11 +87,13 @@ HTTP、SMB、FTP 每次准备都创建独立 Server。
 
 结论：采用。
 
+参考成熟播放器对运行时与来源解析的职责分离，资源获取留在 core_storage，播放请求/恢复策略由后续 player 会话持有。具体代理仍按本项目多内核和协议差异选择，不照搬只适用于 Media3 DataSource 的方案；参见[交接设计 §4.4](2026-07-18-playback-handoff-design.md)。
+
 ## 5. 领域术语
 
 ### 5.1 传输租约（Playback Transport Lease）
 
-一个已经准备完成的播放传输资源。它向调用方提供稳定播放 URL，并拥有幂等释放能力。
+一个已经准备完成的播放传输资源。它向调用方提供本次租约有效期内的播放 URL，并拥有幂等释放能力；该 URL 不等于可持久化的稳定媒体身份。
 
 ### 5.2 租约 ID（Lease ID）
 
@@ -102,7 +109,7 @@ HTTP、SMB、FTP 每次准备都创建独立 Server。
 
 ### 5.5 Bilibili Session Token
 
-绑定某个具体 Bilibili 播放 Session 代次的随机 token。Addon 和释放动作必须使用 token，而不能只按媒体身份操作“当前 Session”。
+绑定某个具体 Bilibili 播放 Session 代次的随机 token。Addon 读取和最终释放动作必须使用 token，而不能只按媒体身份操作“当前 Session”。Addon 借用 token，lease 是 token 的唯一销毁所有者。
 
 ## 6. 总体 Interface
 
@@ -140,19 +147,21 @@ PlaybackTransportLease
 ### 7.1 准备阶段
 
 ```text
-Storage/File 已解析
-  -> acquire transport lease
-  -> lease 提供 playUrl
-  -> StorageVideoSource 创建成功
-  -> 候选 PreparedPlayback 持有租约
+借用入口文件，提取协议身份与队列元数据
+  -> factory 创建独立播放 Storage（SMB/FTP）并重新解析文件
+  -> provider 创建 Server/任务/token，形成 lease
+  -> 返回 AcquiredPlaybackTransport(file, lease)
+  -> StorageVideoSource 接管 Addon 与 lease
+  -> 后续 PreparedPlayback 接管 Source，只委托 Source 释放
 ```
 
-任一步失败：
+`AcquiredPlaybackTransport` 只是装配结果，file 是租约资源的借用视图，不是另一个关闭所有者。成功交给来源前，调用方负责失败时释放 lease；交接后解除该清理责任。
 
-- 释放已创建租约；
-- 关闭候选 StorageFile；
-- 关闭候选 Storage；
-- 不影响活动来源。
+任一步异常或取消按当前所有者清理：lease 尚未形成时，准备作用域关闭已创建的 Server/File/Storage；形成后只调用 lease.release；Source 形成后只调用来源释放入口。不能在 finally 中既释放 lease 又直接关闭同一 Storage。取消清理后重新抛出取消异常。
+
+factory 的准备作用域拥有独立 Storage/File；provider 在成功返回 lease 前仅借用它们，拥有自己新建的 Server/task/token。provider 失败先清理自己新增的资源，再由 factory 清理 Storage/File；成功时二者一并转入 lease。包括切换协程上下文时结果未能交付的取消窗口，也必须有明确的当前所有者负责释放，不能只在正常返回路径转移标志。
+
+入口的浏览 Storage/File 始终是借用，不能加入播放关闭清单。只有真正独占的连接/句柄/任务才进入 lease；纯配置/元数据可复制，具有关闭行为的共享对象不得冒充独占资源。
 
 ### 7.2 激活阶段
 
@@ -161,23 +170,25 @@ Active(A lease)
   + Prepared(B lease)
   -> 播放器应用 B
   -> 活动所有权转移到 B lease
-  -> 释放 A lease
+  -> backend 确认不再使用 A 后，释放 A Source（Addon -> lease）
 ```
 
-若 B 在应用前被更新请求 C 取代：
+若 B 尚未进入不可取消的提交/应用阶段，就被更新请求 C 取代：
 
-- 释放 B lease；
+- 经 B Source 释放入口清理 Addon/lease（尚未形成 Source 才直接释放 lease）；
 - A 继续；
 - 准备 C。
 
+同身份更换 URL/画质也按来源实例/租约所有权退役，不能只比较媒体 identity 决定是否释放。只换内核而继续使用同一来源时保留 lease。Addon 停止自己的工作，token/协议资源由 lease 统一关闭；一项清理失败不得跳过后续清理。
+
 ### 7.3 同一活动会话内
 
-后续播放交接项目将最多同时持有：
+后续播放交接项目最多同时持有以下可用于新播放的逻辑对象：
 
 - 一个活动租约；
 - 一个候选租约。
 
-租约层自身不编码全局数量限制，避免和未来顺序播放预加载形成隐藏耦合。
+取消后尚未关闭完成的资源需跟踪退役，不算新的可用候选。租约层自身不编码全局数量限制；会话负责预加载与用户请求优先级。
 
 ## 8. HTTP 多租户租约
 
@@ -239,28 +250,32 @@ release(leaseId)
 每个 SMB 租约创建：
 
 - 新的 `SmbStorage`；
-- 当前 `SmbStorageFile`；
+- 在新 Storage 上按完整共享路径重新解析的 `SmbStorageFile`；
 - 独立 `SmbPlayServer`；
 - 独立随机端口；
 - 独立输入流状态。
 
 `SmbPlayServer` 不再是单例，不再在 `startSync()` 中释放其他实例。
 
+由 `PlaybackTransportFactory` 创建新 Storage，复用 `StorageFactory.createStorage()` 的凭据解析能力；以 `storagePath()`（含 share）调用新连接的 `pathFile(..., false)`，校验媒体身份，再交给 SMB provider。不得传入浏览 file，也不能用 `file.clone()`，因为当前 clone 仍引用原 Storage。校验/准备使用同一独立连接，不能先在浏览连接验证后把它塞入 lease。
+
 租约释放顺序：
 
-1. 关闭当前输入流；
+1. 将租约标记为不可服务，阻止新的读请求并与正在建立的响应协调，再关闭当前输入流；
 2. 停止该 Server；
 3. 关闭该 StorageFile；
 4. 关闭该 SmbStorage。
 
 每步独立 `runCatching`，保证后续清理继续执行。
 
+Server.start、文件解析或 URL 装配任一失败，准备作用域按已获取顺序逆向清理；返回 lease 后由 lease 接管。Server.release 不额外关闭 Storage/File，防止与 lease 重复。流由 server 管理，关闭时清空其引用。
+
 ## 10. FTP 每租约独立 Server
 
 每个 FTP 租约创建：
 
 - 新的 `FtpStorage`；
-- 当前 `FtpStorageFile`；
+- 在新 Storage 上按稳定路径重新解析的 `FtpStorageFile`；
 - 独立 `FtpPlayServer`；
 - 独立随机端口。
 
@@ -268,12 +283,12 @@ release(leaseId)
 
 租约释放顺序：
 
-1. `completePending()`；
-2. 停止该 Server；
+1. 将租约标记为不可服务并阻止新的读请求；
+2. 停止该 Server、协调在途请求，然后由 Storage 的唯一流所有者关闭流并调用 `completePending()`；
 3. 关闭该 StorageFile；
 4. 关闭该 FtpStorage。
 
-候选 FTP 来源必须由新的 Storage 实例解析，不能和活动来源共享协议连接。
+factory 与 SMB 使用同一隔离规则，新建 `FtpStorage` 后重新解析文件；不能与活动来源或浏览页共享 FTPClient。流关闭、pending 完成与 disconnect 在同一 Storage 生命周期内协调，清空流引用，重复关闭不会重复提交 pending。当前 `pathFile()` 存在元数据失败后构造占位文件的行为，不能仅凭非空返回就宣称服务器文件存在；实施时在播放 acquisition 验证可访问性并返回结构化失败，浏览兼容行为可保留。
 
 ## 11. Thunder task 租约
 
@@ -327,9 +342,10 @@ identity -> token -> session
 `BilibiliPlaybackAddon` 和直播 Addon 固定持有自己的 token：
 
 - 读取 Session 时按 token；
-- 偏好切换时更新自己的 Session；
-- `onRelease()` 只删除自己的 token；
-- 旧 Addon 释放不能删除新候选 Session。
+- 设置/恢复操作只携带自己的 token；租约阶段保留既有操作语义，后续交接阶段由会话创建独立候选后提交替换；
+- `onRelease()` 只停止自身协程、监听和事件派发，不删除 session/token；
+- 来源释放先清理 Addon，再由 lease 删除自己的 token 及对应 heartbeat/session 资源；
+- 旧来源释放不能删除新候选 Session。
 
 ### 12.3 StorageVideoSource
 
@@ -360,13 +376,19 @@ Direct Lease 仍然保留：
 
 ### 14.1 Storage Interface 演进
 
-新增传输获取行为，逻辑语义为：
+保持 core_contract 中的 Storage 接口不反向依赖 core_storage。传输获取在 core_storage 内部 provider/factory 上实现，逻辑语义为：
 
 ```text
-acquirePlaybackTransport(file, profile) -> PlaybackTransportLease?
+PlaybackTransportFactory.acquire(storage, file, profile)
+  -> AcquiredPlaybackTransport(playbackFile, lease)
+
+PlaybackTransportProvider.acquirePlaybackTransport(ownedOrBorrowedFile, profile)
+  -> PlaybackTransportLease
 ```
 
-默认实现可把现有直接 URL包装为 Direct Lease。SMB、FTP、HTTP 代理、Torrent 和 Bilibili 提供专用实现。
+factory 只借用调用参数：SMB/FTP 先独立建连和重解析，再调用新 Storage 的 provider；provider 成功后接管这些独占资源。其他协议使用专用 provider，未知或需资源所有权的类型不能失败后回落到裸 URL。仅经检查确实无可关闭资源、无代理副作用的直接来源可使用 Direct Lease。
+
+返回的 playbackFile 用于字幕/弹幕和来源装配；它与 lease 绑定的 Storage 必须一致。对于无需独立连接的直接来源，元数据可以借用或复制，但 lease 不关闭浏览对象。长期持有的 retry supplier/回调不得捕获会被浏览页关闭的连接；需要连接时纳入该 lease 所有权。
 
 旧 `createPlayUrl()` 在迁移阶段保留，但标记为兼容入口；所有调用迁移完成后，不允许 feature 或新 resolver 直接获取裸 URL。
 
@@ -374,20 +396,19 @@ acquirePlaybackTransport(file, profile) -> PlaybackTransportLease?
 
 Factory 流程改为：
 
-1. 解析 PlaybackProfile；
-2. 获取 Transport Lease；
-3. 获取弹幕、字幕、音轨；
-4. 创建 `StorageVideoSource`；
-5. 将租约所有权交给 Source/PreparedPlayback；
-6. 后续失败则释放租约。
+1. 提取身份、历史/队列元数据快照并解析 PlaybackProfile；不将原浏览连接交给租约。
+2. 通过统一 factory 获取 `AcquiredPlaybackTransport`，取得独立播放 file 和 lease。
+3. 在播放 file/Storage 上准备弹幕、字幕、音轨；不再对浏览 Storage 执行播放准备 I/O。
+4. 用播放 file、固定队列身份和 lease 构造 `StorageVideoSource`，不混入原浏览 file；必要历史字段只复制数据。
+5. Source 成功创建即接管 Addon/lease；任一步失败时按当前所有者清理，Addon 失败不能阻止 lease 清理。
 
-`StorageVideoSource` 的播放 URL来自租约。它必须允许活动会话取得并转移租约所有权，但不向普通调用方暴露协议上下文。
+`StorageVideoSource` 的 URL 来自 lease，通过幂等 `releasePlaybackResources()` 释放 Addon/lease。后续 PreparedPlayback 拥有 Source 并委托该入口；不取出同一 lease 再拥有一次，也不向普通调用方暴露协议上下文。
 
 ### 14.3 队列内切源
 
-当前 `StorageVideoSource.indexSource()` 直接使用共享 Storage 和目录文件创建下一来源。为避免新旧 SMB/FTP 会话共享，后续播放交接项目会将跨身份队列切换交给活动会话 resolver。
+当前 `StorageVideoSource.indexSource()` 用原列表中的文件重新调用 factory。租约项目阶段即要求该 factory 每次独立获取 SMB/FTP 播放连接，不能把修复共享连接推迟到交接项目。兼容队列提取媒体库/完整路径/uniqueKey 等元数据，不能靠旧播放连接存活才能解析下一项。
 
-租约项目阶段可保留该兼容路径，但必须保证旧 Source 释放只释放旧租约。最终播放交接完成后，跨身份 `indexSource()` 不再成为外部切换入口。
+最终交接项目由活动会话持有稳定队列并调 resolver，删除跨身份 `indexSource()` 作为业务切换入口。浏览目录变化不影响已捕获的播放队列。
 
 ## 15. 错误模型
 
@@ -449,6 +470,10 @@ TransportAcquisitionFailure
 - 释放 A 不关闭 B 的 Storage 会话；
 - 流关闭与 Server 停止幂等；
 - 启动失败清理候选 Storage。
+- 测试从生产 factory/acquisition 入口调用，注入 client/server 创建点，验证 A、B、浏览各自使用不同连接；不能仅手工构造两个 fake lease。
+- 分别释放 A/B 后验证另一方可继续读、浏览可继续列目录；同一文件两次 acquisition 也独立。
+- 在建连、解析文件、启动 Server、URL 装配及来源构建期间注入异常/取消，检查每个句柄恰好关闭一次。
+- 文件 clone 不作为独立连接；FTP 占位元数据不误判为可播放文件；退役与新读请求交错时不再打开已释放资源。
 
 ### 17.4 Thunder
 
@@ -461,7 +486,7 @@ TransportAcquisitionFailure
 ### 17.5 Bilibili
 
 - 同 identity 新旧 token 可并存；
-- 旧 Addon 释放不删除新 token；
+- Addon 释放不删除任何 session token；旧 lease 释放仅删除自己的 token；
 - 候选失败只删除候选 token；
 - Addon 不按 identity 获取最新 Session；
 - token 不进入错误文案和日志。
@@ -470,8 +495,8 @@ TransportAcquisitionFailure
 
 1. 建立通用 Transport Lease 与资源释放测试；
 2. HTTP Server 多租户化；
-3. SMB Server 实例化；
-4. FTP Server 实例化；
+3. SMB 独立 Storage/File/Server 获取与失败清理；
+4. FTP 独立 Storage/File/Server 获取与失败清理；
 5. Thunder task lease；
 6. Bilibili Session token；
 7. Storage 获取租约的统一入口；
@@ -479,7 +504,7 @@ TransportAcquisitionFailure
 9. 原有播放路径回归；
 10. 增加静态门禁，禁止新代码直接依赖旧单例或裸 URL路径。
 
-每个协议 Adapter 单独提交和验证，避免一次修改全部传输协议。
+每个协议 Adapter 分批验证，最终同时核对 factory 装配；提交仅在用户授权后执行。优先复用已有工厂/配置，不新增通用连接池或生命周期管理器。
 
 ## 19. 构建与验证
 
@@ -490,6 +515,7 @@ TransportAcquisitionFailure
 ./gradlew :bilibili_component:testDebugUnitTest
 ./gradlew testDebugUnitTest
 ./gradlew verifyModuleDependencies
+./gradlew lint
 ./gradlew assembleDebug
 ```
 
@@ -501,14 +527,15 @@ TransportAcquisitionFailure
 
 - `StorageVideoSource` 不再只持有无所有权的裸代理 URL；
 - HTTP 两个租约可以同时服务不同 upstream；
-- SMB/FTP 候选 Server 不停止活动 Server；
+- SMB/FTP 的浏览、活动和候选连接独立，装配测试证明释放一方不影响另一方；
 - Thunder 候选 task 不停止活动 task；
 - Bilibili 同身份新旧 Session 按 token 隔离；
 - 所有租约释放幂等；
+- 准备作用域、Source 和 lease 逐级转移所有权；Addon/PreparedPlayback 不重复关闭底层资源；
 - 释放旧来源不影响新来源，释放候选不影响活动来源；
 - 没有 Header、Cookie、voucher、磁链或完整路径泄漏到日志；
 - 现有普通播放和内部切源行为没有回归；
-- 单元测试、依赖治理和 Debug 构建明确成功。
+- 单元测试、依赖治理、lint 和 Debug 构建明确成功；缺失协议设备验证单独记录，不视为通过。
 
 ## 21. 与播放交接设计的关系
 

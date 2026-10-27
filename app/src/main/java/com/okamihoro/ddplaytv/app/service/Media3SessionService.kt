@@ -4,98 +4,32 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import androidx.lifecycle.LifecycleService
+import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.media3.Media3SessionClient
-import com.xyoye.data_component.media3.entity.Media3BackgroundMode
-import com.xyoye.data_component.media3.entity.PlaybackSession
-import com.xyoye.data_component.media3.entity.PlayerCapabilityContract
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.xyoye.common_component.playback.handoff.PlaybackCommand
+import com.xyoye.common_component.playback.handoff.PlaybackOperationResult
+import com.xyoye.common_component.playback.handoff.PlaybackStateView
+import com.xyoye.common_component.services.PlaybackRequestService
 import kotlinx.coroutines.flow.StateFlow
 
-/**
- * Lightweight background service that keeps Media3 session metadata in sync with MediaSession /
- * notification surfaces. The actual MediaSession wiring will happen in a follow-up once the
- * Media3 player stack is live; for now we expose StateFlows so activities/fragments react to
- * capability changes consistently.
- */
+/** Metadata/command adapter only. The retained player session still owns the kernel. */
 class Media3SessionService : LifecycleService() {
-    private val sessionState = MutableStateFlow<PlaybackSession?>(null)
-    private val capabilityState = MutableStateFlow<PlayerCapabilityContract?>(null)
-    private val backgroundModesState = MutableStateFlow<Set<Media3BackgroundMode>>(emptySet())
-    private val sessionCommandsState = MutableStateFlow<Set<String>>(emptySet())
-    private val isTelevisionUiMode: Boolean by lazy(LazyThreadSafetyMode.NONE) {
-        applicationContext.isTelevisionUiMode()
+    private val provider: PlaybackRequestService by lazy {
+        checkNotNull(ARouter.getInstance().navigation(PlaybackRequestService::class.java))
     }
+    private val coordinator by lazy { Media3BackgroundCoordinator { provider.dispatch(it) } }
+    private val binder by lazy {
+        object : Binder(), Media3SessionClient {
+            override fun playback(): StateFlow<PlaybackStateView?> = provider.observePlayback()
 
-    private val commandBridge =
-        StateFlowCommandBridge(
-            sessionCommandsState = sessionCommandsState,
-            backgroundModesState = backgroundModesState,
-        )
-
-    private val coordinator = Media3BackgroundCoordinator(commandBridge)
-    private val binder: IBinder by lazy(LazyThreadSafetyMode.NONE) {
-        Media3SessionBinder(
-            sessionState = sessionState,
-            capabilityState = capabilityState,
-            backgroundModesState = backgroundModesState,
-            sessionCommandsState = sessionCommandsState,
-            coordinator = coordinator,
-            isTelevisionUiMode = isTelevisionUiMode,
-        )
+            override suspend fun dispatch(command: PlaybackCommand): PlaybackOperationResult =
+                coordinator.dispatch(command, playback().value, applicationContext.isTelevisionUiMode())
+        }
     }
 
     override fun onBind(intent: Intent): IBinder {
         super.onBind(intent)
         return binder
-    }
-
-    override fun onDestroy() {
-        coordinator.sync(null, isTelevisionUiMode)
-        sessionState.value = null
-        capabilityState.value = null
-        backgroundModesState.value = emptySet()
-        sessionCommandsState.value = emptySet()
-        super.onDestroy()
-    }
-
-    private class Media3SessionBinder(
-        private val sessionState: MutableStateFlow<PlaybackSession?>,
-        private val capabilityState: MutableStateFlow<PlayerCapabilityContract?>,
-        private val backgroundModesState: MutableStateFlow<Set<Media3BackgroundMode>>,
-        private val sessionCommandsState: MutableStateFlow<Set<String>>,
-        private val coordinator: Media3BackgroundCoordinator,
-        private val isTelevisionUiMode: Boolean
-    ) : Binder(),
-        Media3SessionClient {
-        override fun updateSession(
-            session: PlaybackSession?,
-            capability: PlayerCapabilityContract?
-        ) {
-            sessionState.value = session
-            capabilityState.value = capability
-            coordinator.sync(capability, isTelevisionUiMode)
-        }
-
-        override fun session(): StateFlow<PlaybackSession?> = sessionState
-
-        override fun capability(): StateFlow<PlayerCapabilityContract?> = capabilityState
-
-        override fun backgroundModes(): StateFlow<Set<Media3BackgroundMode>> = backgroundModesState
-
-        override fun sessionCommands(): StateFlow<Set<String>> = sessionCommandsState
-    }
-}
-
-private class StateFlowCommandBridge(
-    private val sessionCommandsState: MutableStateFlow<Set<String>>,
-    private val backgroundModesState: MutableStateFlow<Set<Media3BackgroundMode>>
-) : MediaSessionCommandBridge {
-    override fun updateSessionCommands(commands: Set<String>) {
-        sessionCommandsState.value = commands
-    }
-
-    override fun updateBackgroundModes(modes: Set<Media3BackgroundMode>) {
-        backgroundModesState.value = modes
     }
 }

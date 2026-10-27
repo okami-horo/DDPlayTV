@@ -7,24 +7,38 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.PlayTaskManager
 import com.xyoye.common_component.storage.file.helper.TorrentBean
 import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.ThunderPlaybackTransport
+import com.xyoye.common_component.storage.transport.TransportAcquisitionException
+import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.common_component.utils.thunder.model.ThunderTorrentFileInfo
 import com.xyoye.data_component.bean.LocalDanmuBean
+import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import java.io.InputStream
 
 /**
  * Created by xyoye on 2023/4/3
  */
 
-class TorrentStorage(
-    library: MediaLibraryEntity
-) : AbstractStorage(library) {
+class TorrentStorage internal constructor(
+    library: MediaLibraryEntity,
+    private val manager: ThunderManager,
+    private val resolveTorrent: (suspend (StorageFile) -> TorrentBean?)? = null,
+    initialize: () -> Unit = PlayTaskManager::init
+) : AbstractStorage(library), PlaybackTransportProvider {
+    constructor(library: MediaLibraryEntity) : this(library, ThunderManager.getInstance())
+
     init {
         try {
-            PlayTaskManager.init()
+            initialize()
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedExceptionWithContext(
                 e,
@@ -99,7 +113,7 @@ class TorrentStorage(
             val torrent =
                 TorrentBean.formInfo(
                     torrentPath,
-                    ThunderManager.getInstance().getTaskInfo(torrentPath),
+                    manager.getTaskInfo(torrentPath),
                 )
 
             val fileInfo =
@@ -131,36 +145,25 @@ class TorrentStorage(
         }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String? {
-        return try {
-            val torrent =
-                getTorrentFormFile(file)
-                    ?: run {
-                        ErrorReportHelper.postException(
-                            "Failed to get torrent for play URL creation",
-                            "TorrentStorage",
-                            RuntimeException("getTorrentFormFile returned null for file: ${file.fileName()}"),
-                        )
-                        return null
-                    }
-            val fileIndex = (file as TorrentStorageFile).getFileInfo().fileIndex
-            if (fileIndex == -1) {
-                ErrorReportHelper.postException(
-                    "Invalid file index for play URL creation",
-                    "TorrentStorage",
-                    RuntimeException("File index is -1 for file: ${file.fileName()}"),
-                )
-                return null
-            }
-            ThunderManager.getInstance().generatePlayUrl(torrent, fileIndex)
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "TorrentStorage",
-                "createPlayUrl",
-                "文件名: ${file.fileName()}",
-            )
-            null
+    override suspend fun acquirePlaybackTransport(
+        file: StorageFile,
+        profile: PlaybackProfile
+    ): PlaybackTransportLease {
+        val torrentFile = file as? TorrentStorageFile
+        if (torrentFile == null || file.storage !== this || !file.isFile()) {
+            throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable)
+        }
+        val torrent = getTorrentFormFile(file)
+            ?: throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable)
+        val task = manager.acquirePlaybackTask(torrent, torrentFile.getFileInfo().fileIndex)
+        var transferred = false
+        try {
+            currentCoroutineContext().ensureActive()
+            val lease = ThunderPlaybackTransport(task, manager)
+            transferred = true
+            return lease
+        } finally {
+            if (!transferred) manager.releasePlaybackTask(task.taskId, task.leaseId)
         }
     }
 
@@ -172,10 +175,12 @@ class TorrentStorage(
         try {
             val isMagnetLink = Uri.parse(url).scheme == "magnet"
             if (isMagnetLink) {
-                ThunderManager.getInstance().downloadTorrentFile(url)
+                manager.downloadTorrentFile(url)
             } else {
                 url
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedExceptionWithContext(
                 e,
@@ -187,6 +192,7 @@ class TorrentStorage(
         }
 
     private suspend fun getTorrentFormFile(file: StorageFile): TorrentBean? {
+        resolveTorrent?.let { return it(file) }
         return try {
             val directoryInfo = (file as TorrentStorageFile).getFileInfo()
             val torrentPath = torrentPath(directoryInfo.subPath)
@@ -202,8 +208,10 @@ class TorrentStorage(
             }
             TorrentBean.formInfo(
                 torrentPath,
-                ThunderManager.getInstance().getTaskInfo(torrentPath),
+                manager.getTaskInfo(torrentPath),
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedExceptionWithContext(
                 e,

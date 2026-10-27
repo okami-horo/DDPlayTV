@@ -11,6 +11,9 @@ import com.xyoye.common_component.playback.addon.PlaybackIdentity
 import com.xyoye.common_component.playback.addon.PlaybackPreferenceSwitchableAddon
 import com.xyoye.common_component.playback.addon.PlaybackRecoveryRequest
 import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
+import com.xyoye.common_component.playback.addon.PlaybackReplacementDecision
+import com.xyoye.common_component.playback.addon.PlaybackReplacementIntent
+import com.xyoye.common_component.playback.addon.PlaybackReplacementOperation
 import com.xyoye.common_component.playback.addon.PlaybackSettingSpec
 import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
 import com.xyoye.common_component.playback.addon.PlaybackSettingsAddon
@@ -20,11 +23,15 @@ import com.xyoye.data_component.enums.PlayState
 
 class BilibiliPlaybackAddon(
     private val identity: PlaybackIdentity,
-    private val supportsSeamlessPreferenceSwitch: Boolean
+    private val token: String
 ) : PlaybackSettingsAddon,
     PlaybackPreferenceSwitchableAddon,
     PlaybackUrlRecoverableAddon,
     PlaybackReleasableAddon {
+    private val work = BilibiliPlaybackWork()
+
+    @Volatile
+    private var released = false
     private val storageId: Int = identity.storageId
     private val uniqueKey: String = identity.uniqueKey
     private val isLiveKey: Boolean = BilibiliKeys.parse(uniqueKey) is BilibiliKeys.LiveKey
@@ -39,93 +46,87 @@ class BilibiliPlaybackAddon(
 
     override val addonId: String = "bilibili/playback"
 
+    @Synchronized
     override fun onRelease() {
-        BilibiliPlaybackSessionStore.remove(storageId, uniqueKey)
-        BilibiliLivePlaybackSessionStore.remove(storageId, uniqueKey)
+        released = true
+        work.close()
+        BilibiliPlaybackHeartbeat.clear(storageId, uniqueKey, token)
     }
 
-    override suspend fun getSettingSpec(): Result<PlaybackSettingSpec?> =
+    override suspend fun getSettingSpec(): Result<PlaybackSettingSpec?> = work.run { settingSpec() }
+
+    private fun settingSpec(): Result<PlaybackSettingSpec?> =
         runCatching {
             if (isLiveKey) return@runCatching null
             if (identity.mediaType != MediaType.BILIBILI_STORAGE) return@runCatching null
 
-            val session = BilibiliPlaybackSessionStore.get(storageId, uniqueKey) ?: return@runCatching null
+            val session = BilibiliPlaybackSessionStore.get(storageId, uniqueKey, token) ?: return@runCatching null
             val snapshot = session.snapshot() ?: return@runCatching null
 
             PlaybackSettingSpec(
                 identity = identity,
-                sections = buildSettingSections(snapshot),
+                sections = buildSettingSections(snapshot)
             )
         }
 
     override suspend fun applySettingUpdate(
         update: PlaybackSettingUpdate,
         positionMs: Long
-    ): Result<String?> {
-        if (isLiveKey) return Result.success(null)
-        if (identity.mediaType != MediaType.BILIBILI_STORAGE) return Result.success(null)
+    ): Result<PlaybackReplacementDecision> = work.run { updateSetting(update) }
+
+    private suspend fun updateSetting(update: PlaybackSettingUpdate): Result<PlaybackReplacementDecision> {
+        if (isLiveKey || identity.mediaType != MediaType.BILIBILI_STORAGE) return Result.success(PlaybackReplacementDecision.Unavailable)
 
         val session =
-            BilibiliPlaybackSessionStore.get(storageId, uniqueKey)
+            BilibiliPlaybackSessionStore.get(storageId, uniqueKey, token)
                 ?: return Result.failure(IllegalStateException("未获取到B站播放会话"))
 
         val preferenceUpdate =
             runCatching { update.toPreferenceUpdate() }
                 .getOrElse { return Result.failure(it) }
 
-        val result = session.applyPreferenceUpdate(preferenceUpdate, positionMs)
-        if (!supportsSeamlessPreferenceSwitch) {
-            return Result.success(null)
-        }
-
-        val playUrl = result.getOrElse { return Result.failure(it) }
-        if (playUrl.isBlank()) {
-            return Result.failure(IllegalStateException("切换失败"))
-        }
-        return Result.success(playUrl)
+        session.savePreferenceUpdate(preferenceUpdate).getOrElse { return Result.failure(it) }
+        return Result.success(
+            PlaybackReplacementDecision.Prepare(
+                PlaybackReplacementIntent(identity, token, PlaybackReplacementOperation.ApplyPreferences)
+            )
+        )
     }
 
-    override suspend fun recover(request: PlaybackRecoveryRequest): Result<String?> {
+    override suspend fun recover(request: PlaybackRecoveryRequest): Result<PlaybackReplacementDecision> =
+        work.run { recoveryIntent(request) }
+
+    private fun recoveryIntent(request: PlaybackRecoveryRequest): Result<PlaybackReplacementDecision> {
         if (!canHandle(request.identity.mediaType, request.identity.storageId, request.identity.uniqueKey)) {
-            return Result.success(null)
+            return Result.success(PlaybackReplacementDecision.Unavailable)
         }
-        if (identity.mediaType != MediaType.BILIBILI_STORAGE) return Result.success(null)
-
-        if (isLiveKey) {
-            val session =
-                BilibiliLivePlaybackSessionStore.get(storageId, uniqueKey)
-                    ?: return Result.failure(IllegalStateException("未获取到B站直播会话"))
-
-            val playUrl =
-                session
-                    .recover(
-                        failure = request.toFailureContext(),
-                    ).getOrElse { return Result.failure(it) }
-
-            if (playUrl.isBlank()) {
-                return Result.success(null)
+        val present =
+            if (isLiveKey) {
+                BilibiliLivePlaybackSessionStore.get(storageId, uniqueKey, token) != null
+            } else {
+                BilibiliPlaybackSessionStore.get(storageId, uniqueKey, token) != null
             }
-            return Result.success(playUrl)
-        }
-
-        val session =
-            BilibiliPlaybackSessionStore.get(storageId, uniqueKey)
-                ?: return Result.failure(IllegalStateException("未获取到B站播放会话"))
-
-        val playUrl =
-            session
-                .recover(
-                    failure = request.toFailureContext(),
-                    positionMs = request.positionMs,
-                ).getOrElse { return Result.failure(it) }
-
-        if (playUrl.isBlank()) {
-            return Result.success(null)
-        }
-        return Result.success(playUrl)
+        if (!present) return Result.failure(IllegalStateException("未获取到B站播放会话"))
+        val failure = request.toFailureContext()
+        return Result.success(
+            PlaybackReplacementDecision.Prepare(
+                PlaybackReplacementIntent(
+                    identity,
+                    token,
+                    PlaybackReplacementOperation.Recover(
+                        failure.failingUrl,
+                        failure.httpResponseCode,
+                        failure.isDecoderError,
+                        request.positionMs
+                    )
+                )
+            )
+        )
     }
 
+    @Synchronized
     override fun onEvent(event: PlaybackEvent) {
+        if (released) return
         when (event) {
             is PlaybackEvent.SourceChanged -> {
                 if (!canHandle(event.identity.mediaType, event.identity.storageId, event.identity.uniqueKey)) return
@@ -157,9 +158,10 @@ class BilibiliPlaybackAddon(
                 BilibiliPlaybackHeartbeat.onProgress(
                     storageId = storageId,
                     uniqueKey = uniqueKey,
+                    token = token,
                     mediaType = event.identity.mediaType,
                     positionMs = event.positionMs,
-                    isPlaying = event.isPlaying,
+                    isPlaying = event.isPlaying
                 )
             }
 
@@ -172,9 +174,10 @@ class BilibiliPlaybackAddon(
                 BilibiliPlaybackHeartbeat.onPlayStateChanged(
                     storageId = storageId,
                     uniqueKey = uniqueKey,
+                    token = token,
                     mediaType = event.identity.mediaType,
                     playState = event.playState,
-                    positionMs = event.positionMs,
+                    positionMs = event.positionMs
                 )
 
                 if (event.playState == PlayState.STATE_COMPLETED) {
@@ -198,7 +201,7 @@ class BilibiliPlaybackAddon(
                     source = snapshot,
                     throwable = event.throwable,
                     scene = event.scene,
-                    extra = event.diagnostics,
+                    extra = event.diagnostics
                 )
             }
 
@@ -250,7 +253,7 @@ class BilibiliPlaybackAddon(
         return BilibiliPlaybackSession.FailureContext(
             failingUrl = failingUrl,
             httpResponseCode = httpResponseCode,
-            isDecoderError = isDecoderError,
+            isDecoderError = isDecoderError
         )
     }
 
@@ -281,12 +284,12 @@ class BilibiliPlaybackAddon(
                             snapshot.playModeOptions.map { mode ->
                                 PlaybackSettingSpec.Option(
                                     optionId = mode.name,
-                                    label = mode.label,
+                                    label = mode.label
                                 )
                             },
-                        selectedOptionId = snapshot.playMode.name,
-                    ),
-                ),
+                        selectedOptionId = snapshot.playMode.name
+                    )
+                )
         )
 
     private fun buildQualitySection(snapshot: BilibiliPlaybackSession.Snapshot): PlaybackSettingSpec.Section =
@@ -304,12 +307,12 @@ class BilibiliPlaybackAddon(
                                 .map { qn ->
                                     PlaybackSettingSpec.Option(
                                         optionId = qn.toString(),
-                                        label = qualityLabel(qn),
+                                        label = qualityLabel(qn)
                                     )
                                 },
-                        selectedOptionId = snapshot.selectedQualityQn.toString(),
-                    ),
-                ),
+                        selectedOptionId = snapshot.selectedQualityQn.toString()
+                    )
+                )
         )
 
     private fun buildVideoCodecSection(snapshot: BilibiliPlaybackSession.Snapshot): PlaybackSettingSpec.Section =
@@ -325,12 +328,12 @@ class BilibiliPlaybackAddon(
                             snapshot.videoCodecs.map { codec ->
                                 PlaybackSettingSpec.Option(
                                     optionId = codec.name,
-                                    label = codec.label,
+                                    label = codec.label
                                 )
                             },
-                        selectedOptionId = snapshot.selectedVideoCodec.name,
-                    ),
-                ),
+                        selectedOptionId = snapshot.selectedVideoCodec.name
+                    )
+                )
         )
 
     private fun buildAudioQualitySection(snapshot: BilibiliPlaybackSession.Snapshot): PlaybackSettingSpec.Section =
@@ -353,12 +356,12 @@ class BilibiliPlaybackAddon(
                                     }
                                 PlaybackSettingSpec.Option(
                                     optionId = audio.id.toString(),
-                                    label = label,
+                                    label = label
                                 )
                             },
-                        selectedOptionId = snapshot.selectedAudioQualityId.toString(),
-                    ),
-                ),
+                        selectedOptionId = snapshot.selectedAudioQualityId.toString()
+                    )
+                )
         )
 
     private fun qualityLabel(qn: Int): String {
@@ -404,7 +407,7 @@ class BilibiliPlaybackAddon(
         BilibiliPlaybackErrorReporter.reportUnexpectedCompletion(
             source = snapshot,
             scene = "live_completed",
-            extra = extra,
+            extra = extra
         )
     }
 
@@ -427,7 +430,7 @@ class BilibiliPlaybackAddon(
             uniqueKey = uniqueKey,
             videoTitle = videoTitle,
             videoUrl = videoUrl,
-            httpHeader = lastHttpHeader,
+            httpHeader = lastHttpHeader
         )
 
     private companion object {

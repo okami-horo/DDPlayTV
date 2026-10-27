@@ -16,11 +16,17 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class PlayerSettingDpadNavigationTest {
+    @Before
+    fun useRemoteInputMode() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+    }
+
     @Test
     fun dpadDownAtBottomDoesNotSwitchPageInTvSettingsMode() {
         ActivityScenario.launch(SettingPlayerActivity::class.java).use { scenario ->
@@ -54,9 +60,7 @@ class PlayerSettingDpadNavigationTest {
             waitForIdle()
 
             repeat(3) {
-                scenario.onActivity { activity ->
-                    sendDpad(activity, KeyEvent.KEYCODE_DPAD_DOWN)
-                }
+                sendDpad(KeyEvent.KEYCODE_DPAD_DOWN)
                 waitForIdle()
             }
 
@@ -68,10 +72,9 @@ class PlayerSettingDpadNavigationTest {
                     0,
                     viewPager.currentItem,
                 )
-
-                sendDpad(activity, KeyEvent.KEYCODE_DPAD_RIGHT)
             }
 
+            sendDpad(KeyEvent.KEYCODE_DPAD_RIGHT)
             waitForIdle()
 
             scenario.onActivity { activity ->
@@ -81,12 +84,8 @@ class PlayerSettingDpadNavigationTest {
         }
     }
 
-    private fun sendDpad(
-        activity: SettingPlayerActivity,
-        keyCode: Int,
-    ) {
-        activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
-        activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, keyCode))
+    private fun sendDpad(keyCode: Int) {
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(keyCode)
     }
 
     private fun waitForIdle() {

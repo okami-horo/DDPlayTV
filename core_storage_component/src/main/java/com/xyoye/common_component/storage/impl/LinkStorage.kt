@@ -1,5 +1,9 @@
 package com.xyoye.common_component.storage.impl
 
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
+import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.LinkStorageFile
@@ -13,7 +17,7 @@ import java.io.InputStream
 
 class LinkStorage(
     library: MediaLibraryEntity
-) : AbstractStorage(library) {
+) : AbstractStorage(library), PlaybackTransportProvider {
     private val httpHeaders = mutableMapOf<String, String>()
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> = emptyList()
@@ -32,7 +36,8 @@ class LinkStorage(
             it.playHistory = history
         }
 
-    override suspend fun createPlayUrl(file: StorageFile): String = file.fileUrl()
+    override suspend fun acquirePlaybackTransport(file: StorageFile, profile: PlaybackProfile): PlaybackTransportLease =
+        directPlaybackTransport(file.fileUrl())
 
     override fun getNetworkHeaders(): Map<String, String> = httpHeaders
 

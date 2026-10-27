@@ -6,6 +6,11 @@ import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.repository.Cloud115Repository
 import com.xyoye.common_component.network.repository.ResourceRepository
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
+import com.xyoye.common_component.storage.transport.TransportAcquisitionException
+import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.PagedStorage
@@ -20,7 +25,6 @@ import com.xyoye.common_component.storage.file.impl.Cloud115StorageFile
 import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.PlaybackProfile
-import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.cloud115.Cloud115FileInfo
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
@@ -32,7 +36,8 @@ class Cloud115Storage(
     library: MediaLibraryEntity
 ) : AbstractStorage(library),
     PagedStorage,
-    AuthStorage {
+    AuthStorage,
+    PlaybackTransportProvider {
     private val rangeUnsupportedRefreshLock = Any()
 
     private val storageKey = Cloud115AuthStore.storageKey(library)
@@ -296,20 +301,10 @@ class Cloud115Storage(
             ?.let { pathFile(it, isDirectory = false) }
             ?.also { it.playHistory = history }
 
-    override suspend fun createPlayUrl(file: StorageFile): String? =
-        createPlayUrl(
-            file = file,
-            profile =
-                PlaybackProfile(
-                    playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
-                    source = PlaybackProfileSource.GLOBAL,
-                ),
-        )
-
-    override suspend fun createPlayUrl(
+    override suspend fun acquirePlaybackTransport(
         file: StorageFile,
         profile: PlaybackProfile
-    ): String? {
+    ): PlaybackTransportLease {
         val playerType = profile.playerType
         return runCatching {
             check(file.isVideoFile()) { "该文件不是视频，无法播放" }
@@ -326,13 +321,13 @@ class Cloud115Storage(
                         PlayerConfig.getVlcLocalProxyMode() to PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong()
                     PlayerType.TYPE_EXO_PLAYER ->
                         PlayerConfig.getExoLocalProxyMode() to PlayerConfig.getExoProxyRangeMinIntervalMs().toLong()
-                    else -> return@runCatching upstream.url
+                    else -> return@runCatching directPlaybackTransport(upstream.url)
                 }
 
             LogFacade.d(
                 LogModule.STORAGE,
                 LOG_TAG,
-                "createPlayUrl local proxy policy",
+                "acquirePlaybackTransport local proxy policy",
                 mapOf(
                     "storageId" to library.id.toString(),
                     "storageKey" to storageKey,
@@ -343,7 +338,7 @@ class Cloud115Storage(
                 ),
             )
 
-            LocalProxy.wrapIfNeeded(
+            LocalProxy.acquireIfNeeded(
                 playerType = playerType,
                 modeValue = mode,
                 upstreamUrl = upstream.url,
@@ -355,6 +350,7 @@ class Cloud115Storage(
                 onRangeUnsupported = buildRangeUnsupportedRefreshSupplier(file),
             )
         }.getOrElse { t ->
+            if (t is kotlinx.coroutines.CancellationException) throw t
             val fid = file.payloadAs<Cloud115FileInfo>()?.fid.orEmpty()
             val filePath = runCatching { file.filePath() }.getOrNull()
             val cookie = redactedCookie()
@@ -376,7 +372,7 @@ class Cloud115Storage(
             ErrorReportHelper.postCatchedExceptionWithContext(
                 t,
                 "Cloud115Storage",
-                "createPlayUrl",
+                "acquirePlaybackTransport",
                 "storageId=${library.id} storageKey=$storageKey filePath=$filePath fid=$fid playerType=${playerType.name} cookie=$cookie",
             )
             throw t

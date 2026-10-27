@@ -1,5 +1,6 @@
 package com.xyoye.player_component.sequential
 
+import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayerType
@@ -12,9 +13,9 @@ class FallbackSequentialPlaybackAdapterTest {
         val adapter = FallbackSequentialPlaybackAdapter()
         val result =
             adapter.queueNextSource(
-                sessionToken = SequentialPlaybackSessionToken(1, "legacy", PlayerType.TYPE_VLC_PLAYER),
-                queueItemId = SequentialPlaybackQueueItemId(1),
-                nextSource = FakeVideoSource(),
+                sessionToken = SequentialPlaybackSessionToken(PlaybackSessionVersion("session", 1), "legacy", PlayerType.TYPE_VLC_PLAYER),
+                queueItemId = SequentialPlaybackQueueItemId("1"),
+                nextSource = FakeVideoSource()
             )
 
         assertTrue(!adapter.supportsSeamlessPlayback)
@@ -23,8 +24,6 @@ class FallbackSequentialPlaybackAdapterTest {
 
     private class FakeVideoSource : BaseVideoSource(0, listOf("legacy")) {
         override fun indexTitle(index: Int): String = "legacy"
-
-        override suspend fun indexSource(index: Int): BaseVideoSource? = null
 
         override fun getVideoUrl(): String = "file:///legacy.mp4"
 

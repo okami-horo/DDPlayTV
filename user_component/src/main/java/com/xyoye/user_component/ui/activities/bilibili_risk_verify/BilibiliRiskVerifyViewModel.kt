@@ -2,70 +2,39 @@ package com.xyoye.user_component.ui.activities.bilibili_risk_verify
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.bilibili.error.BilibiliException
-import com.xyoye.common_component.bilibili.repository.BilibiliRepository
-import kotlinx.coroutines.Dispatchers
+import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
+import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
+import com.xyoye.common_component.playback.handoff.PlaybackVerificationAnswer
+import com.xyoye.common_component.playback.handoff.PlaybackVerificationChallenge
+import com.xyoye.common_component.playback.handoff.PlaybackVerificationResult
+import com.xyoye.common_component.services.PlaybackRequestService
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class BilibiliRiskVerifyViewModel : BaseViewModel() {
-    data class GeetestConfig(
-        val gt: String,
-        val challenge: String
-    )
+    val geetestConfigLiveData = MutableLiveData<PlaybackVerificationChallenge>()
+    private val results = Channel<PlaybackSubmissionResult>(Channel.CONFLATED)
+    val outcomes = results.receiveAsFlow()
+    private val provider: PlaybackRequestService? by lazy { ARouter.getInstance().navigation(PlaybackRequestService::class.java) }
+    private var verificationId: String? = null
+    private var completed = false
+    private var submitting = false
 
-    val geetestConfigLiveData = MutableLiveData<GeetestConfig>()
-    val verifySuccessLiveData = MutableLiveData<String>()
-    val errorLiveData = MutableLiveData<String>()
-
-    private var repository: BilibiliRepository? = null
-    private var registerChallenge: String? = null
-    private var registerToken: String? = null
-
-    fun start(
-        storageKey: String,
-        vVoucher: String
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
+    fun start(id: String) {
+        if (verificationId == id) return
+        verificationId = id
+        viewModelScope.launch {
             showLoading("加载验证码中…")
             try {
-                val repo = BilibiliRepository(storageKey)
-                repository = repo
-
-                val data =
-                    repo
-                        .gaiaVgateRegister(vVoucher)
-                        .getOrElse { throwable ->
-                            throw throwable
-                        }
-
-                val token =
-                    data.token?.takeIf { it.isNotBlank() }
-                        ?: throw BilibiliException.from(code = -352, message = "验证码获取失败：token 为空")
-
-                val geetest =
-                    data.geetest
-                        ?: throw BilibiliException.from(code = -352, message = "该风控无法通过验证码解除（geetest=null）")
-
-                val gt =
-                    geetest.gt?.takeIf { it.isNotBlank() }
-                        ?: throw BilibiliException.from(code = -352, message = "验证码获取失败：gt 为空")
-
-                val challenge =
-                    geetest.challenge?.takeIf { it.isNotBlank() }
-                        ?: throw BilibiliException.from(code = -352, message = "验证码获取失败：challenge 为空")
-
-                registerToken = token
-                registerChallenge = challenge
-
-                geetestConfigLiveData.postValue(
-                    GeetestConfig(
-                        gt = gt,
-                        challenge = challenge,
-                    ),
-                )
-            } catch (e: Exception) {
-                errorLiveData.postValue(e.message ?: "验证码获取失败")
+                when (val result = provider?.verificationChallenge(id)) {
+                    is PlaybackVerificationResult.Ready -> geetestConfigLiveData.value = result.challenge
+                    is PlaybackVerificationResult.Rejected -> results.trySend(PlaybackSubmissionResult.Rejected(result.failure))
+                    null -> results.trySend(PlaybackSubmissionResult.Rejected(PlaybackPreparationFailure.UnsupportedSource))
+                }
             } finally {
                 hideLoading()
             }
@@ -77,36 +46,27 @@ class BilibiliRiskVerifyViewModel : BaseViewModel() {
         validate: String,
         seccode: String
     ) {
-        val repo = repository
-        val token = registerToken
-        val challenge =
-            challengeFromJs?.takeIf { it.isNotBlank() }
-                ?: registerChallenge
-
-        if (repo == null || token.isNullOrBlank() || challenge.isNullOrBlank()) {
-            errorLiveData.postValue("验证码状态异常，请返回重试")
-            return
-        }
-
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
+            val id = verificationId ?: return@launch
+            if (submitting || completed) return@launch
+            submitting = true
             showLoading("提交验证中…")
             try {
-                val griskId =
-                    repo
-                        .gaiaVgateValidate(
-                            challenge = challenge,
-                            token = token,
-                            validate = validate,
-                            seccode = seccode,
-                        ).getOrElse { throwable ->
-                            throw throwable
-                        }
-                verifySuccessLiveData.postValue(griskId)
-            } catch (e: Exception) {
-                errorLiveData.postValue(e.message ?: "验证失败")
+                val result =
+                    provider?.completeVerification(id, PlaybackVerificationAnswer(challengeFromJs, validate, seccode))
+                        ?: PlaybackSubmissionResult.Rejected(PlaybackPreparationFailure.UnsupportedSource)
+                completed = result is PlaybackSubmissionResult.Accepted
+                results.trySend(result)
             } finally {
+                submitting = false
                 hideLoading()
             }
         }
+    }
+
+    fun cancel() {
+        if (completed) return
+        val id = verificationId ?: return
+        viewModelScope.launch(NonCancellable) { provider?.cancelVerification(id) }
     }
 }

@@ -1,257 +1,255 @@
 package com.xyoye.common_component.storage.impl
 
 import android.net.Uri
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.FtpPlayServer
 import com.xyoye.common_component.storage.file.impl.FtpStorageFile
-import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.common_component.utils.IOUtils
+import com.xyoye.common_component.storage.transport.FtpPlaybackTransport
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.TransportAcquisitionException
+import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
+import com.xyoye.common_component.storage.transport.releaseTransportResources
+import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
+import java.io.FilterInputStream
 import java.io.InputStream
 
-/**
- * Created by XYJ on 2023/1/16.
- */
+class FtpStorage internal constructor(
+    library: MediaLibraryEntity,
+    private val client: FTPClient,
+    private val createServer: (FtpStorage, FtpStorageFile) -> FtpPlayServer = { storage, file -> FtpPlayServer(storage, file) }
+) : AbstractStorage(library),
+    PlaybackTransportProvider {
+    constructor(library: MediaLibraryEntity) : this(library, FTPClient())
 
-class FtpStorage(
-    library: MediaLibraryEntity
-) : AbstractStorage(library) {
-    private val mFtpClient = FTPClient()
-    private var playingInputStream: InputStream? = null
+    private val connectionLock = Any()
+    private var closed = false
+    private var connectionMayBeOpen = false
+    private var pendingRead: PendingRead? = null
 
-    override suspend fun listFiles(file: StorageFile): List<StorageFile> {
-        // 检测FTP通讯是否正常
-        if (checkConnection().not()) {
-            return emptyList()
-        }
-        // 获取文件列表
-        try {
-            checkWorkDirectory()
-            return mFtpClient.listFiles(file.filePath()).map {
-                FtpStorageFile(this, file.filePath(), it)
+    override suspend fun listFiles(file: StorageFile): List<StorageFile> =
+        access(emptyList()) {
+            if (file.storage !== this) return@access emptyList()
+            if (client.printWorkingDirectory() != "/" && !client.changeWorkingDirectory("/")) {
+                return@access emptyList()
             }
-        } catch (e: Exception) {
-            reportError("获取文件列表失败: ${file.filePath()}", e)
-            close()
+            client.listFiles(file.filePath()).map { FtpStorageFile(this, file.filePath(), it) }
         }
-        return emptyList()
-    }
 
-    override suspend fun getRootFile(): StorageFile {
-        val ftpFile =
+    override suspend fun getRootFile(): StorageFile =
+        FtpStorageFile(
+            this,
+            "/",
             FTPFile().apply {
                 name = ""
                 type = FTPFile.DIRECTORY_TYPE
             }
-        return FtpStorageFile(this, "/", ftpFile)
-    }
+        )
 
-    override suspend fun openFile(file: StorageFile): InputStream? {
-        if (file !is FtpStorageFile) return null
-        return openFileBlocking(file)
-    }
+    override suspend fun openFile(file: StorageFile): InputStream? = (file as? FtpStorageFile)?.let { openFileBlocking(it) }
 
     suspend fun openFile(
         file: StorageFile,
         offset: Long
-    ): InputStream? {
-        if (file !is FtpStorageFile) return null
-        return openFileBlocking(file, offset)
-    }
+    ): InputStream? = (file as? FtpStorageFile)?.let { openFileBlocking(it, offset) }
 
     internal fun openFileBlocking(
         file: FtpStorageFile,
-        offset: Long = -1
-    ): InputStream? {
-        if (checkConnection().not()) {
-            return null
+        offset: Long = 0
+    ): InputStream? =
+        access(null) {
+            if (file.storage !== this) return@access null
+            client.restartOffset = offset.coerceAtLeast(0)
+            val stream = client.retrieveFileStream(file.filePath()) ?: return@access null
+            PendingRead(stream).also { pendingRead = it }
         }
-
-        mFtpClient.restartOffset = offset.coerceAtLeast(0)
-        try {
-            playingInputStream = mFtpClient.retrieveFileStream(file.filePath())
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedException(e, "FTP", "打开文件失败: ${file.filePath()}")
-            close()
-        }
-        return playingInputStream
-    }
 
     override suspend fun pathFile(
         path: String,
         isDirectory: Boolean
-    ): StorageFile? {
-        if (checkConnection().not()) {
-            return null
+    ): StorageFile? =
+        access(null) {
+            val metadata =
+                lookupMetadata(path) ?: FTPFile().apply {
+                    name = Uri.parse(path).lastPathSegment.orEmpty()
+                    type = if (isDirectory) FTPFile.DIRECTORY_TYPE else FTPFile.FILE_TYPE
+                }
+            resolvedFile(path, metadata)
         }
 
-        val pathUri = Uri.parse(path)
-        val fileName = pathUri.lastPathSegment
-        val parentPath = pathUri.path?.removeSuffix("/$fileName") ?: "/"
-
-        try {
-            val ftpFile = mFtpClient.mlistFile(path)
-            return FtpStorageFile(this, parentPath, ftpFile)
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedException(e, "FTP", "获取文件信息失败: $path")
+    /** Playback never accepts the browser's synthetic fallback metadata. */
+    internal fun resolvePlaybackFile(path: String): StorageFile? =
+        access(null) {
+            val metadata = lookupMetadata(path)?.takeIf { it.isFile } ?: return@access null
+            resolvedFile(path, metadata)
         }
 
-        val fileType = if (isDirectory) FTPFile.DIRECTORY_TYPE else FTPFile.FILE_TYPE
-        val ftpFile =
-            FTPFile().apply {
-                name = fileName
-                type = fileType
+    private fun lookupMetadata(path: String): FTPFile? {
+        val name = Uri.parse(path).lastPathSegment ?: return null
+        val metadata =
+            try {
+                client.mlistFile(path)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
             }
-        return FtpStorageFile(this, parentPath, ftpFile)
-    }
-
-    override suspend fun historyFile(history: PlayHistoryEntity): StorageFile? {
-        val storagePath = history.storagePath ?: return null
-        return pathFile(storagePath, false)?.also {
-            it.playHistory = history
+        if (metadata != null) return metadata
+        // Some servers do not support MLST; a matching LIST entry is still real metadata.
+        return try {
+            client.listFiles(parentPath(path)).firstOrNull { it.name == name }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            if (throwPlaybackErrors) throw failure
+            null
         }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String? {
-        if (file !is FtpStorageFile) {
-            return null
-        }
-        val playServer = FtpPlayServer.getInstance()
-        val serverStarted = playServer.startSync()
-        if (serverStarted.not()) {
-            return null
-        }
-        return playServer.generatePlayUrl(this, file)
+    private fun resolvedFile(
+        path: String,
+        metadata: FTPFile
+    ): FtpStorageFile {
+        // MLST can return the full path as its name; bind to the requested identity.
+        metadata.name = Uri.parse(path).lastPathSegment.orEmpty()
+        return FtpStorageFile(this, parentPath(path), metadata)
     }
 
-    /**
-     * 检查FTP通讯
-     */
+    private fun parentPath(path: String): String = path.substringBeforeLast('/', "").ifEmpty { "/" }
+
+    override suspend fun historyFile(history: PlayHistoryEntity): StorageFile? =
+        history.storagePath?.let { pathFile(it, false) }?.also { it.playHistory = history }
+
+    override suspend fun acquirePlaybackTransport(
+        file: StorageFile,
+        profile: PlaybackProfile
+    ): PlaybackTransportLease {
+        val ftpFile = file as? FtpStorageFile
+        if (ftpFile == null || file.storage !== this || !file.isFile()) {
+            throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable)
+        }
+        val server = createServer(this, ftpFile)
+        var transferred = false
+        try {
+            currentCoroutineContext().ensureActive()
+            if (!server.startSync()) throw TransportAcquisitionException(TransportAcquisitionFailure.ServerStartFailed)
+            currentCoroutineContext().ensureActive()
+            val lease = FtpPlaybackTransport(server, ftpFile, this)
+            transferred = true
+            return lease
+        } finally {
+            if (!transferred) server.release()
+        }
+    }
+
+    override suspend fun test(): Boolean = access(false) { true }
+
     private fun checkConnection(): Boolean {
-        if (mFtpClient.isAvailable) {
+        if (client.isAvailable) {
+            connectionMayBeOpen = true
             return true
         }
-
-        try {
-            mFtpClient.controlEncoding = library.ftpEncoding
-            mFtpClient.connect(library.ftpAddress, library.port)
-            if (checkLogin().not()) {
-                reportError("登陆失败，请检查账号密码")
-                return false
-            }
-            if (library.isActiveFTP) {
-                mFtpClient.enterLocalActiveMode()
+        connectionMayBeOpen = true
+        client.controlEncoding = library.ftpEncoding
+        client.connect(library.ftpAddress, library.port)
+        val loggedIn =
+            if (library.isAnonymous) {
+                client.login("anonymous", "anonymous")
             } else {
-                mFtpClient.enterLocalPassiveMode()
+                client.login(library.account, library.password)
             }
-            mFtpClient.setFileType(FTP.BINARY_FILE_TYPE)
-            mFtpClient.listHiddenFiles = true
-            return true
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "FtpStorage",
-                "checkConnection",
-                params =
-                    mapOf(
-                        "address" to library.ftpAddress,
-                        "port" to library.port,
-                    ),
-                message = "连接至FTP服务失败",
-            )
-            close()
+        if (!loggedIn) {
+            disconnectConnection()
+            if (throwPlaybackErrors) throw javax.security.auth.login.LoginException("FTP authentication failed")
+            return false
         }
-        return false
+        if (library.isActiveFTP) client.enterLocalActiveMode() else client.enterLocalPassiveMode()
+        if (!client.setFileType(FTP.BINARY_FILE_TYPE)) {
+            disconnectConnection()
+            return false
+        }
+        client.listHiddenFiles = true
+        return true
     }
 
-    /**
-     * 检查工作目录
-     */
-    private fun checkWorkDirectory(switch: Boolean = true) {
-        // 当执行retrieveFileStream后，工作目录会发生变化
-        // 检查工作目录是否为根目录，不是则切换至根目录
-        val workDirectory = mFtpClient.printWorkingDirectory()
-        if (workDirectory == "/") {
-            return
-        }
+    fun completePending() = synchronized(connectionLock) { finishPending() }
 
-        // 切换目录失败，直接重置连接
-        if (switch.not()) {
-            close()
-            checkConnection()
-            return
-        }
-
-        try {
-            mFtpClient.changeWorkingDirectory("/")
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedException(e, "FTP", "切换工作目录失败")
-        }
-        if (switch) {
-            checkWorkDirectory(false)
-        }
-    }
-
-    private fun checkLogin(): Boolean {
-        try {
-            return if (library.isAnonymous) {
-                mFtpClient.login("anonymous", "anonymous")
-            } else {
-                mFtpClient.login(library.account, library.password)
+    private inner class PendingRead(
+        val raw: InputStream
+    ) : FilterInputStream(raw) {
+        override fun close() =
+            synchronized(connectionLock) {
+                // A late response close must never finish a newer transfer.
+                if (pendingRead === this) finishPending()
             }
-        } catch (e: Exception) {
-            reportError("登录FTP服务失败", e)
-            close()
-        }
-        return false
     }
 
-    override suspend fun test(): Boolean = checkConnection()
+    private fun finishPending() {
+        val previous = pendingRead ?: return
+        pendingRead = null
+        var failed = false
+        try {
+            previous.raw.close()
+        } catch (_: Exception) {
+            failed = true
+        }
+        try {
+            if (!client.completePendingCommand()) failed = true
+        } catch (_: Exception) {
+            failed = true
+        }
+        if (failed) disconnectConnection()
+    }
+
+    private fun disconnectConnection() {
+        if (!connectionMayBeOpen) return
+        connectionMayBeOpen = false
+        releaseTransportResources("ftp-connection", listOf({ client.disconnect() }))
+    }
 
     override fun close() {
-        if (playingInputStream != null) {
-            IOUtils.closeIO(playingInputStream)
-            playingInputStream = null
+        synchronized(connectionLock) {
+            if (closed) return
+            closed = true
         }
-
-        try {
-            mFtpClient.disconnect()
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedException(e, "FTP", "断开FTP连接失败")
-        }
+        releaseTransportResources(
+            "ftp-storage",
+            listOf({
+                synchronized(connectionLock) { finishPending() }
+            }, {
+                synchronized(connectionLock) { disconnectConnection() }
+            })
+        )
     }
 
-    fun completePending() {
-        if (playingInputStream == null) {
-            return
-        }
-
-        IOUtils.closeIO(playingInputStream)
-        playingInputStream = null
-
-        try {
-            if (!mFtpClient.completePendingCommand()) {
-                close()
+    private inline fun <T> access(
+        fallback: T,
+        operation: () -> T
+    ): T =
+        synchronized(connectionLock) {
+            if (closed) return fallback
+            try {
+                finishPending()
+                if (!checkConnection()) return fallback
+                operation()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                disconnectConnection()
+                if (throwPlaybackErrors) throw failure
+                LogFacade.w(LogModule.STORAGE, "FtpStorage", "FTP operation failed")
+                fallback
             }
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedException(e, "FTP", "完成挂起命令失败")
-            close()
         }
-    }
-
-    private fun reportError(
-        message: String,
-        e: Exception? = null
-    ) {
-        if (e != null) {
-            ErrorReportHelper.postCatchedException(e, "FTP", message)
-        } else {
-            ErrorReportHelper.postException(message, "FTP")
-        }
-    }
 }

@@ -6,13 +6,21 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.media.AudioManager
+import android.os.Bundle
 import android.os.IBinder
+import android.view.Gravity
 import android.view.KeyEvent
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.HttpDataSource
@@ -26,43 +34,43 @@ import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.enums.SubtitleRendererBackend
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.media3.Media3SessionClient
 import com.xyoye.common_component.playback.addon.PlaybackEvent
 import com.xyoye.common_component.playback.addon.PlaybackIdentity
-import com.xyoye.common_component.playback.addon.PlaybackPreferenceSwitchableAddon
 import com.xyoye.common_component.playback.addon.PlaybackRecoveryRequest
-import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
 import com.xyoye.common_component.playback.addon.PlaybackUrlRecoverableAddon
+import com.xyoye.common_component.playback.handoff.PlaybackAction
+import com.xyoye.common_component.playback.handoff.PlaybackNavigation
+import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
+import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
+import com.xyoye.common_component.playback.userMessage
 import com.xyoye.common_component.receiver.HeadsetBroadcastReceiver
 import com.xyoye.common_component.receiver.PlayerReceiverListener
 import com.xyoye.common_component.receiver.ScreenBroadcastReceiver
 import com.xyoye.common_component.services.Media3SessionServiceProvider
-import com.xyoye.common_component.source.VideoSourceManager
 import com.xyoye.common_component.source.base.BaseVideoSource
-import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media.StorageVideoSource
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.utils.StatusBarStyle
 import com.xyoye.common_component.utils.danmu.StorageDanmuMatcher
-import com.xyoye.common_component.utils.screencast.ScreencastHandler
 import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.bean.VideoTrackBean
-import com.xyoye.data_component.media3.entity.Media3BackgroundMode
-import com.xyoye.data_component.media3.entity.PlaybackSession
-import com.xyoye.data_component.media3.entity.PlayerCapabilityContract
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.data_component.enums.SurfaceType
+import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VLCAudioOutput
 import com.xyoye.data_component.enums.VLCHWDecode
+import com.xyoye.data_component.media3.entity.Media3BackgroundMode
+import com.xyoye.data_component.media3.entity.Media3Capability
+import com.xyoye.data_component.media3.entity.Media3PlaybackState
 import com.xyoye.player.DanDanVideoPlayer
 import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
@@ -73,28 +81,35 @@ import com.xyoye.player.utils.PlaybackErrorFormatter
 import com.xyoye.player_component.BR
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ActivityPlayerBinding
-import com.xyoye.player_component.sequential.FallbackSequentialPlaybackAdapter
+import com.xyoye.player_component.playback.session.BackendPlaybackState
+import com.xyoye.player_component.playback.session.PlaybackActivityArguments
+import com.xyoye.player_component.playback.session.PlaybackPositionConstraints
+import com.xyoye.player_component.playback.session.PlaybackProgress
+import com.xyoye.player_component.playback.session.PlaybackSessionBackend
+import com.xyoye.player_component.playback.session.PreparedPlayback
+import com.xyoye.player_component.playback.session.QueuedPlaybackStatus
+import com.xyoye.player_component.playback.session.SessionRequestResult
 import com.xyoye.player_component.sequential.Media3SequentialPlaybackAdapter
+import com.xyoye.player_component.sequential.SequentialPlaybackBackendAdapter
 import com.xyoye.player_component.sequential.SequentialPlaybackCoordinator
-import com.xyoye.player_component.sequential.SequentialPlaybackFallbackSwitcher
-import com.xyoye.player_component.sequential.SequentialPlaybackStateApplier
-import com.xyoye.player_component.sequential.SequentialPlaybackTransition
+import com.xyoye.player_component.sequential.SequentialPlaybackQueueItemId
+import com.xyoye.player_component.sequential.SequentialPlaybackSessionToken
+import com.xyoye.player_component.sequential.SequentialQueueRetirement
 import com.xyoye.player_component.utils.PlayRecorder
 import com.xyoye.player_component.widgets.popup.PlayerPopupManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
 @UnstableApi
-@Route(path = RouteTable.Player.PlayerCenter)
+@Route(path = RouteTable.Player.Player)
 class PlayerActivity :
     BaseActivity<PlayerViewModel, ActivityPlayerBinding>(),
     PlayerReceiverListener,
-    ScreencastHandler,
     SubtitleFallbackDispatcher {
     companion object {
         private const val TAG_ACTIVITY = "PlayerActivity"
@@ -103,16 +118,15 @@ class PlayerActivity :
         private const val TAG_DANMAKU = "PlayerDanmaku"
         private const val TAG_SUBTITLE = "PlayerSubtitle"
         private const val TAG_CONFIG = "PlayerConfig"
-        private const val TAG_CAST = "PlayerCast"
         private const val TAG_MEDIA3 = "Media3Session"
-        private const val TAG_SEQUENTIAL = "SequentialPlayback"
         private const val BACK_EXIT_CONFIRM_WINDOW_MS = 1500L
+        private const val REQUEST_CODE_PLAYBACK_VERIFICATION = 3301
     }
 
     private val danmuViewModel: PlayerDanmuViewModel by lazy {
         ViewModelProvider(
             viewModelStore,
-            ViewModelProvider.AndroidViewModelFactory(application),
+            ViewModelProvider.AndroidViewModelFactory(application)
         )[PlayerDanmuViewModel::class.java]
     }
 
@@ -141,45 +155,217 @@ class PlayerActivity :
     private var exitPlayerReceiver: BroadcastReceiver? = null
 
     private var videoSource: BaseVideoSource? = null
+    private var activityArguments = PlaybackActivityArguments(null, null)
+    private var explicitPlaybackExit = false
+    private var pauseAfterPrepare = false
+    private var preparingProgress: PlaybackProgress? = null
+    private var playingBeforeLifecyclePause = false
+    private val preparationView by lazy {
+        TextView(this).apply {
+            setTextColor(Color.WHITE)
+            textSize = 18f
+            gravity = Gravity.CENTER
+            setPadding(24, 24, 24, 24)
+            isFocusable = false
+            isClickable = false
+            visibility = View.GONE
+        }
+    }
+
+    /** Borrows the session's source. No source/Addon/lease is released by this adapter. */
+    private val playbackBackend: PlaybackSessionBackend by lazy {
+        object : PlaybackSessionBackend {
+            override fun apply(
+                playback: PreparedPlayback,
+                version: PlaybackSessionVersion,
+                progress: PlaybackProgress
+            ) {
+                danDanPlayer.recordPlayInfo()
+                check(danDanPlayer.release()) { "BackendDetachFailed" }
+                media3SequentialPlaybackAdapter.onBackendDetached()
+                videoSource = null
+                videoController.release()
+                val source = playback.source
+                check(source.getVideoUrl().isNotEmpty())
+                initPlayerConfig(overrideProfile = playback.runtimeProfile)
+                // Set the borrowed reference before starting: an apply failure may still retain it in the kernel.
+                videoSource = source
+                pauseAfterPrepare = !progress.playWhenReady
+                val position = positionConstraints(source).normalize(progress.positionMs)
+                preparingProgress = progress.copy(positionMs = position)
+                updatePlayer(source, position)
+                bindNativeQueue(playback, version)
+                afterInitPlayer()
+            }
+
+            override fun currentSource() = (media3SequentialPlaybackAdapter.currentSource() ?: videoSource) as? StorageVideoSource
+
+            override fun isAttached(source: StorageVideoSource) =
+                videoSource === source || media3SequentialPlaybackAdapter.isAttached(source)
+
+            override fun progress() =
+                preparingProgress ?: PlaybackProgress(
+                    danDanPlayer.getCurrentPosition(),
+                    if (isChangingConfigurations) playingBeforeLifecyclePause else danDanPlayer.isPlaying()
+                )
+
+            override fun positionConstraints(source: StorageVideoSource) =
+                PlaybackPositionConstraints(
+                    seekable = !StorageDanmuMatcher.isBilibiliLive(source),
+                    durationMs = if (currentSource() === source) danDanPlayer.getDuration().takeIf { it > 0 } else null
+                )
+
+            override fun localState(): BackendPlaybackState {
+                val state =
+                    when (danDanPlayer.getPlayState()) {
+                        PlayState.STATE_PLAYING, PlayState.STATE_BUFFERING_PLAYING -> Media3PlaybackState.PLAYING
+                        PlayState.STATE_PAUSED -> Media3PlaybackState.PAUSED
+                        PlayState.STATE_COMPLETED -> Media3PlaybackState.COMPLETED
+                        PlayState.STATE_ERROR, PlayState.STATE_START_ABORT -> Media3PlaybackState.FAILED
+                        PlayState.STATE_BUFFERING_PAUSED -> Media3PlaybackState.BUFFERING
+                        PlayState.STATE_PREPARED -> Media3PlaybackState.READY
+                        else -> Media3PlaybackState.INITIALIZING
+                    }
+                // Popup is currently a no-op and the app service only exposes metadata.
+                // Notification/PIP capabilities require working local operations first.
+                val modes = emptySet<Media3BackgroundMode>()
+                val capabilities =
+                    buildSet {
+                        add(Media3Capability.PLAY)
+                        add(Media3Capability.PAUSE)
+                        add(Media3Capability.SPEED)
+                        add(Media3Capability.SUBTITLE)
+                        if (danDanPlayer.isSeekable() && !danDanPlayer.isLive()) add(Media3Capability.SEEK)
+                        if (danDanPlayer.supportAddTrack(TrackType.AUDIO)) add(Media3Capability.AUDIO_TRACK)
+                    }
+                return BackendPlaybackState(state, capabilities, modes)
+            }
+
+            override fun execute(action: PlaybackAction): Boolean {
+                when (action) {
+                    PlaybackAction.Play -> danDanPlayer.start()
+                    PlaybackAction.Pause -> danDanPlayer.pause()
+                    is PlaybackAction.Seek -> videoController.seekPlaybackTo(action.positionMs)
+                    is PlaybackAction.SetSpeed -> videoController.changePlaybackSpeed(action.speed)
+                    PlaybackAction.Exit -> finish()
+                    PlaybackAction.EnterBackground -> enterTaskBackground()
+                    PlaybackAction.EnterPictureInPicture -> {
+                        enterPopupMode()
+                        if (!popupManager.isShowing()) return false
+                        enterTaskBackground()
+                    }
+                    is PlaybackAction.SelectQueueItem -> return false
+                }
+                return true
+            }
+
+            override fun enqueue(
+                playback: PreparedPlayback,
+                expected: PlaybackSessionVersion
+            ): Boolean {
+                val token = nativeQueueToken ?: return false
+                if (token.version != expected || danDanPlayer.exoPlayerOrNull() == null) return false
+                media3SequentialPlaybackAdapter.beginSession(token, checkNotNull(videoSource))
+                return media3SequentialPlaybackAdapter
+                    .queueNextSource(
+                        token,
+                        SequentialPlaybackQueueItemId(playback.candidateId),
+                        playback.source
+                    ).isSuccess
+            }
+
+            override fun reconcileCandidate(playback: PreparedPlayback): QueuedPlaybackStatus {
+                val token = nativeQueueToken ?: return QueuedPlaybackStatus.DETACHED
+                return when (media3SequentialPlaybackAdapter.invalidateSession(token)) {
+                    SequentialQueueRetirement.CURRENT -> QueuedPlaybackStatus.CURRENT
+                    SequentialQueueRetirement.DETACHED -> QueuedPlaybackStatus.DETACHED
+                    SequentialQueueRetirement.STILL_ATTACHED -> QueuedPlaybackStatus.STILL_ATTACHED
+                }
+            }
+
+            override fun adoptNative(
+                playback: PreparedPlayback,
+                version: PlaybackSessionVersion
+            ) {
+                val previous = videoSource
+                if (previous != null) PlayRecorder.recordProgress(previous, 0, danDanPlayer.getDuration().coerceAtLeast(0))
+                videoSource = playback.source
+                danDanPlayer.setVideoSource(playback.source)
+                videoController.setVideoTitle(playback.source.getVideoTitle())
+                restoreSourceScopedState(playback.source)
+                dispatchPlaybackSourceChangedEvent(playback.source)
+                bindNativeQueue(playback, version)
+                if (playback.positionMs > 0 && danDanPlayer.isSeekable()) danDanPlayer.seekTo(playback.positionMs)
+            }
+
+            override fun detach() {
+                cancelPlaybackAddonJob()
+                danDanPlayer.recordPlayInfo()
+                check(danDanPlayer.release()) { "BackendDetachFailed" }
+                media3SequentialPlaybackAdapter.onBackendDetached()
+                nativeQueueToken = null
+                videoController.release()
+                videoSource = null
+                preparingProgress = null
+            }
+        }
+    }
+
+    private val handoffPlayStateListener: (PlayState) -> Unit = { state ->
+        if (state == PlayState.STATE_PLAYING) preparingProgress = null
+        if (pauseAfterPrepare && state == PlayState.STATE_PLAYING) {
+            pauseAfterPrepare = false
+            danDanPlayer.pause()
+        }
+        if (state == PlayState.STATE_PAUSED) {
+            // DanDanVideoPlayer dispatches PAUSED before its kernel.pause() call returns.
+            danDanPlayer.post { if (!isDestroyed) viewModel.savePlaybackProgress() }
+        }
+        viewModel.refreshPlaybackState(playbackBackend)
+    }
 
     // 电量管理
     /*
     private var batteryHelper = BatteryHelper()
      */
-    private var media3SessionClient: Media3SessionClient? = null
     private val media3SessionServiceProvider: Media3SessionServiceProvider? by lazy {
         ARouter.getInstance().navigation(Media3SessionServiceProvider::class.java)
     }
     private var media3ServiceBound = false
-    private var media3BackgroundModes: Set<Media3BackgroundMode> = emptySet()
-    private var media3BackgroundJob: Job? = null
-    private var latestMedia3Session: PlaybackSession? = null
-    private var latestMedia3Capability: PlayerCapabilityContract? = null
 
     private var playbackAddonJob: Job? = null
-    private var playbackRecoveryAttempts: Int = 0
-    private var pendingSeekPositionMs: Long? = null
     private val exitConfirmGuard = BackPressExitConfirmGuard(BACK_EXIT_CONFIRM_WINDOW_MS)
     private val media3SequentialPlaybackAdapter: Media3SequentialPlaybackAdapter by lazy {
         Media3SequentialPlaybackAdapter.create { danDanPlayer.exoPlayerOrNull() }
     }
-    private val fallbackSequentialPlaybackAdapter = FallbackSequentialPlaybackAdapter()
+    private var nativeQueueToken: SequentialPlaybackSessionToken? = null
+
+    private fun bindNativeQueue(
+        playback: PreparedPlayback,
+        version: PlaybackSessionVersion
+    ) {
+        val token = SequentialPlaybackSessionToken(version, playback.source.getUniqueKey(), PlayerInitializer.playerType)
+        nativeQueueToken = token
+        media3SequentialPlaybackAdapter.setEventListener(
+            object : SequentialPlaybackBackendAdapter.EventListener {
+                override fun onTransitionToQueuedItem(
+                    sessionToken: SequentialPlaybackSessionToken,
+                    queueItemId: SequentialPlaybackQueueItemId
+                ) {
+                    if (nativeQueueToken == sessionToken) viewModel.nativePlaybackTransition(queueItemId.value)
+                }
+            }
+        )
+        media3SequentialPlaybackAdapter.beginSession(token, playback.source)
+    }
+
     private val sequentialPlaybackCoordinator: SequentialPlaybackCoordinator by lazy {
         SequentialPlaybackCoordinator(
             scope = lifecycleScope,
-            backendAdapterProvider = {
-                if (PlayerInitializer.playerType == PlayerType.TYPE_EXO_PLAYER) {
-                    media3SequentialPlaybackAdapter
-                } else {
-                    fallbackSequentialPlaybackAdapter
-                }
-            },
-            stateApplier =
-                SequentialPlaybackStateApplier { transition ->
-                    applySequentialPlaybackTransition(transition)
-                },
-            fallbackSwitcher = SequentialPlaybackFallbackSwitcher { index -> switchVideoSource(index) },
-            isAutoPlayNextEnabled = { PlayerInitializer.Player.isAutoPlayNext },
+            sessionProvider = { viewModel.activePlaybackSession },
+            supportsSeamlessPlayback = { danDanPlayer.exoPlayerOrNull() != null },
+            switchTo = ::switchVideoSource,
+            isAutoPlayNextEnabled = { PlayerInitializer.Player.isAutoPlayNext }
         )
     }
     private val sequentialPlayStateListener: (PlayState) -> Unit = { playState ->
@@ -199,34 +385,66 @@ class PlayerActivity :
                 name: ComponentName?,
                 service: IBinder?
             ) {
-                val client = service as? Media3SessionClient ?: return
-                media3SessionClient = client
-                media3ServiceBound = true
-                pushMedia3SessionToService()
-                media3BackgroundJob =
-                    lifecycleScope.launch {
-                        client.backgroundModes().collectLatest { modes ->
-                            updateBackgroundModes(modes)
-                        }
-                    }
+                if (service is Media3SessionClient) media3ServiceBound = true
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
                 media3ServiceBound = false
-                media3SessionClient = null
-                media3BackgroundJob?.cancel()
-                media3BackgroundJob = null
-                media3BackgroundModes = emptySet()
             }
         }
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            PlayerViewModel::class.java,
+            PlayerViewModel::class.java
         )
 
     override fun getLayoutId() = R.layout.activity_player
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        activityArguments = PlaybackActivityArguments.read(intent, savedInstanceState)
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        viewModel.deliverPlayback(intent.getStringExtra(PlaybackNavigation.REQUEST_ID))
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (!explicitPlaybackExit) {
+            PlaybackActivityArguments.save(outState, intent.getStringExtra(PlaybackNavigation.REQUEST_ID), viewModel.playbackSessionId)
+        }
+    }
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQUEST_CODE_PLAYBACK_VERIFICATION ||
+            !viewModel.finishVerification(data?.getStringExtra(PlaybackNavigation.VERIFICATION_ID))
+        ) {
+            return
+        }
+        if (resultCode == RESULT_OK) {
+            viewModel.deliverPlayback(data?.getStringExtra(PlaybackNavigation.REQUEST_ID))
+        } else if (!viewModel.playbackScreen.value.hasPlayback) {
+            finish()
+        }
+    }
+
+    override fun finish() {
+        if (!explicitPlaybackExit) {
+            explicitPlaybackExit = true
+            intent.removeExtra(PlaybackNavigation.REQUEST_ID)
+            viewModel.exitPlayback()
+        }
+        super.finish()
+    }
 
     override fun initStatusBar() {
         StatusBarStyle.applyFullscreenHideAllBars(this)
@@ -238,11 +456,7 @@ class PlayerActivity :
         LogFacade.d(
             LogModule.PLAYER,
             TAG_ACTIVITY,
-            "initView start intent=${intent?.action.orEmpty()} source=${VideoSourceManager
-                .getInstance()
-                .getSource()
-                ?.javaClass
-                ?.simpleName ?: "null"}",
+            "initView start requestId=${activityArguments.requestId}"
         )
 
         registerReceiver()
@@ -251,24 +465,23 @@ class PlayerActivity :
 
         initPlayer()
 
-        viewModel.media3SessionLiveData.observe(this) { session ->
-            latestMedia3Session = session
-            pushMedia3SessionToService()
-        }
-
-        viewModel.media3CapabilityLiveData.observe(this) { capability ->
-            latestMedia3Capability = capability
-            pushMedia3SessionToService()
-        }
-
         initListener()
 
+        danDanPlayer.addPlayStateListener(handoffPlayStateListener)
         danDanPlayer.addPlayStateListener(sequentialPlayStateListener)
         danDanPlayer.setController(videoController)
         dataBinding.playerContainer.removeAllViews()
         dataBinding.playerContainer.addView(danDanPlayer)
 
-        applyPlaySource(VideoSourceManager.getInstance().getSource())
+        dataBinding.playerContainer.isSaveFromParentEnabled = false
+        dataBinding.playerContainer.addView(preparationView)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch { viewModel.playbackScreen.collect { renderPlaybackScreen(it) } }
+                launch { viewModel.recoverySaveFailure.collect { ToastCenter.showWarning("播放恢复信息暂未保存") } }
+            }
+        }
+        viewModel.bindPlayback(playbackBackend, activityArguments)
 
         LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "initView finished")
     }
@@ -277,6 +490,7 @@ class PlayerActivity :
         super.onResume()
 
         exitPopupMode()
+        viewModel.refreshPlaybackState(playbackBackend)
     }
 
     override fun onStart() {
@@ -298,15 +512,12 @@ class PlayerActivity :
             unbindService(media3ServiceConnection)
             media3ServiceBound = false
         }
-        media3SessionClient = null
-        media3BackgroundJob?.cancel()
-        media3BackgroundJob = null
-        media3BackgroundModes = emptySet()
         super.onStop()
     }
 
     override fun onPause() {
         exitConfirmGuard.reset()
+        playingBeforeLifecyclePause = danDanPlayer.isPlaying()
 
         val popupNotShowing = popupManager.isShowing().not()
         val backgroundAllowed = PlayerConfig.isBackgroundPlay() && media3SupportsBackgroundPlayback()
@@ -314,12 +525,13 @@ class PlayerActivity :
         LogFacade.d(
             LogModule.PLAYER,
             TAG_ACTIVITY,
-            "onPause popupNotShowing=$popupNotShowing backgroundAllowed=$backgroundAllowed",
+            "onPause popupNotShowing=$popupNotShowing backgroundAllowed=$backgroundAllowed"
         )
-        if (popupNotShowing && backgroundPlayDisable) {
+        if (popupNotShowing && backgroundPlayDisable && !viewModel.awaitingVerification) {
             danDanPlayer.pause()
         }
         danDanPlayer.recordPlayInfo()
+        viewModel.savePlaybackProgress()
         super.onPause()
     }
 
@@ -327,9 +539,11 @@ class PlayerActivity :
         LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "onDestroy")
         sequentialPlaybackCoordinator.invalidateActiveSession()
         danDanPlayer.removePlayStateListener(sequentialPlayStateListener)
+        danDanPlayer.removePlayStateListener(handoffPlayStateListener)
         beforePlayExit()
         unregisterReceiver()
-        danDanPlayer.release()
+        popupManager.dismiss()
+        viewModel.unbindPlayback(playbackBackend)
         /*
         batteryHelper.release()
          */
@@ -356,6 +570,34 @@ class PlayerActivity :
         finish()
     }
 
+    private fun renderPlaybackScreen(state: PlaybackScreenState) {
+        preparationView.visibility = if (state.preparing) View.VISIBLE else View.GONE
+        if (state.preparing) {
+            preparationView.text = if (state.hasPlayback) "正在准备新视频…" else "正在准备播放…"
+            preparationView.setBackgroundColor(if (state.hasPlayback) 0xCC000000.toInt() else Color.BLACK)
+            preparationView.layoutParams =
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    if (state.hasPlayback) FrameLayout.LayoutParams.WRAP_CONTENT else FrameLayout.LayoutParams.MATCH_PARENT,
+                    Gravity.TOP
+                )
+        }
+        val failure = state.failure ?: return
+        viewModel.acknowledgePlaybackFailure(failure)
+        if (failure is PlaybackPreparationFailure.InteractiveVerificationRequired) {
+            if (viewModel.beginVerification(failure.verificationId)) {
+                ARouter
+                    .getInstance()
+                    .build(RouteTable.User.BilibiliRiskVerify)
+                    .withString(PlaybackNavigation.VERIFICATION_ID, failure.verificationId)
+                    .navigation(this, REQUEST_CODE_PLAYBACK_VERIFICATION)
+            }
+            return
+        }
+        ToastCenter.showError(failure.userMessage())
+        if (!state.hasPlayback) finish()
+    }
+
     override fun onKeyDown(
         keyCode: Int,
         event: KeyEvent?
@@ -377,40 +619,6 @@ class PlayerActivity :
             error?.message?.let { detail -> "libass subtitles degraded, recovery pending: $reason ($detail)" }
                 ?: "libass subtitles degraded, recovery pending: $reason"
         LogFacade.w(LogModule.PLAYER, TAG_SUBTITLE, message)
-    }
-
-    override fun playScreencast(videoSource: BaseVideoSource) {
-        LogFacade.i(
-            LogModule.PLAYER,
-            TAG_CAST,
-            "receive screencast title=${videoSource.getVideoTitle()} type=${videoSource.getMediaType()}",
-        )
-        lifecycleScope.launch(Dispatchers.Main) {
-            applyPlaySource(videoSource)
-        }
-    }
-
-    private fun checkPlayParams(source: BaseVideoSource?): Boolean {
-        if (source == null || source.getVideoUrl().isEmpty()) {
-            LogFacade.w(
-                LogModule.PLAYER,
-                TAG_SOURCE,
-                "invalid source url=${source?.getVideoUrl()} type=${source?.getMediaType()}",
-            )
-            CommonDialog
-                .Builder(this)
-                .run {
-                    content = "解析播放参数失败"
-                    addPositive("退出重试") {
-                        it.dismiss()
-                        finish()
-                    }
-                    build()
-                }.show()
-            return false
-        }
-
-        return true
     }
 
     private fun initListener() {
@@ -461,7 +669,7 @@ class PlayerActivity :
                 dispatchPlaybackErrorEvent(
                     source = source,
                     throwable = playbackError,
-                    scene = "play_error",
+                    scene = "play_error"
                 )
 
                 val isBilibiliSource = source.getMediaType() == MediaType.BILIBILI_STORAGE
@@ -473,7 +681,7 @@ class PlayerActivity :
                         LogModule.PLAYER,
                         TAG_PLAYBACK,
                         "$baseMessage ${PlaybackErrorFormatter.format(playbackError)}",
-                        throwable = playbackError,
+                        throwable = playbackError
                     )
                 }
                 if (tryRecoverPlayback(source, playbackError)) {
@@ -492,7 +700,7 @@ class PlayerActivity :
                 LogFacade.i(
                     LogModule.PLAYER,
                     TAG_PLAYBACK,
-                    "exit player title=${source.getVideoTitle()}",
+                    "exit player title=${source.getVideoTitle()}"
                 )
                 finish()
             }
@@ -501,18 +709,17 @@ class PlayerActivity :
                 cloudBlock = viewModel.cloudDanmuBlockLiveData,
                 add = { keyword, isRegex -> viewModel.addDanmuBlock(keyword, isRegex) },
                 remove = { id -> viewModel.removeDanmuBlock(id) },
-                queryAll = { viewModel.localDanmuBlockLiveData },
+                queryAll = { viewModel.localDanmuBlockLiveData }
             )
             // 弹幕搜索
             observerDanmuSearch(
                 search = { danmuViewModel.searchDanmu(it) },
                 download = { danmuViewModel.downloadDanmu(it) },
-                searchResult = { danmuViewModel.danmuSearchLiveData },
+                searchResult = { danmuViewModel.danmuSearchLiveData }
             )
             // 进入悬浮窗模式
             observerEnterPopupMode {
-                enterPopupMode()
-                enterTaskBackground()
+                viewModel.dispatchPlayback(PlaybackAction.EnterPictureInPicture)
             }
             // 退出悬浮窗模式
             observerExitPopupMode {
@@ -533,46 +740,32 @@ class PlayerActivity :
 
             // B站画质/编码切换
             observerPlaybackSettingUpdate { update ->
-                val source = danDanPlayer.getVideoSource()
-                val storageSource = source as? StorageVideoSource ?: return@observerPlaybackSettingUpdate
-                val addon = storageSource.getPlaybackAddon() as? PlaybackPreferenceSwitchableAddon
-                if (addon == null) {
-                    ToastCenter.showWarning("当前播放源不支持切换")
-                    return@observerPlaybackSettingUpdate
-                }
-
-                val positionMs = danDanPlayer.getCurrentPosition()
-                if (PlayerInitializer.playerType != PlayerType.TYPE_EXO_PLAYER) {
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        val result = addon.applySettingUpdate(update, positionMs)
-                        withContext(Dispatchers.Main) {
-                            if (result.isFailure) {
-                                ToastCenter.showError(result.exceptionOrNull()?.message ?: "设置失败")
-                            } else {
-                                ToastCenter.showInfo("已保存设置，重新播放后生效")
-                            }
-                        }
-                    }
-                    return@observerPlaybackSettingUpdate
-                }
-                cancelPlaybackAddonJob(resetAttempts = false)
+                val expected = viewModel.playbackVersion ?: return@observerPlaybackSettingUpdate
+                cancelPlaybackAddonJob()
                 showLoading()
-                danDanPlayer.pause()
                 playbackAddonJob =
-                    lifecycleScope.launch(Dispatchers.IO) {
+                    lifecycleScope.launch {
                         try {
-                            val result = addon.applySettingUpdate(update, positionMs)
-                            withContext(Dispatchers.Main) {
-                                hideLoading()
-                                val playUrl = result.getOrNull()
-                                if (playUrl.isNullOrBlank()) {
-                                    ToastCenter.showError(result.exceptionOrNull()?.message ?: "切换失败")
-                                    return@withContext
-                                }
-
-                                val newSource = rebuildStorageVideoSource(storageSource, playUrl)
-                                pendingSeekPositionMs = positionMs
-                                applyPlaySource(newSource)
+                            when (val result = viewModel.applyPlaybackSetting(update, expected)) {
+                                SessionRequestResult.SettingsSaved ->
+                                    if (viewModel.playbackVersion ==
+                                        expected
+                                    ) {
+                                        ToastCenter.showInfo("已保存设置，重新播放后生效")
+                                    }
+                                is SessionRequestResult.Rejected ->
+                                    if (viewModel.playbackVersion ==
+                                        expected
+                                    ) {
+                                        ToastCenter.showError(result.failure.userMessage())
+                                    }
+                                is SessionRequestResult.BackendFailed ->
+                                    if (viewModel.playbackVersion ==
+                                        result.version
+                                    ) {
+                                        showPlayErrorDialog()
+                                    }
+                                else -> Unit
                             }
                         } finally {
                             withContext(NonCancellable + Dispatchers.Main) {
@@ -584,65 +777,19 @@ class PlayerActivity :
         }
     }
 
-    private fun cancelPlaybackAddonJob(resetAttempts: Boolean) {
+    private fun cancelPlaybackAddonJob() {
         playbackAddonJob?.cancel()
         playbackAddonJob = null
-        if (resetAttempts) {
-            playbackRecoveryAttempts = 0
-        }
         hideLoading()
     }
 
-    private fun applyPlaySource(newSource: BaseVideoSource?) {
-        LogFacade.i(
-            LogModule.PLAYER,
-            TAG_SOURCE,
-            "apply start title=${newSource?.getVideoTitle()} type=${newSource?.getMediaType()} urlHash=${newSource?.getVideoUrl()?.hashCode()}",
-        )
-        sequentialPlaybackCoordinator.invalidateActiveSession()
-        val previousSource = videoSource
-        if (previousSource != null &&
-            (
-                newSource == null ||
-                    previousSource.getStorageId() != newSource.getStorageId() ||
-                    previousSource.getUniqueKey() != newSource.getUniqueKey()
-            )
-        ) {
-            releasePlaybackAddonIfNeeded(previousSource)
-        }
-
-        cancelPlaybackAddonJob(resetAttempts = true)
-        danDanPlayer.recordPlayInfo()
-        danDanPlayer.pause()
-        danDanPlayer.release()
-        videoController.release()
-
-        videoSource = newSource
-        if (checkPlayParams(videoSource).not()) {
-            LogFacade.w(LogModule.PLAYER, TAG_SOURCE, "apply abort invalid source")
-            return
-        }
-        VideoSourceManager.getInstance().setSource(videoSource!!)
-
-        val overrideParams = VideoSourceManager.getInstance().consumeMedia3LaunchParams()
-        val launchParams = viewModel.buildMedia3LaunchParams(videoSource!!, overrideParams)
-        viewModel.prepareMedia3Session(launchParams)
-
-        updatePlayer(videoSource!!)
-        sequentialPlaybackCoordinator.onSourceApplied(videoSource!!, PlayerInitializer.playerType)
-
-        afterInitPlayer()
-        LogFacade.i(LogModule.PLAYER, TAG_SOURCE, "apply finished title=${videoSource?.getVideoTitle()}")
-    }
-
-    private fun updatePlayer(source: BaseVideoSource) {
+    private fun updatePlayer(
+        source: BaseVideoSource,
+        restoredPositionMs: Long? = null
+    ) {
         videoController.apply {
             setVideoTitle(source.getVideoTitle())
-            val seekPosition =
-                pendingSeekPositionMs
-                    ?.takeIf { it > 0 }
-                    ?: source.getCurrentPosition()
-            pendingSeekPositionMs = null
+            val seekPosition = restoredPositionMs ?: source.getCurrentPosition()
             setLastPosition(seekPosition)
             setLastPlaySpeed(PlayerConfig.getNewVideoSpeed())
         }
@@ -656,7 +803,7 @@ class PlayerActivity :
             LogFacade.i(
                 LogModule.PLAYER,
                 TAG_PLAYBACK,
-                "start title=${source.getVideoTitle()} type=${source.getMediaType()} position=${source.getCurrentPosition()} speed=${PlayerConfig.getNewVideoSpeed()}",
+                "start title=${source.getVideoTitle()} type=${source.getMediaType()} position=${source.getCurrentPosition()} speed=${PlayerConfig.getNewVideoSpeed()}"
             )
         }
 
@@ -681,7 +828,7 @@ class PlayerActivity :
                 LogFacade.d(
                     LogModule.PLAYER,
                     TAG_SOURCE,
-                    "select directory set path=${parent.absolutePath} type=${source.getMediaType()}",
+                    "select directory set path=${parent.absolutePath} type=${source.getMediaType()}"
                 )
             }
         }
@@ -719,36 +866,6 @@ class PlayerActivity :
         }
     }
 
-    private fun applySequentialPlaybackTransition(transition: SequentialPlaybackTransition) {
-        val previousSource = transition.previousSource
-        val nextSource = transition.nextSource
-
-        LogFacade.i(
-            LogModule.PLAYER,
-            TAG_SEQUENTIAL,
-            "transition generation=${transition.sessionToken.generation} queueItemId=${transition.queueItemId.value} from=${previousSource.getVideoTitle()} to=${nextSource.getVideoTitle()}",
-        )
-
-        releasePlaybackAddonIfNeeded(previousSource)
-        PlayRecorder.recordProgress(previousSource, 0, danDanPlayer.getDuration().coerceAtLeast(0L))
-
-        videoSource = nextSource
-        danDanPlayer.setVideoSource(nextSource)
-        VideoSourceManager.getInstance().setSource(nextSource)
-        videoController.setVideoTitle(nextSource.getVideoTitle())
-        restoreSourceScopedState(nextSource)
-
-        val overrideParams = VideoSourceManager.getInstance().consumeMedia3LaunchParams()
-        val launchParams = viewModel.buildMedia3LaunchParams(nextSource, overrideParams)
-        viewModel.prepareMedia3Session(launchParams)
-        dispatchPlaybackSourceChangedEvent(nextSource)
-
-        val resumePosition = nextSource.getCurrentPosition()
-        if (resumePosition > 0 && danDanPlayer.isSeekable()) {
-            danDanPlayer.seekTo(resumePosition)
-        }
-    }
-
     private fun registerReceiver() {
         LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "register receivers")
         screenLockReceiver = ScreenBroadcastReceiver(this)
@@ -783,7 +900,7 @@ class PlayerActivity :
                 this,
                 receiver,
                 IntentFilter(PlayerActions.ACTION_EXIT_PLAYER),
-                ContextCompat.RECEIVER_NOT_EXPORTED,
+                ContextCompat.RECEIVER_NOT_EXPORTED
             )
         }
         /*
@@ -819,7 +936,7 @@ class PlayerActivity :
             LogFacade.w(
                 LogModule.PLAYER,
                 TAG_CONFIG,
-                "sanitize playerType stored=$storedPlayerType -> ${resolvedPlayerType.value}",
+                "sanitize playerType stored=$storedPlayerType -> ${resolvedPlayerType.value}"
             )
             PlayerConfig.putUsePlayerType(resolvedPlayerType.value)
         }
@@ -827,19 +944,17 @@ class PlayerActivity :
         val globalProfile =
             PlaybackProfile(
                 playerType = resolvedPlayerType,
-                source = PlaybackProfileSource.GLOBAL,
+                source = PlaybackProfileSource.GLOBAL
             )
         val sessionProfile =
             overrideProfile
-                ?: (VideoSourceManager.getInstance().getSource() as? StorageVideoSource)
-                    ?.getPlaybackProfile()
                 ?: globalProfile
 
         PlayerInitializer.playerType = sessionProfile.playerType
         LogFacade.d(
             LogModule.PLAYER,
             TAG_CONFIG,
-            "playerType=${PlayerInitializer.playerType} source=${sessionProfile.source}",
+            "playerType=${PlayerInitializer.playerType} source=${sessionProfile.source}"
         )
         // 是否使用SurfaceView
         PlayerInitializer.surfaceType =
@@ -858,7 +973,7 @@ class PlayerActivity :
         LogFacade.d(
             LogModule.PLAYER,
             TAG_CONFIG,
-            "vlc hw=${PlayerInitializer.Player.vlcHWDecode} audio=${PlayerInitializer.Player.vlcAudioOutput} compat=${PlayerConfig.isVlcAudioCompatMode()}",
+            "vlc hw=${PlayerInitializer.Player.vlcHWDecode} audio=${PlayerInitializer.Player.vlcAudioOutput} compat=${PlayerConfig.isVlcAudioCompatMode()}"
         )
 
         // 弹幕配置
@@ -879,7 +994,7 @@ class PlayerActivity :
         LogFacade.d(
             LogModule.PLAYER,
             TAG_CONFIG,
-            "danmu size=${PlayerInitializer.Danmu.size} speed=${PlayerInitializer.Danmu.speed} language=${PlayerInitializer.Danmu.language}",
+            "danmu size=${PlayerInitializer.Danmu.size} speed=${PlayerInitializer.Danmu.speed} language=${PlayerInitializer.Danmu.language}"
         )
 
         // 字幕配置
@@ -895,7 +1010,7 @@ class PlayerActivity :
         LogFacade.d(
             LogModule.PLAYER,
             TAG_CONFIG,
-            "subtitle size=${PlayerInitializer.Subtitle.textSize} stroke=${PlayerInitializer.Subtitle.strokeWidth} backend=${PlayerInitializer.Subtitle.backend}",
+            "subtitle size=${PlayerInitializer.Subtitle.textSize} stroke=${PlayerInitializer.Subtitle.strokeWidth} backend=${PlayerInitializer.Subtitle.backend}"
         )
     }
 
@@ -913,8 +1028,8 @@ class PlayerActivity :
                     identity = identity,
                     throwable = throwable,
                     scene = scene,
-                    diagnostics = diagnostics,
-                ),
+                    diagnostics = diagnostics
+                )
             )
         }
     }
@@ -926,13 +1041,8 @@ class PlayerActivity :
             mediaType = source.getMediaType(),
             storagePath = source.getStoragePath(),
             videoTitle = source.getVideoTitle(),
-            videoUrl = source.getVideoUrl(),
+            videoUrl = source.getVideoUrl()
         )
-
-    private fun releasePlaybackAddonIfNeeded(source: BaseVideoSource) {
-        val addon = source.getPlaybackAddon() as? PlaybackReleasableAddon ?: return
-        runCatching { addon.onRelease() }
-    }
 
     private fun dispatchPlaybackSourceChangedEvent(source: BaseVideoSource) {
         val addon = source.getPlaybackAddon() ?: return
@@ -941,8 +1051,8 @@ class PlayerActivity :
             addon.onEvent(
                 PlaybackEvent.SourceChanged(
                     identity = identity,
-                    httpHeader = source.getHttpHeader(),
-                ),
+                    httpHeader = source.getHttpHeader()
+                )
             )
         }
     }
@@ -963,7 +1073,6 @@ class PlayerActivity :
         diagnostics["videoTitle"] = source.getVideoTitle()
         val sourcePositionMs = source.getCurrentPosition()
         diagnostics["sourcePositionMs"] = sourcePositionMs.toString()
-        diagnostics["pendingSeekPositionMs"] = pendingSeekPositionMs?.toString() ?: "null"
 
         val resumeCandidateMs =
             if (isLive) {
@@ -990,12 +1099,11 @@ class PlayerActivity :
             diagnostics["media3.bufferedPositionMs"] = exoPlayer.bufferedPosition.toString()
         }
 
-        latestMedia3Session?.let {
-            diagnostics["media3.sessionId"] = it.sessionId
-            diagnostics["media3.mediaId"] = it.mediaId
-            diagnostics["media3.playerEngine"] = it.playerEngine.name
-            diagnostics["media3.sourceType"] = it.sourceType.name
-            diagnostics["media3.toggleCohort"] = it.toggleCohort?.name ?: "UNKNOWN"
+        viewModel.playbackState.value?.let {
+            diagnostics["media3.sessionId"] = it.version.sessionId
+            diagnostics["media3.mediaId"] = it.source.mediaId
+            diagnostics["media3.playerEngine"] = it.playerType.name
+            diagnostics["media3.sourceType"] = it.source.mediaType.name
         }
 
         val invalidResponseCode = findInvalidResponseCodeException(throwable)
@@ -1061,45 +1169,32 @@ class PlayerActivity :
         playbackError: Throwable?
     ): Boolean {
         val storageSource = source as? StorageVideoSource ?: return false
-        val addon = storageSource.getPlaybackAddon() as? PlaybackUrlRecoverableAddon ?: return false
+        if (storageSource.getPlaybackAddon() !is PlaybackUrlRecoverableAddon) return false
+        val expected = viewModel.playbackVersion ?: return false
 
         if (playbackAddonJob?.isActive == true) {
             return true
         }
-        if (playbackRecoveryAttempts >= 3) {
-            return false
-        }
-        playbackRecoveryAttempts += 1
-
         val positionMs = danDanPlayer.getCurrentPosition()
-        val shouldSeek = !danDanPlayer.isLive()
         val request =
             PlaybackRecoveryRequest(
                 identity = buildPlaybackIdentity(source),
                 positionMs = positionMs,
                 playbackError = playbackError,
-                diagnostics = buildPlaybackDiagnostics(source, playbackError),
+                diagnostics = buildPlaybackDiagnostics(source, playbackError)
             )
 
         showLoading()
-        danDanPlayer.pause()
         playbackAddonJob =
-            lifecycleScope.launch(Dispatchers.IO) {
+            lifecycleScope.launch {
                 try {
-                    val result = addon.recover(request)
-                    withContext(Dispatchers.Main) {
-                        hideLoading()
-                        val playUrl = result.getOrNull()
-                        if (playUrl.isNullOrBlank()) {
-                            showPlayErrorDialog()
-                            return@withContext
-                        }
-
-                        val newSource = rebuildStorageVideoSource(storageSource, playUrl)
-                        pendingSeekPositionMs = positionMs.takeIf { shouldSeek }
-                        playbackRecoveryAttempts = 0
+                    val result = viewModel.recoverPlayback(request, expected)
+                    if (result is SessionRequestResult.Activated && viewModel.playbackVersion == result.version) {
                         videoController.showMessage("已自动恢复播放")
-                        applyPlaySource(newSource)
+                    } else if (viewModel.playbackVersion == expected ||
+                        (result is SessionRequestResult.BackendFailed && viewModel.playbackVersion == result.version)
+                    ) {
+                        showPlayErrorDialog()
                     }
                 } finally {
                     withContext(NonCancellable + Dispatchers.Main) {
@@ -1109,25 +1204,6 @@ class PlayerActivity :
             }
 
         return true
-    }
-
-    private fun rebuildStorageVideoSource(
-        source: StorageVideoSource,
-        playUrl: String
-    ): StorageVideoSource {
-        val storageFile = source.getStorageFile()
-        val videoSources =
-            (0 until source.getGroupSize())
-                .map { index -> source.indexStorageFile(index) }
-        return StorageVideoSource(
-            playUrl = playUrl,
-            file = storageFile,
-            videoSources = videoSources,
-            danmu = source.getDanmu(),
-            subtitlePath = source.getSubtitlePath(),
-            audioPath = source.getAudioPath(),
-            playbackProfile = source.getPlaybackProfile(),
-        )
     }
 
     private fun showPlayErrorDialog() {
@@ -1156,38 +1232,20 @@ class PlayerActivity :
         if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
             builder.setPositiveButton("切换默认内核重试") { dialog, _ ->
                 dialog.dismiss()
-                val storageSource = videoSource as? StorageVideoSource
-                if (storageSource == null) {
-                    this@PlayerActivity.finish()
-                    return@setPositiveButton
-                }
+                val expected = viewModel.playbackVersion ?: return@setPositiveButton
 
                 val fallbackProfile =
                     PlaybackProfile(
                         playerType = PlayerType.TYPE_EXO_PLAYER,
-                        source = PlaybackProfileSource.FALLBACK,
+                        source = PlaybackProfileSource.FALLBACK
                     )
-                initPlayerConfig(overrideProfile = fallbackProfile)
-
                 showLoading()
-                danDanPlayer.pause()
-                lifecycleScope.launch(Dispatchers.IO) {
-                    val newSource =
-                        StorageVideoSourceFactory
-                            .create(storageSource.getStorageFile(), fallbackProfile)
-                            ?.also {
-                                it.setDanmu(storageSource.getDanmu())
-                                it.setSubtitlePath(storageSource.getSubtitlePath())
-                                it.setAudioPath(storageSource.getAudioPath())
-                            }
-                    withContext(Dispatchers.Main) {
+                lifecycleScope.launch {
+                    try {
+                        val result = viewModel.fallbackPlaybackKernel(fallbackProfile, expected)
+                        if (result !is SessionRequestResult.Activated && viewModel.playbackVersion == expected) showPlayErrorDialog()
+                    } finally {
                         hideLoading()
-                        if (newSource == null) {
-                            ToastCenter.showError("重试失败，找不到播放资源")
-                            this@PlayerActivity.finish()
-                            return@withContext
-                        }
-                        applyPlaySource(newSource)
                     }
                 }
             }
@@ -1209,41 +1267,22 @@ class PlayerActivity :
 
     private fun beforePlayExit() {
         sequentialPlaybackCoordinator.invalidateActiveSession()
-        val source = videoSource ?: return
-        if (source is StorageVideoSource && source.getMediaType() == MediaType.MAGNET_LINK) {
-            PlayTaskBridge.sendTaskRemoveMsg(source.getPlayTaskId())
-        }
-        releasePlaybackAddonIfNeeded(source)
-        cancelPlaybackAddonJob(resetAttempts = false)
+        cancelPlaybackAddonJob()
     }
 
     private fun switchVideoSource(index: Int) {
-        showLoading()
-        danDanPlayer.pause()
-        lifecycleScope.launch(Dispatchers.IO) {
-            val targetSource = videoSource?.indexSource(index)
-            if (targetSource == null) {
-                ToastCenter.showOriginalToast("播放资源不存在")
-                return@launch
-            }
-            withContext(Dispatchers.Main) {
-                hideLoading()
-                applyPlaySource(targetSource)
-            }
-        }
+        viewModel.selectQueueItem(index)
     }
 
-    private fun pushMedia3SessionToService() {
-        media3SessionClient?.updateSession(latestMedia3Session, latestMedia3Capability)
-    }
+    private fun media3SupportsBackgroundPlayback(): Boolean =
+        viewModel.playbackState.value
+            ?.backgroundModes
+            ?.contains(Media3BackgroundMode.NOTIFICATION) == true
 
-    private fun updateBackgroundModes(modes: Set<Media3BackgroundMode>) {
-        media3BackgroundModes = modes
-    }
-
-    private fun media3SupportsBackgroundPlayback(): Boolean = media3BackgroundModes.contains(Media3BackgroundMode.NOTIFICATION)
-
-    private fun media3SupportsPip(): Boolean = media3BackgroundModes.contains(Media3BackgroundMode.PIP)
+    private fun media3SupportsPip(): Boolean =
+        viewModel.playbackState.value
+            ?.backgroundModes
+            ?.contains(Media3BackgroundMode.PIP) == true
 
     private fun enterPopupMode() {
         if (!media3SupportsPip()) {

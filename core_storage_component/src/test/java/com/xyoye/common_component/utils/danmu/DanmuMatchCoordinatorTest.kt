@@ -62,7 +62,6 @@ class DanmuMatchCoordinatorTest {
         override fun getStorageId(): Int = 0
         override fun getStoragePath(): String? = null
         override fun indexTitle(index: Int): String = url
-        override suspend fun indexSource(index: Int): BaseVideoSource? = null
     }
 
     private class FakeDanmuFinder : DanmuFinder {

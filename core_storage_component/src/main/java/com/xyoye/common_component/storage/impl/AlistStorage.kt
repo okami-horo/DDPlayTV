@@ -4,6 +4,11 @@ import android.net.Uri
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.repository.AlistRepository
 import com.xyoye.common_component.network.repository.ResourceRepository
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
+import com.xyoye.common_component.storage.transport.TransportAcquisitionException
+import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
@@ -11,7 +16,6 @@ import com.xyoye.common_component.storage.file.impl.AlistStorageFile
 import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.PlaybackProfile
-import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.alist.AlistFileData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
@@ -25,7 +29,7 @@ import java.io.InputStream
 
 class AlistStorage(
     library: MediaLibraryEntity
-) : AbstractStorage(library) {
+) : AbstractStorage(library), PlaybackTransportProvider {
     private val rangeUnsupportedRefreshLock = Any()
 
     private var token: String = ""
@@ -104,26 +108,16 @@ class AlistStorage(
             ?.let { pathFile(it, false) }
             ?.also { it.playHistory = history }
 
-    override suspend fun createPlayUrl(file: StorageFile): String? =
-        createPlayUrl(
-            file = file,
-            profile =
-                PlaybackProfile(
-                    playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
-                    source = PlaybackProfileSource.GLOBAL,
-                ),
-        )
-
-    override suspend fun createPlayUrl(
+    override suspend fun acquirePlaybackTransport(
         file: StorageFile,
         profile: PlaybackProfile
-    ): String? {
+    ): PlaybackTransportLease {
         val playerType = profile.playerType
         if (playerType != PlayerType.TYPE_MPV_PLAYER && playerType != PlayerType.TYPE_VLC_PLAYER) {
-            return getStorageFileUrl(file)
+            return directPlaybackTransport(getStorageFileUrl(file) ?: throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable))
         }
 
-        val upstream = getStorageFileProxyUrl(file) ?: getStorageFileUrl(file) ?: return null
+        val upstream = getStorageFileProxyUrl(file) ?: getStorageFileUrl(file) ?: throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable)
         val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
         val contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
 
@@ -133,10 +127,10 @@ class AlistStorage(
                     PlayerConfig.getMpvLocalProxyMode() to PlayerConfig.getMpvProxyRangeMinIntervalMs().toLong()
                 PlayerType.TYPE_VLC_PLAYER ->
                     PlayerConfig.getVlcLocalProxyMode() to PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong()
-                else -> return upstream
+                else -> return directPlaybackTransport(upstream)
             }
 
-        return LocalProxy.wrapIfNeeded(
+        return LocalProxy.acquireIfNeeded(
             playerType = playerType,
             modeValue = mode,
             upstreamUrl = upstream,

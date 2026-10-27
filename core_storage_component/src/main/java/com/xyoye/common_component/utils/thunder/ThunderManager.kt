@@ -2,7 +2,6 @@ package com.xyoye.common_component.utils.thunder
 
 import android.content.Context
 import android.os.Build
-import com.xunlei.downloadlib.XLDownloadManager
 import com.xunlei.downloadlib.XLTaskHelper
 import com.xunlei.downloadlib.parameter.*
 import com.xyoye.common_component.base.app.BaseApplication
@@ -11,6 +10,9 @@ import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.log.privacy.SensitiveDataSanitizer
 import com.xyoye.common_component.storage.file.helper.TorrentBean
+import com.xyoye.common_component.storage.transport.TransportAcquisitionException
+import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
+import com.xyoye.common_component.storage.transport.releaseTransportResources
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.common_component.utils.MagnetUtils
@@ -19,26 +21,37 @@ import com.xyoye.common_component.utils.thunder.model.ThunderTaskInfo
 import com.xyoye.common_component.utils.thunder.model.ThunderTaskReadableInfo
 import com.xyoye.common_component.utils.thunder.model.ThunderTorrentFileInfo
 import com.xyoye.common_component.utils.thunder.model.ThunderTorrentInfo
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withTimeoutOrNull
+import java.io.File
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Created by xyoye on 2021/11/20.
  */
 
-class ThunderManager private constructor() {
+class ThunderManager internal constructor(
+    private val taskOperations: ThunderTaskOperations,
+    private val cacheDirectoryProvider: () -> File
+) {
+    private constructor() : this(NativeThunderTaskOperations(), PathHelper::getPlayCacheDirectory)
+
     // 下载任务序号
     private val mAtomicInteger = AtomicInteger(0)
 
     // 下载任务列表
-    private val mTaskList = hashMapOf<String, Long>()
+    private val tasks = ConcurrentHashMap<Long, TaskAllocation>()
 
     // 种子文件存储文件夹
-    private val torrentDirectory = PathHelper.getTorrentDirectory()
+    private val torrentDirectory by lazy { PathHelper.getTorrentDirectory() }
 
     // 缓存文件存储文件夹
-    private val cacheDirectory = PathHelper.getPlayCacheDirectory()
+    private val cacheDirectory by lazy { cacheDirectoryProvider() }
 
     companion object {
         private const val LOG_TAG = "ThunderManager"
@@ -261,6 +274,8 @@ class ThunderManager private constructor() {
             }
 
             waitTorrentDownloaded(torrentTaskId, torrentTaskParam)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedExceptionWithContext(
                 e,
@@ -272,106 +287,99 @@ class ThunderManager private constructor() {
         }
     }
 
-    /**
-     * 生成视频播放地址
-     */
-    internal suspend fun generatePlayUrl(
+    private class TaskAllocation(
+        val taskId: Long,
+        val leaseId: String,
+        val directory: File,
+        @Volatile var playUrl: String? = null
+    )
+
+    internal suspend fun acquirePlaybackTask(
         torrent: TorrentBean,
         index: Int
-    ): String? {
-        if (!ensureInitialized()) {
-            return null
+    ): ThunderPlaybackTask {
+        if (!taskOperations.ensureReady()) {
+            throw TransportAcquisitionException(TransportAcquisitionFailure.UnsupportedTransport)
         }
-        return try {
-            // 停止其它任务
-            stopAllTask()
-
-            // 启动下载任务
-            val taskId = createPlayTask(torrent, index)
-            if (taskId == INVALID_ID) {
-                val sanitizedTorrentPath = SensitiveDataSanitizer.sanitizePath(torrent.torrentPath)
-                ErrorReportHelper.postException(
-                    "Failed to create play task",
-                    "ThunderManager",
-                    RuntimeException(
-                        "createPlayTask returned INVALID_ID for torrent: $sanitizedTorrentPath, index: $index",
-                    ),
-                )
-                return null
-            }
-
-            // 保存任务ID
-            mTaskList[torrent.torrentPath] = taskId
-
-            val fileName = torrent.subFileInfo.find { it.fileIndex == index }?.fileName ?: "temp.mp4"
-            val filePath = "${cacheDirectory.absolutePath}/$fileName"
-            val playUrl = XLTaskLocalUrl()
-            XLDownloadManager.getInstance().getLocalUrl(filePath, playUrl)
-            playUrl.mStrUrl
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "ThunderManager",
-                "generatePlayUrl",
-                "种子路径: ${SensitiveDataSanitizer.sanitizePath(torrent.torrentPath)}, 文件索引: $index",
-            )
-            null
+        val file =
+            torrent.subFileInfo.find { it.fileIndex == index }
+                ?: throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable)
+        currentCoroutineContext().ensureActive()
+        val leaseId = UUID.randomUUID().toString()
+        val root = cacheDirectory.canonicalFile
+        val directory = File(root, "lease-$leaseId").canonicalFile
+        check(directory.parentFile == root)
+        val mediaFile = File(directory, file.fileName).canonicalFile
+        if (!mediaFile.path.startsWith(directory.path + File.separator)) {
+            throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable)
         }
-    }
-
-    /**
-     * 停止并移除任务
-     */
-    fun stopTask(taskId: Long) {
-        if (!ensureInitialized()) {
-            return
+        if (!directory.mkdirs() && !directory.isDirectory) {
+            throw TransportAcquisitionException(TransportAcquisitionFailure.TaskCreationFailed)
         }
+        var owned: TaskAllocation? = null
+        var delivered = false
         try {
-            mTaskList.entries.find { it.value == taskId }?.let {
-                mTaskList.remove(it.key)
-            }
-            XLTaskHelper.getInstance().deleteTask(taskId, cacheDirectory.absolutePath)
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "ThunderManager",
-                "stopTask",
-                "任务ID: $taskId",
-            )
-        }
-    }
-
-    /**
-     * 停止所有任务
-     */
-    private fun stopAllTask() {
-        if (!ensureInitialized()) {
-            return
-        }
-        try {
-            val iterator = mTaskList.iterator()
-            while (iterator.hasNext()) {
-                val entity = iterator.next()
-                try {
-                    XLTaskHelper.getInstance().deleteTask(entity.value, cacheDirectory.absolutePath)
-                } catch (e: Exception) {
-                    ErrorReportHelper.postCatchedExceptionWithContext(
-                        e,
-                        "ThunderManager",
-                        "stopAllTask",
-                        "删除单个任务失败，任务ID: ${entity.value}",
-                    )
+            val parameters =
+                BtTaskParam().apply {
+                    setCreateMode(1)
+                    setFilePath(directory.absolutePath)
+                    setMaxConcurrent(1)
+                    setSeqId(mAtomicInteger.incrementAndGet())
+                    setTorrentPath(torrent.torrentPath)
                 }
-                iterator.remove()
+            var taskId = taskOperations.create(parameters)
+            if (taskId == INVALID_ID) {
+                delay(200)
+                taskId = taskOperations.create(parameters)
             }
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "ThunderManager",
-                "stopAllTask",
-                "停止所有任务时发生异常",
-            )
+            if (taskId < 0) throw TransportAcquisitionException(TransportAcquisitionFailure.TaskCreationFailed)
+            val allocation = TaskAllocation(taskId, leaseId, directory)
+            // Check before selecting/starting: a duplicate native ID must not mutate an active task.
+            if (tasks.putIfAbsent(taskId, allocation) != null) {
+                throw TransportAcquisitionException(TransportAcquisitionFailure.TaskCreationFailed)
+            }
+            owned = allocation
+            currentCoroutineContext().ensureActive()
+            val deselectedIndexes =
+                torrent.subFileInfo.filter { it.fileIndex != index }.map { it.fileIndex }.toIntArray()
+            taskOperations.select(taskId, intArrayOf(index), deselectedIndexes)
+            taskOperations.start(taskId)
+            if (!taskOperations.awaitStarted(taskId)) {
+                throw TransportAcquisitionException(TransportAcquisitionFailure.TaskCreationFailed)
+            }
+            val url = taskOperations.localUrl(mediaFile.absolutePath)
+            if (url.isBlank()) throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable)
+            currentCoroutineContext().ensureActive()
+            allocation.playUrl = url
+            delivered = true
+            return ThunderPlaybackTask(leaseId, taskId, url, torrent.torrentPath, index)
+        } finally {
+            if (!delivered) {
+                val allocation = owned
+                if (allocation == null) {
+                    releaseTransportResources(leaseId, listOf({
+                        directory.deleteRecursively()
+                        Unit
+                    }))
+                } else {
+                    releasePlaybackTask(allocation.taskId, allocation.leaseId)
+                }
+            }
         }
+    }
+
+    internal fun releasePlaybackTask(
+        taskId: Long,
+        leaseId: String
+    ) {
+        val allocation = tasks[taskId]?.takeIf { it.leaseId == leaseId } ?: return
+        if (!tasks.remove(taskId, allocation)) return
+        releaseTransportResources(leaseId, listOf({ taskOperations.stop(taskId) }, {
+            // Only a generated child directory is ever owned by an individual task.
+            check(allocation.directory.parentFile == cacheDirectory.canonicalFile)
+            allocation.directory.deleteRecursively()
+            Unit
+        }))
     }
 
     /**
@@ -389,16 +397,6 @@ class ThunderManager private constructor() {
                 ) {
                     delay(300L)
                     taskInfo = XLTaskHelper.getInstance().getTaskInfo(torrentTaskId)
-                }
-                try {
-                    XLTaskHelper.getInstance().stopTask(torrentTaskId)
-                } catch (e: Exception) {
-                    ErrorReportHelper.postCatchedExceptionWithContext(
-                        e,
-                        "ThunderManager",
-                        "waitTorrentDownloaded",
-                        "停止种子下载任务失败，任务ID: $torrentTaskId",
-                    )
                 }
                 return@withTimeoutOrNull if (
                     taskInfo.mTaskStatus == XLConstant.XLTaskStatus.TASK_SUCCESS
@@ -420,6 +418,8 @@ class ThunderManager private constructor() {
                 )
                 null
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedExceptionWithContext(
                 e,
@@ -428,127 +428,8 @@ class ThunderManager private constructor() {
                 "任务ID: $torrentTaskId, 文件名: ${param.mFileName}",
             )
             null
-        }
-    }
-
-    /**
-     * 创建下载任务
-     */
-    private suspend fun createPlayTask(
-        torrent: TorrentBean,
-        index: Int
-    ): Long {
-        val btTaskParam =
-            BtTaskParam().apply {
-                setCreateMode(1)
-                setFilePath(cacheDirectory.absolutePath)
-                setMaxConcurrent(1)
-                setSeqId(mAtomicInteger.incrementAndGet())
-                setTorrentPath(torrent.torrentPath)
-            }
-
-        val deselectedIndexes =
-            torrent.subFileInfo
-                .filter { it.fileIndex != index }
-                .map { it.fileIndex }
-                .toIntArray()
-
-        val selectedIndexSet =
-            BtIndexSet(1).apply {
-                mIndexSet = IntArray(index)
-            }
-        val deselectIndexSet =
-            BtIndexSet(deselectedIndexes.size).apply {
-                mIndexSet = deselectedIndexes
-            }
-
-        return createTorrentTask(btTaskParam, selectedIndexSet, deselectIndexSet)
-    }
-
-    /**
-     * 启动下载任务
-     */
-    private suspend fun createTorrentTask(
-        btTaskParam: BtTaskParam,
-        selectedIndexes: BtIndexSet,
-        deSelectIndexes: BtIndexSet
-    ): Long {
-        return try {
-            // 启动下载任务
-            var taskId =
-                XLTaskHelper
-                    .getInstance()
-                    .startTask(btTaskParam, selectedIndexes, deSelectIndexes)
-            if (taskId == INVALID_ID) {
-                stopTask(taskId)
-                delay(200)
-                taskId =
-                    XLTaskHelper
-                        .getInstance()
-                        .startTask(btTaskParam, selectedIndexes, deSelectIndexes)
-            }
-
-            if (taskId == INVALID_ID) {
-                stopTask(taskId)
-                ErrorReportHelper.postException(
-                    "Failed to start torrent task after retry",
-                    "ThunderManager",
-                    RuntimeException("XLTaskHelper.startTask returned INVALID_ID twice for torrent: ${btTaskParam.mTorrentPath}"),
-                )
-                return INVALID_ID
-            }
-
-            // 任务无法下载
-            if (checkTaskFailed(taskId)) {
-                stopTask(taskId)
-                ErrorReportHelper.postException(
-                    "Torrent task failed during check",
-                    "ThunderManager",
-                    RuntimeException("Task failed check, task ID: $taskId, torrent: ${btTaskParam.mTorrentPath}"),
-                )
-                return INVALID_ID
-            }
-
-            taskId
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "ThunderManager",
-                "createTorrentTask",
-                "种子路径: ${btTaskParam.mTorrentPath}",
-            )
-            INVALID_ID
-        }
-    }
-
-    /**
-     * 检查下载任务是否失败
-     */
-    private suspend fun checkTaskFailed(taskId: Long): Boolean {
-        return try {
-            delay(2000)
-
-            // 任务下载失败
-            val taskInfo = XLTaskHelper.getInstance().getTaskInfo(taskId)
-            val taskStatus = taskInfo.mTaskStatus
-            if (taskStatus == XLConstant.XLTaskStatus.TASK_FAILED) {
-                ErrorReportHelper.postException(
-                    "Download task failed",
-                    "ThunderManager",
-                    RuntimeException("Task ID: $taskId, Status: $taskStatus, Error Code: ${taskInfo.mErrorCode}"),
-                )
-                return true
-            }
-
-            false
-        } catch (e: Exception) {
-            ErrorReportHelper.postCatchedExceptionWithContext(
-                e,
-                "ThunderManager",
-                "checkTaskFailed",
-                "任务ID: $taskId",
-            )
-            true // 如果检查过程出错，认为任务失败
+        } finally {
+            releaseTransportResources("thunder-metadata", listOf({ XLTaskHelper.getInstance().stopTask(torrentTaskId) }))
         }
     }
 
@@ -614,5 +495,5 @@ class ThunderManager private constructor() {
     /**
      * 获取下载任务ID
      */
-    fun getTaskId(torrentPath: String): Long = mTaskList[torrentPath] ?: INVALID_ID
+    fun getTaskIdForPlayUrl(playUrl: String): Long = tasks.values.firstOrNull { it.playUrl == playUrl }?.taskId ?: INVALID_ID
 }

@@ -1,7 +1,8 @@
 package com.xyoye.player_component.utils
 
+import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.log.privacy.SensitiveDataSanitizer
-import com.xyoye.common_component.media3.Media3SessionStore
+import com.xyoye.common_component.services.PlaybackRequestService
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.player.info.PlayerInitializer
 
@@ -17,20 +18,32 @@ object PlayerErrorReporter {
             throwable,
             className,
             methodName,
-            enrich(extraInfo),
+            enrich(extraInfo)
         )
     }
 
     private fun enrich(extraInfo: String): String {
-        val session = Media3SessionStore.currentSession()
-        val engine = session?.playerEngine?.name ?: PlayerInitializer.playerType.name
-        val sessionId = session?.sessionId ?: "UNKNOWN"
-        val sourceType = session?.sourceType?.name ?: "UNKNOWN"
-        val mediaId = session?.mediaId?.takeIf { it.isNotBlank() }?.let { SensitiveDataSanitizer.sanitizeValueForKey("mediaId", it) }
+        val session =
+            ARouter
+                .getInstance()
+                .navigation(PlaybackRequestService::class.java)
+                ?.observePlayback()
+                ?.value
+        val engine = session?.playerType?.name ?: PlayerInitializer.playerType.name
+        val sessionId = session?.version?.sessionId ?: "UNKNOWN"
+        val sourceType = session?.source?.mediaType?.name ?: "UNKNOWN"
+        val mediaId =
+            session?.source?.mediaId?.takeIf { it.isNotBlank() }?.let {
+                SensitiveDataSanitizer.sanitizeValueForKey(
+                    "mediaId",
+                    it
+                )
+            }
 
         return buildString {
             append("engine=").append(engine)
             append(", sessionId=").append(sessionId)
+            session?.let { append(", sourceRevision=").append(it.version.sourceRevision) }
             append(", sourceType=").append(sourceType)
             if (!mediaId.isNullOrBlank()) {
                 append(", mediaId=").append(mediaId)

@@ -70,6 +70,7 @@ class DanDanVideoPlayer(
 
     @Volatile
     private var lastPlaybackError: Exception? = null
+
     @Volatile
     private var lastKnownPositionMs: Long = 0
 
@@ -78,7 +79,7 @@ class DanDanVideoPlayer(
         LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT,
-            Gravity.CENTER,
+            Gravity.CENTER
         )
 
     // 音频焦点监听
@@ -295,7 +296,7 @@ class DanDanVideoPlayer(
             LogModule.PLAYER,
             TAG_PLAYBACK,
             "play error title=$title position=$position ${PlaybackErrorFormatter.format(e)}",
-            throwable = e,
+            throwable = e
         )
         setPlayState(PlayState.STATE_ERROR)
         keepScreenOn = false
@@ -322,8 +323,8 @@ class DanDanVideoPlayer(
                     BilibiliCompletionContext(
                         isLive = isLive,
                         positionMs = positionMs,
-                        durationMs = durationMs,
-                    ),
+                        durationMs = durationMs
+                    )
                 )
             if (isUnexpectedCompletion) {
                 // Preserve progress for recovery fallback, then reroute into the existing error-recovery flow.
@@ -406,7 +407,7 @@ class DanDanVideoPlayer(
             SurfaceFactory
                 .getFactory(
                     PlayerInitializer.playerType,
-                    PlayerInitializer.surfaceType,
+                    PlayerInitializer.surfaceType
                 ).createRenderView(context)
                 .apply {
                     this@DanDanVideoPlayer.addView(getView(), 0, mDefaultLayoutParams)
@@ -430,7 +431,7 @@ class DanDanVideoPlayer(
                 context,
                 controller.getSubtitleController(),
                 this,
-                subtitleFallbackDispatcher,
+                subtitleFallbackDispatcher
             )
 
         val kernelBridge = mVideoPlayer as? SubtitleKernelBridge
@@ -514,23 +515,26 @@ class DanDanVideoPlayer(
         PlayRecorder.recordProgress(videoSource, getCurrentPosition(), getDuration())
     }
 
-    fun release() {
+    fun release(): Boolean {
         val hasActiveResources =
             this::mVideoPlayer.isInitialized ||
                 mCurrentPlayState != PlayState.STATE_IDLE ||
                 subtitleRenderer != null ||
                 mRenderView != null
         if (!hasActiveResources) {
-            return
+            return true
         }
 
         destroySubtitleRenderer()
         CacheManager.release()
         mVideoController?.destroy()
-        if (this::mVideoPlayer.isInitialized) {
-            mVideoPlayer.clearPlayerEventListener()
-            runCatching { mVideoPlayer.release() }
-        }
+        val kernelReleased =
+            if (this::mVideoPlayer.isInitialized) {
+                mVideoPlayer.clearPlayerEventListener()
+                runCatching { mVideoPlayer.release() }.isSuccess
+            } else {
+                true
+            }
         keepScreenOn = false
         mRenderView?.run {
             this@DanDanVideoPlayer.removeView(getView())
@@ -540,6 +544,7 @@ class DanDanVideoPlayer(
         mAudioFocusHelper.abandonFocus()
         lastKnownPositionMs = 0
         setPlayState(PlayState.STATE_IDLE)
+        return kernelReleased
     }
 
     fun onBackPressed(): Boolean = mVideoController?.onBackPressed() ?: false
@@ -592,7 +597,7 @@ class DanDanVideoPlayer(
             FrameLayout.LayoutParams(
                 mDefaultLayoutParams.width,
                 mDefaultLayoutParams.height,
-                mDefaultLayoutParams.gravity,
+                mDefaultLayoutParams.gravity
             )
         addView(view, insertIndex, lp)
     }

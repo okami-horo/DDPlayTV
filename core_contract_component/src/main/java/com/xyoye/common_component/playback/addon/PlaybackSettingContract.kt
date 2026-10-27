@@ -36,14 +36,9 @@ interface PlaybackSettingsAddon : PlaybackAddon {
 }
 
 interface PlaybackPreferenceSwitchableAddon : PlaybackAddon {
-    /**
-     * 返回值语义：
-     * - Result.success(playUrl)：表示需要播放器重建 Source，并以该 URL 重新起播（续播到 positionMs）。
-     * - Result.success(null)：表示设置已保存，但本次不重启播放（例如非 Media3 内核：提示“重新播放后生效”）。
-     * - Result.failure(e)：表示切换失败（用于上报/日志）。
-     */
+    /** Persist the preference independently, without changing the active transport. */
     suspend fun applySettingUpdate(
         update: PlaybackSettingUpdate,
         positionMs: Long
-    ): Result<String?>
+    ): Result<PlaybackReplacementDecision>
 }

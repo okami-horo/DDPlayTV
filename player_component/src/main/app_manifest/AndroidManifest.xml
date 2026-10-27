@@ -1136,11 +1136,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ui.activities.player_interceptor.PlayerInterceptorActivity"
-            android:theme="@style/DialogActivityTheme"/>
-
         <activity
             android:name=".ui.activities.player.PlayerActivity"
+            android:launchMode="singleTask"
             android:screenOrientation="landscape" />
 
         <provider

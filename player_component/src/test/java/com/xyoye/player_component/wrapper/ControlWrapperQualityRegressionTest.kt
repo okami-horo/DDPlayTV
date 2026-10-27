@@ -19,7 +19,6 @@ import com.xyoye.player.wrapper.InterVideoController
 import com.xyoye.player.wrapper.InterVideoPlayer
 import com.xyoye.subtitle.MixedSubtitle
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -35,7 +34,7 @@ class ControlWrapperQualityRegressionTest {
                 mController = videoController,
                 mDanmuController = danmuController,
                 mSubtitleController = FakeSubtitleController(),
-                mSettingController = FakeSettingController(),
+                mSettingController = FakeSettingController()
             )
 
         videoPlayer.playing = false
@@ -51,9 +50,9 @@ class ControlWrapperQualityRegressionTest {
         assertEquals(
             listOf(
                 DanmuSeekCall(1_200L, false),
-                DanmuSeekCall(2_400L, true),
+                DanmuSeekCall(2_400L, true)
             ),
-            danmuController.seekCalls,
+            danmuController.seekCalls
         )
         assertEquals(1, videoController.startProgressCalls)
         assertEquals(listOf(1_200L), videoController.progressValues)
@@ -69,7 +68,7 @@ class ControlWrapperQualityRegressionTest {
                 mController = FakeVideoController(),
                 mDanmuController = FakeDanmuController(),
                 mSubtitleController = subtitleController,
-                mSettingController = FakeSettingController(),
+                mSettingController = FakeSettingController()
             )
 
         videoPlayer.setTrackSupport(TrackType.SUBTITLE, false)
@@ -95,7 +94,7 @@ class ControlWrapperQualityRegressionTest {
                 mController = videoController,
                 mDanmuController = FakeDanmuController(),
                 mSubtitleController = FakeSubtitleController(),
-                mSettingController = settingController,
+                mSettingController = settingController
             )
 
         videoController.lockedState = false
@@ -121,7 +120,7 @@ class ControlWrapperQualityRegressionTest {
                 mController = videoController,
                 mDanmuController = FakeDanmuController(),
                 mSubtitleController = subtitleController,
-                mSettingController = FakeSettingController(),
+                mSettingController = FakeSettingController()
             )
 
         videoPlayer.setTrackSupport(TrackType.SUBTITLE, false)
@@ -149,7 +148,7 @@ class ControlWrapperQualityRegressionTest {
                 mController = videoController,
                 mDanmuController = FakeDanmuController(),
                 mSubtitleController = subtitleController,
-                mSettingController = FakeSettingController(),
+                mSettingController = FakeSettingController()
             )
 
         videoPlayer.setTrackSupport(TrackType.SUBTITLE, false)
@@ -167,7 +166,7 @@ class ControlWrapperQualityRegressionTest {
 
 private data class DanmuSeekCall(
     val timeMs: Long,
-    val isPlaying: Boolean,
+    val isPlaying: Boolean
 )
 
 private class FakeVideoPlayer : InterVideoPlayer {
@@ -186,7 +185,7 @@ private class FakeVideoPlayer : InterVideoPlayer {
 
     fun setTrackSupport(
         type: TrackType,
-        supported: Boolean,
+        supported: Boolean
     ) {
         if (supported) {
             supportTrackTypes += type
@@ -197,7 +196,7 @@ private class FakeVideoPlayer : InterVideoPlayer {
 
     fun setTracks(
         type: TrackType,
-        values: List<VideoTrackBean>,
+        values: List<VideoTrackBean>
     ) {
         tracks[type] = values
     }
@@ -302,7 +301,7 @@ private class FakeVideoController : InterVideoController {
 
     override fun showMessage(
         text: String,
-        time: com.xyoye.player.utils.MessageTime,
+        time: com.xyoye.player.utils.MessageTime
     ) {
         // no-op
     }
@@ -362,7 +361,7 @@ private open class FakeTrackController {
 
     fun setTrackSupport(
         type: TrackType,
-        supported: Boolean,
+        supported: Boolean
     ) {
         if (supported) {
             supportTrackTypes += type
@@ -373,7 +372,7 @@ private open class FakeTrackController {
 
     fun setTracks(
         type: TrackType,
-        values: List<VideoTrackBean>,
+        values: List<VideoTrackBean>
     ) {
         tracks[type] = values
     }
@@ -396,7 +395,9 @@ private open class FakeTrackController {
     }
 }
 
-private class FakeDanmuController : FakeTrackController(), InterDanmuController {
+private class FakeDanmuController :
+    FakeTrackController(),
+    InterDanmuController {
     val seekCalls = mutableListOf<DanmuSeekCall>()
 
     override fun updateDanmuSize() {
@@ -457,14 +458,14 @@ private class FakeDanmuController : FakeTrackController(), InterDanmuController 
 
     override fun addBlackList(
         isRegex: Boolean,
-        vararg keyword: String,
+        vararg keyword: String
     ) {
         // no-op
     }
 
     override fun removeBlackList(
         isRegex: Boolean,
-        keyword: String,
+        keyword: String
     ) {
         // no-op
     }
@@ -475,7 +476,7 @@ private class FakeDanmuController : FakeTrackController(), InterDanmuController 
 
     override fun seekTo(
         timeMs: Long,
-        isPlaying: Boolean,
+        isPlaying: Boolean
     ) {
         seekCalls += DanmuSeekCall(timeMs, isPlaying)
     }
@@ -503,7 +504,21 @@ private class FakeDanmuController : FakeTrackController(), InterDanmuController 
     }
 }
 
-private class FakeSubtitleController : FakeTrackController(), InterSubtitleController {
+private class FakeSubtitleController :
+    FakeTrackController(),
+    InterSubtitleController {
+    private var userSubtitleVisible = true
+
+    override fun toggleSubtitleVisible() {
+        userSubtitleVisible = !userSubtitleVisible
+    }
+
+    override fun setUserSubtitleVisible(visible: Boolean) {
+        userSubtitleVisible = visible
+    }
+
+    override fun isUserSubtitleVisible(): Boolean = userSubtitleVisible
+
     override fun updateSubtitleOffsetTime() {
         // no-op
     }
@@ -562,7 +577,7 @@ private class FakeSettingController : InterSettingController {
 
     override fun showSettingView(
         viewType: SettingViewType,
-        extra: Any?,
+        extra: Any?
     ) {
         showCalls += viewType to extra
     }
@@ -573,7 +588,7 @@ private class FakeSettingController : InterSettingController {
 
     override fun onKeyDown(
         keyCode: Int,
-        event: KeyEvent?,
+        event: KeyEvent?
     ): Boolean = false
 
     override fun settingRelease() {

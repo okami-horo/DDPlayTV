@@ -1,6 +1,7 @@
 package com.xyoye.user_component.ui.activities.bilibili_risk_verify
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Build
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
@@ -9,58 +10,58 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.core.view.isGone
-import com.alibaba.android.arouter.facade.annotation.Autowired
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.alibaba.android.arouter.facade.annotation.Route
-import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.bilibili.net.BilibiliHeaders
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.toResColor
+import com.xyoye.common_component.playback.handoff.PlaybackNavigation
+import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
+import com.xyoye.common_component.playback.handoff.PlaybackVerificationChallenge
+import com.xyoye.common_component.playback.userMessage
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.user_component.BR
 import com.xyoye.user_component.R
 import com.xyoye.user_component.databinding.ActivityBilibiliRiskVerifyBinding
 import com.xyoye.user_component.ui.weight.WebViewProgress
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 @SuppressLint("SetJavaScriptEnabled")
 @Route(path = RouteTable.User.BilibiliRiskVerify)
 class BilibiliRiskVerifyActivity : BaseActivity<BilibiliRiskVerifyViewModel, ActivityBilibiliRiskVerifyBinding>() {
-    @JvmField
-    @Autowired
-    var storageKey: String = ""
-
-    @JvmField
-    @Autowired
-    var vVoucher: String = ""
+    private val verificationId get() = intent.getStringExtra(PlaybackNavigation.VERIFICATION_ID).orEmpty()
 
     private var pageLoaded: Boolean = false
-    private var pendingConfig: BilibiliRiskVerifyViewModel.GeetestConfig? = null
+    private var pendingConfig: PlaybackVerificationChallenge? = null
     private lateinit var progressView: WebViewProgress
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            BilibiliRiskVerifyViewModel::class.java,
+            BilibiliRiskVerifyViewModel::class.java
         )
 
     override fun getLayoutId() = R.layout.activity_bilibili_risk_verify
 
     override fun initView() {
-        ARouter.getInstance().inject(this)
-
-        if (storageKey.isBlank() || vVoucher.isBlank()) {
+        if (verificationId.isBlank()) {
             finish()
             return
         }
 
         title = getString(R.string.bilibili_risk_verify_title)
+        setResult(RESULT_CANCELED, Intent().putExtra(PlaybackNavigation.VERIFICATION_ID, verificationId))
 
         initObserver()
         initWebView()
         loadVerifyPage()
 
-        viewModel.start(storageKey, vVoucher)
+        viewModel.start(verificationId)
     }
 
     private fun initObserver() {
@@ -68,16 +69,33 @@ class BilibiliRiskVerifyActivity : BaseActivity<BilibiliRiskVerifyViewModel, Act
             pendingConfig = config
             applyGeetestConfigIfReady()
         }
-        viewModel.verifySuccessLiveData.observe(this) {
-            ToastCenter.showOriginalToast(getString(R.string.bilibili_risk_verify_success))
-            setResult(RESULT_OK)
-            finish()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.outcomes.collect { result ->
+                    when (result) {
+                        is PlaybackSubmissionResult.Accepted -> {
+                            ToastCenter.showOriginalToast(getString(R.string.bilibili_risk_verify_success))
+                            setResult(
+                                RESULT_OK,
+                                Intent()
+                                    .putExtra(PlaybackNavigation.REQUEST_ID, result.requestId)
+                                    .putExtra(PlaybackNavigation.VERIFICATION_ID, verificationId)
+                            )
+                        }
+                        is PlaybackSubmissionResult.Rejected -> {
+                            ToastCenter.showError(result.failure.userMessage())
+                            setResult(RESULT_CANCELED, Intent().putExtra(PlaybackNavigation.VERIFICATION_ID, verificationId))
+                        }
+                    }
+                    finish()
+                }
+            }
         }
-        viewModel.errorLiveData.observe(this) { message ->
-            ToastCenter.showError(message)
-            setResult(RESULT_CANCELED)
-            finish()
-        }
+    }
+
+    override fun finish() {
+        viewModel.cancel()
+        super.finish()
     }
 
     private fun initWebView() {
@@ -89,6 +107,8 @@ class BilibiliRiskVerifyActivity : BaseActivity<BilibiliRiskVerifyViewModel, Act
             }
 
         dataBinding.webView.apply {
+            isSaveEnabled = false
+            isSaveFromParentEnabled = false
             addView(progressView)
             addJavascriptInterface(GeetestBridge(), "Android")
 
@@ -154,7 +174,7 @@ class BilibiliRiskVerifyActivity : BaseActivity<BilibiliRiskVerifyViewModel, Act
             html,
             "text/html",
             "utf-8",
-            null,
+            null
         )
     }
 
@@ -185,19 +205,21 @@ class BilibiliRiskVerifyActivity : BaseActivity<BilibiliRiskVerifyViewModel, Act
             viewModel.submitGeetestResult(
                 challengeFromJs = challenge,
                 validate = realValidate,
-                seccode = realSeccode,
+                seccode = realSeccode
             )
         }
 
         @JavascriptInterface
         fun onError(message: String?) {
-            ToastCenter.showError(message ?: getString(R.string.bilibili_risk_verify_result_failed))
+            ToastCenter.showError(getString(R.string.bilibili_risk_verify_result_failed))
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         dataBinding.webView.apply {
+            isSaveEnabled = false
+            isSaveFromParentEnabled = false
             loadDataWithBaseURL(null, "", "text/html", "utf-8", null)
             clearHistory()
             (parent as ViewGroup).removeView(this)

@@ -1,7 +1,5 @@
 package com.xyoye.common_component.source.inter
 
-import com.xyoye.common_component.source.base.BaseVideoSource
-
 /**
  * Created by xyoye on 2021/11/14.
  *
@@ -18,6 +16,4 @@ interface GroupSource {
     fun hasPreviousSource(): Boolean
 
     fun indexTitle(index: Int): String
-
-    suspend fun indexSource(index: Int): BaseVideoSource?
 }

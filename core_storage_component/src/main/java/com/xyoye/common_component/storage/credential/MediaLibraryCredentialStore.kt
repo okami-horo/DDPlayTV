@@ -18,14 +18,14 @@ object MediaLibraryCredentialStore {
         ensureMigrationScheduled()
     }
 
-    fun readPassword(libraryId: Int): String? {
+    fun readPassword(libraryId: Int, failOnUnavailable: Boolean = false): String? {
         ensureMigrationScheduled()
-        return readCredential(keyPassword(libraryId))
+        return readCredential(keyPassword(libraryId), failOnUnavailable)
     }
 
-    fun readRemoteSecret(libraryId: Int): String? {
+    fun readRemoteSecret(libraryId: Int, failOnUnavailable: Boolean = false): String? {
         ensureMigrationScheduled()
-        return readCredential(keyRemoteSecret(libraryId))
+        return readCredential(keyRemoteSecret(libraryId), failOnUnavailable)
     }
 
     fun writePassword(
@@ -54,11 +54,12 @@ object MediaLibraryCredentialStore {
 
     private fun keyRemoteSecret(libraryId: Int): String = "rs_$libraryId"
 
-    private fun readCredential(key: String): String? {
+    private fun readCredential(key: String, failOnUnavailable: Boolean): String? {
         val stored = kv.decodeString(key)?.takeIf { it.isNotBlank() } ?: return null
         if (crypto.isEncrypted(stored)) {
             val decrypted = crypto.decrypt(stored)
             if (decrypted == null) {
+                if (failOnUnavailable) throw CredentialUnavailableException()
                 kv.removeValueForKey(key)
                 LogFacade.w(
                     module = LogModule.STORAGE,
@@ -113,3 +114,5 @@ object MediaLibraryCredentialStore {
         MediaLibraryCredentialMigration.trySchedule()
     }
 }
+
+internal class CredentialUnavailableException : Exception("Media library credential unavailable")

@@ -5,20 +5,22 @@ import com.xyoye.common_component.bilibili.BilibiliKeys
 import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.bilibili.net.BilibiliHeaders
 import com.xyoye.common_component.bilibili.playback.BilibiliLivePlaybackSession
-import com.xyoye.common_component.bilibili.playback.BilibiliLivePlaybackSessionStore
 import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSession
-import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackSessionStore
 import com.xyoye.common_component.bilibili.repository.BilibiliRepository
-import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.BilibiliStorageFile
 import com.xyoye.common_component.storage.file.payloadAs
+import com.xyoye.common_component.storage.transport.BilibiliPlaybackTransport
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.TransportAcquisitionException
+import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
+import kotlinx.coroutines.CancellationException
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.PlaybackProfile
-import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryCursor
 import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
 import com.xyoye.data_component.data.bilibili.BilibiliLiveFollowItem
@@ -28,11 +30,20 @@ import com.xyoye.data_component.enums.PlayerType
 import java.io.InputStream
 import java.util.Date
 
-class BilibiliStorage(
-    library: MediaLibraryEntity
+class BilibiliStorage internal constructor(
+    library: MediaLibraryEntity,
+    private val prepareRegular: suspend (BilibiliPlaybackSession) -> String,
+    private val prepareLive: suspend (BilibiliLivePlaybackSession) -> String
 ) : AbstractStorage(library),
     PagedStorage,
-    AuthStorage {
+    AuthStorage,
+    PlaybackTransportProvider {
+    constructor(library: MediaLibraryEntity) : this(
+        library,
+        { it.prepare().getOrThrow() },
+        { it.prepare().getOrThrow() }
+    )
+
     private val storageKey = BilibiliPlaybackPreferencesStore.storageKey(library)
     private val repository = BilibiliRepository(storageKey)
 
@@ -507,21 +518,12 @@ class BilibiliStorage(
         }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String? =
-        createPlayUrl(
-            file = file,
-            profile =
-                PlaybackProfile(
-                    playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
-                    source = PlaybackProfileSource.GLOBAL,
-                ),
-        )
-
-    override suspend fun createPlayUrl(
+    override suspend fun acquirePlaybackTransport(
         file: StorageFile,
         profile: PlaybackProfile
-    ): String? {
-        val parsed = BilibiliKeys.parse(file.uniqueKey()) ?: return null
+    ): PlaybackTransportLease {
+        val parsed = BilibiliKeys.parse(file.uniqueKey())
+            ?: throw TransportAcquisitionException(TransportAcquisitionFailure.SessionUnavailable)
         try {
             if (parsed is BilibiliKeys.LiveKey) {
                 val session =
@@ -532,12 +534,7 @@ class BilibiliStorage(
                         repository = repository,
                         roomId = parsed.roomId,
                     )
-                BilibiliLivePlaybackSessionStore.put(session)
-                return session
-                    .prepare()
-                    .onFailure {
-                        BilibiliLivePlaybackSessionStore.remove(library.id, file.uniqueKey())
-                    }.getOrThrow()
+                return BilibiliPlaybackTransport.acquire(session) { prepareLive(session) }
             }
 
             val session =
@@ -549,12 +546,9 @@ class BilibiliStorage(
                     key = parsed,
                     playerType = profile.playerType,
                 )
-            BilibiliPlaybackSessionStore.put(session)
-            return session
-                .prepare()
-                .onFailure {
-                    BilibiliPlaybackSessionStore.remove(library.id, file.uniqueKey())
-                }.getOrThrow()
+            return BilibiliPlaybackTransport.acquire(session) { prepareRegular(session) }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (t: Throwable) {
             val extraInfo =
                 "storageId=${library.id}, uniqueKey=${file.uniqueKey()}, filePath=${file.filePath()}, parsedType=${parsed::class.java.simpleName}"

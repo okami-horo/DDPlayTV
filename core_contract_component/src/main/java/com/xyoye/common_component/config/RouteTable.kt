@@ -50,9 +50,8 @@ object RouteTable {
 
     object Player {
         const val Player = "/player/player_interceptor"
-        const val PlayerCenter = "/player/player"
         const val CloudDanmuBlockService = "/player/cloud_danmu_block_service"
-        const val Media3CapabilityProvider = "/player/media3_capability_provider"
+        const val PlaybackRequestService = "/player/playback_request_service"
     }
 
     object Stream {

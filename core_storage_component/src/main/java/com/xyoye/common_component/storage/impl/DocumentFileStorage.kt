@@ -3,6 +3,10 @@ package com.xyoye.common_component.storage.impl
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import com.xyoye.common_component.base.app.BaseApplication
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
+import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.DocumentStorageFile
@@ -17,7 +21,7 @@ import java.io.InputStream
 
 class DocumentFileStorage(
     library: MediaLibraryEntity
-) : AbstractStorage(library) {
+) : AbstractStorage(library), PlaybackTransportProvider {
     private val context = BaseApplication.getAppContext()
 
     override suspend fun getRootFile(): StorageFile? {
@@ -54,11 +58,12 @@ class DocumentFileStorage(
         path: String,
         isDirectory: Boolean
     ): StorageFile? {
-        val documentFile =
-            DocumentFile.fromTreeUri(
-                context,
-                resolvePath(path),
-            ) ?: return null
+        val uri = Uri.parse(path).takeIf { it.scheme == "content" } ?: resolvePath(path)
+        val documentFile = if (isDirectory) {
+            DocumentFile.fromTreeUri(context, uri)
+        } else {
+            DocumentFile.fromSingleUri(context, uri)
+        } ?: return null
         return DocumentStorageFile(documentFile, this)
     }
 
@@ -75,5 +80,6 @@ class DocumentFileStorage(
         }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String = file.fileUrl()
+    override suspend fun acquirePlaybackTransport(file: StorageFile, profile: PlaybackProfile): PlaybackTransportLease =
+        directPlaybackTransport(file.fileUrl())
 }

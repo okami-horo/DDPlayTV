@@ -7,17 +7,30 @@ import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.playback.addon.PlaybackAddon
+import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
+import com.xyoye.common_component.playback.addon.PlaybackReplacementIntent
 import com.xyoye.common_component.resolver.PlaybackProfileResolver
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageSortOption
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.impl.LinkStorage
+import com.xyoye.common_component.storage.transport.AcquiredPlaybackTransport
+import com.xyoye.common_component.storage.transport.PlaybackTransportFactory
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.TransportAcquisitionResult
+import com.xyoye.common_component.storage.transport.releaseTransportResources
 import com.xyoye.common_component.utils.getDirPath
 import com.xyoye.common_component.utils.isFileExist
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.enums.PlayerType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 
 /**
  * Created by xyoye on 2023/1/2.
@@ -34,25 +47,128 @@ object StorageVideoSourceFactory {
     suspend fun create(
         file: StorageFile,
         profile: PlaybackProfile
-    ): StorageVideoSource? {
-        val storage = file.storage
-        val videoSources = getVideoSources(storage)
-        val playUrl = storage.createPlayUrl(file, profile) ?: return null
-        val danmu = findLocalDanmu(file, storage)
-        val subtitlePath = getSubtitlePath(file, storage)
-        val audioPath = file.playHistory?.audioPath
-        return StorageVideoSource(
-            playUrl,
+    ): StorageVideoSource? = create(file, profile, getVideoSources(file.storage))
+
+    suspend fun create(
+        file: StorageFile,
+        profile: PlaybackProfile,
+        queue: List<StorageFile>,
+        releaseResolution: () -> Unit = {},
+        replacement: PlaybackReplacementIntent? = null
+    ): StorageVideoSource? =
+        createOwned(
             file,
-            videoSources,
-            danmu,
-            subtitlePath,
-            audioPath,
             profile,
+            queue,
+            acquire = { input, selected -> PlaybackTransportFactory().acquire(input.storage, input, selected, replacement) },
+            prepareExtras = { playbackFile ->
+                val storage = playbackFile.storage
+                SourceExtras(
+                    findLocalDanmu(playbackFile, storage),
+                    getSubtitlePath(playbackFile, storage),
+                    playbackFile.playHistory?.audioPath,
+                    storage.getNetworkHeaders(playbackFile)?.toMap()
+                )
+            },
+            createAddon = { transport, _ ->
+                StorageVideoSource.createDefaultPlaybackAddon(
+                    transport.lease.playUrl,
+                    transport.playbackFile,
+                    transport.lease
+                )
+            },
+            releaseResolution = releaseResolution
         )
+
+    internal data class SourceExtras(
+        val danmu: LocalDanmuBean? = null,
+        val subtitlePath: String? = null,
+        val audioPath: String? = null,
+        val httpHeaders: Map<String, String>? = null
+    )
+
+    internal suspend fun createOwned(
+        file: StorageFile,
+        profile: PlaybackProfile,
+        queue: List<StorageFile>,
+        acquire: suspend (StorageFile, PlaybackProfile) -> TransportAcquisitionResult,
+        prepareExtras: suspend (StorageFile) -> SourceExtras,
+        createAddon: (AcquiredPlaybackTransport, PlaybackProfile) -> PlaybackAddon?,
+        releaseResolution: () -> Unit = {}
+    ): StorageVideoSource? {
+        // Queue entries are metadata for later resolution, never the owned playback connection.
+        val inputKey = file.uniqueKey()
+        val videoSources =
+            queue
+                .takeIf { items -> items.any { it.uniqueKey() == inputKey } }
+                .orEmpty()
+                .ifEmpty { listOf(file) }
+                .map { original -> original.clone().apply { playHistory = original.playHistory?.copy() } }
+        var lease: PlaybackTransportLease? = null
+        var addon: PlaybackAddon? = null
+        var source: StorageVideoSource? = null
+        var delivered = false
+        try {
+            val transport =
+                when (val result = acquire(file, profile)) {
+                    is TransportAcquisitionResult.Success -> result.transport
+                    is TransportAcquisitionResult.Failure -> {
+                        result.cause?.let { throw it }
+                        if ((file.storage as? com.xyoye.common_component.storage.AbstractStorage)?.throwPlaybackErrors == true) {
+                            throw com.xyoye.common_component.storage.transport
+                                .TransportAcquisitionException(result.reason)
+                        }
+                        return null
+                    }
+                }
+            lease = transport.lease
+            val extras = prepareExtras(transport.playbackFile)
+            currentCoroutineContext().ensureActive()
+            addon = createAddon(transport, profile)
+            source =
+                StorageVideoSource(
+                    playUrl = lease.playUrl,
+                    file = transport.playbackFile,
+                    videoSources = videoSources,
+                    danmu = extras.danmu,
+                    subtitlePath = extras.subtitlePath,
+                    audioPath = extras.audioPath,
+                    playbackProfile = profile,
+                    transportLease = lease,
+                    playbackAddon = addon,
+                    httpHeaders = extras.httpHeaders?.toMap(),
+                    releaseResolution = releaseResolution
+                )
+            currentCoroutineContext().ensureActive()
+            delivered = true
+            return source
+        } finally {
+            if (!delivered) {
+                withContext(NonCancellable + Dispatchers.IO) {
+                    val constructed = source
+                    if (constructed != null) {
+                        constructed.releasePlaybackResources()
+                    } else {
+                        releaseTransportResources(
+                            lease?.leaseId.orEmpty(),
+                            listOf(
+                                {
+                                    (addon as? PlaybackReleasableAddon)?.onRelease()
+                                    Unit
+                                },
+                                {
+                                    lease?.release()
+                                    Unit
+                                }
+                            )
+                        )
+                    }
+                }
+            }
+        }
     }
 
-    private fun resolvePlaybackProfile(storage: Storage): PlaybackProfile {
+    internal fun resolvePlaybackProfile(storage: Storage): PlaybackProfile {
         val globalPlayerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
         val resolvedLibrary = storage.library.takeIf { storage !is LinkStorage }
         return PlaybackProfileResolver.resolve(
@@ -60,7 +176,7 @@ object StorageVideoSourceFactory {
             globalPlayerType = globalPlayerType,
             mediaType = storage.library.mediaType,
             supportedPlayerTypes = storage.supportedPlayerTypes(),
-            preferredPlayerType = storage.preferredPlayerType(),
+            preferredPlayerType = storage.preferredPlayerType()
         )
     }
 
@@ -84,8 +200,8 @@ object StorageVideoSourceFactory {
                     "mediaType" to storage.library.mediaType.name,
                     "uniqueKey" to file.uniqueKey(),
                     "filePath" to runCatching { file.filePath() }.getOrNull().orEmpty(),
-                    "danmuPath" to historyDanmuPath,
-                ),
+                    "danmuPath" to historyDanmuPath
+                )
             )
         }
 
@@ -121,8 +237,8 @@ object StorageVideoSourceFactory {
                     "mediaType" to storage.library.mediaType.name,
                     "uniqueKey" to file.uniqueKey(),
                     "filePath" to runCatching { file.filePath() }.getOrNull().orEmpty(),
-                    "subtitlePath" to historySubtitlePath,
-                ),
+                    "subtitlePath" to historySubtitlePath
+                )
             )
         }
 

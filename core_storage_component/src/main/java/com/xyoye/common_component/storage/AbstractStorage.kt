@@ -20,6 +20,9 @@ import java.io.File
 abstract class AbstractStorage(
     libraryEntity: MediaLibraryEntity
 ) : Storage {
+    // Resolver instances must preserve protocol failures for structured playback errors.
+    internal var throwPlaybackErrors: Boolean = false
+
     override var library: MediaLibraryEntity = libraryEntity
 
     override var directory: StorageFile? = null

@@ -16,6 +16,10 @@ class BilibiliLivePlaybackSession(
     private val repository: BilibiliRepository,
     private val roomId: Long
 ) {
+    private val work = BilibiliPlaybackWork()
+
+    fun close() = work.close()
+
     private val cdnBlacklistTtlMs = TimeUnit.MINUTES.toMillis(10)
     private val cdnHostBlacklist = LinkedHashMap<String, Long>()
 
@@ -26,13 +30,28 @@ class BilibiliLivePlaybackSession(
     private var selectedIndex: Int = -1
     private var selectedExpiresAtMs: Long? = null
 
-    suspend fun prepare(): Result<String> =
+    suspend fun prepare(): Result<String> = work.run { prepareInternal() }
+
+    private suspend fun prepareInternal(): Result<String> =
         runCatching {
             refreshPlayUrl()
             selectFirstCandidateOrThrow()
         }
 
-    suspend fun recover(failure: BilibiliPlaybackSession.FailureContext): Result<String> =
+    suspend fun recover(failure: BilibiliPlaybackSession.FailureContext): Result<String> = work.run { recoverInternal(failure) }
+
+    suspend fun fork(): BilibiliLivePlaybackSession =
+        work.run {
+            BilibiliLivePlaybackSession(storageId, uniqueKey, storageKey, repository, roomId).also { next ->
+                next.resolvedRoomId = resolvedRoomId
+                next.urlCandidates = urlCandidates.toList()
+                next.selectedIndex = selectedIndex
+                next.selectedExpiresAtMs = selectedExpiresAtMs
+                next.cdnHostBlacklist.putAll(cdnHostBlacklist)
+            }
+        }
+
+    private suspend fun recoverInternal(failure: BilibiliPlaybackSession.FailureContext): Result<String> =
         runCatching {
             cleanupBlacklistIfNeeded()
 
@@ -98,7 +117,7 @@ class BilibiliLivePlaybackSession(
         val ordered =
             data.durl.sortedWith(
                 compareBy<BilibiliLivePlayUrlDurl> { it.order }
-                    .thenBy { it.url },
+                    .thenBy { it.url }
             )
 
         val urls = LinkedHashSet<String>()

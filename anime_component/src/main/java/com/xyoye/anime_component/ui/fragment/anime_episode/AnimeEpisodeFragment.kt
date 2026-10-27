@@ -22,6 +22,9 @@ import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.extension.vertical
+import com.xyoye.common_component.playback.handoff.PlaybackNavigation
+import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
+import com.xyoye.common_component.playback.userMessage
 import com.xyoye.common_component.session.UserSessionManager
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
@@ -47,7 +50,7 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            AnimeEpisodeFragmentViewModel::class.java,
+            AnimeEpisodeFragmentViewModel::class.java
         )
 
     override fun getLayoutId() = R.layout.fragment_anime_episode
@@ -150,11 +153,16 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
             animeDetailActivity?.refreshAnimeDetail()
         }
 
-        viewModel.playVideoFlow.collectAtStarted(this) {
-            ARouter
-                .getInstance()
-                .build(RouteTable.Player.Player)
-                .navigation()
+        viewModel.playVideoFlow.collectAtStarted(viewLifecycleOwner) { result ->
+            when (result) {
+                is PlaybackSubmissionResult.Accepted ->
+                    ARouter
+                        .getInstance()
+                        .build(RouteTable.Player.Player)
+                        .withString(PlaybackNavigation.REQUEST_ID, result.requestId)
+                        .navigation(requireContext())
+                is PlaybackSubmissionResult.Rejected -> ToastCenter.showError(result.failure.userMessage())
+            }
         }
     }
 
@@ -201,10 +209,10 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
             .build(RouteTable.Anime.Search)
             .withString(
                 "animeTitle",
-                viewModel.animeTitleField.get(),
+                viewModel.animeTitleField.get()
             ).withString(
                 "searchWord",
-                "${viewModel.animeSearchWordField.get()} ${data.searchEpisodeNum}",
+                "${viewModel.animeSearchWordField.get()} ${data.searchEpisodeNum}"
             ).withBoolean("isSearchMagnet", true)
             .navigation()
     }
@@ -244,7 +252,7 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
             }
         BottomActionDialog(mAttachActivity, actionList, "选择播放记录") {
             viewModel.playLocalEpisode(
-                episode.histories[it.actionId as Int],
+                episode.histories[it.actionId as Int]
             )
             return@BottomActionDialog true
         }.show()

@@ -1,26 +1,24 @@
 package com.xyoye.player_component.ui.activities.player_intent
 
 import androidx.databinding.ObservableField
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.DatabaseProvider
-import com.xyoye.common_component.source.VideoSourceManager
-import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
-import com.xyoye.common_component.storage.StorageFactory
-import com.xyoye.common_component.storage.impl.LinkStorage
+import com.xyoye.common_component.playback.PlaybackEntryRequests
+import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
+import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
+import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.common_component.utils.getDirPath
 import com.xyoye.common_component.utils.meida.VideoScan
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.ExtendFolderEntity
-import com.xyoye.data_component.entity.MediaLibraryEntity
-import kotlinx.coroutines.Dispatchers
+import com.xyoye.data_component.media3.entity.Media3SourceType
 import kotlinx.coroutines.launch
 import java.io.File
 
 class PlayerIntentViewModel : BaseViewModel() {
-    val playLiveData = MutableLiveData<Any>()
+    private val requests = PlaybackEntryRequests(viewModelScope, { loading -> if (loading) showLoading() else hideLoading() })
+    val playEvents = requests.outcomes
 
     val isParseError = ObservableField(false)
 
@@ -43,36 +41,14 @@ class PlayerIntentViewModel : BaseViewModel() {
             val extendVideos = VideoScan.traverse(folderPath)
             if (extendVideos.isNotEmpty()) {
                 DatabaseProvider.instance.getExtendFolderDao().insert(
-                    ExtendFolderEntity(folderPath, extendVideos.size),
+                    ExtendFolderEntity(folderPath, extendVideos.size)
                 )
             }
         }
     }
 
     fun openIntentUrl(link: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (setupLinkSource(link)) {
-                playLiveData.postValue(Any())
-            }
-        }
-    }
-
-    private suspend fun setupLinkSource(link: String): Boolean {
-        showLoading()
-        val mediaSource =
-            MediaLibraryEntity.HISTORY
-                .copy(url = link)
-                .run { StorageFactory.createStorage(this) }
-                ?.run { this as? LinkStorage }
-                ?.run { getRootFile() }
-                ?.run { StorageVideoSourceFactory.create(this) }
-        hideLoading()
-
-        if (mediaSource == null) {
-            ToastCenter.showError("播放失败，找不到播放资源")
-            return false
-        }
-        VideoSourceManager.getInstance().setSource(mediaSource)
-        return true
+        val descriptor = ExternalUriDescriptor(link, Media3SourceType.STREAM)
+        requests.submit { PlaybackRequestInput(descriptor, null, PlaybackRequestOrigin.EXTERNAL_INTENT) }
     }
 }

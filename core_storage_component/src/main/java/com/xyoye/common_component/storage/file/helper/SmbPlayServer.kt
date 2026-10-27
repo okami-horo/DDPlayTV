@@ -1,184 +1,128 @@
 package com.xyoye.common_component.storage.file.helper
 
-import com.xyoye.common_component.storage.Storage
-import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.SmbStorageFile
 import com.xyoye.common_component.storage.impl.SmbStorage
-import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.common_component.utils.IOUtils
+import com.xyoye.common_component.storage.transport.releaseTransportResources
 import com.xyoye.common_component.utils.RangeUtils
 import com.xyoye.common_component.utils.getFileExtension
 import fi.iki.elonen.NanoHTTPD
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.net.URLEncoder
-import kotlin.random.Random
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * Created by xyoye on 2023/1/15.
- */
-
-class SmbPlayServer private constructor() : NanoHTTPD(randomPort()) {
+/** One server per playback connection. Its streams never belong to another source. */
+internal open class SmbPlayServer(
+    private val storage: SmbStorage,
+    private val file: SmbStorageFile,
+    listenPort: Int = 0
+) : NanoHTTPD("127.0.0.1", listenPort) {
+    val leaseId: String = UUID.randomUUID().toString()
     private val startMutex = Mutex()
+    private val requestLock = Any()
+    private val streamsLock = Any()
+    private val streams = mutableSetOf<InputStream>()
+    private val retired = AtomicBoolean(false)
 
-    private var mStorageFile: SmbStorageFile? = null
-    private var mStorage: SmbStorage? = null
-    private var mContentType: String = "video/*"
-    private var mInputStream: InputStream? = null
-
-    private val resourceNotFound by lazy {
-        resourceNotFoundResponse()
-    }
-    private val resourceOpenFailed by lazy {
-        resourceOpenFailedResponse()
-    }
-
-    private object Holder {
-        val instance = SmbPlayServer()
-    }
-
-    companion object {
-        // 随机端口
-        private fun randomPort() = Random.nextInt(20000, 30000)
-
-        @JvmStatic
-        fun getInstance() = Holder.instance
-    }
-
-    @Synchronized
-    override fun serve(session: IHTTPSession): Response {
-        val storage = mStorage ?: return resourceNotFound
-        val storageFile = mStorageFile ?: return resourceNotFound
-
-        // 关闭之前打开的数据流
-        IOUtils.closeIO(mInputStream)
-
-        // 重新打开数据流，重要，否则无法设置offset
-        val inputStream =
-            openInputStreamBlocking(storage, storageFile)
-                ?: return resourceOpenFailed
-        mInputStream = inputStream
-
-        // 解析Range
-        val rangeText = session.headers["range"]
-        val rangeArray =
-            rangeText?.run {
-                RangeUtils.getRange(this, storageFile.fileLength())
+    override fun serve(session: IHTTPSession): Response =
+        synchronized(requestLock) {
+            if (retired.get() || !session.uri.startsWith("/lease/$leaseId/")) {
+                return notFound()
             }
-
-        // 存在range，且contentLength != 0
-        return if (rangeArray != null && rangeArray[2] != 0L) {
-            getPartialResponse(inputStream, rangeArray, storageFile.fileLength())
-        } else {
-            getOKResponse(inputStream)
-        }
-    }
-
-    /**
-     * Threading model:
-     * - Called from NanoHTTPD request thread (NOT main thread).
-     * - Serialized by [serve] so the underlying SMB session isn't accessed concurrently.
-     */
-    private fun openInputStreamBlocking(
-        storage: Storage,
-        file: StorageFile
-    ): InputStream? {
-        val smbStorage = storage as? SmbStorage ?: return null
-        val smbFile = file as? SmbStorageFile ?: return null
-        return smbStorage.openFileBlocking(smbFile)
-    }
-
-    private fun getPartialResponse(
-        inputStream: InputStream,
-        rangeArray: Array<Long>,
-        sourceLength: Long
-    ): Response {
-        try {
-            // 设置Offset
-            inputStream.skip(rangeArray[0])
-        } catch (e: IOException) {
-            ErrorReportHelper.postCatchedException(e, "SMBPlayServer", "设置偏移量失败: offset=${rangeArray[0]}")
-        }
-        // 响应内容
-        val response =
-            newFixedLengthResponse(
-                Response.Status.PARTIAL_CONTENT,
-                mContentType,
-                inputStream,
-                sourceLength,
-            )
-        // 添加响应头
-        val contentRange = "bytes ${rangeArray[0]}-${rangeArray[1]}/$sourceLength"
-        response.addHeader("Accept-Ranges", "bytes")
-        response.addHeader("Content-Range", contentRange)
-        response.addHeader("Content-Length", rangeArray[2].toString())
-        return response
-    }
-
-    private fun getOKResponse(inputStream: InputStream): Response =
-        newChunkedResponse(
-            Response.Status.OK,
-            mContentType,
-            inputStream,
-        )
-
-    private fun resourceNotFoundResponse(): Response =
-        newFixedLengthResponse(
-            Response.Status.NOT_FOUND,
-            "*/*",
-            "resource not found",
-        )
-
-    private fun resourceOpenFailedResponse(): Response =
-        newFixedLengthResponse(
-            Response.Status.INTERNAL_ERROR,
-            "*/*",
-            "open resource failed",
-        )
-
-    private fun getContentType(filePath: String): String {
-        if (filePath.isEmpty()) {
-            return "video/*"
-        }
-        val extension = getFileExtension(filePath)
-        return "video/$extension"
-    }
-
-    suspend fun startSync(timeoutMs: Long = 5000): Boolean {
-        return startMutex.withLock {
-            if (wasStarted()) {
-                release()
+            val rangeText = session.headers["range"]
+            val range = rangeText?.let { RangeUtils.parseRange(it, file.fileLength()) }
+            if (rangeText != null && range == null) {
+                return newFixedLengthResponse(Response.Status.RANGE_NOT_SATISFIABLE, "text/plain", "")
             }
-            return@withLock try {
-                start()
-                val started = awaitCondition(timeoutMs = timeoutMs) { wasStarted() }
-                if (!started) {
-                    stop()
+            val input =
+                storage.openFileBlocking(file)
+                    ?: return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "open resource failed")
+            val owned = own(input)
+            try {
+                var remaining = range?.first ?: 0
+                while (remaining > 0) {
+                    val skipped = owned.skip(remaining)
+                    if (skipped > 0) {
+                        remaining -= skipped
+                    } else {
+                        if (owned.read() == -1) throw IOException("SMB range offset unavailable")
+                        remaining--
+                    }
                 }
-                started
-            } catch (e: Exception) {
-                ErrorReportHelper.postCatchedException(e, "SMBPlayServer", "启动播放服务器失败: timeout=${timeoutMs}ms")
-                false
+                if (retired.get()) {
+                    owned.close()
+                    return notFound()
+                }
+                val length = range?.let { it.second - it.first + 1 } ?: file.fileLength()
+                newFixedLengthResponse(
+                    if (range == null) Response.Status.OK else Response.Status.PARTIAL_CONTENT,
+                    "video/${getFileExtension(file.filePath())}",
+                    owned,
+                    length
+                ).apply {
+                    addHeader("Accept-Ranges", "bytes")
+                    range?.let { addHeader("Content-Range", "bytes ${it.first}-${it.second}/${file.fileLength()}") }
+                }
+            } catch (_: Exception) {
+                owned.close()
+                newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "read resource failed")
             }
         }
+
+    private fun own(input: InputStream): InputStream {
+        val owned =
+            object : FilterInputStream(input) {
+                private val closed = AtomicBoolean(false)
+
+                override fun close() {
+                    if (!closed.compareAndSet(false, true)) return
+                    synchronized(streamsLock) { streams.remove(this) }
+                    releaseTransportResources(leaseId, listOf({ input.close() }))
+                }
+            }
+        synchronized(streamsLock) { streams.add(owned) }
+        return owned
     }
 
-    @Synchronized
-    fun generatePlayUrl(
-        storage: SmbStorage,
-        storageFile: SmbStorageFile
-    ): String {
-        mStorage = storage
-        mStorageFile = storageFile
-        mContentType = getContentType(storageFile.filePath())
-        val encodeFileName = URLEncoder.encode(storageFile.fileName(), "utf-8")
-        return "http://127.0.0.1:$listeningPort/$encodeFileName"
+    open suspend fun startSync(): Boolean =
+        startMutex.withLock {
+            synchronized(requestLock) {
+                if (retired.get()) return@withLock false
+                if (isAlive) return@withLock true
+                try {
+                    start()
+                    isAlive
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    false
+                }
+            }
+        }
+
+    open fun playUrl(): String {
+        check(isAlive && !retired.get()) { "SMB playback server is unavailable" }
+        return "http://127.0.0.1:$listeningPort/lease/$leaseId/${URLEncoder.encode(file.fileName(), "UTF-8")}"
     }
 
     fun release() {
-        IOUtils.closeIO(mInputStream)
-        this@SmbPlayServer.stop()
+        if (!retired.compareAndSet(false, true)) return
+        releaseTransportResources(
+            leaseId,
+            listOf({ stop() }, {
+                val remaining =
+                    synchronized(requestLock) {
+                        synchronized(streamsLock) { streams.toList().also { streams.clear() } }
+                    }
+                releaseTransportResources(leaseId, remaining.map { stream -> { stream.close() } })
+            })
+        )
     }
+
+    private fun notFound(): Response = newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "")
 }

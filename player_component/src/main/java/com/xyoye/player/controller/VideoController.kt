@@ -51,7 +51,7 @@ class VideoController(
         SettingController(
             context,
             { addControlComponent(it) },
-            onSettingHidden = { onSettingHidden() },
+            onSettingHidden = { onSettingHidden() }
         )
 
     private val playerTopView = PlayerTopView(context)
@@ -146,7 +146,7 @@ class VideoController(
 
     override fun onProgressChanged(
         duration: Long,
-        position: Long,
+        position: Long
     ) {
         super.onProgressChanged(duration, position)
         playbackProgressBlock?.invoke(duration, position, mControlWrapper.isLive())
@@ -210,6 +210,10 @@ class VideoController(
     fun setLastPlaySpeed(speed: Float) {
         lastVideoSpeed = speed
     }
+
+    internal fun seekPlaybackTo(positionMs: Long) = mControlWrapper.seekTo(positionMs)
+
+    internal fun changePlaybackSpeed(speed: Float) = mControlWrapper.setSpeed(speed)
 
     /*
      * 设置电量数据

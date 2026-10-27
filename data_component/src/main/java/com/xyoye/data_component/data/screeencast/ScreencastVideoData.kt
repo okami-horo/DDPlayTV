@@ -1,8 +1,8 @@
 package com.xyoye.data_component.data.screeencast
 
 import android.os.Parcelable
+import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 /**
@@ -15,11 +15,9 @@ data class ScreencastData(
     val port: Int,
     val relatedVideos: List<ScreencastVideoData>,
     val playUniqueKey: String,
-    val httpHeader: Map<String, String>? = null
-) : Parcelable {
-    @IgnoredOnParcel
-    var ip: String? = null
-}
+    val httpHeader: Map<String, String>? = null,
+    @Json(ignore = true) var ip: String? = null
+) : Parcelable
 
 @Parcelize
 @JsonClass(generateAdapter = true)

@@ -10,6 +10,42 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class SensitiveDataSanitizerTest {
     @Test
+    fun verificationJsonAndFormBodiesDoNotExposeChallengeOrAnswers() {
+        val fields = listOf("v_voucher", "gt", "challenge", "validate", "seccode", "grisk_id", "token", "csrf")
+        val json =
+            fields.joinToString(prefix = "{\"code\":-352,\"data\":{", postfix = "}}") {
+                "\"$it\":\"private-$it\""
+            }
+        val form = fields.joinToString("&") { "$it=private-$it" } + "&code=0"
+
+        val safeJson = SensitiveDataSanitizer.sanitizeFreeText(json)
+        val safeForm = SensitiveDataSanitizer.sanitizeFreeText(form)
+
+        fields.forEach {
+            assertFalse(it, safeJson.contains("private-$it"))
+            assertFalse(it, safeForm.contains("private-$it"))
+        }
+        assertTrue(safeJson.contains("\"code\":-352"))
+        assertTrue(safeForm.contains("code=0"))
+    }
+
+    @Test
+    fun verificationContextAndParametersAreRedacted() {
+        val fields = listOf("V_VOUCHER", "gt", "challenge", "validate", "seccode", "grisk_id", "token", "csrf")
+        val context = fields.associateWith { "private-$it" } + ("code" to "-352")
+
+        val safeContext = SensitiveDataSanitizer.sanitizeContext(context)
+        val safeParams = SensitiveDataSanitizer.sanitizeParams(context)
+
+        fields.forEach {
+            assertEquals(it, "<redacted>", safeContext[it])
+            assertEquals(it, "<redacted>", safeParams[it])
+        }
+        assertEquals("-352", safeContext["code"])
+        assertEquals("-352", safeParams["code"])
+    }
+
+    @Test
     fun sanitizeUrlStripsQueryAndFragment() {
         val raw = "https://example.com/a/b.m3u8?token=abc&sign=xyz#frag"
         val safe = SensitiveDataSanitizer.sanitizeUrl(raw, SensitiveDataSanitizer.UrlMode.SAFE)
@@ -37,7 +73,7 @@ class SensitiveDataSanitizerTest {
                 "Authorization" to "Bearer secret-token",
                 "cookie" to "SESSDATA=abc; bili_jct=def",
                 "path" to "/storage/emulated/0/Movies/private.mp4",
-                "url" to "https://a.com/v.m3u8?access_token=aaa",
+                "url" to "https://a.com/v.m3u8?access_token=aaa"
             )
         val safe = SensitiveDataSanitizer.sanitizeContext(ctx)
         assertEquals("<redacted>", safe.getValue("Authorization"))

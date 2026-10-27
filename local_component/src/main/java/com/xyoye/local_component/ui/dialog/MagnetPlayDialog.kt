@@ -3,13 +3,11 @@ package com.xyoye.local_component.ui.dialog
 import androidx.appcompat.app.AppCompatActivity
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.media3.Media3SessionStore
 import com.xyoye.common_component.utils.hideKeyboard
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.BaseBottomDialog
 import com.xyoye.common_component.weight.dialog.FileManagerDialog
 import com.xyoye.data_component.entity.MediaLibraryEntity
-import com.xyoye.data_component.media3.entity.Media3Capability
 import com.xyoye.data_component.enums.FileManagerAction
 import com.xyoye.local_component.R
 import com.xyoye.local_component.databinding.DialogMagnetPlayBinding
@@ -51,10 +49,6 @@ class MagnetPlayDialog(
     }
 
     private fun launchStorageFileActivity(link: String) {
-        if (!ensureMedia3DownloadSupport()) {
-            ToastCenter.showWarning("当前 Media3 配置未启用磁链播放")
-            return
-        }
         val library = MediaLibraryEntity.TORRENT.copy(url = link)
         ARouter
             .getInstance()
@@ -68,11 +62,5 @@ class MagnetPlayDialog(
             hideKeyboard(binding.magnetInputEt)
         }
         super.dismiss()
-    }
-
-    private fun ensureMedia3DownloadSupport(): Boolean {
-        val capability = Media3SessionStore.currentCapability() ?: return true
-        return capability.capabilities.contains(Media3Capability.DOWNLOAD_VALIDATE) ||
-            capability.offlineSupport?.verifyBeforePlay == true
     }
 }

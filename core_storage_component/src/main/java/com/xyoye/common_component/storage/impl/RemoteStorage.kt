@@ -4,6 +4,9 @@ import android.net.Uri
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.repository.RemoteRepository
 import com.xyoye.common_component.network.request.NetworkException
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
@@ -14,7 +17,6 @@ import com.xyoye.common_component.utils.danmu.DanmuFinder
 import com.xyoye.common_component.utils.subtitle.SubtitleUtils
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.PlaybackProfile
-import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.data.remote.RemoteVideoData
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -27,16 +29,20 @@ import kotlin.coroutines.cancellation.CancellationException
  * Created by xyoye on 2023/4/1.
  */
 
-class RemoteStorage(
-    library: MediaLibraryEntity
-) : AbstractStorage(library) {
+class RemoteStorage internal constructor(
+    library: MediaLibraryEntity,
+    private val fetchFiles: suspend (RemoteStorage) -> Result<List<RemoteVideoData>>
+) : AbstractStorage(library), PlaybackTransportProvider {
+    constructor(library: MediaLibraryEntity) : this(library, { RemoteRepository.getStorageFiles(it) })
+
     private var storageFilesSnapshot = listOf<RemoteVideoData>()
+    private var resolvedTree: List<RemoteVideoData>? = null
 
     override var rootUri: Uri = generateRootUri()
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> =
         if (file.isRootFile()) {
-            getRemoteRootFiles() ?: emptyList()
+            resolvedTree ?: getRemoteRootFiles() ?: emptyList()
         } else {
             (file as RemoteStorageFile).getRealFile().childData
         }.map { RemoteStorageFile(this, it) }
@@ -51,33 +57,47 @@ class RemoteStorage(
     override suspend fun pathFile(
         path: String,
         isDirectory: Boolean
-    ): StorageFile? = null
+    ): StorageFile? = resolvePlaybackReference(path, null, isDirectory)
+
+    internal suspend fun resolvePlaybackReference(path: String, videoId: String?, isDirectory: Boolean): StorageFile? {
+        if (resolvedTree == null) {
+            val files = fetchFiles(this).getOrThrow()
+            storageFilesSnapshot = files
+            resolvedTree = if (library.remoteAnimeGrouping) {
+                RemoteFileHelper.convertGroupData(files)
+            } else {
+                RemoteFileHelper.convertTreeData(files)
+            }
+        }
+        if (isDirectory && path == "/") return getRootFile()
+        fun find(items: List<RemoteVideoData>): RemoteVideoData? {
+            for (item in items) {
+                if (item.isFolder == isDirectory && item.absolutePath == path) return item
+                find(item.childData)?.let { return it }
+            }
+            return null
+        }
+        val data = if (videoId != null && !isDirectory) {
+            storageFilesSnapshot.firstOrNull { it.Id == videoId }
+        } else {
+            find(resolvedTree.orEmpty())
+        }
+        return data?.let { RemoteStorageFile(this, it) }
+    }
 
     override suspend fun historyFile(history: PlayHistoryEntity): StorageFile? {
         val videoId = Uri.parse(history.url).lastPathSegment ?: return null
-        return storageFilesSnapshot
-            .firstOrNull { it.Id == videoId }
-            ?.run { RemoteStorageFile(this@RemoteStorage, this) }
+        return resolvePlaybackReference(history.storagePath.orEmpty(), videoId, false)
             ?.also { it.playHistory = history }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String =
-        createPlayUrl(
-            file = file,
-            profile =
-                PlaybackProfile(
-                    playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
-                    source = PlaybackProfileSource.GLOBAL,
-                ),
-        )
-
-    override suspend fun createPlayUrl(
+    override suspend fun acquirePlaybackTransport(
         file: StorageFile,
         profile: PlaybackProfile
-    ): String {
+    ): PlaybackTransportLease {
         val playerType = profile.playerType
         val fileUrl = (file as RemoteStorageFile).fileUrl()
-        val token = library.remoteSecret ?: return fileUrl
+        val token = library.remoteSecret ?: return directPlaybackTransport(fileUrl)
 
         val upstream =
             Uri
@@ -103,10 +123,10 @@ class RemoteStorage(
                         PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong(),
                         false,
                     )
-                else -> return upstream
+                else -> return directPlaybackTransport(upstream)
             }
 
-        return LocalProxy.wrapIfNeeded(
+        return LocalProxy.acquireIfNeeded(
             playerType = playerType,
             modeValue = mode,
             upstreamUrl = upstream,

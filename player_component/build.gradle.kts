@@ -161,6 +161,9 @@ dependencies {
     implementation(project(":repository:video_cache"))
 
     implementation(Dependencies.Github.keyboard_panel)
+    implementation(Dependencies.Tencent.mmkv)
+    implementation(Dependencies.Square.moshi)
+    implementation(Dependencies.Square.moshi_kotlin)
 
     // TODO 暂时移除，编译出64位后再考虑重新添加
     // implementation "com.github.ctiao:ndkbitmap-armv7a:0.9.21"
@@ -183,5 +186,6 @@ dependencies {
     kapt(Dependencies.Alibaba.arouter_compiler)
 
     testImplementation(Dependencies.Kotlin.coroutines_test)
+    testImplementation(Dependencies.Testing.robolectric)
     androidTestImplementation(Dependencies.Kotlin.coroutines_test)
 }

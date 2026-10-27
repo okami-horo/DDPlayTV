@@ -3,6 +3,10 @@ package com.xyoye.common_component.storage.impl
 import com.xyoye.common_component.database.DatabaseProvider
 import com.xyoye.common_component.extension.toFile
 import com.xyoye.common_component.resolver.MediaResolver
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
+import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.VideoStorageFile
@@ -29,7 +33,7 @@ import java.io.InputStream
 
 class VideoStorage(
     library: MediaLibraryEntity
-) : AbstractStorage(library) {
+) : AbstractStorage(library), PlaybackTransportProvider {
     override suspend fun openDirectory(
         file: StorageFile,
         refresh: Boolean
@@ -70,7 +74,7 @@ class VideoStorage(
                     ?: return null
             return VideoStorageFile(this, videoEntity)
         }
-        return null
+        return VideoStorageFile(this, FolderBean(path, 0))
     }
 
     override suspend fun historyFile(history: PlayHistoryEntity): StorageFile? {
@@ -80,7 +84,8 @@ class VideoStorage(
         }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String = file.filePath()
+    override suspend fun acquirePlaybackTransport(file: StorageFile, profile: PlaybackProfile): PlaybackTransportLease =
+        directPlaybackTransport(file.filePath())
 
     override suspend fun cacheDanmu(file: StorageFile): LocalDanmuBean? {
         val danmuFileName = getFileNameNoExtension(file.fileName()) + ".xml"

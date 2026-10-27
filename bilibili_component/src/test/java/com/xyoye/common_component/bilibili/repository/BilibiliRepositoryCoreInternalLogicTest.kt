@@ -73,6 +73,9 @@ class BilibiliRepositoryCoreInternalLogicTest {
 
         val cause = throwable.cause as BilibiliException
         assertEquals(-352, cause.code)
+        assertEquals("risk-voucher", cause.verificationVoucher)
+        assertFalse(cause.toString().contains("risk-voucher"))
+        assertFalse(cause.bilibiliMessage.orEmpty().contains("risk-voucher"))
     }
 
     @Test

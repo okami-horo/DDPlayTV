@@ -12,11 +12,38 @@ data class PlaybackRecoveryRequest(
 )
 
 interface PlaybackUrlRecoverableAddon : PlaybackAddon {
-    /**
-     * 返回值语义：
-     * - Result.success(playUrl)：表示需要播放器重建 Source，并以该 URL 重新起播（续播到 positionMs）。
-     * - Result.success(null)：表示无法恢复（由播放器走通用错误处理）。
-     * - Result.failure(e)：表示恢复过程中发生异常（用于上报/日志）。
-     */
-    suspend fun recover(request: PlaybackRecoveryRequest): Result<String?>
+    /** Describes preparation only; the active session decides whether to acquire and commit a replacement. */
+    suspend fun recover(request: PlaybackRecoveryRequest): Result<PlaybackReplacementDecision>
+}
+
+sealed interface PlaybackReplacementDecision {
+    object Unavailable : PlaybackReplacementDecision
+
+    object SavedForNextPlayback : PlaybackReplacementDecision
+
+    class Prepare(
+        val intent: PlaybackReplacementIntent
+    ) : PlaybackReplacementDecision
+}
+
+/** Runtime-only binding. Neither protocol tokens nor recovery diagnostics belong in navigation or snapshots. */
+class PlaybackReplacementIntent(
+    val identity: PlaybackIdentity,
+    val transportToken: String,
+    val operation: PlaybackReplacementOperation
+) {
+    override fun toString(): String = "PlaybackReplacementIntent"
+}
+
+sealed interface PlaybackReplacementOperation {
+    object ApplyPreferences : PlaybackReplacementOperation
+
+    class Recover(
+        val failingUrl: String?,
+        val httpResponseCode: Int?,
+        val isDecoderError: Boolean,
+        val positionMs: Long
+    ) : PlaybackReplacementOperation {
+        override fun toString(): String = "Recover"
+    }
 }

@@ -217,7 +217,9 @@ internal object ModuleDependencyGovernance {
     private val allowedTestOnlyProjectDependencies: Map<String, Set<String>> =
         mapOf(
             // core_network_component: tests may depend on core_contract_component.
-            MODULE_NETWORK to setOf(MODULE_CONTRACT)
+            MODULE_NETWORK to setOf(MODULE_CONTRACT),
+            // App instrumentation seeds local/history fixtures and verifies Activity source retention.
+            MODULE_APP to setOf(MODULE_STORAGE_CORE, MODULE_DATABASE)
         )
 
     /**

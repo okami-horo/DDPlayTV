@@ -40,6 +40,8 @@ dependencies {
     implementation(Dependencies.Tencent.mmkv)
     implementation(Dependencies.Square.moshi)
     kapt(Dependencies.Square.moshi_codegen)
+
+    testImplementation(Dependencies.Testing.robolectric)
 }
 
 android {

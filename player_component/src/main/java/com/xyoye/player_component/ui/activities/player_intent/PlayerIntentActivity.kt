@@ -4,9 +4,14 @@ import android.net.Uri
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
+import com.xyoye.common_component.extension.collectAtStarted
 import com.xyoye.common_component.extension.decodeUrl
+import com.xyoye.common_component.playback.handoff.PlaybackNavigation
+import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
+import com.xyoye.common_component.playback.userMessage
 import com.xyoye.common_component.utils.MediaUtils
 import com.xyoye.common_component.utils.StatusBarStyle
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.player_component.BR
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ActivityPlayerIntentBinding
@@ -18,7 +23,7 @@ class PlayerIntentActivity : BaseActivity<PlayerIntentViewModel, ActivityPlayerI
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            PlayerIntentViewModel::class.java,
+            PlayerIntentViewModel::class.java
         )
 
     override fun getLayoutId() = R.layout.activity_player_intent
@@ -52,12 +57,21 @@ class PlayerIntentActivity : BaseActivity<PlayerIntentViewModel, ActivityPlayerI
     }
 
     private fun observerPlay() {
-        viewModel.playLiveData.observe(this) {
-            ARouter
-                .getInstance()
-                .build(RouteTable.Player.Player)
-                .navigation()
-            finish()
+        viewModel.playEvents.collectAtStarted(this) { result ->
+            when (result) {
+                is PlaybackSubmissionResult.Accepted -> {
+                    ARouter
+                        .getInstance()
+                        .build(RouteTable.Player.Player)
+                        .withString(PlaybackNavigation.REQUEST_ID, result.requestId)
+                        .navigation(this@PlayerIntentActivity)
+                    finish()
+                }
+                is PlaybackSubmissionResult.Rejected -> {
+                    ToastCenter.showError(result.failure.userMessage())
+                    viewModel.isParseError.set(true)
+                }
+            }
         }
     }
 }

@@ -13,14 +13,10 @@
     <application android:supportsRtl="true">
         <activity
             android:name=".ui.activities.player.PlayerActivity"
+            android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|screenLayout"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.DanDanPlay.PlayerActivity" />
-
-        <activity
-            android:name=".ui.activities.player_interceptor.PlayerInterceptorActivity"
-            android:configChanges="orientation|screenSize"
-            android:theme="@style/DialogActivityTheme" />
 
         <activity
             android:name=".ui.activities.player_intent.PlayerIntentActivity"

@@ -1,32 +1,24 @@
 package com.xyoye.player_component.sequential
 
+import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.enums.PlayerType
 
 data class SequentialPlaybackSessionToken(
-    val generation: Long,
+    val version: PlaybackSessionVersion,
     val sourceUniqueKey: String,
-    val playerType: PlayerType,
+    val playerType: PlayerType
 )
 
 @JvmInline
 value class SequentialPlaybackQueueItemId(
-    val value: Long,
+    val value: String
 )
 
-data class SequentialPlaybackTransition(
-    val previousSource: BaseVideoSource,
-    val nextSource: BaseVideoSource,
-    val sessionToken: SequentialPlaybackSessionToken,
-    val queueItemId: SequentialPlaybackQueueItemId,
-)
-
-fun interface SequentialPlaybackStateApplier {
-    fun apply(transition: SequentialPlaybackTransition)
-}
-
-fun interface SequentialPlaybackFallbackSwitcher {
-    fun switchTo(index: Int)
+enum class SequentialQueueRetirement {
+    DETACHED,
+    CURRENT,
+    STILL_ATTACHED
 }
 
 interface SequentialPlaybackBackendAdapter {
@@ -36,21 +28,21 @@ interface SequentialPlaybackBackendAdapter {
 
     fun beginSession(
         sessionToken: SequentialPlaybackSessionToken,
-        currentSource: BaseVideoSource,
+        currentSource: BaseVideoSource
     )
 
     fun queueNextSource(
         sessionToken: SequentialPlaybackSessionToken,
         queueItemId: SequentialPlaybackQueueItemId,
-        nextSource: BaseVideoSource,
+        nextSource: BaseVideoSource
     ): Result<Unit>
 
-    fun invalidateSession(sessionToken: SequentialPlaybackSessionToken)
+    fun invalidateSession(sessionToken: SequentialPlaybackSessionToken): SequentialQueueRetirement
 
     interface EventListener {
         fun onTransitionToQueuedItem(
             sessionToken: SequentialPlaybackSessionToken,
-            queueItemId: SequentialPlaybackQueueItemId,
+            queueItemId: SequentialPlaybackQueueItemId
         )
     }
 }
@@ -62,14 +54,14 @@ class FallbackSequentialPlaybackAdapter : SequentialPlaybackBackendAdapter {
 
     override fun beginSession(
         sessionToken: SequentialPlaybackSessionToken,
-        currentSource: BaseVideoSource,
+        currentSource: BaseVideoSource
     ) = Unit
 
     override fun queueNextSource(
         sessionToken: SequentialPlaybackSessionToken,
         queueItemId: SequentialPlaybackQueueItemId,
-        nextSource: BaseVideoSource,
+        nextSource: BaseVideoSource
     ): Result<Unit> = Result.failure(UnsupportedOperationException("Fallback adapter does not support queueing"))
 
-    override fun invalidateSession(sessionToken: SequentialPlaybackSessionToken) = Unit
+    override fun invalidateSession(sessionToken: SequentialPlaybackSessionToken) = SequentialQueueRetirement.DETACHED
 }

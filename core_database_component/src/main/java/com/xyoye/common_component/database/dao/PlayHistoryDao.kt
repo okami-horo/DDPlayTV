@@ -13,6 +13,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PlayHistoryDao {
+    @Query("SELECT * FROM play_history WHERE id = (:id)")
+    suspend fun getById(id: Int): PlayHistoryEntity?
+
+    @Query("UPDATE play_history SET unique_key = (:uniqueKey), storage_path = (:storagePath), storage_id = (:storageId) WHERE id = (:id)")
+    suspend fun backfillIdentity(id: Int, uniqueKey: String, storagePath: String, storageId: Int)
+
     @Query("SELECT * FROM play_history WHERE url != '' ORDER BY play_time DESC")
     suspend fun getAll(): MutableList<PlayHistoryEntity>
 

@@ -8,8 +8,13 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
+import com.xyoye.common_component.extension.collectAtStarted
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
+import com.xyoye.common_component.playback.handoff.PlaybackNavigation
+import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
+import com.xyoye.common_component.playback.userMessage
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.local_component.BR
 import com.xyoye.local_component.R
@@ -32,7 +37,7 @@ class PlayHistoryActivity : BaseActivity<PlayHistoryViewModel, ActivityPlayHisto
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            PlayHistoryViewModel::class.java,
+            PlayHistoryViewModel::class.java
         )
 
     override fun getLayoutId() = R.layout.activity_play_history
@@ -73,11 +78,16 @@ class PlayHistoryActivity : BaseActivity<PlayHistoryViewModel, ActivityPlayHisto
         viewModel.historyLiveData.observe(this) {
             dataBinding.playHistoryRv.setData(it)
         }
-        viewModel.playLiveData.observe(this) {
-            ARouter
-                .getInstance()
-                .build(RouteTable.Player.Player)
-                .navigation()
+        viewModel.playEvents.collectAtStarted(this) { result ->
+            when (result) {
+                is PlaybackSubmissionResult.Accepted ->
+                    ARouter
+                        .getInstance()
+                        .build(RouteTable.Player.Player)
+                        .withString(PlaybackNavigation.REQUEST_ID, result.requestId)
+                        .navigation(this@PlayHistoryActivity)
+                is PlaybackSubmissionResult.Rejected -> ToastCenter.showError(result.failure.userMessage())
+            }
         }
     }
 
@@ -100,7 +110,7 @@ class PlayHistoryActivity : BaseActivity<PlayHistoryViewModel, ActivityPlayHisto
             adapter =
                 PlayHistoryAdapter(
                     this@PlayHistoryActivity,
-                    viewModel,
+                    viewModel
                 ).createAdapter()
         }
     }

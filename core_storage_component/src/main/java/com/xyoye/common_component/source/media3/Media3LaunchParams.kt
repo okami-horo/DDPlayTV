@@ -1,11 +1,6 @@
 package com.xyoye.common_component.source.media3
 
-import com.xyoye.data_component.media3.entity.Media3Capability
-import com.xyoye.data_component.media3.entity.Media3SourceType
+import com.xyoye.common_component.playback.handoff.PlaybackLaunchOptions
 
-data class Media3LaunchParams(
-    val mediaId: String,
-    val sourceType: Media3SourceType,
-    val requestedCapabilities: List<Media3Capability> = emptyList(),
-    val autoplay: Boolean = true
-)
+/** Source compatibility during entry migration; removed with its callers in handoff Task 13. */
+typealias Media3LaunchParams = PlaybackLaunchOptions

@@ -1,127 +1,67 @@
 package com.okamihoro.ddplaytv.app.service
 
-import com.xyoye.data_component.media3.entity.Media3BackgroundMode
+import com.xyoye.common_component.playback.handoff.*
+import com.xyoye.data_component.enums.MediaType
+import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.media3.entity.Media3Capability
-import com.xyoye.data_component.media3.entity.PlayerCapabilityContract
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import com.xyoye.data_component.media3.entity.Media3PlaybackState
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.*
 import org.junit.Test
 
 class Media3BackgroundCoordinatorTest {
-    @Test
-    fun syncClearsCommandsAndModes_whenTelevisionUiMode() {
-        val bridge = RecordingBridge()
-        val coordinator = Media3BackgroundCoordinator(bridge)
-        val contract =
-            PlayerCapabilityContract(
-                sessionId = "session-tv",
-                capabilities = listOf(Media3Capability.BACKGROUND, Media3Capability.PIP),
-                backgroundModes = listOf(Media3BackgroundMode.NOTIFICATION, Media3BackgroundMode.PIP),
-                sessionCommands = listOf("REMOTE_HEARTBEAT"),
-            )
+    private val version = PlaybackSessionVersion("session", 2)
 
-        coordinator.sync(contract, isTelevisionUiMode = false)
-        coordinator.sync(contract, isTelevisionUiMode = true)
-
-        assertEquals(setOf<String>(), bridge.commandEvents.last())
-        assertEquals(setOf<Media3BackgroundMode>(), bridge.backgroundEvents.last())
-    }
-
-    @Test
-    fun syncPushesNotificationAndPipCommands_whenCapabilitiesAllow() {
-        val bridge = RecordingBridge()
-        val coordinator = Media3BackgroundCoordinator(bridge)
-        val contract =
-            PlayerCapabilityContract(
-                sessionId = "session-1",
-                capabilities =
-                    listOf(
-                        Media3Capability.PLAY,
-                        Media3Capability.BACKGROUND,
-                        Media3Capability.PIP,
-                    ),
-                backgroundModes =
-                    listOf(
-                        Media3BackgroundMode.NOTIFICATION,
-                        Media3BackgroundMode.PIP,
-                    ),
-                sessionCommands = listOf("REMOTE_HEARTBEAT"),
-            )
-
-        coordinator.sync(contract, isTelevisionUiMode = false)
-
-        assertEquals(
-            setOf(
-                "REMOTE_HEARTBEAT",
-                Media3BackgroundCoordinator.COMMAND_BACKGROUND_RESUME,
-                Media3BackgroundCoordinator.COMMAND_ENTER_PIP,
-            ),
-            bridge.commandEvents.single(),
-        )
-        assertEquals(
-            setOf(
-                Media3BackgroundMode.NOTIFICATION,
-                Media3BackgroundMode.PIP,
-            ),
-            bridge.backgroundEvents.single(),
-        )
-    }
-
-    @Test
-    fun syncOnlyEmitsChanges_whenContractUpdates() {
-        val bridge = RecordingBridge()
-        val coordinator = Media3BackgroundCoordinator(bridge)
-        val baseline =
-            PlayerCapabilityContract(
-                sessionId = "session-2",
-                capabilities = listOf(Media3Capability.BACKGROUND),
-                backgroundModes = listOf(Media3BackgroundMode.NOTIFICATION),
-                sessionCommands = emptyList(),
-            )
-
-        coordinator.sync(baseline, isTelevisionUiMode = false)
-        bridge.reset()
-
-        val updated =
-            baseline.copy(
-                backgroundModes = listOf(Media3BackgroundMode.NOTIFICATION, Media3BackgroundMode.PIP),
-                capabilities = listOf(Media3Capability.BACKGROUND, Media3Capability.PIP),
-            )
-        coordinator.sync(updated, isTelevisionUiMode = false)
-
-        assertEquals(
-            setOf(Media3BackgroundMode.NOTIFICATION, Media3BackgroundMode.PIP),
-            bridge.backgroundEvents.single(),
-        )
-        assertEquals(
-            setOf(
-                Media3BackgroundCoordinator.COMMAND_BACKGROUND_RESUME,
-                Media3BackgroundCoordinator.COMMAND_ENTER_PIP,
-            ),
-            bridge.commandEvents.single(),
+    private fun state(capabilities: Set<Media3Capability>) =
+        PlaybackStateView(
+            version,
+            PlaybackSourceView("media", "key", MediaType.STREAM_LINK, "title", null),
+            Media3PlaybackState.PLAYING,
+            capabilities,
+            emptySet(),
+            2,
+            false,
+            PlayerType.TYPE_EXO_PLAYER
         )
 
-        bridge.reset()
-        coordinator.sync(updated, isTelevisionUiMode = false)
-        assertTrue(bridge.commandEvents.isEmpty())
-        assertTrue(bridge.backgroundEvents.isEmpty())
-    }
-
-    private class RecordingBridge : MediaSessionCommandBridge {
-        val commandEvents = mutableListOf<Set<String>>()
-        val backgroundEvents = mutableListOf<Set<Media3BackgroundMode>>()
-
-        override fun updateSessionCommands(commands: Set<String>) {
-            commandEvents += commands
+    @Test fun platformForwardsTheExactVersionToThePlayerOwner() =
+        runBlocking {
+            val commands = mutableListOf<PlaybackCommand>()
+            val coordinator =
+                Media3BackgroundCoordinator {
+                    commands += it
+                    PlaybackOperationResult.Success
+                }
+            val command = PlaybackCommand(version, PlaybackAction.Pause)
+            assertEquals(PlaybackOperationResult.Success, coordinator.dispatch(command, state(setOf(Media3Capability.PAUSE)), false))
+            assertEquals(listOf(command), commands)
         }
 
-        override fun updateBackgroundModes(modes: Set<Media3BackgroundMode>) {
-            backgroundEvents += modes
+    @Test fun stalePlatformCommandsCannotControlTheNewSource() =
+        runBlocking {
+            val coordinator =
+                Media3BackgroundCoordinator {
+                    fail("Stale command reached the owner")
+                    PlaybackOperationResult.Success
+                }
+            val command = PlaybackCommand(version.copy(sourceRevision = 1), PlaybackAction.Play)
+            assertTrue(coordinator.dispatch(command, state(setOf(Media3Capability.PLAY)), false) is PlaybackOperationResult.Rejected)
+            assertTrue(coordinator.dispatch(command, null, false) is PlaybackOperationResult.Rejected)
         }
 
-        fun reset() {
-            commandEvents.clear()
-            backgroundEvents.clear()
+    @Test fun tvAndUnavailableLocalOperationsRejectBackgroundCommands() =
+        runBlocking {
+            val commands = mutableListOf<PlaybackCommand>()
+            val coordinator =
+                Media3BackgroundCoordinator {
+                    commands += it
+                    PlaybackOperationResult.Success
+                }
+            val command = PlaybackCommand(version, PlaybackAction.EnterPictureInPicture)
+            assertTrue(coordinator.dispatch(command, state(setOf(Media3Capability.PIP)), true) is PlaybackOperationResult.Rejected)
+            assertTrue(coordinator.dispatch(command, state(emptySet()), false) is PlaybackOperationResult.Rejected)
+            assertTrue(commands.isEmpty())
+            assertEquals(PlaybackOperationResult.Success, coordinator.dispatch(command, state(setOf(Media3Capability.PIP)), false))
+            assertEquals(listOf(command), commands)
         }
-    }
 }

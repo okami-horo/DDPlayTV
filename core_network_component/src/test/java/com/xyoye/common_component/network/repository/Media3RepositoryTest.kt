@@ -2,45 +2,15 @@ package com.xyoye.common_component.network.repository
 
 import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.data_component.media3.dto.DownloadValidationRequestData
-import com.xyoye.data_component.media3.dto.PlaybackSessionRequestData
-import com.xyoye.data_component.media3.entity.Media3Capability
-import com.xyoye.data_component.media3.entity.Media3SourceType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 
 @Media3Dependent("Media3 gateway is disabled; validate local fallbacks")
 @OptIn(ExperimentalCoroutinesApi::class)
 class Media3RepositoryTest {
-    @Before
-    fun setUp() {
-        Media3Repository.clearCachesForTest()
-    }
-
-    @After
-    fun tearDown() {
-        Media3Repository.clearCachesForTest()
-    }
-
-    @Test
-    fun createSession_returnsFailureWhenGatewayDisabled() =
-        runTest {
-            val result =
-                Media3Repository.createSession(
-                    PlaybackSessionRequestData(
-                        mediaId = "media-create",
-                        sourceType = Media3SourceType.STREAM,
-                        autoplay = true,
-                        requestedCapabilities = listOf(Media3Capability.PLAY),
-                    ),
-                )
-            assertNotNull(result.exceptionOrNull())
-        }
-
     @Test
     fun validateDownload_returnsCompatibleWhenGatewayDisabled() =
         runTest {
@@ -50,8 +20,8 @@ class Media3RepositoryTest {
                         downloadId = "download-1",
                         mediaId = "media-1",
                         media3Version = "1.8.0-test",
-                        lastVerifiedAt = null,
-                    ),
+                        lastVerifiedAt = null
+                    )
                 )
             val response = result.getOrThrow()
             assertTrue(response.isCompatible)

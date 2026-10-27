@@ -11,7 +11,7 @@ import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper
 
 @UnstableApi
 class Media3SequentialPlaybackAdapter private constructor(
-    private val queuePlayerProvider: () -> Media3QueuePlayer?,
+    private val queuePlayerProvider: () -> Media3QueuePlayer?
 ) : SequentialPlaybackBackendAdapter {
     override val supportsSeamlessPlayback: Boolean = true
 
@@ -19,6 +19,20 @@ class Media3SequentialPlaybackAdapter private constructor(
     private var activeSessionToken: SequentialPlaybackSessionToken? = null
     private var attachedQueuePlayer: Media3QueuePlayer? = null
     private var queuedItem: QueuedMediaItem? = null
+    private var activeSource: BaseVideoSource? = null
+    private val borrowedSources = mutableSetOf<BaseVideoSource>()
+
+    fun currentSource(): BaseVideoSource? =
+        queuedItem?.takeIf { attachedQueuePlayer?.currentMediaId() == it.mediaId }?.source ?: activeSource
+
+    fun isAttached(source: BaseVideoSource): Boolean = source in borrowedSources
+
+    /** Call only after the underlying kernel was released successfully. */
+    fun onBackendDetached() {
+        detachPlayerListener()
+        borrowedSources.clear()
+        activeSource = null
+    }
 
     override fun setEventListener(listener: SequentialPlaybackBackendAdapter.EventListener?) {
         eventListener = listener
@@ -29,39 +43,60 @@ class Media3SequentialPlaybackAdapter private constructor(
 
     override fun beginSession(
         sessionToken: SequentialPlaybackSessionToken,
-        currentSource: BaseVideoSource,
+        currentSource: BaseVideoSource
     ) {
         activeSessionToken = sessionToken
         val player = attachPlayerListener() ?: return
-        trimQueueToCurrent(player)
+        if (runCatching { trimQueueToCurrent(player) }.isSuccess) borrowedSources.clear()
+        borrowedSources.add(currentSource)
+        activeSource = currentSource
         queuedItem = null
     }
 
     override fun queueNextSource(
         sessionToken: SequentialPlaybackSessionToken,
         queueItemId: SequentialPlaybackQueueItemId,
-        nextSource: BaseVideoSource,
+        nextSource: BaseVideoSource
     ): Result<Unit> =
         runCatching {
             val player = attachPlayerListener() ?: error("Media3 player is unavailable")
             val mediaId = buildMediaId(sessionToken, queueItemId)
             trimQueueToCurrent(player)
-            player.enqueueNextSource(nextSource, mediaId)
             queuedItem =
                 QueuedMediaItem(
                     sessionToken = sessionToken,
                     queueItemId = queueItemId,
                     mediaId = mediaId,
+                    source = nextSource
                 )
+            borrowedSources.add(nextSource)
+            player.enqueueNextSource(nextSource, mediaId)
         }
 
-    override fun invalidateSession(sessionToken: SequentialPlaybackSessionToken) {
-        if (activeSessionToken != sessionToken) {
-            return
+    override fun invalidateSession(sessionToken: SequentialPlaybackSessionToken): SequentialQueueRetirement {
+        if (activeSessionToken != sessionToken) return SequentialQueueRetirement.STILL_ATTACHED
+        val player = attachedQueuePlayer
+        val pending = queuedItem
+        // A transition may already be visible on Player before its listener is delivered.
+        val becameCurrent = pending != null && player?.currentMediaId() == pending.mediaId
+        val outcome =
+            if (player == null) {
+                if (pending == null) SequentialQueueRetirement.DETACHED else SequentialQueueRetirement.STILL_ATTACHED
+            } else {
+                val removed = runCatching { trimQueueToCurrent(player) }.isSuccess
+                if (removed && becameCurrent) borrowedSources.retainAll(setOf(pending!!.source))
+                when {
+                    becameCurrent -> SequentialQueueRetirement.CURRENT
+                    removed -> SequentialQueueRetirement.DETACHED
+                    else -> SequentialQueueRetirement.STILL_ATTACHED
+                }
+            }
+        if (outcome == SequentialQueueRetirement.DETACHED) {
+            pending?.let { borrowedSources.remove(it.source) }
+            queuedItem = null
+            activeSessionToken = null
         }
-        attachedQueuePlayer?.let { trimQueueToCurrent(it) }
-        queuedItem = null
-        activeSessionToken = null
+        return outcome
     }
 
     private fun attachPlayerListener(): Media3QueuePlayer? {
@@ -92,20 +127,17 @@ class Media3SequentialPlaybackAdapter private constructor(
         val queued = queuedItem
 
         if (queued != null && mediaId == queued.mediaId && activeToken == queued.sessionToken) {
-            queuedItem = null
+            if (attachedQueuePlayer?.let { runCatching { trimQueueToCurrent(it) }.isSuccess } == true) {
+                borrowedSources.retainAll(setOf(queued.source))
+            }
+            if (queued.notified) return
+            queued.notified = true
             eventListener?.onTransitionToQueuedItem(
                 queued.sessionToken,
-                queued.queueItemId,
+                queued.queueItemId
             )
             return
         }
-
-        val parsedQueueItemId = parseQueuedMediaId(mediaId, activeToken) ?: return
-        queuedItem = null
-        eventListener?.onTransitionToQueuedItem(
-            activeToken,
-            parsedQueueItemId,
-        )
     }
 
     private fun trimQueueToCurrent(queuePlayer: Media3QueuePlayer) {
@@ -126,31 +158,15 @@ class Media3SequentialPlaybackAdapter private constructor(
 
     private fun buildMediaId(
         sessionToken: SequentialPlaybackSessionToken,
-        queueItemId: SequentialPlaybackQueueItemId,
-    ): String = "sequential-${sessionToken.generation}-${queueItemId.value}"
-
-    private fun parseQueuedMediaId(
-        mediaId: String?,
-        activeSessionToken: SequentialPlaybackSessionToken,
-    ): SequentialPlaybackQueueItemId? {
-        val parts = mediaId?.split("-") ?: return null
-        if (parts.size != 3 || parts[0] != "sequential") {
-            return null
-        }
-
-        val generation = parts[1].toLongOrNull() ?: return null
-        if (generation != activeSessionToken.generation) {
-            return null
-        }
-
-        val queueItemId = parts[2].toLongOrNull() ?: return null
-        return SequentialPlaybackQueueItemId(queueItemId)
-    }
+        queueItemId: SequentialPlaybackQueueItemId
+    ): String = "sequential-${sessionToken.version.sessionId}-${sessionToken.version.sourceRevision}-${queueItemId.value}"
 
     private data class QueuedMediaItem(
         val sessionToken: SequentialPlaybackSessionToken,
         val queueItemId: SequentialPlaybackQueueItemId,
         val mediaId: String,
+        val source: BaseVideoSource,
+        var notified: Boolean = false
     )
 
     internal companion object {
@@ -160,7 +176,7 @@ class Media3SequentialPlaybackAdapter private constructor(
                     playerProvider()?.let { exoPlayer ->
                         ExoPlayerQueuePlayer(exoPlayer)
                     }
-                },
+                }
             )
 
         fun createForTests(queuePlayerProvider: () -> Media3QueuePlayer?): Media3SequentialPlaybackAdapter =
@@ -172,30 +188,32 @@ class Media3SequentialPlaybackAdapter private constructor(
 
         fun setTransitionListener(listener: ((String?) -> Unit)?)
 
+        fun currentMediaId(): String?
+
         fun currentMediaItemIndex(): Int
 
         fun mediaItemCount(): Int
 
         fun removeMediaItems(
             fromIndex: Int,
-            toIndex: Int,
+            toIndex: Int
         )
 
         fun enqueueNextSource(
             nextSource: BaseVideoSource,
-            mediaId: String,
+            mediaId: String
         )
     }
 
     private class ExoPlayerQueuePlayer(
-        private val player: ExoPlayer,
+        private val player: ExoPlayer
     ) : Media3QueuePlayer {
         private var transitionListener: ((String?) -> Unit)? = null
         private val playerListener =
             object : Player.Listener {
                 override fun onMediaItemTransition(
                     mediaItem: MediaItem?,
-                    reason: Int,
+                    reason: Int
                 ) {
                     transitionListener?.invoke(mediaItem?.mediaId)
                 }
@@ -212,27 +230,29 @@ class Media3SequentialPlaybackAdapter private constructor(
             }
         }
 
+        override fun currentMediaId(): String? = player.currentMediaItem?.mediaId
+
         override fun currentMediaItemIndex(): Int = player.currentMediaItemIndex
 
         override fun mediaItemCount(): Int = player.mediaItemCount
 
         override fun removeMediaItems(
             fromIndex: Int,
-            toIndex: Int,
+            toIndex: Int
         ) {
             player.removeMediaItems(fromIndex, toIndex)
         }
 
         override fun enqueueNextSource(
             nextSource: BaseVideoSource,
-            mediaId: String,
+            mediaId: String
         ) {
             val mediaSource =
                 Media3MediaSourceHelper.getMediaSource(
                     uri = nextSource.getVideoUrl(),
                     headers = nextSource.getHttpHeader(),
                     parseSubtitlesDuringExtraction = PlayerInitializer.Subtitle.backend != SubtitleRendererBackend.LIBASS,
-                    mediaId = mediaId,
+                    mediaId = mediaId
                 )
             player.addMediaSource(mediaSource)
         }

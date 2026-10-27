@@ -15,13 +15,11 @@ import com.xyoye.common_component.focus.DpadFocusOwner
 import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
 import com.xyoye.common_component.focus.DpadRecyclerOrientation
 import com.xyoye.common_component.focus.requestDefaultFocus
-import com.xyoye.common_component.media3.Media3SessionStore
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.entity.MediaLibraryEntity
-import com.xyoye.data_component.media3.entity.Media3Capability
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.local_component.BR
 import com.xyoye.local_component.R
@@ -33,7 +31,9 @@ import com.xyoye.local_component.databinding.ItemMediaLibraryBinding
  */
 
 @Route(path = RouteTable.Local.MediaFragment)
-class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>(), DpadFocusOwner {
+class MediaFragment :
+    BaseFragment<MediaViewModel, FragmentMediaBinding>(),
+    DpadFocusOwner {
     private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
         DpadRecyclerFocusDelegate(
             recyclerView = dataBinding.mediaLibRv,
@@ -52,14 +52,14 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>(), Dpad
                     }
                     else -> false
                 }
-            },
+            }
         )
     }
 
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            MediaViewModel::class.java,
+            MediaViewModel::class.java
         )
 
     override fun getLayoutId() = R.layout.fragment_media
@@ -164,10 +164,6 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>(), Dpad
                     .navigation()
             }
             MediaType.MAGNET_LINK -> {
-                if (!ensureMedia3DownloadSupport()) {
-                    ToastCenter.showWarning("当前 Media3 配置未启用离线播放，无法打开磁链播放")
-                    return
-                }
                 ARouter
                     .getInstance()
                     .build(RouteTable.Local.PlayHistory)
@@ -216,7 +212,7 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>(), Dpad
         BottomActionDialog(
             requireActivity(),
             actionList,
-            "新增网络媒体库",
+            "新增网络媒体库"
         ) {
             val mediaType = it.actionId as MediaType
             ARouter
@@ -261,14 +257,6 @@ class MediaFragment : BaseFragment<MediaViewModel, FragmentMediaBinding>(), Dpad
                 addNegative()
             }.build()
             .show()
-    }
-
-    private fun ensureMedia3DownloadSupport(): Boolean {
-        val capability = Media3SessionStore.currentCapability() ?: return true
-        val supportsDownloadResume =
-            capability.capabilities.contains(Media3Capability.DOWNLOAD_VALIDATE) ||
-                capability.offlineSupport?.downloadResume == true
-        return supportsDownloadResume
     }
 
     private enum class ManageStorage(

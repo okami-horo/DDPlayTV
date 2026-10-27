@@ -5,20 +5,24 @@ import com.xyoye.data_component.data.bilibili.BilibiliJsonModel
 
 class BilibiliException(
     val code: Int,
-    val bilibiliMessage: String? = null,
-    val hint: String? = null
-) : RuntimeException(buildMessage(code, bilibiliMessage, hint)),
+    bilibiliMessage: String? = null,
+    val hint: String? = null,
+    val verificationVoucher: String? = null
+) : RuntimeException(buildMessage(code, bilibiliMessage.takeIf { verificationVoucher == null }, hint)),
     PassThroughException {
+    val bilibiliMessage: String? = bilibiliMessage.takeIf { verificationVoucher == null }
+
     companion object {
         fun from(model: BilibiliJsonModel<*>): BilibiliException =
             from(
                 code = model.code,
-                message = model.message,
+                message = model.message
             )
 
         fun from(
             code: Int,
-            message: String? = null
+            message: String? = null,
+            verificationVoucher: String? = null
         ): BilibiliException {
             val hint =
                 when (code) {
@@ -32,7 +36,7 @@ class BilibiliException(
                     -509 -> "请求过于频繁，请稍后重试"
                     else -> null
                 }
-            return BilibiliException(code, message, hint)
+            return BilibiliException(code, message, hint, verificationVoucher)
         }
 
         private fun buildMessage(

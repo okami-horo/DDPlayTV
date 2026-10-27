@@ -11,19 +11,22 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.base.app.BaseApplication
-import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
+import com.xyoye.common_component.playback.handoff.PlaybackNavigation
+import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
+import com.xyoye.common_component.playback.userMessage
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.file.StorageFile
@@ -45,6 +48,7 @@ import com.xyoye.storage_component.ui.weight.StorageFileMenus
 import com.xyoye.storage_component.utils.storage.StorageFilePathAdapter
 import com.xyoye.storage_component.utils.storage.StorageFileStyleHelper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -88,37 +92,26 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     companion object {
         private const val TAG = "StorageFileActivity"
-        private const val REQUEST_CODE_BILIBILI_RISK_VERIFY = 3301
         internal const val REQUEST_CODE_OPEN115_REAUTH = 3302
         internal const val REQUEST_CODE_CLOUD115_REAUTH = 3303
 
-        internal fun shouldResumeRiskPlayback(
-            requestCode: Int,
-            resultCode: Int,
-            hasPendingFile: Boolean,
-        ): Boolean =
-            requestCode == REQUEST_CODE_BILIBILI_RISK_VERIFY &&
-                resultCode == Activity.RESULT_OK &&
-                hasPendingFile
-
         internal fun shouldRefreshAfterReauth(
             requestCode: Int,
-            resultCode: Int,
+            resultCode: Int
         ): Boolean =
             resultCode == Activity.RESULT_OK &&
-                (requestCode == REQUEST_CODE_OPEN115_REAUTH ||
-                    requestCode == REQUEST_CODE_CLOUD115_REAUTH)
+                (
+                    requestCode == REQUEST_CODE_OPEN115_REAUTH ||
+                        requestCode == REQUEST_CODE_CLOUD115_REAUTH
+                )
     }
 
     var shareStorageFile: StorageFile? = null
 
-    private var pendingRiskVerifyFile: StorageFile? = null
-    private var riskVerifyInProgress: Boolean = false
-
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
-            StorageFileViewModel::class.java,
+            StorageFileViewModel::class.java
         )
 
     override fun getLayoutId() = R.layout.activity_storage_file
@@ -172,27 +165,27 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                     LogFacade.d(
                         LogModule.STORAGE,
                         TAG,
-                        "pathRv focus gained, request focus index=$lastIndex count=${dataBinding.pathRv.adapter?.itemCount ?: 0}",
+                        "pathRv focus gained, request focus index=$lastIndex count=${dataBinding.pathRv.adapter?.itemCount ?: 0}"
                     )
                     dataBinding.pathRv.requestIndexChildFocus(lastIndex)
                 }
             }
         }
 
-        viewModel.playLiveData.observe(this) {
-            ARouter
-                .getInstance()
-                .build(RouteTable.Player.Player)
-                .navigation()
-        }
-
-        viewModel.bilibiliRiskVerifyLiveData.observe(this) { payload ->
-            if (riskVerifyInProgress) {
-                return@observe
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.playEvents.collect { result ->
+                    when (result) {
+                        is PlaybackSubmissionResult.Accepted ->
+                            ARouter
+                                .getInstance()
+                                .build(RouteTable.Player.Player)
+                                .withString(PlaybackNavigation.REQUEST_ID, result.requestId)
+                                .navigation(this@StorageFileActivity)
+                        is PlaybackSubmissionResult.Rejected -> ToastCenter.showError(result.failure.userMessage())
+                    }
+                }
             }
-            riskVerifyInProgress = true
-            pendingRiskVerifyFile = payload.file
-            showBilibiliRiskVerifyDialog(payload.vVoucher)
         }
         if (storage is FtpStorage) {
             val ftpStorage = storage as FtpStorage
@@ -215,7 +208,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                                 ftpStorage.completePending()
                             }
                         }
-                    },
+                    }
                 )
             }
         }
@@ -241,15 +234,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         data: Intent?
     ) {
         when {
-            requestCode == REQUEST_CODE_BILIBILI_RISK_VERIFY -> {
-                riskVerifyInProgress = false
-                val file = pendingRiskVerifyFile
-                pendingRiskVerifyFile = null
-                if (shouldResumeRiskPlayback(requestCode, resultCode, hasPendingFile = file != null)) {
-                    file?.let(::openFile)
-                }
-            }
-
             shouldRefreshAfterReauth(requestCode, resultCode) -> {
                 routeStack.lastOrNull()?.fragment?.triggerTvRefresh()
             }
@@ -387,7 +371,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         LogFacade.d(
             LogModule.STORAGE,
             TAG,
-            "backToRouteFragment target=${target.route} remove=${fragments.size} remain=${routeStack.size}",
+            "backToRouteFragment target=${target.route} remove=${fragments.size} remain=${routeStack.size}"
         )
         syncStorageToCurrentRoute()
         removeFragment(fragments)
@@ -449,32 +433,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                     "${videoCount}视频  ${directoryCount}文件夹"
                 }
             }
-    }
-
-    private fun showBilibiliRiskVerifyDialog(vVoucher: String) {
-        val storageKey = BilibiliPlaybackPreferencesStore.storageKey(storage.library)
-
-        CommonDialog
-            .Builder(this)
-            .apply {
-                tips = "B站风控验证"
-                content = "检测到B站风控，需要完成验证码验证后才能继续播放。\n\nv_voucher：$vVoucher"
-                addNegative("取消") { dialog ->
-                    dialog.dismiss()
-                    riskVerifyInProgress = false
-                    pendingRiskVerifyFile = null
-                }
-                addPositive("去验证") { dialog ->
-                    dialog.dismiss()
-                    ARouter
-                        .getInstance()
-                        .build(RouteTable.User.BilibiliRiskVerify)
-                        .withString("storageKey", storageKey)
-                        .withString("vVoucher", vVoucher)
-                        .navigation(this@StorageFileActivity, REQUEST_CODE_BILIBILI_RISK_VERIFY)
-                }
-            }.build()
-            .show()
     }
 
     /**
@@ -620,7 +578,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                             SubtitleFontCacheHelper.cacheFontFile(
                                 fontCacheDir,
                                 fontName,
-                                stream,
+                                stream
                             )
                     if (success) {
                         cachedCount++
@@ -671,5 +629,4 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             dialog.show()
             continuation.invokeOnCancellation { dialog.dismiss() }
         }
-
 }

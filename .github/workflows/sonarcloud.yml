@@ -45,9 +45,10 @@ jobs:
                   path: ~/.sonar/cache
                   key: ${{ runner.os }}-sonar
 
-            - name: Run unit tests + JaCoCo + build
+            - name: Run dependency governance + unit tests + JaCoCo + build
               run: |
                   ./gradlew --no-daemon \
+                    verifyModuleDependencies \
                     testDebugUnitTest \
                     jacocoTestReport \
                     assembleDebug

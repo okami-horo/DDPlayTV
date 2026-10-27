@@ -1,120 +1,213 @@
 package com.xyoye.player_component.ui.activities.player
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.config.Media3ToggleProvider
 import com.xyoye.common_component.database.DatabaseProvider
-import com.xyoye.common_component.extension.toMedia3SourceType
-import com.xyoye.common_component.log.LogFacade
-import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.media3.Media3SessionStore
 import com.xyoye.common_component.network.repository.ResourceRepository
-import com.xyoye.common_component.services.Media3CapabilityProvider
+import com.xyoye.common_component.playback.addon.PlaybackRecoveryRequest
+import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
+import com.xyoye.common_component.playback.handoff.PlaybackAction
+import com.xyoye.common_component.playback.handoff.PlaybackCommand
+import com.xyoye.common_component.playback.handoff.PlaybackOperationResult
+import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
+import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.source.base.BaseVideoSource
-import com.xyoye.common_component.source.media3.Media3LaunchParams
 import com.xyoye.common_component.utils.DanmuUtils
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.LocalDanmuBean
+import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.entity.DanmuBlockEntity
-import com.xyoye.data_component.media3.entity.Media3Capability
-import com.xyoye.data_component.media3.entity.PlaybackSession
-import com.xyoye.data_component.media3.entity.PlayerCapabilityContract
-import com.xyoye.data_component.media3.entity.RolloutToggleSnapshot
 import com.xyoye.data_component.enums.TrackType
-import kotlinx.coroutines.Dispatchers
+import com.xyoye.player_component.playback.session.ActivePlaybackSession
+import com.xyoye.player_component.playback.session.PlaybackActivityArguments
+import com.xyoye.player_component.playback.session.PlaybackSessionBackend
+import com.xyoye.player_component.playback.session.SessionRequestResult
+import com.xyoye.player_component.service.PlaybackRequestServiceImpl
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import master.flame.danmaku.danmaku.model.BaseDanmaku
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 class PlayerViewModel : BaseViewModel() {
-    companion object {
-        private const val LOG_TAG = "PlayerViewModel"
+    private val requestService = PlaybackRequestServiceImpl()
+    internal val playbackState = requestService.observePlayback()
+    private var retainedPlaybackSession: ActivePlaybackSession? = null
+    private val _recoverySaveFailure = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val recoverySaveFailure = _recoverySaveFailure.asSharedFlow()
+    private val _playbackScreen = MutableStateFlow(PlaybackScreenState())
+    internal val playbackScreen = _playbackScreen.asStateFlow()
+    private var requestSequence = 0L
+    private var pendingRequestId: String? = null
+    private var verificationInFlight: String? = null
+    internal val hasPlaybackSession get() = retainedPlaybackSession != null
+    internal val activePlaybackSession get() = retainedPlaybackSession
+    internal val playbackVersion get() = retainedPlaybackSession?.runtime?.version
+
+    internal suspend fun applyPlaybackSetting(
+        update: PlaybackSettingUpdate,
+        expected: PlaybackSessionVersion
+    ) = retainedPlaybackSession?.applySetting(update, expected) ?: SessionRequestResult.Ignored
+
+    internal suspend fun recoverPlayback(
+        request: PlaybackRecoveryRequest,
+        expected: PlaybackSessionVersion
+    ) = retainedPlaybackSession?.recover(request, expected) ?: SessionRequestResult.Ignored
+
+    internal suspend fun fallbackPlaybackKernel(
+        profile: PlaybackProfile,
+        expected: PlaybackSessionVersion
+    ) = retainedPlaybackSession?.fallbackKernel(expected, profile) ?: SessionRequestResult.Ignored
+
+    internal val playbackSessionId get() =
+        retainedPlaybackSession?.runtime?.version?.sessionId
+            ?: retainedPlaybackSession?.committedTarget?.version?.sessionId
+
+    internal fun bindPlayback(
+        backend: PlaybackSessionBackend,
+        arguments: PlaybackActivityArguments
+    ) {
+        val firstBinding = retainedPlaybackSession == null
+        val session = playbackSession(backend)
+        viewModelScope.launch {
+            if (firstBinding) {
+                pendingRequestId = arguments.requestId
+                val sequence = ++requestSequence
+                _playbackScreen.value = PlaybackScreenState(preparing = true)
+                publishResult(sequence, session.open(arguments.requestId, arguments.recovery))
+            } else {
+                val result = session.bindBackend(backend)
+                if (result is SessionRequestResult.BackendFailed || result is SessionRequestResult.Rejected) {
+                    publishResult(requestSequence, result)
+                }
+            }
+        }
+    }
+
+    internal fun deliverPlayback(requestId: String?) {
+        val session = retainedPlaybackSession ?: return
+        if (_playbackScreen.value.preparing && pendingRequestId == requestId) return
+        verificationInFlight = null
+        pendingRequestId = requestId
+        val sequence = ++requestSequence
+        _playbackScreen.value = PlaybackScreenState(preparing = true, hasPlayback = session.runtime != null)
+        viewModelScope.launch {
+            val result =
+                requestId?.let { session.deliver(it) }
+                    ?: if (session.runtime != null) {
+                        SessionRequestResult.Ignored
+                    } else {
+                        SessionRequestResult.Rejected(PlaybackPreparationFailure.RequestMissing)
+                    }
+            publishResult(sequence, result)
+        }
+    }
+
+    internal fun selectQueueItem(index: Int) {
+        val session = retainedPlaybackSession ?: return
+        val expected = session.runtime?.version ?: return
+        pendingRequestId = null
+        val sequence = ++requestSequence
+        _playbackScreen.value = PlaybackScreenState(preparing = true, hasPlayback = true)
+        viewModelScope.launch { publishResult(sequence, session.selectQueueItem(index, expected)) }
+    }
+
+    internal fun nativePlaybackTransition(candidateId: String) {
+        val session = retainedPlaybackSession ?: return
+        viewModelScope.launch { session.nativeTransition(candidateId) }
+    }
+
+    private fun publishResult(
+        sequence: Long,
+        result: SessionRequestResult
+    ) {
+        if (sequence != requestSequence) return
+        pendingRequestId = null
+        val failure =
+            when (result) {
+                is SessionRequestResult.Rejected -> result.failure
+                is SessionRequestResult.BackendFailed -> PlaybackPreparationFailure.Unknown("BackendApplyFailed")
+                is SessionRequestResult.Activated -> result.replacedRequestFailure
+                SessionRequestResult.Ignored, SessionRequestResult.SettingsSaved -> null
+            }
+        _playbackScreen.value = PlaybackScreenState(hasPlayback = retainedPlaybackSession?.runtime != null, failure = failure)
+    }
+
+    internal fun acknowledgePlaybackFailure(failure: PlaybackPreparationFailure) {
+        val state = _playbackScreen.value
+        if (state.failure == failure) _playbackScreen.value = state.copy(failure = null)
+    }
+
+    internal fun beginVerification(id: String): Boolean {
+        if (verificationInFlight == id) return false
+        verificationInFlight = id
+        return true
+    }
+
+    internal fun finishVerification(id: String?): Boolean {
+        if (id == null || verificationInFlight != id) return false
+        verificationInFlight = null
+        return true
+    }
+
+    internal val awaitingVerification get() = verificationInFlight != null
+
+    internal fun unbindPlayback(backend: PlaybackSessionBackend) {
+        val session = retainedPlaybackSession ?: return
+        viewModelScope.launch(NonCancellable) { session.unbindBackend(backend) }
+    }
+
+    internal fun savePlaybackProgress() {
+        retainedPlaybackSession?.requestProgressSave()
+    }
+
+    internal fun refreshPlaybackState(backend: PlaybackSessionBackend) {
+        val session = retainedPlaybackSession ?: return
+        val expected = session.runtime?.version ?: return
+        viewModelScope.launch { session.refreshState(backend, expected) }
+    }
+
+    internal fun dispatchPlayback(action: PlaybackAction) {
+        val expected = playbackVersion ?: return
+        viewModelScope.launch {
+            val result = requestService.dispatch(PlaybackCommand(expected, action))
+            if (result is PlaybackOperationResult.Rejected && playbackVersion == expected) {
+                _playbackScreen.value = PlaybackScreenState(hasPlayback = true, failure = result.failure)
+            }
+        }
+    }
+
+    internal fun exitPlayback() {
+        val session = retainedPlaybackSession ?: return
+        requestSequence++
+        viewModelScope.launch(NonCancellable) {
+            session.exit()
+            _playbackScreen.value = PlaybackScreenState()
+        }
+    }
+
+    internal fun playbackSession(backend: PlaybackSessionBackend): ActivePlaybackSession =
+        retainedPlaybackSession ?: requestService.createSession(backend).also { session ->
+            retainedPlaybackSession = session
+            session.startSnapshotWriter(viewModelScope) { _recoverySaveFailure.tryEmit(Unit) }
+        }
+
+    override fun onCleared() {
+        val session = retainedPlaybackSession
+        retainedPlaybackSession = null
+        if (session != null) viewModelScope.launch(NonCancellable) { session.exit() }
+        super.onCleared()
     }
 
     val localDanmuBlockLiveData = DatabaseProvider.instance.getDanmuBlockDao().getAll(false)
     val cloudDanmuBlockLiveData = DatabaseProvider.instance.getDanmuBlockDao().getAll(true)
-
-    private val media3Provider: Media3CapabilityProvider? by lazy {
-        ARouter.getInstance().navigation(Media3CapabilityProvider::class.java)
-    }
-
-    private val _media3SessionLiveData = MutableLiveData<PlaybackSession?>()
-    val media3SessionLiveData: LiveData<PlaybackSession?> = _media3SessionLiveData
-
-    private val _media3CapabilityLiveData = MutableLiveData<PlayerCapabilityContract?>()
-    val media3CapabilityLiveData: LiveData<PlayerCapabilityContract?> = _media3CapabilityLiveData
-
-    private val _media3ToggleLiveData = MutableLiveData<RolloutToggleSnapshot?>()
-    val media3ToggleLiveData: LiveData<RolloutToggleSnapshot?> = _media3ToggleLiveData
-
-    private val _media3ErrorLiveData = MutableLiveData<String?>()
-    val media3ErrorLiveData: LiveData<String?> = _media3ErrorLiveData
-
-    private var activeSessionId: String? = null
-
-    fun buildMedia3LaunchParams(
-        source: BaseVideoSource,
-        override: Media3LaunchParams? = null
-    ): Media3LaunchParams {
-        override?.let { return it }
-        val mediaId = source.getUniqueKey().ifEmpty { source.getVideoUrl() }
-        val sourceType = source.getMediaType().toMedia3SourceType()
-        return Media3LaunchParams(mediaId = mediaId, sourceType = sourceType)
-    }
-
-    fun prepareMedia3Session(params: Media3LaunchParams) {
-        if (!Media3ToggleProvider.isEnabled()) {
-            _media3SessionLiveData.postValue(null)
-            _media3CapabilityLiveData.postValue(null)
-            _media3ToggleLiveData.postValue(null)
-            Media3SessionStore.clear()
-            activeSessionId = null
-            return
-        }
-        val provider = media3Provider ?: return
-        viewModelScope.launch(Dispatchers.IO) {
-            provider
-                .prepareSession(
-                    params.mediaId,
-                    params.sourceType,
-                    params.requestedCapabilities,
-                    params.autoplay,
-                ).onSuccess { bundle ->
-                    activeSessionId = bundle.session.sessionId
-                    Media3SessionStore.update(bundle)
-                    _media3SessionLiveData.postValue(bundle.session)
-                    _media3CapabilityLiveData.postValue(bundle.capabilityContract)
-                    _media3ToggleLiveData.postValue(bundle.toggleSnapshot)
-                }.onFailure {
-                    LogFacade.e(LogModule.PLAYER, LOG_TAG, "prepareSession failed: ${it.message}")
-                    _media3ErrorLiveData.postValue(it.message)
-                    Media3SessionStore.clear()
-                }
-        }
-    }
-
-    fun dispatchMedia3Capability(
-        capability: Media3Capability,
-        payload: Map<String, Any?>? = null
-    ) {
-        val provider = media3Provider ?: return
-        val sessionId = activeSessionId ?: return
-        viewModelScope.launch(Dispatchers.IO) {
-            provider
-                .dispatchCapability(sessionId, capability, payload)
-                .onFailure {
-                    LogFacade.w(LogModule.PLAYER, LOG_TAG, "dispatchCapability failed: ${it.message}")
-                    _media3ErrorLiveData.postValue(it.message)
-                }
-        }
-    }
 
     fun storeTrackAdded(
         videoSource: BaseVideoSource,
@@ -161,7 +254,7 @@ class PlayerViewModel : BaseViewModel() {
     ) {
         viewModelScope.launch {
             DatabaseProvider.instance.getDanmuBlockDao().insert(
-                DanmuBlockEntity(0, keyword, isRegex),
+                DanmuBlockEntity(0, keyword, isRegex)
             )
         }
     }
@@ -213,7 +306,7 @@ class PlayerViewModel : BaseViewModel() {
                         time,
                         mode,
                         color,
-                        sendDanmuBean.text,
+                        sendDanmuBean.text
                     )
 
                 if (result.isFailure) {
@@ -227,7 +320,7 @@ class PlayerViewModel : BaseViewModel() {
                             exception,
                             "PlayerViewModel",
                             "sendDanmuToServer",
-                            "发送弹幕到服务器失败: $episodeId",
+                            "发送弹幕到服务器失败: $episodeId"
                         )
                     }
                 }
@@ -236,7 +329,7 @@ class PlayerViewModel : BaseViewModel() {
                     e,
                     "PlayerViewModel",
                     "sendDanmuToServer",
-                    "发送弹幕异常: $episodeId",
+                    "发送弹幕异常: $episodeId"
                 )
                 ToastCenter.showOriginalToast("发送弹幕失败: ${e.message}")
             }

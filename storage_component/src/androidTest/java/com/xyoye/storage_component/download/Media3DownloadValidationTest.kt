@@ -5,7 +5,7 @@ import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.data_component.media3.dto.DownloadValidationRequestData
 import com.xyoye.data_component.media3.dto.DownloadValidationResponseData
 import com.xyoye.data_component.media3.entity.DownloadRequiredAction
-import com.xyoye.storage_component.download.validator.DownloadValidator
+import com.xyoye.common_component.source.handoff.DownloadValidator
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

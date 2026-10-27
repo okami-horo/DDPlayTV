@@ -10,16 +10,15 @@ import com.xyoye.common_component.extension.toMedia3SourceType
 import com.xyoye.common_component.extension.toText
 import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.AnimeRepository
-import com.xyoye.common_component.source.VideoSourceManager
-import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
-import com.xyoye.common_component.source.media3.Media3LaunchParams
-import com.xyoye.common_component.storage.StorageFactory
+import com.xyoye.common_component.playback.PlaybackEntryRequests
+import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
+import com.xyoye.common_component.playback.handoff.PlaybackLaunchOptions
+import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
+import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.data.BangumiData
 import com.xyoye.data_component.data.EpisodeData
 import com.xyoye.data_component.entity.EpisodeHistoryEntity
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,13 +76,13 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
             formattedEpisodeFlow,
             _ascendingFlow,
             _markModeFlow,
-            markedEpisodeIdsFlow,
+            markedEpisodeIdsFlow
         ) { episodes, ascending, markMode, markedEpisodeIds ->
             return@combine combineEpisodeData(episodes, ascending, markMode, markedEpisodeIds)
         }.stateIn(
             viewModelScope,
             SharingStarted.Lazily,
-            emptyList(),
+            emptyList()
         )
 
     // 刷新番剧信息
@@ -91,8 +90,8 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
     val refreshBangumiFlow = _refreshBangumiFlow.collectable
 
     // 播放视频
-    private val playVideoMutableFlow = MutableSharedFlow<Any>()
-    val playVideoFlow = playVideoMutableFlow.collectable
+    private val requests = PlaybackEntryRequests(viewModelScope, { loading -> if (loading) showLoading() else hideLoading() })
+    val playVideoFlow = requests.outcomes
 
     fun setBangumiData(bangumiData: BangumiData) {
         animeTitleField.set(bangumiData.animeTitle)
@@ -110,7 +109,7 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
         return episode.copy(
             title = titles.first,
             subtitle = titles.second,
-            searchEpisodeNum = getEpisodeNum(titles.first),
+            searchEpisodeNum = getEpisodeNum(titles.first)
         )
     }
 
@@ -152,7 +151,7 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
             }.map {
                 it.copy(
                     inMarkMode = markMode,
-                    isMarked = markedEpisodeIds.contains(it.episodeId),
+                    isMarked = markedEpisodeIds.contains(it.episodeId)
                 )
             }
 
@@ -187,7 +186,7 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
                 e,
                 "AnimeEpisodeFragmentViewModel",
                 "getCloudPlayTime",
-                "解析UTC时间失败: $time",
+                "解析UTC时间失败: $time"
             )
             null
         }
@@ -245,42 +244,20 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
      * 播放与剧集相关的本地媒体库资源
      */
     fun playLocalEpisode(episodeHistory: EpisodeHistoryEntity) {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (setupHistorySource(episodeHistory)) {
-                playVideoMutableFlow.emit(Any())
-            }
-        }
+        val history = episodeHistory.entity
+        val descriptor = PlayHistoryDescriptor(history.id, history.uniqueKey, history.storageId ?: episodeHistory.library?.id)
+        val options = playbackLaunchOptions(episodeHistory)
+        requests.submit { PlaybackRequestInput(descriptor, options, PlaybackRequestOrigin.ANIME_EPISODE) }
     }
 
-    /**
-     * 设置播放资源
-     */
-    private suspend fun setupHistorySource(episodeHistory: EpisodeHistoryEntity): Boolean {
-        showLoading()
-        val mediaSource =
-            episodeHistory.library
-                ?.let { StorageFactory.createStorage(it) }
-                ?.run { historyFile(episodeHistory.entity) }
-                ?.let { StorageVideoSourceFactory.create(it) }
-        hideLoading()
-
-        if (mediaSource == null) {
-            ToastCenter.showError("播放失败，无法连接到播放资源")
-            return false
-        }
-        VideoSourceManager.getInstance().setSource(mediaSource)
-        VideoSourceManager.getInstance().attachMedia3LaunchParams(media3LaunchParams(episodeHistory))
-        return true
-    }
-
-    private fun media3LaunchParams(history: EpisodeHistoryEntity): Media3LaunchParams {
+    private fun playbackLaunchOptions(history: EpisodeHistoryEntity): PlaybackLaunchOptions {
         val mediaId =
             history.entity.episodeId?.takeIf { it.isNotBlank() }
                 ?: history.entity.uniqueKey
         val mediaType = history.library?.mediaType ?: history.entity.mediaType
-        return Media3LaunchParams(
+        return PlaybackLaunchOptions(
             mediaId = mediaId,
-            sourceType = mediaType.toMedia3SourceType(),
+            sourceType = mediaType.toMedia3SourceType()
         )
     }
 
@@ -345,7 +322,7 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
                     unknownErrorMessage = "Add episode play history failed with unknown error",
                     className = "AnimeEpisodeFragmentViewModel",
                     methodName = "submitEpisodesViewed",
-                    reportMessage = "剧集ID列表: ${episodeIds.joinToString(", ")}",
+                    reportMessage = "剧集ID列表: ${episodeIds.joinToString(", ")}"
                 )
             ) {
                 return@launch

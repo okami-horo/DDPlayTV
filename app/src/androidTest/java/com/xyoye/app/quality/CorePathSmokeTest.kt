@@ -2,16 +2,16 @@ package com.xyoye.app.quality
 
 import android.os.SystemClock
 import androidx.lifecycle.Lifecycle
-import androidx.viewpager2.widget.ViewPager2
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.tabs.TabLayout
 import com.okamihoro.ddplaytv.R
 import com.okamihoro.ddplaytv.ui.main.MainActivity
 import com.xyoye.anime_component.ui.activities.search.SearchActivity
-import com.xyoye.player_component.ui.activities.player_interceptor.PlayerInterceptorActivity
+import com.xyoye.player_component.ui.activities.player.PlayerActivity
 import com.xyoye.user_component.ui.activities.scan_manager.ScanManagerActivity
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -47,14 +47,14 @@ class CorePathSmokeTest {
 
     @Test
     fun corePlaybackEntryHandlesMissingSourceGracefully() {
-        ActivityScenario.launch(PlayerInterceptorActivity::class.java).use { scenario ->
+        ActivityScenario.launch(PlayerActivity::class.java).use { scenario ->
             assertTrue(waitUntilDestroyed(scenario))
         }
     }
 
     private fun waitUntilDestroyed(
         scenario: ActivityScenario<*>,
-        timeoutMs: Long = 5_000L,
+        timeoutMs: Long = 5_000L
     ): Boolean {
         val deadline = SystemClock.uptimeMillis() + timeoutMs
         while (SystemClock.uptimeMillis() < deadline) {

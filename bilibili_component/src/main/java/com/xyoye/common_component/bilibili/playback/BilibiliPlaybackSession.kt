@@ -9,8 +9,6 @@ import com.xyoye.common_component.bilibili.cdn.BilibiliCdnStrategy
 import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.bilibili.mpd.BilibiliMpdGenerator
 import com.xyoye.common_component.bilibili.repository.BilibiliRepository
-import com.xyoye.common_component.extension.toMd5String
-import com.xyoye.common_component.utils.PathHelper
 import com.xyoye.data_component.data.bilibili.BilibiliDashData
 import com.xyoye.data_component.data.bilibili.BilibiliDashMediaData
 import com.xyoye.data_component.data.bilibili.BilibiliDurlData
@@ -19,7 +17,6 @@ import com.xyoye.data_component.enums.PlayerType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -62,11 +59,13 @@ class BilibiliPlaybackSession(
         val isDecoderError: Boolean = false
     )
 
-    private val mpdFile =
-        File(
-            PathHelper.getPlayCacheDirectory(),
-            "bilibili_${uniqueKey.toMd5String()}.mpd",
-        )
+    private val work = BilibiliPlaybackWork()
+    private val manifest = BilibiliSessionManifest()
+
+    fun close() {
+        work.close()
+        manifest.close()
+    }
 
     private val cdnBlacklistTtlMs = TimeUnit.MINUTES.toMillis(10)
     private val cdnHostBlacklist = LinkedHashMap<String, Long>()
@@ -83,7 +82,7 @@ class BilibiliPlaybackSession(
 
     private var lastPositionMs: Long = 0
 
-    private var preferences: BilibiliPlaybackPreferences = coercePreferencesForPlayer(BilibiliPlaybackPreferencesStore.read(storageKey))
+    private var preferences: BilibiliPlaybackPreferences = coercePreferencesForPlayer(BilibiliPlaybackPreferences())
     private var playurl: BilibiliPlayurlData? = null
     private var dash: BilibiliDashData? = null
     private var durl: List<BilibiliDurlData> = emptyList()
@@ -105,17 +104,18 @@ class BilibiliPlaybackSession(
         BilibiliHeartbeatPolicy.decide(
             storageKey = storageKey,
             key = key,
-            repository = repository,
+            repository = repository
         )
 
-    suspend fun reportPlaybackHeartbeat(playedTimeSec: Long): Result<Unit> {
-        return repository.playbackHeartbeat(
+    suspend fun reportPlaybackHeartbeat(playedTimeSec: Long): Result<Unit> =
+        repository.playbackHeartbeat(
             key = key,
-            playedTimeSec = playedTimeSec,
+            playedTimeSec = playedTimeSec
         )
-    }
 
-    suspend fun prepare(): Result<String> =
+    suspend fun prepare(): Result<String> = work.run { prepareInternal() }
+
+    private suspend fun prepareInternal(): Result<String> =
         runCatching {
             preferences = coercePreferencesForPlayer(BilibiliPlaybackPreferencesStore.read(storageKey))
             ensureStreams(forceRefresh = true)
@@ -123,6 +123,11 @@ class BilibiliPlaybackSession(
         }
 
     suspend fun recover(
+        failure: FailureContext,
+        positionMs: Long
+    ): Result<String> = work.run { recoverInternal(failure, positionMs) }
+
+    private suspend fun recoverInternal(
         failure: FailureContext,
         positionMs: Long
     ): Result<String> =
@@ -155,30 +160,55 @@ class BilibiliPlaybackSession(
             rebuildWithBlacklistOrRefresh(forceRefresh = false)
         }
 
-    suspend fun applyPreferenceUpdate(
-        update: PreferenceUpdate,
-        positionMs: Long
-    ): Result<String> =
-        runCatching {
-            lastPositionMs = positionMs
-            val latest = BilibiliPlaybackPreferencesStore.read(storageKey)
-            val updated =
-                latest.copy(
-                    playMode = update.playMode ?: latest.playMode,
-                    preferredQualityQn = update.qualityQn ?: latest.preferredQualityQn,
-                    preferredVideoCodec = update.videoCodec ?: latest.preferredVideoCodec,
-                    preferredAudioQualityId = update.audioQualityId ?: latest.preferredAudioQualityId,
-                )
-            BilibiliPlaybackPreferencesStore.write(storageKey, updated)
-            preferences = coercePreferencesForPlayer(updated)
-
-            if (playurl == null) {
-                ensureStreams(forceRefresh = true)
-            } else {
-                rebuildCandidates()
+    /** User settings survive a failed candidate, while the active stream and manifest stay unchanged. */
+    suspend fun savePreferenceUpdate(update: PreferenceUpdate): Result<Unit> =
+        work.run {
+            runCatching {
+                val latest = BilibiliPlaybackPreferencesStore.read(storageKey)
+                val updated =
+                    latest.copy(
+                        playMode = update.playMode ?: latest.playMode,
+                        preferredQualityQn = update.qualityQn ?: latest.preferredQualityQn,
+                        preferredVideoCodec = update.videoCodec ?: latest.preferredVideoCodec,
+                        preferredAudioQualityId = update.audioQualityId ?: latest.preferredAudioQualityId
+                    )
+                BilibiliPlaybackPreferencesStore.write(storageKey, updated)
             }
+        }
 
-            buildPlayableOrThrow()
+    suspend fun applySavedPreferences(): Result<String> =
+        work.run {
+            runCatching {
+                preferences = coercePreferencesForPlayer(BilibiliPlaybackPreferencesStore.read(storageKey))
+                if (playurl == null) {
+                    ensureStreams(forceRefresh = true)
+                } else {
+                    rebuildCandidates()
+                }
+
+                buildPlayableOrThrow()
+            }
+        }
+
+    /** Fork protocol selection state; the candidate has its own work scope and MPD file. */
+    suspend fun fork(playerType: PlayerType): BilibiliPlaybackSession =
+        work.run {
+            BilibiliPlaybackSession(storageId, uniqueKey, storageKey, repository, key, playerType).also { next ->
+                next.preferences = preferences
+                next.playurl = playurl
+                next.dash = dash
+                next.durl = durl.toList()
+                next.videoCandidatesByCodec = videoCandidatesByCodec.mapValues { it.value.toList() }
+                next.audioCandidates = audioCandidates.toList()
+                next.selectedVideo = selectedVideo
+                next.selectedAudio = selectedAudio
+                next.selectedDurlCandidates = selectedDurlCandidates.toList()
+                next.selectedDurlIndex = selectedDurlIndex
+                next.selectedExpiresAtMs = selectedExpiresAtMs
+                next.lastPositionMs = lastPositionMs
+                next.snapshot = snapshot
+                next.cdnHostBlacklist.putAll(cdnHostBlacklist)
+            }
         }
 
     private fun shouldForceRefresh(failure: FailureContext): Boolean {
@@ -250,7 +280,7 @@ class BilibiliPlaybackSession(
                     selectedAudioQualityId = preferences.preferredAudioQualityId,
                     qualities = emptyList(),
                     codecs = emptyList(),
-                    audios = emptyList(),
+                    audios = emptyList()
                 )
                 return next
             }
@@ -328,7 +358,7 @@ class BilibiliPlaybackSession(
                         cid = parsed.cid,
                         avid = parsed.avid,
                         preferences = preferences,
-                        session = pgcSession,
+                        session = pgcSession
                     )
                 }
 
@@ -355,7 +385,7 @@ class BilibiliPlaybackSession(
                                 cid = parsed.cid,
                                 avid = parsed.avid,
                                 preferences = preferences,
-                                session = pgcSession,
+                                session = pgcSession
                             )
                         }
 
@@ -428,7 +458,7 @@ class BilibiliPlaybackSession(
                     BilibiliCdnStrategy.resolveUrls(
                         baseUrl = first.url,
                         backupUrls = first.backupUrl,
-                        options = BilibiliCdnStrategy.Options(hostOverride = preferences.cdnService.host),
+                        options = BilibiliCdnStrategy.Options(hostOverride = preferences.cdnService.host)
                     )
                 }.orEmpty()
         selectedDurlIndex = 0
@@ -488,16 +518,19 @@ class BilibiliPlaybackSession(
                     }
                 }.filterNotNull().minOrNull()
 
-            withContext(Dispatchers.IO) {
-                BilibiliMpdGenerator.writeDashMpd(
-                    outputFile = mpdFile,
-                    dash = dashValue,
-                    videos = buildDashVideoRepresentations(dashValue, selectedVideo),
-                    audios = buildDashAudioRepresentations(audioCandidates, selectedAudio),
-                    cdnHostOverride = preferences.cdnService.host,
-                    cdnHostBlacklist = blacklist,
-                )
-            }
+            val manifestPath =
+                withContext(Dispatchers.IO) {
+                    manifest.write { outputFile ->
+                        BilibiliMpdGenerator.writeDashMpd(
+                            outputFile = outputFile,
+                            dash = dashValue,
+                            videos = buildDashVideoRepresentations(dashValue, selectedVideo),
+                            audios = buildDashAudioRepresentations(audioCandidates, selectedAudio),
+                            cdnHostOverride = preferences.cdnService.host,
+                            cdnHostBlacklist = blacklist
+                        )
+                    }
+                }
 
             updateSnapshot(
                 dashAvailable = true,
@@ -513,10 +546,10 @@ class BilibiliPlaybackSession(
                     dashValue.video
                         .mapNotNull { BilibiliVideoCodec.fromCodecid(it.codecid) }
                         .distinct(),
-                audios = audioCandidates.map { AudioOption(it.id, it.bandwidth) },
+                audios = audioCandidates.map { AudioOption(it.id, it.bandwidth) }
             )
 
-            return mpdFile.absolutePath
+            return manifestPath
         }
 
         val allowMp4 = preferences.playMode != BilibiliPlayMode.DASH
@@ -538,7 +571,7 @@ class BilibiliPlaybackSession(
                     selectedAudioQualityId = preferences.preferredAudioQualityId,
                     qualities = emptyList(),
                     codecs = emptyList(),
-                    audios = emptyList(),
+                    audios = emptyList()
                 )
                 return candidate
             }
@@ -607,12 +640,11 @@ class BilibiliPlaybackSession(
                 qualities = qualities,
                 videoCodecs = codecs,
                 audios = audios,
-                lastPositionMs = lastPositionMs,
+                lastPositionMs = lastPositionMs
             )
     }
 
-    private fun playModeOptionsForPlayer(): List<BilibiliPlayMode> =
-        BilibiliPlayMode.entries
+    private fun playModeOptionsForPlayer(): List<BilibiliPlayMode> = BilibiliPlayMode.entries
 
     private fun coercePreferencesForPlayer(preferences: BilibiliPlaybackPreferences): BilibiliPlaybackPreferences = preferences
 }

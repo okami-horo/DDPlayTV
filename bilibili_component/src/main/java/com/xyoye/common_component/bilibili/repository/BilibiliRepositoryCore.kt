@@ -963,7 +963,8 @@ internal class BilibiliRepositoryCore(
             if (!vVoucher.isNullOrBlank()) {
                 throw BilibiliException.from(
                     code = -352,
-                    message = "风控校验失败（v_voucher=$vVoucher）",
+                    message = "风控校验失败",
+                    verificationVoucher = vVoucher,
                 )
             }
             throw throwable
@@ -1029,7 +1030,7 @@ internal class BilibiliRepositoryCore(
             return data
         }
         if (!data.vVoucher.isNullOrBlank()) {
-            throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+            throw BilibiliException.from(code = -352, message = "风控校验失败", verificationVoucher = data.vVoucher)
         }
         throw BilibiliException.from(code = -1, message = MSG_PLAYURL_EMPTY_STREAM)
     }
@@ -1070,7 +1071,7 @@ internal class BilibiliRepositoryCore(
                         if (hasPlayableStream(data)) {
                             data
                         } else if (!data.vVoucher.isNullOrBlank()) {
-                            throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                            throw BilibiliException.from(code = -352, message = "风控校验失败", verificationVoucher = data.vVoucher)
                         } else {
                             throw BilibiliException.from(code = -1, message = MSG_PLAYURL_EMPTY_STREAM)
                         }
@@ -1107,7 +1108,7 @@ internal class BilibiliRepositoryCore(
                         if (hasPlayableStream(data)) {
                             data
                         } else if (!data.vVoucher.isNullOrBlank()) {
-                            throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                            throw BilibiliException.from(code = -352, message = "风控校验失败", verificationVoucher = data.vVoucher)
                         } else {
                             throw BilibiliException.from(code = -1, message = MSG_PLAYURL_EMPTY_STREAM)
                         }
@@ -1165,7 +1166,7 @@ internal class BilibiliRepositoryCore(
                                 if (hasPlayableStream(data)) {
                                     data
                                 } else if (!data.vVoucher.isNullOrBlank()) {
-                                    throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                                    throw BilibiliException.from(code = -352, message = "风控校验失败", verificationVoucher = data.vVoucher)
                                 } else {
                                     throw BilibiliException.from(code = -1, message = MSG_PLAYURL_EMPTY_STREAM)
                                 }
@@ -1268,7 +1269,7 @@ internal class BilibiliRepositoryCore(
                                 if (hasPlayableStream(data)) {
                                     data
                                 } else if (!data.vVoucher.isNullOrBlank()) {
-                                    throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=${data.vVoucher}）")
+                                    throw BilibiliException.from(code = -352, message = "风控校验失败", verificationVoucher = data.vVoucher)
                                 } else {
                                     throw BilibiliException.from(code = -1, message = MSG_PLAYURL_EMPTY_STREAM)
                                 }
@@ -1767,7 +1768,7 @@ internal class BilibiliRepositoryCore(
             if (model.code == -352) {
                 val vVoucher = (model.data as? BilibiliPlayurlData)?.vVoucher
                 if (!vVoucher.isNullOrBlank()) {
-                    throw BilibiliException.from(code = -352, message = "风控校验失败（v_voucher=$vVoucher）")
+                    throw BilibiliException.from(code = -352, message = "风控校验失败", verificationVoucher = vVoucher)
                 }
             }
             throw BilibiliException.from(model)

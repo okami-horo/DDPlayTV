@@ -1,12 +1,15 @@
 package com.xyoye.common_component.storage.file.helper
 
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
+import com.xyoye.common_component.storage.transport.requireUnownedPlaybackUrl
 import com.xyoye.data_component.enums.LocalProxyMode
 import com.xyoye.data_component.enums.PlayerType
 
 object LocalProxy {
     enum class UpstreamTlsPolicy {
         STRICT,
-        UNSAFE_TRUST_ALL,
+        UNSAFE_TRUST_ALL
     }
 
     data class UpstreamSource(
@@ -14,10 +17,10 @@ object LocalProxy {
         val headers: Map<String, String> = emptyMap(),
         val contentType: String = "application/octet-stream",
         val contentLength: Long = -1L,
-        val tlsPolicy: UpstreamTlsPolicy = UpstreamTlsPolicy.STRICT,
+        val tlsPolicy: UpstreamTlsPolicy = UpstreamTlsPolicy.STRICT
     )
 
-    suspend fun wrapIfNeeded(
+    suspend fun acquireIfNeeded(
         playerType: PlayerType,
         modeValue: Int?,
         upstreamUrl: String,
@@ -28,40 +31,25 @@ object LocalProxy {
         autoEnabled: Boolean,
         upstreamTlsPolicy: UpstreamTlsPolicy = UpstreamTlsPolicy.STRICT,
         onRangeUnsupported: (() -> UpstreamSource?)? = null
-    ): String {
-        if (upstreamUrl.isBlank()) return upstreamUrl
-
-        val mode = LocalProxyMode.from(modeValue)
-        if (mode == LocalProxyMode.OFF) return upstreamUrl
-        if (mode == LocalProxyMode.AUTO && !autoEnabled) return upstreamUrl
-
-        val isHttp =
-            upstreamUrl.startsWith("http://", ignoreCase = true) ||
-                upstreamUrl.startsWith("https://", ignoreCase = true)
-        if (!isHttp) return upstreamUrl
-
-        val resolvedLength = contentLength.coerceAtLeast(-1L)
-        if (resolvedLength <= 0) return upstreamUrl
-
+    ): PlaybackTransportLease {
+        requireUnownedPlaybackUrl(upstreamUrl)
         val playServer = HttpPlayServer.getInstance()
-        if (playServer.isServingUrl(upstreamUrl)) return upstreamUrl
-
-        val started = playServer.startSync()
-        if (!started) return upstreamUrl
-
-        return playServer.generatePlayUrl(
-            upstreamUrl = upstreamUrl,
-            upstreamHeaders = upstreamHeaders.orEmpty(),
-            contentLength = resolvedLength,
+        val mode = LocalProxyMode.from(modeValue)
+        val isHttp = upstreamUrl.startsWith("http://", true) || upstreamUrl.startsWith("https://", true)
+        if (mode == LocalProxyMode.OFF || (mode == LocalProxyMode.AUTO && !autoEnabled) || !isHttp || contentLength <= 0) {
+            return directPlaybackTransport(upstreamUrl)
+        }
+        return playServer.acquireTransport(
+            source =
+                HttpPlayServer.UpstreamSource(
+                    url = upstreamUrl,
+                    headers = upstreamHeaders.orEmpty(),
+                    contentLength = contentLength,
+                    tlsPolicy = upstreamTlsPolicy.toServerPolicy()
+                ),
             prePlayRangeMinIntervalMs = prePlayRangeMinIntervalMs,
             fileName = fileName.ifBlank { playerType.name.lowercase() },
-            upstreamTlsPolicy = upstreamTlsPolicy.toServerPolicy(),
-            onRangeUnsupported =
-                onRangeUnsupported?.let { supplier ->
-                    {
-                        supplier.invoke()?.toServerSource()
-                    }
-                },
+            onRangeUnsupported = onRangeUnsupported?.let { supplier -> { supplier()?.toServerSource() } }
         )
     }
 
@@ -80,8 +68,7 @@ object LocalProxy {
             return false
         }
         return runCatching {
-            HttpPlayServer.getInstance().setSeekEnabled(enabled)
-            true
+            HttpPlayServer.getInstance().setSeekEnabled(url!!, enabled)
         }.getOrDefault(false)
     }
 
@@ -97,6 +84,6 @@ object LocalProxy {
             headers = headers,
             contentType = contentType,
             contentLength = contentLength,
-            tlsPolicy = tlsPolicy.toServerPolicy(),
+            tlsPolicy = tlsPolicy.toServerPolicy()
         )
 }

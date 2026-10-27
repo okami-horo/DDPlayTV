@@ -87,5 +87,8 @@ dependencies {
     implementation(project(":local_component"))
     implementation(project(":storage_component"))
 
+    androidTestImplementation(project(":core_storage_component"))
+    androidTestImplementation(project(":core_database_component"))
+
     kapt(Dependencies.Alibaba.arouter_compiler)
 }

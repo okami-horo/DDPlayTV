@@ -7,13 +7,15 @@ import com.xyoye.common_component.network.helper.OkHttpTlsPolicy
 import com.xyoye.common_component.network.helper.UnsafeTlsApi
 import com.xyoye.common_component.network.helper.WebDavOkHttpClient
 import com.xyoye.common_component.network.helper.WebDavOkHttpClientFactory
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.WebDavStorageFile
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.PlaybackProfile
-import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
@@ -31,7 +33,7 @@ import java.util.Date
 
 class WebDavStorage(
     library: MediaLibraryEntity
-) : AbstractStorage(library) {
+) : AbstractStorage(library), PlaybackTransportProvider {
     @OptIn(UnsafeTlsApi::class)
     private val sardine =
         OkHttpSardine(
@@ -69,6 +71,7 @@ class WebDavStorage(
                 .filter { isChildFile(file.fileUrl(), it.href) }
                 .map { WebDavStorageFile(it, this) }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException || throwPlaybackErrors) throw e
             ErrorReportHelper.postCatchedException(e, "WebDAV", "获取文件列表失败: ${file.fileUrl()}")
             emptyList()
         }
@@ -78,6 +81,10 @@ class WebDavStorage(
         isDirectory: Boolean
     ): StorageFile {
         val hrefUrl = resolvePath(path).toString()
+        if (throwPlaybackErrors) {
+            val resource = sardine.list(hrefUrl, 0).firstOrNull() ?: throw java.io.FileNotFoundException("WebDAV file missing")
+            return WebDavStorageFile(resource, this)
+        }
         val davResource = CustomDavResource(hrefUrl)
         return WebDavStorageFile(davResource, this)
     }
@@ -89,20 +96,10 @@ class WebDavStorage(
         }
     }
 
-    override suspend fun createPlayUrl(file: StorageFile): String =
-        createPlayUrl(
-            file = file,
-            profile =
-                PlaybackProfile(
-                    playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
-                    source = PlaybackProfileSource.GLOBAL,
-                ),
-        )
-
-    override suspend fun createPlayUrl(
+    override suspend fun acquirePlaybackTransport(
         file: StorageFile,
         profile: PlaybackProfile
-    ): String {
+    ): PlaybackTransportLease {
         val playerType = profile.playerType
         val upstream = file.fileUrl()
         val contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
@@ -121,10 +118,10 @@ class WebDavStorage(
                         PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong(),
                         false,
                     )
-                else -> return upstream
+                else -> return directPlaybackTransport(upstream)
             }
 
-        return LocalProxy.wrapIfNeeded(
+        return LocalProxy.acquireIfNeeded(
             playerType = playerType,
             modeValue = mode,
             upstreamUrl = upstream,

@@ -21,6 +21,13 @@ object SensitiveDataSanitizer {
             "token",
             "access_token",
             "refresh_token",
+            "v_voucher",
+            "gt",
+            "challenge",
+            "validate",
+            "seccode",
+            "grisk_id",
+            "csrf",
             "authorization",
             "proxy-authorization",
             "cookie",
@@ -35,7 +42,7 @@ object SensitiveDataSanitizer {
             "x-appid",
             "x-appsecret",
             "x-appkey",
-            "x-appsec",
+            "x-appsec"
         )
 
     private val urlRegex = "(?i)\\b[a-z][a-z0-9+.-]*://[^\\s\"']+".toRegex()
@@ -51,11 +58,11 @@ object SensitiveDataSanitizer {
     private val ipv4Regex = "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})".toRegex()
 
     private val jsonKeyValueRegex =
-        "(?i)(\"(?:token|access_token|refresh_token|password|passwd|secret|appsecret|app_sec|appsec)\"\\s*:\\s*\")([^\"]+)(\")"
+        "(?i)(\"(?:token|access_token|refresh_token|v_voucher|gt|challenge|validate|seccode|grisk_id|csrf|password|passwd|secret|appsecret|app_sec|appsec)\"\\s*:\\s*\")([^\"]+)(\")"
             .toRegex()
 
     private val queryKeyValueRegex =
-        "(?i)(\\b(?:token|access_token|refresh_token|password|passwd|secret|appsecret|app_sec|appsec)\\b=)([^&\\s]+)"
+        "(?i)(\\b(?:token|access_token|refresh_token|v_voucher|gt|challenge|validate|seccode|grisk_id|csrf|password|passwd|secret|appsecret|app_sec|appsec)\\b=)([^&\\s]+)"
             .toRegex()
 
     private val cookieStyleRegexes =
@@ -66,7 +73,7 @@ object SensitiveDataSanitizer {
             "(?i)(UID=)[^;\\s\"]+".toRegex(),
             "(?i)(CID=)[^;\\s\"]+".toRegex(),
             "(?i)(SEID=)[^;\\s\"]+".toRegex(),
-            "(?i)(KID=)[^;\\s\"]+".toRegex(),
+            "(?i)(KID=)[^;\\s\"]+".toRegex()
         )
 
     enum class UrlMode {

@@ -326,6 +326,7 @@ graph TD
 以“直接 Gradle module 依赖”为准，允许如下方向（未列出即默认不推荐/需评审）：
 
 - `:app` -> `feature` / `core_*`（组合根允许依赖所有上层业务与基础设施入口）
+  - 2026-10-27：增加仅用于测试的 `androidTestImplementation(:core_storage_component/:core_database_component)`，供真实 PlayerActivity 交接/重建测试断言来源复用，并准备本地媒体与历史记录夹具；生产依赖仍按代码中的 app 白名单校验。
 - `feature` -> `:core_ui_component` / `:core_system_component` / `:core_log_component` / `:core_network_component` / `:core_database_component` / `:core_storage_component` / `:bilibili_component` / `:core_contract_component` / `:data_component`（仅当确实需要；优先走 contract/storage 的统一入口）
 - `:core_ui_component` -> `:core_contract_component` / `:core_system_component` / `:core_log_component` / `:data_component` / `:repository:immersion_bar`
 - `:core_storage_component` -> `:core_contract_component` / `:core_network_component` / `:core_database_component` / `:core_system_component` / `:core_log_component` / `:bilibili_component` / `:data_component` / `:repository:seven_zip` / `:repository:thunder`

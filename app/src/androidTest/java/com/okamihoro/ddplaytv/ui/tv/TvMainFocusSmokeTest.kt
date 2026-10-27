@@ -10,11 +10,17 @@ import com.okamihoro.ddplaytv.R
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class TvMainFocusSmokeTest {
+    @Before
+    fun useRemoteInputMode() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+    }
+
     @Test
     fun tvShellKeepsVisibleFocusAcrossNavAndContentBoundary() {
         ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
@@ -22,13 +28,13 @@ class TvMainFocusSmokeTest {
             scenario.onActivity { activity ->
                 assumeTrue(activity.isTvUiMode())
                 assertVisibleFocus(activity.currentFocus)
-                sendDpad(activity, KeyEvent.KEYCODE_DPAD_RIGHT)
             }
+            sendDpad(KeyEvent.KEYCODE_DPAD_RIGHT)
             waitForIdle()
             scenario.onActivity { activity ->
                 assertVisibleFocus(activity.currentFocus)
-                sendDpad(activity, KeyEvent.KEYCODE_DPAD_LEFT)
             }
+            sendDpad(KeyEvent.KEYCODE_DPAD_LEFT)
             waitForIdle()
             scenario.onActivity { activity ->
                 assertVisibleFocus(activity.currentFocus)
@@ -37,12 +43,8 @@ class TvMainFocusSmokeTest {
         }
     }
 
-    private fun sendDpad(
-        activity: TvMainActivity,
-        keyCode: Int,
-    ) {
-        activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
-        activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, keyCode))
+    private fun sendDpad(keyCode: Int) {
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(keyCode)
     }
 
     private fun waitForIdle() {

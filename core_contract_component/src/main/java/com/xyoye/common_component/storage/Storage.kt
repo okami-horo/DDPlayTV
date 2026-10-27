@@ -3,7 +3,6 @@ package com.xyoye.common_component.storage
 import android.net.Uri
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.data_component.bean.LocalDanmuBean
-import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
@@ -65,16 +64,6 @@ interface Storage {
      * 根据播放记录获取文件
      */
     suspend fun historyFile(history: PlayHistoryEntity): StorageFile?
-
-    /**
-     * 创建播放链接
-     */
-    suspend fun createPlayUrl(file: StorageFile): String?
-
-    suspend fun createPlayUrl(
-        file: StorageFile,
-        profile: PlaybackProfile
-    ): String? = createPlayUrl(file)
 
     /**
      * 当前媒体库支持的播放器内核集合，用于对“全局/媒体库覆盖”的选择做能力裁剪。

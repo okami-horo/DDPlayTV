@@ -2,8 +2,10 @@ package com.xyoye.player.kernel.impl.media3
 
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.util.UnstableApi
 import java.util.Locale
 
+@androidx.annotation.OptIn(UnstableApi::class)
 internal object Media3SubtitleFormatClassifier {
     fun isMedia3CueFormat(format: Format): Boolean =
         format.sampleMimeType == MimeTypes.APPLICATION_MEDIA3_CUES

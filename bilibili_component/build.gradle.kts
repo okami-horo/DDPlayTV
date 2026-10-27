@@ -19,6 +19,7 @@ dependencies {
 
     testImplementation(Dependencies.Testing.androidx_test_core)
     testImplementation(Dependencies.Testing.robolectric)
+    testImplementation(Dependencies.Kotlin.coroutines_test)
 }
 
 android {

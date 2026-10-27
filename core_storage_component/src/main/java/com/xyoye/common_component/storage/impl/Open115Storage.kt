@@ -5,6 +5,11 @@ import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.repository.Open115Repository
 import com.xyoye.common_component.network.repository.ResourceRepository
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
+import com.xyoye.common_component.storage.transport.TransportAcquisitionException
+import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.PagedStorage
@@ -19,7 +24,6 @@ import com.xyoye.common_component.storage.open115.path.Open115FolderInfoCache
 import com.xyoye.common_component.storage.open115.play.Open115DownUrlCache
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.PlaybackProfile
-import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.open115.Open115FileItem
 import com.xyoye.data_component.data.open115.Open115SearchItem
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -32,7 +36,8 @@ class Open115Storage(
     library: MediaLibraryEntity
 ) : AbstractStorage(library),
     PagedStorage,
-    AuthStorage {
+    AuthStorage,
+    PlaybackTransportProvider {
     private val rangeUnsupportedRefreshLock = Any()
 
     private val storageKey = Open115AuthStore.storageKey(library)
@@ -244,20 +249,10 @@ class Open115Storage(
             ?.let { pathFile(it, isDirectory = false) }
             ?.also { it.playHistory = history }
 
-    override suspend fun createPlayUrl(file: StorageFile): String? =
-        createPlayUrl(
-            file = file,
-            profile =
-                PlaybackProfile(
-                    playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
-                    source = PlaybackProfileSource.GLOBAL,
-                ),
-        )
-
-    override suspend fun createPlayUrl(
+    override suspend fun acquirePlaybackTransport(
         file: StorageFile,
         profile: PlaybackProfile
-    ): String? {
+    ): PlaybackTransportLease {
         val playerType = profile.playerType
         return runCatching {
             if (!file.isVideoFile()) {
@@ -276,13 +271,13 @@ class Open115Storage(
                         PlayerConfig.getVlcLocalProxyMode() to PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong()
                     PlayerType.TYPE_EXO_PLAYER ->
                         PlayerConfig.getExoLocalProxyMode() to PlayerConfig.getExoProxyRangeMinIntervalMs().toLong()
-                    else -> return@runCatching upstream.url
+                    else -> return@runCatching directPlaybackTransport(upstream.url)
                 }
 
             LogFacade.d(
                 LogModule.STORAGE,
                 LOG_TAG,
-                "createPlayUrl local proxy policy",
+                "acquirePlaybackTransport local proxy policy",
                 mapOf(
                     "storageId" to library.id.toString(),
                     "storageKey" to storageKey,
@@ -293,7 +288,7 @@ class Open115Storage(
                 ),
             )
 
-            LocalProxy.wrapIfNeeded(
+            LocalProxy.acquireIfNeeded(
                 playerType = playerType,
                 modeValue = mode,
                 upstreamUrl = upstream.url,
@@ -305,6 +300,7 @@ class Open115Storage(
                 onRangeUnsupported = buildRangeUnsupportedRefreshSupplier(file),
             )
         }.getOrElse { t ->
+            if (t is kotlinx.coroutines.CancellationException) throw t
             val fid = file.payloadAs<Open115FileItem>()?.fid.orEmpty()
             LogFacade.e(
                 LogModule.STORAGE,
@@ -323,7 +319,7 @@ class Open115Storage(
             ErrorReportHelper.postCatchedExceptionWithContext(
                 t,
                 "Open115Storage",
-                "createPlayUrl",
+                "acquirePlaybackTransport",
                 "storageId=${library.id} storageKey=$storageKey filePath=${runCatching {
                     file.filePath()
                 }.getOrNull()} fid=$fid playerType=${playerType.name}",
