@@ -15,12 +15,13 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.7.2")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25")
+        classpath("com.android.tools.build:gradle:8.10.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.10")
     }
 }
 
 plugins {
+    id("com.google.devtools.ksp") version "2.2.10-2.0.2" apply false
     id("com.github.ben-manes.versions") version "0.44.0"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.1" apply false
     jacoco

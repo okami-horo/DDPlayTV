@@ -4,16 +4,15 @@ plugins {
     id("com.android.library")
     kotlin("android")
     kotlin("kapt")
+    id("com.google.devtools.ksp")
 }
 
 moduleSetup()
 
-kapt {
-    arguments {
-        arg("room.schemaLocation", "$projectDir/schemas")
-        arg("room.incremental", "true")
-        arg("room.expandProjection", "true")
-    }
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.incremental", "true")
+    arg("room.expandProjection", "true")
 }
 
 dependencies {
@@ -24,7 +23,9 @@ dependencies {
     api(Dependencies.AndroidX.room)
     api(Dependencies.AndroidX.lifecycle_livedata)
     implementation(Dependencies.AndroidX.room_ktx)
-    kapt(Dependencies.AndroidX.room_compiler)
+    ksp(Dependencies.AndroidX.room_compiler)
+    // KSP resolves @IgnoredOnParcel on entities compiled in :data_component.
+    compileOnly(kotlin("parcelize-runtime"))
 
     api(Dependencies.Kotlin.coroutines_core)
 

@@ -9,7 +9,7 @@ plugins {
 
 moduleSetup()
 
-val media3Version = project.findProperty("media3Version")?.toString() ?: "1.9.0"
+val media3Version = project.property("media3Version").toString()
 val unstrippedJniLibsDir = layout.projectDirectory.dir("libs")
 val strippedJniLibsDir = layout.buildDirectory.dir("strippedJniLibs")
 

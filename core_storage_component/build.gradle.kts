@@ -5,6 +5,7 @@ plugins {
     id("kotlin-parcelize")
     kotlin("android")
     kotlin("kapt")
+    id("com.google.devtools.ksp")
 }
 
 moduleSetup()
@@ -38,7 +39,7 @@ dependencies {
 
     implementation(Dependencies.Tencent.mmkv)
     implementation(Dependencies.Square.moshi)
-    kapt(Dependencies.Square.moshi_codegen)
+    ksp(Dependencies.Square.moshi_codegen)
 
     testImplementation(Dependencies.Testing.robolectric)
 }

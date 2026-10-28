@@ -4,6 +4,7 @@ plugins {
     id("com.android.library")
     kotlin("android")
     kotlin("kapt")
+    id("com.google.devtools.ksp")
     id("kotlin-parcelize")
 }
 
@@ -24,7 +25,7 @@ dependencies {
     api(Dependencies.Alibaba.arouter_api)
     api(Dependencies.Square.moshi)
 
-    kapt(Dependencies.Square.moshi_codegen)
+    ksp(Dependencies.Square.moshi_codegen)
     kapt(Dependencies.Alibaba.arouter_compiler)
 
     testImplementation(Dependencies.Kotlin.coroutines_test)

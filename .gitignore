@@ -37,6 +37,7 @@ Thumbs.db
 
 # Canonical IDE/Gradle ignores (keep generic forms for tooling checks)
 .gradle/
+.kotlin/
 .idea/
 
 # Python caches (scripts/)

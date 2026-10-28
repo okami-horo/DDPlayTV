@@ -76,7 +76,7 @@ android {
             project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
         buildConfigField("boolean", "MEDIA3_ENABLED_FALLBACK", media3FallbackFlag.toString())
 
-        val media3Version = project.findProperty("media3Version")?.toString() ?: "1.9.0"
+        val media3Version = project.property("media3Version").toString()
         buildConfigField("String", "MEDIA3_VERSION", buildConfigString(media3Version))
     }
     namespace = "com.xyoye.core_system_component"

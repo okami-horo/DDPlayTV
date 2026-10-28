@@ -1,6 +1,8 @@
 # Active Context
 
 ## Current Focus
+Media3 is upgraded from 1.8.0 to stable 1.11.1 (authorized 2026-10-28), with Kotlin/AGP/Gradle and SDK requirements in `memory-bank/techContext.md`. Moshi/Room processing moved to KSP1; the libass legacy decoder has a method-scoped ExperimentalApi opt-in. Final Debug/Release/test APKs, full lint, scoped ktlint and governance ended BUILD SUCCESSFUL; 379 JVM tests passed, two external protocol fixtures skipped. Two subtitle, nine TV playback/DPAD and five mobile page checks passed. Initial device failures under concurrent build load and the historical unresolved VLC seek test are explicitly retained in the upgrade ledger. The AVD is restored to its original mobile/display/non-root baseline. No commit was requested. See `docs/superpowers/plans/2026-10-28-media3-upgrade.md` for exact commands and device limits.
+
 Anime4K video post-processing is removed on all devices by user decision (2026-10-28): TV GPU cost is unsuitable. Player settings/contracts, mpv shader JNI, Media3 effects/diagnostics, nine shader assets and the `media3-effect` dependency are deleted. Normal video outputs, subtitles and subtitle-backend rebuilding remain. Debug/test APKs, all JVM tests (376 passed, two external fixtures skipped), lint and governance passed. Seven distinct TV-mode AVD checks passed; an additional VLC immediate-seek snapshot test repeatedly timed out and remains unresolved, with no pre-change baseline comparison. See `memory-bank/progress.md` for exact verification and `document/mpv_conf_supported_options.md` for the retained mpv capabilities. No commit was requested.
 
 Authorized removal of all Bilibili features, including local-video Bilibili danmaku matching/download, is committed as `b4b971fdd` (2026-10-28). The module, UI/routes, playback Addons/risk/live integration and build edges are removed; local XML danmaku and Dandanplay remain. Room 16->17, retired credential cleanup and independent legacy handoff-slot cleanup are covered. Build/full lint/module and playback governance passed; 376 JVM tests passed with two external FTP/SMB fixture tests skipped. Mobile pages/three kernels/credential cleanup, corrected reentry, four TV regressions and three real Keystore/MMKV tests passed. Commands, initial failures, screenshots and device limits are in `docs/superpowers/plans/2026-10-28-remove-bilibili.md`.
@@ -27,12 +29,14 @@ The handoff implementation is committed in `69903c36d` after `b2ce478eb`, follow
 - Sequential playback integration and TV smoke acceptance remain pending in `document/player/playback-validation-followup.md`. Partial newer tests do not close these scenarios or the separate user-owned handoff acceptance.
 
 ## Next Steps
+- Media3 upgrade implementation and local verification are complete. Physical-TV/Android 6 and 16 compatibility and full HDR/DRM/network-media acceptance remain outside the observed AVD coverage; preserve the upgrade ledger's limits and KSP1 requirement when continuing.
 - TV rewrite code and local verification are complete. Physical-TV Release navigation, long-hold/rapid-reversal responsiveness and the untested real-network scenarios remain pending; see the rewrite ledger before claiming full device acceptance.
 - Documentation pruning is committed as `575b9db24`; no new commit was requested for the rewrite.
 - Await the user's playback acceptance findings: repeated FTP replacement/seek, seeded BT, subtitle/danmaku continuity, nonzero process-restored position and full mobile/physical-TV navigation.
 - Address DIR-04/DIR-05 or the preserved danmaku repairs only under a subsequent implementation request. Do not request test credentials again or expand the user-owned acceptance independently.
 
 ## Retrieval Map
+- Media3 1.11.1 upgrade -> `docs/superpowers/plans/2026-10-28-media3-upgrade.md` -> read before changing the media/toolchain versions, Moshi/Room processing, legacy libass decoding or interpreting upgrade verification.
 - Retired Anime4K and retained mpv options -> `document/mpv_conf_supported_options.md` -> read before changing video output or proposing shader post-processing; removal verification and the unresolved VLC test are in `memory-bank/progress.md`.
 - Approved TV focus/library rewrite -> `docs/superpowers/designs/2026-10-28-tv-dpad-library-rewrite-design.md` -> read before DPAD migration; contains scope, dependency risks, removal targets and acceptance gates.
 - TV rewrite execution -> `docs/superpowers/plans/2026-10-28-tv-dpad-library-rewrite.md` -> read before continuing implementation or interpreting verification status.
