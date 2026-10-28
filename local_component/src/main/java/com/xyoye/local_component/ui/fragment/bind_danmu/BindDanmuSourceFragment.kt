@@ -6,6 +6,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.adapter.setupHorizontalAnimation
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.extension.collectAtStarted
@@ -66,6 +67,9 @@ class BindDanmuSourceFragment : BaseFragment<BindDanmuSourceFragmentViewModel, F
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as DanmuAnimeData).animeId == (new as DanmuAnimeData).animeId }
+                    }
                     addItem<DanmuAnimeData, ItemDanmuHeaderBinding>(R.layout.item_danmu_header) {
                         initView { data, _, _ ->
                             itemBinding.animeNameTv.text = data.animeTitle.ifNullOrBlank { "未知" }
@@ -95,6 +99,9 @@ class BindDanmuSourceFragment : BaseFragment<BindDanmuSourceFragmentViewModel, F
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as DanmuEpisodeData).episodeId == (new as DanmuEpisodeData).episodeId }
+                    }
                     setupHorizontalAnimation()
 
                     addItem<DanmuEpisodeData, ItemDanmuContentBinding>(R.layout.item_danmu_content) {

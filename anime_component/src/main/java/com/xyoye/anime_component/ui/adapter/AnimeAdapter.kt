@@ -11,6 +11,7 @@ import com.xyoye.anime_component.utils.loadAnimeCover
 import com.xyoye.common_component.adapter.addEmptyView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.session.UserSessionManager
 import com.xyoye.common_component.utils.FastClickFilter
@@ -25,6 +26,11 @@ class AnimeAdapter {
     companion object {
         fun getAdapter(activity: Activity) =
             buildAdapter {
+                setupDiffUtil {
+                    areItemsTheSame { old, new ->
+                        old is AnimeData && new is AnimeData && old.animeId == new.animeId
+                    }
+                }
                 addEmptyView(R.layout.layout_empty)
 
                 addItem<AnimeData, ItemAnimeBinding>(R.layout.item_anime) {

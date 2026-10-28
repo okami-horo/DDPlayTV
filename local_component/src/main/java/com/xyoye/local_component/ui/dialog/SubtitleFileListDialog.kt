@@ -3,6 +3,7 @@ package com.xyoye.local_component.ui.dialog
 import android.app.Activity
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.weight.dialog.BaseBottomDialog
@@ -43,6 +44,9 @@ class SubtitleFileListDialog(
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as SubFileData).url == (new as SubFileData).url }
+                    }
                     addItem<SubFileData, ItemSubtitleFileBinding>(R.layout.item_subtitle_file) {
                         initView { data, _, _ ->
                             itemBinding.apply {

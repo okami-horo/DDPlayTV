@@ -9,7 +9,9 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.google.android.material.tabs.TabLayoutMediator
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.focus.TabLayoutViewPager2DpadFocusCoordinator
+import com.xyoye.common_component.extension.isTelevisionUiMode
+import com.xyoye.common_component.focus.TvCategory
+import com.xyoye.common_component.focus.TvCategoryPages
 import com.xyoye.user_component.BR
 import com.xyoye.user_component.R
 import com.xyoye.user_component.databinding.ActivityScanManagerBinding
@@ -22,7 +24,8 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
     private var extensionSettingItem: MenuItem? = null
     private var extensionSettingDialog: VideoExtensionSupportSettingDialog? = null
     private val pageAdapter by lazy { ScanManagerFragmentAdapter() }
-    private var tvFocusCoordinator: TabLayoutViewPager2DpadFocusCoordinator? = null
+    private var tvPages: TvCategoryPages? = null
+    private var initialFocusPending = true
 
     override fun initViewModel() =
         ViewModelInit(
@@ -35,6 +38,20 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
     override fun initView() {
         title = "扫描目录管理"
 
+        if (isTelevisionUiMode()) {
+            tvPages =
+                TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager) {
+                    extensionSettingItem?.isVisible = it == 0
+                }.apply {
+                    submit(
+                        listOf("scan", "filter").mapIndexed { index, key ->
+                            TvCategory(key, pageAdapter.getItemTitle(index)) { pageAdapter.createFragment(index) }
+                        }
+                    )
+                }
+            return
+        }
+
         dataBinding.viewpager.apply {
             adapter = pageAdapter
             offscreenPageLimit = 2
@@ -44,12 +61,6 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
         TabLayoutMediator(dataBinding.tabLayout, dataBinding.viewpager) { tab, position ->
             tab.text = pageAdapter.getItemTitle(position)
         }.attach()
-
-        tvFocusCoordinator =
-            TabLayoutViewPager2DpadFocusCoordinator.attachIfTelevision(
-                tabLayout = dataBinding.tabLayout,
-                viewPager = dataBinding.viewpager,
-            )
 
         dataBinding.viewpager.registerOnPageChangeCallback(
             object : ViewPager2.OnPageChangeCallback() {
@@ -63,8 +74,16 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_scan_manager, menu)
         extensionSettingItem = menu.findItem(R.id.item_video_extension_support_setting)
-        extensionSettingItem?.isVisible = dataBinding.viewpager.currentItem == 0
+        extensionSettingItem?.isVisible = (tvPages?.selectedIndex ?: dataBinding.viewpager.currentItem) == 0
         return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus || !initialFocusPending) return
+        initialFocusPending = false
+        val pages = tvPages ?: return
+        if (!dataBinding.root.isInTouchMode && !pages.content.hasFocus()) pages.requestNavigationFocus()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -82,12 +101,6 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
             VideoExtensionSupportSettingDialog(this).also {
                 it.show()
             }
-    }
-
-    override fun onDestroy() {
-        tvFocusCoordinator?.detach()
-        tvFocusCoordinator = null
-        super.onDestroy()
     }
 
     inner class ScanManagerFragmentAdapter : FragmentStateAdapter(this@ScanManagerActivity) {

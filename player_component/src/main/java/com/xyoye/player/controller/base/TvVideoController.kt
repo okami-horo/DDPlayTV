@@ -52,7 +52,7 @@ abstract class TvVideoController(
     private var pendingSeekStartPosition: Long? = null
     private var pendingSeekOffset: Long = 0L
     private val pendingSeekRunnable = Runnable { commitPendingSeek() }
-    private var handlingFromDispatch = false
+    private val consumedKeys = mutableSetOf<Int>()
     protected var actionHandler: ((PlayerAction) -> Unit)? = null
 
     init {
@@ -60,6 +60,7 @@ abstract class TvVideoController(
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_UP && consumedKeys.remove(event.keyCode)) return true
         val isDpadKey =
             when (event.keyCode) {
                 KeyEvent.KEYCODE_DPAD_CENTER,
@@ -71,39 +72,17 @@ abstract class TvVideoController(
                 else -> false
             }
         if (event.action == KeyEvent.ACTION_DOWN && isDpadKey) {
-            handlingFromDispatch = true
             val state = currentUiState()
-            val dispatchResult = remoteKeyDispatcher.onKeyDown(event.keyCode, state)
-            return try {
-                when (dispatchResult) {
-                    RemoteKeyDispatcher.DispatchResult.CONSUMED -> true
-                    RemoteKeyDispatcher.DispatchResult.PASS_TO_CONTROL -> super.dispatchKeyEvent(event)
-                    RemoteKeyDispatcher.DispatchResult.IGNORED -> super.dispatchKeyEvent(event)
-                }
-            } finally {
-                handlingFromDispatch = false
+            if (remoteKeyDispatcher.onKeyDown(event.keyCode, state, event.repeatCount) == RemoteKeyDispatcher.DispatchResult.CONSUMED) {
+                consumedKeys.add(event.keyCode)
+                return true
             }
         }
         return super.dispatchKeyEvent(event)
     }
 
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent?
-    ): Boolean {
-        if (handlingFromDispatch) {
-            return super.onKeyDown(keyCode, event)
-        }
-        val state = currentUiState()
-        val dispatchResult = remoteKeyDispatcher.onKeyDown(keyCode, state)
-        return when (dispatchResult) {
-            RemoteKeyDispatcher.DispatchResult.CONSUMED -> true
-            RemoteKeyDispatcher.DispatchResult.PASS_TO_CONTROL -> mControlWrapper.onKeyDown(keyCode, event)
-            RemoteKeyDispatcher.DispatchResult.IGNORED -> false
-        }
-    }
-
     override fun hideController() {
+        if (mControlWrapper.isSettingViewShowing()) return
         super.hideController()
         clearFocus()
         requestDefaultFocus()

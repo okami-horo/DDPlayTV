@@ -9,11 +9,16 @@ import android.view.View
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
+import com.rubensousa.dpadrecyclerview.spacing.DpadGridSpacingDecoration
 
 class ItemDecorationDrawable : ItemDecoration {
-    private var leftRight: Int
-    private var topBottom: Int
+    private var leftRight: Int = 0
+    private var topBottom: Int = 0
     private var mDivider: Drawable?
+    private val dpadSpacing by lazy {
+        DpadGridSpacingDecoration(topBottom, topBottom, topBottom, leftRight)
+    }
 
     constructor(spacePx: Int) {
         leftRight = spacePx
@@ -38,7 +43,7 @@ class ItemDecorationDrawable : ItemDecoration {
         parent: RecyclerView,
         state: RecyclerView.State
     ) {
-        val layoutManager = parent.layoutManager as GridLayoutManager? ?: return
+        val layoutManager = parent.layoutManager as? GridLayoutManager ?: return
         val divider = mDivider ?: return
         if (layoutManager.childCount == 0) return
 
@@ -149,7 +154,11 @@ class ItemDecorationDrawable : ItemDecoration {
         parent: RecyclerView,
         state: RecyclerView.State
     ) {
-        val layoutManager = parent.layoutManager as GridLayoutManager? ?: return
+        if (parent is DpadRecyclerView) {
+            dpadSpacing.getItemOffsets(outRect, view, parent, state)
+            return
+        }
+        val layoutManager = parent.layoutManager as? GridLayoutManager ?: return
         val lp =
             view.layoutParams as GridLayoutManager.LayoutParams
         val childPosition = parent.getChildAdapterPosition(view)

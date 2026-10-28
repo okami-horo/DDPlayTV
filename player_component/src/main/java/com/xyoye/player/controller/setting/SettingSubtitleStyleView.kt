@@ -55,18 +55,6 @@ class SettingSubtitleStyleView(
         }
     }
 
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent?
-    ): Boolean {
-        if (isSettingShowing().not()) {
-            return false
-        }
-
-        handleKeyCode(keyCode)
-        return true
-    }
-
     private fun applySubtitleStyleStatus() {
         // 文字大小
         val textSizePercent = PlayerInitializer.Subtitle.textSize
@@ -139,6 +127,15 @@ class SettingSubtitleStyleView(
     }
 
     private fun initSettingListener() {
+        listOf(viewBinding.subtitleColorSb, viewBinding.subtitleStrokeColorSb).forEach { control ->
+            control.setOnKeyListener { _, keyCode, event ->
+                if (keyCode != KeyEvent.KEYCODE_DPAD_LEFT && keyCode != KeyEvent.KEYCODE_DPAD_RIGHT) return@setOnKeyListener false
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) control.previousPosition() else control.nextPosition()
+                }
+                true
+            }
+        }
         viewBinding.tvResetSubtitleConfig.setOnClickListener {
             resetConfig()
         }
@@ -339,172 +336,5 @@ class SettingSubtitleStyleView(
             "$offsetPercent%"
         }
 
-    private enum class SubtitleFocusNode {
-        RESET,
-        SIZE,
-        STROKE_WIDTH,
-        COLOR,
-        STROKE_COLOR,
-        ALPHA,
-        FONT_SCALE_OFFSET,
-        VERTICAL_OFFSET,
-        UNKNOWN,
-    }
-
-    private fun handleKeyCode(keyCode: Int) {
-        if (isLibassMode()) {
-            handleLibassKeyCode(keyCode)
-            return
-        }
-
-        when (currentSubtitleFocusNode()) {
-            SubtitleFocusNode.RESET -> handleResetFocusKey(keyCode)
-            SubtitleFocusNode.SIZE -> handleSizeFocusKey(keyCode)
-            SubtitleFocusNode.STROKE_WIDTH -> handleStrokeWidthFocusKey(keyCode)
-            SubtitleFocusNode.COLOR -> handleColorFocusKey(keyCode)
-            SubtitleFocusNode.STROKE_COLOR -> handleStrokeColorFocusKey(keyCode)
-            SubtitleFocusNode.ALPHA -> handleAlphaFocusKey(keyCode)
-            SubtitleFocusNode.FONT_SCALE_OFFSET -> {
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleAlphaSb.requestFocus()
-                    KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleVerticalOffsetSb.requestFocus()
-                }
-            }
-            SubtitleFocusNode.VERTICAL_OFFSET -> handleVerticalOffsetFocusKey(keyCode, fallbackToAlpha = false)
-            SubtitleFocusNode.UNKNOWN -> viewBinding.subtitleSizeSb.requestFocus()
-        }
-    }
-
-    private fun isLibassMode(): Boolean =
-        PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS
-
-    private fun handleLibassKeyCode(keyCode: Int) {
-        when (currentLibassFocusNode()) {
-            SubtitleFocusNode.RESET -> {
-                if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-                    viewBinding.subtitleAlphaSb.requestFocus()
-                }
-            }
-            SubtitleFocusNode.ALPHA -> {
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_UP -> focusResetOrVerticalOffset()
-                    KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleFontScaleOffsetSb.requestFocus()
-                }
-            }
-            SubtitleFocusNode.FONT_SCALE_OFFSET -> {
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleAlphaSb.requestFocus()
-                    KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleVerticalOffsetSb.requestFocus()
-                }
-            }
-            SubtitleFocusNode.VERTICAL_OFFSET -> {
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleFontScaleOffsetSb.requestFocus()
-                    KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        if (isConfigChanged()) {
-                            viewBinding.tvResetSubtitleConfig.requestFocus()
-                        } else {
-                            viewBinding.subtitleAlphaSb.requestFocus()
-                        }
-                    }
-                }
-            }
-            SubtitleFocusNode.UNKNOWN -> viewBinding.subtitleAlphaSb.requestFocus()
-            else -> viewBinding.subtitleAlphaSb.requestFocus()
-        }
-    }
-
-    private fun currentLibassFocusNode(): SubtitleFocusNode =
-        when {
-            viewBinding.tvResetSubtitleConfig.hasFocus() -> SubtitleFocusNode.RESET
-            viewBinding.subtitleAlphaSb.hasFocus() -> SubtitleFocusNode.ALPHA
-            viewBinding.subtitleFontScaleOffsetSb.hasFocus() -> SubtitleFocusNode.FONT_SCALE_OFFSET
-            viewBinding.subtitleVerticalOffsetSb.hasFocus() -> SubtitleFocusNode.VERTICAL_OFFSET
-            else -> SubtitleFocusNode.UNKNOWN
-        }
-
-    private fun currentSubtitleFocusNode(): SubtitleFocusNode =
-        when {
-            viewBinding.tvResetSubtitleConfig.hasFocus() -> SubtitleFocusNode.RESET
-            viewBinding.subtitleSizeSb.hasFocus() -> SubtitleFocusNode.SIZE
-            viewBinding.subtitleStrokeWidthSb.hasFocus() -> SubtitleFocusNode.STROKE_WIDTH
-            viewBinding.subtitleColorSb.hasFocus() -> SubtitleFocusNode.COLOR
-            viewBinding.subtitleStrokeColorSb.hasFocus() -> SubtitleFocusNode.STROKE_COLOR
-            viewBinding.subtitleAlphaSb.hasFocus() -> SubtitleFocusNode.ALPHA
-            viewBinding.subtitleFontScaleOffsetSb.hasFocus() -> SubtitleFocusNode.FONT_SCALE_OFFSET
-            viewBinding.subtitleVerticalOffsetSb.hasFocus() -> SubtitleFocusNode.VERTICAL_OFFSET
-            else -> SubtitleFocusNode.UNKNOWN
-        }
-
-    private fun focusResetOrVerticalOffset() {
-        if (isConfigChanged()) {
-            viewBinding.tvResetSubtitleConfig.requestFocus()
-        } else {
-            viewBinding.subtitleVerticalOffsetSb.requestFocus()
-        }
-    }
-
-    private fun handleResetFocusKey(keyCode: Int) {
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleVerticalOffsetSb.requestFocus()
-            KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleSizeSb.requestFocus()
-        }
-    }
-
-    private fun handleSizeFocusKey(keyCode: Int) {
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP -> focusResetOrVerticalOffset()
-            KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleStrokeWidthSb.requestFocus()
-        }
-    }
-
-    private fun handleStrokeWidthFocusKey(keyCode: Int) {
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleSizeSb.requestFocus()
-            KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleColorSb.requestFocus()
-        }
-    }
-
-    private fun handleColorFocusKey(keyCode: Int) {
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.subtitleColorSb.previousPosition()
-            KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.subtitleColorSb.nextPosition()
-            KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleStrokeWidthSb.requestFocus()
-            KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleStrokeColorSb.requestFocus()
-        }
-    }
-
-    private fun handleStrokeColorFocusKey(keyCode: Int) {
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_LEFT -> viewBinding.subtitleStrokeColorSb.previousPosition()
-            KeyEvent.KEYCODE_DPAD_RIGHT -> viewBinding.subtitleStrokeColorSb.nextPosition()
-            KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleColorSb.requestFocus()
-            KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleAlphaSb.requestFocus()
-        }
-    }
-
-    private fun handleAlphaFocusKey(keyCode: Int) {
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleStrokeColorSb.requestFocus()
-            KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.subtitleVerticalOffsetSb.requestFocus()
-        }
-    }
-
-    private fun handleVerticalOffsetFocusKey(
-        keyCode: Int,
-        fallbackToAlpha: Boolean
-    ) {
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP -> viewBinding.subtitleAlphaSb.requestFocus()
-            KeyEvent.KEYCODE_DPAD_DOWN -> {
-                if (isConfigChanged()) {
-                    viewBinding.tvResetSubtitleConfig.requestFocus()
-                } else if (fallbackToAlpha) {
-                    viewBinding.subtitleAlphaSb.requestFocus()
-                } else {
-                    viewBinding.subtitleSizeSb.requestFocus()
-                }
-            }
-        }
-    }
+    private fun isLibassMode(): Boolean = PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS
 }

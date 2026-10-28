@@ -62,6 +62,7 @@
             android:background="@color/layout_bg_color" />
 
         <androidx.recyclerview.widget.RecyclerView
+            app:tvDpadList="true"
             android:id="@+id/subtitle_rv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
 
     <data>
 
@@ -19,6 +19,7 @@
         <include layout="@layout/layout_toolbar" />
 
         <androidx.recyclerview.widget.RecyclerView
+            app:tvDpadList="true"
             android:id="@+id/license_rv"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

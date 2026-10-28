@@ -9,10 +9,7 @@ import com.xyoye.common_component.extension.gridEmpty
 import com.xyoye.common_component.extension.isLandScreen
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.toResColor
-import com.xyoye.common_component.focus.DpadDirection
 import com.xyoye.common_component.focus.DpadFocusOwner
-import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
-import com.xyoye.common_component.focus.DpadRecyclerOrientation
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationDrawable
 import com.xyoye.data_component.data.BangumiAnimeData
@@ -21,17 +18,10 @@ import com.xyoye.data_component.data.BangumiAnimeData
  * Created by xyoye on 2020/7/30.
  */
 
-class HomePageFragment : BaseAppFragment<FragmentHomePageBinding>(), DpadFocusOwner {
+class HomePageFragment :
+    BaseAppFragment<FragmentHomePageBinding>(),
+    DpadFocusOwner {
     private var spanCount: Int = 1
-
-    private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
-        DpadRecyclerFocusDelegate(
-            recyclerView = dataBinding.pageAnimeRv,
-            orientation = DpadRecyclerOrientation.Grid,
-            spanCountProvider = { spanCount },
-            boundaryHandler = { direction -> onDpadFocusBoundary(direction) },
-        )
-    }
 
     companion object {
         fun newInstance(weeklyAnimeData: BangumiAnimeData): HomePageFragment {
@@ -56,7 +46,6 @@ class HomePageFragment : BaseAppFragment<FragmentHomePageBinding>(), DpadFocusOw
             val pxValue = dp2px(10)
             val spaceColor = R.color.item_bg_color.toResColor(mAttachActivity)
             addItemDecoration(ItemDecorationDrawable(pxValue, pxValue, spaceColor))
-            focusDelegate.install()
         }
 
         arguments?.run {
@@ -66,13 +55,5 @@ class HomePageFragment : BaseAppFragment<FragmentHomePageBinding>(), DpadFocusOw
         }
     }
 
-    override fun requestDefaultDpadFocus(): Boolean = focusDelegate.requestDefaultFocus()
-
-    override fun saveDpadFocus() {
-        focusDelegate.saveFocus()
-    }
-
-    override fun restoreDpadFocus(): Boolean = focusDelegate.restoreFocus()
-
-    override fun onDpadFocusBoundary(direction: DpadDirection): Boolean = false
+    override fun requestDefaultDpadFocus(): Boolean = dataBinding.pageAnimeRv.requestFocus()
 }

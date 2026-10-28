@@ -21,7 +21,6 @@ fun BaseExtension.setupKotlinOptions() {
     val kotlinOptions = extensions.getByName<KotlinJvmOptions>("kotlinOptions")
     kotlinOptions.apply {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
-        freeCompilerArgs = freeCompilerArgs + listOf("-Xskip-metadata-version-check")
     }
 }
 

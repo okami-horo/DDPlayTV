@@ -153,6 +153,7 @@
             app:constraint_referenced_ids="title_cl,action_layout" />
 
         <androidx.recyclerview.widget.RecyclerView
+            app:tvDpadList="true"
             android:id="@+id/episode_rv"
             android:layout_width="match_parent"
             android:layout_height="0dp"

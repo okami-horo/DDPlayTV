@@ -29,6 +29,9 @@ object StorageFilePathAdapter {
         onPathClick: (path: StorageFilePath) -> Unit
     ) = buildAdapter {
         setupDiffUtil {
+            areItemsTheSame { old, new ->
+                if (old is StorageFilePath && new is StorageFilePath) old.route == new.route else old === new
+            }
             areContentsTheSame(isSameStoragePathContent())
         }
 

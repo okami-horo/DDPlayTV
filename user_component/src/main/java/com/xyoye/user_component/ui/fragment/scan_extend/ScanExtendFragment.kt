@@ -2,12 +2,12 @@ package com.xyoye.user_component.ui.fragment.scan_extend
 
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.application.DanDanPlay
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
-import com.xyoye.common_component.focus.RecyclerViewFocusDelegate
 import com.xyoye.common_component.utils.FastClickFilter
 import com.xyoye.common_component.utils.getFolderName
 import com.xyoye.common_component.weight.ToastCenter
@@ -26,10 +26,6 @@ class ScanExtendFragment : BaseFragment<ScanExtendFragmentViewModel, FragmentSca
         fun newInstance() = ScanExtendFragment()
     }
 
-    private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
-        RecyclerViewFocusDelegate(recyclerView = dataBinding.extendFolderRv)
-    }
-
     private var fileManagerDialog: FileManagerDialog? = null
 
     override fun initViewModel() =
@@ -46,6 +42,11 @@ class ScanExtendFragment : BaseFragment<ScanExtendFragmentViewModel, FragmentSca
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new ->
+                            if (old is ExtendFolderEntity && new is ExtendFolderEntity) old.folderPath == new.folderPath else old == new
+                        }
+                    }
                     addItem<Int, ItemExtendFolderAddBinding>(R.layout.item_extend_folder_add) {
                         initView { _, _, _ ->
                             itemBinding.itemLayout.setOnClickListener {
@@ -65,7 +66,7 @@ class ScanExtendFragment : BaseFragment<ScanExtendFragmentViewModel, FragmentSca
                                 folderTv.text = getFolderName(data.folderPath)
                                 fileCountTv.text = fileCountText
 
-                                if (mAttachActivity.isTelevisionUiMode() && !itemLayout.isInTouchMode) {
+                                if (mAttachActivity.isTelevisionUiMode()) {
                                     itemLayout.setOnClickListener {
                                         if (FastClickFilter.isNeedFilter()) {
                                             return@setOnClickListener
@@ -76,6 +77,7 @@ class ScanExtendFragment : BaseFragment<ScanExtendFragmentViewModel, FragmentSca
                                     itemLayout.setOnClickListener(null)
                                 }
 
+                                removeFolderIv.isFocusable = !mAttachActivity.isTelevisionUiMode()
                                 removeFolderIv.setOnClickListener {
                                     if (FastClickFilter.isNeedFilter()) {
                                         return@setOnClickListener
@@ -86,32 +88,17 @@ class ScanExtendFragment : BaseFragment<ScanExtendFragmentViewModel, FragmentSca
                         }
                     }
                 }
-
-            focusDelegate.installVerticalDpadKeyNavigation()
         }
 
-        viewModel.extendFolderLiveData.observe(this) {
+        viewModel.extendFolderLiveData.observe(viewLifecycleOwner) {
             dataBinding.extendFolderRv.setData(it)
         }
 
-        viewModel.extendAppendedLiveData.observe(this) {
+        viewModel.extendAppendedLiveData.observe(viewLifecycleOwner) {
             fileManagerDialog?.dismiss()
         }
 
         viewModel.getExtendFolder()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (bindingOrNull == null) return
-        focusDelegate.onResume()
-    }
-
-    override fun onPause() {
-        if (bindingOrNull != null) {
-            focusDelegate.onPause()
-        }
-        super.onPause()
     }
 
     private fun showExtendFolderDialog() {

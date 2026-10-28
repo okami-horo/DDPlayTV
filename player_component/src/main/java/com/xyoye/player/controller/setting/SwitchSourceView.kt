@@ -4,22 +4,17 @@ import android.content.Context
 import android.os.Environment
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.KeyEvent
 import androidx.annotation.Dimension
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
-import com.xyoye.common_component.adapter.setupVerticalAnimation
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.extension.filterHiddenFile
-import com.xyoye.common_component.extension.findIndexOnLeft
-import com.xyoye.common_component.extension.findIndexOnRight
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.isValid
-import com.xyoye.common_component.extension.nextItemIndex
-import com.xyoye.common_component.extension.previousItemIndex
-import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.toResDrawable
@@ -111,36 +106,6 @@ class SwitchSourceView(
         viewBinding.tvSearchNetworkDanmu.isVisible = sourceSearchAble
     }
 
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent?
-    ): Boolean {
-        if (isSettingShowing().not()) {
-            return false
-        }
-
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-            return true
-        }
-
-        // KeyCode对应的View
-        val handled = handleKeyCode(keyCode)
-        if (handled) {
-            return true
-        }
-
-        if (mFileData.size > 0) {
-            viewBinding.rvFile.requestIndexChildFocus(0)
-        } else {
-            if (viewBinding.tvSearchNetworkDanmu.isVisible) {
-                viewBinding.tvSearchNetworkDanmu.requestFocus()
-            } else {
-                viewBinding.rvCommonFolder.requestIndexChildFocus(0)
-            }
-        }
-        return true
-    }
-
     fun setTrackType(trackType: TrackType) {
         this.mTrackType = trackType
     }
@@ -151,6 +116,9 @@ class SwitchSourceView(
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as FilePathBean).path == (new as FilePathBean).path }
+                    }
                     addItem<FilePathBean, ItemFileManagerFolderBinding>(R.layout.item_file_manager_folder) {
                         initView { data, _, _ ->
                             itemBinding.apply {
@@ -179,6 +147,9 @@ class SwitchSourceView(
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as FilePathBean).path == (new as FilePathBean).path }
+                    }
                     addItem<FilePathBean, ItemFileManagerFolderBinding>(R.layout.item_file_manager_folder) {
                         initView { data, _, _ ->
                             itemBinding.apply {
@@ -213,8 +184,9 @@ class SwitchSourceView(
 
             adapter =
                 buildAdapter {
-                    setupVerticalAnimation()
-
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as FileManagerBean).filePath == (new as FileManagerBean).filePath }
+                    }
                     addItem<FileManagerBean, ItemFileManagerPlayerBinding>(R.layout.item_file_manager_player) {
                         initView { data, _, _ ->
                             itemBinding.apply {
@@ -241,7 +213,6 @@ class SwitchSourceView(
     private fun initListener() {
         viewBinding.tvSearchNetworkDanmu.setOnClickListener {
             mControlWrapper.showSettingView(SettingViewType.SEARCH_DANMU)
-            onSettingVisibilityChanged(false)
         }
     }
 
@@ -249,7 +220,7 @@ class SwitchSourceView(
      * 选中目标文件
      */
     private fun openFile(data: FileManagerBean) {
-        onSettingVisibilityChanged(false)
+        mControlWrapper.hideSettingView()
 
         File(data.filePath).parentFile?.absolutePath?.let {
             AppConfig.putLastOpenFolder(it)
@@ -284,11 +255,19 @@ class SwitchSourceView(
         mPathData.clear()
         mPathData.addAll(pathData)
         viewBinding.rvPath.setData(mPathData)
-        viewBinding.rvPath.scrollToPosition(mPathData.size - 1)
+        val paths = viewBinding.rvPath
+        if (paths is DpadRecyclerView) {
+            paths.setSelectedPosition(mPathData.lastIndex)
+        } else {
+            paths.scrollToPosition(mPathData.lastIndex)
+        }
 
         mFileData.clear()
         mFileData.addAll(getDirectoryChildData(directory))
         viewBinding.rvFile.setData(mFileData)
+        if (isSettingShowing() && viewBinding.rvFile.hasFocus() && mFileData.isEmpty()) {
+            viewBinding.rvPath.requestFocus()
+        }
     }
 
     /**
@@ -426,201 +405,5 @@ class SwitchSourceView(
         }
 
         return PathHelper.getCachePath()
-    }
-
-    /**
-     * 根据KeyCode目标焦点ItemBinding
-     */
-    private fun handleKeyCode(keyCode: Int): Boolean {
-        // 垂直方向上的事件处理
-        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-            return handleKeyCodeVertical(keyCode)
-        }
-
-        // 网络弹幕按钮的焦点处理
-        if (viewBinding.tvSearchNetworkDanmu.hasFocus()) {
-            when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    viewBinding.tvSearchNetworkDanmu.requestFocus()
-                }
-            }
-            return true
-        }
-
-        if (handleKeyCodeInCommonRv(keyCode)) {
-            return true
-        }
-        if (handleKeyCodeInPathRv(keyCode)) {
-            return true
-        }
-        return handleKeyCodeInFileRv(keyCode)
-    }
-
-    private fun handleKeyCodeVertical(keyCode: Int): Boolean {
-        val isKeyUp =
-            when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> true
-                KeyEvent.KEYCODE_DPAD_DOWN -> false
-                else -> return false
-            }
-
-        if (viewBinding.tvSearchNetworkDanmu.hasFocus()) {
-            if (isKeyUp) {
-                if (mFileData.size > 0) {
-                    viewBinding.rvFile.requestIndexChildFocus(mFileData.size - 1)
-                } else if (mPathData.size > 0) {
-                    viewBinding.rvPath.requestIndexChildFocus(mPathData.size - 1)
-                } else {
-                    viewBinding.rvCommonFolder.requestIndexChildFocus(0)
-                }
-            } else {
-                viewBinding.rvCommonFolder.requestIndexChildFocus(0)
-            }
-            return true
-        }
-
-        if (viewBinding.rvCommonFolder.focusedChild != null) {
-            if (isKeyUp) {
-                if (viewBinding.tvSearchNetworkDanmu.isVisible) {
-                    viewBinding.tvSearchNetworkDanmu.requestFocus()
-                } else if (mFileData.size > 0) {
-                    viewBinding.rvFile.requestIndexChildFocus(mFileData.size - 1)
-                }
-            } else {
-                if (mPathData.size > 0) {
-                    viewBinding.rvPath.requestIndexChildFocus(mPathData.size - 1)
-                } else if (mFileData.size > 0) {
-                    viewBinding.rvFile.requestIndexChildFocus(0)
-                }
-            }
-            return true
-        }
-
-        if (viewBinding.rvPath.focusedChild != null) {
-            if (isKeyUp) {
-                viewBinding.rvCommonFolder.requestIndexChildFocus(0)
-            } else {
-                if (mFileData.size > 0) {
-                    viewBinding.rvFile.requestIndexChildFocus(0)
-                } else if (viewBinding.tvSearchNetworkDanmu.isVisible) {
-                    viewBinding.tvSearchNetworkDanmu.requestFocus()
-                }
-            }
-            return true
-        }
-
-        if (viewBinding.rvFile.focusedChild != null) {
-            return handleKeyCodeInFileRv(keyCode)
-        }
-
-        return false
-    }
-
-    private fun handleKeyCodeInCommonRv(keyCode: Int): Boolean {
-        // 已获取的焦点View
-        val focusedChild =
-            viewBinding.rvCommonFolder.focusedChild
-                ?: return false
-        val focusedChildIndex = viewBinding.rvCommonFolder.getChildAdapterPosition(focusedChild)
-        // 已获取的焦点View的位置
-        if (focusedChildIndex == -1) {
-            return false
-        }
-
-        // 向左的点击事件
-        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
-            val targetIndex =
-                mCommonDirectoryData.previousItemIndex<FilePathBean>(focusedChildIndex)
-            viewBinding.rvCommonFolder.requestIndexChildFocus(targetIndex)
-            return true
-        }
-
-        // 向右的点击事件
-        if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-            val targetIndex = mCommonDirectoryData.nextItemIndex<FilePathBean>(focusedChildIndex)
-            viewBinding.rvCommonFolder.requestIndexChildFocus(targetIndex)
-            return true
-        }
-        return false
-    }
-
-    private fun handleKeyCodeInPathRv(keyCode: Int): Boolean {
-        // 已获取的焦点View
-        val focusedChild =
-            viewBinding.rvPath.focusedChild
-                ?: return false
-
-        val focusedChildIndex = viewBinding.rvPath.getChildAdapterPosition(focusedChild)
-        // 已获取的焦点View的位置
-        if (focusedChildIndex == -1) {
-            return false
-        }
-
-        // 向左的点击事件
-        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
-            val targetIndex = mPathData.previousItemIndex<FilePathBean>(focusedChildIndex)
-            viewBinding.rvPath.requestIndexChildFocus(targetIndex)
-            return true
-        }
-
-        // 向右的点击事件
-        if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-            val targetIndex = mPathData.nextItemIndex<FilePathBean>(focusedChildIndex)
-            viewBinding.rvPath.requestIndexChildFocus(targetIndex)
-            return true
-        }
-        return false
-    }
-
-    private fun handleKeyCodeInFileRv(keyCode: Int): Boolean {
-        // 已获取的焦点View
-        val focusedChild =
-            viewBinding.rvFile.focusedChild
-                ?: return false
-        val focusedChildIndex = viewBinding.rvFile.getChildAdapterPosition(focusedChild)
-        // 已获取的焦点View的位置
-        if (focusedChildIndex == -1) {
-            return false
-        }
-
-        // 向左或向右的点击事件
-        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-            focusedChild.requestFocus()
-            return true
-        }
-
-        // 向上的事件
-        if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-            val index = mFileData.findIndexOnLeft(focusedChildIndex) { true }
-            if (index != -1) {
-                viewBinding.rvFile.requestIndexChildFocus(index)
-                return true
-            }
-
-            if (mPathData.size > 0) {
-                viewBinding.rvPath.requestIndexChildFocus(mPathData.size - 1)
-            } else {
-                viewBinding.rvCommonFolder.requestIndexChildFocus(0)
-            }
-            return true
-        }
-
-        // 向下的事件
-        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-            val index = mFileData.findIndexOnRight(focusedChildIndex) { true }
-            if (index != -1) {
-                viewBinding.rvFile.requestIndexChildFocus(index)
-                return true
-            }
-
-            if (viewBinding.tvSearchNetworkDanmu.isVisible) {
-                viewBinding.tvSearchNetworkDanmu.requestFocus()
-            } else {
-                viewBinding.rvCommonFolder.requestIndexChildFocus(0)
-            }
-            return true
-        }
-
-        return false
     }
 }

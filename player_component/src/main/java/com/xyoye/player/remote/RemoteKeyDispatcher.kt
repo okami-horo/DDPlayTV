@@ -37,10 +37,17 @@ class RemoteKeyDispatcher(
 
     fun onKeyDown(
         keyCode: Int,
-        state: UiState
+        state: UiState,
+        repeatCount: Int = 0
     ): DispatchResult {
         if (state.isPopupMode) {
             return DispatchResult.IGNORED
+        }
+        if (state.isSettingShowing) {
+            return if (keyCode == KeyEvent.KEYCODE_MENU) DispatchResult.CONSUMED else DispatchResult.PASS_TO_CONTROL
+        }
+        if (repeatCount > 0 && (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_MENU)) {
+            return DispatchResult.CONSUMED
         }
         return when (keyCode) {
             KeyEvent.KEYCODE_DPAD_CENTER -> handleCenter(state)

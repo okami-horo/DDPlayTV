@@ -14,9 +14,9 @@ import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.collectAtStarted
 import com.xyoye.common_component.extension.isTelevisionUiMode
-import com.xyoye.common_component.focus.TabLayoutViewPager2DpadFocusCoordinator
+import com.xyoye.common_component.focus.TvCategory
+import com.xyoye.common_component.focus.TvCategoryPages
 import com.xyoye.common_component.focus.applyDpadEditTextPolicy
-import com.xyoye.common_component.focus.bindDpadDownToTabFocus
 import com.xyoye.common_component.services.StorageFileProvider
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.utils.hideKeyboard
@@ -44,7 +44,7 @@ class BindExtraSourceActivity : BaseActivity<BindExtraSourceViewModel, ActivityB
     lateinit var storageFile: StorageFile
 
     private val pageAdapter by lazy { BindSourcePageAdapter() }
-    private var tvFocusCoordinator: TabLayoutViewPager2DpadFocusCoordinator? = null
+    private var tvPages: TvCategoryPages? = null
 
     override fun initViewModel() =
         ViewModelInit(
@@ -66,25 +66,22 @@ class BindExtraSourceActivity : BaseActivity<BindExtraSourceViewModel, ActivityB
         this.storageFile = storageFile
         viewModel.setStorageFile(storageFile)
 
-        dataBinding.viewpager.apply {
-            adapter = pageAdapter
-            offscreenPageLimit = 2
-        }
-        TabLayoutMediator(dataBinding.tabLayout, dataBinding.viewpager) { tab, position ->
-            tab.text = pageAdapter.getItemTitle(position)
-        }.attach()
-
-        tvFocusCoordinator =
-            TabLayoutViewPager2DpadFocusCoordinator.attachIfTelevision(
-                tabLayout = dataBinding.tabLayout,
-                viewPager = dataBinding.viewpager,
-            )
-
-        tvFocusCoordinator?.let { coordinator ->
-            dataBinding.searchCl.bindDpadDownToTabFocus(
-                coordinator = coordinator,
-                tabLayout = dataBinding.tabLayout,
-            )
+        if (isTelevisionUiMode()) {
+            tvPages =
+                TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager, ::updateSearchHint).apply {
+                    submit(
+                        listOf("danmu", "subtitle").mapIndexed { index, key ->
+                            TvCategory(key, pageAdapter.getItemTitle(index)) { pageAdapter.createFragment(index) }
+                        },
+                        if (isSearchDanmu) 0 else 1
+                    )
+                }
+            dataBinding.searchCl.nextFocusDownId = dataBinding.tabLayout.id
+        } else {
+            dataBinding.viewpager.adapter = pageAdapter
+            TabLayoutMediator(dataBinding.tabLayout, dataBinding.viewpager) { tab, position ->
+                tab.text = pageAdapter.getItemTitle(position)
+            }.attach()
         }
 
         if (isTelevisionUiMode() && !dataBinding.root.isInTouchMode) {
@@ -94,12 +91,6 @@ class BindExtraSourceActivity : BaseActivity<BindExtraSourceViewModel, ActivityB
         initListener()
 
         initChildFragment()
-    }
-
-    override fun onDestroy() {
-        tvFocusCoordinator?.detach()
-        tvFocusCoordinator = null
-        super.onDestroy()
     }
 
     private fun initListener() {
@@ -168,12 +159,7 @@ class BindExtraSourceActivity : BaseActivity<BindExtraSourceViewModel, ActivityB
         dataBinding.viewpager.registerOnPageChangeCallback(
             object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
-                    dataBinding.searchEt.hint =
-                        when (position) {
-                            0 -> getString(R.string.tips_search_danmu)
-                            1 -> getString(R.string.tips_search_subtitle)
-                            else -> ""
-                        }
+                    updateSearchHint(position)
                 }
             },
         )
@@ -200,7 +186,17 @@ class BindExtraSourceActivity : BaseActivity<BindExtraSourceViewModel, ActivityB
         }
     }
 
+    private fun updateSearchHint(position: Int) {
+        dataBinding.searchEt.hint =
+            when (position) {
+                0 -> getString(R.string.tips_search_danmu)
+                1 -> getString(R.string.tips_search_subtitle)
+                else -> ""
+            }
+    }
+
     private fun initChildFragment() {
+        if (tvPages != null) return
         if (isSearchDanmu.not()) {
             dataBinding.viewpager.post {
                 dataBinding.viewpager.currentItem = 1

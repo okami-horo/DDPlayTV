@@ -2,10 +2,10 @@ package com.xyoye.player.controller
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.View
 import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.extension.isTelevisionUiMode
-import com.xyoye.common_component.focus.resetDescendantFocus
 import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.data.DanmuEpisodeData
@@ -50,7 +50,11 @@ class VideoController(
         SettingController(
             context,
             { addControlComponent(it) },
-            onSettingHidden = { onSettingHidden() }
+            onSettingHidden = { onSettingHidden() },
+            onSettingShown = {
+                settingCallerId = findFocus()?.id ?: View.NO_ID
+                stopFadeOut()
+            }
         )
 
     private val playerTopView = PlayerTopView(context)
@@ -62,6 +66,7 @@ class VideoController(
     private val playerPopupControlView = PlayerPopupControlView(context)
 
     private var lastPlayPosition = 0L
+    private var settingCallerId = View.NO_ID
     private var lastVideoSpeed: Float? = null
 
     private var switchVideoSourceBlock: ((Int) -> Unit)? = null
@@ -176,10 +181,14 @@ class VideoController(
     }
 
     private fun onSettingHidden() {
-        hideController()
-        if (!isInTouchMode) {
-            resetDescendantFocus()
+        val caller = findViewById<View>(settingCallerId)
+        if (!isInTouchMode && caller != null && caller !== this && caller.isShown && caller.isFocusable) {
+            caller.requestFocus()
+            startFadeOut()
+        } else {
+            hideController()
         }
+        settingCallerId = View.NO_ID
     }
 
     /**

@@ -33,6 +33,7 @@
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/path_rv"
+                app:tvDpadList="true"
                 android:layout_width="match_parent"
                 android:layout_height="48dp" />
 

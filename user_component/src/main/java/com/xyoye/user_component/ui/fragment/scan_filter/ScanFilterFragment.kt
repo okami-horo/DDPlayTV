@@ -2,11 +2,12 @@ package com.xyoye.user_component.ui.fragment.scan_filter
 
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseFragment
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.vertical
-import com.xyoye.common_component.focus.RecyclerViewFocusDelegate
 import com.xyoye.common_component.utils.getFolderName
 import com.xyoye.data_component.bean.FolderBean
 import com.xyoye.user_component.BR
@@ -17,10 +18,6 @@ import com.xyoye.user_component.databinding.ItemFilterFolderBinding
 class ScanFilterFragment : BaseFragment<ScanFilterFragmentViewModel, FragmentScanFilterBinding>() {
     companion object {
         fun newInstance() = ScanFilterFragment()
-    }
-
-    private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
-        RecyclerViewFocusDelegate(recyclerView = dataBinding.filterFolderRv)
     }
 
     override fun initViewModel() =
@@ -39,6 +36,11 @@ class ScanFilterFragment : BaseFragment<ScanFilterFragmentViewModel, FragmentSca
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new ->
+                            if (old is FolderBean && new is FolderBean) old.folderPath == new.folderPath else old == new
+                        }
+                    }
                     addItem<FolderBean, ItemFilterFolderBinding>(R.layout.item_filter_folder) {
                         initView { data, _, _ ->
                             itemBinding.apply {
@@ -51,6 +53,7 @@ class ScanFilterFragment : BaseFragment<ScanFilterFragmentViewModel, FragmentSca
                                 folderTv.setTextColorRes(if (data.isFilter) R.color.text_red else R.color.text_black)
                                 fileCountTv.setTextColorRes(if (data.isFilter) R.color.text_red else R.color.text_gray)
 
+                                filterFolderCb.isFocusable = !requireContext().isTelevisionUiMode()
                                 filterFolderCb.setOnCheckedChangeListener(null)
                                 filterFolderCb.isChecked = data.isFilter
                                 filterFolderCb.setOnCheckedChangeListener { _, isChecked ->
@@ -66,23 +69,8 @@ class ScanFilterFragment : BaseFragment<ScanFilterFragmentViewModel, FragmentSca
                 }
         }
 
-        focusDelegate.installVerticalDpadKeyNavigation()
-
-        viewModel.folderLiveData.observe(this) {
+        viewModel.folderLiveData.observe(viewLifecycleOwner) {
             dataBinding.filterFolderRv.setData(it)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (bindingOrNull == null) return
-        focusDelegate.onResume()
-    }
-
-    override fun onPause() {
-        if (bindingOrNull != null) {
-            focusDelegate.onPause()
-        }
-        super.onPause()
     }
 }

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Environment
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.adapter.setupVerticalAnimation
 import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.extension.filterHiddenFile
@@ -140,6 +141,9 @@ class FileManagerDialog(
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as FilePathBean).path == (new as FilePathBean).path }
+                    }
                     addItem<FilePathBean, ItemFileManagerPathBinding>(R.layout.item_file_manager_path) {
                         initView { data, _, _ ->
                             itemBinding.apply {
@@ -171,6 +175,9 @@ class FileManagerDialog(
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as FileManagerBean).filePath == (new as FileManagerBean).filePath }
+                    }
                     setupVerticalAnimation()
 
                     addItem<FileManagerBean, ItemFileManagerBinding>(R.layout.item_file_manager) {

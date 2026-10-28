@@ -13,6 +13,7 @@ import com.xyoye.anime_component.ui.adapter.AnimeAdapter
 import com.xyoye.anime_component.utils.loadAnimeCover
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.grid
@@ -57,6 +58,9 @@ class AnimeRecommendFragment : BaseFragment<AnimeRecommendFragmentViewModel, Fra
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as AnimeData).animeId == (new as AnimeData).animeId }
+                    }
                     addItem<AnimeData, ItemAnimeRecommendBinding>(R.layout.item_anime_recommend) {
                         initView { data, _, _ ->
                             itemBinding.apply {
@@ -88,7 +92,7 @@ class AnimeRecommendFragment : BaseFragment<AnimeRecommendFragmentViewModel, Fra
     }
 
     private fun initObserver() {
-        parentViewModel.animeDetailLiveData.observe(this) {
+        parentViewModel.animeDetailLiveData.observe(viewLifecycleOwner) {
             viewModel.setBangumiData(it)
             dataBinding.recommendRv.setData(it.relateds)
             dataBinding.recommendMoreRv.setData(it.similars)

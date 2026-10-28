@@ -2,7 +2,6 @@ package com.xyoye.player.controller.setting
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.KeyEvent
 import androidx.core.view.isVisible
 import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.extension.observeProgressChange
@@ -38,18 +37,6 @@ class SettingDanmuStyleView(
 
     override fun onViewShowed() {
         viewBinding.danmuSizeSb.requestFocus()
-    }
-
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent?
-    ): Boolean {
-        if (isSettingShowing().not()) {
-            return false
-        }
-
-        handleKeyCode(keyCode)
-        return true
     }
 
     private fun applyDanmuStyleStatus() {
@@ -179,47 +166,4 @@ class SettingDanmuStyleView(
             PlayerInitializer.Danmu.alpha != PlayerInitializer.Danmu.DEFAULT_ALPHA ||
             PlayerInitializer.Danmu.stoke != PlayerInitializer.Danmu.DEFAULT_STOKE ||
             PlayerInitializer.Danmu.speed != PlayerInitializer.Danmu.DEFAULT_SPEED
-
-    private fun handleKeyCode(keyCode: Int) {
-        if (viewBinding.tvResetDanmuConfig.hasFocus()) {
-            when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.danmuStokeSb.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.danmuSizeSb.requestFocus()
-            }
-        } else if (viewBinding.danmuSizeSb.hasFocus()) {
-            when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> {
-                    if (isConfigChanged()) {
-                        viewBinding.tvResetDanmuConfig.requestFocus()
-                    } else {
-                        viewBinding.danmuSpeedSb.requestFocus()
-                    }
-                }
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.danmuSpeedSb.requestFocus()
-            }
-        } else if (viewBinding.danmuSpeedSb.hasFocus()) {
-            when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.danmuSizeSb.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.danmuAlphaSb.requestFocus()
-            }
-        } else if (viewBinding.danmuAlphaSb.hasFocus()) {
-            when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.danmuSpeedSb.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> viewBinding.danmuStokeSb.requestFocus()
-            }
-        } else if (viewBinding.danmuStokeSb.hasFocus()) {
-            when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_UP -> viewBinding.danmuAlphaSb.requestFocus()
-                KeyEvent.KEYCODE_DPAD_DOWN -> {
-                    if (isConfigChanged()) {
-                        viewBinding.tvResetDanmuConfig.requestFocus()
-                    } else {
-                        viewBinding.danmuSizeSb.requestFocus()
-                    }
-                }
-            }
-        } else {
-            viewBinding.danmuSizeSb.requestFocus()
-        }
-    }
 }

@@ -15,6 +15,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -388,6 +389,7 @@ class PlayerActivity :
     override fun onCreate(savedInstanceState: Bundle?) {
         activityArguments = PlaybackActivityArguments.read(intent, savedInstanceState)
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this) { handleBackPressed() }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -525,8 +527,7 @@ class PlayerActivity :
         super.onDestroy()
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
+    private fun handleBackPressed() {
         if (danDanPlayer.onBackPressed()) {
             return
         }

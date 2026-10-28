@@ -20,9 +20,9 @@ import com.xyoye.anime_component.ui.fragment.search_magnet.SearchMagnetFragment
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.isTelevisionUiMode
-import com.xyoye.common_component.focus.TabLayoutViewPager2DpadFocusCoordinator
+import com.xyoye.common_component.focus.TvCategory
+import com.xyoye.common_component.focus.TvCategoryPages
 import com.xyoye.common_component.focus.applyDpadEditTextPolicy
-import com.xyoye.common_component.focus.bindDpadDownToTabFocus
 import com.xyoye.common_component.utils.hideKeyboard
 import com.xyoye.common_component.utils.showKeyboard
 
@@ -41,7 +41,7 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
     var isSearchMagnet: Boolean = false
 
     private lateinit var searchAdapter: SearchPageAdapter
-    private var tvFocusCoordinator: TabLayoutViewPager2DpadFocusCoordinator? = null
+    private var tvPages: TvCategoryPages? = null
 
     override fun initViewModel() =
         ViewModelInit(
@@ -56,29 +56,24 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
 
         searchAdapter = SearchPageAdapter(searchWord)
 
-        dataBinding.viewpager.apply {
-            adapter = searchAdapter
-            offscreenPageLimit = 2
-            currentItem = if (isSearchMagnet) 1 else 0
-        }
-
-        TabLayoutMediator(dataBinding.tabLayout, dataBinding.viewpager) { tab, position ->
-            tab.text = searchAdapter.getItemTitle(position)
-        }.attach()
-
-        updateSearchHint(dataBinding.viewpager.currentItem)
-
-        tvFocusCoordinator =
-            TabLayoutViewPager2DpadFocusCoordinator.attachIfTelevision(
-                tabLayout = dataBinding.tabLayout,
-                viewPager = dataBinding.viewpager,
-            )
-
-        tvFocusCoordinator?.let { coordinator ->
-            dataBinding.searchCl.bindDpadDownToTabFocus(
-                coordinator = coordinator,
-                tabLayout = dataBinding.tabLayout,
-            )
+        if (isTelevisionUiMode()) {
+            tvPages =
+                TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager, ::updateSearchHint).apply {
+                    submit(
+                        listOf("anime", "magnet").mapIndexed { index, key ->
+                            TvCategory(key, searchAdapter.getItemTitle(index)) { searchAdapter.createFragment(index) }
+                        },
+                        if (isSearchMagnet) 1 else 0
+                    )
+                }
+            dataBinding.searchCl.nextFocusDownId = dataBinding.tabLayout.id
+        } else {
+            dataBinding.viewpager.adapter = searchAdapter
+            dataBinding.viewpager.currentItem = if (isSearchMagnet) 1 else 0
+            TabLayoutMediator(dataBinding.tabLayout, dataBinding.viewpager) { tab, position ->
+                tab.text = searchAdapter.getItemTitle(position)
+            }.attach()
+            updateSearchHint(dataBinding.viewpager.currentItem)
         }
 
         if (!isSearchMagnet && dataBinding.root.isInTouchMode) {
@@ -92,12 +87,6 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
             dataBinding.searchCl.requestFocus()
         }
         initListener()
-    }
-
-    override fun onDestroy() {
-        tvFocusCoordinator?.detach()
-        tvFocusCoordinator = null
-        super.onDestroy()
     }
 
     private fun initListener() {
@@ -193,6 +182,7 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
     }
 
     private fun getCurrentSearchFragment(): SearchListener? {
+        tvPages?.let { return it.currentFragment as? SearchListener }
         val currentItem = dataBinding.viewpager.currentItem
         val fragmentTag = searchAdapter.getFragmentTag(currentItem)
         return supportFragmentManager.findFragmentByTag(fragmentTag) as? SearchListener

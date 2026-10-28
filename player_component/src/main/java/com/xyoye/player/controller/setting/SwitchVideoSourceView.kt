@@ -1,20 +1,17 @@
 package com.xyoye.player.controller.setting
 
 import android.content.Context
-import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.KeyEvent
 import androidx.recyclerview.widget.RecyclerView
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
-import com.xyoye.common_component.extension.nextItemIndex
-import com.xyoye.common_component.extension.previousItemIndex
-import com.xyoye.common_component.extension.requestIndexChildFocus
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.extension.setData
+import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationOrientation
-import com.xyoye.common_component.weight.CenterLayoutManager
 import com.xyoye.data_component.bean.VideoSourceBean
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player_component.R
@@ -34,7 +31,6 @@ class SwitchVideoSourceView
     ) : BaseSettingView<LayoutSwitchVideoSourceBinding>(context, attrs, defStyleAttr) {
         private var switchVideoSourceBlock: ((Int) -> Unit)? = null
         private val mVideoSources = mutableListOf<VideoSourceBean>()
-        private var lastNavigateRealtimeMs = 0L
 
         init {
             initRv()
@@ -55,45 +51,26 @@ class SwitchVideoSourceView
             viewBinding.sourceRv.clearFocus()
         }
 
-        override fun onKeyDown(
-            keyCode: Int,
-            event: KeyEvent?
-        ): Boolean {
-            if (isSettingShowing().not()) {
-                return false
-            }
-
-            val handled = handleKeyCode(keyCode)
-            if (handled) {
-                return true
-            }
-
-            val currentIndex = mVideoSources.indexOfFirst { it.isCurrent }
-            if (currentIndex != -1) {
-                viewBinding.sourceRv.requestIndexChildFocus(currentIndex)
-            } else if (mVideoSources.size > 0) {
-                viewBinding.sourceRv.requestIndexChildFocus(0)
-            }
-            return true
-        }
-
         fun setSwitchVideoSourceBlock(block: (Int) -> Unit) {
             switchVideoSourceBlock = block
         }
 
         private fun initRv() {
             viewBinding.sourceRv.apply {
-                layoutManager = CenterLayoutManager(context)
+                layoutManager = vertical()
 
                 adapter =
                     buildAdapter {
+                        setupDiffUtil {
+                            areItemsTheSame { old, new -> (old as VideoSourceBean).index == (new as VideoSourceBean).index }
+                        }
                         addItem<VideoSourceBean, ItemVideoSourceBinding>(R.layout.item_video_source) {
                             initView { data, _, _ ->
                                 itemBinding.tvSourceName.isSelected = data.isCurrent
                                 itemBinding.tvSourceName.text = data.title
                                 itemBinding.tvSourceName.setOnClickListener {
                                     if (data.isCurrent.not()) {
-                                        onSettingVisibilityChanged(false)
+                                        mControlWrapper.hideSettingView()
                                         switchVideoSourceBlock?.invoke(data.index)
                                     }
                                 }
@@ -125,58 +102,11 @@ class SwitchVideoSourceView
                 )
             }
             viewBinding.sourceRv.setData(mVideoSources)
-            viewBinding.sourceRv.smoothScrollToPosition(videoSource.getGroupIndex())
-        }
-
-        /**
-         * 处理KeyCode事件
-         */
-        private fun handleKeyCode(keyCode: Int): Boolean {
-            val now = SystemClock.elapsedRealtime()
-            if (now - lastNavigateRealtimeMs < MIN_NAV_INTERVAL_MS) {
-                // 最小间隔内丢弃重复导航，防抖
-                return true
+            val list = viewBinding.sourceRv
+            if (list is DpadRecyclerView) {
+                list.setSelectedPosition(videoSource.getGroupIndex())
+            } else {
+                list.scrollToPosition(videoSource.getGroupIndex())
             }
-
-            // 已取得焦点的Item
-            val focusedChild =
-                viewBinding.sourceRv.focusedChild
-                    ?: return false
-            val focusedChildIndex = viewBinding.sourceRv.getChildAdapterPosition(focusedChild)
-            if (focusedChildIndex == -1) {
-                return false
-            }
-            val targetIndex = getTargetIndexByKeyCode(keyCode, focusedChildIndex)
-            if (targetIndex == -1) {
-                return false
-            }
-            lastNavigateRealtimeMs = now
-            viewBinding.sourceRv.requestIndexChildFocus(targetIndex)
-            return true
-        }
-
-        /**
-         * 根据KeyCode与当前焦点位置，取得目标焦点位置
-         */
-        private fun getTargetIndexByKeyCode(
-            keyCode: Int,
-            focusedIndex: Int
-        ): Int =
-            when (keyCode) {
-                // 左、上规则
-                KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_UP -> {
-                    mVideoSources.previousItemIndex<VideoSourceBean>(focusedIndex)
-                }
-                // 右、下规则
-                KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_DOWN -> {
-                    mVideoSources.nextItemIndex<VideoSourceBean>(focusedIndex)
-                }
-                else -> {
-                    -1
-                }
-            }
-
-        companion object {
-            private const val MIN_NAV_INTERVAL_MS = 100L
         }
     }

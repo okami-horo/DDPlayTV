@@ -7,11 +7,13 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewPropertyAnimatorListener
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
+import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.TrackType
@@ -53,6 +55,12 @@ abstract class BaseSettingView<V : ViewDataBinding>
                 true,
             )!!
 
+        init {
+            descendantFocusability = FOCUS_BLOCK_DESCENDANTS
+            viewBinding.root.visibility = View.GONE
+            if (viewBinding.root !is RecyclerView) viewBinding.root.isFocusable = false
+        }
+
         override fun attach(controlWrapper: ControlWrapper) {
             mControlWrapper = controlWrapper
         }
@@ -60,7 +68,11 @@ abstract class BaseSettingView<V : ViewDataBinding>
         override fun getView(): View = this
 
         override fun onSettingVisibilityChanged(isVisible: Boolean) {
+            if (settingShowing == isVisible) return
+            ViewCompat.animate(viewBinding.root).cancel()
             settingShowing = isVisible
+            descendantFocusability = if (isVisible) FOCUS_AFTER_DESCENDANTS else FOCUS_BLOCK_DESCENDANTS
+            if (isVisible) viewBinding.root.visibility = View.VISIBLE
             if (settingGravity == Gravity.CENTER) {
                 handleCenterVisibilityChanged(isVisible)
             } else {
@@ -84,7 +96,7 @@ abstract class BaseSettingView<V : ViewDataBinding>
                             }
 
                             override fun onAnimationEnd(view: View) {
-                                onViewShowed()
+                                if (settingShowing) onViewShowed()
                             }
 
                             override fun onAnimationCancel(view: View) {
@@ -127,7 +139,7 @@ abstract class BaseSettingView<V : ViewDataBinding>
                             }
 
                             override fun onAnimationEnd(view: View) {
-                                onViewShowed()
+                                if (settingShowing) onViewShowed()
                             }
 
                             override fun onAnimationCancel(view: View) {
@@ -147,6 +159,7 @@ abstract class BaseSettingView<V : ViewDataBinding>
                             }
 
                             override fun onAnimationEnd(view: View) {
+                                view.visibility = View.GONE
                             }
 
                             override fun onAnimationCancel(view: View) {
@@ -191,6 +204,18 @@ abstract class BaseSettingView<V : ViewDataBinding>
         }
 
         open fun onViewShowed() {
+            if (!isInTouchMode) viewBinding.root.requestFocus()
+        }
+
+        // A panel is modal. Native search still chooses controls inside it.
+        override fun focusSearch(
+            focused: View,
+            direction: Int
+        ): View? {
+            val next = super.focusSearch(focused, direction) ?: return focused
+            var parent = next.parent
+            while (parent is ViewGroup && parent !== this) parent = parent.parent
+            return if (parent === this) next else focused
         }
 
         open fun onViewHide() {

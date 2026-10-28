@@ -16,6 +16,7 @@ import com.xyoye.anime_component.utils.loadAnimeCover
 import com.xyoye.common_component.adapter.addEmptyView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.collectAtStarted
@@ -88,6 +89,9 @@ class AnimeHistoryActivity : BaseActivity<AnimeHistoryViewModel, ActivityAnimeHi
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as AnimeData).animeId == (new as AnimeData).animeId }
+                    }
                     addEmptyView(R.layout.layout_empty)
 
                     addItem<AnimeData, ItemAnimeBinding>(R.layout.item_anime) {

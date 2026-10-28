@@ -7,6 +7,7 @@
 
  ## Main Libraries
  - AndroidX Lifecycle/ViewModel, Room, Preference, RecyclerView, Startup.
+ - TV navigation: DpadRecyclerView `1.4.3`, exposed by core UI. Verified resolution on 2026-10-28: RecyclerView `1.4.0`, Fragment `1.8.2`, Collection `1.4.3`, Kotlin stdlib `2.0.0`. Kotlin plugin `1.9.25` / JVM `1.8` remain; metadata skipping was removed. Strict Kotlin/DataBinding/KAPT builds and an isolated minified R8 sample passed. Main-app Release still has minify disabled and falls back to debug signing without release credentials; see the rewrite ledger.
  - Kotlin Coroutines.
  - ARouter.
  - Retrofit, OkHttp, Moshi.
@@ -25,7 +26,7 @@
  - `./gradlew connectedDebugAndroidTest` for instrumentation.
 
  ## Local AVD Baseline
- - Latest Bilibili-removal verification (2026-10-28): `scripts/dev-env/gradlew-local.bat` works with the project-private toolchain and offline Robolectric cache. Device `emulator-5558` was restored to mobile UI mode, physical 1080x2340 / 440 dpi and non-root adbd after temporary TV tests. Its captured pre-test baseline already had SystemUI and lockscreen disabled; those values were preserved. Do not infer current device state from older restoration notes. Exact readback is `.tmp/bilibili-avd-restored.log` and the retirement ledger.
+ - Latest TV-rewrite verification (2026-10-28): `scripts/dev-env/gradlew-local.bat` works with the project-private toolchain and offline Robolectric cache. Device `emulator-5558` was restored to mobile UI mode `0x11`, physical 1080x2340 / 440 dpi and non-root adbd after temporary TV tests; the task-created TV feature file is absent. Its captured pre-test baseline already had SystemUI and lockscreen disabled; those values were preserved. Exact readback is `.tmp/tv-dpad-avd-restored.log`; test scope is in `docs/superpowers/plans/2026-10-28-tv-dpad-library-rewrite.md`. Query current device state rather than assuming this historical readback remains current.
  - Current verified workflow (2026-10-27): project-local `.dev-env/jdk/ms-17.0.15`, `.dev-env/gradle-home` and `.dev-env/android-sdk`; set JAVA_HOME, GRADLE_USER_HOME, ANDROID_HOME and ANDROID_SDK_ROOT, then run gradlew.bat directly. The PowerShell wrapper is blocked by local execution policy.
  - Historical device verification used API 34 `emulator-5558`, including temporary TV UI/feature injection. Those AVD modifications were reverted after final 2026-10-28 testing. DIR-01 cleanup preserved the working emulator and removed a separate runaway emulator writer; query current device/UI state instead of assuming TV mode remains enabled.
  - User-authorized deletion of the self-loop portproxy `*:5555 -> 127.0.0.1:5555` restored ADB/Gradle connectivity. Backup/restore records remain under `.tmp/portproxy-*`; do not repeat UAC or alter unrelated system networking.

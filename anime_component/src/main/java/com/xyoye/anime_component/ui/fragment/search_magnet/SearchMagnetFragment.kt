@@ -14,6 +14,7 @@ import com.xyoye.anime_component.ui.dialog.SearchDomainDialog
 import com.xyoye.common_component.adapter.addEmptyView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.config.RouteTable
@@ -21,7 +22,6 @@ import com.xyoye.common_component.extension.addToClipboard
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.vertical
-import com.xyoye.common_component.focus.RecyclerViewFocusDelegate
 import com.xyoye.common_component.utils.MagnetUtils
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
@@ -44,12 +44,6 @@ class SearchMagnetFragment :
     }
 
     private val actionData = ManageMagnet.values().map { it.toSheetActionBean() }
-    private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
-        RecyclerViewFocusDelegate(
-            recyclerView = dataBinding.magnetRv,
-            uniqueKeyProvider = { item -> (item as? MagnetData)?.Magnet },
-        )
-    }
 
     override fun initViewModel() =
         ViewModelInit(
@@ -99,6 +93,11 @@ class SearchMagnetFragment :
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new ->
+                            if (old is MagnetData && new is MagnetData) old.Magnet == new.Magnet else old == new
+                        }
+                    }
                     addEmptyView(R.layout.layout_empty)
 
                     addItem<MagnetData, ItemSearchMagnetBinding>(R.layout.item_search_magnet) {
@@ -143,22 +142,19 @@ class SearchMagnetFragment :
                         }
                     }
                 }
-
-            focusDelegate.installVerticalDpadKeyNavigation()
         }
     }
 
     private fun initObserver() {
-        viewModel.magnetLiveData.observe(this) {
+        viewModel.magnetLiveData.observe(viewLifecycleOwner) {
             dataBinding.magnetRv.setData(it)
-            dataBinding.magnetRv.post { requestMagnetListFocusIfNeeded() }
         }
 
-        viewModel.searchHistoryLiveData.observe(this) {
+        viewModel.searchHistoryLiveData.observe(viewLifecycleOwner) {
             dataBinding.historyLabelsView.setLabels(it)
         }
 
-        viewModel.magnetTypeData.observe(this) {
+        viewModel.magnetTypeData.observe(viewLifecycleOwner) {
             MagnetScreenDialog(mAttachActivity, it, MagnetScreenType.TYPE) { entity ->
                 viewModel.magnetTypeId.set(entity.screenId)
                 viewModel.magnetTypeText.set(entity.screenName)
@@ -166,7 +162,7 @@ class SearchMagnetFragment :
             }.show()
         }
 
-        viewModel.magnetSubgroupData.observe(this) {
+        viewModel.magnetSubgroupData.observe(viewLifecycleOwner) {
             MagnetScreenDialog(mAttachActivity, it, MagnetScreenType.SUBGROUP) { entity ->
                 viewModel.magnetSubgroupId.set(entity.screenId)
                 viewModel.magnetSubgroupText.set(entity.screenName)
@@ -174,24 +170,10 @@ class SearchMagnetFragment :
             }.show()
         }
 
-        viewModel.domainErrorLiveData.observe(this) {
+        viewModel.domainErrorLiveData.observe(viewLifecycleOwner) {
             ToastCenter.showError("请完善节点信息")
             showInputDomainDialog()
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (bindingOrNull == null) return
-        focusDelegate.onResume()
-        dataBinding.magnetRv.post { requestMagnetListFocusIfNeeded() }
-    }
-
-    override fun onPause() {
-        if (bindingOrNull != null) {
-            focusDelegate.onPause()
-        }
-        super.onPause()
     }
 
     override fun search(searchText: String) {
@@ -207,15 +189,6 @@ class SearchMagnetFragment :
     override fun onTextClear() {
         dataBinding.historyCl.isVisible = true
         dataBinding.magnetRv.isVisible = false
-    }
-
-    private fun requestMagnetListFocusIfNeeded() {
-        val binding = bindingOrNull ?: return
-        if (binding.root.isInTouchMode) return
-        if (!binding.magnetRv.isVisible) return
-        if (binding.root.findFocus() != null) return
-
-        focusDelegate.requestFocus()
     }
 
     private fun showInputDomainDialog() {

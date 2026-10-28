@@ -51,6 +51,7 @@ object Dependencies {
     }
 
     object Github {
+        const val dpad_recyclerview = "com.rubensousa.dpadrecyclerview:dpadrecyclerview:1.4.3"
         const val banner = "io.github.youth5201314:banner:2.2.2"
         const val coil = "io.coil-kt:coil:2.2.2"
         const val coil_video = "io.coil-kt:coil-video:2.2.2"

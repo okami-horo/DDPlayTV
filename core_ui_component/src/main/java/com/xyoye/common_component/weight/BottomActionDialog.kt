@@ -4,10 +4,9 @@ import android.app.Activity
 import androidx.core.view.isGone
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
-import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
-import com.xyoye.common_component.focus.DpadRecyclerOrientation
 import com.xyoye.common_component.weight.dialog.BaseBottomDialog
 import com.xyoye.core_ui_component.R
 import com.xyoye.core_ui_component.databinding.DialogBottomActionBinding
@@ -44,6 +43,11 @@ class BottomActionDialog(
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new ->
+                            (old as SheetActionBean).actionId == (new as SheetActionBean).actionId
+                        }
+                    }
                     addItem<SheetActionBean, ItemBottomActionVerticalBinding>(R.layout.item_bottom_action_vertical) {
                         initView { data, _, _ ->
                             itemBinding.apply {
@@ -62,16 +66,6 @@ class BottomActionDialog(
                 }
 
             setData(actionData)
-
-            if (!isInTouchMode) {
-                DpadRecyclerFocusDelegate(
-                    recyclerView = this,
-                    orientation = DpadRecyclerOrientation.Vertical,
-                ).also { delegate ->
-                    delegate.install()
-                    post { delegate.requestDefaultFocus() }
-                }
-            }
         }
     }
 }

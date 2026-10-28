@@ -30,6 +30,7 @@
 ## UI、诊断与测试
 
 - AndroidX AppCompat、Lifecycle、RecyclerView、Paging、Startup、Preference 等。
+- DpadRecyclerView `1.4.3`：`core_ui_component` 提供 TV 列表、网格和动态菜单的方向导航与滚动；移动端共享布局继续使用普通 RecyclerView。
 - Material Components、Coil（含视频帧）、Banner：UI 与封面加载。
 - ARouter：模块路由和服务。
 - ImmersionBar、PanelSwitchHelper：`repository:immersion_bar`、`repository:panel_switch` 封装。

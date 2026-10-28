@@ -6,7 +6,10 @@
         android:id="@+id/layout_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:focusable="true"
+        android:tag="@string/focusable_item"
+        android:background="@drawable/background_item_press">
 
         <CheckBox
             android:id="@+id/danmu_source_cb"
@@ -15,6 +18,7 @@
             android:textColor="@color/text_black"
             android:textSize="16sp"
             android:clickable="false"
+            android:focusable="false"
             app:theme="@style/Theme.DanDanPlay.CheckBox" />
 
         <TextView

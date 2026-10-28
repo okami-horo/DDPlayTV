@@ -10,6 +10,7 @@ import com.xyoye.anime_component.databinding.ItemAnimeTagBinding
 import com.xyoye.anime_component.ui.activities.anime_detail.AnimeDetailViewModel
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
@@ -32,6 +33,9 @@ class AnimeIntroFragment : BaseFragment<AnimeIntroFragmentViewModel, FragmentAni
             layoutManager = horizontal()
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as TagData).id == (new as TagData).id }
+                    }
                     addItem<TagData, ItemAnimeTagBinding>(R.layout.item_anime_tag) {
                         initView { data, _, _ ->
                             itemBinding.tagTv.text = data.name
@@ -48,7 +52,7 @@ class AnimeIntroFragment : BaseFragment<AnimeIntroFragmentViewModel, FragmentAni
                 }
         }
 
-        parentViewModel.animeDetailLiveData.observe(this) {
+        parentViewModel.animeDetailLiveData.observe(viewLifecycleOwner) {
             viewModel.setBangumiData(it)
 
             dataBinding.tagRv.isVisible = it.tags.isNotEmpty()

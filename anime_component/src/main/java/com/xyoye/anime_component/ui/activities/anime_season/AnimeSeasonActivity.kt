@@ -9,6 +9,7 @@ import com.xyoye.anime_component.ui.adapter.AnimeAdapter
 import com.xyoye.anime_component.ui.dialog.date_picker.DatePickerDialog
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.grid
@@ -58,6 +59,9 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as CommonTypeData).typeId == (new as CommonTypeData).typeId }
+                    }
                     addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
                         initView { data, _, _ ->
                             itemBinding.apply {
@@ -89,6 +93,9 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as CommonTypeData).typeId == (new as CommonTypeData).typeId }
+                    }
                     addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
                         initView { data, _, _ ->
                             itemBinding.apply {
@@ -119,6 +126,9 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as CommonTypeData).typeId == (new as CommonTypeData).typeId }
+                    }
                     addItemDecoration(ItemDecorationSpace(dp2px(2), 0))
 
                     addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {

@@ -41,6 +41,7 @@ dependencies {
 
     api(Dependencies.AndroidX.constraintlayout)
     api(Dependencies.AndroidX.recyclerview)
+    api(Dependencies.Github.dpad_recyclerview)
     api(Dependencies.AndroidX.swiperefreshlayout)
     api(Dependencies.AndroidX.palette)
     api(Dependencies.AndroidX.paging)

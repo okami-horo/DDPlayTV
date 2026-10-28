@@ -2,20 +2,12 @@ package com.xyoye.player.controller.setting
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.KeyEvent
-import androidx.recyclerview.widget.GridLayoutManager
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.extension.grid
-import com.xyoye.common_component.extension.nextItemIndex
-import com.xyoye.common_component.extension.previousItemIndex
-import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
-import com.xyoye.common_component.focus.DpadDirection
-import com.xyoye.common_component.focus.DpadFocusOwner
-import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
-import com.xyoye.common_component.focus.DpadRecyclerOrientation
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.data_component.enums.PlayerType
@@ -39,18 +31,9 @@ class PlayerSettingView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : BaseSettingView<LayoutPlayerSettingBinding>(context, attrs, defStyleAttr), DpadFocusOwner {
+) : BaseSettingView<LayoutPlayerSettingBinding>(context, attrs, defStyleAttr) {
     // 操作项集合（每次展示时根据运行态重建）
     private var settingItems: List<Any> = emptyList()
-
-    private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
-        DpadRecyclerFocusDelegate(
-            recyclerView = viewBinding.settingRv,
-            orientation = DpadRecyclerOrientation.Grid,
-            spanCountProvider = { 4 },
-            boundaryHandler = { direction -> onDpadFocusBoundary(direction) },
-        )
-    }
 
     init {
         initRv()
@@ -67,9 +50,6 @@ class PlayerSettingView(
             .filter { it is SettingItem }
             .forEach { applyItemStatus(it as SettingItem) }
         viewBinding.settingRv.setData(settingItems)
-        viewBinding.settingRv.post {
-            requestDefaultDpadFocus()
-        }
     }
 
     override fun onViewHide() {
@@ -77,44 +57,26 @@ class PlayerSettingView(
         viewBinding.settingRv.clearFocus()
     }
 
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent?
-    ): Boolean {
-        // 未展示
-        if (isSettingShowing().not()) {
-            return false
-        }
-
-        val handled = handleKeyCode(keyCode)
-        if (handled) {
-            return true
-        }
-
-        val firstIndex = settingItems.indexOfFirst { it is SettingItem }
-        if (firstIndex != -1) {
-            viewBinding.settingRv.requestIndexChildFocus(firstIndex)
-        }
-        return true
-    }
-
     private fun initRv() {
         viewBinding.settingRv.apply {
             layoutManager =
-                grid(4).apply {
-                    spanSizeLookup =
-                        object : GridLayoutManager.SpanSizeLookup() {
-                            override fun getSpanSize(position: Int): Int {
-                                if (settingItems[position] is SettingActionType) {
-                                    return 4
-                                }
-                                return 1
-                            }
-                        }
+                grid(4) { position ->
+                    if (settingItems.getOrNull(position) is SettingActionType) 4 else 1
                 }
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new ->
+                            if (old is SettingItem &&
+                                new is SettingItem
+                            ) {
+                                old.action == new.action
+                            } else {
+                                old == new
+                            }
+                        }
+                    }
                     addItem<Any, ItemPlayerSettingBinding>(R.layout.item_player_setting) {
                         checkType { data, _ -> data is SettingItem }
                         initView { data, _, _ ->
@@ -145,99 +107,6 @@ class PlayerSettingView(
         }
     }
 
-    override fun requestDefaultDpadFocus(): Boolean {
-        val firstIndex = settingItems.indexOfFirst { it is SettingItem }
-        if (firstIndex != -1) {
-            focusDelegate.setPendingFocus(index = firstIndex)
-            return focusDelegate.restoreFocus()
-        }
-        return false
-    }
-
-    override fun saveDpadFocus() {
-        focusDelegate.saveFocus()
-    }
-
-    override fun restoreDpadFocus(): Boolean = focusDelegate.restoreFocus()
-
-    override fun onDpadFocusBoundary(direction: DpadDirection): Boolean = false
-
-    /**
-     * 处理KeyCode事件
-     */
-    private fun handleKeyCode(keyCode: Int): Boolean {
-        val focusedView =
-            viewBinding.settingRv.focusedChild
-                ?: return false
-        val focusedIndex = viewBinding.settingRv.getChildAdapterPosition(focusedView)
-        if (focusedIndex == -1) {
-            return false
-        }
-        val targetIndex = getTargetIndexByKeyCode(keyCode, focusedIndex)
-        viewBinding.settingRv.requestIndexChildFocus(targetIndex)
-        return true
-    }
-
-    /**
-     * 根据KeyCode与当前焦点位置，取得目标焦点位置
-     */
-    private fun getTargetIndexByKeyCode(
-        keyCode: Int,
-        focusedIndex: Int
-    ): Int {
-        when (keyCode) {
-            // 左规则
-            KeyEvent.KEYCODE_DPAD_LEFT -> {
-                return settingItems.previousItemIndex<SettingItem>(focusedIndex)
-            }
-            // 右规则
-            KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                return settingItems.nextItemIndex<SettingItem>(focusedIndex)
-            }
-            // 上、下规则
-            // 按类型分组后，找到当前焦点所在分组的位置，取上/下一个分组的同样位置
-            else -> {
-                val focusedItem = settingItems[focusedIndex]
-                // item按分类分组
-                val groupedItemMap =
-                    settingItems
-                        .asSequence()
-                        .filter { it is SettingItem }
-                        .groupBy { (it as SettingItem).action.type }
-                // 当前焦点所在分组
-                val focusedList =
-                    groupedItemMap.values
-                        .find { it.contains(focusedItem) }
-                        ?: return -1
-                // 当前焦点item在分组的位置
-                val focusedIndexInList = focusedList.indexOf(focusedItem)
-                val listIndexInMap = groupedItemMap.values.indexOf(focusedList)
-                val targetList =
-                    if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-                        // 上一列分组，无则取最后一列分组
-                        groupedItemMap.values
-                            .toList()
-                            .getOrNull(listIndexInMap - 1)
-                            ?: groupedItemMap.values.last()
-                    } else {
-                        // 下一列分组，无则取第一列分组
-                        groupedItemMap.values
-                            .toList()
-                            .getOrNull(listIndexInMap + 1)
-                            ?: groupedItemMap.values.first()
-                    }
-                // 分组对应焦点位置的Item，无则取最后一个
-                val upItem =
-                    targetList.getOrNull(focusedIndexInList)
-                        ?: targetList.last()
-                return settingItems.indexOf(upItem)
-            }
-        }
-    }
-
-    /**
-     * 生成Item数据
-     */
     private fun generateItems(): List<Any> {
         val items = mutableListOf<Any>()
         val disabledActions =
@@ -325,62 +194,50 @@ class PlayerSettingView(
 
             SettingAction.VIDEO_SPEED -> {
                 mControlWrapper.showSettingView(SettingViewType.VIDEO_SPEED)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.VIDEO_ASPECT -> {
                 mControlWrapper.showSettingView(SettingViewType.VIDEO_ASPECT)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.ANIME4K -> {
                 mControlWrapper.showSettingView(SettingViewType.ANIME4K)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.AUDIO_TRACK -> {
                 mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.AUDIO)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.VIDEO_TRACK -> {
                 mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.VIDEO)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.DANMU_TRACK -> {
                 mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.DANMU)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.DANMU_CONFIG -> {
                 mControlWrapper.showSettingView(SettingViewType.DANMU_CONFIGURE)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.DANMU_STYLE -> {
                 mControlWrapper.showSettingView(SettingViewType.DANMU_STYLE)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.DANMU_TIME -> {
                 mControlWrapper.showSettingView(SettingViewType.DANMU_OFFSET_TIME)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.SUBTITLE_TRACK -> {
                 mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.SUBTITLE)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.SUBTITLE_STYLE -> {
                 mControlWrapper.showSettingView(SettingViewType.SUBTITLE_STYLE)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.SUBTITLE_TIME -> {
                 mControlWrapper.showSettingView(SettingViewType.SUBTITLE_OFFSET_TIME)
-                onSettingVisibilityChanged(false)
             }
 
             SettingAction.SCREEN_SHOT -> {

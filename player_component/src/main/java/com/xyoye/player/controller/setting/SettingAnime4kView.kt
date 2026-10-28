@@ -2,13 +2,10 @@ package com.xyoye.player.controller.setting
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.KeyEvent
 import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
-import com.xyoye.common_component.extension.nextItemIndex
-import com.xyoye.common_component.extension.previousItemIndex
-import com.xyoye.common_component.extension.requestIndexChildFocus
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.utils.dp2px
@@ -52,23 +49,6 @@ class SettingAnime4kView(
         viewBinding.rvAnime4k.clearFocus()
     }
 
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent?
-    ): Boolean {
-        if (isSettingShowing().not()) {
-            return false
-        }
-
-        val handled = handleKeyCode(keyCode)
-        if (handled) {
-            return true
-        }
-
-        viewBinding.rvAnime4k.requestIndexChildFocus(0)
-        return true
-    }
-
     private fun initView() {
         anime4kOptions.clear()
         anime4kOptions.add(Anime4kOption(Anime4kMode.MODE_OFF, "关闭"))
@@ -87,6 +67,9 @@ class SettingAnime4kView(
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as Anime4kOption).mode == (new as Anime4kOption).mode }
+                    }
                     addItem<Anime4kOption, ItemSettingAnime4kBinding>(R.layout.item_setting_anime4k) {
                         initView { data, _, _ ->
                             itemBinding.tvName.text = data.display
@@ -122,33 +105,4 @@ class SettingAnime4kView(
         mControlWrapper.setAnime4kMode(mode)
         applyModeStatus()
     }
-
-    private fun handleKeyCode(keyCode: Int): Boolean {
-        val focusedChild = viewBinding.rvAnime4k.focusedChild ?: return false
-        val focusedIndex = viewBinding.rvAnime4k.getChildAdapterPosition(focusedChild)
-        if (focusedIndex == -1) {
-            return false
-        }
-        val targetIndex = getTargetIndexByKeyCode(keyCode, focusedIndex)
-        viewBinding.rvAnime4k.requestIndexChildFocus(targetIndex)
-        return true
-    }
-
-    private fun getTargetIndexByKeyCode(
-        keyCode: Int,
-        focusedIndex: Int
-    ): Int =
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_UP -> {
-                anime4kOptions.previousItemIndex<Anime4kOption>(focusedIndex)
-            }
-
-            KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_DOWN -> {
-                anime4kOptions.nextItemIndex<Anime4kOption>(focusedIndex)
-            }
-
-            else -> {
-                -1
-            }
-        }
 }

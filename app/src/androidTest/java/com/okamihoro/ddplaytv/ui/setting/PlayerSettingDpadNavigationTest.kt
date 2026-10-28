@@ -1,19 +1,20 @@
-package com.okamihoro.ddplaytv.ui.setting
+﻿package com.okamihoro.ddplaytv.ui.setting
 
-import android.content.res.Configuration
+import android.os.SystemClock
 import android.view.KeyEvent
-import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceGroupAdapter
+import androidx.preference.SwitchPreference
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.viewpager2.widget.ViewPager2
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.user_component.R
 import com.xyoye.user_component.ui.activities.setting_player.SettingPlayerActivity
+import com.xyoye.user_component.ui.fragment.DanmuSettingFragment
 import com.xyoye.user_component.ui.fragment.PlayerSettingFragment
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -22,104 +23,114 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class PlayerSettingDpadNavigationTest {
+    private val instrumentation = InstrumentationRegistry.getInstrumentation()
+
     @Before
     fun useRemoteInputMode() {
-        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+        instrumentation.setInTouchMode(false)
     }
 
     @Test
-    fun dpadDownAtBottomDoesNotSwitchPageInTvSettingsMode() {
+    fun categoriesRequireExplicitNavigationAndSurviveRecreation() {
         ActivityScenario.launch(SettingPlayerActivity::class.java).use { scenario ->
-            waitForIdle()
-
-            scenario.onActivity { activity ->
-                assumeTrue("This test only applies to TV UI mode", activity.isTvUiMode())
-                activity.supportFragmentManager.executePendingTransactions()
-
-                val playerFragment = findFragment<PlayerSettingFragment>(activity)
-                val listView = playerFragment.listView
-                val lastPosition = (listView.adapter?.itemCount ?: 0) - 1
-                assertTrue("Player settings list should contain at least one item", lastPosition >= 0)
-                listView.scrollToPosition(lastPosition)
+            scenario.onActivity { assumeTrue(it.isTelevisionUiMode()) }
+            await(scenario) { it.findViewById<DpadRecyclerView>(R.id.tab_layout).hasFocus() && it.hasWindowFocus() }
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            await(scenario) { active(it) is PlayerSettingFragment && (active(it) as PlayerSettingFragment).listView.hasFocus() }
+            repeat(100) { send(KeyEvent.KEYCODE_DPAD_DOWN) }
+            repeat(100) { send(KeyEvent.KEYCODE_DPAD_UP) }
+            scenario.onActivity {
+                assertTrue(active(it) is PlayerSettingFragment)
+                assertTrue(it.currentFocus?.isShown == true)
+                it.findViewById<DpadRecyclerView>(R.id.tab_layout).requestFocus()
             }
-
-            waitForIdle()
-
-            scenario.onActivity { activity ->
-                val playerFragment = findFragment<PlayerSettingFragment>(activity)
-                val listView = playerFragment.listView
-                val lastPosition = (listView.adapter?.itemCount ?: 0) - 1
-                val holder = listView.findViewHolderForAdapterPosition(lastPosition)
-                assertNotNull("Expected last preference row to be bound", holder)
-
-                val focusTarget = findFocusableView(holder!!.itemView)
-                assertNotNull("Expected last preference row to have a focusable target", focusTarget)
-                assertTrue("Failed to focus the last preference row", focusTarget!!.requestFocus())
-            }
-
-            waitForIdle()
-
-            repeat(3) {
-                sendDpad(KeyEvent.KEYCODE_DPAD_DOWN)
-                waitForIdle()
-            }
-
-            scenario.onActivity { activity ->
-                val viewPager = activity.findViewById<ViewPager2>(R.id.viewpager)
-                assertNotNull("Player setting ViewPager should be present", viewPager)
-                assertEquals(
-                    "Pressing DPAD_DOWN at the bottom should keep the current tab",
-                    0,
-                    viewPager.currentItem,
-                )
-            }
-
-            sendDpad(KeyEvent.KEYCODE_DPAD_RIGHT)
-            waitForIdle()
-
-            scenario.onActivity { activity ->
-                val viewPager = activity.findViewById<ViewPager2>(R.id.viewpager)
-                assertEquals("DPAD_RIGHT should still switch to next tab", 1, viewPager.currentItem)
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            scenario.onActivity { assertTrue("Browsing a category must not activate it", active(it) is PlayerSettingFragment) }
+            send(KeyEvent.KEYCODE_DPAD_CENTER)
+            await(scenario) { active(it) is DanmuSettingFragment }
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            await(scenario) { (active(it) as DanmuSettingFragment).listView.hasFocus() }
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            send(KeyEvent.KEYCODE_DPAD_LEFT)
+            scenario.onActivity { assertTrue("Content arrows must not change category", active(it) is DanmuSettingFragment) }
+            scenario.recreate()
+            await(scenario) { active(it) is DanmuSettingFragment && it.currentFocus?.isShown == true }
+            scenario.onActivity {
+                assertEquals(1, it.supportFragmentManager.fragments.count { fragment -> fragment.view?.isShown == true })
             }
         }
     }
 
-    private fun sendDpad(keyCode: Int) {
-        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(keyCode)
-    }
-
-    private fun waitForIdle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
-
-    private fun SettingPlayerActivity.isTvUiMode(): Boolean {
-        val mask = resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK
-        return mask == Configuration.UI_MODE_TYPE_TELEVISION
-    }
-
-    private inline fun <reified T : Fragment> findFragment(activity: SettingPlayerActivity): T {
-        val fragment =
-            activity.supportFragmentManager.fragments.firstOrNull {
-                it is T
+    @Test
+    fun switchExecutesOnceAndPersistsAcrossRecreation() {
+        ActivityScenario.launch(SettingPlayerActivity::class.java).use { scenario ->
+            var original = false
+            var position = -1
+            scenario.onActivity { activity ->
+                assumeTrue(activity.isTelevisionUiMode())
+                val fragment = active(activity) as PlayerSettingFragment
+                original = fragment.findPreference<SwitchPreference>("surface_renders")!!.isChecked
+                val list = fragment.listView as DpadRecyclerView
+                position = (list.adapter as PreferenceGroupAdapter).getPreferenceAdapterPosition("surface_renders")
+                list.setSelectedPosition(position)
+                list.requestFocus()
             }
-        assertTrue("Expected fragment ${T::class.java.simpleName} to be attached", fragment is T)
-        @Suppress("UNCHECKED_CAST")
-        return fragment as T
-    }
-
-    private fun findFocusableView(root: View): View? {
-        if (root.isShown && root.isFocusable) {
-            return root
-        }
-
-        val viewGroup = root as? ViewGroup ?: return null
-        for (index in 0 until viewGroup.childCount) {
-            val child = viewGroup.getChildAt(index)
-            val found = findFocusableView(child)
-            if (found != null) {
-                return found
+            await(scenario) { activity ->
+                val list = (active(activity) as PlayerSettingFragment).listView
+                activity.hasWindowFocus() &&
+                    activity.currentFocus?.let { list.findContainingViewHolder(it)?.bindingAdapterPosition == position } == true
+            }
+            try {
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                scenario.onActivity {
+                    assertEquals(
+                        !original,
+                        (active(it) as PlayerSettingFragment).findPreference<SwitchPreference>("surface_renders")!!.isChecked
+                    )
+                }
+                send(KeyEvent.KEYCODE_DPAD_LEFT)
+                send(KeyEvent.KEYCODE_DPAD_RIGHT)
+                scenario.onActivity { assertTrue(active(it) is PlayerSettingFragment) }
+                scenario.recreate()
+                await(scenario) { active(it) is PlayerSettingFragment }
+                scenario.onActivity {
+                    assertEquals(
+                        !original,
+                        (active(it) as PlayerSettingFragment).findPreference<SwitchPreference>("surface_renders")!!.isChecked
+                    )
+                }
+            } finally {
+                scenario.onActivity {
+                    (active(it) as PlayerSettingFragment).findPreference<SwitchPreference>("surface_renders")!!.isChecked =
+                        original
+                }
             }
         }
-        return null
+    }
+
+    private fun active(activity: SettingPlayerActivity): Fragment? =
+        activity.supportFragmentManager.fragments.firstOrNull { !it.isHidden && it.view != null }
+
+    private fun send(key: Int) {
+        instrumentation.sendKeyDownUpSync(key)
+        instrumentation.waitForIdleSync()
+    }
+
+    private fun await(
+        scenario: ActivityScenario<SettingPlayerActivity>,
+        condition: (SettingPlayerActivity) -> Boolean
+    ) {
+        val deadline = SystemClock.uptimeMillis() + 5000
+        var ready = false
+        var diagnostic = ""
+        while (!ready && SystemClock.uptimeMillis() < deadline) {
+            instrumentation.waitForIdleSync()
+            scenario.onActivity {
+                ready = condition(it)
+                diagnostic = "focus=${it.currentFocus?.javaClass?.simpleName}:${it.currentFocus?.id} window=${it.hasWindowFocus()}"
+            }
+            if (!ready) SystemClock.sleep(25)
+        }
+        assertTrue("Expected category and actual focus target: $diagnostic", ready)
     }
 }

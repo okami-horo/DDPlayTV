@@ -11,7 +11,7 @@ import com.xyoye.common_component.bridge.ServiceLifecycleBridge
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.UserConfig
 import com.xyoye.common_component.extension.setTextColorRes
-import com.xyoye.common_component.focus.requestDefaultFocus
+import com.xyoye.common_component.focus.DpadFocusOwner
 import com.xyoye.common_component.session.UserSessionManager
 import com.xyoye.data_component.data.LoginData
 import com.xyoye.user_component.BR
@@ -25,7 +25,9 @@ import java.text.NumberFormat
  */
 
 @Route(path = RouteTable.User.PersonalFragment)
-class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersonalBinding>() {
+class PersonalFragment :
+    BaseFragment<PersonalFragmentViewModel, FragmentPersonalBinding>(),
+    DpadFocusOwner {
     private var lastFocusedViewId: Int = View.NO_ID
 
     override fun initViewModel() =
@@ -65,12 +67,6 @@ class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersona
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        if (bindingOrNull == null) return
-        dataBinding.root.post { requestDefaultFocusIfNeeded() }
-    }
-
     override fun onPause() {
         if (bindingOrNull != null) {
             val focusedId = dataBinding.root.findFocus()?.id ?: View.NO_ID
@@ -81,21 +77,12 @@ class PersonalFragment : BaseFragment<PersonalFragmentViewModel, FragmentPersona
         super.onPause()
     }
 
-    private fun requestDefaultFocusIfNeeded() {
-        val binding = bindingOrNull ?: return
-        if (binding.root.isInTouchMode) return
-        if (binding.root.findFocus() != null) return
-
-        val restored =
-            if (lastFocusedViewId != View.NO_ID) {
-                binding.root.findViewById<View>(lastFocusedViewId)?.requestDefaultFocus() == true
-            } else {
-                false
-            }
-
-        if (!restored) {
-            binding.userAccountCl.requestDefaultFocus()
-        }
+    override fun requestDefaultDpadFocus(): Boolean {
+        val binding = bindingOrNull ?: return false
+        if (!isVisible || binding.root.isInTouchMode) return false
+        val previous = binding.root.findViewById<View>(lastFocusedViewId)
+        return previous?.takeIf { it.isShown && it.isFocusable }?.requestFocus()
+            ?: binding.userAccountCl.requestFocus()
     }
 
     private fun applyLoginData(loginData: LoginData?) {

@@ -17,8 +17,8 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.toResColor
-import com.xyoye.common_component.focus.DpadDialogFocusController
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.core_ui_component.R
 import com.xyoye.core_ui_component.databinding.DialogBaseBottomDialogBinding
@@ -31,23 +31,21 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
     private val activity: Activity
 ) : BottomSheetDialog(activity, R.style.Bottom_Sheet_Dialog) {
     protected lateinit var rootViewBinding: DialogBaseBottomDialogBinding
-
-    private val focusController by lazy(LazyThreadSafetyMode.NONE) {
-        DpadDialogFocusController(
-            activity = activity,
-            rootProvider = { rootViewBinding.root },
-        )
-    }
+    private var initialFocusPending = false
 
     override fun show() {
-        focusController.captureHostFocus()
+        initialFocusPending = true
         super.show()
-        focusController.requestDialogFocus()
     }
 
-    override fun dismiss() {
-        super.dismiss()
-        activity.window?.decorView?.post { focusController.restoreHostFocus() }
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && initialFocusPending && context.isTelevisionUiMode() && !rootViewBinding.root.isInTouchMode) {
+            initialFocusPending = false
+            if (!rootViewBinding.containerFl.requestFocus()) {
+                if (!rootViewBinding.negativeBt.requestFocus()) rootViewBinding.positiveBt.requestFocus()
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +59,7 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
                 null,
                 false,
             )
+        if (context.isTelevisionUiMode()) rootViewBinding.root.isFocusable = false
 
         val childViewBinding =
             DataBindingUtil.inflate<T>(
@@ -83,6 +82,7 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
 
         // 默认展开
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        if (context.isTelevisionUiMode()) behavior.isDraggable = false
 
         setContentView(rootViewBinding.root)
 

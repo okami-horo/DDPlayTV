@@ -12,7 +12,10 @@ import com.xyoye.anime_component.ui.adapter.HomeBannerAdapter
 import com.xyoye.anime_component.ui.fragment.home_page.HomePageFragment
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.focus.TabLayoutViewPager2DpadFocusCoordinator
+import com.xyoye.common_component.extension.isTelevisionUiMode
+import com.xyoye.common_component.focus.DpadFocusOwner
+import com.xyoye.common_component.focus.TvCategory
+import com.xyoye.common_component.focus.TvCategoryPages
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.data_component.data.BangumiAnimeData
 import com.youth.banner.config.BannerConfig
@@ -25,9 +28,11 @@ import java.util.*
  */
 
 @Route(path = RouteTable.Anime.HomeFragment)
-class HomeFragment : BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>() {
+class HomeFragment :
+    BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>(),
+    DpadFocusOwner {
     private var tabLayoutMediator: TabLayoutMediator? = null
-    private var tvFocusCoordinator: TabLayoutViewPager2DpadFocusCoordinator? = null
+    private var tvPages: TvCategoryPages? = null
 
     override fun initViewModel() =
         ViewModelInit(
@@ -36,6 +41,8 @@ class HomeFragment : BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>() 
         )
 
     override fun getLayoutId() = R.layout.fragment_home
+
+    override fun requestDefaultDpadFocus(): Boolean = tvPages?.requestNavigationFocus() ?: dataBinding.searchLl.requestFocus()
 
     override fun initView() {
         dataBinding.searchLl.setOnClickListener {
@@ -59,13 +66,12 @@ class HomeFragment : BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>() 
     override fun onDestroyView() {
         tabLayoutMediator?.detach()
         tabLayoutMediator = null
-        tvFocusCoordinator?.detach()
-        tvFocusCoordinator = null
+        tvPages = null
         super.onDestroyView()
     }
 
     private fun initViewModelObserve() {
-        viewModel.bannersLiveData.observe(this) {
+        viewModel.bannersLiveData.observe(viewLifecycleOwner) {
             dataBinding.banner.apply {
                 setAdapter(HomeBannerAdapter(it.banners))
                 indicator = CircleIndicator(mAttachActivity)
@@ -81,8 +87,20 @@ class HomeFragment : BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>() 
             }
         }
 
-        viewModel.weeklyAnimeLiveData.observe(this) {
+        viewModel.weeklyAnimeLiveData.observe(viewLifecycleOwner) {
             val pageAdapter = HomePageAdapter(it)
+            if (requireContext().isTelevisionUiMode()) {
+                val pages =
+                    tvPages
+                        ?: TvCategoryPages(this, childFragmentManager, dataBinding.tabLayout, dataBinding.viewpager).also { tvPages = it }
+                pages.submit(
+                    (0 until pageAdapter.itemCount).map { index ->
+                        TvCategory("weekday_$index", pageAdapter.getItemTitle(index)) { pageAdapter.createFragment(index) }
+                    },
+                    Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
+                )
+                return@observe
+            }
 
             dataBinding.viewpager.apply {
                 adapter = pageAdapter
@@ -96,13 +114,6 @@ class HomeFragment : BaseFragment<HomeFragmentViewModel, FragmentHomeBinding>() 
                 }.also { mediator ->
                     mediator.attach()
                 }
-
-            tvFocusCoordinator?.detach()
-            tvFocusCoordinator =
-                TabLayoutViewPager2DpadFocusCoordinator.attachIfTelevision(
-                    tabLayout = dataBinding.tabLayout,
-                    viewPager = dataBinding.viewpager,
-                )
 
             dataBinding.viewpager.post {
                 dataBinding.viewpager.currentItem = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1

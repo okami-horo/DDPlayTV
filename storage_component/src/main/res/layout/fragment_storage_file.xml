@@ -28,6 +28,7 @@
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/storage_file_rv"
+                app:tvDpadList="true"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"

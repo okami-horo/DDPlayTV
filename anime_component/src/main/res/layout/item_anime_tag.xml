@@ -7,7 +7,10 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_marginStart="12dp"
-        android:padding="2dp">
+        android:padding="2dp"
+        android:focusable="true"
+        android:tag="@string/focusable_item"
+        android:background="@drawable/background_item_press">
 
         <TextView
             android:id="@+id/tag_tv"

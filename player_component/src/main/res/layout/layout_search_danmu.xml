@@ -82,6 +82,7 @@
             app:layout_constraintTop_toTopOf="@id/search_danmu_et" />
 
         <androidx.recyclerview.widget.RecyclerView
+            app:tvDpadList="true"
             android:id="@+id/danmu_rv"
             android:layout_width="match_parent"
             android:layout_height="0dp"

@@ -9,7 +9,9 @@
         android:background="@drawable/background_item_press_corner"
         android:gravity="center_vertical"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:padding="12dp"
+        android:focusable="true"
+        android:tag="@string/focusable_item">
 
         <TextView
             android:id="@+id/cache_type_name_tv"

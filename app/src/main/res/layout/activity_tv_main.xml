@@ -18,7 +18,7 @@
         android:background="@color/layout_bg_color"
         tools:context=".ui.tv.TvMainActivity">
 
-        <androidx.recyclerview.widget.RecyclerView
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
             android:id="@+id/tv_nav_rv"
             android:layout_width="220dp"
             android:layout_height="0dp"
@@ -42,7 +42,7 @@
             app:layout_constraintStart_toEndOf="@id/tv_nav_rv"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <FrameLayout
+        <com.okamihoro.ddplaytv.ui.tv.TvContentContainer
             android:id="@+id/fragment_container"
             android:layout_width="0dp"
             android:layout_height="0dp"

@@ -41,7 +41,7 @@ class UserCoverDialog(
                             nameArray.recycle()
                             itemBinding.userCoverTv.text = coverName
 
-                            itemBinding.userCoverIv.setOnClickListener {
+                            itemBinding.root.setOnClickListener {
                                 callback.invoke(position)
                                 dismiss()
                             }

@@ -18,7 +18,8 @@ import com.xyoye.player.wrapper.InterSettingController
 class SettingController(
     private val context: Context,
     private val addView: (InterSettingView) -> Unit,
-    private val onSettingHidden: (() -> Unit)? = null
+    private val onSettingHidden: (() -> Unit)? = null,
+    private val onSettingShown: (() -> Unit)? = null
 ) : InterSettingController {
     private lateinit var playerSettingView: PlayerSettingView
     private lateinit var switchVideoSourceView: SwitchVideoSourceView
@@ -55,27 +56,22 @@ class SettingController(
         }
 
         val settingView = getSettingView(viewType, extra)
-        if (showingSettingViews.contains(settingView).not()) {
-            showingSettingViews.add(settingView)
-        }
-        if (settingView.isSettingShowing().not()) {
-            settingView.onSettingVisibilityChanged(true)
-        }
+        if (showingSettingViews.lastOrNull() === settingView && settingView.isSettingShowing()) return
+        if (showingSettingViews.isEmpty()) onSettingShown?.invoke()
+        showingSettingViews.lastOrNull()?.onSettingVisibilityChanged(false)
+        showingSettingViews.remove(settingView)
+        showingSettingViews.add(settingView)
+        settingView.onSettingVisibilityChanged(true)
     }
 
     override fun hideSettingView() {
-        var hidden = false
-        val iterator = showingSettingViews.iterator()
-        while (iterator.hasNext()) {
-            val view = iterator.next()
-            if (view.isSettingShowing()) {
-                view.onSettingVisibilityChanged(false)
-                view.getView().clearFocus()
-                iterator.remove()
-                hidden = true
-            }
-        }
-        if (hidden) {
+        val view = showingSettingViews.removeLastOrNull() ?: return
+        view.onSettingVisibilityChanged(false)
+        view.getView().clearFocus()
+        val previous = showingSettingViews.lastOrNull()
+        if (previous != null && !isPopupMode) {
+            previous.onSettingVisibilityChanged(true)
+        } else {
             onSettingHidden?.invoke()
         }
     }
@@ -244,7 +240,9 @@ class SettingController(
     fun setPopupMode(isPopupMode: Boolean) {
         this.isPopupMode = isPopupMode
         if (isPopupMode) {
-            hideSettingView()
+            showingSettingViews.forEach { it.onSettingVisibilityChanged(false) }
+            showingSettingViews.clear()
+            onSettingHidden?.invoke()
         }
     }
 }

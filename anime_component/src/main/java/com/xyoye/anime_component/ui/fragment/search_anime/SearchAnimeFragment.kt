@@ -11,6 +11,7 @@ import com.xyoye.anime_component.ui.adapter.AnimeAdapter
 import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.extension.grid
 import com.xyoye.common_component.extension.gridEmpty
@@ -91,6 +92,9 @@ class SearchAnimeFragment :
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as CommonTypeData).typeId == (new as CommonTypeData).typeId }
+                    }
                     addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
                         initView { data, position, _ ->
                             itemBinding.apply {
@@ -118,6 +122,9 @@ class SearchAnimeFragment :
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as CommonTypeData).typeId == (new as CommonTypeData).typeId }
+                    }
                     addItemDecoration(ItemDecorationSpace(dp2px(2), 0))
 
                     addItem<CommonTypeData, ItemCommonScreenBinding>(R.layout.item_common_screen) {
@@ -156,22 +163,22 @@ class SearchAnimeFragment :
     }
 
     private fun initObserver() {
-        viewModel.animeTypeLiveData.observe(this) {
+        viewModel.animeTypeLiveData.observe(viewLifecycleOwner) {
             dataBinding.animeTypeRv.setData(it)
         }
 
-        viewModel.animeSortLiveData.observe(this) {
+        viewModel.animeSortLiveData.observe(viewLifecycleOwner) {
             dataBinding.sortRv.setData(it)
         }
 
-        viewModel.animeLiveData.observe(this) {
+        viewModel.animeLiveData.observe(viewLifecycleOwner) {
             // 保留recycler view位置，避免滚动
             val recyclerSaveState = dataBinding.animeRv.layoutManager?.onSaveInstanceState()
             dataBinding.animeRv.setData(it)
             dataBinding.animeRv.layoutManager?.onRestoreInstanceState(recyclerSaveState)
         }
 
-        viewModel.searchHistoryLiveData.observe(this) {
+        viewModel.searchHistoryLiveData.observe(viewLifecycleOwner) {
             dataBinding.historyLabelsView.setLabels(it)
         }
     }

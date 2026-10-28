@@ -13,9 +13,11 @@ import com.google.android.material.tabs.TabLayout
 import com.okamihoro.ddplaytv.R
 import com.okamihoro.ddplaytv.ui.main.MainActivity
 import com.okamihoro.ddplaytv.ui.tv.TvMainActivity
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.anime_component.ui.activities.anime_season.AnimeSeasonActivity
 import com.xyoye.anime_component.ui.activities.search.SearchActivity
 import com.xyoye.anime_component.ui.fragment.home.HomeFragment
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.local_component.ui.activities.play_history.PlayHistoryActivity
 import com.xyoye.local_component.ui.activities.shooter_subtitle.ShooterSubtitleActivity
@@ -84,6 +86,11 @@ class AppFeaturePageSmokeTest {
         ActivityScenario.launch(ScanManagerActivity::class.java).use { scenario ->
             waitForIdle()
             scenario.onActivity { activity ->
+                if (activity.isTelevisionUiMode()) {
+                    assertEquals(2, activity.findViewById<DpadRecyclerView>(com.xyoye.user_component.R.id.tab_layout).adapter?.itemCount)
+                    assertEquals(1, activity.supportFragmentManager.fragments.count { it.view?.isShown == true })
+                    return@onActivity
+                }
                 val viewPager = activity.findViewById<ViewPager2>(com.xyoye.user_component.R.id.viewpager)
                 val tabLayout = activity.findViewById<TabLayout>(com.xyoye.user_component.R.id.tab_layout)
                 assertNotNull("Scan manager ViewPager should exist", viewPager)
@@ -163,6 +170,11 @@ class AppFeaturePageSmokeTest {
         ActivityScenario.launch(SearchActivity::class.java).use { scenario ->
             waitForIdle()
             scenario.onActivity { activity ->
+                if (activity.isTelevisionUiMode()) {
+                    assertEquals(2, activity.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.tab_layout).adapter?.itemCount)
+                    assertEquals(1, activity.supportFragmentManager.fragments.count { it.view?.isShown == true })
+                    return@onActivity
+                }
                 val viewPager = activity.findViewById<ViewPager2>(com.xyoye.anime_component.R.id.viewpager)
                 assertNotNull("Anime search ViewPager should exist", viewPager)
                 assertEquals(2, viewPager.adapter?.itemCount)

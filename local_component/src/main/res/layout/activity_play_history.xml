@@ -17,6 +17,7 @@
         <include layout="@layout/layout_toolbar" />
 
         <androidx.recyclerview.widget.RecyclerView
+            app:tvDpadList="true"
             android:id="@+id/play_history_rv"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

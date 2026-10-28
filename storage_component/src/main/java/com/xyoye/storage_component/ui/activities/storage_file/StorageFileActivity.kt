@@ -12,15 +12,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
-import com.xyoye.common_component.extension.requestIndexChildFocus
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
@@ -73,6 +72,8 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     // 导航栈：当前页面/目录的单一事实源
     private val routeStack = mutableListOf<RouteEntry>()
+    private var restoredRoutePaths = emptyList<String>()
+    private var restoredRouteNames = emptyList<String>()
 
     // 当前所处文件夹（由导航栈推导，避免状态不同步）
     val directory: StorageFile?
@@ -117,6 +118,8 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ARouter.getInstance().inject(this)
+        restoredRoutePaths = savedInstanceState?.getStringArrayList("directory_paths").orEmpty()
+        restoredRouteNames = savedInstanceState?.getStringArrayList("directory_names").orEmpty()
 
         if (checkBundle().not()) {
             super.onCreate(savedInstanceState)
@@ -126,6 +129,12 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         super.onCreate(savedInstanceState)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putStringArrayList("directory_paths", ArrayList(routeStack.map { it.path.route }))
+        outState.putStringArrayList("directory_names", ArrayList(routeStack.map { it.path.name }))
+        super.onSaveInstanceState(outState)
+    }
+
     override fun initView() {
         mToolbarStyleHelper.observerChildScroll()
         title = storageLibrary?.displayName
@@ -133,7 +142,25 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
         initPathRv()
         initListener()
-        openDirectory(null)
+        if (restoredRoutePaths.isEmpty()) {
+            openDirectory(null)
+        } else {
+            val transaction = supportFragmentManager.beginTransaction().setReorderingAllowed(true)
+            restoredRoutePaths.forEachIndexed { index, path ->
+                val fragment =
+                    supportFragmentManager.findFragmentByTag(path) as? StorageFileFragment
+                        ?: StorageFileFragment.newInstance(path)
+                routeStack.add(RouteEntry(StorageFilePath(restoredRouteNames.getOrElse(index) { path }, path), null, fragment))
+                if (!fragment.isAdded) transaction.add(dataBinding.fragmentContainer.id, fragment, path)
+                if (index == restoredRoutePaths.lastIndex) {
+                    transaction.show(fragment).setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
+                } else {
+                    transaction.hide(fragment).setMaxLifecycle(fragment, Lifecycle.State.STARTED)
+                }
+            }
+            transaction.commitNow()
+            onDisplayFragmentChanged()
+        }
     }
 
     private fun initPathRv() {
@@ -151,23 +178,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         mToolbar?.setNavigationOnClickListener {
             if (popFragment().not()) {
                 finish()
-            }
-        }
-
-        dataBinding.pathRv.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                val lastIndex =
-                    dataBinding.pathRv.adapter?.itemCount?.let { count ->
-                        if (count > 0) count - 1 else RecyclerView.NO_POSITION
-                    } ?: RecyclerView.NO_POSITION
-                if (lastIndex != RecyclerView.NO_POSITION) {
-                    LogFacade.d(
-                        LogModule.STORAGE,
-                        TAG,
-                        "pathRv focus gained, request focus index=$lastIndex count=${dataBinding.pathRv.adapter?.itemCount ?: 0}"
-                    )
-                    dataBinding.pathRv.requestIndexChildFocus(lastIndex)
-                }
             }
         }
 
@@ -275,14 +285,14 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         path: StorageFilePath,
         directory: StorageFile?
     ) {
-        val fragment = StorageFileFragment.newInstance()
+        val fragment = StorageFileFragment.newInstance(path.route)
         val previousFragment = routeStack.lastOrNull()?.fragment
         routeStack.add(RouteEntry(path = path, directory = directory, fragment = fragment))
         LogFacade.d(LogModule.STORAGE, TAG, "pushFragment route=${path.route} size=${routeStack.size}")
 
         supportFragmentManager.beginTransaction().apply {
             // 添加前的最后一个Fragment，设置为STARTED状态
-            previousFragment?.let { setMaxLifecycle(it, Lifecycle.State.STARTED) }
+            previousFragment?.let { hide(it).setMaxLifecycle(it, Lifecycle.State.STARTED) }
 
             setCustomAnimations(R.anim.fragment_fade_in, R.anim.fragment_fade_out)
             setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
@@ -357,7 +367,8 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
             // 以导航栈为准：最后一个Fragment，设置为RESUMED状态
             if (resumedFragment != null && resumedFragment !in fragments) {
-                setMaxLifecycle(resumedFragment, Lifecycle.State.RESUMED)
+                show(resumedFragment).setMaxLifecycle(resumedFragment, Lifecycle.State.RESUMED)
+                runOnCommit { resumedFragment.requestFocus() }
             }
             commit()
         }
@@ -367,9 +378,12 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         val newPathData = StorageFilePathAdapter.buildPathData(routeStack.map { it.path })
         LogFacade.d(LogModule.STORAGE, TAG, "onDisplayFragmentChanged pathSize=${newPathData.size}")
         dataBinding.pathRv.setData(newPathData)
-        dataBinding.pathRv.post {
-            dataBinding.pathRv.smoothScrollToPosition(newPathData.size - 1)
-            LogFacade.d(LogModule.STORAGE, TAG, "pathRv smoothScrollToPosition index=${newPathData.size - 1}")
+        val pathList = dataBinding.pathRv
+        if (pathList is DpadRecyclerView) {
+            pathList.setSelectedPosition(newPathData.lastIndex)
+            pathList.requestFocus()
+        } else {
+            pathList.smoothScrollToPosition(newPathData.lastIndex)
         }
     }
 
@@ -417,9 +431,13 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     /**
      * 分发焦点到最后一个Fragment
      */
-    fun dispatchFocus(reversed: Boolean = false) {
-        routeStack.lastOrNull()?.fragment?.requestFocus(reversed)
+    fun dispatchFocus() {
+        routeStack.lastOrNull()?.fragment?.requestFocus()
     }
+
+    fun isCurrentDirectory(fragment: StorageFileFragment): Boolean = routeStack.lastOrNull()?.fragment === fragment
+
+    fun directoryFor(fragment: StorageFileFragment): StorageFile? = routeStack.firstOrNull { it.fragment === fragment }?.directory
 
     @Suppress("UNUSED_PARAMETER")
     fun onDirectoryDataLoaded(

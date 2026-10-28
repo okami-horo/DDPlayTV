@@ -63,7 +63,8 @@ class StorageFileFragmentViewModel : BaseViewModel() {
      */
     fun listFile(
         directory: StorageFile?,
-        refresh: Boolean = false
+        refresh: Boolean = false,
+        directoryPath: String? = null
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             lastListError = null
@@ -89,7 +90,12 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                     return@launch
                 }
 
-                val target = directory ?: storage.getRootFile()
+                val target =
+                    directory ?: if (directoryPath != null && directoryPath != "/") {
+                        storage.pathFile(directoryPath, isDirectory = true)
+                    } else {
+                        storage.getRootFile()
+                    }
                 if (target == null) {
                     emptyList<Any>()
                         .apply { _fileLiveData.postValue(this) }

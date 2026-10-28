@@ -1,5 +1,6 @@
 package com.okamihoro.ddplaytv.ui.tv
 
+import android.os.Bundle
 import android.view.KeyEvent
 import androidx.fragment.app.Fragment
 import com.alibaba.android.arouter.launcher.ARouter
@@ -8,10 +9,10 @@ import com.okamihoro.ddplaytv.databinding.ActivityTvMainBinding
 import com.okamihoro.ddplaytv.databinding.ItemTvMainNavBinding
 import com.okamihoro.ddplaytv.ui.shell.BaseShellActivity
 import com.okamihoro.ddplaytv.ui.shell.ShellFragmentSwitcher
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.extension.findAndRemoveFragment
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 
@@ -35,7 +36,6 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
     private val focusCoordinator by lazy(LazyThreadSafetyMode.NONE) {
         TvShellFocusCoordinator(
             navRecyclerView = dataBinding.tvNavRv,
-            contentRoot = dataBinding.fragmentContainer,
             selectedNavIndexProvider = { navItems.indexOf(selectedSection) },
             currentFragmentProvider = { fragmentSwitcher.currentFragment() },
         )
@@ -43,19 +43,23 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
 
     override fun getLayoutId() = R.layout.activity_tv_main
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        selectedSection = TvNavItem.entries.firstOrNull {
+            it.name == savedInstanceState?.getString("tv_section") && it.isSection
+        } ?: TvNavItem.MEDIA
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("tv_section", selectedSection.name)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun initView() {
-        supportFragmentManager.findAndRemoveFragment(
-            TAG_FRAGMENT_MEDIA,
-            TAG_FRAGMENT_PERSONAL,
-        )
-
         initNav()
-
-        // 默认显示媒体库页面
-        switchSection(TvNavItem.MEDIA)
-        dataBinding.tvNavRv.post {
-            focusCoordinator.requestNavFocus()
-        }
+        dataBinding.fragmentContainer.navigationTarget = focusCoordinator::navigationTarget
+        switchSection(selectedSection)
+        focusCoordinator.requestNavFocus()
 
         initShell()
     }
@@ -64,9 +68,6 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
         keyCode: Int,
         event: KeyEvent?
     ): Boolean {
-        if (focusCoordinator.onContentKeyDown(keyCode)) {
-            return true
-        }
         when (keyCode) {
             KeyEvent.KEYCODE_MENU,
             KeyEvent.KEYCODE_SETTINGS -> {
@@ -75,6 +76,9 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
             }
 
             KeyEvent.KEYCODE_BACK -> {
+                if (dataBinding.fragmentContainer.hasFocus()) {
+                    return focusCoordinator.requestNavFocus()
+                }
                 if (handleBackExit()) {
                     return true
                 }
@@ -99,10 +103,17 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
                     }
                 }
             setData(navItems)
-            setOnKeyListener { _, keyCode, event ->
-                if (event?.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
-                focusCoordinator.onNavKeyDown(keyCode)
-            }
+            setFocusOutAllowed(false, false)
+            setFocusOutSideAllowed(false, false)
+            setOnKeyInterceptListener(
+                object : DpadRecyclerView.OnKeyInterceptListener {
+                    override fun onInterceptKeyEvent(event: KeyEvent): Boolean {
+                        if (event.keyCode != KeyEvent.KEYCODE_DPAD_RIGHT) return false
+                        if (event.action == KeyEvent.ACTION_DOWN) focusCoordinator.requestContentFocus()
+                        return true
+                    }
+                }
+            )
         }
     }
 
@@ -111,7 +122,6 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
         position: Int
     ) {
         if (item.isSection) {
-            focusCoordinator.saveContentFocus()
             val oldIndex = navItems.indexOf(selectedSection)
             selectedSection = item
             dataBinding.tvNavRv.adapter?.notifyItemChanged(oldIndex)

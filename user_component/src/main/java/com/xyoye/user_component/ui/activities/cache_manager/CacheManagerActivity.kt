@@ -3,6 +3,7 @@ package com.xyoye.user_component.ui.activities.cache_manager
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.setData
@@ -37,6 +38,9 @@ class CacheManagerActivity : BaseActivity<CacheManagerViewModel, ActivityCacheMa
             layoutManager = vertical()
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as CacheBean).cacheType == (new as CacheBean).cacheType }
+                    }
                     addItem<CacheBean, ItemCacheTypeBinding>(R.layout.item_cache_type) {
                         initView { data, _, _ ->
                             var cacheTypeName = data.cacheType?.displayName ?: "其它文件"

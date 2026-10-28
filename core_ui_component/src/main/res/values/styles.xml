@@ -2,6 +2,7 @@
 <resources>
 
     <style name="AppTheme" parent="Theme.AppCompat.DayNight">
+        <item name="viewInflaterClass">com.xyoye.common_component.focus.TvViewInflater</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="colorPrimary">@color/theme</item>
@@ -28,6 +29,7 @@
     </style>
 
     <style name="DialogActivityTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="viewInflaterClass">com.xyoye.common_component.focus.TvViewInflater</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="colorPrimary">@color/theme</item>
@@ -79,6 +81,7 @@
     </style>
 
     <style name="Bottom_Sheet_Dialog" parent="Theme.Design.BottomSheetDialog">
+        <item name="viewInflaterClass">com.xyoye.common_component.focus.TvViewInflater</item>
         <item name="android:windowIsFloating">false</item>
         <item name="bottomSheetStyle">@style/Bottom_Sheet_Modal</item>
     </style>

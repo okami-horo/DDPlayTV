@@ -25,9 +25,10 @@
  - TV-specific structural differences may use separate activities/pages.
  - Small same-screen differences should branch at runtime with `isTelevisionUiMode()`.
  - Pure visual TV differences should use resource qualifiers/selectors.
- - RecyclerView/grid focus should use shared focus helpers when available, including `RecyclerViewFocusDelegate`, `DpadRecyclerFocusDelegate`, `FocusPolicy`, and `FocusTarget` conventions.
- - TV DPAD focus ownership should be explicit for migrated screens via `DpadFocusOwner`; shell/page/dialog/overlay transitions should save focus, restore focus, and provide a default fallback instead of relying on Android default focus search.
- - Dialog focus restore should be centralized through `BaseBottomDialog`/`DpadDialogFocusController` where possible, with TV/non-touch checks to avoid changing mobile behavior.
+ - TV lists, grids and dynamic menus use DpadRecyclerView 1.4.3. `TvViewInflater` replaces only XML lists marked `tvDpadList` in TV mode; mobile retains ordinary RecyclerView. Layout helpers configure the library's layout manager instead of replacing it. Both old list delegates and index/retry navigation were removed on 2026-10-28.
+ - `TvCategoryPages` displays one active Fragment and explicit category navigation; mobile keeps TabLayout/ViewPager2. Browsing focus and activating a category are separate. `DpadFocusOwner` retains only the cross-module content-entry operation.
+ - Page-specific stable keys and library state restore lists; storage scopes DpadStateRegistry by directory. The shell only provides sidebar/content handoff. Android window focus retains dialog callers without delayed recursive restoration. Player panel boundaries contain native/library navigation, and RemoteKeyDispatcher owns playback key semantics through one dispatch entry.
+ - Migration coverage and evidence are authoritative in `docs/superpowers/plans/2026-10-28-tv-dpad-library-rewrite.md`; physical-TV acceptance remains distinct from AVD verification.
 
  ## Retired Integration Compatibility (2026-10-28)
  - Room 16->17 removes Bilibili media libraries and their history before removed enum values can fall back to generic streaming. Other rows and local danmaku bindings remain.

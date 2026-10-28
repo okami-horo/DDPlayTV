@@ -5,6 +5,7 @@ import android.os.Looper
 import android.view.animation.AnimationUtils
 import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.RecyclerView
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.core_ui_component.R
 
 /**
@@ -62,6 +63,7 @@ abstract class AnimatedAdapter<VH : RecyclerView.ViewHolder> : RecyclerView.Adap
 
     protected fun bindViewHolderAnimation(holder: VH) {
         holder.itemView.clearAnimation()
+        if (recyclerView is DpadRecyclerView) return
         if (isAnimating) {
             val animation =
                 AnimationUtils

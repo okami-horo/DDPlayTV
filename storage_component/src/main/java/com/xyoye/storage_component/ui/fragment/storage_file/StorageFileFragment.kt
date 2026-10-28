@@ -1,22 +1,19 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
-import android.view.ViewGroup
+import android.os.Bundle
+import android.view.KeyEvent
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.launcher.ARouter
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
+import com.rubensousa.dpadrecyclerview.state.DpadStateRegistry
 import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.extension.FocusTarget
 import com.xyoye.common_component.extension.setData
-import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.extension.vertical
-import com.xyoye.common_component.focus.DpadDirection
 import com.xyoye.common_component.focus.DpadFocusOwner
-import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
-import com.xyoye.common_component.focus.DpadRecyclerOrientation
-import com.xyoye.common_component.focus.setDescendantFocusBlocked
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.AuthStorage
@@ -31,33 +28,24 @@ import com.xyoye.storage_component.databinding.FragmentStorageFileBinding
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
 import com.xyoye.storage_component.ui.dialog.BaiduPanLoginDialog
 
-class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>(), DpadFocusOwner {
-    private val directory: StorageFile? by lazy { ownerActivity.directory }
+class StorageFileFragment :
+    BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>(),
+    DpadFocusOwner {
+    private val directory: StorageFile? get() = ownerActivity.directoryFor(this)
+    private var loaded = false
+    private val listState by lazy { DpadStateRegistry(this) }
+    private var restoreLayout = true
+    private var savedFileKey: String? = null
+    private val listKey get() = "${ownerActivity.storage.library.id}|${arguments?.getString("directory_path")}"
     private var lastPagingHintState: com.xyoye.common_component.storage.PagedStorage.State? = null
-    private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
-        DpadRecyclerFocusDelegate(
-            recyclerView = dataBinding.storageFileRv,
-            orientation = DpadRecyclerOrientation.Vertical,
-            uniqueKeyProvider = { item -> (item as? StorageFile)?.uniqueKey() },
-            focusTargetProvider = { rv -> rv.resolveVerticalMoveFocusTarget() },
-            boundaryHandler = { direction -> onDpadFocusBoundary(direction) },
-            extraKeyHandler = { keyCode, _ ->
-                when (keyCode) {
-                    android.view.KeyEvent.KEYCODE_MENU,
-                    android.view.KeyEvent.KEYCODE_SETTINGS -> {
-                        triggerTvRefresh()
-                        true
-                    }
-                    else -> false
-                }
-            },
-        )
-    }
 
     companion object {
         private const val TAG = "StorageFileFocus"
 
-        fun newInstance() = StorageFileFragment()
+        fun newInstance(path: String) =
+            StorageFileFragment().apply {
+                arguments = Bundle().apply { putString("directory_path", path) }
+            }
     }
 
     private val ownerActivity by lazy {
@@ -72,7 +60,35 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
 
     override fun getLayoutId() = R.layout.fragment_storage_file
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        savedFileKey = savedInstanceState?.getString("focused_file")
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        rememberFile()
+        (bindingOrNull?.storageFileRv as? DpadRecyclerView)?.let {
+            listState.getScrollState().save(it, listKey, detachAdapter = false)
+        }
+        outState.putString("focused_file", savedFileKey)
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun rememberFile() {
+        val list = bindingOrNull?.storageFileRv as? DpadRecyclerView ?: return
+        savedFileKey = ((list.adapter as? BaseAdapter)?.items?.getOrNull(list.getSelectedPosition()) as? StorageFile)?.uniqueKey()
+    }
+
+    override fun onDestroyView() {
+        rememberFile()
+        (bindingOrNull?.storageFileRv as? DpadRecyclerView)?.let {
+            listState.getScrollState().save(it, listKey)
+        }
+        super.onDestroyView()
+    }
+
     override fun initView() {
+        restoreLayout = true
         initRecyclerView()
 
         viewModel.storage = ownerActivity.storage
@@ -81,12 +97,19 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             reloadDirectory(refresh = true)
         }
 
-        viewModel.fileLiveData.observe(this) {
+        viewModel.fileLiveData.observe(viewLifecycleOwner) {
             dataBinding.loading.isVisible = false
             dataBinding.refreshLayout.isVisible = true
             dataBinding.refreshLayout.isRefreshing = false
             ownerActivity.onDirectoryOpened(this, it.filterIsInstance<StorageFile>())
             dataBinding.storageFileRv.setData(it)
+            val list = dataBinding.storageFileRv as? DpadRecyclerView
+            if (list != null && restoreLayout) {
+                restoreLayout = false
+                listState.getScrollState().restore(list, listKey, requireNotNull(list.adapter))
+                val position = it.indexOfFirst { file -> (file as? StorageFile)?.uniqueKey() == savedFileKey }
+                if (savedFileKey != null && position >= 0) list.setSelectedPosition(position)
+            }
 
             if (!dataBinding.storageFileRv.isInTouchMode) {
                 val pagingItem = it.lastOrNull() as? StoragePagingItem
@@ -99,58 +122,21 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                     }
                 }
             }
-            // ownerActivity.onDirectoryDataLoaded(this, it)
-            // 仅在需要恢复上次焦点时，才请求焦点（与媒体库首页保持一致：首次进入不默认高亮首项）
-            if (!dataBinding.storageFileRv.isInTouchMode &&
-                focusDelegate.pendingFocusIndex == RecyclerView.NO_POSITION &&
-                focusDelegate.pendingFocusUniqueKey == null
-            ) {
-                val showEmptyActionFocus =
-                    it.isEmpty() ||
-                        ((it.singleOrNull() as? StoragePagingItem)?.isDataEmpty == true)
-                if (showEmptyActionFocus) {
-                    focusDelegate.setPendingFocus(index = 0)
-                }
-            }
-
-            if (focusDelegate.pendingFocusIndex != RecyclerView.NO_POSITION || focusDelegate.pendingFocusUniqueKey != null) {
-                // 触控模式下不恢复列表焦点，避免出现“默认高亮/焦点框”
-                if (dataBinding.storageFileRv.isInTouchMode) {
-                    focusDelegate.clearPendingFocus()
-                    return@observe
-                }
-
-                val adapterCount = dataBinding.storageFileRv.adapter?.itemCount ?: 0
-                if (adapterCount <= 0) {
-                    LogFacade.d(LogModule.STORAGE, TAG, "pending focus skipped, adapter empty")
-                    return@observe
-                }
-
-                val resolvedIndex = focusDelegate.resolvePendingFocusIndex(it, adapterCount)
-                focusDelegate.setPendingFocus(index = resolvedIndex)
-                // 等待下一次消息循环后再请求焦点，避免因子 View 未就绪导致的滚动跳变
-                dataBinding.storageFileRv.post { requestFocus() }
-            }
         }
 
-        viewModel.loginRequiredLiveData.observe(this) { library ->
-            showLoginDialog(library)
+        viewModel.loginRequiredLiveData.observe(viewLifecycleOwner) { library ->
+            if (ownerActivity.isCurrentDirectory(this)) showLoginDialog(library)
         }
-
-        viewModel.listFile(directory)
     }
 
     override fun onResume() {
         super.onResume()
-        (bindingOrNull?.root as? ViewGroup)?.setDescendantFocusBlocked(false)
-        viewModel.updateHistory()
-        focusDelegate.onResume()
-    }
-
-    override fun onPause() {
-        focusDelegate.onPause()
-        super.onPause()
-        (bindingOrNull?.root as? ViewGroup)?.setDescendantFocusBlocked(true)
+        if (!loaded) {
+            loaded = true
+            reloadDirectory()
+        } else {
+            viewModel.updateHistory()
+        }
     }
 
     private fun initRecyclerView() {
@@ -188,29 +174,27 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                 },
             )
 
-            focusDelegate.install()
+            (this as? DpadRecyclerView)?.apply {
+                isSaveEnabled = false
+                setFocusOutAllowed(true, false)
+                setOnKeyInterceptListener(
+                    object : DpadRecyclerView.OnKeyInterceptListener {
+                        override fun onInterceptKeyEvent(event: KeyEvent): Boolean {
+                            if (event.keyCode != KeyEvent.KEYCODE_MENU && event.keyCode != KeyEvent.KEYCODE_SETTINGS) return false
+                            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) triggerTvRefresh()
+                            return true
+                        }
+                    }
+                )
+            }
         }
     }
 
-    private fun RecyclerView.resolveVerticalMoveFocusTarget(): FocusTarget {
-        val focusedView = findFocus()
-        val isMoreActionFocused = focusedView?.id == com.xyoye.core_ui_component.R.id.more_action_iv
-        return if (isMoreActionFocused) {
-            FocusTarget.ViewId(com.xyoye.core_ui_component.R.id.more_action_iv)
-        } else {
-            FocusTarget.Tag(R.string.focusable_item.toResString())
-        }
+    override fun requestDefaultDpadFocus(): Boolean {
+        val binding = bindingOrNull ?: return false
+        if (binding.root.isInTouchMode || !ownerActivity.isCurrentDirectory(this)) return false
+        return binding.storageFileRv.requestFocus()
     }
-
-    override fun requestDefaultDpadFocus(): Boolean = focusDelegate.requestDefaultFocus()
-
-    override fun saveDpadFocus() {
-        focusDelegate.saveFocus()
-    }
-
-    override fun restoreDpadFocus(): Boolean = focusDelegate.restoreFocus()
-
-    override fun onDpadFocusBoundary(direction: DpadDirection): Boolean = direction == DpadDirection.Down
 
     fun triggerTvRefresh() {
         val binding = bindingOrNull ?: return
@@ -220,16 +204,6 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             return
         }
 
-        val (focusedIndex, focusedUniqueKey) = focusDelegate.captureFocusedItem()
-        focusDelegate.setPendingFocus(
-            index =
-                when {
-                    focusedIndex != RecyclerView.NO_POSITION -> focusedIndex
-                    else -> 0
-                },
-            uniqueKey = focusedUniqueKey,
-        )
-
         ToastCenter.showInfo("刷新中…")
         reloadDirectory(refresh = true)
     }
@@ -238,17 +212,11 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
         if (refresh) {
             dataBinding.refreshLayout.isRefreshing = true
         }
-        viewModel.listFile(directory, refresh)
+        viewModel.listFile(directory, refresh, arguments?.getString("directory_path"))
     }
 
-    fun requestFocus(reversed: Boolean = false) {
-        val binding = bindingOrNull ?: return
-        if (binding.storageFileRv.isInTouchMode) {
-            LogFacade.d(LogModule.STORAGE, TAG, "requestFocus skipped (touch mode)")
-            return
-        }
-        val moved = focusDelegate.requestFocus(reversed = reversed)
-        LogFacade.d(LogModule.STORAGE, TAG, "requestFocus reversed=$reversed moved=$moved")
+    fun requestFocus() {
+        requestDefaultDpadFocus()
     }
 
     fun focusFile(uniqueKey: String) {
@@ -263,8 +231,9 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             LogFacade.w(LogModule.STORAGE, TAG, "focusFile target not found uniqueKey=$uniqueKey")
             return
         }
-        focusDelegate.setPendingFocus(index = targetIndex)
-        binding.storageFileRv.post { requestFocus() }
+        if (!ownerActivity.isCurrentDirectory(this)) return
+        (binding.storageFileRv as? DpadRecyclerView)?.setSelectedPosition(targetIndex)
+        requestFocus()
     }
 
     /**
@@ -354,8 +323,7 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
                     authStorage?.let { it.requiresLogin(directory) && !it.isConnected() } == true
                 bindingOrNull?.let { binding ->
                     if (!binding.storageFileRv.isInTouchMode && requiresLogin) {
-                        focusDelegate.setPendingFocus(index = 0)
-                        binding.storageFileRv.post { requestFocus() }
+                        (binding.storageFileRv as? DpadRecyclerView)?.setSelectedPosition(0)
                     }
                 }
             },

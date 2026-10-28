@@ -2,9 +2,7 @@ package com.okamihoro.ddplaytv.ui.shell
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentTransaction
-import com.xyoye.common_component.extension.hideFragment
-import com.xyoye.common_component.extension.showFragment
+import androidx.lifecycle.Lifecycle
 
 class ShellFragmentSwitcher(
     private val fragmentManager: FragmentManager,
@@ -24,33 +22,14 @@ class ShellFragmentSwitcher(
             return
         }
 
-        previousFragment?.also {
-            fragmentManager.hideFragment(it)
+        val fragment = fragmentManager.findFragmentByTag(tag) ?: fragmentProvider(fragmentPath) ?: return
+        val transaction = fragmentManager.beginTransaction().setReorderingAllowed(true)
+        fragmentManager.fragments.filter { it.id == containerId && it !== fragment }.forEach {
+            transaction.hide(it).setMaxLifecycle(it, Lifecycle.State.STARTED)
         }
-
-        val fragment = fragmentManager.findFragmentByTag(tag)
-        if (fragment == null) {
-            fragmentProvider(fragmentPath)?.also {
-                addFragment(it, tag)
-                previousFragment = it
-                currentTag = tag
-            }
-            return
-        }
-
-        fragmentManager.showFragment(fragment)
+        if (fragment.isAdded) transaction.show(fragment) else transaction.add(containerId, fragment, tag)
+        transaction.setMaxLifecycle(fragment, Lifecycle.State.RESUMED).commitNow()
         previousFragment = fragment
         currentTag = tag
-    }
-
-    private fun addFragment(
-        fragment: Fragment,
-        tag: String
-    ) {
-        fragmentManager
-            .beginTransaction()
-            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-            .add(containerId, fragment, tag)
-            .commit()
     }
 }

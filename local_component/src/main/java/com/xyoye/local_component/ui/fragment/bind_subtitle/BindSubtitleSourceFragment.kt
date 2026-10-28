@@ -109,14 +109,14 @@ class BindSubtitleSourceFragment : BaseFragment<BindSubtitleSourceFragmentViewMo
             dataBinding.subtitleRv.isVisible = emptyData.not()
         }
 
-        viewModel.subtitleSearchLiveData.observe(this) {
+        viewModel.subtitleSearchLiveData.observe(viewLifecycleOwner) {
             subtitleAdapter.submitPagingData(lifecycle, it)
         }
-        viewModel.subtitleMatchLiveData.observe(this) {
+        viewModel.subtitleMatchLiveData.observe(viewLifecycleOwner) {
             subtitleAdapter.submitPagingData(lifecycle, it)
         }
 
-        viewModel.searchSubtitleDetailLiveData.observe(this) {
+        viewModel.searchSubtitleDetailLiveData.observe(viewLifecycleOwner) {
             SubtitleDetailDialog(
                 requireActivity(),
                 it,
@@ -134,7 +134,7 @@ class BindSubtitleSourceFragment : BaseFragment<BindSubtitleSourceFragmentViewMo
             ).show()
         }
 
-        viewModel.unzipResultLiveData.observe(this) { dirPath ->
+        viewModel.unzipResultLiveData.observe(viewLifecycleOwner) { dirPath ->
             FileManagerDialog(
                 requireActivity(),
                 FileManagerAction.ACTION_SELECT_SUBTITLE,

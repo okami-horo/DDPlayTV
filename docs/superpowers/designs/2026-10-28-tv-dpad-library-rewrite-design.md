@@ -1,10 +1,10 @@
 # TV 遥控器与焦点交互重写设计
 
-日期：2026-10-28。状态：**待用户确认，尚未实施**。
+日期：2026-10-28。状态：**用户已批准，代码迁移、旧引擎移除及本地构建／AVD 回归完成；实体 TV 验收待进行**。
 
-本次授权是调查、选型和编写设计。用户确认后才开始依赖接入、代码改写和设备验证。本文中的目标行为、删除清单和迁移阶段均为提案，不代表已经完成。
+用户已明确要求“开始实施 TV 焦点重写任务”。按本设计推进依赖接入、页面改写和验证，实际进度与证据见[执行记录](../plans/2026-10-28-tv-dpad-library-rewrite.md)。本文中的目标行为、删除清单和迁移阶段是验收要求，不代表已经完成。
 
-> 范围更新（2026-10-28）：用户另行授权先移除全部 Bilibili 功能，包括弹幕来源。该任务独立执行；本设计覆盖移除后的保留页面，DPAD 重写仍待确认。
+> 范围更新（2026-10-28）：全部 Bilibili 功能（包括弹幕来源）已独立移除；本设计覆盖移除后的保留页面。
 
 ## 1. 目标与设计结论
 
@@ -16,15 +16,15 @@
 
 PiliPlus 的 Flutter `dpad` 包不能直接用于本项目。借鉴其区域隔离、焦点与业务选中分离、播放器分状态处理输入的思路；不移植 Flutter UI 或另写一个 Kotlin 版 `dpad` 引擎。
 
-## 2. 当前证据与未确认原因
+## 2. 重写前的证据与未确认原因
 
-本次检查针对当前工作区源码，工作区含已有未提交改动。没有实机复现本轮报告的故障，因此以下是已确认的结构问题与风险，不是每一次焦点丢失的已证实根因。
+以下保留设计阶段对重写前源码的检查结果，不描述迁移后的现状。当时没有实机复现本轮报告的故障，因此这些是已确认的结构问题与风险，不是每一次焦点丢失的已证实根因。实施阶段捕获的失败基线、修正及最终回归见执行记录。
 
 | 已确认的实现 | 对重写的影响 |
 | --- | --- |
-| [DpadRecyclerFocusDelegate](../../../core_ui_component/src/main/java/com/xyoye/common_component/focus/DpadRecyclerFocusDelegate.kt) 按索引和列数计算目标；[RecyclerViewFocusDelegate](../../../core_ui_component/src/main/java/com/xyoye/common_component/focus/RecyclerViewFocusDelegate.kt) 仍被其他页面使用 | 两套代理均退出 TV 导航，避免只迁移其中一套 |
+| `DpadRecyclerFocusDelegate` 按索引和列数计算目标；`RecyclerViewFocusDelegate` 仍被其他页面使用 | 两套代理均退出 TV 导航，避免只迁移其中一套 |
 | [RecyclerViewExt](../../../core_ui_component/src/main/java/com/xyoye/common_component/extension/RecyclerViewExt.kt) 自行保证可见、对齐中心线，并最多逐帧重试 10 次 | 用库的布局、选择和对齐完成事件取代，不能保留为新库的兜底路径 |
-| [ViewPager2DpadPageFocusSync](../../../core_ui_component/src/main/java/com/xyoye/common_component/focus/ViewPager2DpadPageFocusSync.kt) 根据焦点落在哪一页反向切换当前页 | TV 页面必须先由导航决定活动页，再开放该页焦点；移除焦点驱动的隐式翻页 |
+| `ViewPager2DpadPageFocusSync` 根据焦点落在哪一页反向切换当前页 | TV 页面必须先由导航决定活动页，再开放该页焦点；移除焦点驱动的隐式翻页 |
 | [SettingPlayerActivity](../../../user_component/src/main/java/com/xyoye/user_component/ui/activities/setting_player/SettingPlayerActivity.kt) 使用不可聚焦的分类指示栏，内容区左右键切页 | 改成显式可聚焦分类，解除左右调整数值与左右切页的语义冲突 |
 | [BaseBottomDialog](../../../core_ui_component/src/main/java/com/xyoye/common_component/weight/dialog/BaseBottomDialog.kt) 在关闭后异步恢复宿主 View；[MediaFragment](../../../local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaFragment.kt) 在恢复和数据更新时也请求焦点 | 统一限制恢复时机，防止已跳页或用户已移动后旧回调重新抢焦点 |
 | [BaseAdapter](../../../core_ui_component/src/main/java/com/xyoye/common_component/adapter/BaseAdapter.kt) 同时支持 DiffUtil 和全量通知；默认身份比较可退回整个对象相等 | 为迁移列表声明真正的条目身份，避免状态刷新被识别成删除并插入 |
@@ -60,7 +60,7 @@ Leanback 状态依据：[AndroidX 官方说明](https://developer.android.com/je
 | Kotlin 标准库 | 由当前 Kotlin 与依赖图解析 | 发布依赖 2.0.0 |
 | 其他传递依赖 | 需要实际解析后确认 | Fragment 1.8.2、Collection 1.4.3 |
 
-当前配置来源：[根构建](../../../build.gradle.kts)、[Dependencies](../../../buildSrc/src/main/java/Dependencies.kt)、[Versions](../../../buildSrc/src/main/java/Versions.kt)、[模块设置](../../../buildSrc/src/main/java/setup/Module.kt)。库信息来源：[发布 POM](https://repo.maven.apache.org/maven2/com/rubensousa/dpadrecyclerview/dpadrecyclerview/1.4.3/dpadrecyclerview-1.4.3.pom)、[构建文件](https://github.com/rubensousa/DpadRecyclerView/blob/1.4.3/dpadrecyclerview/build.gradle)、[SDK 配置](https://github.com/rubensousa/DpadRecyclerView/blob/1.4.3/versions.gradle)。声明版本不等同于项目最终解析版本，本次没有运行依赖解析或编译。
+设计阶段配置来源：[根构建](../../../build.gradle.kts)、[Dependencies](../../../buildSrc/src/main/java/Dependencies.kt)、[Versions](../../../buildSrc/src/main/java/Versions.kt)、[模块设置](../../../buildSrc/src/main/java/setup/Module.kt)。库信息来源：[发布 POM](https://repo.maven.apache.org/maven2/com/rubensousa/dpadrecyclerview/dpadrecyclerview/1.4.3/dpadrecyclerview-1.4.3.pom)、[构建文件](https://github.com/rubensousa/DpadRecyclerView/blob/1.4.3/dpadrecyclerview/build.gradle)、[SDK 配置](https://github.com/rubensousa/DpadRecyclerView/blob/1.4.3/versions.gradle)。本表保留接入前的版本差异；实施后已完成依赖解析、严格编译及独立 R8 样例验证，实际版本与验证范围见执行记录。
 
 版本差异不能直接证明兼容或不兼容。实施第一阶段先在现有 Kotlin 1.9.25、AGP 8.7.2、Gradle 8.9 下验证依赖解析、Kotlin/KAPT/DataBinding、D8/R8 和发布 APK。RecyclerView 等传递依赖升级属于本方案必要影响，需要验证移动端及 Preference/ViewPager2 兼容性。
 
@@ -259,9 +259,9 @@ TV 的多分类页面不保留可同时参与焦点搜索的离屏 ViewPager 页
 
 ## 10. 本次核验与待确认项
 
-本次已检查现有焦点/输入实现、使用位置、Adapter、Preference、分类页面、历史验收边界，以及库的官方说明、Maven POM/版本列表和 1.4.3 标签的关键 API。尚未修改生产代码或依赖，未进行编译接入、故障复现或实机体验验证。
+设计阶段检查了焦点/输入实现、使用位置、Adapter、Preference、分类页面、历史验收边界，以及库的官方说明、Maven POM/版本列表和 1.4.3 标签的关键 API。随后已获授权实施，依赖兼容性、迁移结果与设备验证以[执行记录](../plans/2026-10-28-tv-dpad-library-rewrite.md)为准，不将设计阶段的状态作为当前进度。
 
-独立任务补充：随后获授权的 Bilibili 移除任务已完成现有 UI 的 TV 模式冒烟，证据见[移除记录](../plans/2026-10-28-remove-bilibili.md)。这些结果仅检查保留页面未被移除任务破坏，不是新焦点库的兼容性或重写验收；本设计仍未实施。
+独立任务补充：Bilibili 移除任务的 TV 模式冒烟证据见[移除记录](../plans/2026-10-28-remove-bilibili.md)。这些历史结果只检查保留页面未被移除任务破坏，不作为新焦点库的兼容性或重写验收。
 
 PiliPlus 参考路径为 `E:\Project\PiliPlus\lib\pages\tv\widgets\tv_dpad_root.dart`、`tv_focusable.dart`、`tv_browse_grid.dart`，以及 `main/view.dart`、`navigation/tv_back_dispatcher.dart`、`player/tv_player_input_controller.dart`。它们映射到本项目的 `core_ui_component`、`app` 主壳和 `player_component` 输入层；只参考交互原则，本地化为 Android View/Fragment/窗口机制。
 
@@ -271,4 +271,4 @@ PiliPlus 参考路径为 `E:\Project\PiliPlus\lib\pages\tv\widgets\tv_dpad_root.
 2. 保留原生 View 与业务架构，允许必要的 TV 局部布局调整；设置/分类采用显式可聚焦导航，取消内容区隐式左右切页。
 3. 通用导航交库，少量页面/返回/播放业务接线保留；依赖兼容性与主路径验证先行，工具链若必须升级则补充证据和确认。
 
-用户确认前，本设计不进入实施阶段。
+上述决定已获用户确认；如兼容性证据要求调整 Kotlin 插件或 JVM target，仍按第 3.2 节提交具体方案确认。

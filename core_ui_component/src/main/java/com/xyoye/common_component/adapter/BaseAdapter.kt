@@ -15,6 +15,10 @@ import androidx.recyclerview.widget.RecyclerView
  */
 
 class BaseAdapter : AnimatedAdapter<RecyclerView.ViewHolder>() {
+    init {
+        stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
+    }
+
     companion object {
         // 空布局数据
         val EMPTY_ITEM = Any()

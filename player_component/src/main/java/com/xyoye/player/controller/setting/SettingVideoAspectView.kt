@@ -2,10 +2,10 @@ package com.xyoye.player.controller.setting
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.KeyEvent
 import androidx.recyclerview.widget.RecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.extension.*
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationOrientation
@@ -53,23 +53,6 @@ class SettingVideoAspectView(
         viewBinding.rvAspect.clearFocus()
     }
 
-    override fun onKeyDown(
-        keyCode: Int,
-        event: KeyEvent?
-    ): Boolean {
-        if (isSettingShowing().not()) {
-            return false
-        }
-
-        val handled = handleKeyCode(keyCode)
-        if (handled) {
-            return true
-        }
-
-        viewBinding.rvAspect.requestIndexChildFocus(0)
-        return true
-    }
-
     private fun initView() {
         viewBinding.rvAspect.apply {
             itemAnimator = null
@@ -78,6 +61,9 @@ class SettingVideoAspectView(
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as VideoScaleBean).screenScale == (new as VideoScaleBean).screenScale }
+                    }
                     addItem<VideoScaleBean, ItemSeetingVideoAspectBinding>(R.layout.item_seeting_video_aspect) {
                         initView { data, _, _ ->
                             itemBinding.tvName.text = data.scaleName
@@ -122,42 +108,4 @@ class SettingVideoAspectView(
         mControlWrapper.setScreenScale(aspect)
         applyAspectStatus()
     }
-
-    /**
-     * 处理KeyCode事件
-     */
-    private fun handleKeyCode(keyCode: Int): Boolean {
-        // 已取得焦点的Item
-        val focusedChild =
-            viewBinding.rvAspect.focusedChild
-                ?: return false
-        val focusedChildIndex = viewBinding.rvAspect.getChildAdapterPosition(focusedChild)
-        if (focusedChildIndex == -1) {
-            return false
-        }
-        val targetIndex = getTargetIndexByKeyCode(keyCode, focusedChildIndex)
-        viewBinding.rvAspect.requestIndexChildFocus(targetIndex)
-        return true
-    }
-
-    /**
-     * 根据KeyCode与当前焦点位置，取得目标焦点位置
-     */
-    private fun getTargetIndexByKeyCode(
-        keyCode: Int,
-        focusedIndex: Int
-    ): Int =
-        when (keyCode) {
-            // 左、上规则
-            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_UP -> {
-                videoAspectData.previousItemIndex<VideoScaleBean>(focusedIndex)
-            }
-            // 右、下规则
-            KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_DOWN -> {
-                videoAspectData.nextItemIndex<VideoScaleBean>(focusedIndex)
-            }
-            else -> {
-                -1
-            }
-        }
 }

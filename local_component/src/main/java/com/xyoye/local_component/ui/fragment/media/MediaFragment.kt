@@ -1,20 +1,20 @@
 package com.xyoye.local_component.ui.fragment.media
 
+import android.view.KeyEvent
+import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.application.DanDanPlay
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.deletable
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
-import com.xyoye.common_component.focus.DpadDirection
 import com.xyoye.common_component.focus.DpadFocusOwner
-import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
-import com.xyoye.common_component.focus.DpadRecyclerOrientation
-import com.xyoye.common_component.focus.requestDefaultFocus
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
@@ -34,28 +34,6 @@ import com.xyoye.local_component.databinding.ItemMediaLibraryBinding
 class MediaFragment :
     BaseFragment<MediaViewModel, FragmentMediaBinding>(),
     DpadFocusOwner {
-    private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
-        DpadRecyclerFocusDelegate(
-            recyclerView = dataBinding.mediaLibRv,
-            orientation = DpadRecyclerOrientation.Vertical,
-            uniqueKeyProvider = { item ->
-                (item as? MediaLibraryEntity)?.let { "${it.mediaType.name}|${it.url}" }
-            },
-            boundaryHandler = { direction -> onDpadFocusBoundary(direction) },
-            fallbackFocusProvider = { dataBinding.addMediaStorageBt },
-            extraKeyHandler = { keyCode, _ ->
-                when (keyCode) {
-                    android.view.KeyEvent.KEYCODE_MENU,
-                    android.view.KeyEvent.KEYCODE_SETTINGS -> {
-                        showAddStorageDialog()
-                        true
-                    }
-                    else -> false
-                }
-            }
-        )
-    }
-
     override fun initViewModel() =
         ViewModelInit(
             BR.viewModel,
@@ -75,24 +53,9 @@ class MediaFragment :
             showAddStorageDialog()
         }
 
-        viewModel.mediaLibWithStatusLiveData.observe(this) {
+        viewModel.mediaLibWithStatusLiveData.observe(viewLifecycleOwner) {
             dataBinding.mediaLibRv.setData(it)
-            dataBinding.mediaLibRv.post { requestDefaultFocusIfNeeded(allowFallback = true) }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (bindingOrNull == null) return
-        focusDelegate.onResume()
-        dataBinding.mediaLibRv.post { requestDefaultFocusIfNeeded(allowFallback = false) }
-    }
-
-    override fun onPause() {
-        if (bindingOrNull != null) {
-            focusDelegate.onPause()
-        }
-        super.onPause()
     }
 
     private fun initRv() {
@@ -101,6 +64,14 @@ class MediaFragment :
 
             adapter =
                 buildAdapter {
+                    stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+                    setupDiffUtil {
+                        areItemsTheSame { old, new ->
+                            old as MediaLibraryEntity
+                            new as MediaLibraryEntity
+                            old.id == new.id
+                        }
+                    }
                     addItem<MediaLibraryEntity, ItemMediaLibraryBinding>(R.layout.item_media_library) {
                         initView { data, _, _ ->
                             itemBinding.apply {
@@ -129,28 +100,30 @@ class MediaFragment :
                     }
                 }
 
-            focusDelegate.install()
+            (this as? DpadRecyclerView)?.apply {
+                setFocusOutAllowed(false, true)
+                setOnKeyInterceptListener(
+                    object : DpadRecyclerView.OnKeyInterceptListener {
+                        override fun onInterceptKeyEvent(event: KeyEvent): Boolean {
+                            if (event.keyCode != KeyEvent.KEYCODE_MENU && event.keyCode != KeyEvent.KEYCODE_SETTINGS) {
+                                return false
+                            }
+                            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) showAddStorageDialog()
+                            return true
+                        }
+                    }
+                )
+            }
         }
     }
 
-    override fun requestDefaultDpadFocus(): Boolean = focusDelegate.requestDefaultFocus()
-
-    override fun saveDpadFocus() {
-        focusDelegate.saveFocus()
-    }
-
-    override fun restoreDpadFocus(): Boolean = focusDelegate.restoreFocus()
-
-    override fun onDpadFocusBoundary(direction: DpadDirection): Boolean = false
-
-    private fun requestDefaultFocusIfNeeded(allowFallback: Boolean) {
-        val binding = bindingOrNull ?: return
-        if (binding.root.isInTouchMode) return
-        if (binding.root.findFocus() != null) return
-
-        val moved = focusDelegate.restoreFocus()
-        if (!moved && allowFallback) {
-            binding.addMediaStorageBt.requestDefaultFocus()
+    override fun requestDefaultDpadFocus(): Boolean {
+        val binding = bindingOrNull ?: return false
+        if (!isVisible || binding.root.isInTouchMode) return false
+        return if ((binding.mediaLibRv.adapter?.itemCount ?: 0) > 0) {
+            binding.mediaLibRv.requestFocus()
+        } else {
+            binding.addMediaStorageBt.requestFocus()
         }
     }
 

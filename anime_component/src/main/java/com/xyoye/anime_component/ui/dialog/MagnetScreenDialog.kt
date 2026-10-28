@@ -6,6 +6,7 @@ import com.xyoye.anime_component.databinding.DialogMagnetScreenBinding
 import com.xyoye.anime_component.databinding.ItemMagnetScreenBinding
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
+import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.extension.grid
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.weight.dialog.BaseBottomDialog
@@ -35,6 +36,9 @@ class MagnetScreenDialog(
 
             adapter =
                 buildAdapter {
+                    setupDiffUtil {
+                        areItemsTheSame { old, new -> (old as MagnetScreenEntity).screenId == (new as MagnetScreenEntity).screenId }
+                    }
                     addItem<MagnetScreenEntity, ItemMagnetScreenBinding>(R.layout.item_magnet_screen) {
                         initView { data, _, _ ->
                             itemBinding.apply {

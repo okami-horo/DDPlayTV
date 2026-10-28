@@ -1,0 +1,5 @@
+<resources>
+    <declare-styleable name="TvList">
+        <attr name="tvDpadList" format="boolean" />
+    </declare-styleable>
+</resources>

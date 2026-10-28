@@ -8,7 +8,11 @@
         android:layout_height="wrap_content"
         android:background="@drawable/background_item_press"
         android:minHeight="46dp"
-        android:paddingVertical="10dp">
+        android:paddingVertical="10dp"
+        android:focusable="true"
+        android:tag="@string/focusable_item"
+        android:id="@+id/item_layout"
+        android:nextFocusRight="@id/download_iv">
 
         <TextView
             android:id="@+id/episode_tv"
@@ -45,6 +49,8 @@
 
         <ImageView
             android:id="@+id/download_iv"
+            android:focusable="true"
+            android:nextFocusLeft="@id/item_layout"
             android:layout_width="26dp"
             android:layout_height="0dp"
             android:background="@drawable/background_item_press"

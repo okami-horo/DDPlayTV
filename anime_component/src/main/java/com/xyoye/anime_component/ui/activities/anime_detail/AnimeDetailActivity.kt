@@ -2,6 +2,7 @@ package com.xyoye.anime_component.ui.activities.anime_detail
 
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
+import androidx.activity.addCallback
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
@@ -16,11 +17,13 @@ import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.clamp
 import com.xyoye.common_component.extension.dp
 import com.xyoye.common_component.extension.isNightMode
+import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.loadImage
 import com.xyoye.common_component.extension.opacity
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.toResColor
-import com.xyoye.common_component.focus.TabLayoutViewPager2DpadFocusCoordinator
+import com.xyoye.common_component.focus.TvCategory
+import com.xyoye.common_component.focus.TvCategoryPages
 import com.xyoye.common_component.utils.StatusBarStyle
 import com.xyoye.data_component.bean.AnimeArgument
 import com.xyoye.data_component.bean.ColorRange
@@ -58,7 +61,7 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
     // 返回事件拦截器
     private var backPressInterceptor: (() -> Boolean)? = null
     private var tabLayoutMediator: TabLayoutMediator? = null
-    private var tvFocusCoordinator: TabLayoutViewPager2DpadFocusCoordinator? = null
+    private var tvPages: TvCategoryPages? = null
 
     override fun initViewModel() =
         ViewModelInit(
@@ -82,6 +85,9 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
 
         initViewPager(defaultTabs)
         initListener()
+        onBackPressedDispatcher.addCallback(this) {
+            if (backPressInterceptor?.invoke() != true) finish()
+        }
 
         updateUIByScroll(0f)
         updateTabLayoutRound(0f)
@@ -93,6 +99,13 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
     }
 
     private fun initViewPager(tabs: Array<AnimeDetailTab>) {
+        if (isTelevisionUiMode()) {
+            val pages =
+                tvPages ?: TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager).also { tvPages = it }
+            val factory = AnimeDetailPageAdapter(this, tabs)
+            pages.submit(tabs.mapIndexed { index, tab -> TvCategory(tab.name, tab.title) { factory.createFragment(index) } })
+            return
+        }
         val viewPagerAdapter = dataBinding.viewpager.adapter as? AnimeDetailPageAdapter?
         if (viewPagerAdapter != null && viewPagerAdapter.tabs.contentEquals(tabs)) {
             return
@@ -109,32 +122,12 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
             ) { tab, position ->
                 tab.text = tabs[position].title
             }.also { it.attach() }
-
-        tvFocusCoordinator?.detach()
-        tvFocusCoordinator =
-            TabLayoutViewPager2DpadFocusCoordinator.attachIfTelevision(
-                tabLayout = dataBinding.tabLayout,
-                viewPager = dataBinding.viewpager,
-            )
     }
 
     override fun onDestroy() {
         tabLayoutMediator?.detach()
         tabLayoutMediator = null
-        tvFocusCoordinator?.detach()
-        tvFocusCoordinator = null
         super.onDestroy()
-    }
-
-    @Deprecated("Deprecated in Java", ReplaceWith("finish()"))
-    override fun onBackPressed() {
-        // 如果有返回事件拦截器，优先执行拦截器
-        if (backPressInterceptor?.invoke() == true) {
-            return
-        }
-
-        // 重写以防止返回动画
-        finish()
     }
 
     private fun initListener() {
@@ -216,7 +209,7 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
                 bottomRadius,
                 bottomRadius,
             )
-        dataBinding.tabLayout.background =
+        (tvPages?.navigation ?: dataBinding.tabLayout).background =
             ShapeDrawable().apply {
                 shape = RoundRectShape(roundCorners, null, null)
                 paint.color = pageColorRange.start
