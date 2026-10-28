@@ -110,10 +110,6 @@
 
 core_system_component 承担 Application、启动编排和系统整合，BaseApplication 需要尽早初始化日志/异常上报，因此允许依赖 core_log_component。日志模块不反向依赖 system。此前讨论的“另建 core_app 模块、让 system 变成纯系统工具”没有采用，不是待实施的默认目标；只有出现具体职责变化时才重新评估。
 
-### DR-0002：Bilibili 依赖白名单已退役
-
-2026-10-28 用户确认由 PiliPlus 接手全部 Bilibili 功能，包括弹幕来源。`:bilibili_component`、四条调用方依赖、专有白名单及覆盖率规则均移除。不得按旧规则重新添加该模块；移除范围与验证见[执行记录](../../docs/superpowers/plans/2026-10-28-remove-bilibili.md)。
-
 ### DR-0003：限制 project API 暴露
 
 跨模块类型优先由 contract/data 提供，避免实现层充当传递类型出口。保留第 4.3.3 节的兼容允许列表，但允许不等于必须使用 api。已经完成的收敛包括：UI 移除 storage 实现依赖、storage 不再通过 api 暴露 repository 模块、UI 的 ImmersionBar 改为 implementation。新的例外必须基于真实公开 API 的类型需求，不能仅为减少 import 或依赖声明而放宽。

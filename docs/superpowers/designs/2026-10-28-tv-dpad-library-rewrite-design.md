@@ -81,7 +81,7 @@ Leanback 状态依据：[AndroidX 官方说明](https://developer.android.com/je
 | 页面/现有宿主 | 活动页面、进入/返回目的地、条目业务 key、初始/空态目标 | 通用几何搜索、索引加减导航、重试直到抢到焦点 |
 | 播放器输入层 | 画面/控制条/面板各状态的按键含义，调用现有 PlayerAction | 接管已展示菜单的普通上下左右导航 |
 
-不改变 Bilibili 接口、播放器内核、播放会话/租约、字幕弹幕渲染和网络协议。手机保持触摸路径；只在 TV UI mode 启用新的容器与交互规则，复用 `isTelevisionUiMode()`。
+保留现有播放器内核、播放会话/租约、字幕弹幕渲染和网络协议的职责。手机保持触摸路径；只在 TV UI mode 启用新的容器与交互规则，复用 `isTelevisionUiMode()`。
 
 ```mermaid
 flowchart TD
@@ -263,7 +263,7 @@ TV 的多分类页面不保留可同时参与焦点搜索的离屏 ViewPager 页
 
 独立任务补充：随后获授权的 Bilibili 移除任务已完成现有 UI 的 TV 模式冒烟，证据见[移除记录](../plans/2026-10-28-remove-bilibili.md)。这些结果仅检查保留页面未被移除任务破坏，不是新焦点库的兼容性或重写验收；本设计仍未实施。
 
-PiliPlus 参考路径为 `E:\Project\PiliPlus\lib\pages\tv\widgets\tv_dpad_root.dart`、`tv_focusable.dart`、`tv_browse_grid.dart`，以及 `main/view.dart`、`navigation/tv_back_dispatcher.dart`、`player/tv_player_input_controller.dart`。它们映射到本项目的 `core_ui_component`、`app` 主壳和 `player_component` 输入层；只参考交互原则，本地化为 Android View/Fragment/窗口机制。没有改动任何 Bilibili 媒体业务。
+PiliPlus 参考路径为 `E:\Project\PiliPlus\lib\pages\tv\widgets\tv_dpad_root.dart`、`tv_focusable.dart`、`tv_browse_grid.dart`，以及 `main/view.dart`、`navigation/tv_back_dispatcher.dart`、`player/tv_player_input_controller.dart`。它们映射到本项目的 `core_ui_component`、`app` 主壳和 `player_component` 输入层；只参考交互原则，本地化为 Android View/Fragment/窗口机制。
 
 本设计请确认的决定是：
 

@@ -19,7 +19,7 @@ context/params 的 key 大小写不敏感。敏感键由 SensitiveDataSanitizer.
 
 - token/access_token/refresh_token，authorization/proxy-authorization，cookie/set-cookie。
 - password/passwd，secret/appsecret/app_sec/appsec，appkey 及 x-appid/x-appsecret/x-appkey/x-appsec。
-- Bilibili/验证字段 v_voucher、gt、challenge、validate、seccode、grisk_id、csrf。
+- 验证与会话字段 v_voucher、gt、challenge、validate、seccode、grisk_id、csrf。
 
 完整列表以源码为准。非敏感字段仍会经过 URL、地址、路径或自由文本处理，而不是一律原样保留。
 

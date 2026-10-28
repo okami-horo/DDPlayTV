@@ -10,14 +10,13 @@
 | 开发、提交与验证要求 | [贡献指南](Contributing.md)、[本地开发环境](project_local_dev_env.md) |
 | 模块职责与依赖限制 | [模块治理](architecture/module_dependency_governance.md)、[构建门禁](architecture/architecture_governance_guardrails.md) |
 | 播放会话、资源所有权与恢复设计 | [设计与执行账本导航](../docs/superpowers/README.md) |
-| Bilibili 功能退役与升级兼容 | [移除说明](player/bilibili-playback-policy.md) |
 | ASS/SSA 字幕渲染、偏移与 GPU 恢复 | [字幕渲染](player/subtitle-rendering.md) |
 | 简繁转换现状和字幕待实现需求 | [简繁转换](player/subtitle-language-conversion.md) |
-| 顺序续播与异常完成的保留验收 | [播放验证待办](player/playback-validation-followup.md) |
+| 顺序续播的集成与 TV 验收 | [播放验证待办](player/playback-validation-followup.md) |
 | mpv 原生库与运行参数 | [产物来源与更新](mpv-build-notes.md)、[配置项](mpv_conf_supported_options.md) |
 | 日志收集与问题复现证据 | [日志指南](monitoring/logging-system.md)、[测试证据](monitoring/test_evidence_format.md) |
 | 网络、隐私和依赖说明 | [TLS 策略](architecture/network_tls_policy.md)、[日志脱敏](architecture/log_redaction_policy.md)、[隐私说明](<Privacy policy.md>)、[第三方库](Third_Party_Libraries.md) |
-| 文档整理后的剩余工作 | [目录整理追踪](architecture/directory-hygiene-followup.md) |
+| 模块归属、辅助工具与工作流待办 | [目录维护待办](architecture/directory-hygiene-followup.md) |
 | 旧计划保留下来的行为决策和未完成修复 | [播放器与焦点决策整理](../docs/superpowers/archive/2026-06-player-focus-decisions.md) |
 
 ## 目录职责
@@ -33,10 +32,6 @@
 | `.specify/`、`.spec-workflow/`、`.github/prompts/` | 工作流规则、模板和提示词 | 属于工具输入，非产品功能说明；是否继续使用由 DIR-05 跟踪 |
 | `AGENTS.md` | agent 工作规则 | 不与产品说明、历史对话或执行结果混放 |
 
-原 `TODOs/` 中有价值的字幕需求已并入播放器说明，架构原始对话已清理；未完成工作保留在上述主题文档或账本中，不再维护一套零散的重复方案。
-
-原 OpenSpec 五组变更的有效约束已整合到播放器设计、维护说明和测试证据指南，三项未完成验证保留在播放验证待办；旧提案、重复任务模板与空规格目录已清理。各主题的迁移去向和原状态见[目录整理追踪](architecture/directory-hygiene-followup.md#openspec-记录价值复核)。工作流技能与提示词的保留策略仍由 DIR-05 单独追踪。
-
 ## 架构资料与维护状态
 
 | 资料 | 职责与状态 |
@@ -44,8 +39,6 @@
 | [模块依赖治理](architecture/module_dependency_governance.md) | 当前规则与保留的关键决策 |
 | [直接依赖快照](architecture/module_dependencies_snapshot.md)、[JSON](architecture/module_dependencies_snapshot.json) | 从 Gradle 声明生成的文档工件，不手工维护依赖边 |
 | [旧 Pager 基线](architecture/legacy_pager_api_baseline.tsv) | 构建门禁读取的存量基线，非迁移完成证明 |
-| [模块拆分评估](architecture/over_partitioning_analysis.md) | 模块边界取舍与现有治理规则的关系 |
-| [播放重构参考评审](architecture/2026-10-27-playback-refactor-reference-review.md) | 参考项目映射、重构依据和验收边界；历史发现须结合后续账本阅读 |
 
 ## 本地 AAR 资料
 

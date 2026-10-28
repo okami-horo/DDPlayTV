@@ -1,19 +1,19 @@
 # 播放启动交接与活动会话深化设计
 
-> 2026-10-28 范围变更：Bilibili 功能已按用户决策退役。本文中的 B 站 Addon、风控验证、画质／URL 恢复及 token 示例仅保留设计历史，不再对应当前实现或验收要求；普通会话、队列、持久化与内核回退约束仍适用。见[退役说明](../../../document/player/bilibili-playback-policy.md)。原 62/65 是历史账本计数，退役项不记为通过。
+> 2026-10-28 范围更新：本文保留当前普通播放的会话、队列、持久化与内核回退约束。Bilibili 专有设计已删除；升级兼容与移除证据统一见[移除执行记录](../plans/2026-10-28-remove-bilibili.md)。
 
 > 日期：2026-07-18  
 > 状态核对：2026-10-28
 >
-> 状态：任务 1–13 与任务 14 的两项自动验证已完成，合计 62/65；余下三项综合验收由用户负责。旧路径已删除，不再处于任务 12 暂停状态。
+> 状态：原实施账本为 62/65，此为功能退役前的历史计数；其余三项综合验收仍由用户负责，已退役场景不再验收，也不记为通过。
 >
 > 范围：播放请求提交、来源恢复、播放器路由、前台切换、进程恢复与敏感临时数据  
-> 不包含：全部内核切换算法重写、完整后台 MediaSession 服务、Bilibili 账号会话重构、存储浏览页面重构  
+> 不包含：全部内核切换算法重写、完整后台 MediaSession 服务、存储浏览页面重构
 > 前置依赖：`2026-07-19-playback-transport-leases-design.md`
 
 > 文档职责：保留选定的设计约束、职责边界及其形成原因。实施进度、测试证据和未完成验收以[播放交接与活动会话实施计划](../plans/2026-10-27-playback-handoff-session.md)为准；示例类型与迁移步骤不作为再次实施旧路径的指令。
 
-> 修订依据：[播放重构方案与参考项目源码复核](../../../document/architecture/2026-10-27-playback-refactor-reference-review.md)。本版将请求/恢复策略归入 player，明确唯一状态写入者及旧职责迁移表，统一释放树，取消自动下一集候选的磁盘持久化。用户已确认的主动切换失败策略保持不变。
+> 设计决策：请求/恢复策略归入 player，当前来源只有一个业务写入者；底层资源沿唯一释放树退役，自动下一集候选仅在内存持有。主动切换激活前必须成功保存恢复记录。
 
 ## 1. 重构前背景
 
@@ -50,7 +50,7 @@ feature ViewModel
 
 本设计不以增加一次 `clear()` 为目标，而是重新建立播放请求和活动播放会话的所有权。
 
-2026-07-19 的源码级复核确认：当时 HTTP、SMB、FTP、Thunder 和 Bilibili 播放 Session 使用共享可变资源，在准备候选来源时可能破坏旧播放。因此本设计拆为两个独立子项目：先完成传输资源租约，再实施播放请求与活动会话。本文只描述后者，且要求所有 `PreparedPlayback` 已获得独立、可释放的 `PlaybackTransportLease`。
+2026-07-19 的源码级复核确认：当时 HTTP、SMB、FTP 和 Thunder 使用共享可变资源，在准备候选来源时可能破坏旧播放。因此本设计拆为两个独立子项目：先完成传输资源租约，再实施播放请求与活动会话。本文只描述后者，且要求所有 `PreparedPlayback` 已获得独立、可释放的 `PlaybackTransportLease`。
 
 2026-10-27 用户确认内部切源采用“统一会话与资源归属、保留底层切换流程”，并确认主动切换激活前持久化失败必须阻止切换；随后授权 agent 自行决策，并要求参考成熟项目调整方案。本版以降低维护成本为目标：新增会话必须替换旧状态写入口，新增资源对象必须明确替换谁的释放责任。
 
@@ -69,7 +69,6 @@ feature ViewModel
 9. URL Header、Cookie、投屏 Header 等敏感数据不以明文进入 Intent、SavedState、MMKV 或日志。
 10. 删除透明的 `PlayerInterceptorActivity` 和旧 `VideoSourceManager`。
 11. 所有跨身份内部切源必须更新活动描述、租约和会话快照。
-12. 同身份画质或 URL 恢复必须替换自己的传输/Bilibili token，不能覆盖全局当前资源。
 
 ### 2.2 架构目标
 
@@ -140,7 +139,7 @@ feature ViewModel
 - 支持进程恢复；
 - feature 不再了解来源构建顺序；
 - 可以通过请求 ID 和会话 ID建立明确状态机；
-- 为投屏、Bilibili、磁链和外部 URL 提供统一入口。
+- 为投屏、磁链和外部 URL 提供统一入口。
 
 缺点：
 
@@ -159,7 +158,7 @@ feature ViewModel
 | [Jellyfin TV PlaybackManager](https://github.com/jellyfin/jellyfin-androidtv/blob/master/app/src/main/java/org/jellyfin/androidtv/ui/playback/PlaybackManager.kt) | 媒体身份/选项解析为可播放结果 | 保留独立准备结果，但不照搬其先停止旧转码的顺序，满足准备失败旧播放继续 |
 | [Media3 恢复示例](https://github.com/androidx/media/blob/release/demos/session_service/src/main/java/androidx/media3/demo/session/DemoMediaLibrarySessionCallback.kt) | 按媒体身份、索引和位置重建播放 | 增加本项目必需的加密、租约和多协议解析；平台 API 不承担业务状态存储 |
 
-源码核对日期为 2026-10-27，详细适用限制见复核报告。参考 `E:/Project/PiliPlus/lib/plugin/pl_player/playback_source.dart` 的纯来源选择，以及 `lib/pages/video/controller.dart` 的播放器调用关系；协议选择映射到 `bilibili_component`，来源/租约映射到 core_storage，会话归 player。保留 TV 和多内核约束，不复制 Flutter/GetX UI 或单例。
+上述参考于 2026-10-27 核对，用于说明职责取舍；本项目保留多内核、TV 交互、独立租约与加密恢复，不按参考项目逐类复制。
 
 不采用“旧 manager 不动、外面再包一层会话”的方案，也不采用一次性重写所有内核/全量迁入 service 的方案。前者增加同步点，后者扩大验证面；本版先收回状态写入权，再沿现有内核适配执行。
 
@@ -191,7 +190,7 @@ feature ViewModel
 
 ### 5.7 播放传输租约（Playback Transport Lease）
 
-已准备播放对本地代理、SMB/FTP 播放服务器、迅雷任务、Bilibili 播放会话等传输资源的独占引用。候选来源必须持有自己的租约；释放旧候选不能删除新候选资源，准备新来源也不能改写旧来源正在使用的传输状态。
+已准备播放对本地代理、SMB/FTP 播放服务器和迅雷任务等传输资源的独占引用。候选来源必须持有自己的租约；释放旧候选不能删除新候选资源，准备新来源也不能改写旧来源正在使用的传输状态。
 
 ## 6. Module 与职责
 
@@ -200,7 +199,7 @@ feature ViewModel
 ### 6.1 `core_contract_component`：稳定数据和入口契约
 
 - 定义 `PlaybackDescriptor`、`PlaybackRequestInput`、`PlaybackLaunchOptions`、请求提交结果和必要的只读会话视图；不暴露 Storage、内核或 Activity。
-- 定义 `PlaybackRequestService : IProvider`，提供 `submit(input)` 与验证结果提交；不向 feature 暴露 store 的读写方法。
+- 定义 `PlaybackRequestService : IProvider`，提供 `submit(input)`；不向 feature 暴露 store 的读写方法。
 - `PlaybackLaunchOptions` 从当前 `Media3LaunchParams` 移入 contract，保留 `mediaId`、`sourceType`、`requestedCapabilities`、`autoplay` 字段语义。仅依赖已有 data 类型；迁完调用方后删除旧定义，避免 contract 反向依赖 core_storage。
 - 沿用 ARouter provider/路由装配方式，provider 实现在 player，app 组合；feature 只依赖 contract，不新增 feature→player 编译依赖。
 
@@ -210,9 +209,9 @@ feature ViewModel
 - 按稳定描述查询媒体库、历史、凭据和协议状态，解析独立播放文件，调用租约 factory，并准备字幕/弹幕所需元数据。
 - 返回可释放来源及解析后的身份/队列数据。`PreparedPlayback` 由 player 在该结果上装配启动选项与初始进度；core_storage 不引用 player 类型。
 - 协议校验与错误分类留在此层；是否接受新请求、是否恢复、如何更新快照由 player 决定。
-- SMB/FTP 的播放连接和浏览连接完全分开；其他协议按租约设计隔离代理上下文、task、session token。
+- SMB/FTP 的播放连接和浏览连接完全分开；其他协议按租约设计隔离代理上下文和 task。
 
-媒体库、历史、磁链、外部 URL、投屏有实际不同的恢复方法，使用小型解析适配器即可，不建立动态插件注册平台。Bilibili 的协议身份、取流、画质选择和验证数据仍由 `bilibili_component` 解释。
+媒体库、历史、磁链、外部 URL、投屏有实际不同的恢复方法，使用小型解析适配器即可，不建立动态插件注册平台。
 
 解析器不修改活动会话，不接收 Activity；取消前已创建而未交出的资源由准备作用域清理，成功返回后由接收方拥有。晚返回的结果由会话识别并释放。
 
@@ -261,14 +260,13 @@ flowchart TD
 | 当前位置 | 修订后的职责 | 必须移除的写入权 |
 | --- | --- | --- |
 | `VideoSourceManager` | 由稳定请求/provider 完全替代 | 来源槽位及分离的 attach/consume，最终删除类 |
-| `PlayerActivity.videoSource`、`applyPlaySource()` | 从会话读来源；保留必要内核/UI 适配 | 独立赋值来源、构造请求参数、提前释放 Addon |
+| `PlayerActivity.videoSource`、`applyPlaySource()` | 从会话读来源；保留必要内核/UI 适配 | 独立赋值来源、构造请求参数、提前释放来源 |
 | `applySequentialPlaybackTransition()` | 展示会话已经接管的新来源 | 再次修改全局来源、另启会话和重复提交快照 |
 | `SequentialPlaybackCoordinator` | 会话内部的预加载决策与 backend 协作者 | 不再拥有活动来源/候选；token 从会话代次派生，不另增业务代次 |
 | `StorageVideoSource.indexSource()` | 迁移期兼容；最终由稳定队列身份交给会话解析 | 直接构造并激活下一来源、依赖浏览文件对象存活 |
 | `PlayerViewModel.prepareMedia3Session()` | 观察本地会话，派生 UI 能力 | 自建 activeSessionId、依赖远端 createSession 驱动本地状态 |
 | `Media3SessionStore` | 若仍有跨模块读者则短期保留只读兼容投影；读者迁完删除 | 公共 update/clear 及独立可写 session/capability |
 | `Media3SessionService` | 接收同一版本的状态投影并回传命令 | 独立决定播放身份或能力，不能按缓存重建第二套状态 |
-| Bilibili Addon | token 绑定的设置/恢复适配；返回候选解析意图或结果 | 按 identity 取最新 session、直接覆盖当前 transport、独立删除 session token |
 
 所有投影一次发布完整的 `(sessionId, sourceRevision, source, capabilities)` 视图，避免分别更新 session/capability 产生短暂错配。跨模块的 source 仅含稳定身份和必要展示数据，不含 BaseVideoSource、凭据或 Header。退出发布空状态；旧代次的能力或元数据回调不得更新新投影。
 
@@ -414,7 +412,7 @@ ScreencastDescriptor
 
 ### 8.1 存储 Adapter
 
-在 player 内部使用独立 MMKV 文件保存一个完整加密的 `PlaybackHandoffState` blob，只包含 pending 请求、验证状态和活动会话快照。所有更新经 `PlaybackHandoffStore` 在进程内 Mutex 中执行 read-modify-write，并通过单个 MMKV value 替换，避免多 key 部分更新。MMKV 不提供 ACID transaction，因此只承诺单进程串行更新和单值替换。
+在 player 内部使用独立 MMKV 文件保存一个完整加密的 `PlaybackHandoffState` blob，只包含 pending 请求和活动会话快照。所有更新经 `PlaybackHandoffStore` 在进程内 Mutex 中执行 read-modify-write，并通过单个 MMKV value 替换，避免多 key 部分更新。MMKV 不提供 ACID transaction，因此只承诺单进程串行更新和单值替换。
 
 取消旧草案的磁盘 `queuedCandidate`。下一集候选的父代次、候选 ID、来源与租约仅由活动会话在内存持有；进程恢复不推断尚未提交的候选。原生切换后保存失败的重试也只保留最新运行状态，不新增持久化任务日志，详见第 12.2 节。
 
@@ -444,7 +442,7 @@ API < 23 的 RSA 包装密钥也使用独立 alias `dandanplay.playback.handoff.
 
 ### 8.3 TTL
 
-- 待消费请求 TTL：创建后固定 15 分钟，读取、解析和交互验证不延期；解析完成及验证成功后仍需再次检查过期时间；
+- 待消费请求 TTL：创建后固定 15 分钟，读取和解析不延期；解析完成后仍需再次检查过期时间；
 - 活动会话快照 TTL：最后一次成功保存后 24 小时；保存失败不刷新过期时间；
 - 显式退出播放器立即删除活动会话快照；
 - 普通冷启动不读取活动快照；只有系统恢复且 SavedState/Intent 携带会话 ID 时才能恢复；
@@ -472,15 +470,8 @@ Created
 
 Resolving
   -> Prepared
-  -> AwaitingInteractiveVerification
   -> Failed
   -> Superseded
-
-AwaitingInteractiveVerification
-  -> Resolving
-  -> Replaced
-  -> Expired
-  -> Failed
 
 Prepared
   -> Active
@@ -495,11 +486,9 @@ Prepared
 3. Activity 只转交 ID，由会话加载请求且不立即删除记录；
 4. 解析完成后，在提交临界区内再次检查当前 pending request ID 和 TTL；
 5. ID 不匹配说明请求已被更新请求取代，必须释放解析结果；
-6. 以成功写入新活动快照并删除对应 pending/验证状态的单值替换为逻辑激活点，之后才调用底层切换；
+6. 以成功写入新活动快照并删除对应 pending的单值替换为逻辑激活点，之后才调用底层切换；
 7. 失败时删除对应 pending 请求；
 8. 重复路由同一 request ID 不得重复激活；
-9. 交互验证不是普通失败；请求进入 `AwaitingInteractiveVerification` 并保留加密 descriptor；
-10. 验证成功后重试同一 request ID；取消、替换或过期后才删除请求和验证数据。
 
 ### 9.2 前台替换
 
@@ -552,9 +541,9 @@ Active(old)
 
 1. 在临界区外完成候选解析、校验、租约获取和启动参数装配，旧来源继续播放。
 2. 活动会话串行处理提交；先按第 12.2 节清退原生候选并核对内核实际来源，防止加密写入期间又发生自主切源。在 store Mutex 内复核 request ID、TTL 与预期活动代次，只消费匹配请求。
-3. 在同一个加密 blob 中写入新描述、启动选项、初始进度和递增代次，移除对应 pending/验证状态。加密或写入失败按第 9.2.1 节处理；成功即完成逻辑激活。
+3. 在同一个加密 blob 中写入新描述、启动选项、初始进度和递增代次，移除对应 pending。加密或写入失败按第 9.2.1 节处理；成功即完成逻辑激活。
 4. 在播放器线程调用现有切换流程。已提交候选的应用和所有权接管串行完成；后到请求属于下一笔替换，不再把已提交来源当作可随解析任务取消的候选。
-5. 内核停止使用旧来源后才幂等释放其资源。原有提前释放 Addon/来源的调用须迁移到该所有权边界；不等待新来源首帧。
+5. 内核停止使用旧来源后才幂等释放其资源。原有提前释放来源的调用须迁移到该所有权边界；不等待新来源首帧。
 
 提交前发生进程回收，已提交的活动快照仍指向旧来源；若 Intent 对应的新 pending 仍有效，可以重新准备它，但不能把它当作已经激活。提交成功后，即使新来源尚未应用到内核，会话恢复也以新快照为准。普通冷启动仍不读取快照。启动时若原 Intent 的请求已被消费，只能按第 10.1 节的会话绑定规则恢复，不能任取最新快照。
 
@@ -569,7 +558,6 @@ Active(old)
 - `HttpPlayServer` 按不可预测 token 路由到独立 upstream，候选准备不得覆盖单一 `upstreamUrl`；
 - SMB/FTP 租约拥有独立 Server、Storage/client 和在该连接上重新解析的文件，不能用浏览 Storage 或 `StorageFile.clone()` 代替连接隔离；
 - 迅雷准备新 torrent 时不得调用 `stopAllTask()`，新旧任务允许在切换窗口短暂并存；
-- Bilibili 播放/直播会话使用 generation token，Addon 只借用自己的 token，最终删除由对应租约执行；
 - `PreparedPlayback.release()` 释放自己的租约，不按宽泛 identity 删除“当前最新”资源。
 
 本次同时覆盖外部请求和第 12.1 节列出的内部切源路径，统一播放身份、传输租约及恢复快照的归属。底层停止、准备、应用和错误恢复仍沿用现有 source transition；完整切换状态机及其事务化回滚留到后续深化。
@@ -656,7 +644,6 @@ PlaybackPreparationFailure
   CredentialUnavailable
   OfflineValidationBlocked(reason)
   AuthenticationRequired
-  InteractiveVerificationRequired(payload)
   NetworkUnavailable
   UnsupportedSource
   InvalidDescriptor
@@ -667,10 +654,7 @@ UI 根据“初始播放”或“替换播放”选择行为：
 
 - 初始播放失败：错误对话框 + 退出；
 - 替换请求在提交前失败：提示 + 保留旧播放；提交后内核失败进入现有错误恢复；
-- 需要风控验证：请求进入 `AwaitingInteractiveVerification`，验证页只接收不透明 `verificationId`，成功后重试同一 request ID；
 - 失败信息不得依赖正则解析错误文案。
-
-Bilibili `v_voucher` 必须由 Bilibili 层结构化提供，不能进入异常文案或 Intent。验证 payload 与 requestId 一起保存在整体加密记录中。Bilibili 播放 Session 必须使用身份 + sessionToken 的代次所有权；Addon 停止自身任务，租约删除自己拥有的 token。
 
 ## 12. 资源所有权
 
@@ -680,9 +664,8 @@ Bilibili `v_voucher` 必须由 Bilibili 层结构化提供，不能进入异常�
 ActivePlaybackSession（决定何时退役来源）
   -> PreparedPlayback.release()
     -> StorageVideoSource.releasePlaybackResources()
-      -> Addon.onRelease()：停止自身协程/监听，不删除 transport token
       -> PlaybackTransportLease.release()
-        -> 独占的 Server / StorageFile / Storage / task / session token
+        -> 独占的 Server / StorageFile / Storage / task
 ```
 
 `PreparedPlayback` 拥有来源并把释放委托给它，不另持一个可独立释放的同一 lease。其他来源使用同一来源释放约定，底层资源只出现一次；内核和 UI 对来源均为借用，不拥有关闭权。具体 Server/流的关闭顺序由租约设计规定。
@@ -696,7 +679,7 @@ ActivePlaybackSession（决定何时退役来源）
 - PlayerActivity 显式退出；
 - 进程恢复后旧运行时对象自然不存在，只恢复稳定描述。
 
-只在内核确认不再使用该来源后退役。来源总释放入口与 lease 释放均幂等；Addon 清理失败不能阻止 lease 清理，各底层步骤失败记录脱敏信息并继续。禁止 PreparedPlayback、Activity 或 Addon 再直接 `close()` 已归租约所有的 Storage/File。
+只在内核确认不再使用该来源后退役。来源总释放入口与 lease 释放均幂等；各底层清理步骤失败时记录脱敏信息并继续。禁止 PreparedPlayback 或 Activity 再直接 `close()` 已归租约所有的 Storage/File。
 
 准备作用域先拥有尚未交出的资源；租约形成即接管其底层资源，来源形成即接管租约，PreparedPlayback 形成再接管来源。每次转移后旧作用域解除清理责任；转移前异常/取消清理本地资源，转移后异常只释放子所有者。取消异常在清理后继续传播，不吞成普通空来源。
 
@@ -708,7 +691,6 @@ ActivePlaybackSession（决定何时退役来源）
 
 - 手动下一集和传统自动下一集：按新身份生成稳定描述、PreparedPlayback 和租约，先提交快照再调用底层切换；不得在候选准备期间提前暂停旧来源；
 - Media3 seamless transition：按第 12.2 节登记内存候选并入队，收到真实切换回调后接管新来源并提交活动快照；
-- Bilibili 画质/编码切换和 URL 恢复：Addon 输出受 token 约束的准备意图/结果，由会话经 resolver 创建独立候选；身份保持不变，提交后替换 transport/sessionToken，不能在准备阶段修改活动 session；
 - 播放内核回退：复用当前租约，只更新运行时 playback profile，不误改全局设置。
 
 任何内部切源不得继续通过 `VideoSourceManager` 或裸 `StorageVideoSourceFactory.create()` 绕过活动会话。
@@ -781,15 +763,15 @@ openPlayer(requestId)
 
 ### 前置阶段：传输租约
 
-必须先完成 `2026-07-19-playback-transport-leases-design.md`，验证 HTTP、SMB、FTP、Thunder 和 Bilibili Session 新旧资源可以短暂并存。未完成该前置项目时，不得宣称 replacement 失败能普遍保留旧播放。
+必须先完成 `2026-07-19-playback-transport-leases-design.md`，验证 HTTP、SMB、FTP 和 Thunder 新旧资源可以短暂并存。未完成该前置项目时，不得宣称 replacement 失败能普遍保留旧播放。
 
 ### 阶段 2：稳定契约、解析和会话核心
 
 - contract 建立稳定输入/provider 契约，迁移启动选项类型；core_storage 提供引用提取和独立来源解析。
 - player 建立 ActivePlaybackSession 与统一来源释放委托；先用内存测试替身验证命令/事件及第 6.5 节写入权迁移，不接通未完成持久化的生产切换。
-- player 建立加密 store、固定 TTL、快照提交和 `AwaitingInteractiveVerification`；复用现有加密设施，不把策略放进 core_storage。
+- player 建立加密 store、固定 TTL 和快照提交；复用现有加密设施，不把策略放进 core_storage。
 - `DownloadValidator` 的协议兼容检查由 core_storage 执行，player 接受结构化结果；保留禁用网关时的本地兼容行为。
-- 覆盖媒体库、历史、磁链、外部 URL、投屏和 Bilibili 媒体库文件；PreparedPlayback 只委托来源释放。
+- 覆盖媒体库、历史、磁链、外部 URL 和投屏；PreparedPlayback 只委托来源释放。
 
 先验证租约再接通生产入口。持久化依赖会话的身份/代次模型；生产切换依赖持久化门槛，两者不能拆成各自可写的并行状态机。
 
@@ -818,7 +800,6 @@ openPlayer(requestId)
 
 - 手动/传统下一集；
 - Media3 seamless transition；
-- Bilibili 画质和 URL 恢复；
 - 播放内核回退；
 - 主动切换先提交描述、启动选项、队列位置及快照；原生无缝切换按第 12.2 节登记内存候选、真实事件后提交快照；
 - 迁移 Coordinator 的来源/候选所有权，扩展原生队列清退反馈，删除 Activity 中独立更新来源及代次的逻辑。
@@ -860,7 +841,7 @@ openPlayer(requestId)
 - 相同请求不能激活两次；
 - 加密失败不落明文；
 - 解密失败清理记录。
-- 固定 15 分钟 TTL 不因读取或验证而续期，提交时再次检查到期；
+- 固定 15 分钟 TTL 不因读取或解析而续期，提交时再次检查到期；
 - 新快照提交与对应 pending 消费使用同一次单值写入，保存失败不返回激活成功；
 - 进度写入保留新 pending，迟到的旧代次不能覆盖当前快照；
 - 清理写入失败被显式报告，不宣称请求或会话已删除。
@@ -874,8 +855,6 @@ openPlayer(requestId)
 - 磁链校验阻止时不产生活动来源；
 - 外部 URL Header 恢复；
 - 投屏发送端地址恢复；
-- Bilibili 短期 URL 不进入持久描述；
-- Bilibili voucher 结构化传递，错误文案和日志不包含 voucher；
 - 解析完成后发现请求已被替换，结果被释放。
 
 #### 活动会话
@@ -889,14 +868,11 @@ openPlayer(requestId)
 - 提交后发生内核错误，不错误承诺旧播放仍可继续；
 - A 慢、B 快时 A 结果不能覆盖 B；
 - 候选 B 准备期间活动来源 A 的传输资源不被覆盖或停止；
-- 旧 Bilibili 来源退役仅由其租约删除旧 generation，Addon 不再直接删除 token；
-- 风控验证成功后重试同一 request ID；
 - 快照恢复使用正确播放位置；
 - 显式退出删除活动快照；
 - 普通冷启动不读取活动快照。
 - 手动下一集后恢复到新集；
 - seamless transition 的新快照成功保存后恢复到新集；
-- 同身份画质/URL 恢复只替换对应 token；
 - 内核回退复用当前 transport lease。
 - 系统恢复优先使用快照，即使同媒体历史写入更晚、位置更大或快照位置为 0；
 - 正常播放每 5 秒保存，暂停、seek 完成及后台切换触发立即采样；
@@ -907,10 +883,9 @@ openPlayer(requestId)
 - 用户请求与原生切换回调竞争时，实际在播来源的租约不会被当作过期候选释放。
 - 同进程配置变化保留真实当前集，即使原生切换后的快照尚未保存；
 - 主动提交前清退原生候选，模拟“已经自动切换但回调尚未处理”时先接管事实，再准备新请求；
-- 来源/Addon/lease 清理异常相互隔离；取消在每个资源交接点发生时无泄漏和重复关闭；
+- 来源/lease 清理异常相互隔离；取消在每个资源交接点发生时无泄漏和重复关闭；
 - UI、service 和跨模块状态读者收到同一会话/代次的完整投影；旧能力回调不覆盖新状态；
 - 浏览页改目录/关闭连接不改变正在播放的队列和连接；
-- 同身份 Bilibili 画质准备失败不改写活动 session；提交成功再替换 token；
 - provider 只接收稳定输入，实际 factory 获取来源，测试不能通过直接构造两个假 lease 代替装配验证。
 
 ### 15.2 Robolectric 或 Activity 测试
