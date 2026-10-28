@@ -1,64 +1,53 @@
-# 日志与异常上报脱敏策略（统一工具）
+# 日志与异常上下文脱敏策略
 
-## 背景
+源码核对日期：2026-10-28。本文维护统一脱敏入口和已实现的行为；日志开关、服务端点与采集流程见 [日志维护指南](../monitoring/logging-system.md)。
 
-本仓库将“日志/异常上报默认脱敏”作为长期治理要求；当前以本文与 `document/monitoring/logging-system.md` 作为维护基线。  
-核心诉求是：在 **logcat / HTTP 对外日志 / 异常上报上下文** 中，默认不泄露 token、cookie、密码、secret、URL query 等敏感信息，同时仍保留足够的定位线索（host/path、指纹等）。
+## 统一入口及覆盖边界
 
-## 统一入口
+- [SensitiveDataSanitizer](../../core_log_component/src/main/java/com/xyoye/common_component/log/privacy/SensitiveDataSanitizer.kt)：结构化字段、URL、路径、Cookie 和自由文本的统一处理。
+- [LogFormatter](../../core_log_component/src/main/java/com/xyoye/common_component/log/LogFormatter.kt)：输出前处理 message、context 和渲染的 throwable 堆栈；HTTP/文件日志与 logcat 使用对应格式化入口。
+- [ErrorReportHelper](../../core_log_component/src/main/java/com/xyoye/common_component/utils/ErrorReportHelper.kt)：处理 tag、extraInfo、结构化 params 与自定义异常 message；忽略正常协程 CancellationException 的错误上报。
+- [BuglyReporter](../../core_log_component/src/main/java/com/xyoye/common_component/log/BuglyReporter.kt)：处理 user data、breadcrumb 和主动日志的上下文。
 
-- 统一脱敏工具：`core_log_component/src/main/java/com/xyoye/common_component/log/privacy/SensitiveDataSanitizer.kt`
-- 统一接入点（默认生效）：
-  - `LogFormatter`：对日志 `message/context/throwable` 做脱敏后再输出到 logcat/HTTP（对外接口同样要求默认脱敏）
-  - `ErrorReportHelper`：对调试输出的 tag/extraInfo 做脱敏（避免本地调试阶段泄露）
+上述覆盖不能表述为“任何异常对象都已彻底脱敏”。BuglyReporter.postCatchedException 仍把传入 Throwable 交给 SDK；ErrorReportHelper 对附加字段的处理不等于重新构造并清洗原 Throwable/cause 的全部内容。调用方不得把凭证放入异常 message，也不得绕过统一入口输出原始响应。
 
-## 默认规则（摘要）
+## 已实现规则
 
-### 1) Key-based 脱敏（context/params/header）
+### 结构化字段
 
-当 key 命中以下敏感字段（大小写不敏感）时，value 会直接替换为 `<redacted>`：
+context/params 的 key 大小写不敏感。敏感键由 SensitiveDataSanitizer.sensitiveKeys 维护，命中后整个值替换为 &lt;redacted&gt;，包括：
 
-- `token` / `access_token` / `refresh_token`
-- `authorization` / `proxy-authorization`
-- `cookie` / `set-cookie`
-- `password` / `passwd`
-- `secret` / `appsecret` / `app_sec` / `appsec`
-- `x-appid` / `x-appsecret`（避免泄露构建期注入或运行期拼装的敏感 header）
+- token/access_token/refresh_token，authorization/proxy-authorization，cookie/set-cookie。
+- password/passwd，secret/appsecret/app_sec/appsec，appkey 及 x-appid/x-appsecret/x-appkey/x-appsec。
+- Bilibili/验证字段 v_voucher、gt、challenge、validate、seccode、grisk_id、csrf。
 
-> 说明：如需要扩展敏感 key，统一在 `SensitiveDataSanitizer.sensitiveKeys` 中维护，避免各模块重复实现。
+完整列表以源码为准。非敏感字段仍会经过 URL、地址、路径或自由文本处理，而不是一律原样保留。
 
-### 2) URL 默认策略
+### Header 与 Cookie
 
-- 默认模式（SAFE）：仅保留 `scheme://host[:port]/path`，**不输出 query/fragment**
-- “仅保留 query key”模式（KEYS_ONLY）：保留 query key，但 value 统一 `<redacted>`（fragment 仍不输出）
+sanitizeHeader 是专门入口，规则与结构化 map 不完全相同：Authorization、Proxy-Authorization、Set-Cookie 及部分应用鉴权头会整体遮蔽；Cookie 保留 cookie 名称并遮蔽各值。其他 header 使用自由文本规则。因此不要假定任意自定义 header 名都自动命中 sensitiveKeys；新增敏感头时统一补充规则和回归验证。
 
-### 3) 磁力链（magnet）
+### URL、磁力链、地址与路径
 
-- 默认仅保留 `btih` hash：`magnet:btih=<hash>`
-- 无法提取 hash 时输出：`magnet:btih=<redacted>`
+| 输入 | 默认输出 |
+| --- | --- |
+| 常规 URL，SAFE 模式 | scheme、host、port、path；移除 query/fragment |
+| URL，KEYS_ONLY 模式 | 保留 query key，所有 query value 遮蔽；移除 fragment |
+| magnet | 仅保留 btih hash；无法提取时输出遮蔽值 |
+| 本地路径 | 文件名与原值 SHA-256 前 8 位指纹，不输出完整目录 |
+| 结构化 address/host/ip 类字段 | IPv4 遮蔽末段，其他 host 使用遮蔽值和指纹；可保留端口 |
 
-### 4) 本地路径
+自由文本处理包含已知 Bearer、JSON/查询敏感键、平台 Cookie、常见本地路径、URL 与 magnet 模式。这是模式匹配兜底，不保证识别所有自定义格式、路径或任意未知敏感键。优先使用结构化上下文和已明确语义的处理方法，不依赖事后正则替代日志设计。
 
-- 默认输出 `文件名#指纹`，避免输出完整目录结构：`movie.mp4#1a2b3c4d`
+## HTTP 日志服务
 
-## HTTP 日志服务安全门禁
+[HttpRequestAuth](../../core_log_component/src/main/java/com/xyoye/common_component/log/http/auth/HttpRequestAuth.kt) 要求有效 token，同时限制来源为 loopback、site-local 或 IPv6 ULA：
 
-HTTP 日志服务属于“仅局域网调试”的对外输出通道：
+- 优先读取合法 Authorization: Bearer 值；未解析到 Bearer 时回退到 token 查询参数。
+- token 为空、错误或来源不符合限制时返回未授权。
+- 优先通过 Header 传递 token，减少凭证进入 URL 历史或其他访问日志的机会。
+- 对外返回及落盘应保持脱敏；不要通过关闭脱敏来排查鉴权或取流问题。
 
-- 必须 Token 鉴权（Header + URL 参数，Header 优先）
-- 强制限制仅局域网来源可访问
-- 对外输出与落盘默认先脱敏（优先“先脱敏再存储/返回”）
+## 维护要求
 
-## 调用建议
-
-### 业务日志（推荐）
-
-- 使用 `LogFacade` + `context` 传递结构化字段
-- 不要把完整 URL query/token/cookie 拼到 message；即使拼了，Formatter 也会做兜底脱敏，但更推荐让上下文结构化、可控
-
-### 异常上报上下文（推荐）
-
-- 在构造 `extraInfo` 时，优先传“可定位但不敏感”的信息：
-  - URL：使用 SAFE（host/path）+ 可选 fingerprint
-  - 磁力链：仅 hash
-  - 路径：仅文件名或 fingerprint
+新增敏感字段在统一工具中维护，分别考虑结构化数据、header、自由文本和异常上报的实际入口，并补充能暴露泄漏的回归样例。业务日志使用 LogFacade 与可定位的结构化字段；URL 默认 SAFE，路径使用文件名/指纹，不拼接完整 Cookie、token、账号配置或原始响应。

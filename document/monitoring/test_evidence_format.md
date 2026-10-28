@@ -1,120 +1,66 @@
-# Test Evidence Format — Coverage Improvement Changes
+# 测试与覆盖率证据格式
 
-> Applies to: all pull requests that add, update, or move tests for the purpose
-> of improving JaCoCo coverage.  Required by spec `test-coverage-improvement`.
+核对日期：2026-10-28。测试/覆盖率变更按本文报告；通用要求见 [贡献指南](../Contributing.md)。
 
----
+## 变更说明
 
-## 1. Mandatory evidence block
+记录完整命令、影响模块、代码状态、环境、实际结果与报告路径。覆盖率比较报告 Before/After 的 LINE、BRANCH；Gradle 必须报告尾部 `BUILD SUCCESSFUL` 或 `BUILD FAILED`。说明失败和未执行范围。TV 变更另记录纯 DPAD 路径、焦点与返回恢复。
 
-Every coverage-improvement change **MUST** include a test-evidence block in its
-PR description or change summary.  The block must contain three sections in
-this exact order:
-
-```
-### Test evidence
-
-**Tasks run**
-```
-./gradlew :<module>:testDebugUnitTest            # run JVM unit tests
-./gradlew jacocoTestReport                       # rebuild aggregate XML report
-./gradlew verifyCoverageBaseline                 # optional: check gates
+```text
+命令：./gradlew :player_component:testDebugUnitTest
+结果：BUILD SUCCESSFUL，<实际测试数> tests
+覆盖率：LINE <before>% → <after>%，BRANCH <before>% → <after>%
+报告：build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+TV：进入 → DPAD 操作 → BACK，<实际观察>
+未覆盖：<设备/协议/场景或无>
 ```
 
-**Coverage delta**
-| Scope | Before | After |
-|-------|--------|-------|
-| LINE  | x.xx % | x.xx % |
-| BRANCH | x.xx % | x.xx % |
+没有报告时标记“未测量”，不填推测百分比。历史结果在输入和代码不变时可以引用，注明来源和日期，不当作本轮执行。
 
-**Build outcome**
-`BUILD SUCCESSFUL` ✓   — or —   `BUILD FAILED` ✗ (reason …)
-```
+## 补测原则
 
-All three sections are required even if the delta is 0.  "I forgot to run it"
-is not acceptable; add `jacocoTestReport` to local Gradle task chain before
-sending.
+- 复用现有 Gradle / JaCoCo 聚合口径；每轮记录可复现的 LINE、BRANCH、CLASS、METHOD 基线和热点范围，比较时保持源码、排除规则与环境口径一致，不建立第二套覆盖率来源。
+- 按当前报告中的覆盖缺口、用户影响和回归代价确定补测顺序，不平均分配测试数量，也不只看全仓库总百分比。旧提案中的百分比缺少可复核报告，不作为当前基线。
+- 状态协调、映射、解析、仓储和错误处理优先使用 JVM 单元／契约测试，覆盖成功、失败和边界；生命周期、内核、系统服务和 TV 焦点使用必要的仪器／冒烟验证。固定夹具、数据源与前置状态，保留可重复步骤，不要求所有页面建立完整 UI 自动化。
+- 每轮覆盖率改进同时提交测试结果、Before/After 报告及剩余缺口；只为隔离真实测试边界做必要调整，避免为刷覆盖率重写生产代码。门槛按已确认基线和目标范围渐进调整，不对所有模块直接套用统一高阈值。
 
----
+## 单模块与聚合
 
-## 2. Obtaining coverage numbers
-
-Run the parse helper from the repo root:
+单模块测试使用对应任务：
 
 ```bash
-# Windows
-python parse_coverage.py
-
-# Linux / macOS
-python3 parse_coverage.py
+./gradlew :player_component:testDebugUnitTest
 ```
 
-The script reads `build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml`
-and prints:
+全工程报告使用：
 
-1. **Overall summary** — LINE / BRANCH / CLASS / METHOD ratios
-2. **Module breakdown** — per-module LINE coverage sorted ascending
-3. **Hot-spot table** — lowest-covered packages with ≥ 50 executable lines
-4. **High-coverage packages** — for context
+```bash
+./gradlew jacocoTestReport
+```
 
-Record the *"Overall"* LINE and BRANCH figures from section 1 for the
-*Before* and *After* rows in the evidence table.
+当前 `jacocoTestReport` 依赖 `jacocoAggregateDebugUnitTest`，要求所有提供 `testDebugUnitTest` 的模块执行任务。追加到单模块命令后不会变成轻量的单模块报告。XML 位于 `build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml`，HTML 在同级报告目录。
 
----
+从根目录解析：
 
-## 3. Scoped runs (single-module changes)
+```bash
+python parse_coverage.py
+# 使用 python3 的环境改为 python3 parse_coverage.py
+```
 
-When a change only touches one or two modules, prefer scoped commands to
-reduce CI time:
+解析器热点默认阈值为 **20 行**，默认前 30 项，通过 `--hotspot-min-lines`、`--hotspot-top` 覆盖。“模块”表按历史包名前缀推断，跨模块同包名可能错误归类；DIR-04 修复前按原始包/类报告与源目录核对，不能直接等同 Gradle 模块覆盖率。
 
-| Module touched | Recommended command |
-|---------------|------------------|
-| `local_component`, `anime_component` | `./gradlew :local_component:testDebugUnitTest :anime_component:testDebugUnitTest jacocoTestReport` |
-| `storage_component` | `./gradlew :storage_component:testDebugUnitTest jacocoTestReport` |
-| `player_component` | `./gradlew :player_component:testDebugUnitTest jacocoTestReport` |
-| `core_*` modules | `./gradlew :<module>:testDebugUnitTest jacocoTestReport` |
-| Instrumentation-only | `./gradlew connectedDebugAndroidTest` (requires a device/emulator in `device` state) |
-
----
-
-## 4. Baseline gate
-
-The `verifyCoverageBaseline` Gradle task enforces that priority-module
-coverage does not regress below the recorded baseline.  Run it after adding
-new tests to confirm that you have not accidentally removed coverage:
+## 覆盖率门禁
 
 ```bash
 ./gradlew verifyCoverageBaseline
 ```
 
-A `BUILD SUCCESSFUL` result here means no baseline regression.  If the task
-fails, the violation output names the exact package and the gap (e.g.
-*"Rule violated… covered ratio is 0.12 but expected minimum is 0.15"*).
+该任务依赖聚合报告，以 PACKAGE 粒度检查 LINE 的 `COVEREDRATIO`。规则以 [根构建配置](../../build.gradle.kts) 的 `violationRules` 为准，不是为全部物理模块设置门槛。
 
-Raise the gate threshold once you have confirmed the new floor is stable — do
-**not** lower it to make a failing build pass.
+当前规则包含日志包 50%、Bilibili 包 15%、adapter/preference 包 15%、player/player_component 包 5%、storage 包 5%、data_component 包 5%。历史注释中的 database/network 数字不是实际规则，不能据此宣称受保护。
 
----
+成功只表示当前输入满足既定规则，不证明测试无缺口。失败时核对范围与回归；门槛变更明确理由和追踪项，不静默降低以绕过失败。
 
-## 5. Skipping the gate (last resort)
+## 设备与 TV
 
-If you must merge without satisfying a gate (e.g. a test environment issue,
-not a real regression), add a `// COVERAGE_GATE_SKIP: <reason>` comment
-next to the temporarily lowered limit in `build.gradle.kts` and create a
-follow-up tracking issue.  Do **not** silently disable a rule.
-
----
-
-## 6. TV / instrumentation paths
-
-For changes that affect TV-reachable flows, add a DPAD-path evidence line:
-
-```
-**TV regression**
-Path: PlayHistoryActivity launch → BACK → finish
-Driver: adb + DPAD (KEYCODE_BACK)
-Result: activity reached DESTROYED state — PASS
-```
-
-See [`document/Contributing.md`](../Contributing.md) and the AGENTS.md TV/Remote
-UX section for the full DPAD self-check checklist.
+`connectedDebugAndroidTest` 前确认设备为 `device` 且启动完成。DPAD 证据涵盖进入、选择/操作、返回，并检查焦点可见、可达、可恢复；单次 BACK 不是完整主路径验证。环境见 [本地开发说明](../project_local_dev_env.md)。

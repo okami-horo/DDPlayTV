@@ -1,47 +1,42 @@
-# 第三方库清单（非穷举）
+# 第三方组件清单
 
-> 说明：本清单用于快速了解“项目主要依赖”。完整依赖以各模块 `build.gradle.kts` 与 Gradle 依赖树为准（例如 `./gradlew :app:dependencies`）。
+核对日期：2026-10-28。本文用于定位主要依赖职责，不作为完整依赖树或许可证清单。版本及使用范围以 [依赖常量](../buildSrc/src/main/java/Dependencies.kt)、各模块构建脚本及 `./gradlew :app:dependencies` 为准；定义常量不代表已经使用。
 
-## 1、播放器 / 渲染
+## 播放与渲染
 
-- AndroidX Media3（`androidx.media3:*`）：TYPE_EXO 播放内核、Session、Cast 等能力
-- libVLC（`org.videolan.android:libvlc-all`）：VLC 播放内核
-- libmpv（`mpv-android` 编译产物）：MPV 播放内核（见 `document/mpv-build-notes.md`）
-- DanmakuFlameMaster（`repository:danmaku`）：弹幕渲染库（AAR 封装）
-- VideoCache（`repository:video_cache`）：视频缓存相关库（AAR 封装）
-- PanelSwitchHelper（`repository:panel_switch`）：面板/键盘切换库（AAR 封装）
+| 组件 | 当前用途与位置 |
+| --- | --- |
+| AndroidX Media3 | `player_component` 的 Exo 内核、Session、UI、数据源和扩展；Cast 依赖不代表完整投屏已实现 |
+| libVLC | VLC 内核，`org.videolan.android:libvlc-all` |
+| libmpv / FFmpeg | mpv 内核，预编译库位于 `player_component/libs/<abi>/`，见 [原生库记录](mpv-build-notes.md) |
+| libass / 字体依赖 | ASS/SSA 与字体支持，位于播放器原生库目录 |
+| OpenCC | 简繁转换包装、词典与 `libopen_cc.so`，位于 `player_component` |
+| DanmakuFlameMaster | `repository:danmaku` AAR 封装，弹幕渲染 |
+| VideoCache | `repository:video_cache` AAR 封装，缓存 |
 
-## 2、网络 / 协议 / 解析
+当前播放器构建使用 Media3。`Dependencies.Google` 保留了 ExoPlayer 2 常量，但当前模块构建没有引用，不作为独立现用内核列出。
 
-- OkHttp：HTTP 客户端
-- Retrofit：网络请求封装
-- Moshi：JSON 序列化/反序列化
-- Kotlin Coroutines：异步与并发
-- NanoHTTPD：本地 HTTP 服务/代理（例如播放代理）
-- SMBJ + dcerpc：SMB 协议访问
-- Apache Commons Net：FTP 等协议访问
-- jsoup：HTML/文本解析（部分站点能力）
+## 网络、数据与系统
 
-## 3、数据 / 存储
+- OkHttp、Retrofit、Moshi：HTTP 与数据转换。
+- Kotlin Coroutines：异步与并发。
+- NanoHTTPD：播放代理、日志等本地服务。
+- SMBJ / dcerpc、Apache Commons Net：SMB、FTP 访问。
+- jsoup、juniversalchardet：网页与文本解析、编码识别。
+- Room、MMKV：数据库与键值存储。
+- SevenZip（`repository:seven_zip`）、Thunder（`repository:thunder`）：解压与下载封装。
+- 华为 Scan Kit：二维码生成/相关组件调用；依赖存在不代表当前声明相机权限。
 
-- Room：SQLite ORM
-- MMKV：Key-Value 存储
-- SevenZip（`repository:seven_zip`）：7z 解压能力（AAR 封装）
-- Thunder（`repository:thunder`）：下载相关能力（AAR 封装）
+## UI、诊断与测试
 
-## 4、UI / 基础设施
+- AndroidX AppCompat、Lifecycle、RecyclerView、Paging、Startup、Preference 等。
+- Material Components、Coil（含视频帧）、Banner：UI 与封面加载。
+- ARouter：模块路由和服务。
+- ImmersionBar、PanelSwitchHelper：`repository:immersion_bar`、`repository:panel_switch` 封装。
+- Bugly：有效 App ID 配置下的诊断上报，见 [数据处理说明](<Privacy policy.md>)。
+- LeakCanary：`app` Debug 依赖。
+- JUnit、AndroidX Test、Robolectric、Coroutines Test：测试。
 
-- AndroidX（AppCompat/RecyclerView/Paging/Startup/Preference 等）
-- Material Components：Material UI 组件
-- Coil（含视频帧解码）：图片/封面加载
-- ARouter：组件化路由
-- ImmersionBar（`repository:immersion_bar`）：沉浸式状态栏（AAR 封装）
+## 分发材料
 
-## 5、质量 / 诊断
-
-- Bugly：崩溃上报（若构建时配置相关参数）
-- LeakCanary：内存泄漏检测（debug）
-
-## 6、已移除 / 不再使用（历史遗留说明）
-
-历史版本曾使用但当前仓库已不再依赖（以代码与 Gradle 为准）：IJKPlayer、RxJava、ButterKnife、Sophix 等。
+应用内许可证文本在 `user_component/src/main/assets/license/`，该目录与本文均不是完整合规审查结论。更新 AAR、预编译 `.so` 或 Maven 依赖时，核对来源、编译选项与许可证材料，不用旧文本代表新产物。

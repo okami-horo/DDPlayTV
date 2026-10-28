@@ -1,55 +1,60 @@
-# document/ 文档索引与维护状态
+# 项目文档导航
 
-本目录用于存放 **DDPlayTV** 的项目文档。由于项目来自上游 fork 且经历过多轮重构，历史上曾残留部分“上游文档/模板文档”，内容可能与当前仓库实现不一致。
+这里是 DDPlayTV 的文档总入口。当前维护说明以源码、Gradle 配置和实际验证结果为依据；设计、提案和历史测试记录分别标注，不能直接当作当前实现或本次测试通过的证明。
 
-本文用于：
-- 给出 `document/` 内文档的用途与入口
-- 标注维护状态（维护中 / 需更新 / 已归档）
-- 约定文档更新时需要同步的动作（例如依赖快照、门禁基线）
+## 按任务查阅
 
-## 快速入口
+| 需要了解 | 入口 |
+| --- | --- |
+| 产品功能与构建入口 | [项目 README](../README.md) |
+| 开发、提交与验证要求 | [贡献指南](Contributing.md)、[本地开发环境](project_local_dev_env.md) |
+| 模块职责与依赖限制 | [模块治理](architecture/module_dependency_governance.md)、[构建门禁](architecture/architecture_governance_guardrails.md) |
+| 播放会话、资源所有权与恢复设计 | [设计与执行账本导航](../docs/superpowers/README.md) |
+| Bilibili 历史同步与异常完成恢复 | [播放策略](player/bilibili-playback-policy.md) |
+| ASS/SSA 字幕渲染、偏移与 GPU 恢复 | [字幕渲染](player/subtitle-rendering.md) |
+| 简繁转换现状和字幕待实现需求 | [简繁转换](player/subtitle-language-conversion.md) |
+| 顺序续播与异常完成的保留验收 | [播放验证待办](player/playback-validation-followup.md) |
+| mpv 原生库与运行参数 | [产物来源与更新](mpv-build-notes.md)、[配置项](mpv_conf_supported_options.md) |
+| 日志收集与问题复现证据 | [日志指南](monitoring/logging-system.md)、[测试证据](monitoring/test_evidence_format.md) |
+| 网络、隐私和依赖说明 | [TLS 策略](architecture/network_tls_policy.md)、[日志脱敏](architecture/log_redaction_policy.md)、[隐私说明](<Privacy policy.md>)、[第三方库](Third_Party_Libraries.md) |
+| 文档整理后的剩余工作 | [目录整理追踪](architecture/directory-hygiene-followup.md) |
+| 旧计划保留下来的行为决策和未完成修复 | [播放器与焦点决策整理](../docs/superpowers/archive/2026-06-player-focus-decisions.md) |
 
-- 通用说明
-  - `document/Contributing.md`：贡献指南（中英文）
-  - `document/project_local_dev_env.md`：项目私有 JDK / Android SDK 本地环境说明
-  - `document/Privacy policy.md`：隐私政策（权限 / 日志 / 第三方服务）
-  - `document/Third_Party_Libraries.md`：主要第三方依赖清单（非穷举）
-- 架构治理
-  - [项目目录整理追踪](architecture/directory-hygiene-followup.md)：临时产物清理结果及文档、包名、工具归属的后续任务
-  - `document/architecture/architecture_governance_guardrails.md`：推荐门禁集合入口
-  - `document/architecture/module_dependency_governance.md`：模块依赖治理规范（v2）
-  - `document/architecture/module_dependencies_snapshot.md`：直接依赖快照（自动生成）
-  - `document/architecture/module_dependencies_snapshot.json`：直接依赖快照（机器可读）
-  - `document/architecture/legacy_pager_api_baseline.tsv`：旧版 Pager API 存量基线
-- 运行监控
-  - `document/monitoring/logging-system.md`：日志系统维护指南（本仓库现状）
-  - `document/monitoring/test_evidence_format.md`：覆盖率改进类变更的测试证据格式
-- MPV
-  - `document/mpv-build-notes.md`：`libmpv.so` 本地编译记录
-  - `document/mpv_conf_supported_options.md`：项目实际用到/暴露的 mpv 配置项清单
+## 目录职责
 
-> 当前 `document/` 目录中**不包含** `support/` 或 `release-notes/` 子目录；如后续新增，请同步更新本文索引与维护状态表。
-
-## 维护状态（建议以此为准）
-
-| 文档 | 状态 | 备注 |
+| 位置 | 保存什么 | 使用边界 |
 | --- | --- | --- |
-| `document/README.md` | 维护中 | 仅列出当前仓库实际存在的文档入口 |
-| `document/Contributing.md` | 维护中 | 通用贡献指南（含中英文） |
-| `document/project_local_dev_env.md` | 维护中 | 与 `.dev-env` 脚本 / 本地 SDK 约定强关联 |
-| `document/Privacy policy.md` | 维护中 | 需随权限/SDK 变化同步更新 |
-| `document/Third_Party_Libraries.md` | 维护中 | 主要依赖清单（非穷举） |
-| `document/architecture/*.md` | 维护中 | 与构建门禁强关联，变更需同步快照/基线 |
-| `document/architecture/module_dependencies_snapshot.{md,json}` | 自动生成 | 修改 `project(...)` 依赖后需重新生成 |
-| `document/architecture/legacy_pager_api_baseline.tsv` | 基线文件 | 更新旧版 Pager API 存量后需同步维护 |
-| `document/monitoring/logging-system.md` | 维护中 | 与日志导出方式 / 安全约束强关联 |
-| `document/monitoring/test_evidence_format.md` | 维护中 | 与覆盖率门禁 / PR 证据格式强关联 |
-| `document/mpv-*.md` | 维护中 | 与 mpv 产物/选项强关联 |
+| `README.md` | 产品简介、功能和文档入口 | 不堆放实现步骤与执行日志 |
+| `document/` | 当前维护的开发、架构、播放器与运行说明 | 同一主题保留一个主要维护位置 |
+| `docs/superpowers/` | 设计决策、执行账本与精简历史记录 | [导航](../docs/superpowers/README.md) 区分设计、结果与剩余验收 |
+| `repository/*/README.md` | 对应本地 AAR 的来源、校验和、授权线索与升级步骤 | 随该工件维护，入口见下表 |
+| `change/` | 面向发布版本的更新说明 | 发布工作流直接读取，移动时必须同步 CI |
+| `memory-bank/` | agent 使用的项目上下文、检索图和历史验证摘要 | 英文；重要事实仍须回到源码和原始证据核对 |
+| `.specify/`、`.spec-workflow/`、`.github/prompts/` | 工作流规则、模板和提示词 | 属于工具输入，非产品功能说明；是否继续使用由 DIR-05 跟踪 |
+| `AGENTS.md` | agent 工作规则 | 不与产品说明、历史对话或执行结果混放 |
 
-## 文档联动（需要同步的动作）
+原 `TODOs/` 中有价值的字幕需求已并入播放器说明，架构原始对话已清理；未完成工作保留在上述主题文档或账本中，不再维护一套零散的重复方案。
 
-- 变更模块 `project(...)` 依赖后：运行 `python scripts/module_deps_snapshot.py --write`（Windows）或 `python3 scripts/module_deps_snapshot.py --write`（Linux/macOS）更新 `document/architecture/module_dependencies_snapshot.*`。
-- 更新 `ViewPager`/`FragmentPagerAdapter` 存量后：同步维护 `document/architecture/legacy_pager_api_baseline.tsv`，保证 `./gradlew verifyLegacyPagerApis` 门禁可用。
-- 调整日志导出、脱敏规则或 HTTP 日志服务安全约束后：同步检查 `document/monitoring/logging-system.md`、`document/architecture/log_redaction_policy.md`、`document/Privacy policy.md`。
-- 调整 `.dev-env` 脚本、JDK / SDK 版本约定或 `local.properties` 写入策略后：同步更新 `document/project_local_dev_env.md`。
-- 调整覆盖率门禁、JaCoCo 证据格式或 PR 交付规范后：同步更新 `document/monitoring/test_evidence_format.md`。
+原 OpenSpec 五组变更的有效约束已整合到播放器设计、维护说明和测试证据指南，三项未完成验证保留在播放验证待办；旧提案、重复任务模板与空规格目录已清理。各主题的迁移去向和原状态见[目录整理追踪](architecture/directory-hygiene-followup.md#openspec-记录价值复核)。工作流技能与提示词的保留策略仍由 DIR-05 单独追踪。
+
+## 架构资料与维护状态
+
+| 资料 | 职责与状态 |
+| --- | --- |
+| [模块依赖治理](architecture/module_dependency_governance.md) | 当前规则与保留的关键决策 |
+| [直接依赖快照](architecture/module_dependencies_snapshot.md)、[JSON](architecture/module_dependencies_snapshot.json) | 从 Gradle 声明生成的文档工件，不手工维护依赖边 |
+| [旧 Pager 基线](architecture/legacy_pager_api_baseline.tsv) | 构建门禁读取的存量基线，非迁移完成证明 |
+| [模块拆分评估](architecture/over_partitioning_analysis.md) | 模块边界取舍与现有治理规则的关系 |
+| [播放重构参考评审](architecture/2026-10-27-playback-refactor-reference-review.md) | 参考项目映射、重构依据和验收边界；历史发现须结合后续账本阅读 |
+
+## 本地 AAR 资料
+
+[弹幕](../repository/danmaku/README.md) · [沉浸栏](../repository/immersion_bar/README.md) · [面板切换](../repository/panel_switch/README.md) · [7-Zip](../repository/seven_zip/README.md) · [迅雷](../repository/thunder/README.md) · [视频缓存](../repository/video_cache/README.md)
+
+## 维护约定
+
+- 当前实现以 [settings.gradle.kts](../settings.gradle.kts)、[版本配置](../buildSrc/src/main/java/Versions.kt)、模块构建文件和源码为准。记录“已验证”时给出日期、命令和范围；旧测试结果不能包装成本次验证。
+- 修改 `project(...)` 依赖后，通过 [快照脚本](../scripts/module_deps_snapshot.py) 更新快照，并执行模块治理检查；具体命令见治理文档。
+- 改变 Pager 存量、日志安全、SDK/NDK 或 CI 入口时，同步对应说明及基线。
+- 设计文档保存理由与约束；执行账本保存完成状态和证据；操作指南只保留当前可用步骤。未完成需求明确列为待办。
+- 移动或合并文档时同步相对链接、agent 检索入口、脚本和 CI 中的固定路径。模板、自动生成文件及历史发布说明不按普通手册随意改写。

@@ -1,12 +1,12 @@
 # Playback Transport Leases Implementation Plan
 
-> Revised 2026-10-27 after the [reference architecture review](../../../document/architecture/2026-10-27-playback-refactor-reference-review.md). Connection acquisition, source ownership, Bilibili cleanup and production-wiring tests now follow the revised design. This is an implementation plan, not evidence that implementation or verification has passed.
+> Revised 2026-10-27 after the [reference architecture review](../../../document/architecture/2026-10-27-playback-refactor-reference-review.md); status reconciled 2026-10-28. This document retains the implementation ledger and recorded verification. Task descriptions preserve their original execution order; completed steps must not be replayed merely because a file is described as "Create" or "Modify".
 
 **Goal:** Candidate preparation and disposal must not alter the active source or the browser's connection. Each resource has one cleanup owner.
 
 **Design:** [Playback transport leases](../designs/2026-07-19-playback-transport-leases-design.md). The dependent [handoff design](../designs/2026-07-18-playback-handoff-design.md) owns request/recovery policy in player; this plan establishes transport ownership without changing routes or implementing that session.
 
-**Execution:** The user authorized sequential implementation on 2026-10-27, with progress updated after each completed task. Use Superpowers executing-plans inline unless delegation is explicitly authorized. Tasks 1–9 are complete (37/37 checks); the dependent handoff/session plan is next. Task 6 brought forward the Source/retirement prerequisites needed for production Bilibili token wiring; Task 8 completed its source-ownership verification. Preserve the existing worktree/index; do not commit without user authorization. This document does not require a commit after every task.
+**Status:** Tasks 1–9 are complete (37/37 checks). The dependent [handoff/session plan](2026-10-27-playback-handoff-session.md) has reached 62/65 checks: Tasks 1–13 and two automated Task 14 checks are complete; three integrated acceptance items remain user-owned. Task 6 brought forward the Source/retirement prerequisites needed for production Bilibili token wiring; Task 8 completed its source-ownership verification. Historical authorization and task-local logs below describe their dated runs, not a new request to modify or commit code.
 
 **Stack:** Kotlin 1.9.25, Gradle 8.9, NanoHTTPD, SMBJ, Commons Net, Thunder AAR, existing Bilibili sessions, JUnit4/Robolectric/AndroidX Test. Do not upgrade dependencies or introduce new Gradle modules for this refactor.
 

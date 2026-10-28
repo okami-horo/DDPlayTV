@@ -9,7 +9,7 @@
 ## 汇总
 
 - 模块数：21
-- 依赖条目数：86（生产 85 / 测试 1）
+- 依赖条目数：88（生产 85 / 测试 3）
 
 ## 依赖列表（按模块）
 
@@ -19,7 +19,7 @@
 - `implementation`：:anime_component, :core_contract_component, :core_log_component, :core_system_component, :core_ui_component, :data_component, :local_component, :player_component, :storage_component, :user_component
 
 **测试依赖**
-- （无）
+- `androidTestImplementation`：:core_database_component, :core_storage_component
 
 ### :local_component
 

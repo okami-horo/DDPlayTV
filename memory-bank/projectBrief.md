@@ -13,6 +13,8 @@
  ## Scope
  Main build modules are defined in `settings.gradle.kts`: `:app`, feature modules, Bilibili infra, core modules, data module, and bundled `repository:*` AAR wrappers.
 
+ Current maintained documentation starts at `document/README.md`. Workflow design/execution ledgers, historical decisions and agent memory have distinct responsibilities described there. Former OpenSpec records were consolidated by topic; preserved validation gaps live in `document/player/playback-validation-followup.md`.
+
  ## Non-negotiables
  - TV/DPAD UX first: focus must be reachable, visible, restorable, and returnable.
  - Preserve module dependency layering; run `./gradlew verifyModuleDependencies` when dependency edges change.

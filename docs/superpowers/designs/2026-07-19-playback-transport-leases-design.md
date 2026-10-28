@@ -1,12 +1,14 @@
 # 播放传输资源租约设计
 
 > 日期：2026-07-19  
-> 修订：2026-10-27  
-> 状态：租约实施计划的 9 个任务、37 项检查已完成；验证范围与限制见计划，后续交接会话重构正在实施  
+> 状态核对：2026-10-28
+>
+> 状态：租约实施计划的 9 个任务、37 项检查已完成；后续交接任务已完成 62/65，三项综合验收由用户负责。具体证据与限制见两份计划。
+>
 > 范围：HTTP 代理、SMB、FTP、Thunder 与 Bilibili 播放 Session 的并存、代次和释放所有权  
 > 后续依赖：`2026-07-18-playback-handoff-design.md`
 
-> 进度与验证以[租约实施计划](../plans/2026-07-19-playback-transport-leases.md)为准；基础测试通过不代表 HTTP/SMB/FTP/Thunder/Bilibili 的实际并存已经验收。
+> 文档职责：保留租约模型、独立连接和释放所有权的设计依据；进度与验证以[租约实施计划](../plans/2026-07-19-playback-transport-leases.md)和[交接实施计划](../plans/2026-10-27-playback-handoff-session.md)为准。协议集成证据的实际范围与完整业务验收分别记录，不能互相替代。
 
 > 修订依据：[播放重构方案与参考项目源码复核](../../../document/architecture/2026-10-27-playback-refactor-reference-review.md) F1、F3。租约 factory 负责独立播放连接的获取，来源统一释放 Addon/lease，PreparedPlayback 仅委托来源释放；测试必须经过实际 acquisition/factory 路径。
 
@@ -14,7 +16,7 @@
 
 播放交接设计要求：新来源完成稳定描述解析、凭据读取、播放 URL 创建、下载校验和播放配置装配后，才替换当前活动来源。准备失败时，旧播放必须继续。
 
-当前传输实现无法满足该要求：
+重构前的传输实现不能满足该要求。以下是当时的缺陷背景，相关旧 API 已由租约实现替换，不代表当前仍使用该实现：
 
 - `HttpPlayServer` 是全局单例，只保存一份 upstream URL、Header、TLS 和 Range 状态；
 - `SmbPlayServer.startSync()` 在已启动时会释放旧 Server，且只保存一份 Storage/File；
@@ -492,6 +494,8 @@ TransportAcquisitionFailure
 - token 不进入错误文案和日志。
 
 ## 18. 迁移顺序
+
+本节是已执行迁移的顺序记录，不是尚未完成的待办；实际验证结果见实施计划。
 
 1. 建立通用 Transport Lease 与资源释放测试；
 2. HTTP Server 多租户化；

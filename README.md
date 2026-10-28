@@ -26,7 +26,7 @@
 - 播放内核调整：移除已弃用的 **IJKPlayer**，新增 **mpv**，与 **Media3 / VLC** 组成多内核方案
 - 字幕渲染增强：强化 **libass**（ASS/SSA）渲染能力，提升表现一致性
 - 媒体库扩展：新增 **B 站媒体库 / 115 Open / 百度网盘** 等来源；其中 115 Open 的 `access_token` / `refresh_token` 获取可参考 [OpenList 官方文档](https://www.oplist.org.cn/ecosystem/official_docs)
-- TV 默认策略：对部分不适合 TV 的能力做默认裁剪/关闭（如画中画/后台播放、投屏“发送端”等）
+- TV 交互：独立的 Leanback 入口、默认焦点与遥控器导航反馈
 
 ## 功能
 
@@ -36,6 +36,8 @@
 - 倍速播放与长按加速、进度记忆与续播
 - 轨道管理：音轨 / 字幕 / 弹幕
 - 对部分远端源提供本地 HTTP 代理，改善 Seek/Range 等兼容性问题
+
+完整后台播放与画中画宿主尚未实现；现有媒体会话适配不代表已提供这些能力。
 
 ### 弹幕
 
@@ -69,7 +71,7 @@
 ### TV 交互
 
 - Leanback 入口与遥控器（DPAD）操作优化
-- TV 场景下的默认策略调整（例如画中画/后台播放、投屏“发送端”等默认关闭）
+- TV 场景的默认焦点、列表导航、设置操作与返回恢复
 
 ## 构建
 
@@ -77,6 +79,12 @@
 
 - `./gradlew assembleDebug`
 - `./gradlew assembleRelease`
+
+Windows 的项目私有 JDK/SDK 配置与包装命令见 [本地开发环境](document/project_local_dev_env.md)。
+
+## 项目文档
+
+[文档导航](document/README.md) 按开发、架构、播放器、日志与隐私组织当前说明，并提供设计账本、历史决策和待办入口。贡献前请先阅读 [贡献指南](document/Contributing.md)。
 
 ## 开发者信息
 
@@ -92,7 +100,7 @@
 
 ## 注意事项
 
-- `user_component` 默认关闭远端用户相关接口调用；如需启用请评估安全与分发风险，并遵循项目约束。
+- 弹弹play 账户登录需要开发者凭证，配置后存在真实的远端请求入口；部分 Media3 远端网关接口当前未启用。数据处理范围见 [隐私说明](<document/Privacy policy.md>)。
 
 ## License
 

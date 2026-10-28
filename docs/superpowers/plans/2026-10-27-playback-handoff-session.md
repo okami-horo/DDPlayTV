@@ -8,11 +8,13 @@
 
 **Prerequisite:** The [transport lease plan](2026-07-19-playback-transport-leases.md) completed all 37 checks on 2026-10-27. Task 1 records its actual factory/cancellation/protocol/backend and TV evidence before new production integration.
 
-**Execution:** The user resumed remaining work on 2026-10-28, then explicitly took ownership of real-scenario acceptance ("验收我自己来"). Finish implementation, regressions and build verification; keep unverified acceptance items open for the user. The user subsequently authorized a local Git commit. Dependency upgrades, new Gradle modules and delegation remain outside scope. Do not introduce a second session manager, general plugin framework or full background-service migration.
+**Status and acceptance:** The user resumed remaining work on 2026-10-28, then explicitly took ownership of real-scenario acceptance ("验收我自己来"). Tasks 1–13 and two automated Task 14 checks are complete (62/65); keep the three unverified integrated acceptance items open for the user. The dated local commit authorization is historical context. This ledger does not authorize new changes, commits, dependency upgrades, new Gradle modules or a full background-service migration.
+
+**Record usage:** Completed task descriptions retain the original source inventory, proposed filenames and execution order. Some legacy files were subsequently deleted by later tasks. Read the completion and verification entries to interpret those paths; the current checkout is the source of truth for current implementation. Local `.tmp` evidence paths are historical machine-local artifacts, not guaranteed portable attachments.
 
 ## File notation and verification approach
 
-Paths below are repository-relative. These aliases refer to existing production roots; **proposed** marks new files or test suites, not existing implementation.
+Paths below are repository-relative. These aliases identify production roots; **proposed** records files or test suites planned at that stage, not a claim that they remain absent after implementation.
 
 | Alias | Root |
 | --- | --- |
@@ -329,7 +331,7 @@ Installed the new universal Debug APK on emulator-5558 (device, API 34 TV mode) 
 
 Temporary diagnostic code was removed and the two local SMB/FTP fixture processes were stopped. AVD restoration readback confirms boot complete, mobile `mCurUiMode=0x11`, running SystemUI, lockscreen enabled and absence of the injected XML (`.tmp/handoff14-avd-restored.log`). UTP logcat and final ADB logcat are available. HTTP-log collection did not obtain an app archive: token absent and the fallback ran after UTP had uninstalled the package (`.tmp/handoff-task14-log-collection.log`); do not claim an HTTP log archive exists.
 
-**Commands:** Use the checked-in wrapper from the repository root. Focused test classes are those named above, for example once implemented:
+**Commands:** For a later change that requires revalidation, use the checked-in wrapper from the repository root and the relevant focused suites, for example:
 
 ```powershell
 .\gradlew.bat :player_component:testDebugUnitTest --tests "com.xyoye.player_component.playback.handoff.PlaybackHandoffStoreTest"
@@ -344,4 +346,4 @@ adb devices -l
 
 Implementation is complete only when the lease prerequisite, all tasks here and handoff design section 17 have evidence. In particular, there must be one business writer, one resource release tree, stable-only request/navigation boundaries, distinct controlled/native persistence tests, working process recovery, gateway-independent local playback and no surviving legacy entry or internal-switch bypass.
 
-Plan-writing verification is limited to design coverage, task dependencies, inspected paths, document links and diff scope. It does not establish runtime correctness. No new product decision is waiting for user input: protocol/AAR/device feasibility and fault handling are implementation verification obligations, not reasons to leave the implementation plan unwritten.
+The original plan-writing review established design coverage, task dependencies, inspected paths and document consistency. Runtime evidence comes from the dated implementation/verification entries, with its failures and limits retained. Completion remains 62/65 until the user-owned integrated acceptance has evidence; documentation maintenance does not close those checks.

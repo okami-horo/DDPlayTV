@@ -1,49 +1,22 @@
-# 日志系统维护指南（本仓库现状）
+# 日志采集与 HTTP 下载
 
-本文描述 **DDPlayTV（本仓库版本）** 当前的日志输出与抓取方式。
+核对日期：2026-10-28。实现位于 `core_log_component` 的 `LogSystem`、`LogWriter`、`HttpLogServerManager`、`HttpLogServer` 和 `SegmentedJsonlLogStore`。
 
-> 说明：本仓库已移除本地 `log.txt / log_old.txt` 的文件落盘能力；日志抓取以 **logcat** 与 **HTTP 日志下载服务（仅局域网）** 为主。
+## 输出与存储
 
-## 1. 输出通道
+事件经级别与采样策略后输出 logcat。开启 HTTP 日志服务时，另保存应用事件和当前进程可读取的 logcat 到私有 `files/http_logs/` 分段 JSONL；这不是旧的 `log.txt` / `log_old.txt`。
 
-- **logcat（默认）**：始终输出，受“日志级别”设置影响
-- **HTTP 日志下载服务（可选，仅局域网调试）**：提供全量 ZIP、分段目录、最新分段与按时间点分段下载（用于离线检索）
+关闭服务停止监听与新采集，不自动删除历史。保留档位为 7/14/30 天，上限 1/2/4 GiB；空间不足可能降档或暂停持久化。当前提供页面和下载接口，**没有 SSE 实时推送**。
 
-HTTP 服务仅用于局域网调试，具备如下安全约束：
+## 应用操作
 
-- Token 鉴权（Header + URL 参数，Header 优先）
-- 强制限制仅局域网来源可访问
-- 对外输出默认脱敏（见：`document/architecture/log_redaction_policy.md`）
+进入“设置 → 开发者设置”，开启 HTTP 日志服务，查看地址、实际端口、Token、保留档位和占用。可清空历史或重置凭证，重置后旧 Token 失效。默认请求端口 `17010`，以显示地址为准。
 
-## 2. App 内开启步骤
+访问限于实现允许的回环/局域网来源，并需要 Token。HTTP 不提供传输加密，仅在可信网络开启。凭证与导出日志不要直接贴入公开反馈。
 
-1. 打开：`设置` → `开发者设置`
-2. 开启：`HTTP 日志服务`
-3. 页面会显示：
-   - 下载地址（可能包含多网卡/IPv6）
-   - Token（可重置；重置后旧 Token 立即失效）
-   - 日志保留档位与当前占用（7/14/30 天；1/2/4GB）
-   - 操作：重置凭证 / 清空历史日志
+## 下载接口
 
-## 3. 浏览器访问
-
-推荐在 URL 参数携带 Token：
-
-```text
-http://<设备IP>:17010/?token=<token>
-```
-
-页面提供以下操作：
-
-- 下载日志 ZIP（`GET /api/v1/logs/download`）
-- 查看分段目录（`GET /api/v1/logs/segments`）
-- 下载最新分段（`GET /api/v1/logs/latest-segment`）
-- 下载指定时间点所属分段（`GET /api/v1/logs/segment-at?timestampMs=<ms>`）
-- 手动清空本地历史日志（`POST /api/v1/logs/clear`）
-
-## 4. 脚本/命令行访问
-
-### 下载日志 ZIP
+脚本优先用 Header；浏览器可访问 `http://<设备IP>:17010/?token=<token>`，注意地址可能保存在浏览器历史。
 
 ```bash
 curl -L -H "Authorization: Bearer <token>" \
@@ -51,89 +24,33 @@ curl -L -H "Authorization: Bearer <token>" \
   "http://<设备IP>:17010/api/v1/logs/download"
 ```
 
-下载完成后，解压并在本地使用文本工具检索：
+| 方法与路径 | 用途 |
+| --- | --- |
+| `GET /` | 下载页面 |
+| `GET /api/v1/logs/download` | 全量 ZIP |
+| `GET /api/v1/logs/segments` | 分段目录与统计 |
+| `GET /api/v1/logs/latest-segment` | 最新分段 |
+| `GET /api/v1/logs/segment-at?timestampMs=<ms>` | 指定毫秒时间点分段 |
+| `POST /api/v1/logs/clear` | 清空历史 |
+
+目录包括分段的 `fileName/startMs/endMs/sizeBytes/lastModifiedMs/isLatest` 及 `totalCount/totalBytes/latestStartMs/oldestStartMs`。可使用同样 Header 替换请求路径获取所需内容。
+
+## ADB
+
+确认设备为 `device`，按 tag 或进程过滤，避免系统和其他应用日志：
 
 ```bash
-unzip ddplaytv-logs.zip -d ddplaytv-logs
-rg "关键字" ddplaytv-logs
+adb -s <serial> logcat -s DDLog-CORE
 ```
 
-### 查看分段目录（先看有哪些时段）
+`LogWriter` 的 tag 为 `DDLog-<模块>-<子tag>`，当前实现截断到 23 字符，筛选时按实际输出填写。需要多模块时保存有范围的结果再检索 `DDLog-`，不要无期限重定向全部日志。
 
-```bash
-curl -L -H "Authorization: Bearer <token>" \
-  "http://<设备IP>:17010/api/v1/logs/segments"
-```
+## 状态与安全
 
-返回字段包含：
+- `401`：核对 Token、来源与重置情况；有效 Bearer Header 优先于 URL 参数。
+- `404`：路径不存在或分段尚未生成/已清理。
+- `405`：方法错误，例如清空需要 POST。
+- `429`：限流，降低频率。
+- `503`：下载/分段暂不可用，查看应用状态及存储情况。
 
-- `segments[]`：每个分段的 `fileName/startMs/endMs/sizeBytes/lastModifiedMs/isLatest`
-- `totalCount/totalBytes`：当前分段总数与总大小
-- `latestStartMs/oldestStartMs`：最新与最早分段起点
-
-### 下载最新分段（快速排查）
-
-```bash
-curl -L -H "Authorization: Bearer <token>" \
-  -o ddplaytv-latest-segment.jsonl \
-  "http://<设备IP>:17010/api/v1/logs/latest-segment"
-```
-
-若返回 `404`，表示当前还没有可下载的分段日志文件。
-
-### 下载指定时间点所属分段（围绕错误上报排查）
-
-```bash
-curl -L -H "Authorization: Bearer <token>" \
-  -o ddplaytv-segment-at.jsonl \
-  "http://<设备IP>:17010/api/v1/logs/segment-at?timestampMs=<ms>"
-```
-
-- `timestampMs` 为毫秒时间戳（例如错误上报时间）。
-- 若返回 `404`，表示该时间点对应分段已被清理或当前不存在。
-
-### 手动清空本地历史日志
-
-```bash
-curl -X POST -H "Authorization: Bearer <token>" \
-  "http://<设备IP>:17010/api/v1/logs/clear"
-```
-
-## 5. ADB logcat 抓取（默认通道）
-
-logcat 会包含系统与其他应用输出，建议按 tag 过滤。
-
-- 本仓库的 logcat tag 形如：`DDLog-<模块>` 或 `DDLog-<模块>-<子 tag>`（Android tag 长度上限 23，超长会被截断）
-- 示例（仅查看 DDLog 前缀）：
-
-```bash
-adb logcat | rg "DDLog-"
-```
-
-只看某个模块（以实际输出为准）：
-
-```bash
-adb logcat -s "DDLog-CORE"
-```
-
-> 注意：`adb logcat` 可能很吵；尽量使用 `-s` 或管道过滤，不要直接贴全量日志。
-
-## 6. 脱敏与安全提示
-
-- 默认会对 token/cookie/password/URL query 等敏感字段做脱敏处理
-- 规则与扩展方式见：`document/architecture/log_redaction_policy.md`
-
-即便已脱敏，仍建议：
-
-- 仅在可信局域网内开启 HTTP 日志服务
-- 排查完成后及时关闭 HTTP 服务或重置 Token
-
-## 7. 常见问题
-
-### 7.1 访问 401
-
-Token 不正确或未携带（Header 与 URL 参数同时存在时以 Header 为准），或 Token 已在 TV 端被重置。
-
-### 7.2 下载慢或出现 429/503
-
-日志服务以“播放体验优先”。当资源紧张或外部请求过于频繁时，会触发限流/降级，请稍后重试或降低下载频率。
+导出默认经过 [脱敏](../architecture/log_redaction_policy.md)，提交前仍检查账号、Cookie、Token、地址和媒体名。Bugly 与 HTTP 日志是不同通道，见 [数据处理说明](<../Privacy policy.md>)。

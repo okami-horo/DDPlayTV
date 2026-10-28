@@ -1,6 +1,13 @@
  # Progress
 
 ## Current Status
+- 2026-10-28: User requested a further OpenSpec value review. Consolidated five changes into playback design, Bilibili/subtitle manuals and testing guidance; removed redundant record/config directories after backing up 27 files, including five ignored delta specs. Preserved seamless 5.1/5.2 and unexpected-completion 2.3 as pending validation, separate from the unchanged 37/37 lease and 62/65 handoff ledgers. Migration details and validation evidence live in `document/architecture/directory-hygiene-followup.md`; no source, business acceptance or Git index changes.
+- 2026-10-28: DIR-01/02 cleanup is committed as `b545eb3ba`. DIR-03 documentation consolidation completed: separated manuals/history, corrected stale facts, preserved pending matching repairs and business acceptance, and verified links/encoding/ledgers, snapshot regeneration and module/playback governance (BUILD SUCCESSFUL). Documentation changes remain uncommitted; see `document/architecture/directory-hygiene-followup.md` for commands and scope.
+
+## Playback Implementation History
+
+The following dated entries describe their respective execution points; old "continue Task" instructions are historical, not the current next step. Current acceptance remains in the handoff ledger.
+
 - 2026-10-28: Handoff Task 13 complete; Task 14 automated checks recorded (62/65). User explicitly owns remaining integrated acceptance. Removed legacy writers/helpers, added playback boundary governance/CI, immediate Media3/VLC/mpv seek snapshots, FTP ranges and main-thread subtitle recovery. Final 478 JVM tests, module/playback checks, full lint, scoped ktlint and APK builds passed (BUILD SUCCESSFUL); five final device regressions passed. Real encrypted storage and original-task process restoration have evidence; nonzero restored position and full credentials/BT/physical-TV acceptance remain unverified. Earlier intermittent FTP EOF/invalid-range failures were not causally isolated despite final passing runs; global ktlint/Pager baselines still fail. AVD modifications were reverted after testing. The user subsequently authorized a local commit. Exact commands, failures and limits are in the handoff plan.
 - 2026-10-27: Handoff Task 12 completed (56/65): one local session projection, version-bound platform commands, stale-owner/backend protection, and removal of replaced gateway/store/controller/cache paths. All 488 JVM tests, scoped ktlint/governance/full lint and APK builds passed (BUILD SUCCESSFUL in 2m 28s); eight device tests passed. Real missing-state/preload-retirement regressions were fixed. Existing popup no-op and metadata-only service are explicit background/PIP limitations. User requested Git commit then pause; Tasks 13–14 await the next session. Exact evidence is in the handoff plan.
 - 2026-10-27: Handoff Task 11 completed (51/65): session-owned settings/URL recovery with independent Bilibili candidates and kernel retry reusing the lease. All 490 repository JVM tests, scoped ktlint, governance, full lint and APK builds passed (BUILD SUCCESSFUL in 4m 5s); final device retry/stale-kernel-error and manual/native queue tests passed (2 tests). Task 12 local projection/gateway removal is next; authenticated Bilibili and physical multi-kernel acceptance remain Task 14. Exact regression and verification evidence is in the handoff plan.
@@ -13,8 +20,8 @@
 - 2026-10-27: Handoff Tasks 1–3 completed (12/65 checks): legacy characterizations, stable contracts/options alias, reference capture and five-family resolution with fresh protocol leases. Final 410 JVM tests, governance/scoped ktlint/full lint/Debug build and three targeted TV tests passed; actual TV local playback and DPAD return/focus were inspected. DownloadValidator and its 13 existing tests moved to core_storage, plus cancellation coverage. This established the Task 4 prerequisite; entry cutover remains pending. Evidence and scope live in the [handoff plan](../docs/superpowers/plans/2026-10-27-playback-handoff-session.md).
 - 2026-10-27: Transport lease implementation completed all 9 tasks/37 checks. Final 386 JVM tests, governance/lint/Debug build and eight TV instrumentation tests passed; real SMB/FTP connections, Thunder native task coexistence, HTTP reads and Bilibili token retirement have evidence. TV-mode AVD playback, DPAD controls/exit, settings persistence and error recovery were inspected. See the authoritative [lease plan](../docs/superpowers/plans/2026-07-19-playback-transport-leases.md) for scope/commands/limitations. Handoff/session implementation has started; no commit or index change.
 - Memory Bank core structure exists and was refreshed for the 2026-06-13 session.
-- Player subtitle quick toggle implementation is complete in `:player_component` and remains uncommitted.
-- Danmu match optimization implementation is complete and uncommitted.
+- Subtitle quick-toggle controller/button wiring is present in `:player_component`; implementation and verification limits are summarized in `docs/superpowers/archive/2026-06-player-focus-decisions.md`.
+- Initial danmaku matching support is present; five repairs/test gaps remain tracked in that summary. Do not treat the old optimization plan as proof they are complete.
 - TV DPAD focus architecture work is implemented and committed on branch `feat/tv-dpad-focus-architecture` as `35b477674 feat(tv): 建立 DPAD 焦点架构`.
 
 ## What Works
@@ -37,7 +44,7 @@
 ## Known Issues
 - The June TV validation gap was closed by the 2026-10-27 AVD smoke run; full background/PIP and handoff recovery matrices remain in the handoff plan.
 
-## Verification
+## Historical Verification
 - IDE diagnostics for changed files reported no issues.
 - `assembleDebug` was run and parsed as `BUILD SUCCESSFUL`.
 - No Gradle build was run for the 2026-06-13 Memory Bank refresh because only documentation was updated.

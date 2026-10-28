@@ -1,19 +1,21 @@
 # 播放启动交接与活动会话深化设计
 
 > 日期：2026-07-18  
-> 修订：2026-10-27  
-> 状态：实施中；任务 1–12 已验收；按用户要求提交后暂停，旧路径删除与完整验收待任务 13–14 完成  
+> 状态核对：2026-10-28
+>
+> 状态：任务 1–13 与任务 14 的两项自动验证已完成，合计 62/65；余下三项综合验收由用户负责。旧路径已删除，不再处于任务 12 暂停状态。
+>
 > 范围：播放请求提交、来源恢复、播放器路由、前台切换、进程恢复与敏感临时数据  
 > 不包含：全部内核切换算法重写、完整后台 MediaSession 服务、Bilibili 账号会话重构、存储浏览页面重构  
 > 前置依赖：`2026-07-19-playback-transport-leases-design.md`
 
-> 实施计划：[播放交接与活动会话实施计划](../plans/2026-10-27-playback-handoff-session.md)，共 14 个任务、65 个检查项；传输租约已完成，交接会话按任务持续实施，具体进度与证据以计划为准。
+> 文档职责：保留选定的设计约束、职责边界及其形成原因。实施进度、测试证据和未完成验收以[播放交接与活动会话实施计划](../plans/2026-10-27-playback-handoff-session.md)为准；示例类型与迁移步骤不作为再次实施旧路径的指令。
 
 > 修订依据：[播放重构方案与参考项目源码复核](../../../document/architecture/2026-10-27-playback-refactor-reference-review.md)。本版将请求/恢复策略归入 player，明确唯一状态写入者及旧职责迁移表，统一释放树，取消自动下一集候选的磁盘持久化。用户已确认的主动切换失败策略保持不变。
 
-## 1. 背景
+## 1. 重构前背景
 
-当前所有播放入口通过 `VideoSourceManager` 交接一个进程内 `BaseVideoSource`。部分入口还会单独写入 `Media3LaunchParams`：
+本节描述重构前的缺陷与旧调用链；`VideoSourceManager`、`Media3LaunchParams` 和二段拦截路由已在实施中删除，不能用本节判断当前源码状态。当时所有播放入口通过 `VideoSourceManager` 交接一个进程内 `BaseVideoSource`。部分入口还会单独写入 `Media3LaunchParams`：
 
 ```text
 feature ViewModel
@@ -36,7 +38,7 @@ feature ViewModel
 - 进程死亡后 `BaseVideoSource` 无法恢复；
 - 投屏、外部 URL 和磁链各自还携带不同的临时信息。
 
-现有代码已经存在可复现的状态串线窗口：
+当时的代码存在可复现的状态串线窗口：
 
 1. `StorageFileViewModel` 创建播放源并写入 Media3 参数；
 2. 磁链离线校验随后阻止播放；
@@ -46,7 +48,7 @@ feature ViewModel
 
 本设计不以增加一次 `clear()` 为目标，而是重新建立播放请求和活动播放会话的所有权。
 
-2026-07-19 的源码级复核进一步确认：HTTP、SMB、FTP、Thunder 和 Bilibili 播放 Session 当前使用共享可变资源，在准备候选来源时可能破坏旧播放。因此本设计拆为两个独立子项目：先完成传输资源租约，再实施播放请求与活动会话。本文只描述后者，且假设所有 `PreparedPlayback` 已获得独立、可释放的 `PlaybackTransportLease`。
+2026-07-19 的源码级复核确认：当时 HTTP、SMB、FTP、Thunder 和 Bilibili 播放 Session 使用共享可变资源，在准备候选来源时可能破坏旧播放。因此本设计拆为两个独立子项目：先完成传输资源租约，再实施播放请求与活动会话。本文只描述后者，且要求所有 `PreparedPlayback` 已获得独立、可释放的 `PlaybackTransportLease`。
 
 2026-10-27 用户确认内部切源采用“统一会话与资源归属、保留底层切换流程”，并确认主动切换激活前持久化失败必须阻止切换；随后授权 agent 自行决策，并要求参考成熟项目调整方案。本版以降低维护成本为目标：新增会话必须替换旧状态写入口，新增资源对象必须明确替换谁的释放责任。
 
@@ -711,17 +713,30 @@ ActivePlaybackSession（决定何时退役来源）
 
 ### 12.2 Media3 自动切换的保存边界
 
-2026-10-27 核对 [SequentialPlaybackCoordinator](../../../player_component/src/main/java/com/xyoye/player_component/sequential/SequentialPlaybackCoordinator.kt)、[Media3SequentialPlaybackAdapter](../../../player_component/src/main/java/com/xyoye/player_component/sequential/Media3SequentialPlaybackAdapter.kt) 和 [PlayerActivity.applySequentialPlaybackTransition()](../../../player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt)：下一来源入队后由内核自主切换，`onMediaItemTransition` 是切换后通知。保留这一底层机制，不能把回调后的保存失败描述为“尚未切换，旧播放继续”。
+2026-10-28 核对 [SequentialPlaybackCoordinator](../../../player_component/src/main/java/com/xyoye/player_component/sequential/SequentialPlaybackCoordinator.kt)、[Media3SequentialPlaybackAdapter](../../../player_component/src/main/java/com/xyoye/player_component/sequential/Media3SequentialPlaybackAdapter.kt)、[ActivePlaybackSession](../../../player_component/src/main/java/com/xyoye/player_component/playback/session/ActivePlaybackSession.kt) 和 [PlayerActivity 的 playbackBackend](../../../player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt)：下一来源入队后由内核自主切换，`onMediaItemTransition` 是切换后通知。Coordinator 仅决定预加载时机；会话通过 `nativeTransition()` 接管实际来源，Activity 的 `adoptNative()` 同步内核与页面。不能把回调后的保存失败描述为“尚未切换，旧播放继续”。
 
 1. 会话经 resolver 准备候选并持有独立来源/租约；登记父 `sourceRevision`、候选 ID 与内核 item ID 后调用 `queueNextSource()`。无需磁盘写入；入队失败确认未被内核采用后释放候选，当前播放继续。
 2. 收到匹配候选及父代次的真实切换事件后，会话先接管实际来源并递增代次，随后保存新快照；不重复启动内核、不消费无关 pending。旧来源在 backend 确认脱离后退役。
 3. 保存失败继续已开始的新播放，保留当前运行状态及“快照待更新”标记，按第 8.4 节合并重试。每次补写在会话串行路径核对 session/当前代次，只写最新实际状态；后续提交/退出排在同一 store 写入顺序，旧任务不能覆盖更新目标或复活会话。
 4. 进程在补写成功前死亡，只能恢复最后成功提交的快照，可能回到上一集；磁盘没有候选可供推断。配置变化保留有效运行时，因此不会因这种保存失败倒退。取消候选磁盘状态并未提供严格无损恢复保证。
-5. 新用户请求准备前或显式退出时，由 backend 在播放器线程核对当前 item 并清退尚未采用的排队项，返回“已移除”或“已经成为当前项”的事实。前者才释放候选；后者先接管实际来源再处理新请求。不能仅调用当前 `invalidateSession()` 清空字段就认为内核已脱离，实施时需扩展该适配反馈并测试竞态。
+5. 新用户请求准备前或显式退出时，由 backend 在播放器线程核对当前 item 并清退尚未采用的排队项。当前 `invalidateSession()` 返回 `DETACHED`、`CURRENT` 或 `STILL_ATTACHED`，会话据此确认是否已移除、已经成为当前项或仍被内核借用。仅确认脱离后才释放候选；已经成为当前项时先接管实际来源再处理新请求，不能仅清空字段就认为内核已脱离。
 
 这取代旧草案的“入队前保存候选”门槛：磁盘保存失败不再阻止原生下一集预加载。用户确认的主动切换保存门槛仍保留；两个路径统一业务所有者，不伪造相同的内核时间顺序。
 
 活动来源之外只保留一个逻辑候选。用户请求优先于下一集预加载；已取消但尚未完成关闭的资源可以短暂存在，必须被跟踪退役，不能用于新播放。以上收敛所有权和 backend 反馈，不重写内核内部的播放算法。
+
+### 12.3 顺序续播的产品边界
+
+以下约束整合自首版 `add-seamless-part-playback` 需求与 delta spec，继续适用于当前会话实现；旧 Coordinator 独立拥有来源、候选和状态同步的设计不再适用。
+
+- 复用已有“自动播放下一项”设置，不新增开关。开启且存在下一项时在当前播放页续播；关闭或到达列表末尾时保持正常完成行为。
+- 只使用当前队列顺序中的紧邻下一项，不新增文件名识别、Part 推断、跨目录猜测或重新排序。只准备这一项，避免预先获取整个列表的来源与传输资源。
+- Media3（基于 ExoPlayer）可利用原生队列减少切换停顿；网络解析、解码和资源加载仍可能产生停顿，不承诺绝对无缝。VLC/mpv 保留完成后受控切源，不宣称具备等价原生队列能力。
+- 下一项的预解析、准备或入队失败不应中断当前播放；完成时仍可经活动会话尝试传统自动下一项。目标仍不可用时正常完成，不播放无关内容。
+- 每项均有独立的媒体身份、标题、历史、弹幕、字幕、外挂音轨及会话元数据。切换后恢复目标自身历史与绑定；没有自身绑定时按目标的自动加载规则处理，不继承上一项文件级绑定。播放器全局偏好继续有效。
+- 异步准备与切换事件必须核对活动会话／来源代次及候选／队列项身份。手动切换、错误恢复、重建或退出后，旧结果不能覆盖当前来源、页面信息或资源绑定；已被内核采用的候选按第 12.2 节先确认事实再交接资源。
+
+这些是需持续维护的行为约束，不能用源码存在代替集成验收。首版未关闭的四类 Media3 集成场景及 Gradle／TV 主路径验证已移入[播放验证遗留项](../../../document/player/playback-validation-followup.md)；原 15/17 状态没有因整理自动变为完成，当前交接账本的 62/65 也保持不变。
 
 ## 13. feature 调用方式
 
@@ -751,6 +766,8 @@ openPlayer(requestId)
 不允许继续使用 `Any()` 表达播放请求。
 
 ## 14. 迁移顺序
+
+本节保留实施顺序及依赖依据，不是尚未开始的任务清单；已完成项和剩余验收请查实施计划。
 
 ### 阶段 1：特征测试与安全基线
 

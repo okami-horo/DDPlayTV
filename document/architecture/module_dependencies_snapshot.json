@@ -55,6 +55,16 @@
           "configuration": "implementation",
           "module": ":storage_component",
           "scope": "main"
+        },
+        {
+          "configuration": "androidTestImplementation",
+          "module": ":core_storage_component",
+          "scope": "test"
+        },
+        {
+          "configuration": "androidTestImplementation",
+          "module": ":core_database_component",
+          "scope": "test"
         }
       ]
     },

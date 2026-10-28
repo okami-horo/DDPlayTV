@@ -8,12 +8,12 @@
  - Shared foundations: `:core_contract_component`, `:core_system_component`, `:core_log_component`, `:core_network_component`, `:core_database_component`, `:core_storage_component`, `:core_ui_component`, `:data_component`.
  - Bundled AAR wrappers live under `:repository:*`.
 
- ## Playback Ownership (verified 2026-10-27)
+ ## Playback Ownership (source and ledger reconciliation: 2026-10-28)
  - Contract-only descriptors and request IDs cross feature/navigation boundaries; `PlaybackRequestServiceImpl` owns shared encrypted handoff storage/resolution access in player.
  - `ActivePlaybackSession`, retained by PlayerViewModel, owns active/candidate sources, revisions, controlled/native transitions and recovery. Source owns Addon plus transport lease; only that lease retires protocol resources/tokens. Activity/kernel adapters borrow sources.
  - The session publishes one immutable `PlaybackStateView`; provider/platform service/UI read the same complete identity/capability revision. Platform commands carry an expected version back to the owner. The process provider only weakly references runtime ownership.
  - Local playback never requires a remote gateway-created session. Download validation retains its local compatibility fallback. `Media3SessionService` is metadata/command adaptation only; pre-existing popup no-ops and missing notification hosting do not imply background/PIP support.
- - Exact migration/verification evidence is in `docs/superpowers/plans/2026-10-27-playback-handoff-session.md`. Task 13 legacy deletion/governance and Task 14 complete acceptance remain outstanding.
+ - Exact migration/verification evidence is in `docs/superpowers/plans/2026-10-27-playback-handoff-session.md`. Task 13 legacy deletion/governance is complete; three Task 14 integrated acceptance checks remain user-owned (62/65 total).
 
  ## Dependency Rules
  - Dependencies flow from app/features to lower-level core/infra/data/contracts.

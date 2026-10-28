@@ -1,135 +1,54 @@
-# English
+# 隐私与数据处理说明
 
-# DDPlayTV Privacy Policy
+更新日期：2026-10-28。本文依据本仓库源码静态核对；具体分发包的配置、合并权限及第三方 SDK 行为可能不同。
 
-Last updated: 2026-04-06
+## 本地数据
 
-DDPlayTV is an open-source local media player. This document describes what this repository version does (and does not) collect when you use the app.
+应用保存设置、媒体库配置、播放历史、字幕/弹幕缓存，以及用户配置的存储凭证和第三方登录态，分别位于数据库、键值存储及应用可访问的文件目录。下载、导出或用户选择的媒体可能位于外部存储。
 
-If you use third-party services (for example Bilibili, DandanPlay, Baidu Pan, Shooter subtitle service), your requests and data submitted to those services are governed by their own privacy policies.
+播放交接和进程恢复会保存请求、位置与恢复信息。当前恢复快照使用 Android Keystore 支持的加密机制，不代表全部设置、凭证、缓存或用户文件采用相同加密方式。
 
-## 1. Data We Store Locally
+## 联网数据
 
-DDPlayTV stores data on your device to provide features, for example:
-- App settings and preferences
-- Media library configurations
-- Playback history and related metadata
-- Login state (cookies/tokens) for third-party services you choose to log in to (e.g. Bilibili, Baidu Pan)
+使用弹弹play、Bilibili、网盘、字幕服务或自行配置的远端存储时，会发送完成操作所需的媒体文件名、大小、哈希、搜索词、播放标识、请求头和鉴权信息；播放过程还可能向平台发送进度或心跳。服务方也会收到网络请求本身包含的 IP 地址等信息。
 
-This local data is stored in the app’s private storage and is not uploaded automatically by DDPlayTV.
+弹弹play账户登录入口要求开发者凭证，配置后调用账户 API，提交用户填写的账号、密码及请求签名。不能将其描述为“所有远端用户接口都关闭”。当前 `Media3Repository` 的远端遥测/下载校验兼容入口不发起请求，不代表其他联网功能关闭。
 
-## 2. Data Sent to Third-Party Services
+第三方服务独立处理收到的数据，应按实际使用服务查阅其规则。本文不替第三方服务或 SDK 保证无收集、无上传。
 
-When you use online features, DDPlayTV may send data to third-party services, such as:
-- Network requests to obtain playback URLs, subtitles, danmaku, or remote storage file lists
-- Authentication cookies/tokens required by those services
+## Bugly 与诊断
 
-DDPlayTV does not operate a dedicated “account system” or a self-hosted analytics backend in this repository by default.
+配置有效 Bugly App ID 时，AndroidX Startup 会初始化腾讯 Bugly。应用可提交崩溃、捕获异常和诊断上下文，可能包含设备、系统、应用版本、堆栈及播放运行态信息。项目对自身提交的上下文和日志脱敏，但不能据此承诺 SDK 采集内容全部受本项目控制。
 
-## 3. Crash Reporting (Bugly)
+未配置有效 App ID 时，当前初始化入口跳过 Bugly。启用状态以具体构建配置和运行状态为准，不能只凭 Debug/Release 名称判断。
 
-This project integrates Tencent Bugly for crash reporting. If Bugly is enabled/configured in the build, the app may send crash/ANR reports that can include:
-- Device model, OS version
-- App version and basic runtime information
-- Crash stack traces
+## 日志与局域网
 
-For the exact behavior, please refer to Bugly’s documentation and privacy policy.
+应用按日志级别和采样策略输出到 logcat。开启 HTTP 日志服务后，会将应用事件与当前进程可读取的 logcat 写入私有 `files/http_logs/`，提供页面、ZIP 和分段下载。访问要求 Token，并限制到实现允许的回环/局域网来源；当前没有 SSE 实时推送接口。
 
-## 4. Permissions
+存储档位为 7/14/30 天，对应上限 1/2/4 GiB；空间不足可能降档或暂停持久化。关闭服务停止监听和新采集，不会自动清空历史。开发者设置提供清空历史及重置凭证。
 
-The app may request permissions to enable specific features. The declared permissions may include:
-- Network: `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`
-- Media access: `READ_MEDIA_VIDEO`, `READ_MEDIA_AUDIO`, `READ_MEDIA_VISUAL_USER_SELECTED` (Android 13+), and `READ_EXTERNAL_STORAGE` (Android 12 and below)
-- Storage compatibility: `WRITE_EXTERNAL_STORAGE` (legacy compatibility; behavior depends on Android version)
-- Install packages: `REQUEST_INSTALL_PACKAGES` (only used when you choose to install an APK from the app)
-- Background playback: `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`
-- Local network discovery: `CHANGE_WIFI_MULTICAST_STATE`
-- Camera: the current TV-oriented manifest does **not** declare `CAMERA`; if camera/scanning capabilities are re-enabled in future builds, this policy will be updated accordingly
+HTTP 下载由持有凭证的客户端主动发起，不是云端自动上传入口；Bugly 与联网服务另按上文处理。脱敏不能替代导出前人工检查。操作见 [日志指南](monitoring/logging-system.md)。
 
-Some permissions may be disabled for TV adaptation builds (for example, `CAMERA` is currently removed from the main TV-oriented manifest; see the merged AndroidManifest at build time).
+## 权限
 
-## 5. Logs
+以下按当前源码声明说明，最终以分发包合并后的 Manifest 和系统授权为准：
 
-DDPlayTV always prints runtime logs to Android logcat (subject to the configured log level).
+| 权限 | 用途与范围 |
+| --- | --- |
+| `INTERNET`、`ACCESS_NETWORK_STATE`、`ACCESS_WIFI_STATE` | 联网与网络状态 |
+| `READ_MEDIA_VIDEO`、`READ_MEDIA_AUDIO` | 新版系统媒体读取 |
+| `READ_MEDIA_VISUAL_USER_SELECTED` | Android 14 起所选视觉媒体访问声明 |
+| `READ_EXTERNAL_STORAGE`（最高 API 32） | 旧版媒体/文件读取 |
+| `WRITE_EXTERNAL_STORAGE`（最高 API 29） | 旧版写入兼容 |
+| `REQUEST_INSTALL_PACKAGES` | 用户选择安装 APK |
+| `FOREGROUND_SERVICE`、`FOREGROUND_SERVICE_MEDIA_PLAYBACK` | 已声明媒体相关前台服务，不能据此推断完整后台播放已实现 |
+| `CHANGE_WIFI_MULTICAST_STATE` | 局域网发现 |
 
-If “HTTP Log Server” is enabled in the app, DDPlayTV can expose logs over the local network via an HTTP server for debugging (page + structured APIs + SSE). Access is protected by a token (Authorization header or `?token=`) and restricted to LAN clients. Outputs are redacted by default. Logs are not uploaded automatically by DDPlayTV.
+当前工程主线未启用 `CAMERA` 声明。声明与实际授权不同，拒绝权限可能使相应功能不可用。
 
-See `document/monitoring/logging-system.md` for how to enable and capture logs.
+## 数据管理
 
-## 6. Third-Party Libraries
+通过应用设置管理缓存、历史、存储配置及日志。卸载由系统清理私有数据，但不保证清理下载或导出的外部文件。反馈问题只提交最少必要信息。
 
-See `document/Third_Party_Libraries.md` for the major third-party dependencies used by this project.
-
-## 7. Contact
-
-If you have questions or want to report an issue, please open an issue on GitHub:
-- https://github.com/okami-horo/DDPlayTV/issues/new/choose
-
----
-
-# 中文版
-
-# DDPlayTV 隐私政策
-
-最后更新：2026-04-06
-
-DDPlayTV 是一款开源的本地媒体播放器。本文用于说明**本仓库当前版本**在使用过程中会（或不会）收集/处理哪些数据。
-
-如果你使用第三方服务（例如 Bilibili、弹弹 play、百度网盘、Shooter 字幕服务等），你提交给这些服务的请求与数据将受其各自隐私政策约束。
-
-## 1. 本地存储的数据
-
-为实现功能，DDPlayTV 会在你的设备本地存储一些数据，例如：
-- App 设置与偏好
-- 媒体库配置
-- 播放历史与相关元信息
-- 你主动登录的第三方服务登录态（Cookie/Token，例如 Bilibili、百度网盘）
-
-上述数据默认仅保存在本地（应用私有目录/数据库/键值存储），DDPlayTV 不会自动上传。
-
-## 2. 可能发送给第三方服务的数据
-
-当你使用联网功能时，DDPlayTV 可能会向第三方服务发送数据，例如：
-- 为获取播放链接/字幕/弹幕/远端存储列表等而发起的网络请求
-- 访问第三方服务所需的鉴权信息（Cookie/Token 等）
-
-本仓库默认不提供自建账号系统，也不提供自建的埋点/分析后端。
-
-## 3. 崩溃上报（Bugly）
-
-本项目集成了腾讯 Bugly 崩溃上报能力。若在构建时启用/配置了 Bugly，应用在发生崩溃/ANR 时可能会上报包含以下信息的报告：
-- 设备型号、系统版本
-- App 版本与基础运行态信息
-- 崩溃堆栈信息
-
-具体行为以 Bugly 的官方说明与隐私政策为准。
-
-## 4. 权限说明
-
-应用会按功能需要声明/申请权限。当前工程声明的权限可能包括：
-- 网络：`INTERNET`、`ACCESS_NETWORK_STATE`、`ACCESS_WIFI_STATE`
-- 媒体读取：Android 13+ 的 `READ_MEDIA_VIDEO` / `READ_MEDIA_AUDIO` / `READ_MEDIA_VISUAL_USER_SELECTED`；Android 12 及以下的 `READ_EXTERNAL_STORAGE`
-- 存储兼容：`WRITE_EXTERNAL_STORAGE`（历史兼容；具体效果取决于系统版本与系统策略）
-- 安装 APK：`REQUEST_INSTALL_PACKAGES`（仅在你选择从应用内安装 APK 时使用）
-- 后台播放：`FOREGROUND_SERVICE`、`FOREGROUND_SERVICE_MEDIA_PLAYBACK`
-- 局域网发现：`CHANGE_WIFI_MULTICAST_STATE`
-- 摄像头：当前 TV 适配主线默认**不声明** `CAMERA` 权限；若未来重新启用扫码/摄像能力，本文会同步更新
-
-部分权限可能会因 TV 适配而被禁用（例如当前主线已移除 `CAMERA` 声明；以构建时合并后的 AndroidManifest 为准）。
-
-## 5. 日志
-
-DDPlayTV 默认会将运行日志输出到 Android logcat（受“日志级别”设置影响）。
-
-当你在应用内开启“HTTP 日志服务”时，DDPlayTV 会在局域网内启动仅用于调试的 HTTP 日志服务，提供日志页面、结构化查询接口与实时推送（SSE）。访问需要 Token 鉴权，并限制仅局域网来源可访问。日志默认不会自动上传。
-
-开启方式与抓取示例见：`document/monitoring/logging-system.md`。
-
-## 6. 第三方库
-
-主要依赖清单见：`document/Third_Party_Libraries.md`（非穷举）。
-
-## 7. 联系方式
-
-如有疑问或需要反馈问题，请在 GitHub 提交 issue：
-- https://github.com/okami-horo/DDPlayTV/issues/new/choose
+组件见 [第三方库](Third_Party_Libraries.md)。维护核对入口为 `core_system_component/src/main/AndroidManifest.xml`、`storage_component/src/main/AndroidManifest.xml`、`BuglyInitializer`、`UserRepository`、`HttpLogServerManager`；本文不替代具体发布包的隐私审查。
