@@ -89,6 +89,7 @@ dependencies {
 
     androidTestImplementation(project(":core_storage_component"))
     androidTestImplementation(project(":core_database_component"))
+    androidTestImplementation(Dependencies.Tencent.mmkv)
 
     kapt(Dependencies.Alibaba.arouter_compiler)
 }

@@ -64,6 +64,7 @@ class DanDanVideoPlayer(
     InterVideoTrack,
     VideoPlayerEventListener {
     private val playStateListeners = LinkedHashSet<(PlayState) -> Unit>()
+    var seekCompleteListener: (() -> Unit)? = null
 
     // 播放状态
     private var mCurrentPlayState = PlayState.STATE_IDLE
@@ -281,6 +282,10 @@ class DanDanVideoPlayer(
 
     override fun onPrepared() {
         setPlayState(PlayState.STATE_PREPARED)
+    }
+
+    override fun onSeekComplete() {
+        seekCompleteListener?.invoke()
     }
 
     override fun onError(e: Exception?) {

@@ -69,6 +69,18 @@ class FtpPlaybackTransportTest {
     }
 
     @Test
+    fun rangeRequestsReturnOnlyRequestedBytesAndRejectOffsetsPastEnd() =
+        runBlocking {
+            val acquired = acquire(factory())
+            assertEquals(206 to "irs", read(acquired.lease.playUrl, "bytes=1-3"))
+            assertEquals(206 to "st", read(acquired.lease.playUrl, "bytes=3-"))
+            assertEquals(206 to "st", read(acquired.lease.playUrl, "bytes=-2"))
+            assertEquals(416 to "", read(acquired.lease.playUrl, "bytes=5-"))
+            assertEquals(listOf(1L, 3L, 3L), clients.single().offsets)
+            assertEquals(200 to "first", read(acquired.lease.playUrl))
+        }
+
+    @Test
     fun borrowedProxyUrlCannotAcquireAnUnownedDirectLease() =
         runBlocking {
             val active = acquire(factory())
@@ -124,8 +136,8 @@ class FtpPlaybackTransportTest {
                     }
                 )
                 assertEquals(listOf(1L), clients[0].offsets)
-                assertEquals("other", read(second.lease.playUrl, "bytes=1-3").second)
-                assertEquals(listOf(0L), clients[1].offsets)
+                assertEquals("the", read(second.lease.playUrl, "bytes=1-3").second)
+                assertEquals(listOf(1L), clients[1].offsets)
                 retired.lease.release()
                 retired.lease.release()
                 assertEquals(1, clients[retiredIndex].disconnects.get())
@@ -360,8 +372,14 @@ class FtpPlaybackTransportTest {
         range?.let { connection.setRequestProperty("Range", it) }
         return try {
             val status = connection.responseCode
+            if (status == 206) {
+                assertEquals("bytes", connection.getHeaderField("Accept-Ranges"))
+                assertTrue(connection.getHeaderField("Content-Range").endsWith("/5"))
+            } else if (status == 416) {
+                assertEquals("bytes */5", connection.getHeaderField("Content-Range"))
+            }
             val stream = if (status >= 400) connection.errorStream else connection.inputStream
-            status to stream.bufferedReader().use { it.readText() }
+            status to stream?.bufferedReader()?.use { it.readText() }.orEmpty()
         } finally {
             connection.disconnect()
         }

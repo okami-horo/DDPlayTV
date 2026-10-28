@@ -468,6 +468,14 @@ class PlayerActivity :
         initListener()
 
         danDanPlayer.addPlayStateListener(handoffPlayStateListener)
+        danDanPlayer.seekCompleteListener = {
+            val expected = viewModel.playbackVersion
+            danDanPlayer.post {
+                if (!isDestroyed && expected != null && viewModel.playbackVersion == expected) {
+                    viewModel.savePlaybackProgress()
+                }
+            }
+        }
         danDanPlayer.addPlayStateListener(sequentialPlayStateListener)
         danDanPlayer.setController(videoController)
         dataBinding.playerContainer.removeAllViews()
@@ -540,6 +548,7 @@ class PlayerActivity :
         sequentialPlaybackCoordinator.invalidateActiveSession()
         danDanPlayer.removePlayStateListener(sequentialPlayStateListener)
         danDanPlayer.removePlayStateListener(handoffPlayStateListener)
+        danDanPlayer.seekCompleteListener = null
         beforePlayExit()
         unregisterReceiver()
         popupManager.dismiss()

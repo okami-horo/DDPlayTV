@@ -13,6 +13,8 @@ interface VideoPlayerEventListener {
 
     fun onCompletion()
 
+    fun onSeekComplete() = Unit
+
     fun onVideoSizeChange(
         width: Int,
         height: Int

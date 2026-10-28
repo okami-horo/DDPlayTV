@@ -34,6 +34,7 @@ import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
 import com.xyoye.common_component.services.PlaybackRequestService
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.handoff.PlaybackReferenceFactory
+import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.file.impl.VideoStorageFile
 import com.xyoye.common_component.storage.impl.VideoStorage
 import com.xyoye.common_component.utils.ActivityHelper
@@ -80,6 +81,79 @@ import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 class PlaybackEntriesInstrumentedTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
+
+    @Test fun smbAndFtpRequestsSurviveBrowserCloseAndReplaceThroughTheSession() =
+        withFixture {
+            val host = InstrumentationRegistry.getArguments().getString("leaseFixtureHost")
+            org.junit.Assume.assumeTrue("Requires documented SMB/FTP wire fixtures", host != null)
+            val libraries =
+                listOf(
+                    MediaLibraryEntity(
+                        displayName = "handoff SMB fixture",
+                        mediaType = MediaType.SMB_SERVER,
+                        url = host!!,
+                        port = 1445,
+                        account = "lease",
+                        password = "lease-fixture",
+                        smbSharePath = "videos"
+                    ),
+                    MediaLibraryEntity(
+                        displayName = "handoff FTP fixture",
+                        mediaType = MediaType.FTP_SERVER,
+                        url = "ftp://$host:2121",
+                        ftpAddress = host,
+                        port = 2121,
+                        account = "lease",
+                        password = "lease-fixture",
+                        ftpEncoding = "UTF-8"
+                    )
+                )
+            val dao = DatabaseProvider.instance.getMediaLibraryDao()
+            val provider = ARouter.getInstance().navigation(PlaybackRequestService::class.java)
+            libraries.forEach { input ->
+                val previous = runBlocking { dao.getByUrl(input.url, input.mediaType) }
+                assertNull("Fixture must not overwrite an existing library", previous)
+                runBlocking { dao.insert(input) }
+                val library = runBlocking { dao.getByUrl(input.url, input.mediaType)!! }
+                val browser = requireNotNull(StorageFactory.createStorage(library))
+                var historyKey: String? = null
+                try {
+                    val path = if (library.mediaType == MediaType.SMB_SERVER) "videos/playback-long.mp4" else "/playback-long.mp4"
+                    val file = runBlocking { requireNotNull(browser.pathFile(path, false)) }
+                    historyKey = file.uniqueKey()
+                    val descriptor = PlaybackReferenceFactory.fromFile(file, StorageSort.NAME, false, true)
+                    browser.close()
+
+                    fun request() =
+                        runBlocking {
+                            provider.submit(PlaybackRequestInput(descriptor, null, PlaybackRequestOrigin.STORAGE_FILE))
+                        } as PlaybackSubmissionResult.Accepted
+                    ActivityScenario.launch<PlayerActivity>(playerIntent(request().requestId)).use { scenario ->
+                        var activity: PlayerActivity? = null
+                        scenario.onActivity { activity = it }
+                        val first = awaitSource { activity }
+                        assertEquals(library.mediaType, first.getMediaType())
+                        val replacement = request()
+                        scenario.onActivity { it.startActivity(playerIntent(replacement.requestId)) }
+                        val second = awaitSource(first) { activity }
+                        assertEquals(first.getUniqueKey(), second.getUniqueKey())
+                        assertNotEquals(first.getVideoUrl(), second.getVideoUrl())
+                        scenario.onActivity { assertTrue(player(it).isPlaying()) }
+                    }
+                } finally {
+                    browser.close()
+                    runBlocking {
+                        dao.delete(library.url, library.mediaType)
+                        DatabaseProvider.instance
+                            .getPlayHistoryDao()
+                            .getPlayHistory(
+                                historyKey.orEmpty(),
+                                library.id
+                            )?.let { DatabaseProvider.instance.getPlayHistoryDao().delete(it.id) }
+                    }
+                }
+            }
+        }
 
     @Test fun localProjectionAndPlatformCommandsWorkWithoutGatewayResponses() =
         withFixture { fixture ->

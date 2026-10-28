@@ -12,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -102,6 +103,8 @@ class PlaybackTransportProtocolIntegrationTest {
                 assertBrowserAvailable(browser)
                 browser.close()
                 assertArrayEquals(payload, read(survivor.lease.playUrl))
+                assertArrayEquals(payload.copyOfRange(1024, 4096), read(survivor.lease.playUrl, "bytes=1024-4095"))
+                assertArrayEquals(payload.copyOfRange(payload.size - 1024, payload.size), read(survivor.lease.playUrl, "bytes=-1024"))
             } finally {
                 leases.forEach { it.release() }
                 browser.close()
@@ -114,11 +117,16 @@ class PlaybackTransportProtocolIntegrationTest {
         assertTrue(browser.openDirectory(root, true).any { it.fileName() == "probe.bin" })
     }
 
-    private fun read(url: String): ByteArray {
+    private fun read(
+        url: String,
+        range: String? = null
+    ): ByteArray {
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.connectTimeout = 5_000
         connection.readTimeout = 10_000
+        range?.let { connection.setRequestProperty("Range", it) }
         return try {
+            assertEquals(if (range == null) 200 else 206, connection.responseCode)
             connection.inputStream.use { it.readBytes() }
         } finally {
             connection.disconnect()

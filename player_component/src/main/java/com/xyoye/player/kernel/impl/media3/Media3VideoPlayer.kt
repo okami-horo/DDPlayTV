@@ -417,6 +417,16 @@ class Media3VideoPlayer(
         player.seekTo(timeMs)
     }
 
+    override fun onPositionDiscontinuity(
+        oldPosition: Player.PositionInfo,
+        newPosition: Player.PositionInfo,
+        reason: Int
+    ) {
+        if (reason == Player.DISCONTINUITY_REASON_SEEK || reason == Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT) {
+            mPlayerEventListener.onSeekComplete()
+        }
+    }
+
     override fun setSpeed(speed: Float) {
         speedParameters = PlaybackParameters(speed)
         player.playbackParameters = speedParameters

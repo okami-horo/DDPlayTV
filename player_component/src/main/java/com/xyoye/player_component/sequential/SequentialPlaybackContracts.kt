@@ -46,22 +46,3 @@ interface SequentialPlaybackBackendAdapter {
         )
     }
 }
-
-class FallbackSequentialPlaybackAdapter : SequentialPlaybackBackendAdapter {
-    override val supportsSeamlessPlayback: Boolean = false
-
-    override fun setEventListener(listener: SequentialPlaybackBackendAdapter.EventListener?) = Unit
-
-    override fun beginSession(
-        sessionToken: SequentialPlaybackSessionToken,
-        currentSource: BaseVideoSource
-    ) = Unit
-
-    override fun queueNextSource(
-        sessionToken: SequentialPlaybackSessionToken,
-        queueItemId: SequentialPlaybackQueueItemId,
-        nextSource: BaseVideoSource
-    ): Result<Unit> = Result.failure(UnsupportedOperationException("Fallback adapter does not support queueing"))
-
-    override fun invalidateSession(sessionToken: SequentialPlaybackSessionToken) = SequentialQueueRetirement.DETACHED
-}

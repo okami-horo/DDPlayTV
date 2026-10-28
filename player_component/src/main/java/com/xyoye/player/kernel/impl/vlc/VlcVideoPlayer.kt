@@ -54,6 +54,7 @@ class VlcVideoPlayer(
 
     private var mCurrentDuration = 0L
     private var seekable = true
+    private var pendingSeekMs: Long? = null
     private var isBufferEnd = false
     private var lastBufferingStarted: Boolean? = null
     private var dataSource: String? = null
@@ -142,6 +143,7 @@ class VlcVideoPlayer(
     }
 
     override fun reset() {
+        pendingSeekMs = null
         attachedLayout = null
         isUsingTextureView = false
         didTextureFallback = false
@@ -171,6 +173,7 @@ class VlcVideoPlayer(
 
     override fun seekTo(timeMs: Long) {
         if (seekable && isPlayerAvailable()) {
+            pendingSeekMs = timeMs
             mMediaPlayer.time = timeMs
         }
     }
@@ -350,6 +353,15 @@ class VlcVideoPlayer(
                 MediaPlayer.Event.Paused -> playbackState = PlaybackStateCompat.STATE_PAUSED
                 // 是否可跳转
                 MediaPlayer.Event.SeekableChanged -> seekable = it.seekable
+
+                MediaPlayer.Event.TimeChanged -> {
+                    val target = pendingSeekMs
+                    // Queued time updates from before setTime must not consume seek completion.
+                    if (target != null && kotlin.math.abs(it.timeChanged - target) <= 1000) {
+                        pendingSeekMs = null
+                        mPlayerEventListener.onSeekComplete()
+                    }
+                }
                 // 播放错误
                 MediaPlayer.Event.EncounteredError -> {
                     if (fallbackTextureAttachAfterErrorIfNeeded()) {

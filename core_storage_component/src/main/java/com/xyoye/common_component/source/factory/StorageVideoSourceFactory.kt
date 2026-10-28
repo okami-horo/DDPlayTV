@@ -1,7 +1,6 @@
 package com.xyoye.common_component.source.factory
 
 import android.net.Uri
-import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.SubtitleConfig
@@ -13,7 +12,6 @@ import com.xyoye.common_component.playback.addon.PlaybackReplacementIntent
 import com.xyoye.common_component.resolver.PlaybackProfileResolver
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.Storage
-import com.xyoye.common_component.storage.StorageSortOption
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.impl.LinkStorage
 import com.xyoye.common_component.storage.transport.AcquiredPlaybackTransport
@@ -38,16 +36,6 @@ import kotlinx.coroutines.withContext
 
 object StorageVideoSourceFactory {
     private const val LOG_TAG = "StorageVideoSourceFactory"
-
-    suspend fun create(file: StorageFile): StorageVideoSource? {
-        val profile = resolvePlaybackProfile(file.storage)
-        return create(file, profile)
-    }
-
-    suspend fun create(
-        file: StorageFile,
-        profile: PlaybackProfile
-    ): StorageVideoSource? = create(file, profile, getVideoSources(file.storage))
 
     suspend fun create(
         file: StorageFile,
@@ -273,10 +261,4 @@ object StorageVideoSourceFactory {
             true
         }.getOrDefault(false)
     }
-
-    private fun getVideoSources(storage: Storage): List<StorageFile> =
-        storage.directoryFiles
-            .filter { it.isVideoFile() }
-            .filter { AppConfig.isShowHiddenFile() || !it.fileName().startsWith(".") }
-            .sortedWith(StorageSortOption.comparator())
 }

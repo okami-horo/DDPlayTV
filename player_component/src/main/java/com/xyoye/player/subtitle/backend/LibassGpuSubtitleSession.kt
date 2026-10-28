@@ -261,9 +261,13 @@ internal class LibassGpuSubtitleSession(
         if (!succeeded) {
             return
         }
-        fallbackDispatched.set(false)
-        val positionMs = environment.playerView?.getCurrentPosition() ?: 0L
-        renderOnceIfPaused(positionMs)
+        // Recovery arrives on the render/IO thread; player reads belong to the UI thread.
+        // The session scope cancels queued work when this subtitle session is released.
+        sessionScope.launch(Dispatchers.Main) {
+            fallbackDispatched.set(false)
+            val positionMs = environment.playerView?.getCurrentPosition() ?: return@launch
+            renderOnceIfPaused(positionMs)
+        }
     }
 
     private val frameCallback =

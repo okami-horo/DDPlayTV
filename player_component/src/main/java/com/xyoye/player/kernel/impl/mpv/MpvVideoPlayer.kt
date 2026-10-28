@@ -44,6 +44,7 @@ class MpvVideoPlayer(
     private var userAgent: String? = null
     private var proxySeekEnabled: Boolean = false
     private var pendingSeekMs: Long? = null
+    private var awaitingSeek = false
     private var videoSize = Point(0, 0)
     private var isPrepared = false
     private var isPreparing = false
@@ -445,6 +446,7 @@ class MpvVideoPlayer(
     }
 
     override fun reset() {
+        awaitingSeek = false
         nativeBridge.stop()
         dataSource = null
         headers = emptyMap()
@@ -491,6 +493,7 @@ class MpvVideoPlayer(
                 }
             }
         }
+        awaitingSeek = true
         nativeBridge.seek(timeMs)
     }
 
@@ -775,6 +778,11 @@ class MpvVideoPlayer(
                 mPlayerEventListener.onPrepared()
             }
             is MpvNativeBridge.Event.RenderingStart -> {
+                // The bridge emits this for MPV_EVENT_PLAYBACK_RESTART, including completed seeks.
+                if (awaitingSeek) {
+                    awaitingSeek = false
+                    mPlayerEventListener.onSeekComplete()
+                }
                 BuglyReporter.updateContext("mpv.event", "RenderingStart")
                 recordBuglyBreadcrumb(message = "rendering start")
                 isPlaying = true
@@ -787,6 +795,7 @@ class MpvVideoPlayer(
                             proxySeekEnabled = true
                             pendingSeekMs?.let { pending ->
                                 pendingSeekMs = null
+                                awaitingSeek = true
                                 nativeBridge.seek(pending)
                             }
                         }

@@ -6,7 +6,7 @@
 
 > 后续状态（2026-10-27）：用户要求按参考架构调整设计后，两份设计和租约计划已完成文档修订；随后已补写交接实施计划。下文“发现”保留修订前证据；请以处理表和链接设计判断当前方案状态，不能把文档修订当成代码缺陷已修复。
 
-> 实施状态：用户随后授权逐任务实施，租约计划的 9 个任务、37 项检查已全部完成，包含完整 JVM/构建检查、真实协议隔离及 TV 模式 AVD 验收。[交接实施计划](../../docs/superpowers/plans/2026-10-27-playback-handoff-session.md)已完成 Tasks 1–12（56/65 项），包括稳定契约、独立来源解析和加密交接存储；任务 3 的 410 项 JVM 测试、lint、构建及 TV 冒烟已通过，任务 4 的 14 项存储测试／94 项 player 测试及 lint、治理、构建也已通过。任务 5 的会话核心及受控切换已通过 18 项会话测试／112 项 player 测试和完整构建检查。任务 6 已实现请求 provider、系统重建恢复与进度保存，129 项 player 测试、构建及三条 TV 冒烟通过。任务 7 已实现请求绑定的 Bilibili 验证和日志脱敏，387 项相关 JVM 测试、lint、治理、构建通过。任务 8–9 已完成 Activity/内核生命周期、仅传 ID 的外部入口与验证页面接入；全仓 482 项 JVM 测试、完整 lint、构建与治理通过，真实加密提交、Activity 重建、singleTask 重入、DPAD/BACK 以及五类入口和前后台 HTTP 投屏均有设备测试证据。任务 10 已完成会话拥有的稳定队列切集，480 项全仓 JVM 测试、lint、构建、治理及真实手动／原生切集设备测试通过；原生切集保留同一内核。任务 11 已完成同身份恢复与内核回退，490 项全仓 JVM 测试、lint、构建、治理及两条设备回归通过；任务 12 已完成本地状态投影、带版本的平台命令及禁用网关解耦，488 项 JVM 测试和 8 条设备测试通过；按用户要求提交后暂停，任务 13–14 留待下次，完整进程恢复仍待任务 14 验收。具体证据与范围限制以两份实施计划为准。下文“未实施”等标记描述的是设计审查时状态，不替代实施记录。
+> 实施状态（2026-10-28）：租约计划已完成 37/37；[交接实施计划](../../docs/superpowers/plans/2026-10-27-playback-handoff-session.md)已完成任务 1–13，合计 62/65 项检查。旧写入路径已删除，边界检查接入根治理任务和 CI；补齐三种内核的定位快照、FTP Range 和字幕恢复线程修复。最终 478 项 JVM 测试、模块／播放边界治理、完整 lint、限定范围 ktlint 及 APK 构建通过（BUILD SUCCESSFUL），5 项最终设备回归通过。用户明确自行验收，余下 3 项综合场景保留未勾选。FTP 曾间歇出现 EOF／非法范围错误，后续回归通过但未隔离该间歇问题的原因；全仓旧 ktlint／Pager 基线仍失败。Bilibili 真实验证、BT 完整播放、非零进度进程恢复和实体 TV 等范围以任务 14 清单为准。下文保留设计审查时证据，不替代当前实施记录。
 
 ## 发现的设计处理状态
 
@@ -60,7 +60,7 @@
 
 ### F2 · P1：新活动会话还缺少替换旧状态写入权的明确清单
 
-**证据。** [VideoSourceManager.kt](../../core_storage_component/src/main/java/com/xyoye/common_component/source/VideoSourceManager.kt):20–35 分别保存来源和启动参数；[PlayerActivity.kt](../../player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt):596–634 与 722–749 分别处理普通切源和原生切换后的状态更新；1220–1232 的手动切源会先暂停，再准备来源。[SequentialPlaybackCoordinator.kt](../../player_component/src/main/java/com/xyoye/player_component/sequential/SequentialPlaybackCoordinator.kt):22–24、91、128–153 独立持有来源、代次、候选并应用切换。
+**证据。** `VideoSourceManager.kt`（已删除，见审查基线）:20–35 分别保存来源和启动参数；[PlayerActivity.kt](../../player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt):596–634 与 722–749 分别处理普通切源和原生切换后的状态更新；1220–1232 的手动切源会先暂停，再准备来源。[SequentialPlaybackCoordinator.kt](../../player_component/src/main/java/com/xyoye/player_component/sequential/SequentialPlaybackCoordinator.kt):22–24、91、128–153 独立持有来源、代次、候选并应用切换。
 
 另外，审查时的 [PlayerViewModel.kt](../../player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerViewModel.kt):48–60、72–100 和 `Media3SessionStore.kt:13–24`（已于任务 12 删除）保存会话元数据。[交接设计](../../docs/superpowers/designs/2026-07-18-playback-handoff-design.md) §6、§12.1 已要求内部切源接入活动会话，但 §3、§18 仍将 Media3 状态所有权整体统一后置，尚未逐项说明哪些旧字段会删除、哪些仅为只读投影。
 

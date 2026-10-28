@@ -1,5 +1,6 @@
 import governance.VerifyLegacyPagerApisTask
 import governance.VerifyModuleDependenciesTask
+import governance.VerifyPlaybackBoundariesTask
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import org.gradle.api.GradleException
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
@@ -207,6 +208,7 @@ tasks {
 
     register<VerifyModuleDependenciesTask>("verifyModuleDependencies")
     register<VerifyLegacyPagerApisTask>("verifyLegacyPagerApis")
+    register<VerifyPlaybackBoundariesTask>("verifyPlaybackBoundaries")
 
     register("verifyArchitectureGovernance") {
         group = "verification"
@@ -337,6 +339,7 @@ gradle.projectsEvaluated {
     tasks.named("verifyArchitectureGovernance").configure {
         dependsOn(tasks.named("verifyModuleDependencies"))
         dependsOn(tasks.named("verifyLegacyPagerApis"))
+        dependsOn(tasks.named("verifyPlaybackBoundaries"))
 
         val ktlintTasks = allprojects.mapNotNull { it.tasks.findByName("ktlintCheck") }
         dependsOn(ktlintTasks)

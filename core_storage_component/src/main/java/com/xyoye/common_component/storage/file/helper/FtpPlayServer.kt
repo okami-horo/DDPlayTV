@@ -3,6 +3,7 @@ package com.xyoye.common_component.storage.file.helper
 import com.xyoye.common_component.storage.file.impl.FtpStorageFile
 import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.storage.transport.releaseTransportResources
+import com.xyoye.common_component.utils.RangeUtils
 import com.xyoye.common_component.utils.getFileExtension
 import fi.iki.elonen.NanoHTTPD
 import kotlinx.coroutines.CancellationException
@@ -26,12 +27,27 @@ internal open class FtpPlayServer(
     override fun serve(session: IHTTPSession): Response =
         synchronized(requestLock) {
             if (retired.get() || !session.uri.startsWith("/lease/$leaseId/")) return notFound()
+            val size = file.fileLength()
+            val rangeText = session.headers["range"]
+            val range = rangeText?.let { RangeUtils.parseRange(it, size) }
+            if (rangeText != null && range == null) {
+                return newFixedLengthResponse(Response.Status.RANGE_NOT_SATISFIABLE, "text/plain", "").apply {
+                    addHeader("Content-Range", "bytes */$size")
+                }
+            }
             val stream =
-                storage.openFileBlocking(file)
+                storage.openFileBlocking(file, range?.first ?: 0)
                     ?: return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "open resource failed")
             if (retired.get()) return notFound()
-            // Preserve the existing FTP proxy's linear playback policy (Range support is disabled).
-            newChunkedResponse(Response.Status.OK, "video/${getFileExtension(file.filePath())}", stream)
+            newFixedLengthResponse(
+                if (range == null) Response.Status.OK else Response.Status.PARTIAL_CONTENT,
+                "video/${getFileExtension(file.filePath())}",
+                stream,
+                range?.let { it.second - it.first + 1 } ?: size
+            ).apply {
+                addHeader("Accept-Ranges", "bytes")
+                range?.let { addHeader("Content-Range", "bytes ${it.first}-${it.second}/$size") }
+            }
         }
 
     open suspend fun startSync(): Boolean =
