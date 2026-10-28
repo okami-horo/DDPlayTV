@@ -1,6 +1,10 @@
  # Active Context
 
 ## Current Focus
+Directory hygiene follow-up (2026-10-28): the user authorized audit items 1–2 only and deferred items 3–5. Stopped the confirmed runaway emulator writer and its crash handler, removed its 72,907,257,796-byte log, preserved the healthy emulator, moved eight tracked root screenshots into ignored local evidence with matching SHA-256 hashes, removed the tracked Python cache, and added a root-only temporary-screenshot ignore rule. Changes remain uncommitted. Deferred work and verification scope are tracked in `document/architecture/directory-hygiene-followup.md`; do not implement items 3–5 without a subsequent request.
+
+Playback acceptance context remains:
+
 The user resumed Tasks 13–14 on 2026-10-28 and then explicitly took ownership of real-scenario acceptance ("验收我自己来"). Lease Tasks 1–9 remain complete (37/37); handoff Tasks 1–13 and two Task 14 checks are complete (62/65). Removed legacy writers and added Kotlin-syntax playback boundary governance to the root aggregate and CI. Completed seek snapshot callbacks, FTP Range handling and subtitle recovery main-thread dispatch. Final verification: 478 JVM tests, module/playback governance, full lint, scoped ktlint and Debug/test APK builds passed (BUILD SUCCESSFUL). Five final device regressions passed on emulator-5558 with actual Media3/VLC/mpv kernels. Real Keystore/MMKV tests and original-task process restoration have evidence. Three integrated acceptance checks remain user-owned. Earlier FTP EOF/invalid-range failures were intermittent; final/repeated runs passed, but their cause was not isolated, so repeated FTP replacement remains a specific acceptance concern. Full architecture aggregation still fails existing global ktlint/Pager baselines. Details and exact commands are in the handoff plan. Existing popup no-ops and the metadata-only service still do not provide full background/PIP hosting. The user authorized a local commit of this continuation on 2026-10-28, based on b2ce478eb.
 
  ## Active Decisions
@@ -39,6 +43,7 @@ The user resumed Tasks 13–14 on 2026-10-28 and then explicitly took ownership 
 - The transport lease design uses HTTP multi-tenant routing, per-lease SMB/FTP servers, per-task Thunder ownership, and tokenized Bilibili sessions.
 
 ## Retrieval Map
+- Directory hygiene status and deferred audit items 3–5 -> `document/architecture/directory-hygiene-followup.md` -> read before further directory/document/package/tool cleanup; only items 1–2 were authorized for implementation.
 - Refactor rationale, reference projects, findings, verification limits -> `document/architecture/2026-10-27-playback-refactor-reference-review.md` -> read before revising or implementing playback architecture.
 - Revised handoff decisions -> `docs/superpowers/designs/2026-07-18-playback-handoff-design.md` -> read before planning state ownership, request/recovery, queue transitions or platform adaptation.
 - Revised transport ownership -> `docs/superpowers/designs/2026-07-19-playback-transport-leases-design.md` -> read before acquisition/release implementation; execution is now authorized.

@@ -15,6 +15,7 @@
   - `document/Privacy policy.md`：隐私政策（权限 / 日志 / 第三方服务）
   - `document/Third_Party_Libraries.md`：主要第三方依赖清单（非穷举）
 - 架构治理
+  - [项目目录整理追踪](architecture/directory-hygiene-followup.md)：临时产物清理结果及文档、包名、工具归属的后续任务
   - `document/architecture/architecture_governance_guardrails.md`：推荐门禁集合入口
   - `document/architecture/module_dependency_governance.md`：模块依赖治理规范（v2）
   - `document/architecture/module_dependencies_snapshot.md`：直接依赖快照（自动生成）
