@@ -4,10 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
-import com.xyoye.common_component.bilibili.auth.BilibiliCookieJarStore
 import com.xyoye.common_component.database.repository.MediaLibraryRepository
-import com.xyoye.common_component.network.config.Api
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.cloud115.auth.Cloud115AuthStore
 import com.xyoye.common_component.storage.credential.MediaLibraryCredentialStore
@@ -56,21 +53,6 @@ class StoragePlusViewModel : BaseViewModel() {
                 if (!isValid) {
                     if (showToast) {
                         ToastCenter.showWarning("保存失败，请先扫码授权")
-                    }
-                    return@launch
-                }
-            }
-
-            if (upsertLibrary.mediaType == MediaType.BILIBILI_STORAGE) {
-                if (upsertLibrary.url.isBlank()) {
-                    upsertLibrary.url = Api.BILI_BILI_API
-                }
-                upsertLibrary.url = upsertLibrary.url.trim().removeSuffix("/")
-                val storageKey = BilibiliPlaybackPreferencesStore.storageKey(upsertLibrary)
-                val isLoggedIn = BilibiliCookieJarStore(storageKey).isLoginCookiePresent()
-                if (!isLoggedIn) {
-                    if (showToast) {
-                        ToastCenter.showWarning("保存失败，请先扫码登录")
                     }
                     return@launch
                 }

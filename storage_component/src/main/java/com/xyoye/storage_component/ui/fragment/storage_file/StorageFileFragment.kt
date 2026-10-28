@@ -22,7 +22,6 @@ import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.baidupan.auth.BaiduPanAuthStore
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
@@ -31,11 +30,9 @@ import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.FragmentStorageFileBinding
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
 import com.xyoye.storage_component.ui.dialog.BaiduPanLoginDialog
-import com.xyoye.storage_component.ui.dialog.BilibiliLoginDialog
 
 class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentStorageFileBinding>(), DpadFocusOwner {
     private val directory: StorageFile? by lazy { ownerActivity.directory }
-    private var tvHistoryHintShown = false
     private var lastPagingHintState: com.xyoye.common_component.storage.PagedStorage.State? = null
     private val focusDelegate by lazy(LazyThreadSafetyMode.NONE) {
         DpadRecyclerFocusDelegate(
@@ -94,14 +91,6 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             if (!dataBinding.storageFileRv.isInTouchMode) {
                 val pagingItem = it.lastOrNull() as? StoragePagingItem
                 if (pagingItem != null) {
-                    if (!tvHistoryHintShown &&
-                        ownerActivity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
-                        BilibiliStorage.isBilibiliPagedDirectoryPath(ownerActivity.directory?.filePath())
-                    ) {
-                        ToastCenter.showInfo("提示：按菜单键/设置键可刷新，列表底部可选择“加载更多/重试/刷新”")
-                        tvHistoryHintShown = true
-                    }
-
                     if (pagingItem.state != lastPagingHintState) {
                         lastPagingHintState = pagingItem.state
                         if (pagingItem.state == com.xyoye.common_component.storage.PagedStorage.State.ERROR) {
@@ -231,24 +220,15 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             return
         }
 
-        val isBilibiliHistory =
-            ownerActivity.storage.library.mediaType == MediaType.BILIBILI_STORAGE &&
-                directory?.filePath() == com.xyoye.common_component.storage.impl.BilibiliStorage.PATH_HISTORY_DIR
-
-        if (isBilibiliHistory) {
-            // 历史列表刷新：刷新后聚焦第一项（最新）
-            focusDelegate.setPendingFocus(index = 0)
-        } else {
-            val (focusedIndex, focusedUniqueKey) = focusDelegate.captureFocusedItem()
-            focusDelegate.setPendingFocus(
-                index =
-                    when {
-                        focusedIndex != RecyclerView.NO_POSITION -> focusedIndex
-                        else -> 0
-                    },
-                uniqueKey = focusedUniqueKey,
-            )
-        }
+        val (focusedIndex, focusedUniqueKey) = focusDelegate.captureFocusedItem()
+        focusDelegate.setPendingFocus(
+            index =
+                when {
+                    focusedIndex != RecyclerView.NO_POSITION -> focusedIndex
+                    else -> 0
+                },
+            uniqueKey = focusedUniqueKey,
+        )
 
         ToastCenter.showInfo("刷新中…")
         reloadDirectory(refresh = true)
@@ -303,7 +283,6 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
 
     private fun showLoginDialog(library: MediaLibraryEntity) {
         when (library.mediaType) {
-            MediaType.BILIBILI_STORAGE -> showBilibiliLoginDialog(library)
             MediaType.BAIDU_PAN_STORAGE -> showBaiduPanLoginDialog(library)
             MediaType.OPEN_115_STORAGE -> {
                 ARouter
@@ -323,25 +302,6 @@ class StorageFileFragment : BaseFragment<StorageFileFragmentViewModel, FragmentS
             }
             else -> Unit
         }
-    }
-
-    private fun showBilibiliLoginDialog(library: MediaLibraryEntity) {
-        BilibiliLoginDialog(
-            activity = ownerActivity,
-            library = library,
-            onLoginSuccess = { triggerTvRefresh() },
-            onDismiss = {
-                val authStorage = ownerActivity.storage as? AuthStorage
-                val requiresLogin =
-                    authStorage?.let { it.requiresLogin(directory) && !it.isConnected() } == true
-                bindingOrNull?.let { binding ->
-                    if (!binding.storageFileRv.isInTouchMode && requiresLogin) {
-                        focusDelegate.setPendingFocus(index = 0)
-                        binding.storageFileRv.post { requestFocus() }
-                    }
-                }
-            },
-        ).show()
     }
 
     private fun showBaiduPanLoginDialog(library: MediaLibraryEntity) {

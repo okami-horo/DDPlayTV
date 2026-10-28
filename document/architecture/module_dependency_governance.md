@@ -6,8 +6,8 @@
 
 ## 0. 范围与口径
 
-- [settings.gradle.kts](../../settings.gradle.kts) 显式纳入 21 个模块：1 个 app、5 个业务模块、1 个 Bilibili 集成、7 个 core、1 个 data、6 个内置 AAR 包装模块。
-- Gradle 还会创建嵌套模块的父项目 :repository。治理实现认识该容器，但不把它计入 21 个显式模块。
+- [settings.gradle.kts](../../settings.gradle.kts) 显式纳入 20 个模块：1 个 app、5 个业务模块、7 个 core、1 个 data、6 个内置 AAR 包装模块。
+- Gradle 还会创建嵌套模块的父项目 :repository。治理实现认识该容器，但不把它计入 20 个显式模块。
 - 校验直接声明的 Gradle project 依赖，包括生产与测试配置；不展开传递依赖、不检查外部库版本，也不代替源码边界和行为验证。
 - core_notification_component、core_service_component、remote_component、Han1meViewer 不是当前目录或构建模块。不得根据旧文档为它们添加依赖例外。
 
@@ -18,12 +18,12 @@
 | 组合根 | :app | 启动入口、全局装配、Android 平台宿主；通过契约触发各域能力 |
 | 业务 | :anime_component、:local_component、:user_component、:storage_component、:player_component | 番剧、本地媒体、用户设置、存储浏览、播放业务与 UI |
 | UI 基础 | :core_ui_component | 页面基类、焦点、通用控件与主题 |
-| 基础设施 | :core_storage_component、:bilibili_component、:core_network_component、:core_database_component | 协议/来源解析、平台集成、网络、持久化实现 |
+| 基础设施 | :core_storage_component、:core_network_component、:core_database_component | 协议/来源解析、网络、持久化实现 |
 | 运行时 | :core_system_component、:core_log_component | 启动与系统整合、日志及异常上报 |
 | 契约与数据 | :core_contract_component、:data_component | 跨模块接口/路由/稳定播放描述、共享模型 |
 | 内置依赖 | :repository:* | AAR 包装；不承担业务规则 |
 
-当前 app 的生产依赖已收敛为业务模块及 system/log/ui/contract/data。用户会话恢复和云弹幕屏蔽词同步通过契约服务触发，数据库手动迁移由所属模块的 Startup initializer 负责。core_ui_component 已不依赖 storage/network/database/bilibili 实现层；这两项是已经完成的边界，不再列为待实施重构。
+当前 app 的生产依赖已收敛为业务模块及 system/log/ui/contract/data。用户会话恢复和云弹幕屏蔽词同步通过契约服务触发，数据库手动迁移由所属模块的 Startup initializer 负责。core_ui_component 已不依赖 storage/network/database 实现层；这两项是已经完成的边界，不再列为待实施重构。
 
 ## 2. 硬规则
 
@@ -40,7 +40,7 @@
 新增模块或直接依赖时：
 
 1. 先说明能力归属，判断是否应通过 contract/data 协作。
-2. 同步更新第 4 节、相关 DR 与 buildSrc 中的允许列表；Bilibili 或 API 暴露变化必须说明原因。
+2. 同步更新第 4 节、相关 DR 与 buildSrc 中的允许列表；API 暴露变化必须说明原因。
 3. 执行 ./gradlew verifyModuleDependencies --console=plain，查看输出尾部的 BUILD SUCCESSFUL 或 BUILD FAILED。
 4. 使用 Python 3 运行 scripts/module_deps_snapshot.py --write，更新 Markdown 和 JSON 快照，并检查生成差异。
 5. 按改动范围运行构建、测试和其他 [治理检查](architecture_governance_guardrails.md)。
@@ -63,13 +63,12 @@
 
 | 来源 | 允许目标 |
 | --- | --- |
-| :app | 5 个业务模块，以及 system、log、ui、contract、data；不直接依赖 network、database、storage 实现或 bilibili |
+| :app | 5 个业务模块，以及 system、log、ui、contract、data；不直接依赖 network、database、storage 实现 |
 | :anime_component | 普通业务基础依赖 |
-| :local_component、:user_component、:storage_component | 普通业务基础依赖，以及 :bilibili_component |
+| :local_component、:user_component、:storage_component | 普通业务基础依赖 |
 | :player_component | 普通业务基础依赖，以及 :repository:danmaku、:repository:panel_switch、:repository:video_cache |
 | :core_ui_component | contract、system、log、data，以及 :repository:immersion_bar |
-| :core_storage_component | contract、network、database、system、log、bilibili、data，以及 :repository:seven_zip、:repository:thunder |
-| :bilibili_component | contract、network、database、system、log、data |
+| :core_storage_component | contract、network、database、system、log、data，以及 :repository:seven_zip、:repository:thunder |
 | :core_network_component | system、log、data |
 | :core_database_component | system、data |
 | :core_system_component | contract、log、data |
@@ -111,9 +110,9 @@
 
 core_system_component 承担 Application、启动编排和系统整合，BaseApplication 需要尽早初始化日志/异常上报，因此允许依赖 core_log_component。日志模块不反向依赖 system。此前讨论的“另建 core_app 模块、让 system 变成纯系统工具”没有采用，不是待实施的默认目标；只有出现具体职责变化时才重新评估。
 
-### DR-0002：Bilibili 实现依赖使用白名单
+### DR-0002：Bilibili 依赖白名单已退役
 
-允许直接依赖 :bilibili_component 的模块为 :local_component、:user_component、:storage_component、:core_storage_component。其他模块新增依赖时，应说明为什么已有 storage/contract 入口不能满足需求，评估替换该实现的影响，并同步文档、白名单和快照。
+2026-10-28 用户确认由 PiliPlus 接手全部 Bilibili 功能，包括弹幕来源。`:bilibili_component`、四条调用方依赖、专有白名单及覆盖率规则均移除。不得按旧规则重新添加该模块；移除范围与验证见[执行记录](../../docs/superpowers/plans/2026-10-28-remove-bilibili.md)。
 
 ### DR-0003：限制 project API 暴露
 

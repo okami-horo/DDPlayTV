@@ -10,7 +10,7 @@
 | 开发、提交与验证要求 | [贡献指南](Contributing.md)、[本地开发环境](project_local_dev_env.md) |
 | 模块职责与依赖限制 | [模块治理](architecture/module_dependency_governance.md)、[构建门禁](architecture/architecture_governance_guardrails.md) |
 | 播放会话、资源所有权与恢复设计 | [设计与执行账本导航](../docs/superpowers/README.md) |
-| Bilibili 历史同步与异常完成恢复 | [播放策略](player/bilibili-playback-policy.md) |
+| Bilibili 功能退役与升级兼容 | [移除说明](player/bilibili-playback-policy.md) |
 | ASS/SSA 字幕渲染、偏移与 GPU 恢复 | [字幕渲染](player/subtitle-rendering.md) |
 | 简繁转换现状和字幕待实现需求 | [简繁转换](player/subtitle-language-conversion.md) |
 | 顺序续播与异常完成的保留验收 | [播放验证待办](player/playback-validation-followup.md) |

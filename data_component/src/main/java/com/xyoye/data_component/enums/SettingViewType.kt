@@ -23,8 +23,6 @@ enum class SettingViewType {
 
     ANIME4K,
 
-    PLAYBACK_ADDON_SETTING,
-
     DANMU_CONFIGURE,
 
     DANMU_STYLE,

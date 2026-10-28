@@ -1,12 +1,5 @@
 package com.xyoye.player_component.playback.session
 
-import com.xyoye.common_component.playback.addon.PlaybackPreferenceSwitchableAddon
-import com.xyoye.common_component.playback.addon.PlaybackRecoveryRequest
-import com.xyoye.common_component.playback.addon.PlaybackReplacementDecision
-import com.xyoye.common_component.playback.addon.PlaybackReplacementIntent
-import com.xyoye.common_component.playback.addon.PlaybackReplacementOperation
-import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
-import com.xyoye.common_component.playback.addon.PlaybackUrlRecoverableAddon
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackAction
 import com.xyoye.common_component.playback.handoff.PlaybackCommand
@@ -23,7 +16,6 @@ import com.xyoye.common_component.source.handoff.PlaybackResolutionResult
 import com.xyoye.common_component.source.handoff.PlaybackSourceResolver
 import com.xyoye.common_component.source.handoff.ResolvedPlayback
 import com.xyoye.data_component.bean.PlaybackProfile
-import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.media3.entity.Media3Capability
 import com.xyoye.player_component.playback.handoff.HandoffStoreFailureKind
 import com.xyoye.player_component.playback.handoff.HandoffStoreResult
@@ -31,7 +23,6 @@ import com.xyoye.player_component.playback.handoff.PendingPlaybackRequest
 import com.xyoye.player_component.playback.handoff.PlaybackHandoffStore
 import com.xyoye.player_component.playback.handoff.PlaybackSnapshotRecord
 import com.xyoye.player_component.playback.handoff.PlaybackSnapshotTarget
-import com.xyoye.player_component.playback.handoff.PlaybackVerificationPayload
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -63,8 +54,6 @@ internal sealed interface SessionRequestResult {
     ) : SessionRequestResult
 
     object Ignored : SessionRequestResult
-
-    object SettingsSaved : SessionRequestResult
 }
 
 internal data class ActivePlayback(
@@ -91,8 +80,6 @@ internal class ActivePlaybackSession(
     private val resolve: suspend (PlaybackDescriptor) -> PlaybackResolutionResult = { PlaybackSourceResolver().resolve(it) },
     private val playbackDispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
     private val cleanupDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val resolveReplacement: suspend (PlaybackDescriptor, PlaybackProfile, PlaybackReplacementIntent) -> PlaybackResolutionResult =
-        { descriptor, profile, intent -> PlaybackSourceResolver().resolve(descriptor, profile, intent) },
     private val onStateChanged: (PlaybackStateView?) -> Unit = {},
     private val isCurrentOwner: () -> Boolean = { true }
 ) {
@@ -104,7 +91,6 @@ internal class ActivePlaybackSession(
     private val owned = mutableSetOf<PreparedPlayback>()
     private var attempt: Preparation? = null
     private var nativePreparation: Job? = null
-    private var recoveryAttempts = 0
     private var candidate: PreparedPlayback? = null
     private var closed = false
     private var snapshotWriter: PlaybackSnapshotWriter? = null
@@ -328,16 +314,6 @@ internal class ActivePlaybackSession(
                 val current = checkNotNull(preparing)
                 val input = checkNotNull(request).input
                 when (val result = resolve(input.descriptor)) {
-                    is PlaybackResolutionResult.VerificationRequired -> {
-                        val verification = store.startVerification(requestId, PlaybackVerificationPayload(result.voucher))
-                        return@withContext when (verification) {
-                            is HandoffStoreResult.Success ->
-                                SessionRequestResult.Rejected(
-                                    PlaybackPreparationFailure.InteractiveVerificationRequired(verification.value.verificationId)
-                                )
-                            is HandoffStoreResult.Failure -> reject(requestId, verification)
-                        }
-                    }
                     is PlaybackResolutionResult.Failure -> return@withContext reject(requestId, result.failure)
                     is PlaybackResolutionResult.Success -> {
                         try {
@@ -438,10 +414,6 @@ internal class ActivePlaybackSession(
             }
         try {
             when (val result = resolve(target.descriptor)) {
-                // A consumed snapshot is not a pending request. Re-enter from a stable playback entry to verify.
-                is PlaybackResolutionResult.VerificationRequired -> return SessionRequestResult.Rejected(
-                    PlaybackPreparationFailure.AuthenticationRequired
-                )
                 is PlaybackResolutionResult.Failure -> return SessionRequestResult.Rejected(result.failure)
                 is PlaybackResolutionResult.Success -> {
                     try {
@@ -550,7 +522,6 @@ internal class ActivePlaybackSession(
         val applied = runCatching { backend.apply(next, target.version, progress) }.isSuccess
         val actual = backend.currentSource()
         if (actual === next.source) {
-            recoveryAttempts = 0
             runtime = ActivePlayback(target.version, target.requestId, next)
         } else if (actual !== runtime?.playback?.source) {
             runtime = null
@@ -574,35 +545,6 @@ internal class ActivePlaybackSession(
     suspend fun selectQueueItem(
         index: Int,
         expected: PlaybackSessionVersion
-    ): SessionRequestResult = replaceInternally(InternalChange.Queue(index), expected)
-
-    suspend fun applySetting(
-        update: PlaybackSettingUpdate,
-        expected: PlaybackSessionVersion
-    ): SessionRequestResult = replaceInternally(InternalChange.Setting(update), expected)
-
-    suspend fun recover(
-        request: PlaybackRecoveryRequest,
-        expected: PlaybackSessionVersion
-    ): SessionRequestResult = replaceInternally(InternalChange.Recovery(request), expected)
-
-    private sealed interface InternalChange {
-        class Queue(
-            val index: Int
-        ) : InternalChange
-
-        class Setting(
-            val update: PlaybackSettingUpdate
-        ) : InternalChange
-
-        class Recovery(
-            val request: PlaybackRecoveryRequest
-        ) : InternalChange
-    }
-
-    private suspend fun replaceInternally(
-        change: InternalChange,
-        expected: PlaybackSessionVersion
     ): SessionRequestResult =
         withContext(playbackDispatcher) {
             val retired = mutableListOf<PreparedPlayback>()
@@ -614,86 +556,17 @@ internal class ActivePlaybackSession(
                     commands.withLock {
                         if (closed || !reconcileCandidate(retired) || runtime?.version != expected) return@withLock null
                         val active = runtime ?: return@withLock null
-                        if (change is InternalChange.Queue && change.index !in active.playback.resolved.queue.indices) return@withLock null
-                        if (change is InternalChange.Recovery && recoveryAttempts >= 3) return@withLock null
+                        if (index !in active.playback.resolved.queue.indices) return@withLock null
                         attempt?.job?.cancel()
                         nativePreparation?.cancel()
                         preparing = Preparation(null, expected, currentCoroutineContext().job).also { attempt = it }
                         active
                     } ?: return@withContext SessionRequestResult.Rejected(PlaybackPreparationFailure.RequestSuperseded)
-                val intent =
-                    if (change is InternalChange.Queue) {
-                        null
-                    } else {
-                        val addon = active.playback.source.getPlaybackAddon()
-                        val position = attachedBackend?.progress()?.positionMs ?: active.playback.positionMs
-                        val decisionResult =
-                            when (change) {
-                                is InternalChange.Setting -> {
-                                    val setting =
-                                        addon as? PlaybackPreferenceSwitchableAddon
-                                            ?: return@withContext SessionRequestResult.Rejected(
-                                                PlaybackPreparationFailure.UnsupportedSource
-                                            )
-                                    withContext(cleanupDispatcher) { setting.applySettingUpdate(change.update, position) }
-                                }
-                                is InternalChange.Recovery -> {
-                                    val recovery = addon as? PlaybackUrlRecoverableAddon ?: return@withContext SessionRequestResult.Ignored
-                                    recoveryAttempts++
-                                    withContext(cleanupDispatcher) { recovery.recover(change.request) }
-                                }
-                                is InternalChange.Queue -> error("Queue has no Addon preparation")
-                            }
-                        currentCoroutineContext().ensureActive()
-                        val decision =
-                            decisionResult.getOrElse {
-                                return@withContext SessionRequestResult.Rejected(
-                                    PlaybackPreparationFailure.Unknown(it.javaClass.simpleName)
-                                )
-                            }
-                        if (decision is PlaybackReplacementDecision.Unavailable) return@withContext SessionRequestResult.Ignored
-                        if (decision is PlaybackReplacementDecision.SavedForNextPlayback ||
-                            (change is InternalChange.Setting && active.playback.runtimeProfile.playerType != PlayerType.TYPE_EXO_PLAYER)
-                        ) {
-                            return@withContext SessionRequestResult.SettingsSaved
-                        }
-                        (decision as PlaybackReplacementDecision.Prepare).intent.also {
-                            val bound = it.identity
-                            val identity = active.playback.resolved.identity
-                            if (bound.storageId != identity.libraryId ||
-                                bound.uniqueKey != identity.uniqueKey ||
-                                bound.mediaType != identity.mediaType
-                            ) {
-                                return@withContext SessionRequestResult.Rejected(PlaybackPreparationFailure.RequestSuperseded)
-                            }
-                        }
-                    }
-                val resolution =
-                    if (change is InternalChange.Queue) {
-                        resolve(active.playback.resolved.queue[change.index])
-                    } else {
-                        resolveReplacement(active.playback.resolved.descriptor, active.playback.runtimeProfile, checkNotNull(intent))
-                    }
+                val resolution = resolve(active.playback.resolved.queue[index])
                 when (val result = resolution) {
                     is PlaybackResolutionResult.Failure -> return@withContext SessionRequestResult.Rejected(result.failure)
-                    is PlaybackResolutionResult.VerificationRequired -> return@withContext SessionRequestResult.Rejected(
-                        PlaybackPreparationFailure.AuthenticationRequired
-                    )
                     is PlaybackResolutionResult.Success -> {
                         prepared = prepareQueueItem(active.playback, result.playback)
-                        if (intent != null) {
-                            val selected = prepared.resolved.identity
-                            val previous = active.playback.resolved.identity
-                            if (selected.uniqueKey != previous.uniqueKey ||
-                                selected.libraryId != previous.libraryId ||
-                                selected.mediaType != previous.mediaType
-                            ) {
-                                return@withContext SessionRequestResult.Rejected(PlaybackPreparationFailure.RequestSuperseded)
-                            }
-                            prepared.source.setDanmu(active.playback.source.getDanmu())
-                            prepared.source.setSubtitlePath(active.playback.source.getSubtitlePath())
-                            prepared.source.setAudioPath(active.playback.source.getAudioPath())
-                        }
                     }
                 }
                 currentCoroutineContext().ensureActive()
@@ -703,22 +576,7 @@ internal class ActivePlaybackSession(
                             return@commit SessionRequestResult.Rejected(PlaybackPreparationFailure.RequestSuperseded)
                         }
                         val next = checkNotNull(prepared)
-                        val initial = next.snapshot(nextVersion(active.version.sessionId), active.requestId)
-                        val target =
-                            if (intent != null) {
-                                val recovery = intent.operation as? PlaybackReplacementOperation.Recover
-                                val progress = backend.progress()
-                                initial.copy(
-                                    positionMs =
-                                        backend
-                                            .positionConstraints(
-                                                next.source
-                                            ).normalize(recovery?.positionMs ?: progress.positionMs),
-                                    playWhenReady = recovery != null || progress.playWhenReady
-                                )
-                            } else {
-                                initial
-                            }
+                        val target = next.snapshot(nextVersion(active.version.sessionId), active.requestId)
                         val saved =
                             store.saveSnapshot(target) {
                                 !closed && attempt === preparing && runtime?.version == expected && it == target.version
@@ -954,7 +812,6 @@ internal class ActivePlaybackSession(
                 if (backend.currentSource() !== queued.source) return false
                 val previous = checkNotNull(runtime)
                 val active = ActivePlayback(nextVersion(previous.version.sessionId), previous.requestId, queued)
-                recoveryAttempts = 0
                 runtime = active
                 candidate = null
                 backend.adoptNative(queued, active.version)
@@ -991,10 +848,7 @@ internal class ActivePlaybackSession(
     private suspend fun reject(
         requestId: String,
         failure: PlaybackPreparationFailure
-    ): SessionRequestResult.Rejected {
-        if (failure is PlaybackPreparationFailure.InteractiveVerificationRequired) return SessionRequestResult.Rejected(failure)
-        return SessionRequestResult.Rejected(failure, store.clearPending(requestId) is HandoffStoreResult.Failure)
-    }
+    ): SessionRequestResult.Rejected = SessionRequestResult.Rejected(failure, store.clearPending(requestId) is HandoffStoreResult.Failure)
 
     private suspend fun reject(
         requestId: String,

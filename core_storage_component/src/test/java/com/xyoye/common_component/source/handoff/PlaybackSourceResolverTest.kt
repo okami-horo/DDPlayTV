@@ -2,15 +2,12 @@ package com.xyoye.common_component.source.handoff
 
 import com.tencent.mmkv.MMKV
 import com.xunlei.downloadlib.parameter.BtTaskParam
-import com.xyoye.common_component.bilibili.BilibiliKeys
-import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.network.request.NetworkException
 import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackFileReference
 import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
-import com.xyoye.common_component.playback.handoff.PlaybackVerificationAnswer
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import com.xyoye.common_component.playback.handoff.TorrentDescriptor
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
@@ -22,7 +19,6 @@ import com.xyoye.common_component.storage.file.helper.SmbPlayServer
 import com.xyoye.common_component.storage.file.helper.TorrentBean
 import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
 import com.xyoye.common_component.storage.file.impl.SmbStorageFile
-import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.impl.LinkStorage
 import com.xyoye.common_component.storage.impl.RemoteStorage
 import com.xyoye.common_component.storage.impl.ScreencastStorage
@@ -37,8 +33,6 @@ import com.xyoye.common_component.utils.thunder.ThunderTaskOperations
 import com.xyoye.common_component.utils.thunder.model.ThunderTorrentFileInfo
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
-import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateRegisterData
-import com.xyoye.data_component.data.bilibili.BilibiliGeetestData
 import com.xyoye.data_component.data.remote.RemoteVideoData
 import com.xyoye.data_component.data.screeencast.ScreencastData
 import com.xyoye.data_component.data.screeencast.ScreencastVideoData
@@ -96,12 +90,6 @@ class PlaybackSourceResolverTest {
     }
     private var afterAssembly: (StorageVideoSource) -> Unit = {}
     private var smbFailure: Exception? = null
-    private var register: suspend (String, String) -> Result<BilibiliGaiaVgateRegisterData> = { _, _ -> error("Unexpected register") }
-    private var validate: suspend (
-        String,
-        ResolvedPlaybackVerification,
-        PlaybackVerificationAnswer
-    ) -> Result<String> = { _, _, _ -> error("Unexpected validate") }
     private val transportFactory = PlaybackTransportFactory({ create(it) }, ioDispatcher = Dispatchers.Unconfined)
     private val resolver get() =
         PlaybackSourceResolver(
@@ -123,16 +111,13 @@ class PlaybackSourceResolverTest {
                         listOf(file),
                         acquire = { selected, selectedProfile -> transportFactory.acquire(selected.storage, selected, selectedProfile) },
                         prepareExtras = { extras(it) },
-                        createAddon = { _, _ -> null },
                         releaseResolution = cleanup
                     )?.also {
                         sources.add(it)
                         afterAssembly(it)
                     }
             },
-            Dispatchers.Unconfined,
-            { key, voucher -> register(key, voucher) },
-            { key, registration, answer -> validate(key, registration, answer) }
+            Dispatchers.Unconfined
         )
 
     @After fun cleanup() {
@@ -296,83 +281,6 @@ class PlaybackSourceResolverTest {
             assertEquals("42", reference.protocolReference)
             current = current.copy(Hash = "replacement")
             assertEquals(PlaybackPreparationFailure.FileMissing, failure(descriptor))
-        }
-
-    @Test fun bilibiliPgcResolvesStableKeyThroughExistingProtocolLayer() =
-        runBlocking {
-            library = MediaLibraryEntity(id = 21, displayName = "Bili", url = "bilibili://fixture", mediaType = MediaType.BILIBILI_STORAGE)
-            create = { BilibiliStorage(it, { "https://example.test/prepared-pgc" }, { "https://example.test/live" }) }
-            val key = BilibiliKeys.pgcEpisodeKey(epId = 42, cid = 43, seasonId = 44, avid = 45)
-            val descriptor =
-                StoredLibraryFileDescriptor(
-                    library.id,
-                    library.mediaType,
-                    PlaybackFileReference(key, "/history/pgc/44/42", protocolReference = key)
-                )
-            val result = success(descriptor)
-            assertEquals(key, result.identity.uniqueKey)
-            assertEquals("https://example.test/prepared-pgc", result.source.getVideoUrl())
-            result.source.releasePlaybackResources()
-        }
-
-    @Test fun bilibiliFactoryFailureCarriesVoucherAsDataWithoutCreatingASource() =
-        runBlocking {
-            library = MediaLibraryEntity(id = 21, displayName = "Bili", url = "bilibili://fixture", mediaType = MediaType.BILIBILI_STORAGE)
-            create =
-                {
-                    BilibiliStorage(
-                        it,
-                        { throw BilibiliException.from(-352, verificationVoucher = "private-voucher") },
-                        { error("Not live") }
-                    )
-                }
-            val key = BilibiliKeys.pgcEpisodeKey(epId = 42, cid = 43, seasonId = 44, avid = 45)
-            val descriptor =
-                StoredLibraryFileDescriptor(
-                    library.id,
-                    library.mediaType,
-                    PlaybackFileReference(key, "/history/pgc/44/42", protocolReference = key)
-                )
-            val result = resolver.resolve(descriptor, profile) as PlaybackResolutionResult.VerificationRequired
-            assertEquals("private-voucher", result.voucher)
-            assertFalse(result.toString().contains("private-voucher"))
-            assertTrue(sources.isEmpty())
-        }
-
-    @Test fun verificationResolvesTheCurrentLibraryAndKeepsRegistrationSecretsBehindTheBoundary() =
-        runBlocking {
-            library = MediaLibraryEntity(id = 21, displayName = "Bili", url = "bilibili://fixture", mediaType = MediaType.BILIBILI_STORAGE)
-            val descriptor = StoredLibraryFileDescriptor(library.id, library.mediaType, PlaybackFileReference("key", "/episode"))
-            val calls = mutableListOf<String>()
-            register = { key, voucher ->
-                calls.add(key)
-                assertEquals("private-voucher", voucher)
-                Result.success(BilibiliGaiaVgateRegisterData(token = "private-token", geetest = BilibiliGeetestData("gt", "challenge")))
-            }
-            val registered = (resolver.registerVerification(descriptor, "private-voucher") as PlaybackVerificationResolution.Success).value
-            assertEquals("private-token", registered.registerToken)
-            assertFalse(registered.toString().contains("private-token"))
-            validate = { key, registration, answer ->
-                assertEquals(calls.single(), key)
-                assertEquals("private-token", registration.registerToken)
-                assertEquals("validate", answer.validate)
-                Result.success("private-cookie")
-            }
-            assertTrue(
-                resolver.validateVerification(
-                    descriptor,
-                    registered,
-                    PlaybackVerificationAnswer(null, "validate", "seccode")
-                ) is PlaybackVerificationResolution.Success
-            )
-            load = { null }
-            val missing =
-                resolver.validateVerification(
-                    descriptor,
-                    registered,
-                    PlaybackVerificationAnswer(null, "validate", "seccode")
-                ) as PlaybackVerificationResolution.Failure
-            assertEquals(PlaybackPreparationFailure.LibraryMissing, missing.failure)
         }
 
     @Test fun torrentCompatibilityBlocksBeforeNativeAllocationAndAudioOnlyRemainsAdvisory() =

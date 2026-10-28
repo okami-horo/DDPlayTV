@@ -1,7 +1,6 @@
 package com.xyoye.storage_component.ui.dialog.scanlogin
 
 import com.squareup.moshi.JsonDataException
-import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.network.request.NetworkException
 import org.json.JSONException
 import retrofit2.HttpException
@@ -34,15 +33,6 @@ object ScanErrorMapper {
                 category = ScanFailureCategory.CONFIG,
                 debugCode = withPrefix(providerId, step, throwable.debugCode),
                 retryable = false,
-            )
-        }
-
-        if (throwable is BilibiliException) {
-            return ScanFailure(
-                userMessage = throwable.message?.ifBlank { "扫码登录失败，请重试" } ?: "扫码登录失败，请重试",
-                category = ScanFailureCategory.API,
-                debugCode = withPrefix(providerId, step, "BILIBILI_${throwable.code}"),
-                retryable = true,
             )
         }
 
@@ -180,6 +170,6 @@ object ScanErrorMapper {
     ): String {
         val provider = providerId.trim().ifBlank { "scan" }
         val stepName = step.name.lowercase(Locale.US)
-        return "${provider}_${stepName}_${debugCode}"
+        return "${provider}_${stepName}_$debugCode"
     }
 }

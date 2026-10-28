@@ -1,11 +1,11 @@
  # Product Context
 
  ## Why This Exists
- DDPlayTV provides a living-room media workflow for TV users who need local playback, storage browsing, casting/streaming, anime resource discovery, settings, and Bilibili-related content support in one Android app.
+ DDPlayTV provides a living-room media workflow for TV users who need local playback, storage browsing, casting/streaming, anime resource discovery, and settings in one Android app.
 
  ## Problems Solved
  - Remote-controlled media navigation where touch is unavailable or secondary.
- - Unified entry points for local media, storage sources, Bilibili-derived data, and player settings.
+ - Unified entry points for local media, storage sources, and player settings.
  - Clear separation between playback capabilities, media sources, and UI shell.
  - Reusable infra for network, DB, system runtime, logging, storage, and contracts.
 
@@ -19,4 +19,4 @@
  ## Product Constraints
  - Runtime TV detection should use shared `Context.isTelevisionUiMode()` from `core_ui_component`.
  - TV-only disablement must be explicitly gated by TV UI mode; global disablement must be a clear product decision.
- - Bilibili behavior may reference PiliPlus, but UI and architecture must be locally adapted.
+ - Bilibili functionality, including its danmaku source, is retired globally in favor of standalone PiliPlus (2026-10-28). Dandanplay matching and local danmaku files remain in scope.

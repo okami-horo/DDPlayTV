@@ -45,6 +45,45 @@ class PlaybackHandoffStoreTest {
             PlaybackRequestOrigin.EXTERNAL_INTENT
         )
 
+    @Test fun retiredPendingDoesNotDiscardTheActiveSnapshot() {
+        val pending =
+            PendingPlaybackRequest(
+                "retired",
+                input.copy(descriptor = StoredLibraryFileDescriptor(7, MediaType.SMB_SERVER, PlaybackFileReference("key", "/video"))),
+                now,
+                now + 1000
+            )
+        val snapshot = PlaybackSnapshotRecord(target("active"), now, now + 2000)
+        val legacy =
+            codec
+                .encode(PlaybackHandoffState(pending = pending, snapshot = snapshot))
+                .replace("SMB_SERVER", "BILIBILI_STORAGE")
+                .dropLast(1) + ",\"verification\":{\"voucher\":\"old-secret\"}}"
+        val restored = codec.decode(legacy)
+        assertNull(restored.pending)
+        assertEquals(snapshot, restored.snapshot)
+        assertFalse(codec.encode(restored).contains("old-secret"))
+    }
+
+    @Test fun retiredSnapshotDoesNotDiscardTheNextRequest() {
+        val pending = PendingPlaybackRequest("next", input, now, now + 1000)
+        val snapshot =
+            PlaybackSnapshotRecord(
+                target(
+                    "retired"
+                ).copy(descriptor = StoredLibraryFileDescriptor(7, MediaType.SMB_SERVER, PlaybackFileReference("key", "/video"))),
+                now,
+                now + 2000
+            )
+        val legacy =
+            codec
+                .encode(PlaybackHandoffState(pending = pending, snapshot = snapshot))
+                .replace("SMB_SERVER", "BILIBILI_STORAGE")
+        val restored = codec.decode(legacy)
+        assertEquals(pending, restored.pending)
+        assertNull(restored.snapshot)
+    }
+
     @Test fun latestRequestWinsAndConditionalActivationConsumesOnlyOnce() =
         runBlocking {
             val first = value(store.submit(input))
@@ -61,20 +100,6 @@ class PlaybackHandoffStoreTest {
                 error(store.activate(second.requestId, target(second.requestId)) { true }).kind
             )
             assertEquals(second.requestId, value(store.readSnapshot(version.sessionId)).target.requestId)
-        }
-
-    @Test fun verificationReadsAndUpdatesNeverExtendPendingExpiry() =
-        runBlocking {
-            val pending = value(store.submit(input))
-            assertEquals(pending.createdAtMs + 15 * 60 * 1000L, pending.expiresAtMs)
-            val verification = value(store.startVerification(pending.requestId, PlaybackVerificationPayload("private-voucher")))
-            now = pending.expiresAtMs - 1
-            value(store.readVerification(verification.verificationId))
-            value(store.updateVerification(verification.verificationId, verification.payload.copy(registerToken = "private-register")))
-            assertEquals(pending.expiresAtMs, value(store.readPending(pending.requestId)).expiresAtMs)
-            now++
-            assertEquals(HandoffStoreFailureKind.REQUEST_EXPIRED, error(store.readVerification(verification.verificationId)).kind)
-            assertNull(blob.data)
         }
 
     @Test fun expiredPreparationCannotCommitAndFailedCleanupIsReported() =
@@ -208,11 +233,9 @@ class PlaybackHandoffStoreTest {
             assertFalse(blob.data!!.contains("private-header"))
             assertFalse(blob.data!!.contains("secret-query"))
             headers.clear()
-            val verification =
-                value(store.startVerification(pending.requestId, PlaybackVerificationPayload("private-voucher", "private-register")))
             val read = value(store.readPending(pending.requestId))
             assertEquals("private-header", (read.input.descriptor as ExternalUriDescriptor).headers["Authorization"])
-            val diagnostics = listOf(pending, read, verification).joinToString()
+            val diagnostics = listOf(pending, read).joinToString()
             for (secret in listOf("private-header", "private-voucher", "private-register", "secret-query", "private.mkv")) {
                 assertFalse(blob.data!!.contains(secret))
                 assertFalse(diagnostics.contains(secret))
@@ -252,18 +275,6 @@ class PlaybackHandoffStoreTest {
                 assertFalse(blob.data!!.contains("magnet:"))
                 assertFalse(blob.data!!.contains("file:"))
             }
-        }
-
-    @Test fun replacementMakesLateVerificationResultInvalidAndLeavesNewPendingIntact() =
-        runBlocking {
-            val old = value(store.submit(input))
-            val verification = value(store.startVerification(old.requestId, PlaybackVerificationPayload("voucher")))
-            val next = value(store.submit(input))
-            assertEquals(
-                HandoffStoreFailureKind.VERIFICATION_MISSING,
-                error(store.updateVerification(verification.verificationId, verification.payload.copy(validated = true))).kind
-            )
-            assertEquals(next.requestId, value(store.readPending(next.requestId)).requestId)
         }
 
     @Test

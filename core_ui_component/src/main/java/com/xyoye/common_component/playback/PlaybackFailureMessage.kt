@@ -23,6 +23,5 @@ fun PlaybackPreparationFailure.userMessage(): String =
                 DownloadRequiredAction.REVALIDATE -> "当前下载需要重新验证，请联网后重试"
                 else -> "当前下载资源不可播放，请检查下载状态"
             }
-        is PlaybackPreparationFailure.InteractiveVerificationRequired -> "当前资源需要验证"
         is PlaybackPreparationFailure.Unknown -> "准备播放失败，请重试"
     }

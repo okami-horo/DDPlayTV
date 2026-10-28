@@ -56,6 +56,8 @@
 
 复核日期：2026-10-28。五组记录的原始状态与有效信息去向如下；原任务数量仅用于说明迁移前状态，不代表本次重新执行了验证。
 
+后续产品决策：全部 Bilibili 功能已退役，下表中的相关策略与异常播完实现现仅属于历史。原 2.3 现场验收不再适用，不记为通过；对应文档现为[退役与升级说明](../player/bilibili-playback-policy.md)。其余迁移与验收结论保持原口径。
+
 | 原变更 | 原状态 | 有效内容与归属 |
 | --- | --- | --- |
 | `add-seamless-part-playback` | 15/17 | 顺序、独立资源绑定、过期回调隔离和降级约束并入[交接设计](../../docs/superpowers/designs/2026-07-18-playback-handoff-design.md)；旧 Coordinator/StateApplier 编排已被活动会话替代；5.1/5.2 验证保留在[播放验证待办](../player/playback-validation-followup.md) |

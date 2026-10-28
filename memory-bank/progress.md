@@ -1,6 +1,7 @@
  # Progress
 
 ## Current Status
+- 2026-10-28: All Bilibili functionality, including online danmaku matching/download, removed by user authorization. Room 17 and legacy MMKV/handoff compatibility preserve other sources and local media. Full build/lint/governance passed (BUILD SUCCESSFUL); 376 JVM tests passed, two external protocol fixture tests skipped. Mobile page/credential/three-kernel checks, corrected reentry, four TV regressions and three Keystore/MMKV checks passed. Pure DPAD personal/settings return restored the original focus target. Temporary TV/display overrides were removed and the actual pre-test device baseline restored. Failures, limits and commands are in `docs/superpowers/plans/2026-10-28-remove-bilibili.md`; no commit or index changes. TV library rewrite remains design-only pending approval.
 - 2026-10-28: User requested a further OpenSpec value review. Consolidated five changes into playback design, Bilibili/subtitle manuals and testing guidance; removed redundant record/config directories after backing up 27 files, including five ignored delta specs. Preserved seamless 5.1/5.2 and unexpected-completion 2.3 as pending validation, separate from the unchanged 37/37 lease and 62/65 handoff ledgers. Migration details and validation evidence live in `document/architecture/directory-hygiene-followup.md`; no source, business acceptance or Git index changes.
 - 2026-10-28: DIR-01/02 cleanup is committed as `b545eb3ba`. DIR-03 documentation consolidation completed: separated manuals/history, corrected stale facts, preserved pending matching repairs and business acceptance, and verified links/encoding/ledgers, snapshot regeneration and module/playback governance (BUILD SUCCESSFUL). Documentation changes remain uncommitted; see `document/architecture/directory-hygiene-followup.md` for commands and scope.
 
@@ -25,11 +26,11 @@ The following dated entries describe their respective execution points; old "con
 - TV DPAD focus architecture work is implemented and committed on branch `feat/tv-dpad-focus-architecture` as `35b477674 feat(tv): 建立 DPAD 焦点架构`.
 
 ## What Works
-- Project rules define module layout, dependency governance, TV UX rules, testing expectations, and Bilibili reference workflow.
+- Current architecture documents define the 20-module build and retired Bilibili boundary; older repository instructions retain historical descriptions and do not authorize restoring the integration.
 - Known build/test commands documented in Memory Bank.
 - Player bottom bar now has a subtitle quick toggle design/plan and code changes for UI resources, controller API, visibility state, action routing, and DPAD focus skipping when no selected subtitle track exists.
 - Dandanplay danmu matching now passes hash, filename, file size, duration, and match mode via source metadata.
-- Player auto-match now uses `DanmuMatchCoordinator`; exact matches download automatically, fuzzy candidates stay manual-only, and Bilibili live switch semantics are preserved.
+- Player auto-match uses `DanmuMatchCoordinator`; exact Dandanplay matches download automatically and fuzzy candidates stay manual-only. Bilibili matching and live switch semantics were retired on 2026-10-28.
 - Exact match success/fail marker cache exists for auto-match, with tests covering model parsing, source metadata, hash concurrency, finder semantics, and coordinator fuzzy behavior.
 - TV DPAD focus now has additive core skeleton types (`DpadDirection`, `DpadFocusOwner`, `DpadFocusScope`, `DpadRecyclerFocusDelegate`, `DpadDialogFocusController`) plus `TvShellFocusCoordinator` in `:app`.
 - TV shell, bottom dialogs, media list, storage file list, anime home grid page, and player setting overlay have first-stage DPAD focus ownership/default/restore integration.

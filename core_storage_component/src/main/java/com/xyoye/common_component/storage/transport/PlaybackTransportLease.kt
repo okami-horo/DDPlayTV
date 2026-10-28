@@ -23,7 +23,6 @@ enum class PlaybackTransportType {
     SMB,
     FTP,
     THUNDER,
-    BILIBILI
 }
 
 internal class ManagedPlaybackTransportLease(

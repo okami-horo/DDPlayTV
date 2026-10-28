@@ -24,7 +24,7 @@ class SequentialPlaybackCoordinatorTest {
             f.session.deliver(f.submit("one"))
             val coordinator = SequentialPlaybackCoordinator(this, { f.session }, { true }, {}, { true })
             coordinator.onPlaybackStable()
-            coordinator.onPlaybackProgress(100000, 1000, false)
+            coordinator.onPlaybackProgress()
             runCurrent()
             assertEquals(2, f.leases.size)
             assertEquals(3, f.backend.current!!.getGroupSize())
@@ -32,7 +32,7 @@ class SequentialPlaybackCoordinatorTest {
             f.backend.transition()
             f.session.nativeTransition(next.candidateId)
             assertEquals(1, f.backend.current!!.getGroupIndex())
-            coordinator.onPlaybackProgress(100000, 1000, false)
+            coordinator.onPlaybackProgress()
             runCurrent()
             assertEquals(3, f.leases.size)
             assertEquals(1, f.leases.first().releases)
@@ -60,25 +60,6 @@ class SequentialPlaybackCoordinatorTest {
             f.session.exit()
         }
 
-    @Test fun bilibiliLongVideoOnlyPreloadsNearCompletionAndLiveNeverDoes() =
-        runTest {
-            val f = PlaybackSessionTestFixture(StandardTestDispatcher(testScheduler))
-            queue(f, MediaType.BILIBILI_STORAGE)
-            f.session.deliver(f.submit("one"))
-            val coordinator = SequentialPlaybackCoordinator(this, { f.session }, { true }, {}, { true })
-            coordinator.onPlaybackStable()
-            coordinator.onPlaybackProgress(1200000, 1000, false)
-            runCurrent()
-            assertNull(f.backend.queued)
-            coordinator.onPlaybackProgress(1200000, 1199999, true)
-            runCurrent()
-            assertNull(f.backend.queued)
-            coordinator.onPlaybackProgress(1200000, 1199999, false)
-            runCurrent()
-            assertNotNull(f.backend.queued)
-            f.session.exit()
-        }
-
     @Test fun endOfQueueAndUnstablePlaybackNeverPreload() =
         runTest {
             val f = PlaybackSessionTestFixture(StandardTestDispatcher(testScheduler))
@@ -93,7 +74,7 @@ class SequentialPlaybackCoordinatorTest {
             assertTrue(switches.isEmpty())
             f.session.selectQueueItem(0, f.session.runtime!!.version)
             coordinator.invalidateActiveSession()
-            coordinator.onPlaybackProgress(100000, 1000, false)
+            coordinator.onPlaybackProgress()
             runCurrent()
             assertNull(f.backend.queued)
             f.session.exit()

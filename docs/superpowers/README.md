@@ -6,10 +6,12 @@
 
 | 主题 | 设计依据 | 执行状态与证据 |
 | --- | --- | --- |
+| Bilibili 全部功能退役 | 用户确认由 PiliPlus 接手，包括弹幕来源 | [移除执行记录](plans/2026-10-28-remove-bilibili.md) |
+| TV 遥控器与焦点重写 | [DpadRecyclerView 重写设计](designs/2026-10-28-tv-dpad-library-rewrite-design.md) | 待用户确认；仅完成源码与选型核查，尚未接入依赖或实施 |
 | 播放交接、活动会话与恢复 | [交接设计](designs/2026-07-18-playback-handoff-design.md) | [交接账本](plans/2026-10-27-playback-handoff-session.md)：62/65，三项集成验收仍由用户负责 |
 | 传输资源所有权与租约 | [传输租约设计](designs/2026-07-19-playback-transport-leases-design.md) | [租约账本](plans/2026-07-19-playback-transport-leases.md)：37/37；具体协议、设备及验证范围以账本为准 |
 
-两份设计的早期背景描述的是重构前系统；后续决策和实际源码已经替换部分旧入口。不要重新实施账本中已经完成的迁移，也不要因自动检查通过就将用户验收改为完成。完整后台／画中画能力仍不能由当前元数据服务适配推断。
+两份播放设计的早期背景描述的是重构前系统；后续决策和实际源码已经替换部分旧入口。不要重新实施账本中已经完成的迁移，也不要因自动检查通过就将用户验收改为完成。完整后台／画中画能力仍不能由当前元数据服务适配推断。
 
 ## 历史决策与保留待办
 
@@ -17,7 +19,7 @@
 
 字幕简繁转换的现状与待实现需求见 [播放器说明](../../document/player/subtitle-language-conversion.md)。历史架构原始对话不再作为现行方案，模块边界以 [治理文档](../../document/architecture/module_dependency_governance.md) 为准。
 
-原 OpenSpec 中仍有价值的顺序续播约束已并入交接设计，Bilibili 策略和 libass 渲染说明归入 [项目文档导航](../../document/README.md)。原顺序续播 5.1/5.2、异常完成 2.3 三项验证仍未关闭，统一记录在[播放验证待办](../../document/player/playback-validation-followup.md)，不以新账本中的部分测试代替完整验收。
+原 OpenSpec 中仍有价值的顺序续播约束已并入交接设计，Bilibili 策略和 libass 渲染说明归入 [项目文档导航](../../document/README.md)。原顺序续播 5.1/5.2 仍待验收；B 站异常完成 2.3 随功能退役不再适用，不记为测试通过，统一记录在[播放验证待办](../../document/player/playback-validation-followup.md)，不以新账本中的部分测试代替完整验收。
 
 ## 维护方式
 

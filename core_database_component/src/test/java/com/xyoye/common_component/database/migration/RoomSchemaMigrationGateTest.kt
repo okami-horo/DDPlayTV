@@ -22,6 +22,69 @@ import java.io.File
 @Config(manifest = Config.NONE)
 class RoomSchemaMigrationGateTest {
     @Test
+    fun migration16To17RemovesRetiredSourcesAndPreservesOtherRows() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        deleteDatabaseFiles(context, TEST_DB_NAME)
+        val dbFile = context.getDatabasePath(TEST_DB_NAME).also { it.parentFile?.mkdirs() }
+        createDatabaseFromRoomSchemaJson(dbFile, loadSchemaJson(16), 16)
+        loadSchemaJson(17)
+        val expectedLibraries: List<List<String?>>
+        val expectedHistory: List<List<String?>>
+        SQLiteDatabase.openDatabase(dbFile.path, null, SQLiteDatabase.OPEN_READWRITE).use { database ->
+            for ((id, type) in listOf(1 to "webdav_server", 2 to "bilibili_storage")) {
+                database.execSQL(
+                    "INSERT INTO media_library(" +
+                        "id, display_name, url, media_type, account, password, is_anonymous, port, " +
+                        "ftp_mode, ftp_address, ftp_encoding, smb_v2, web_dav_strict, " +
+                        "web_dav_allow_insecure_tls, screencast_address, remote_anime_grouping, player_type_override" +
+                        ") VALUES (?, 'Library', ?, ?, 'account', 'password', 0, 443, 0, '', 'UTF-8', 1, 1, 1, '', 0, 2)",
+                    arrayOf(id, "https://example.test/$id", type)
+                )
+            }
+            for ((id, type, storageId) in listOf(
+                Triple(1, "webdav_server", 1),
+                Triple(2, "bilibili_storage", 2),
+                Triple(3, "other_storage", 2),
+                Triple(4, "bilibili_storage", null)
+            )) {
+                database.execSQL(
+                    "INSERT INTO play_history(" +
+                        "id, video_name, url, media_type, video_position, video_duration, play_time, " +
+                        "danmu_path, episode_id, subtitle_path, torrent_index, unique_key, storage_id, audio_path" +
+                        ") VALUES (?, 'Video', 'play://video', ?, 12345, 90000, 123, " +
+                        "'/local/bilibili_downloaded.xml', 'episode', '/local/subtitle.ass', -1, ?, ?, '/local/audio.flac')",
+                    arrayOf(id, type, "key-$id", storageId)
+                )
+            }
+            expectedLibraries = rows(database.rawQuery("SELECT * FROM media_library WHERE id = 1", null))
+            expectedHistory = rows(database.rawQuery("SELECT * FROM play_history WHERE id = 1", null))
+        }
+        val roomDb =
+            Room
+                .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
+                .addMigrations(DatabaseManager.MIGRATION_16_17)
+                .build()
+        try {
+            val database = roomDb.openHelper.writableDatabase
+            assertEquals(17, database.version)
+            assertEquals(expectedLibraries, rows(database.query("SELECT * FROM media_library")))
+            assertEquals(expectedHistory, rows(database.query("SELECT * FROM play_history")))
+        } finally {
+            roomDb.close()
+            deleteDatabaseFiles(context, TEST_DB_NAME)
+        }
+    }
+
+    private fun rows(cursor: android.database.Cursor): List<List<String?>> =
+        cursor.use {
+            buildList {
+                while (it.moveToNext()) {
+                    add((0 until it.columnCount).map { column -> if (it.isNull(column)) null else it.getString(column) })
+                }
+            }
+        }
+
+    @Test
     fun schemaExportEnabledAndMigration15To16Works() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         deleteDatabaseFiles(context, TEST_DB_NAME)
@@ -38,7 +101,7 @@ class RoomSchemaMigrationGateTest {
         val roomDb =
             Room
                 .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
-                .addMigrations(DatabaseManager.MIGRATION_15_16)
+                .addMigrations(DatabaseManager.MIGRATION_15_16, DatabaseManager.MIGRATION_16_17)
                 .build()
 
         try {
@@ -71,6 +134,7 @@ class RoomSchemaMigrationGateTest {
         val roomDb =
             Room
                 .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
+                .addMigrations(DatabaseManager.MIGRATION_16_17)
                 .build()
 
         try {
@@ -119,6 +183,7 @@ class RoomSchemaMigrationGateTest {
         val roomDb =
             Room
                 .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
+                .addMigrations(DatabaseManager.MIGRATION_16_17)
                 .build()
 
         try {
@@ -162,6 +227,7 @@ class RoomSchemaMigrationGateTest {
         val roomDb =
             Room
                 .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
+                .addMigrations(DatabaseManager.MIGRATION_16_17)
                 .build()
 
         try {

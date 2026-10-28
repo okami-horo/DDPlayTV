@@ -1,8 +1,6 @@
-﻿package com.xyoye.player_component.sequential
+package com.xyoye.player_component.sequential
 
 import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
-import com.xyoye.data_component.enums.MediaType
-import com.xyoye.player.BilibiliCompletionTrust
 import com.xyoye.player_component.playback.session.ActivePlaybackSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -17,19 +15,13 @@ internal class SequentialPlaybackCoordinator(
 ) {
     private var requestedVersion: PlaybackSessionVersion? = null
     private var isPlaybackStable = false
-    private var playbackSnapshot: PlaybackSnapshot? = null
 
     fun onPlaybackStable() {
         isPlaybackStable = true
         considerQueueNextSource()
     }
 
-    fun onPlaybackProgress(
-        durationMs: Long,
-        positionMs: Long,
-        isLive: Boolean
-    ) {
-        playbackSnapshot = PlaybackSnapshot(durationMs, positionMs, isLive)
+    fun onPlaybackProgress() {
         considerQueueNextSource()
     }
 
@@ -41,7 +33,6 @@ internal class SequentialPlaybackCoordinator(
     fun invalidateActiveSession() {
         requestedVersion = null
         isPlaybackStable = false
-        playbackSnapshot = null
     }
 
     private fun considerQueueNextSource() {
@@ -55,22 +46,7 @@ internal class SequentialPlaybackCoordinator(
         ) {
             return
         }
-        if (active.playback.resolved.identity.mediaType == MediaType.BILIBILI_STORAGE) {
-            val snapshot = playbackSnapshot ?: return
-            if (snapshot.isLive || snapshot.durationMs <= 0) return
-            if (snapshot.durationMs > BilibiliCompletionTrust.LONG_VIDEO_MIN_DURATION_MS &&
-                snapshot.durationMs - snapshot.positionMs.coerceAtLeast(0) > BilibiliCompletionTrust.COMPLETION_TRUST_WINDOW_MS
-            ) {
-                return
-            }
-        }
         requestedVersion = active.version
         scope.launch { session.prepareNextNative(active.version) }
     }
-
-    private data class PlaybackSnapshot(
-        val durationMs: Long,
-        val positionMs: Long,
-        val isLive: Boolean
-    )
 }

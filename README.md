@@ -25,7 +25,7 @@
 - 以 TV 端交互为先（Leanback 启动入口、DPAD 焦点/遥控器导航），移动端依然可用
 - 播放内核调整：移除已弃用的 **IJKPlayer**，新增 **mpv**，与 **Media3 / VLC** 组成多内核方案
 - 字幕渲染增强：强化 **libass**（ASS/SSA）渲染能力，提升表现一致性
-- 媒体库扩展：新增 **B 站媒体库 / 115 Open / 百度网盘** 等来源；其中 115 Open 的 `access_token` / `refresh_token` 获取可参考 [OpenList 官方文档](https://www.oplist.org.cn/ecosystem/official_docs)
+- 媒体库扩展：新增 **115 Open / 百度网盘** 等来源；其中 115 Open 的 `access_token` / `refresh_token` 获取可参考 [OpenList 官方文档](https://www.oplist.org.cn/ecosystem/official_docs)
 - TV 交互：独立的 Leanback 入口、默认焦点与遥控器导航反馈
 
 ## 功能
@@ -59,10 +59,12 @@
 | --- | --- |
 | 本地 | 本地媒体库、设备存储库、外部媒体库 |
 | 网络 | SMB、FTP、WebDav、Alist、PC 端媒体库 |
-| 云/平台 | Bilibili 媒体库、115 Open、百度网盘 |
+| 云/平台 | 115 Open、百度网盘 |
 | 其他 | 串流视频、磁链视频、远程投屏 |
 
 > 115 Open：需要配置 `access_token` / `refresh_token`，获取方式参考 [OpenList 官方文档](https://www.oplist.org.cn/ecosystem/official_docs)。
+
+Bilibili 视频、直播、媒体库及 B 站弹幕来源已移除，相关功能由独立的 PiliPlus 项目接手。弹弹play 弹幕及本地弹幕文件仍受支持。
 
 ### 动漫
 
@@ -94,7 +96,6 @@ Windows 的项目私有 JDK/SDK 配置与包装命令见 [本地开发环境](do
 - 入口：`:app`
 - 业务组件：`:anime_component`、`:local_component`、`:player_component`、`:storage_component`、`:user_component`
 - 基建组件：`:core_contract_component`、`:core_system_component`、`:core_log_component`、`:core_network_component`、`:core_database_component`、`:core_storage_component`、`:core_ui_component`、`:data_component`
-- 扩展组件：`:bilibili_component`
 - 内置依赖封装：`:repository:*`
 </details>
 

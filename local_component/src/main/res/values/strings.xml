@@ -38,7 +38,6 @@
     <string name="tips_danmu_history_keyword">上次搜索</string>
     <string name="tips_danmu_search_keyword">关键字</string>
     <string name="tips_danmu_search_file_name">文件名（长按可复制）</string>
-    <string name="hint_bilibili_danmu_download_message">请输入下载信息</string>
     <string name="tips_download_path">路径：</string>
     <string name="tips_danmu_source">弹幕源：</string>
     <string name="text_all">所有</string>
@@ -66,5 +65,4 @@
     <string name="action_select_subtitle_file">选取本地字幕</string>
     <string name="action_subtitle_key_setting">字幕API密钥</string>
 
-    <string name="action_modify_user_agent">修改User-Agent</string>
 </resources>

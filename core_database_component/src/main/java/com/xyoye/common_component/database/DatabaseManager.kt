@@ -250,6 +250,18 @@ class DatabaseManager private constructor() {
                 }
             }
 
+        val MIGRATION_16_17 =
+            object : Migration(16, 17) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    // Remove retired sources before their enum values can fall back to OTHER_STORAGE.
+                    database.execSQL(
+                        "DELETE FROM play_history WHERE media_type = 'bilibili_storage' " +
+                            "OR storage_id IN (SELECT id FROM media_library WHERE media_type = 'bilibili_storage')"
+                    )
+                    database.execSQL("DELETE FROM media_library WHERE media_type = 'bilibili_storage'")
+                }
+            }
+
         val MIGRATION_16_15 =
             object : Migration(16, 15) {
                 override fun migrate(database: SupportSQLiteDatabase) {
@@ -338,6 +350,7 @@ class DatabaseManager private constructor() {
                 MIGRATION_13_14,
                 MIGRATION_14_15,
                 MIGRATION_15_16,
+                MIGRATION_16_17,
                 MIGRATION_16_15,
             )
             .build()

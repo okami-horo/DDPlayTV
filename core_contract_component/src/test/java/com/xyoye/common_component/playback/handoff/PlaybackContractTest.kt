@@ -37,8 +37,6 @@ class PlaybackContractTest {
                     queue,
                     castVideo,
                     options,
-                    PlaybackVerificationChallenge(secret, secret),
-                    PlaybackVerificationAnswer(secret, secret, secret),
                     PlaybackRequestInput(descriptors.first(), options, PlaybackRequestOrigin.STORAGE_FILE)
                 )
         diagnostics.forEach { assertFalse(it.toString().contains(secret)) }

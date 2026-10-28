@@ -16,7 +16,6 @@ import com.xyoye.common_component.utils.comparator.FileNameComparator
 import com.xyoye.common_component.utils.comparator.FileSizeComparator
 import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.data_component.data.screeencast.ScreencastData
-import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.StorageSort
 import java.util.Collections
 
@@ -71,7 +70,6 @@ object PlaybackReferenceFactory {
             protocolReference =
                 when {
                     file is RemoteStorageFile && file.isFile() -> file.getRealFile().Id
-                    file.storage.library.mediaType == MediaType.BILIBILI_STORAGE -> file.uniqueKey()
                     else -> null
                 },
             displayTitle = file.fileName()

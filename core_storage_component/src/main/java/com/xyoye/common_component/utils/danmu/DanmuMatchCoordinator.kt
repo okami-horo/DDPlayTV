@@ -16,8 +16,6 @@ class DanmuMatchCoordinator(
     private val danmuCache: DanmuMatchCacheStore = DanmuMatchCache,
 ) {
     suspend fun match(source: BaseVideoSource, mode: MatchMode): MatchOutcome {
-        if (StorageDanmuMatcher.isSupported(source)) return matchBilibili(source)
-
         val danmuSource = DanmuSourceFactory.build(source) ?: return MatchOutcome.NotFound
         val hash = danmuSource.hash()
         val fileName = danmuSource.fileName()
@@ -53,11 +51,6 @@ class DanmuMatchCoordinator(
             else ->
                 MatchOutcome.NotFound
         }
-    }
-
-    private suspend fun matchBilibili(source: BaseVideoSource): MatchOutcome {
-        val resource = StorageDanmuMatcher.matchDanmu(source)
-        return if (resource != null) MatchOutcome.Success(resource, MatchMethod.HASH, 0.0) else MatchOutcome.NotFound
     }
 
     private suspend fun searchFallback(fileName: String): MatchOutcome {

@@ -19,9 +19,7 @@ import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.source.base.BaseVideoSource
-import com.xyoye.common_component.utils.danmu.StorageDanmuMatcher
 import com.xyoye.data_component.bean.VideoTrackBean
-import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
@@ -253,9 +251,6 @@ class DanDanVideoPlayer(
     }
 
     override fun isLive(): Boolean {
-        if (this::videoSource.isInitialized && StorageDanmuMatcher.isBilibiliLive(videoSource)) {
-            return true
-        }
         val exoPlayer = exoPlayerOrNull()
         return exoPlayer?.isCurrentMediaItemLive ?: false
     }
@@ -309,44 +304,6 @@ class DanDanVideoPlayer(
 
     override fun onCompletion() {
         val durationMs = getDuration().coerceAtLeast(0L)
-        val rawPositionMs = getCurrentPosition()
-        val positionMs =
-            if (rawPositionMs > 0) {
-                rawPositionMs
-            } else {
-                lastKnownPositionMs
-            }.coerceAtLeast(0L)
-
-        val isBilibiliSource =
-            this::videoSource.isInitialized &&
-                videoSource.getMediaType() == MediaType.BILIBILI_STORAGE
-
-        if (mCurrentPlayState != PlayState.STATE_ERROR && isBilibiliSource) {
-            val isLive = isLive()
-            val isUnexpectedCompletion =
-                BilibiliCompletionTrust.isUnexpectedCompletion(
-                    BilibiliCompletionContext(
-                        isLive = isLive,
-                        positionMs = positionMs,
-                        durationMs = durationMs
-                    )
-                )
-            if (isUnexpectedCompletion) {
-                // Preserve progress for recovery fallback, then reroute into the existing error-recovery flow.
-                PlayRecorder.recordProgress(videoSource, positionMs, durationMs)
-
-                val title = videoSource.getVideoTitle()
-                val message =
-                    "unexpected completion title=$title isLive=$isLive positionMs=$positionMs durationMs=$durationMs lastKnownPositionMs=$lastKnownPositionMs"
-                lastPlaybackError = IllegalStateException(message)
-                LogFacade.w(LogModule.PLAYER, TAG_PLAYBACK, message)
-
-                setPlayState(PlayState.STATE_ERROR)
-                keepScreenOn = false
-                return
-            }
-        }
-
         if (mCurrentPlayState != PlayState.STATE_ERROR) {
             setPlayState(PlayState.STATE_COMPLETED)
         }

@@ -39,11 +39,23 @@ internal class PlaybackHandoffCodec {
         reader.endObject()
         if (schema == null) throw HandoffCodecException(HandoffStoreFailureKind.INVALID_PAYLOAD)
         if (schema != 1) throw HandoffCodecException(HandoffStoreFailureKind.UNSUPPORTED_SCHEMA)
-        val state = stateAdapter.fromJson(json) ?: throw HandoffCodecException(HandoffStoreFailureKind.INVALID_PAYLOAD)
-        if (state.verification != null && state.verification.requestId != state.pending?.requestId) {
-            throw HandoffCodecException(HandoffStoreFailureKind.INVALID_PAYLOAD)
-        }
-        return state
+        val envelope =
+            JsonReader.of(Buffer().writeUtf8(json)).readJsonValue() as? Map<*, *>
+                ?: throw HandoffCodecException(HandoffStoreFailureKind.INVALID_PAYLOAD)
+        val migrated = envelope.toMutableMap()
+        val pending = envelope["pending"] as? Map<*, *>
+        val input = pending?.get("input") as? Map<*, *>
+        if (isRetiredDescriptor(input?.get("descriptor"))) migrated["pending"] = null
+        val snapshot = envelope["snapshot"] as? Map<*, *>
+        val target = snapshot?.get("target") as? Map<*, *>
+        if (isRetiredDescriptor(target?.get("descriptor"))) migrated["snapshot"] = null
+        return stateAdapter.fromJsonValue(migrated) ?: throw HandoffCodecException(HandoffStoreFailureKind.INVALID_PAYLOAD)
+    }
+
+    private fun isRetiredDescriptor(value: Any?): Boolean {
+        val descriptor = value as? Map<*, *> ?: return false
+        val payload = descriptor["value"] as? Map<*, *> ?: return false
+        return descriptor["kind"] == "library" && payload["mediaType"] == "BILIBILI_STORAGE"
     }
 
     fun copy(input: PlaybackRequestInput): PlaybackRequestInput = requireNotNull(inputAdapter.fromJson(inputAdapter.toJson(input)))

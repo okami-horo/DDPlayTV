@@ -3,7 +3,6 @@ package com.xyoye.common_component.storage
 import com.xyoye.common_component.storage.credential.MediaLibraryCredentialResolver
 import com.xyoye.common_component.storage.impl.AlistStorage
 import com.xyoye.common_component.storage.impl.BaiduPanStorage
-import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.impl.Cloud115Storage
 import com.xyoye.common_component.storage.impl.DocumentFileStorage
 import com.xyoye.common_component.storage.impl.FtpStorage
@@ -39,7 +38,6 @@ object StorageFactory {
             MediaType.BAIDU_PAN_STORAGE -> BaiduPanStorage(library)
             MediaType.OPEN_115_STORAGE -> Open115Storage(library)
             MediaType.CLOUD_115_STORAGE -> Cloud115Storage(library)
-            MediaType.BILIBILI_STORAGE -> BilibiliStorage(library)
             else -> null
         }
 }

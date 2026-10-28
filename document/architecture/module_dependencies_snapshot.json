@@ -1,5 +1,5 @@
 {
-  "module_count": 21,
+  "module_count": 20,
   "modules": [
     {
       "build_file": "app/build.gradle.kts",
@@ -105,11 +105,6 @@
         },
         {
           "configuration": "implementation",
-          "module": ":bilibili_component",
-          "scope": "main"
-        },
-        {
-          "configuration": "implementation",
           "module": ":core_contract_component",
           "scope": "main"
         },
@@ -204,11 +199,6 @@
         },
         {
           "configuration": "implementation",
-          "module": ":bilibili_component",
-          "scope": "main"
-        },
-        {
-          "configuration": "implementation",
           "module": ":core_contract_component",
           "scope": "main"
         },
@@ -252,11 +242,6 @@
         {
           "configuration": "implementation",
           "module": ":core_storage_component",
-          "scope": "main"
-        },
-        {
-          "configuration": "implementation",
-          "module": ":bilibili_component",
           "scope": "main"
         },
         {
@@ -461,11 +446,6 @@
         },
         {
           "configuration": "implementation",
-          "module": ":bilibili_component",
-          "scope": "main"
-        },
-        {
-          "configuration": "implementation",
           "module": ":repository:seven_zip",
           "scope": "main"
         },
@@ -504,43 +484,6 @@
         {
           "configuration": "implementation",
           "module": ":repository:immersion_bar",
-          "scope": "main"
-        }
-      ]
-    },
-    {
-      "build_file": "bilibili_component/build.gradle.kts",
-      "dir": "bilibili_component",
-      "name": ":bilibili_component",
-      "project_dependencies": [
-        {
-          "configuration": "implementation",
-          "module": ":core_contract_component",
-          "scope": "main"
-        },
-        {
-          "configuration": "implementation",
-          "module": ":core_network_component",
-          "scope": "main"
-        },
-        {
-          "configuration": "implementation",
-          "module": ":core_log_component",
-          "scope": "main"
-        },
-        {
-          "configuration": "implementation",
-          "module": ":core_system_component",
-          "scope": "main"
-        },
-        {
-          "configuration": "implementation",
-          "module": ":core_database_component",
-          "scope": "main"
-        },
-        {
-          "configuration": "implementation",
-          "module": ":data_component",
           "scope": "main"
         }
       ]

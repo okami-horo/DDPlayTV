@@ -275,7 +275,7 @@ class ActivePlaybackSessionTest {
     @Test fun sourceRetirementWaitsForBackendDetachmentAndAddonFailureStillReleasesLease() =
         runTest {
             val f = PlaybackSessionTestFixture(StandardTestDispatcher(testScheduler))
-            f.addonThrows = true
+            f.resolutionThrows = true
             f.session.deliver(f.submit("old"))
             f.backend.retainOld = true
             f.session.deliver(f.submit("new"))
@@ -287,7 +287,7 @@ class ActivePlaybackSessionTest {
             assertTrue(f.session.exit().detached)
             f.session.exit()
             assertEquals(listOf(1, 1), f.leases.map { it.releases })
-            assertEquals(2, f.addonReleases)
+            assertEquals(2, f.resolutionReleases)
         }
 
     @Test fun nativeCandidateIsMemoryOnlyAndTransitionFailureDoesNotStopPlaybackOrBlockControlledSwitch() =

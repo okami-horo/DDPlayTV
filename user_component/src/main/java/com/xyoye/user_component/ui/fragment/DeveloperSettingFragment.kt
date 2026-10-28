@@ -7,7 +7,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceGroup
 import androidx.preference.SwitchPreference
 import com.xyoye.common_component.base.BasePreferenceFragmentCompat
-import com.xyoye.common_component.config.BilibiliTvCredentialStore
 import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.config.DeveloperCredentialStore
 import com.xyoye.common_component.extension.addToClipboard
@@ -28,7 +27,6 @@ import com.xyoye.common_component.utils.formatFileSize
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
 import com.xyoye.user_component.R
-import com.xyoye.user_component.ui.dialog.BilibiliTvCredentialDialog
 import kotlinx.coroutines.launch
 import java.net.Inet4Address
 import java.net.NetworkInterface
@@ -59,7 +57,6 @@ class DeveloperSettingFragment : BasePreferenceFragmentCompat() {
         private const val KEY_BUGLY_TEST_REPORT = "bugly_test_report"
         private const val KEY_CREDENTIAL_PLAINTEXT_FALLBACK = "developer_credential_plaintext_fallback"
         private const val KEY_CREDENTIAL_MIGRATE_PLAINTEXT = "developer_credential_migrate_plaintext"
-        private const val KEY_BILIBILI_TV_CREDENTIAL = "bilibili_tv_credential"
         private const val KEY_SUBTITLE_SESSION_STATUS = "subtitle_session_status"
         private const val SUBTITLE_STATUS_PROVIDER =
             "com.xyoye.player.subtitle.debug.PlaybackSessionStatusProvider"
@@ -96,7 +93,6 @@ class DeveloperSettingFragment : BasePreferenceFragmentCompat() {
         initBuglyStatusPreference()
         initBuglyTestPreference()
         initDeveloperCredentialPreferences()
-        initBilibiliTvCredentialPreference()
 
         if (requireContext().isTelevisionUiMode()) {
             view.post { requestPreferenceItemFocus(KEY_HTTP_LOG_SERVER_ENABLE) }
@@ -395,19 +391,6 @@ class DeveloperSettingFragment : BasePreferenceFragmentCompat() {
         }
     }
 
-    private fun initBilibiliTvCredentialPreference() {
-        findPreference<Preference>(KEY_BILIBILI_TV_CREDENTIAL)?.apply {
-            title = getString(R.string.developer_bilibili_tv_credential_title)
-            summary = buildBilibiliTvCredentialSummary()
-            setOnPreferenceClickListener {
-                BilibiliTvCredentialDialog(requireActivity()) {
-                    summary = buildBilibiliTvCredentialSummary()
-                }.show()
-                true
-            }
-        }
-    }
-
     private fun initDeveloperCredentialPreferences() {
         initCredentialPlaintextFallbackPreference()
         initCredentialMigratePreference()
@@ -520,19 +503,6 @@ class DeveloperSettingFragment : BasePreferenceFragmentCompat() {
                 getString(R.string.developer_credential_migrate_summary_clean)
             }
     }
-
-    private fun buildBilibiliTvCredentialSummary(): String =
-        when {
-            BilibiliTvCredentialStore.isBuildCredentialInjected() ->
-                getString(R.string.developer_bilibili_tv_credential_summary_injected)
-
-            BilibiliTvCredentialStore.getAppKey().isNullOrBlank() ||
-                BilibiliTvCredentialStore.getAppSecret().isNullOrBlank() ->
-                getString(R.string.developer_bilibili_tv_credential_summary_missing)
-
-            else ->
-                getString(R.string.developer_bilibili_tv_credential_summary_local)
-        }
 
     private fun buildSubtitleStatusSummary(): String =
         runCatching {

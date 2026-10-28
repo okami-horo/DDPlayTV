@@ -6,15 +6,11 @@ import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.playback.addon.PlaybackAddon
-import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
-import com.xyoye.common_component.playback.addon.PlaybackReplacementIntent
 import com.xyoye.common_component.resolver.PlaybackProfileResolver
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.impl.LinkStorage
-import com.xyoye.common_component.storage.transport.AcquiredPlaybackTransport
 import com.xyoye.common_component.storage.transport.PlaybackTransportFactory
 import com.xyoye.common_component.storage.transport.PlaybackTransportLease
 import com.xyoye.common_component.storage.transport.TransportAcquisitionResult
@@ -41,14 +37,13 @@ object StorageVideoSourceFactory {
         file: StorageFile,
         profile: PlaybackProfile,
         queue: List<StorageFile>,
-        releaseResolution: () -> Unit = {},
-        replacement: PlaybackReplacementIntent? = null
+        releaseResolution: () -> Unit = {}
     ): StorageVideoSource? =
         createOwned(
             file,
             profile,
             queue,
-            acquire = { input, selected -> PlaybackTransportFactory().acquire(input.storage, input, selected, replacement) },
+            acquire = { input, selected -> PlaybackTransportFactory().acquire(input.storage, input, selected) },
             prepareExtras = { playbackFile ->
                 val storage = playbackFile.storage
                 SourceExtras(
@@ -56,13 +51,6 @@ object StorageVideoSourceFactory {
                     getSubtitlePath(playbackFile, storage),
                     playbackFile.playHistory?.audioPath,
                     storage.getNetworkHeaders(playbackFile)?.toMap()
-                )
-            },
-            createAddon = { transport, _ ->
-                StorageVideoSource.createDefaultPlaybackAddon(
-                    transport.lease.playUrl,
-                    transport.playbackFile,
-                    transport.lease
                 )
             },
             releaseResolution = releaseResolution
@@ -81,7 +69,6 @@ object StorageVideoSourceFactory {
         queue: List<StorageFile>,
         acquire: suspend (StorageFile, PlaybackProfile) -> TransportAcquisitionResult,
         prepareExtras: suspend (StorageFile) -> SourceExtras,
-        createAddon: (AcquiredPlaybackTransport, PlaybackProfile) -> PlaybackAddon?,
         releaseResolution: () -> Unit = {}
     ): StorageVideoSource? {
         // Queue entries are metadata for later resolution, never the owned playback connection.
@@ -93,7 +80,6 @@ object StorageVideoSourceFactory {
                 .ifEmpty { listOf(file) }
                 .map { original -> original.clone().apply { playHistory = original.playHistory?.copy() } }
         var lease: PlaybackTransportLease? = null
-        var addon: PlaybackAddon? = null
         var source: StorageVideoSource? = null
         var delivered = false
         try {
@@ -112,7 +98,6 @@ object StorageVideoSourceFactory {
             lease = transport.lease
             val extras = prepareExtras(transport.playbackFile)
             currentCoroutineContext().ensureActive()
-            addon = createAddon(transport, profile)
             source =
                 StorageVideoSource(
                     playUrl = lease.playUrl,
@@ -123,7 +108,6 @@ object StorageVideoSourceFactory {
                     audioPath = extras.audioPath,
                     playbackProfile = profile,
                     transportLease = lease,
-                    playbackAddon = addon,
                     httpHeaders = extras.httpHeaders?.toMap(),
                     releaseResolution = releaseResolution
                 )
@@ -140,10 +124,6 @@ object StorageVideoSourceFactory {
                         releaseTransportResources(
                             lease?.leaseId.orEmpty(),
                             listOf(
-                                {
-                                    (addon as? PlaybackReleasableAddon)?.onRelease()
-                                    Unit
-                                },
                                 {
                                     lease?.release()
                                     Unit

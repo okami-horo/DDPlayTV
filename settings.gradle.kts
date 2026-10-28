@@ -14,7 +14,6 @@ include(":core_network_component")
 include(":core_database_component")
 include(":core_storage_component")
 include(":core_ui_component")
-include(":bilibili_component")
 
 include(":repository:danmaku")
 include(":repository:immersion_bar")

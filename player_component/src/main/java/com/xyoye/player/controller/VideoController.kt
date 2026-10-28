@@ -6,7 +6,6 @@ import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.focus.resetDescendantFocus
-import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
 import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.data.DanmuEpisodeData
@@ -68,7 +67,7 @@ class VideoController(
     private var switchVideoSourceBlock: ((Int) -> Unit)? = null
     private var autoPlayNextBlock: ((Int) -> Unit)? = null
     private var trackAddedBlock: ((VideoTrackBean) -> Unit)? = null
-    private var playbackProgressBlock: ((Long, Long, Boolean) -> Unit)? = null
+    private var playbackProgressBlock: (() -> Unit)? = null
 
     init {
         addControlComponent(mDanmuController.getView())
@@ -149,7 +148,7 @@ class VideoController(
         position: Long
     ) {
         super.onProgressChanged(duration, position)
-        playbackProgressBlock?.invoke(duration, position, mControlWrapper.isLive())
+        playbackProgressBlock?.invoke()
     }
 
     override fun onBackPressed(): Boolean {
@@ -273,7 +272,7 @@ class VideoController(
         autoPlayNextBlock = block
     }
 
-    fun observerPlaybackProgress(block: (Long, Long, Boolean) -> Unit) {
+    fun observerPlaybackProgress(block: () -> Unit) {
         playbackProgressBlock = block
     }
 
@@ -306,10 +305,6 @@ class VideoController(
         searchResult: () -> LiveData<List<DanmuEpisodeData>>
     ) {
         mSettingController.setDanmuSearch(search, download, searchResult)
-    }
-
-    fun observerPlaybackSettingUpdate(block: (PlaybackSettingUpdate) -> Unit) {
-        mSettingController.setPlaybackSettingUpdateBlock(block)
     }
 
     /**

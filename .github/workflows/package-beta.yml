@@ -61,8 +61,6 @@ jobs:
           BUGLY_APP_ID: ${{ secrets.BUGLY_APP_ID }}
           DANDAN_APP_ID: ${{ secrets.DANDAN_APP_ID }}
           DANDAN_APP_SECRET: ${{ secrets.DANDAN_APP_SECRET }}
-          BILIBILI_TV_APP_KEY: ${{ secrets.BILIBILI_TV_APP_KEY }}
-          BILIBILI_TV_APP_SECRET: ${{ secrets.BILIBILI_TV_APP_SECRET }}
           BAIDU_PAN_CLIENT_ID: ${{ secrets.BAIDU_PAN_CLIENT_ID }}
           BAIDU_PAN_CLIENT_SECRET: ${{ secrets.BAIDU_PAN_CLIENT_SECRET }}
           ALIYUN_SECRET: ${{ secrets.ALIYUN_SECRET }}
@@ -103,8 +101,6 @@ jobs:
           BUGLY_APP_ID: ${{ secrets.BUGLY_APP_ID }}
           DANDAN_APP_ID: ${{ secrets.DANDAN_APP_ID }}
           DANDAN_APP_SECRET: ${{ secrets.DANDAN_APP_SECRET }}
-          BILIBILI_TV_APP_KEY: ${{ secrets.BILIBILI_TV_APP_KEY }}
-          BILIBILI_TV_APP_SECRET: ${{ secrets.BILIBILI_TV_APP_SECRET }}
           BAIDU_PAN_CLIENT_ID: ${{ secrets.BAIDU_PAN_CLIENT_ID }}
           BAIDU_PAN_CLIENT_SECRET: ${{ secrets.BAIDU_PAN_CLIENT_SECRET }}
           ALIYUN_SECRET: ${{ secrets.ALIYUN_SECRET }}

@@ -4,8 +4,6 @@ import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.DatabaseProvider
 import com.xyoye.common_component.network.repository.ResourceRepository
-import com.xyoye.common_component.playback.addon.PlaybackRecoveryRequest
-import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
 import com.xyoye.common_component.playback.handoff.PlaybackAction
 import com.xyoye.common_component.playback.handoff.PlaybackCommand
 import com.xyoye.common_component.playback.handoff.PlaybackOperationResult
@@ -46,20 +44,9 @@ class PlayerViewModel : BaseViewModel() {
     internal val playbackScreen = _playbackScreen.asStateFlow()
     private var requestSequence = 0L
     private var pendingRequestId: String? = null
-    private var verificationInFlight: String? = null
     internal val hasPlaybackSession get() = retainedPlaybackSession != null
     internal val activePlaybackSession get() = retainedPlaybackSession
     internal val playbackVersion get() = retainedPlaybackSession?.runtime?.version
-
-    internal suspend fun applyPlaybackSetting(
-        update: PlaybackSettingUpdate,
-        expected: PlaybackSessionVersion
-    ) = retainedPlaybackSession?.applySetting(update, expected) ?: SessionRequestResult.Ignored
-
-    internal suspend fun recoverPlayback(
-        request: PlaybackRecoveryRequest,
-        expected: PlaybackSessionVersion
-    ) = retainedPlaybackSession?.recover(request, expected) ?: SessionRequestResult.Ignored
 
     internal suspend fun fallbackPlaybackKernel(
         profile: PlaybackProfile,
@@ -94,7 +81,6 @@ class PlayerViewModel : BaseViewModel() {
     internal fun deliverPlayback(requestId: String?) {
         val session = retainedPlaybackSession ?: return
         if (_playbackScreen.value.preparing && pendingRequestId == requestId) return
-        verificationInFlight = null
         pendingRequestId = requestId
         val sequence = ++requestSequence
         _playbackScreen.value = PlaybackScreenState(preparing = true, hasPlayback = session.runtime != null)
@@ -135,7 +121,7 @@ class PlayerViewModel : BaseViewModel() {
                 is SessionRequestResult.Rejected -> result.failure
                 is SessionRequestResult.BackendFailed -> PlaybackPreparationFailure.Unknown("BackendApplyFailed")
                 is SessionRequestResult.Activated -> result.replacedRequestFailure
-                SessionRequestResult.Ignored, SessionRequestResult.SettingsSaved -> null
+                SessionRequestResult.Ignored -> null
             }
         _playbackScreen.value = PlaybackScreenState(hasPlayback = retainedPlaybackSession?.runtime != null, failure = failure)
     }
@@ -144,20 +130,6 @@ class PlayerViewModel : BaseViewModel() {
         val state = _playbackScreen.value
         if (state.failure == failure) _playbackScreen.value = state.copy(failure = null)
     }
-
-    internal fun beginVerification(id: String): Boolean {
-        if (verificationInFlight == id) return false
-        verificationInFlight = id
-        return true
-    }
-
-    internal fun finishVerification(id: String?): Boolean {
-        if (id == null || verificationInFlight != id) return false
-        verificationInFlight = null
-        return true
-    }
-
-    internal val awaitingVerification get() = verificationInFlight != null
 
     internal fun unbindPlayback(backend: PlaybackSessionBackend) {
         val session = retainedPlaybackSession ?: return

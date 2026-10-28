@@ -31,7 +31,6 @@ import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.danmu
 import com.xyoye.common_component.storage.file.subtitle
-import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.utils.PlayHistoryUtils
 import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.common_component.utils.getRecognizableFileName
@@ -45,7 +44,6 @@ import com.xyoye.core_ui_component.databinding.ItemStorageVideoTagBinding
 import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.bean.VideoTagBean
 import com.xyoye.data_component.enums.FileManagerAction
-import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ItemStoragePagingBinding
@@ -99,12 +97,7 @@ class StorageFileAdapter(
                     itemBinding.emptyActionTv.isVisible = true
 
                     if (requiresLogin) {
-                        val directoryName =
-                            when (directory?.filePath()) {
-                                BilibiliStorage.PATH_HISTORY_DIR -> "历史记录"
-                                BilibiliStorage.PATH_FOLLOW_LIVE_DIR -> "关注直播"
-                                else -> "当前目录"
-                            }
+                        val directoryName = directory?.fileName().orEmpty()
                         val actionText = authStorage?.loginActionText(directory).orEmpty()
                         itemBinding.emptyTv.text = "需要${actionText}才能查看$directoryName"
                         itemBinding.emptyActionTv.text = actionText
@@ -218,15 +211,7 @@ class StorageFileAdapter(
     private fun BaseViewHolderCreator<ItemStoragePagingBinding>.pagingItem() =
         { data: StoragePagingItem ->
             val isDataEmpty = data.isDataEmpty
-            val emptyTitle =
-                if (activity.storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
-                    when (activity.directory?.filePath()) {
-                        BilibiliStorage.PATH_FOLLOW_LIVE_DIR -> "暂无直播"
-                        else -> "暂无历史记录"
-                    }
-                } else {
-                    R.string.text_empty_video.toResString(activity)
-                }
+            val emptyTitle = R.string.text_empty_video.toResString(activity)
             val title =
                 when (data.state) {
                     com.xyoye.common_component.storage.PagedStorage.State.LOADING -> "加载中…"

@@ -191,8 +191,7 @@ class MediaFragment :
             MediaType.ALSIT_STORAGE,
             MediaType.BAIDU_PAN_STORAGE,
             MediaType.OPEN_115_STORAGE,
-            MediaType.CLOUD_115_STORAGE,
-            MediaType.BILIBILI_STORAGE -> {
+            MediaType.CLOUD_115_STORAGE -> {
                 ARouter
                     .getInstance()
                     .build(RouteTable.Stream.StorageFile)

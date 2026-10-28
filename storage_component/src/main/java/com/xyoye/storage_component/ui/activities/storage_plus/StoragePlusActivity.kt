@@ -14,7 +14,6 @@ import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ActivityStoragePlusBinding
 import com.xyoye.storage_component.ui.dialog.AlistStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.BaiduPanStorageEditDialog
-import com.xyoye.storage_component.ui.dialog.BilibiliStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.Cloud115StorageEditDialog
 import com.xyoye.storage_component.ui.dialog.ExternalStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.FTPStorageEditDialog
@@ -99,7 +98,6 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
                 MediaType.BAIDU_PAN_STORAGE -> BaiduPanStorageEditDialog(this, resolvedEditData)
                 MediaType.OPEN_115_STORAGE -> Open115StorageEditDialog(this, resolvedEditData)
                 MediaType.CLOUD_115_STORAGE -> Cloud115StorageEditDialog(this, resolvedEditData)
-                MediaType.BILIBILI_STORAGE -> BilibiliStorageEditDialog(this, resolvedEditData)
                 else -> {
                     finish()
                     null

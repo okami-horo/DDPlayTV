@@ -58,13 +58,11 @@ class PlaybackHandoffStorageInstrumentedTest {
             assertTrue(recreatedStore.readSnapshot(version.sessionId) is HandoffStoreResult.Failure)
         }
 
-    @Test fun fixedExpirySurvivesRealEncryptionAndVerificationReads() =
+    @Test fun fixedExpirySurvivesRealEncryptionAndPendingReads() =
         runBlocking {
             val store = PlaybackHandoffStore(wallTime = { now })
             val pending = value(store.submit(input))
-            val verification = value(store.startVerification(pending.requestId, PlaybackVerificationPayload("private-voucher")))
             now = pending.expiresAtMs - 1
-            value(store.readVerification(verification.verificationId))
             assertEquals(pending.expiresAtMs, value(store.readPending(pending.requestId)).expiresAtMs)
             now++
             val failure = store.readPending(pending.requestId) as HandoffStoreResult.Failure

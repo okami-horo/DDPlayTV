@@ -1,7 +1,5 @@
 package com.xyoye.common_component.source
 
-import com.xyoye.common_component.playback.addon.PlaybackEvent
-import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.AbstractStorage
@@ -18,8 +16,6 @@ import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayerType
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
@@ -38,13 +34,11 @@ class StorageVideoSourceFactoryTest {
     private val input = File(browser, "first")
     private val queue = listOf(input, File(browser, "second"))
     private val playbackFiles = mutableListOf<File>()
-    private val addons = mutableListOf<Addon>()
     private val headers = mutableMapOf("Authorization" to "first")
     private var extras: suspend (StorageFile) -> StorageVideoSourceFactory.SourceExtras = {
         assertSame(playbackFiles.last(), it)
         StorageVideoSourceFactory.SourceExtras(subtitlePath = "subtitle.ass", audioPath = "audio.flac", httpHeaders = headers)
     }
-    private var makeAddon: (File) -> Addon = { Addon() }
 
     private suspend fun create(): StorageVideoSource =
         StorageVideoSourceFactory.createOwned(
@@ -63,8 +57,7 @@ class StorageVideoSourceFactoryTest {
                     )
                 )
             },
-            prepareExtras = { extras(it) },
-            createAddon = { transport, _ -> makeAddon(transport.playbackFile as File).also { addons.add(it) } }
+            prepareExtras = { extras(it) }
         )!!
 
     @Test
@@ -80,7 +73,6 @@ class StorageVideoSourceFactoryTest {
             source.releasePlaybackResources()
             source.releasePlaybackResources()
             assertEquals(1, playbackFiles.single().closes)
-            assertEquals(1, addons.single().releases)
             assertEquals(0, input.closes)
         }
 
@@ -89,32 +81,28 @@ class StorageVideoSourceFactoryTest {
         runBlocking {
             val first = create()
             val second = create()
-            assertSame(addons[0], first.getPlaybackAddon())
             first.releasePlaybackResources()
             assertEquals(1, playbackFiles[0].closes)
             assertEquals(0, playbackFiles[1].closes)
-            assertEquals(0, addons[1].releases)
             second.releasePlaybackResources()
         }
 
     @Test
-    fun failedExtrasRetireAcquisitionBeforeAddonCreation() =
+    fun failedExtrasRetireAcquisition() =
         runBlocking {
             extras = { error("subtitle fixture failed") }
             assertFailure { create() }
             assertEquals(1, playbackFiles.single().closes)
-            assertTrue(addons.isEmpty())
         }
 
     @Test
-    fun failedSourceConstructionRetiresAddonAndLeaseEvenWhenAddonThrows() =
+    fun failedSourceConstructionRetiresLease() =
         runBlocking {
-            makeAddon = { file ->
-                file.failIdentity = true
-                Addon(failRelease = true)
+            extras = {
+                (it as File).failIdentity = true
+                StorageVideoSourceFactory.SourceExtras()
             }
             assertFailure { create() }
-            assertEquals(1, addons.single().releases)
             assertEquals(1, playbackFiles.single().closes)
         }
 
@@ -130,26 +118,6 @@ class StorageVideoSourceFactoryTest {
             started.await()
             pending.cancelAndJoin()
             assertEquals(1, playbackFiles.single().closes)
-            assertTrue(addons.isEmpty())
-        }
-
-    @Test
-    fun cancellationAfterAddonCreationCannotDeliverSource() =
-        runBlocking {
-            lateinit var pending: Job
-            makeAddon = {
-                pending.cancel()
-                Addon()
-            }
-            pending =
-                launch(start = CoroutineStart.LAZY) {
-                    create()
-                    fail("Cancelled source delivered")
-                }
-            pending.start()
-            pending.join()
-            assertEquals(1, addons.single().releases)
-            assertEquals(1, playbackFiles.single().closes)
         }
 
     private suspend fun assertFailure(block: suspend () -> Unit) {
@@ -162,20 +130,6 @@ class StorageVideoSourceFactoryTest {
 
     private fun storage() =
         LinkStorage(MediaLibraryEntity(displayName = "fixture", url = "https://example.test", mediaType = MediaType.STREAM_LINK))
-
-    private class Addon(
-        private val failRelease: Boolean = false
-    ) : PlaybackReleasableAddon {
-        var releases = 0
-        override val addonId = "test"
-
-        override fun onEvent(event: PlaybackEvent) = Unit
-
-        override fun onRelease() {
-            releases++
-            if (failRelease) error("addon cleanup failure")
-        }
-    }
 
     private class File(
         storage: AbstractStorage,

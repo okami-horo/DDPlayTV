@@ -19,14 +19,6 @@ object DevelopConfigTable {
     @MMKVFiled
     const val appSecret = ""
 
-    // Bilibili TV App Key
-    @MMKVFiled
-    const val bilibiliTvAppKey = ""
-
-    // Bilibili TV App Secret
-    @MMKVFiled
-    const val bilibiliTvAppSecret = ""
-
     // AppId（加密后存储）
     @MMKVFiled
     const val appIdEncrypted = ""
@@ -38,14 +30,6 @@ object DevelopConfigTable {
     // 开发者凭证：是否允许“加密失败时明文兜底”（仅用户显式开启后生效）
     @MMKVFiled
     const val credentialPlaintextFallbackEnabled = false
-
-    // Bilibili TV App Key（加密后存储）
-    @MMKVFiled
-    const val bilibiliTvAppKeyEncrypted = ""
-
-    // Bilibili TV App Secret（加密后存储）
-    @MMKVFiled
-    const val bilibiliTvAppSecretEncrypted = ""
 
     // API < 23 时使用：RSA 包裹的 AES Key（Base64）
     @MMKVFiled

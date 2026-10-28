@@ -1,5 +1,7 @@
 # Playback Handoff and Active Session Implementation Plan
 
+> Scope superseded on 2026-10-28: Bilibili Addons, quality/URL recovery and risk verification have been retired by user decision. Their recorded implementation remains historical evidence; their pending acceptance is no longer applicable and is not marked passed. Ordinary playback, transport, recovery and navigation acceptance remains open as recorded. The original 62/65 count is unchanged. See the [retirement record](2026-10-28-remove-bilibili.md).
+
 > Written 2026-10-27 against repository HEAD `f8d4c54c41eb1401107849417afcac68dc88869a` and the revised working-tree designs. Agent-facing execution document. Updated 2026-10-28 from HEAD `b2ce478eb` plus the continuation included in the user-authorized local commit. Tasks 1–13 are complete; Task 14 records automated verification and remaining user-owned acceptance.
 
 **Goal:** Replace scattered playback-source writers with one ActivePlaybackSession, atomic stable requests, independently owned sources and encrypted process-recovery state. Preserve the existing media features, supported kernels, background/PIP behavior and TV interaction.

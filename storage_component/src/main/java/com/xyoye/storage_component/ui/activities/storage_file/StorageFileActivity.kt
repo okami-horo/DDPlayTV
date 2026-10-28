@@ -30,7 +30,6 @@ import com.xyoye.common_component.playback.userMessage
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.impl.BilibiliStorage
 import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.common_component.utils.subtitle.SubtitleFontCacheHelper
@@ -251,13 +250,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         return super.onKeyDown(keyCode, event)
     }
 
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (handleTvBilibiliPagedRefreshKey(event)) {
-            return true
-        }
-        return super.dispatchKeyEvent(event)
-    }
-
     override fun onDestroy() {
         shareStorageFile = null
         if (this::storage.isInitialized) {
@@ -302,33 +294,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         }
 
         onDisplayFragmentChanged()
-    }
-
-    private fun handleTvBilibiliPagedRefreshKey(event: KeyEvent): Boolean {
-        if (event.action != KeyEvent.ACTION_DOWN) return false
-        if (event.repeatCount != 0) return false
-
-        val library = storage.library
-        if (library.mediaType != MediaType.BILIBILI_STORAGE) return false
-        if (!BilibiliStorage.isBilibiliPagedDirectoryPath(currentRoute)) return false
-
-        val isRefreshKey =
-            when (event.keyCode) {
-                KeyEvent.KEYCODE_MENU -> true
-                // 部分 TV 遥控器“菜单”键会被映射为 Settings
-                KeyEvent.KEYCODE_SETTINGS -> true
-                else -> false
-            }
-        if (!isRefreshKey) return false
-
-        val fragment = routeStack.lastOrNull()?.fragment
-        if (fragment == null) {
-            LogFacade.w(LogModule.STORAGE, TAG, "bilibili paged refresh ignored, fragment null keyCode=${event.keyCode}")
-            return false
-        }
-
-        fragment.triggerTvRefresh()
-        return true
     }
 
     private fun popFragment(): Boolean {

@@ -42,7 +42,6 @@ data class VideoTrackBean(
             val name =
                 when (resource) {
                     is DanmuTrackResource.LocalFile -> Uri.parse(resource.danmu.danmuPath).lastPathSegment.orEmpty()
-                    is DanmuTrackResource.BilibiliLive -> "直播实时弹幕"
                 }
             return VideoTrackBean(name = name, type = TrackType.DANMU, trackResource = resource)
         }

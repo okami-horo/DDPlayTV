@@ -6,8 +6,6 @@ import com.xyoye.common_component.playback.handoff.PlaybackOperationResult
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackStateView
 import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
-import com.xyoye.common_component.playback.handoff.PlaybackVerificationAnswer
-import com.xyoye.common_component.playback.handoff.PlaybackVerificationResult
 import kotlinx.coroutines.flow.StateFlow
 
 /** Player owns the implementation. Callers cannot read or mutate the persistent handoff store. */
@@ -18,13 +16,4 @@ interface PlaybackRequestService : IProvider {
     fun observePlayback(): StateFlow<PlaybackStateView?>
 
     suspend fun dispatch(command: PlaybackCommand): PlaybackOperationResult
-
-    suspend fun verificationChallenge(verificationId: String): PlaybackVerificationResult
-
-    suspend fun completeVerification(
-        verificationId: String,
-        answer: PlaybackVerificationAnswer
-    ): PlaybackSubmissionResult
-
-    suspend fun cancelVerification(verificationId: String): PlaybackOperationResult
 }

@@ -25,6 +25,7 @@
  - `./gradlew connectedDebugAndroidTest` for instrumentation.
 
  ## Local AVD Baseline
+ - Latest Bilibili-removal verification (2026-10-28): `scripts/dev-env/gradlew-local.bat` works with the project-private toolchain and offline Robolectric cache. Device `emulator-5558` was restored to mobile UI mode, physical 1080x2340 / 440 dpi and non-root adbd after temporary TV tests. Its captured pre-test baseline already had SystemUI and lockscreen disabled; those values were preserved. Do not infer current device state from older restoration notes. Exact readback is `.tmp/bilibili-avd-restored.log` and the retirement ledger.
  - Current verified workflow (2026-10-27): project-local `.dev-env/jdk/ms-17.0.15`, `.dev-env/gradle-home` and `.dev-env/android-sdk`; set JAVA_HOME, GRADLE_USER_HOME, ANDROID_HOME and ANDROID_SDK_ROOT, then run gradlew.bat directly. The PowerShell wrapper is blocked by local execution policy.
  - Historical device verification used API 34 `emulator-5558`, including temporary TV UI/feature injection. Those AVD modifications were reverted after final 2026-10-28 testing. DIR-01 cleanup preserved the working emulator and removed a separate runaway emulator writer; query current device/UI state instead of assuming TV mode remains enabled.
  - User-authorized deletion of the self-loop portproxy `*:5555 -> 127.0.0.1:5555` restored ADB/Gradle connectivity. Backup/restore records remain under `.tmp/portproxy-*`; do not repeat UAC or alter unrelated system networking.

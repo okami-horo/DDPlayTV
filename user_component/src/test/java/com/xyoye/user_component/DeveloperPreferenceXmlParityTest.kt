@@ -1,9 +1,9 @@
 package com.xyoye.user_component
 
-import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 class DeveloperPreferenceXmlParityTest {
     @Test
@@ -17,7 +17,6 @@ class DeveloperPreferenceXmlParityTest {
         val televisionKeys = extractKeys(televisionXml)
 
         assertTrue(defaultKeys.contains("bugly_test_report"))
-        assertTrue(defaultKeys.contains("bilibili_tv_credential"))
         assertEquals(defaultKeys, televisionKeys)
     }
 

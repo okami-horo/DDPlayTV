@@ -3,7 +3,6 @@ package com.xyoye.local_component.ui.fragment.media
 import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
 import com.xyoye.common_component.database.repository.MediaLibraryRepository
 import com.xyoye.common_component.database.repository.PlayHistoryRepository
 import com.xyoye.common_component.extension.toastError
@@ -83,9 +82,6 @@ class MediaViewModel : BaseViewModel() {
     fun deleteStorage(data: MediaLibraryEntity) {
         viewModelScope.launch(context = Dispatchers.IO) {
             try {
-                if (data.mediaType == MediaType.BILIBILI_STORAGE) {
-                    BilibiliPlaybackPreferencesStore.clear(data)
-                }
                 if (data.mediaType == MediaType.BAIDU_PAN_STORAGE) {
                     BaiduPanAuthStore.clear(BaiduPanAuthStore.storageKey(data))
                 }

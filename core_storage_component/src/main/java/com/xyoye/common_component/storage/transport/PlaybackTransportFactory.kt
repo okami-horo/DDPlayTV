@@ -1,6 +1,5 @@
 package com.xyoye.common_component.storage.transport
 
-import com.xyoye.common_component.playback.addon.PlaybackReplacementIntent
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageFactory
@@ -74,8 +73,7 @@ class PlaybackTransportFactory internal constructor(
     suspend fun acquire(
         storage: Storage,
         file: StorageFile,
-        profile: PlaybackProfile,
-        replacement: PlaybackReplacementIntent? = null
+        profile: PlaybackProfile
     ): TransportAcquisitionResult {
         var ownedStorage: Storage? = null
         var ownedFile: StorageFile? = null
@@ -127,20 +125,7 @@ class PlaybackTransportFactory internal constructor(
                     val provider =
                         providerFor(playbackStorage)
                             ?: throw TransportAcquisitionException(TransportAcquisitionFailure.UnsupportedTransport)
-                    val lease =
-                        if (replacement == null) {
-                            provider.acquirePlaybackTransport(playbackFile, profile)
-                        } else {
-                            val bound = replacement.identity
-                            if (library.mediaType != MediaType.BILIBILI_STORAGE ||
-                                bound.mediaType != library.mediaType ||
-                                bound.storageId != library.id ||
-                                bound.uniqueKey != identity
-                            ) {
-                                throw TransportAcquisitionException(TransportAcquisitionFailure.Superseded)
-                            }
-                            BilibiliPlaybackTransport.acquireReplacement(replacement, profile.playerType)
-                        }
+                    val lease = provider.acquirePlaybackTransport(playbackFile, profile)
                     acquiredLease = lease
                     ensureActive()
                     TransportAcquisitionResult.Success(AcquiredPlaybackTransport(playbackFile, lease))

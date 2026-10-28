@@ -8,8 +8,8 @@
 
 ## 汇总
 
-- 模块数：21
-- 依赖条目数：88（生产 85 / 测试 3）
+- 模块数：20
+- 依赖条目数：78（生产 75 / 测试 3）
 
 ## 依赖列表（按模块）
 
@@ -24,7 +24,7 @@
 ### :local_component
 
 **生产依赖**
-- `implementation`：:bilibili_component, :core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
+- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
 
 **测试依赖**
 - （无）
@@ -40,7 +40,7 @@
 ### :user_component
 
 **生产依赖**
-- `implementation`：:bilibili_component, :core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
+- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
 
 **测试依赖**
 - （无）
@@ -48,7 +48,7 @@
 ### :storage_component
 
 **生产依赖**
-- `implementation`：:bilibili_component, :core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
+- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
 
 **测试依赖**
 - （无）
@@ -112,7 +112,7 @@
 ### :core_storage_component
 
 **生产依赖**
-- `implementation`：:bilibili_component, :core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_system_component, :data_component, :repository:seven_zip, :repository:thunder
+- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_system_component, :data_component, :repository:seven_zip, :repository:thunder
 
 **测试依赖**
 - （无）
@@ -121,14 +121,6 @@
 
 **生产依赖**
 - `implementation`：:core_contract_component, :core_log_component, :core_system_component, :data_component, :repository:immersion_bar
-
-**测试依赖**
-- （无）
-
-### :bilibili_component
-
-**生产依赖**
-- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_system_component, :data_component
 
 **测试依赖**
 - （无）
@@ -187,7 +179,6 @@
 graph TD
   anime_component[":anime_component"]
   app[":app"]
-  bilibili_component[":bilibili_component"]
   core_contract_component[":core_contract_component"]
   core_database_component[":core_database_component"]
   core_log_component[":core_log_component"]
@@ -225,12 +216,6 @@ graph TD
   app --> player_component
   app --> storage_component
   app --> user_component
-  bilibili_component --> core_contract_component
-  bilibili_component --> core_database_component
-  bilibili_component --> core_log_component
-  bilibili_component --> core_network_component
-  bilibili_component --> core_system_component
-  bilibili_component --> data_component
   core_contract_component --> data_component
   core_database_component --> core_system_component
   core_database_component --> data_component
@@ -238,7 +223,6 @@ graph TD
   core_network_component --> core_log_component
   core_network_component --> core_system_component
   core_network_component --> data_component
-  core_storage_component --> bilibili_component
   core_storage_component --> core_contract_component
   core_storage_component --> core_database_component
   core_storage_component --> core_log_component
@@ -255,7 +239,6 @@ graph TD
   core_ui_component --> core_system_component
   core_ui_component --> data_component
   core_ui_component --> repository_immersion_bar
-  local_component --> bilibili_component
   local_component --> core_contract_component
   local_component --> core_database_component
   local_component --> core_log_component
@@ -274,7 +257,6 @@ graph TD
   player_component --> data_component
   player_component --> repository_danmaku
   player_component --> repository_video_cache
-  storage_component --> bilibili_component
   storage_component --> core_contract_component
   storage_component --> core_database_component
   storage_component --> core_log_component
@@ -283,7 +265,6 @@ graph TD
   storage_component --> core_system_component
   storage_component --> core_ui_component
   storage_component --> data_component
-  user_component --> bilibili_component
   user_component --> core_contract_component
   user_component --> core_database_component
   user_component --> core_log_component

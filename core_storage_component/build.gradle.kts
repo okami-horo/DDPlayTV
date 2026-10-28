@@ -17,7 +17,6 @@ dependencies {
     implementation(project(":core_system_component"))
     implementation(project(":core_log_component"))
     implementation(project(":core_database_component"))
-    implementation(project(":bilibili_component"))
 
     implementation(Dependencies.AndroidX.lifecycle_livedata)
     implementation(Dependencies.AndroidX.paging)

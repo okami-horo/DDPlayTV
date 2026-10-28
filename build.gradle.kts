@@ -115,7 +115,6 @@ tasks {
     //
     // Baseline snapshot (measured 2026-04):
     //   core_log_component   57.2 %   → gate 50 %
-    //   bilibili_component   17.2 %   → gate 15 %
     //   core_ui_component    19.0 %   → gate 15 %
     //   core_storage_comp.    6.4 %   → gate  5 %
     //   core_database_comp.   6.9 %   → gate  5 %
@@ -140,17 +139,6 @@ tasks {
                     counter = "LINE"
                     value = "COVEREDRATIO"
                     minimum = BigDecimal("0.50")
-                }
-            }
-
-            // bilibili_component — gateway for playback, protect >15 %
-            rule {
-                element = "PACKAGE"
-                includes = listOf("com/xyoye/common_component/bilibili/**")
-                limit {
-                    counter = "LINE"
-                    value = "COVEREDRATIO"
-                    minimum = BigDecimal("0.15")
                 }
             }
 

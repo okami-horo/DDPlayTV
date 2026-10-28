@@ -32,7 +32,7 @@ internal class PlaybackHandoffStore(
         return transaction { state ->
             val now = wallTime()
             val pending = PendingPlaybackRequest(newId(), captured, now, now + PENDING_TTL_MS)
-            persist(state.copy(pending = pending, verification = null))
+            persist(state.copy(pending = pending))
             pending
         }
     }
@@ -40,33 +40,6 @@ internal class PlaybackHandoffStore(
     suspend fun readPending(requestId: String): HandoffStoreResult<PendingPlaybackRequest> =
         transaction { state ->
             pending(state, requestId)
-        }
-
-    suspend fun startVerification(
-        requestId: String,
-        payload: PlaybackVerificationPayload
-    ): HandoffStoreResult<PendingPlaybackVerification> =
-        transaction { state ->
-            pending(state, requestId)
-            val verification = PendingPlaybackVerification(requestId, newId(), payload)
-            persist(state.copy(verification = verification))
-            verification
-        }
-
-    suspend fun readVerification(verificationId: String): HandoffStoreResult<PendingPlaybackVerification> =
-        transaction { state ->
-            verification(state, verificationId)
-        }
-
-    suspend fun updateVerification(
-        verificationId: String,
-        payload: PlaybackVerificationPayload
-    ): HandoffStoreResult<PendingPlaybackVerification> =
-        transaction { state ->
-            val current = verification(state, verificationId)
-            val updated = current.copy(payload = payload)
-            persist(state.copy(verification = updated))
-            updated
         }
 
     suspend fun activate(
@@ -85,7 +58,7 @@ internal class PlaybackHandoffStore(
             if (captured.requestId != requestId) fail(HandoffStoreFailureKind.INVALID_PAYLOAD)
             if (!stillCurrent()) fail(HandoffStoreFailureKind.STALE_SESSION)
             val snapshot = snapshot(captured)
-            persist(state.copy(pending = null, verification = null, snapshot = snapshot))
+            persist(state.copy(pending = null, snapshot = snapshot))
             snapshot
         }
     }
@@ -142,7 +115,7 @@ internal class PlaybackHandoffStore(
 
     suspend fun clearPending(requestId: String): HandoffStoreResult<Unit> =
         transaction { state ->
-            if (state.pending?.requestId == requestId) persist(state.copy(pending = null, verification = null))
+            if (state.pending?.requestId == requestId) persist(state.copy(pending = null))
         }
 
     suspend fun clearSnapshot(sessionId: String): HandoffStoreResult<Unit> =
@@ -161,7 +134,7 @@ internal class PlaybackHandoffStore(
             val now = wallTime()
             val pending = state.pending?.takeIf { now < it.expiresAtMs }
             val snapshot = state.snapshot?.takeIf { now < it.expiresAtMs }
-            val cleaned = state.copy(pending = pending, verification = state.verification?.takeIf { pending != null }, snapshot = snapshot)
+            val cleaned = state.copy(pending = pending, snapshot = snapshot)
             if (cleaned != state) persist(cleaned)
         }
 
@@ -172,20 +145,9 @@ internal class PlaybackHandoffStore(
         val pending = state.pending ?: fail(HandoffStoreFailureKind.REQUEST_MISSING)
         if (pending.requestId != requestId) fail(HandoffStoreFailureKind.REQUEST_SUPERSEDED)
         if (wallTime() >= pending.expiresAtMs) {
-            expire(HandoffStoreFailureKind.REQUEST_EXPIRED, state.copy(pending = null, verification = null))
+            expire(HandoffStoreFailureKind.REQUEST_EXPIRED, state.copy(pending = null))
         }
         return pending
-    }
-
-    private fun verification(
-        state: PlaybackHandoffState,
-        verificationId: String
-    ): PendingPlaybackVerification {
-        val verification =
-            state.verification?.takeIf { it.verificationId == verificationId }
-                ?: fail(HandoffStoreFailureKind.VERIFICATION_MISSING)
-        pending(state, verification.requestId)
-        return verification
     }
 
     private fun snapshot(target: PlaybackSnapshotTarget): PlaybackSnapshotRecord {
@@ -234,7 +196,7 @@ internal class PlaybackHandoffStore(
     }
 
     private fun persist(state: PlaybackHandoffState) {
-        if (state.pending == null && state.verification == null && state.snapshot == null) {
+        if (state.pending == null && state.snapshot == null) {
             if (!write(null)) fail(HandoffStoreFailureKind.WRITE_FAILED)
             return
         }

@@ -15,52 +15,60 @@ import com.xyoye.data_component.data.MatchResult
 import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayInputStream
 import java.io.File
 
 class DanmuMatchCoordinatorTest {
-    @Test
-    fun storageMatcherSupportsOnlyBilibiliStorage() {
-        assertTrue(StorageDanmuMatcher.isSupported(FakeVideoSource(mediaType = MediaType.BILIBILI_STORAGE)))
-        assertFalse(StorageDanmuMatcher.isSupported(FakeVideoSource(mediaType = MediaType.LOCAL_STORAGE)))
-    }
+    @get:Rule
+    val temporary = TemporaryFolder(File(System.getProperty("user.dir")))
 
     @Test
-    fun coordinatorReturnsFuzzyCandidatesWithoutDownloading() = runBlocking {
-        val dir = File("/tmp/danmu-match-${System.nanoTime()}")
-        val file = File(dir, "Episode 01.mkv")
-        dir.mkdirs()
-        file.writeText("video")
-        val hash = DanmuHashCalculator.calculate(ByteArrayInputStream(file.readBytes()))
-        val episode = DanmuEpisodeData(episodeId = "100", animeTitle = "Anime")
-        val finder = FakeDanmuFinder()
-        val query = FakeDanmuQuery(MatchResult(false, listOf(episode), MatchMethod.FILE_NAME))
-        val coordinator = DanmuMatchCoordinator(finder, query, FakeDanmuMatchCache())
+    fun coordinatorReturnsFuzzyCandidatesWithoutDownloading() =
+        runBlocking {
+            val file = temporary.newFile("Episode 01.mkv")
+            file.writeText("video")
+            val hash = DanmuHashCalculator.calculate(ByteArrayInputStream(file.readBytes()))
+            val episode = DanmuEpisodeData(episodeId = "100", animeTitle = "Anime")
+            val finder = FakeDanmuFinder()
+            val query = FakeDanmuQuery(MatchResult(false, listOf(episode), MatchMethod.FILE_NAME))
+            val coordinator = DanmuMatchCoordinator(finder, query, FakeDanmuMatchCache())
 
-        val outcome = coordinator.match(FakeVideoSource(url = file.path.replace('\\', '/')), DanmuMatchCoordinator.MatchMode.AUTO)
+            // Android paths are rooted without a drive letter; keep the fixture on the working drive on Windows.
+            val androidPath = file.absolutePath.replace('\\', '/').replace(Regex("^[A-Za-z]:"), "")
+            assertTrue(File(androidPath).isFile)
+            val outcome = coordinator.match(FakeVideoSource(url = androidPath), DanmuMatchCoordinator.MatchMode.AUTO)
 
-        assertEquals(MatchOutcome.Candidates(listOf(episode)), outcome)
-        assertEquals(hash, query.hash)
-        assertEquals("Episode 01", query.fileName)
-        assertEquals(file.length(), query.fileSize)
-        assertEquals(0, finder.downloadCount)
-    }
+            assertEquals(MatchOutcome.Candidates(listOf(episode)), outcome)
+            assertEquals(hash, query.hash)
+            assertEquals("Episode 01", query.fileName)
+            assertEquals(file.length(), query.fileSize)
+            assertEquals(0, finder.downloadCount)
+        }
 
     private class FakeVideoSource(
         private val url: String = "file:///tmp/video.mkv",
         private val mediaType: MediaType = MediaType.LOCAL_STORAGE,
     ) : BaseVideoSource(0, listOf(url)) {
         override fun getVideoUrl(): String = url
+
         override fun getVideoTitle(): String = "Video"
+
         override fun getCurrentPosition(): Long = 0L
+
         override fun getMediaType(): MediaType = mediaType
+
         override fun getHttpHeader(): Map<String, String>? = null
+
         override fun getUniqueKey(): String = "key"
+
         override fun getStorageId(): Int = 0
+
         override fun getStoragePath(): String? = null
+
         override fun indexTitle(index: Int): String = url
     }
 

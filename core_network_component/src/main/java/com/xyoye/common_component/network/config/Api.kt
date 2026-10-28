@@ -44,15 +44,6 @@ object Api {
     // Shooter（伪）字幕
     const val ASSRT_SUB = "http://api.assrt.net/"
 
-    // BiliBili
-    const val BILI_BILI_M = "https://m.bilibili.com/"
-
-    // BiliBili API
-    const val BILI_BILI_API = "https://api.bilibili.com/"
-
-    // BiliBili弹幕
-    const val BILI_BILI_COMMENT = "http://comment.bilibili.com/"
-
     // HanLP
     const val HAN_LP = "https://www.hanlp.com/"
 
@@ -71,7 +62,6 @@ object Api {
             "baidu_pan" to BAIDU_PAN,
             "open115_passport" to OPEN_115_PASSPORT_API,
             "cloud115_passport" to CLOUD_115_PASSPORT_API,
-            "bilibili_api" to BILI_BILI_API,
         )
 
     // Media3 internal gateway

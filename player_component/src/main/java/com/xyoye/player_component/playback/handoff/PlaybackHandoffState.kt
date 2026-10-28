@@ -14,24 +14,6 @@ internal data class PendingPlaybackRequest(
     override fun toString(): String = "PendingPlaybackRequest(requestId=$requestId)"
 }
 
-internal data class PlaybackVerificationPayload(
-    val voucher: String,
-    val registerToken: String? = null,
-    val gt: String? = null,
-    val challenge: String? = null,
-    val validated: Boolean = false
-) {
-    override fun toString(): String = "PlaybackVerificationPayload"
-}
-
-internal data class PendingPlaybackVerification(
-    val requestId: String,
-    val verificationId: String,
-    val payload: PlaybackVerificationPayload
-) {
-    override fun toString(): String = "PendingPlaybackVerification(verificationId=$verificationId)"
-}
-
 internal data class PlaybackSnapshotTarget(
     val version: PlaybackSessionVersion,
     val requestId: String,
@@ -55,7 +37,6 @@ internal data class PlaybackSnapshotRecord(
 internal data class PlaybackHandoffState(
     val schemaVersion: Int = 1,
     val pending: PendingPlaybackRequest? = null,
-    val verification: PendingPlaybackVerification? = null,
     val snapshot: PlaybackSnapshotRecord? = null
 ) {
     override fun toString(): String = "PlaybackHandoffState(schemaVersion=$schemaVersion)"
@@ -65,7 +46,6 @@ internal enum class HandoffStoreFailureKind {
     REQUEST_MISSING,
     REQUEST_SUPERSEDED,
     REQUEST_EXPIRED,
-    VERIFICATION_MISSING,
     SNAPSHOT_MISSING,
     SNAPSHOT_EXPIRED,
     STALE_SESSION,

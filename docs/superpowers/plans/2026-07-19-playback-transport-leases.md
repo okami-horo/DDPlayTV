@@ -1,5 +1,7 @@
 # Playback Transport Leases Implementation Plan
 
+> Scope superseded on 2026-10-28: all Bilibili functionality, its sole Addon implementation and dedicated token/transport paths are retired. Related tasks below are historical evidence, not instructions to restore that integration. Ordinary transport ownership remains applicable; the original 37/37 count is unchanged. See the [retirement record](2026-10-28-remove-bilibili.md).
+
 > Revised 2026-10-27 after the [reference architecture review](../../../document/architecture/2026-10-27-playback-refactor-reference-review.md); status reconciled 2026-10-28. This document retains the implementation ledger and recorded verification. Task descriptions preserve their original execution order; completed steps must not be replayed merely because a file is described as "Create" or "Modify".
 
 **Goal:** Candidate preparation and disposal must not alter the active source or the browser's connection. Each resource has one cleanup owner.

@@ -1,5 +1,7 @@
 # 播放传输资源租约设计
 
+> 2026-10-28 范围变更：Bilibili 集成及其专用 Addon/token 租约已移除；本文保留相关历史设计。当前 Source 仍持有并释放普通传输租约，PreparedPlayback 委托来源释放。原 37/37 记录保持不变，见[退役说明](../../../document/player/bilibili-playback-policy.md)。
+
 > 日期：2026-07-19  
 > 状态核对：2026-10-28
 >

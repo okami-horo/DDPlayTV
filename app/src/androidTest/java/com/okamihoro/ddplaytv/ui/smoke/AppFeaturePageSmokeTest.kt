@@ -17,7 +17,6 @@ import com.xyoye.anime_component.ui.activities.anime_season.AnimeSeasonActivity
 import com.xyoye.anime_component.ui.activities.search.SearchActivity
 import com.xyoye.anime_component.ui.fragment.home.HomeFragment
 import com.xyoye.data_component.enums.MediaType
-import com.xyoye.local_component.ui.activities.bilibili_danmu.BilibiliDanmuActivity
 import com.xyoye.local_component.ui.activities.play_history.PlayHistoryActivity
 import com.xyoye.local_component.ui.activities.shooter_subtitle.ShooterSubtitleActivity
 import com.xyoye.local_component.ui.fragment.media.MediaFragment
@@ -186,16 +185,6 @@ class AppFeaturePageSmokeTest {
                 assertNotNull(
                     "Play history list should exist",
                     activity.findViewById<RecyclerView>(com.xyoye.local_component.R.id.play_history_rv),
-                )
-            }
-        }
-
-        ActivityScenario.launch(BilibiliDanmuActivity::class.java).use { scenario ->
-            waitForIdle()
-            scenario.onActivity { activity ->
-                assertNotNull(
-                    "Bilibili danmu output box should exist",
-                    activity.findViewById<android.view.View>(com.xyoye.local_component.R.id.download_message_et),
                 )
             }
         }

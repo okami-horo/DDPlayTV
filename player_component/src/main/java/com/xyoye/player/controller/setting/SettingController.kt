@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.KeyEvent
 import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
-import com.xyoye.common_component.playback.addon.PlaybackSettingUpdate
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.SettingViewType
@@ -23,7 +22,6 @@ class SettingController(
 ) : InterSettingController {
     private lateinit var playerSettingView: PlayerSettingView
     private lateinit var switchVideoSourceView: SwitchVideoSourceView
-    private lateinit var playbackAddonView: SettingPlaybackAddonView
     private lateinit var keywordBlockView: KeywordBlockView
     private lateinit var screenShotView: ScreenShotView
     private lateinit var settingDanmuStyleView: SettingDanmuStyleView
@@ -124,11 +122,6 @@ class SettingController(
             .setSwitchVideoSourceBlock(block)
     }
 
-    fun setPlaybackSettingUpdateBlock(block: (PlaybackSettingUpdate) -> Unit) {
-        (getSettingView(SettingViewType.PLAYBACK_ADDON_SETTING) as SettingPlaybackAddonView)
-            .setUpdateBlock(block)
-    }
-
     private fun getSettingView(
         type: SettingViewType,
         extra: Any? = null
@@ -205,14 +198,6 @@ class SettingController(
                     addView.invoke(anime4kView)
                 }
                 return anime4kView
-            }
-
-            SettingViewType.PLAYBACK_ADDON_SETTING -> {
-                if (this::playbackAddonView.isInitialized.not()) {
-                    playbackAddonView = SettingPlaybackAddonView(context)
-                    addView.invoke(playbackAddonView)
-                }
-                return playbackAddonView
             }
 
             SettingViewType.DANMU_STYLE -> {

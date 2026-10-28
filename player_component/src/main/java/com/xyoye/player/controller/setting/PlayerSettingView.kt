@@ -16,7 +16,6 @@ import com.xyoye.common_component.focus.DpadDirection
 import com.xyoye.common_component.focus.DpadFocusOwner
 import com.xyoye.common_component.focus.DpadRecyclerFocusDelegate
 import com.xyoye.common_component.focus.DpadRecyclerOrientation
-import com.xyoye.common_component.playback.addon.PlaybackSettingsAddon
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.data_component.enums.PlayerType
@@ -247,12 +246,6 @@ class PlayerSettingView(
                 SettingAction.BACKGROUND_PLAY,
             )
 
-        val source = mControlWrapper.getVideoSource()
-        val canShowPlaybackSetting = source.getPlaybackAddon() is PlaybackSettingsAddon
-        if (!canShowPlaybackSetting) {
-            disabledActions.add(SettingAction.PLAYBACK_ADDON_SETTING)
-        }
-
         if (PlayerInitializer.playerType != PlayerType.TYPE_EXO_PLAYER ||
             mControlWrapper.getTracks(TrackType.VIDEO).size <= 1
         ) {
@@ -332,11 +325,6 @@ class PlayerSettingView(
 
             SettingAction.VIDEO_SPEED -> {
                 mControlWrapper.showSettingView(SettingViewType.VIDEO_SPEED)
-                onSettingVisibilityChanged(false)
-            }
-
-            SettingAction.PLAYBACK_ADDON_SETTING -> {
-                mControlWrapper.showSettingView(SettingViewType.PLAYBACK_ADDON_SETTING)
                 onSettingVisibilityChanged(false)
             }
 

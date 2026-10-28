@@ -21,7 +21,6 @@ internal object ModuleDependencyGovernance {
     private const val MODULE_DATABASE = ":core_database_component"
     private const val MODULE_STORAGE_CORE = ":core_storage_component"
     private const val MODULE_UI = ":core_ui_component"
-    private const val MODULE_BILIBILI = ":bilibili_component"
     private const val MODULE_REPOSITORY = ":repository"
     private const val MODULE_REPO_DANMAKU = ":repository:danmaku"
     private const val MODULE_REPO_IMMERSION = ":repository:immersion_bar"
@@ -46,7 +45,6 @@ internal object ModuleDependencyGovernance {
             MODULE_DATABASE,
             MODULE_STORAGE_CORE,
             MODULE_UI,
-            MODULE_BILIBILI,
             // Gradle "container" project for nested :repository:* modules.
             MODULE_REPOSITORY,
             MODULE_REPO_DANMAKU,
@@ -95,7 +93,6 @@ internal object ModuleDependencyGovernance {
                 ),
             MODULE_LOCAL to
                 setOf(
-                    MODULE_BILIBILI,
                     MODULE_UI,
                     MODULE_SYSTEM,
                     MODULE_LOG,
@@ -107,7 +104,6 @@ internal object ModuleDependencyGovernance {
                 ),
             MODULE_USER to
                 setOf(
-                    MODULE_BILIBILI,
                     MODULE_UI,
                     MODULE_SYSTEM,
                     MODULE_LOG,
@@ -119,7 +115,6 @@ internal object ModuleDependencyGovernance {
                 ),
             MODULE_STORAGE to
                 setOf(
-                    MODULE_BILIBILI,
                     MODULE_UI,
                     MODULE_SYSTEM,
                     MODULE_LOG,
@@ -169,7 +164,6 @@ internal object ModuleDependencyGovernance {
                 ),
             MODULE_STORAGE_CORE to
                 setOf(
-                    MODULE_BILIBILI,
                     MODULE_CONTRACT,
                     MODULE_DATABASE,
                     MODULE_LOG,
@@ -179,16 +173,6 @@ internal object ModuleDependencyGovernance {
                     MODULE_REPO_SEVEN_ZIP,
                     MODULE_REPO_THUNDER
                 ),
-            MODULE_BILIBILI to
-                setOf(
-                    MODULE_CONTRACT,
-                    MODULE_DATABASE,
-                    MODULE_LOG,
-                    MODULE_NETWORK,
-                    MODULE_SYSTEM,
-                    MODULE_DATA
-                ),
-
             // ui (must not depend on infra impl layer; repo allowlist is restricted)
             MODULE_UI to
                 setOf(
@@ -220,18 +204,6 @@ internal object ModuleDependencyGovernance {
             MODULE_NETWORK to setOf(MODULE_CONTRACT),
             // App instrumentation seeds local/history fixtures and verifies Activity source retention.
             MODULE_APP to setOf(MODULE_STORAGE_CORE, MODULE_DATABASE)
-        )
-
-    /**
-     * Bilibili dependency whitelist (DR-0002).
-     * Any new direct dependency to :bilibili_component must be explicitly approved here + in docs.
-     */
-    private val bilibiliDependentWhitelist: Set<String> =
-        setOf(
-            MODULE_LOCAL,
-            MODULE_USER,
-            MODULE_STORAGE,
-            MODULE_STORAGE_CORE
         )
 
     /**
@@ -342,7 +314,7 @@ internal object ModuleDependencyGovernance {
                         from = fromPath,
                         configuration = configurationName,
                         to = toPath,
-                        reason = disallowedDependencyReason(fromPath, toPath),
+                        reason = "不在 v2 允许矩阵内",
                     )
             }
 
@@ -359,17 +331,6 @@ internal object ModuleDependencyGovernance {
 
         return violations
     }
-
-    private fun disallowedDependencyReason(
-        fromPath: String,
-        toPath: String,
-    ): String =
-        when {
-            toPath == MODULE_BILIBILI && fromPath !in bilibiliDependentWhitelist ->
-                "违反 DR-0002：仅允许 ${bilibiliDependentWhitelist.sorted().joinToString()} 直接依赖 :bilibili_component"
-            else ->
-                "不在 v2 允许矩阵内"
-        }
 
     private fun formatViolations(violations: List<Violation>): String =
         buildString {

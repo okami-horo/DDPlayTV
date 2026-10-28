@@ -1,20 +1,15 @@
 package com.xyoye.common_component.source.handoff
 
 import android.net.Uri
-import com.xyoye.common_component.bilibili.BilibiliPlaybackPreferencesStore
-import com.xyoye.common_component.bilibili.error.BilibiliException
-import com.xyoye.common_component.bilibili.repository.BilibiliRepository
 import com.xyoye.common_component.database.DatabaseProvider
 import com.xyoye.common_component.database.repository.MediaLibraryRepository
 import com.xyoye.common_component.network.request.NetworkException
-import com.xyoye.common_component.playback.addon.PlaybackReplacementIntent
 import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackFileReference
 import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
 import com.xyoye.common_component.playback.handoff.PlaybackSourceView
-import com.xyoye.common_component.playback.handoff.PlaybackVerificationAnswer
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import com.xyoye.common_component.playback.handoff.TorrentDescriptor
@@ -35,7 +30,6 @@ import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
 import com.xyoye.common_component.storage.transport.releaseTransportResources
 import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.data_component.bean.PlaybackProfile
-import com.xyoye.data_component.data.bilibili.BilibiliGaiaVgateRegisterData
 import com.xyoye.data_component.data.screeencast.ScreencastData
 import com.xyoye.data_component.data.screeencast.ScreencastVideoData
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -61,13 +55,6 @@ sealed interface PlaybackResolutionResult {
     class Failure(
         val failure: PlaybackPreparationFailure
     ) : PlaybackResolutionResult
-
-    /** Sensitive protocol data stays inside resolver/session code and encrypted handoff storage. */
-    class VerificationRequired(
-        val voucher: String
-    ) : PlaybackResolutionResult {
-        override fun toString(): String = "VerificationRequired"
-    }
 }
 
 /** Source owns all resources. These descriptors and queue entries contain only recoverable inputs. */
@@ -81,24 +68,6 @@ class ResolvedPlayback(
     val queue: List<PlaybackDescriptor> = Collections.unmodifiableList(queue.toList())
 }
 
-class ResolvedPlaybackVerification(
-    val gt: String,
-    val challenge: String,
-    val registerToken: String
-) {
-    override fun toString(): String = "ResolvedPlaybackVerification"
-}
-
-sealed interface PlaybackVerificationResolution<out T> {
-    class Success<T>(
-        val value: T
-    ) : PlaybackVerificationResolution<T>
-
-    class Failure(
-        val failure: PlaybackPreparationFailure
-    ) : PlaybackVerificationResolution<Nothing>
-}
-
 class PlaybackSourceResolver internal constructor(
     private val loadLibrary: suspend (Int) -> MediaLibraryEntity?,
     private val loadHistory: suspend (Int) -> PlayHistoryEntity?,
@@ -108,22 +77,7 @@ class PlaybackSourceResolver internal constructor(
     private val resolveCredentials: (MediaLibraryEntity) -> MediaLibraryEntity,
     private val validateDownload: suspend (String, String, Long?) -> DownloadValidator.ValidationOutcome,
     private val createSource: suspend (StorageFile, PlaybackProfile?, () -> Unit) -> StorageVideoSource?,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val registerVerification: suspend (String, String) -> Result<BilibiliGaiaVgateRegisterData> = { key, voucher ->
-        BilibiliRepository(key).gaiaVgateRegister(voucher)
-    },
-    private val validateVerification: suspend (
-        String,
-        ResolvedPlaybackVerification,
-        PlaybackVerificationAnswer
-    ) -> Result<String> = { key, registration, answer ->
-        BilibiliRepository(key).gaiaVgateValidate(
-            answer.challenge?.takeIf { it.isNotBlank() } ?: registration.challenge,
-            registration.registerToken,
-            answer.validate,
-            answer.seccode
-        )
-    }
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     constructor() : this(
         MediaLibraryRepository::getById,
@@ -145,68 +99,9 @@ class PlaybackSourceResolver internal constructor(
         }
     )
 
-    suspend fun registerVerification(
-        descriptor: PlaybackDescriptor,
-        voucher: String
-    ): PlaybackVerificationResolution<ResolvedPlaybackVerification> =
-        verificationOperation {
-            val key = verificationStorageKey(descriptor)
-            val data = registerVerification(key, voucher).getOrThrow()
-            val token = data.token?.takeIf { it.isNotBlank() } ?: fail(PlaybackPreparationFailure.AuthenticationRequired)
-            val gt = data.geetest?.gt?.takeIf { it.isNotBlank() } ?: fail(PlaybackPreparationFailure.AuthenticationRequired)
-            val challenge = data.geetest?.challenge?.takeIf { it.isNotBlank() } ?: fail(PlaybackPreparationFailure.AuthenticationRequired)
-            ResolvedPlaybackVerification(gt, challenge, token)
-        }
-
-    suspend fun validateVerification(
-        descriptor: PlaybackDescriptor,
-        registration: ResolvedPlaybackVerification,
-        answer: PlaybackVerificationAnswer
-    ): PlaybackVerificationResolution<Unit> =
-        verificationOperation {
-            if (answer.validate.isBlank() || answer.seccode.isBlank()) fail(PlaybackPreparationFailure.InvalidDescriptor)
-            validateVerification(verificationStorageKey(descriptor), registration, answer).getOrThrow()
-            Unit
-        }
-
-    private suspend fun verificationStorageKey(descriptor: PlaybackDescriptor): String {
-        val libraryId =
-            when (descriptor) {
-                is StoredLibraryFileDescriptor -> {
-                    if (descriptor.mediaType != MediaType.BILIBILI_STORAGE) fail(PlaybackPreparationFailure.UnsupportedSource)
-                    descriptor.libraryId
-                }
-                is PlayHistoryDescriptor -> {
-                    val history = loadHistory(descriptor.historyId) ?: fail(PlaybackPreparationFailure.FileMissing)
-                    if (history.uniqueKey != descriptor.expectedUniqueKey ||
-                        (descriptor.expectedLibraryId != null && history.storageId != descriptor.expectedLibraryId)
-                    ) {
-                        fail(PlaybackPreparationFailure.FileMissing)
-                    }
-                    history.storageId ?: fail(PlaybackPreparationFailure.LibraryMissing)
-                }
-                else -> fail(PlaybackPreparationFailure.UnsupportedSource)
-            }
-        val library = loadLibrary(libraryId) ?: fail(PlaybackPreparationFailure.LibraryMissing)
-        if (library.mediaType != MediaType.BILIBILI_STORAGE) fail(PlaybackPreparationFailure.UnsupportedSource)
-        return BilibiliPlaybackPreferencesStore.storageKey(library)
-    }
-
-    private suspend fun <T> verificationOperation(block: suspend () -> T): PlaybackVerificationResolution<T> =
-        try {
-            withContext(ioDispatcher) { PlaybackVerificationResolution.Success(block()) }
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (failure: Exception) {
-            currentCoroutineContext().ensureActive()
-            throwWrappedCancellation(failure)
-            PlaybackVerificationResolution.Failure(classify(failure))
-        }
-
     suspend fun resolve(
         descriptor: PlaybackDescriptor,
-        profile: PlaybackProfile? = null,
-        replacement: PlaybackReplacementIntent? = null
+        profile: PlaybackProfile? = null
     ): PlaybackResolutionResult {
         val ownership = ResolutionOwnership()
         var source: StorageVideoSource? = null
@@ -225,19 +120,7 @@ class PlaybackSourceResolver internal constructor(
                     }
                     ensureActive()
                     val created =
-                        (
-                            if (replacement == null) {
-                                createSource(file, profile, ownership::close)
-                            } else {
-                                StorageVideoSourceFactory.create(
-                                    file,
-                                    profile ?: StorageVideoSourceFactory.resolvePlaybackProfile(file.storage),
-                                    listOf(file),
-                                    ownership::close,
-                                    replacement
-                                )
-                            }
-                        )
+                        createSource(file, profile, ownership::close)
                             ?: fail(PlaybackPreparationFailure.FileMissing)
                     source = created
                     ensureActive()
@@ -262,11 +145,6 @@ class PlaybackSourceResolver internal constructor(
         } catch (failure: Exception) {
             currentCoroutineContext().ensureActive()
             throwWrappedCancellation(failure)
-            if (failure is BilibiliException && failure.code == -352) {
-                failure.verificationVoucher?.takeIf { it.isNotBlank() }?.let {
-                    return PlaybackResolutionResult.VerificationRequired(it)
-                }
-            }
             return PlaybackResolutionResult.Failure(classify(failure))
         } finally {
             if (!delivered) {
@@ -376,17 +254,6 @@ class PlaybackSourceResolver internal constructor(
     ): StorageFile? =
         when {
             storage is RemoteStorage -> storage.resolvePlaybackReference(reference.storagePath, reference.protocolReference, false)
-            storage.library.mediaType == MediaType.BILIBILI_STORAGE ->
-                storage.historyFile(
-                    PlayHistoryEntity(
-                        videoName = reference.displayTitle ?: reference.uniqueKey,
-                        url = "",
-                        mediaType = storage.library.mediaType,
-                        uniqueKey = reference.protocolReference ?: reference.uniqueKey,
-                        storagePath = reference.storagePath,
-                        storageId = storage.library.id
-                    )
-                )
             else -> storage.pathFile(reference.storagePath, false)
         }
 
@@ -589,13 +456,6 @@ class PlaybackSourceResolver internal constructor(
                         403 -> PlaybackPreparationFailure.PermissionDenied
                         404 -> PlaybackPreparationFailure.FileMissing
                         else -> PlaybackPreparationFailure.NetworkUnavailable
-                    }
-                is BilibiliException ->
-                    when (failure.code) {
-                        -101 -> PlaybackPreparationFailure.AuthenticationRequired
-                        -403 -> PlaybackPreparationFailure.PermissionDenied
-                        -404 -> PlaybackPreparationFailure.FileMissing
-                        else -> PlaybackPreparationFailure.Unknown("Bilibili:${failure.code}")
                     }
                 is SecurityException -> PlaybackPreparationFailure.PermissionDenied
                 is FileNotFoundException -> PlaybackPreparationFailure.FileMissing

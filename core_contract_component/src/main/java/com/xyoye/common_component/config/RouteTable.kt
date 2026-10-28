@@ -25,7 +25,6 @@ object RouteTable {
         const val MediaFragment = "/local/media_fragment"
         const val BindExtraSource = "/local/bind_extra_source"
         const val PlayHistory = "/local/play_history"
-        const val BiliBiliDanmu = "/local/bilibili_danmu"
         const val ShooterSubtitle = "/local/shooter_subtitle"
     }
 
@@ -38,7 +37,6 @@ object RouteTable {
         const val SettingPlayer = "/user/setting_player"
         const val SettingApp = "/user/setting_app"
         const val WebView = "/user/web_view"
-        const val BilibiliRiskVerify = "/user/bilibili_risk_verify"
         const val ScanManager = "/user/scan_manager"
         const val CacheManager = "/user/cache_manager"
         const val CommonManager = "/user/common_manager"

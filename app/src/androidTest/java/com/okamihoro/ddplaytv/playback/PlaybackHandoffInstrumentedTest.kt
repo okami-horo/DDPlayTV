@@ -24,7 +24,6 @@ import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.media3.entity.Media3SourceType
 import com.xyoye.player.DanDanVideoPlayer
 import com.xyoye.player_component.ui.activities.player.PlayerActivity
-import com.xyoye.user_component.ui.activities.bilibili_risk_verify.BilibiliRiskVerifyActivity
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -169,21 +168,17 @@ class PlaybackHandoffInstrumentedTest {
                 instrumentation.waitForIdleSync()
                 scenario.onActivity {
                     assertSame("Rejected replacement retired the active source", activeSource, player(it).getVideoSource())
-                    it.startActivity(
-                        Intent(it, BilibiliRiskVerifyActivity::class.java)
-                            .putExtra(PlaybackNavigation.VERIFICATION_ID, "expired-verification")
-                    )
                 }
-                // The real verification page rejects an expired ID and returns to the same player.
+                // singleTask reentry pauses playback; wait until its window can receive remote input.
                 val returnDeadline = SystemClock.elapsedRealtime() + 5000
-                while (scenario.state != Lifecycle.State.RESUMED && SystemClock.elapsedRealtime() < returnDeadline) {
-                    SystemClock.sleep(50)
+                var readyForInput = false
+                while (!readyForInput && SystemClock.elapsedRealtime() < returnDeadline) {
+                    scenario.onActivity {
+                        readyForInput = it.hasWindowFocus() && it.intent.getStringExtra(PlaybackNavigation.REQUEST_ID) == "missing-request"
+                    }
+                    if (!readyForInput) SystemClock.sleep(50)
                 }
-                assertEquals(Lifecycle.State.RESUMED, scenario.state)
-                scenario.onActivity {
-                    assertSame(retainedActivity, it)
-                    assertSame(activeSource, player(it).getVideoSource())
-                }
+                assertTrue("Reentered player window must receive input", readyForInput)
                 instrumentation.setInTouchMode(false)
                 instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_CENTER)
                 awaitPlaying(scenario)

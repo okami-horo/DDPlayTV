@@ -1,10 +1,5 @@
 package com.xyoye.player_component.playback.session
 
-import com.xyoye.common_component.playback.addon.PlaybackAddon
-import com.xyoye.common_component.playback.addon.PlaybackEvent
-import com.xyoye.common_component.playback.addon.PlaybackIdentity
-import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
-import com.xyoye.common_component.playback.addon.PlaybackReplacementIntent
 import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackAction
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
@@ -48,17 +43,11 @@ internal class PlaybackSessionTestFixture(
     val leases = mutableListOf<SessionTestLease>()
     var now = 1000L
     var sequence = 0
-    var addonThrows = false
-    var addonReleases = 0
-    var addonFactory: ((PlaybackIdentity) -> PlaybackAddon)? = null
+    var resolutionThrows = false
+    var resolutionReleases = 0
     val store = PlaybackHandoffStore(blob, cipher, { now }, { "request-${++sequence}" }, storeDispatcher)
     var resolve: suspend (PlaybackDescriptor) -> PlaybackResolutionResult = { PlaybackResolutionResult.Success(resolved(it)) }
-    var resolveReplacement: suspend (PlaybackDescriptor, PlaybackProfile, PlaybackReplacementIntent) -> PlaybackResolutionResult =
-        { descriptor, _, _ -> PlaybackResolutionResult.Success(resolved(descriptor)) }
-    val session =
-        ActivePlaybackSession(store, backend, { resolve(it) }, dispatcher, dispatcher, { descriptor, profile, intent ->
-            resolveReplacement(descriptor, profile, intent)
-        })
+    val session = ActivePlaybackSession(store, backend, { resolve(it) }, dispatcher, dispatcher)
 
     fun descriptor(name: String) = ExternalUriDescriptor("https://example.test/$name", Media3SourceType.STREAM)
 
@@ -91,26 +80,6 @@ internal class PlaybackSessionTestFixture(
         file.playHistory =
             PlayHistoryEntity(videoName = name(descriptor), url = url, mediaType = MediaType.STREAM_LINK, videoPosition = 123)
         val lease = SessionTestLease(url).also(leases::add)
-        val addon =
-            addonFactory?.invoke(
-                PlaybackIdentity(
-                    0,
-                    file.uniqueKey(),
-                    MediaType.STREAM_LINK,
-                    url,
-                    name(descriptor),
-                    url
-                )
-            ) ?: object : PlaybackReleasableAddon {
-                override val addonId = "fixture"
-
-                override fun onEvent(event: PlaybackEvent) = Unit
-
-                override fun onRelease() {
-                    addonReleases++
-                    if (addonThrows) error("fixture cleanup")
-                }
-            }
         val source =
             StorageVideoSource(
                 url,
@@ -121,7 +90,10 @@ internal class PlaybackSessionTestFixture(
                 null,
                 PlaybackProfile(PlayerType.TYPE_EXO_PLAYER, PlaybackProfileSource.GLOBAL),
                 lease,
-                addon
+                releaseResolution = {
+                    resolutionReleases++
+                    if (resolutionThrows) error("fixture cleanup")
+                }
             )
         lease.beforeRelease = { assertFalse("Released a source still borrowed by the backend", backend.isAttached(source)) }
         return ResolvedPlayback(

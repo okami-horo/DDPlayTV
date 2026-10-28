@@ -11,10 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.xyoye.common_component.playback.addon.PlaybackAddon
-import com.xyoye.common_component.playback.addon.PlaybackAddonProvider
-import com.xyoye.common_component.playback.addon.PlaybackEvent
-import com.xyoye.common_component.playback.addon.PlaybackIdentity
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.controller.video.InterControllerView
@@ -54,10 +50,6 @@ abstract class BaseVideoController(
     protected val mControlComponents = LinkedHashMap<InterControllerView, Boolean>()
     protected val mOrientationHelper = OrientationHelper(context)
     protected val attachLifecycle = (context as LifecycleOwner)
-
-    private var mPlaybackAddonSource: Any? = null
-    private var mPlaybackAddon: PlaybackAddon? = null
-    private var mPlaybackIdentity: PlaybackIdentity? = null
 
     // 播放失败回调
     protected var mPlayErrorBlock: (() -> Unit)? = null
@@ -249,14 +241,6 @@ abstract class BaseVideoController(
             entry.key.onPlayStateChanged(playState)
         }
         onPlayStateChanged(playState)
-
-        dispatchPlaybackEvent { identity ->
-            PlaybackEvent.PlayStateChanged(
-                identity = identity,
-                playState = playState,
-                positionMs = mControlWrapper.getCurrentPosition(),
-            )
-        }
     }
 
     @CallSuper
@@ -352,43 +336,6 @@ abstract class BaseVideoController(
             entry.key.onProgressChanged(duration, position)
         }
         onProgressChanged(duration, position)
-
-        val isPlaying = mControlWrapper.isPlaying()
-        dispatchPlaybackEvent { identity ->
-            PlaybackEvent.Progress(
-                identity = identity,
-                positionMs = position,
-                durationMs = duration,
-                isPlaying = isPlaying,
-            )
-        }
-    }
-
-    private fun dispatchPlaybackEvent(createEvent: (PlaybackIdentity) -> PlaybackEvent) {
-        if (!this::mControlWrapper.isInitialized) return
-
-        val source = mControlWrapper.getVideoSource()
-        if (source !== mPlaybackAddonSource) {
-            mPlaybackAddonSource = source
-            mPlaybackAddon = (source as? PlaybackAddonProvider)?.getPlaybackAddon()
-            mPlaybackIdentity =
-                if (mPlaybackAddon != null) {
-                    PlaybackIdentity(
-                        storageId = source.getStorageId(),
-                        uniqueKey = source.getUniqueKey(),
-                        mediaType = source.getMediaType(),
-                        storagePath = source.getStoragePath(),
-                        videoTitle = source.getVideoTitle(),
-                        videoUrl = source.getVideoUrl(),
-                    )
-                } else {
-                    null
-                }
-        }
-
-        val addon = mPlaybackAddon ?: return
-        val identity = mPlaybackIdentity ?: return
-        runCatching { addon.onEvent(createEvent(identity)) }
     }
 
     abstract fun getDanmuController(): InterDanmuController

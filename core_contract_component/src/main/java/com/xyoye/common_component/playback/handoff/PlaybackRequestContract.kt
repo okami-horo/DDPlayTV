@@ -70,11 +70,6 @@ sealed interface PlaybackPreparationFailure {
         val reason: DownloadRequiredAction
     ) : PlaybackPreparationFailure
 
-    /** The voucher and registration token remain behind the provider boundary. */
-    data class InteractiveVerificationRequired(
-        val verificationId: String
-    ) : PlaybackPreparationFailure
-
     data class Unknown(
         val causeFingerprint: String
     ) : PlaybackPreparationFailure
@@ -86,30 +81,4 @@ sealed interface PlaybackOperationResult {
     data class Rejected(
         val failure: PlaybackPreparationFailure
     ) : PlaybackOperationResult
-}
-
-/** Transient data for the existing Geetest UI. Never put this object in navigation or saved state. */
-data class PlaybackVerificationChallenge(
-    val gt: String,
-    val challenge: String
-) {
-    override fun toString(): String = "PlaybackVerificationChallenge"
-}
-
-data class PlaybackVerificationAnswer(
-    val challenge: String?,
-    val validate: String,
-    val seccode: String
-) {
-    override fun toString(): String = "PlaybackVerificationAnswer"
-}
-
-sealed interface PlaybackVerificationResult {
-    data class Ready(
-        val challenge: PlaybackVerificationChallenge
-    ) : PlaybackVerificationResult
-
-    data class Rejected(
-        val failure: PlaybackPreparationFailure
-    ) : PlaybackVerificationResult
 }

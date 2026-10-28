@@ -5,7 +5,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.bilibili.error.BilibiliException
 import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.database.repository.PlayHistoryRepository
 import com.xyoye.common_component.storage.AuthStorage
@@ -15,27 +14,19 @@ import com.xyoye.common_component.storage.StorageSortOption
 import com.xyoye.common_component.storage.baidupan.auth.BaiduPanReAuthRequiredException
 import com.xyoye.common_component.storage.cloud115.auth.Cloud115ReAuthRequiredException
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.file.payloadAs
 import com.xyoye.common_component.storage.open115.auth.Open115ReAuthRequiredException
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.data_component.data.bilibili.BilibiliHistoryItem
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.TrackType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Date
-import java.util.concurrent.TimeUnit
-import kotlin.math.abs
 
 class StorageFileFragmentViewModel : BaseViewModel() {
     companion object {
-        private val remoteHistoryOverrideThresholdMs = TimeUnit.MINUTES.toMillis(1)
-        private const val remoteHistoryPositionToleranceMs = 3_000L
-
         private val lastPlayDirectory =
             PlayHistoryEntity(
                 url = "",
@@ -119,14 +110,8 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                 storage
                     .openDirectory(target, refresh)
                     .filter { isDisplayFile(it) }
-                    .let { files ->
-                        // Bilibili 历史列表需要按时间倒序展示；其分P列表也应保留服务端顺序
-                        if (storage.library.mediaType == MediaType.BILIBILI_STORAGE) {
-                            files
-                        } else {
-                            files.sortedWith(StorageSortOption.comparator())
-                        }
-                    }.onEach { it.playHistory = getHistory(it) }
+                    .sortedWith(StorageSortOption.comparator())
+                    .onEach { it.playHistory = getHistory(it) }
                     .let { buildDisplayItems(it) }
                     .apply { _fileLiveData.postValue(this) }
                     .also { filesSnapshot = it }
@@ -392,11 +377,6 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             return null
         }
 
-        val bilibiliRemoteHistory =
-            file
-                .payloadAs<BilibiliHistoryItem>()
-                .takeIf { storage.library.mediaType == MediaType.BILIBILI_STORAGE }
-
         var history: PlayHistoryEntity? =
             PlayHistoryRepository.getPlayHistory(file.uniqueKey(), file.storage.library.id)
         if (history == null) {
@@ -414,58 +394,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
             history.isLastPlay = history.id == storageLastPlay!!.id
         }
 
-        bilibiliRemoteHistory?.let { remote ->
-            val remotePositionMs = normalizeRemoteProgress(remote.progressSec, remote.durationSec) * 1000
-            val remoteDurationMs = remote.durationSec.coerceAtLeast(0) * 1000
-            val remoteViewAtMs = remote.viewAt.coerceAtLeast(0) * 1000
-
-            val local = history
-            if (local == null) {
-                return PlayHistoryEntity(
-                    id = 0,
-                    videoName = file.fileName(),
-                    url = file.uniqueKey(),
-                    mediaType = storage.library.mediaType,
-                    videoPosition = remotePositionMs,
-                    videoDuration = remoteDurationMs,
-                    playTime = Date(remoteViewAtMs),
-                    uniqueKey = file.uniqueKey(),
-                    storagePath = file.storagePath(),
-                    storageId = storage.library.id,
-                )
-            }
-
-            val localViewAtMs = local.playTime.time
-            val remoteNewer = remoteViewAtMs > localViewAtMs + remoteHistoryOverrideThresholdMs
-            val positionDeltaMs = abs(remotePositionMs - local.videoPosition)
-            val durationChanged = remoteDurationMs > 0 && remoteDurationMs != local.videoDuration
-            val positionChanged = positionDeltaMs >= remoteHistoryPositionToleranceMs
-
-            if (remoteNewer && (positionChanged || durationChanged)) {
-                val updated =
-                    local
-                        .copy(
-                            videoPosition = remotePositionMs,
-                            videoDuration = if (remoteDurationMs > 0) remoteDurationMs else local.videoDuration,
-                            playTime = Date(remoteViewAtMs),
-                        ).also {
-                            it.isLastPlay = local.isLastPlay
-                        }
-                PlayHistoryRepository.insert(updated)
-                history = updated
-            }
-        }
-
         return history
-    }
-
-    private fun normalizeRemoteProgress(
-        progressSec: Long,
-        durationSec: Long
-    ): Long {
-        if (progressSec <= 0) return 0
-        if (durationSec > 0 && progressSec >= durationSec) return 0
-        return progressSec.coerceAtLeast(0)
     }
 
     /**
@@ -549,10 +478,6 @@ class StorageFileFragmentViewModel : BaseViewModel() {
                 is Cloud115ReAuthRequiredException ->
                     throwable.message?.takeIf { it.isNotBlank() }
                         ?: "授权已失效，请重新${authStorage.loginActionText(storage.directory)}"
-                is BilibiliException -> {
-                    if (throwable.code != -101) return false
-                    "登录已失效，请重新${authStorage.loginActionText(storage.directory)}"
-                }
                 else -> return false
             }
 

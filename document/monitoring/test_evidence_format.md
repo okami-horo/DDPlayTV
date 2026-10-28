@@ -57,7 +57,7 @@ python parse_coverage.py
 
 该任务依赖聚合报告，以 PACKAGE 粒度检查 LINE 的 `COVEREDRATIO`。规则以 [根构建配置](../../build.gradle.kts) 的 `violationRules` 为准，不是为全部物理模块设置门槛。
 
-当前规则包含日志包 50%、Bilibili 包 15%、adapter/preference 包 15%、player/player_component 包 5%、storage 包 5%、data_component 包 5%。历史注释中的 database/network 数字不是实际规则，不能据此宣称受保护。
+当前规则包含日志包 50%、adapter/preference 包 15%、player/player_component 包 5%、storage 包 5%、data_component 包 5%。Bilibili 包随功能退役移除了覆盖率规则；历史注释中的 database/network 数字不是实际规则，不能据此宣称受保护。
 
 成功只表示当前输入满足既定规则，不证明测试无缺口。失败时核对范围与回归；门槛变更明确理由和追踪项，不静默降低以绕过失败。
 

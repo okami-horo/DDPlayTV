@@ -54,26 +54,6 @@ android {
             (dandanAppId.isNotBlank() && dandanAppSecret.isNotBlank()).toString(),
         )
 
-        val bilibiliTvAppKey =
-            System.getenv("BILIBILI_TV_APP_KEY")
-                ?: project.findProperty("BILIBILI_TV_APP_KEY")?.toString()
-                ?: localProperties.getProperty("BILIBILI_TV_APP_KEY")
-                ?: ""
-        buildConfigField("String", "BILIBILI_TV_APP_KEY", buildConfigString(bilibiliTvAppKey))
-
-        val bilibiliTvAppSecret =
-            System.getenv("BILIBILI_TV_APP_SECRET")
-                ?: project.findProperty("BILIBILI_TV_APP_SECRET")?.toString()
-                ?: localProperties.getProperty("BILIBILI_TV_APP_SECRET")
-                ?: ""
-        buildConfigField("String", "BILIBILI_TV_APP_SECRET", buildConfigString(bilibiliTvAppSecret))
-
-        buildConfigField(
-            "boolean",
-            "BILIBILI_TV_CREDENTIAL_INJECTED",
-            (bilibiliTvAppKey.isNotBlank() && bilibiliTvAppSecret.isNotBlank()).toString(),
-        )
-
         val baiduPanClientId =
             System.getenv("BAIDU_PAN_CLIENT_ID")
                 ?: project.findProperty("BAIDU_PAN_CLIENT_ID")?.toString()

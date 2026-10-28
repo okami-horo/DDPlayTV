@@ -1,13 +1,8 @@
 package com.xyoye.common_component.source.media
 
-import com.xyoye.common_component.bilibili.playback.BilibiliPlaybackAddon
-import com.xyoye.common_component.playback.addon.PlaybackAddon
-import com.xyoye.common_component.playback.addon.PlaybackIdentity
-import com.xyoye.common_component.playback.addon.PlaybackReleasableAddon
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
-import com.xyoye.common_component.storage.transport.BilibiliPlaybackTransport
 import com.xyoye.common_component.storage.transport.PlaybackTransportLease
 import com.xyoye.common_component.storage.transport.releaseTransportResources
 import com.xyoye.common_component.utils.getFileName
@@ -30,7 +25,6 @@ class StorageVideoSource(
     private var audioPath: String?,
     private val playbackProfile: PlaybackProfile,
     private val transportLease: PlaybackTransportLease,
-    private val playbackAddon: PlaybackAddon? = createDefaultPlaybackAddon(playUrl, file, transportLease),
     private val httpHeaders: Map<String, String>? = file.storage.getNetworkHeaders(file)?.toMap(),
     private val releaseResolution: () -> Unit = {}
 ) : BaseVideoSource(
@@ -58,24 +52,18 @@ class StorageVideoSource(
 
     override fun hasPreviousSource(): Boolean = getGroupIndex() > 0
 
-    /** Call after backend detachment; this Source is the sole Addon/lease owner. */
+    /** Call after backend detachment; this Source is the sole lease owner. */
     fun releasePlaybackResources() {
         if (released.compareAndSet(false, true)) {
             releaseTransportResources(
                 transportLease.leaseId,
                 listOf(
-                    {
-                        (playbackAddon as? PlaybackReleasableAddon)?.onRelease()
-                        Unit
-                    },
                     { transportLease.release() },
                     releaseResolution
                 )
             )
         }
     }
-
-    override fun getPlaybackAddon(): PlaybackAddon? = playbackAddon
 
     override fun getDanmu(): LocalDanmuBean? = danmu
 
@@ -140,28 +128,4 @@ class StorageVideoSource(
     fun getStorageFile(): StorageFile = file
 
     fun getPlaybackProfile(): PlaybackProfile = playbackProfile
-
-    internal companion object {
-        fun createDefaultPlaybackAddon(
-            playUrl: String,
-            file: StorageFile,
-            transportLease: PlaybackTransportLease?
-        ): PlaybackAddon? =
-            if (file.storage.library.mediaType == MediaType.BILIBILI_STORAGE && transportLease is BilibiliPlaybackTransport) {
-                BilibiliPlaybackAddon(
-                    identity =
-                        PlaybackIdentity(
-                            storageId = file.storage.library.id,
-                            uniqueKey = file.uniqueKey(),
-                            mediaType = file.storage.library.mediaType,
-                            storagePath = file.storagePath(),
-                            videoTitle = file.fileName(),
-                            videoUrl = playUrl
-                        ),
-                    token = transportLease.sessionToken
-                )
-            } else {
-                null
-            }
-    }
 }

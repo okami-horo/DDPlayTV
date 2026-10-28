@@ -31,7 +31,6 @@
     <string name="tips_login">登录帐号</string>
     <string name="action_player_setting">播放器设置</string>
     <string name="action_scan_manager">扫描目录管理</string>
-    <string name="action_bilibili_danmu_download">BiliBili弹幕下载</string>
     <string name="action_shooter_subtitle_download">射手(伪)字幕下载</string>
     <string name="action_screencast_receiver">投屏接收端</string>
     <string name="action_app_setting">应用设置</string>
@@ -45,7 +44,6 @@
     <string name="tips_extend_folder">扫描视频数据时，APP将额外扫描以下文件夹</string>
     <string name="tips_filter_folder">扫描视频数据时，APP将隐藏已屏蔽的文件夹</string>
     <string name="action_add_extend_folder">添加文件夹</string>
-    <string name="action_select_url">选择Url</string>
     <string name="text_app_name">弹弹play 概念版</string>
     <string name="text_github_project_name">Github：DDPlayTV</string>
     <string name="text_official_address">官网：www.dandanplay.com</string>
@@ -186,14 +184,6 @@
     <string name="developer_credential_plaintext_fallback_toast_enabled">已开启明文兜底（仅调试）：请在排障后及时关闭并执行迁移清理</string>
     <string name="developer_auth_save_failed_encrypt">保存失败：凭证加密失败，未写入本地。可在开发者设置中临时开启“明文兜底（仅调试）”后重试。</string>
     <string name="developer_auth_save_success_with_plaintext">认证成功：当前因加密失败使用了明文兜底，请尽快关闭兜底并迁移清理。</string>
-    <string name="developer_bilibili_tv_credential_title">B站 TV APP_KEY/APP_SEC</string>
-    <string name="developer_bilibili_tv_credential_summary_missing">未配置：TV 登录/签名已禁用</string>
-    <string name="developer_bilibili_tv_credential_summary_local">已配置：使用本地配置（加密存储）</string>
-    <string name="developer_bilibili_tv_credential_summary_injected">已配置：构建期注入（不回显）</string>
-    <string name="developer_bilibili_tv_credential_dialog_title">B站 TV 密钥</string>
-    <string name="developer_bilibili_tv_credential_dialog_hint_app_key">APP_KEY</string>
-    <string name="developer_bilibili_tv_credential_dialog_hint_app_secret">APP_SEC</string>
-    <string name="developer_bilibili_tv_credential_dialog_tips">用于 TV 登录/APP API 签名；未配置时相关能力会被禁用。</string>
 
     <integer-array name="cover">
         <item>@drawable/ic_bailitusu</item>
@@ -241,9 +231,4 @@
         <item>紫萱</item>
     </string-array>
 
-    <string name="bilibili_risk_verify_title">B站风控验证</string>
-    <string name="bilibili_risk_verify_tip">检测到B站风控，需要完成验证码验证后才能继续播放。</string>
-    <string name="bilibili_risk_verify_success">验证成功</string>
-    <string name="bilibili_risk_verify_page_failed">加载验证页面失败</string>
-    <string name="bilibili_risk_verify_result_failed">验证码结果无效</string>
 </resources>
