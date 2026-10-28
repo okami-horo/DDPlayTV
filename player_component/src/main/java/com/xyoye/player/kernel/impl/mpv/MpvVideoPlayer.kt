@@ -24,7 +24,6 @@ import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import com.xyoye.player.utils.DecodeType
 import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.player_component.BuildConfig
-import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -53,7 +52,6 @@ class MpvVideoPlayer(
     private var playbackSpeed = PlayerInitializer.Player.videoSpeed
     private var looping = PlayerInitializer.isLooping
     private var initializationError: Exception? = null
-    private var anime4kMode: Int = Anime4kShaderManager.MODE_OFF
     private val embeddedSubtitleBridge = MpvEmbeddedSubtitleBridge()
     private val pendingExternalTracks = mutableListOf<PendingExternalTrack>()
     private var playbackSessionId: String = "-"
@@ -124,7 +122,6 @@ class MpvVideoPlayer(
                 "play.speed" to playbackSpeed.toString(),
                 "play.sub_backend" to PlayerInitializer.Subtitle.backend.name,
                 "play.sub_gpu_pipe" to canStartGpuSubtitlePipeline().toString(),
-                "play.anime4k" to formatAnime4kMode(anime4kMode),
             ),
         )
         applyHwdecPriority()
@@ -137,7 +134,6 @@ class MpvVideoPlayer(
         path: String,
         headers: Map<String, String>?
     ) {
-        setAnime4kMode(Anime4kShaderManager.MODE_OFF)
         dataSource = path
         pendingExternalTracks.clear()
         lastUnsupportedBitmapSubtitleTrackId = null
@@ -221,7 +217,6 @@ class MpvVideoPlayer(
                     "vo" to MpvOptions.resolveVideoOutput(PlayerConfig.getMpvVideoOutput()),
                 ),
         )
-        setAnime4kMode(anime4kMode)
     }
 
     fun setSurfaceSize(
@@ -238,118 +233,6 @@ class MpvVideoPlayer(
                     "size" to "${width}x$height",
                 ),
         )
-    }
-
-    /**
-     * Append a custom shader to mpv's `glsl-shaders` list.
-     *
-     * If [stage] is provided:
-     * - When the shader file already contains `//!HOOK`, it must include the same hook.
-     * - Otherwise the shader source is wrapped with `//!HOOK <stage>` and `//!BIND HOOKED`
-     *   and written to app cache before being appended.
-     *
-     * Supported hook stages (case-insensitive, libplacebo/mpv):
-     * - RGB: input plane with RGB values
-     * - LUMA: input plane with luma (Y)
-     * - CHROMA: input chroma plane(s)
-     * - ALPHA: input alpha plane
-     * - XYZ: input plane with XYZ values
-     * - CHROMA_SCALED: chroma upscaled to luma size
-     * - ALPHA_SCALED: alpha upscaled to luma size
-     * - NATIVE: merged input planes before color conversion
-     * - MAIN: after RGB conversion, before linearization/scaling
-     * - MAINPRESUB: mpv compatibility hook, treated as MAIN by libplacebo
-     * - LINEAR: after conversion to linear light
-     * - SIGMOID: after conversion to sigmoidized light (for upscaling)
-     * - PREKERNEL: right before main scaling kernel
-     * - POSTKERNEL: right after main scaling kernel
-     * - SCALED: after scaling (linear or nonlinear light)
-     * - PREOUTPUT: after conversion to output colorspace, before blending
-     * - OUTPUT: after blending, before dithering/final output
-     *
-     * Note: some hooks may never fire depending on input (e.g. RGB input skips LUMA/CHROMA).
-     *
-     * Example: addShader("/sdcard/shaders/filmgrain.hook", "LUMA")
-     */
-    fun addShader(
-        shaderPath: String,
-        stage: String? = null
-    ): Boolean {
-        if (!nativeBridge.isAvailable) return false
-        val resolvedPath = resolveShaderPath(shaderPath, stage) ?: return false
-        return nativeBridge.addShader(resolvedPath)
-    }
-
-    fun getAnime4kMode(): Int = anime4kMode
-
-    fun setAnime4kMode(mode: Int) {
-        val safeMode =
-            when (mode) {
-                Anime4kShaderManager.MODE_PERFORMANCE -> Anime4kShaderManager.MODE_PERFORMANCE
-                Anime4kShaderManager.MODE_QUALITY -> Anime4kShaderManager.MODE_QUALITY
-                else -> Anime4kShaderManager.MODE_OFF
-            }
-        val previousMode = anime4kMode
-        anime4kMode = safeMode
-        if (previousMode != safeMode) {
-            BuglyReporter.updateContext("play.anime4k", formatAnime4kMode(safeMode))
-            recordBuglyBreadcrumb(
-                message = "anime4k mode",
-                context = mapOf("mode" to formatAnime4kMode(safeMode)),
-            )
-        }
-
-        if (!nativeBridge.isAvailable) {
-            return
-        }
-
-        val outputSupported = MpvOptions.isAnime4kSupportedVideoOutput(PlayerConfig.getMpvVideoOutput())
-
-        if (safeMode == Anime4kShaderManager.MODE_OFF || outputSupported) {
-            if (!nativeBridge.clearShaders()) {
-                LogFacade.w(
-                    LogModule.PLAYER,
-                    "MpvVideoPlayer",
-                    "clearShaders failed: ${nativeBridge.lastError().orEmpty()}",
-                )
-            }
-        }
-
-        if (safeMode == Anime4kShaderManager.MODE_OFF) {
-            return
-        }
-
-        if (!outputSupported) {
-            anime4kMode = Anime4kShaderManager.MODE_OFF
-            return
-        }
-
-        val shaderPaths = Anime4kShaderManager.resolveShaderPaths(appContext, safeMode)
-        if (shaderPaths.isEmpty()) {
-            LogFacade.w(LogModule.PLAYER, "MpvVideoPlayer", "Anime4K shader paths unavailable")
-            return
-        }
-
-        val shaderList = shaderPaths.joinToString(separator = ":")
-        if (nativeBridge.setShaders(shaderList)) {
-            return
-        }
-
-        LogFacade.w(
-            LogModule.PLAYER,
-            "MpvVideoPlayer",
-            "setShaders failed, fallback to append: ${nativeBridge.lastError().orEmpty()}",
-        )
-
-        shaderPaths.forEach { path ->
-            if (!nativeBridge.addShader(path)) {
-                LogFacade.w(
-                    LogModule.PLAYER,
-                    "MpvVideoPlayer",
-                    "addShader failed: path=$path reason=${nativeBridge.lastError().orEmpty()}",
-                )
-            }
-        }
     }
 
     override fun prepareAsync() {
@@ -911,75 +794,6 @@ class MpvVideoPlayer(
         BuglyReporter.updateContext("play.video_sync", configured)
     }
 
-    private fun resolveShaderPath(
-        shaderPath: String,
-        stage: String?
-    ): String? {
-        if (shaderPath.isBlank()) return null
-        val requestedStage = stage?.trim().orEmpty()
-        if (requestedStage.isEmpty()) return shaderPath
-
-        val stageToken = requestedStage.uppercase()
-        val shaderFile = File(shaderPath)
-        if (!shaderFile.isFile) {
-            LogFacade.w(LogModule.PLAYER, "MpvVideoPlayer", "shader file missing: $shaderPath")
-            return null
-        }
-        val content =
-            runCatching { shaderFile.readText() }.getOrElse { error ->
-                LogFacade.w(
-                    LogModule.PLAYER,
-                    "MpvVideoPlayer",
-                    "shader read failed: $shaderPath, reason=${error.message}",
-                )
-                return null
-            }
-
-        val hookRegex = Regex("^\\s*//!HOOK\\s+(\\S+)", RegexOption.IGNORE_CASE)
-        val hooks =
-            content
-                .lineSequence()
-                .mapNotNull { line -> hookRegex.find(line)?.groupValues?.getOrNull(1) }
-                .toList()
-        if (hooks.isNotEmpty()) {
-            val matched = hooks.any { it.equals(stageToken, ignoreCase = true) }
-            if (!matched) {
-                LogFacade.w(
-                    LogModule.PLAYER,
-                    "MpvVideoPlayer",
-                    "shader hook mismatch: requested=$stageToken, found=${hooks.joinToString(",")}",
-                )
-                return null
-            }
-            return shaderFile.absolutePath
-        }
-
-        val cacheDir = File(appContext.cacheDir, "mpv-shaders")
-        if (!cacheDir.exists() && !cacheDir.mkdirs()) {
-            LogFacade.w(LogModule.PLAYER, "MpvVideoPlayer", "shader cache dir create failed: ${cacheDir.path}")
-            return null
-        }
-        val stageTag = stageToken.replace(Regex("[^A-Z0-9_-]"), "_").lowercase()
-        val cacheKey = "${shaderFile.absolutePath}:${shaderFile.lastModified()}:$stageToken"
-        val cacheHash = Integer.toHexString(cacheKey.hashCode())
-        val wrapperFile = File(cacheDir, "hook_${stageTag}_$cacheHash.hook")
-        val header =
-            buildString {
-                append("//!HOOK ").append(stageToken).append('\n')
-                append("//!BIND HOOKED").append('\n')
-            }
-        val output = header + content
-        runCatching { wrapperFile.writeText(output) }.getOrElse { error ->
-            LogFacade.w(
-                LogModule.PLAYER,
-                "MpvVideoPlayer",
-                "shader write failed: ${wrapperFile.path}, reason=${error.message}",
-            )
-            return null
-        }
-        return wrapperFile.absolutePath
-    }
-
     private fun sanitizeMpvLog(message: String): String {
         var result = message
         // Redact common credential headers.
@@ -1078,13 +892,6 @@ class MpvVideoPlayer(
         val seq = BUGLY_LOG_SAMPLE_COUNTER.incrementAndGet()
         return seq % BUGLY_LOG_SAMPLE_RATE == 0
     }
-
-    private fun formatAnime4kMode(mode: Int): String =
-        when (mode) {
-            Anime4kShaderManager.MODE_PERFORMANCE -> "perf"
-            Anime4kShaderManager.MODE_QUALITY -> "quality"
-            else -> "off"
-        }
 
     companion object {
         private val PLAYBACK_SESSION_COUNTER = AtomicInteger(0)

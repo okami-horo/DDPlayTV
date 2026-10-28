@@ -95,7 +95,7 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
 
         val mpvVideoOutput =
             mapOf(
-                Pair("gpu（默认，可使用自定义后处理效果）", "gpu"),
+                Pair("gpu（默认，OpenGL 渲染）", "gpu"),
                 Pair("gpu-next（实验）", "gpu-next"),
                 Pair("mediacodec_embed（Android embed，系统硬件渲染）", "mediacodec_embed"),
             )

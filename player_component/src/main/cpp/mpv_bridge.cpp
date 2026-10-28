@@ -1009,55 +1009,6 @@ bool addExternalTrack(MpvSession* session, jint trackType, const std::string& pa
     return false;
 }
 
-bool addShader(MpvSession* session, const std::string& path) {
-    if (session == nullptr || session->handle == nullptr || path.empty()) {
-        return false;
-    }
-    const char* cmd[] = {"change-list", "glsl-shaders", "append", path.c_str(), nullptr};
-    const int result = mpv_command(session->handle, cmd);
-    if (result < 0) {
-        const std::string message =
-            "mpv glsl-shaders append failed: " + std::to_string(result) + " (" + mpv_error_string(result) +
-            ") path=" + path;
-        set_last_error(message);
-        return false;
-    }
-    set_last_error("");
-    return true;
-}
-
-bool setShaders(MpvSession* session, const std::string& listValue) {
-    if (session == nullptr || session->handle == nullptr) {
-        return false;
-    }
-    const char* cmd[] = {"change-list", "glsl-shaders", "set", listValue.c_str(), nullptr};
-    const int result = mpv_command(session->handle, cmd);
-    if (result < 0) {
-        const std::string message =
-            "mpv glsl-shaders set failed: " + std::to_string(result) + " (" + mpv_error_string(result) + ")";
-        set_last_error(message);
-        return false;
-    }
-    set_last_error("");
-    return true;
-}
-
-bool clearShaders(MpvSession* session) {
-    if (session == nullptr || session->handle == nullptr) {
-        return false;
-    }
-    const char* cmd[] = {"change-list", "glsl-shaders", "clr", "", nullptr};
-    const int result = mpv_command(session->handle, cmd);
-    if (result < 0) {
-        const std::string message =
-            "mpv glsl-shaders clr failed: " + std::to_string(result) + " (" + mpv_error_string(result) +
-            ")";
-        set_last_error(message);
-        return false;
-    }
-    set_last_error("");
-    return true;
-}
 #else
 std::vector<std::string> fetchTrackList(MpvSession*) {
     return {};
@@ -1072,18 +1023,6 @@ bool deselectTrack(MpvSession*, jint) {
 }
 
 bool addExternalTrack(MpvSession*, jint, const std::string&) {
-    return true;
-}
-
-bool addShader(MpvSession*, const std::string&) {
-    return true;
-}
-
-bool setShaders(MpvSession*, const std::string&) {
-    return true;
-}
-
-bool clearShaders(MpvSession*) {
     return true;
 }
 
@@ -1411,66 +1350,6 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeAddExternalTrack(
         return JNI_FALSE;
     }
     return addExternalTrack(session, trackType, pathString) ? JNI_TRUE : JNI_FALSE;
-}
-
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeAddShader(
-    JNIEnv* env, jclass, jlong handle, jstring path) {
-    auto* session = fromHandle(handle);
-    if (session == nullptr || path == nullptr) return JNI_FALSE;
-#if MPV_PREBUILT_AVAILABLE
-    const char* pathChars = env->GetStringUTFChars(path, nullptr);
-    if (pathChars == nullptr) {
-        set_last_error("Failed to decode shader path for mpv");
-        return JNI_FALSE;
-    }
-    const std::string pathString = pathChars;
-    env->ReleaseStringUTFChars(path, pathChars);
-    if (pathString.empty()) {
-        return JNI_FALSE;
-    }
-    return addShader(session, pathString) ? JNI_TRUE : JNI_FALSE;
-#else
-    (void)env;
-    (void)handle;
-    set_last_error("libmpv.so not linked; addShader is unavailable");
-    return JNI_FALSE;
-#endif
-}
-
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetShaders(
-    JNIEnv* env, jclass, jlong handle, jstring value) {
-    auto* session = fromHandle(handle);
-    if (session == nullptr || value == nullptr) return JNI_FALSE;
-#if MPV_PREBUILT_AVAILABLE
-    const char* valueChars = env->GetStringUTFChars(value, nullptr);
-    if (valueChars == nullptr) {
-        set_last_error("Failed to decode shader list value for mpv");
-        return JNI_FALSE;
-    }
-    const std::string listValue = valueChars;
-    env->ReleaseStringUTFChars(value, valueChars);
-    return setShaders(session, listValue) ? JNI_TRUE : JNI_FALSE;
-#else
-    (void)env;
-    (void)handle;
-    set_last_error("libmpv.so not linked; setShaders is unavailable");
-    return JNI_FALSE;
-#endif
-}
-
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeClearShaders(
-    JNIEnv*, jclass, jlong handle) {
-    auto* session = fromHandle(handle);
-    if (session == nullptr) return JNI_FALSE;
-#if MPV_PREBUILT_AVAILABLE
-    return clearShaders(session) ? JNI_TRUE : JNI_FALSE;
-#else
-    set_last_error("libmpv.so not linked; clearShaders is unavailable");
-    return JNI_FALSE;
-#endif
 }
 
 extern "C" JNIEXPORT jlong JNICALL

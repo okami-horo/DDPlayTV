@@ -25,10 +25,8 @@ import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.enums.VideoScreenScale
 import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
-import com.xyoye.player.kernel.anime4k.Anime4kMode
 import com.xyoye.player.kernel.facoty.PlayerFactory
 import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
-import com.xyoye.player.kernel.impl.mpv.MpvVideoPlayer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.inter.VideoPlayerEventListener
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
@@ -223,27 +221,6 @@ class DanDanVideoPlayer(
         } else {
             DecodeType.HW
         }
-
-    override fun getAnime4kMode(): Int {
-        if (!this::mVideoPlayer.isInitialized) {
-            return Anime4kMode.MODE_OFF
-        }
-        return when (val videoPlayer = mVideoPlayer) {
-            is MpvVideoPlayer -> videoPlayer.getAnime4kMode()
-            is Media3VideoPlayer -> videoPlayer.getAnime4kMode()
-            else -> Anime4kMode.MODE_OFF
-        }
-    }
-
-    override fun setAnime4kMode(mode: Int) {
-        if (!this::mVideoPlayer.isInitialized) {
-            return
-        }
-        when (val videoPlayer = mVideoPlayer) {
-            is MpvVideoPlayer -> videoPlayer.setAnime4kMode(mode)
-            is Media3VideoPlayer -> videoPlayer.setAnime4kMode(mode)
-        }
-    }
 
     override fun isSeekable(): Boolean {
         val exoPlayer = exoPlayerOrNull()

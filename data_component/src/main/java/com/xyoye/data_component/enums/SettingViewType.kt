@@ -21,7 +21,6 @@ enum class SettingViewType {
 
     VIDEO_ASPECT,
 
-    ANIME4K,
 
     DANMU_CONFIGURE,
 

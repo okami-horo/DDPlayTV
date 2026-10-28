@@ -39,10 +39,13 @@
 | `loop-file` / `speed` / `volume` | 循环、速度和音量 |
 | `sub-delay` | 字幕延迟；毫秒在 native 转为秒 |
 | `aid` / `vid` / `sid` | 音频、视频和字幕轨道 |
-| `glsl-shaders` | 追加、设置、清空 shader 列表；Anime4K 另受输出模式限制 |
 
 `deinterlace`、`sigmoid-upscaling`、`sigmoid-upscaling-strength` 当前没有源码设置入口，已从实际暴露能力清单移除。参数注入成功不能单独证明设备上的实际效果。
 
 ## 命令与验证
 
-bridge 使用 `loadfile`、`seek`、`audio-add`、`sub-add` 及 shader 列表命令，不能将它们当作配置行。新增参数时核对内置 libmpv 支持、设置时机、错误返回和实际播放。原生库来源见 [打包记录](mpv-build-notes.md)。
+bridge 使用 `loadfile`、`seek`、`audio-add`、`sub-add` 命令，不能将它们当作配置行。新增参数时核对内置 libmpv 支持、设置时机、错误返回和实际播放。原生库来源见 [打包记录](mpv-build-notes.md)。
+
+## 已移除能力
+
+2026-10-28 按产品决策全端移除 Anime4K 视频后处理：TV GPU 的性能成本不适合本项目。播放器设置、内置 shader、Media3 特效管线及 mpv 自定义 shader 桥接已删除；普通视频输出与字幕渲染继续保留。

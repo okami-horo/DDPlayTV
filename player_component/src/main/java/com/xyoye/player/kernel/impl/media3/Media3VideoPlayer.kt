@@ -8,7 +8,6 @@ import android.os.Looper
 import android.view.Display
 import android.view.Surface
 import androidx.media3.common.C
-import androidx.media3.common.Effect
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
@@ -18,13 +17,11 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
 import androidx.media3.common.text.Cue
 import androidx.media3.common.util.Clock
-import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.LoadControl
-import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.analytics.DefaultAnalyticsCollector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
@@ -43,10 +40,7 @@ import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
-import com.xyoye.player.kernel.anime4k.Anime4kMode
 import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper.getMediaSource
-import com.xyoye.player.kernel.impl.media3.effect.Anime4kPerformanceGlEffect
-import com.xyoye.player.kernel.impl.media3.effect.Anime4kQualityGlEffect
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
@@ -97,12 +91,6 @@ class Media3VideoPlayer(
 
     private val trackNameProvider by lazy { DefaultTrackNameProvider(appContext.resources) }
 
-    private var anime4kMode: Int = Anime4kMode.MODE_OFF
-    private var effectsPipelineConfigured = false
-    private var outputResolution: Size? = null
-    private var videoRenderer: Renderer? = null
-    private var anime4kFallbackTriggered = false
-
     override fun initPlayer() {
         if (this::player.isInitialized) {
             return
@@ -121,15 +109,9 @@ class Media3VideoPlayer(
         }
 
         player = buildPlayer()
-        videoRenderer = null
-        effectsPipelineConfigured = false
 
         if (PlayerInitializer.isPrintLog && trackSelector is MappingTrackSelector) {
             player.addAnalyticsListener(EventLogger(Media3VideoPlayer::class.java.simpleName))
-        }
-
-        if (anime4kMode != Anime4kMode.MODE_OFF) {
-            applyVideoEffects()
         }
 
         setOptions()
@@ -186,7 +168,6 @@ class Media3VideoPlayer(
         }
         currentDataSource = path
         currentDataSourceHeaders = headers
-        anime4kFallbackTriggered = false
         runCatching {
             LocalProxy.setSeekEnabledIfServing(path, enabled = false)
         }
@@ -201,7 +182,6 @@ class Media3VideoPlayer(
     override fun setSurface(surface: Surface) {
         currentSurface = surface
         player.setVideoSurface(surface)
-        sendVideoOutputResolutionIfConfigured()
     }
 
     override fun prepareAsync() {
@@ -216,142 +196,6 @@ class Media3VideoPlayer(
         // 为单一 MediaSource 注入比特流修补（仅 H.264 avcC -> Annex-B，目前媒体管线已覆盖大部分情况）
         player.setMediaSource(mediaSource)
         player.prepare()
-    }
-
-    fun getAnime4kMode(): Int = anime4kMode
-
-    fun setAnime4kMode(mode: Int) {
-        val safeMode = Anime4kMode.normalize(mode)
-        if (anime4kMode == safeMode) {
-            return
-        }
-        if (safeMode != Anime4kMode.MODE_OFF) {
-            anime4kFallbackTriggered = false
-        }
-        val previousMode = anime4kMode
-        Media3Diagnostics.logAnime4kModeChanged(
-            requestedMode = mode,
-            appliedMode = safeMode,
-        )
-        anime4kMode = safeMode
-
-        if (!this::player.isInitialized) {
-            return
-        }
-
-        val wasPipelineEnabled = previousMode != Anime4kMode.MODE_OFF
-        val isPipelineEnabled = safeMode != Anime4kMode.MODE_OFF
-        if (wasPipelineEnabled != isPipelineEnabled) {
-            rebuildPlayer()
-        } else if (isPipelineEnabled) {
-            applyVideoEffects()
-        }
-    }
-
-    fun setVideoOutputResolution(
-        width: Int,
-        height: Int
-    ) {
-        if (width <= 0 || height <= 0) return
-        val newResolution = Size(width, height)
-        if (outputResolution == newResolution) {
-            return
-        }
-        outputResolution = newResolution
-
-        // Some Anime4K passes (mpv user shader format) depend on OUTPUT.w/h for WHEN/WIDTH/HEIGHT evaluation.
-        // Re-apply the effects so the shader program can re-configure when output size changes.
-        if (anime4kMode != Anime4kMode.MODE_OFF) {
-            applyVideoEffects()
-        }
-    }
-
-    private fun applyVideoEffects() {
-        if (!this::player.isInitialized) {
-            return
-        }
-        if (anime4kMode == Anime4kMode.MODE_OFF) {
-            effectsPipelineConfigured = false
-            videoRenderer = null
-            return
-        }
-
-        val effects: List<Effect> =
-            when (anime4kMode) {
-                Anime4kMode.MODE_PERFORMANCE -> listOf(Anime4kPerformanceGlEffect(outputSizeProvider = { outputResolution }))
-                Anime4kMode.MODE_QUALITY -> listOf(Anime4kQualityGlEffect(outputSizeProvider = { outputResolution }))
-                else -> emptyList()
-            }
-        if (effects.isEmpty()) {
-            effectsPipelineConfigured = false
-            videoRenderer = null
-            return
-        }
-        Media3Diagnostics.logAnime4kEffectsApplied(
-            mode = anime4kMode,
-            effectsCount = effects.size,
-        )
-        player.setVideoEffects(effects)
-        effectsPipelineConfigured = true
-        sendVideoOutputResolutionIfConfigured()
-    }
-
-    private fun resolveVideoRenderer(): Renderer? {
-        if (!this::player.isInitialized) return null
-        for (index in 0 until player.rendererCount) {
-            if (player.getRendererType(index) == C.TRACK_TYPE_VIDEO) {
-                return player.getRenderer(index)
-            }
-        }
-        return null
-    }
-
-    private fun sendVideoOutputResolutionIfConfigured() {
-        if (anime4kMode == Anime4kMode.MODE_OFF) {
-            return
-        }
-        if (!effectsPipelineConfigured || !this::player.isInitialized) {
-            return
-        }
-        val shouldLog = anime4kMode != Anime4kMode.MODE_OFF
-        val resolution =
-            outputResolution
-                ?: run {
-                    if (shouldLog) {
-                        Media3Diagnostics.logAnime4kOutputResolutionSkipped("output_resolution_unset")
-                    }
-                    return
-                }
-        val renderer =
-            videoRenderer
-                ?: resolveVideoRenderer().also { resolved ->
-                    videoRenderer = resolved
-                }
-                ?: run {
-                    if (shouldLog) {
-                        Media3Diagnostics.logAnime4kOutputResolutionSkipped("video_renderer_unresolved")
-                    }
-                    return
-                }
-
-        val rendererName = renderer.javaClass.simpleName.ifBlank { renderer.javaClass.name }
-        val sent =
-            runCatching {
-                player
-                    .createMessage(renderer)
-                    .setType(Renderer.MSG_SET_VIDEO_OUTPUT_RESOLUTION)
-                    .setPayload(resolution)
-                    .send()
-            }.isSuccess
-
-        if (shouldLog) {
-            Media3Diagnostics.logAnime4kOutputResolutionMessage(
-                resolution = resolution,
-                renderer = rendererName,
-                sent = sent,
-                reason = if (sent) null else "message_send_failed",
-            )
-        }
     }
 
     override fun start() {
@@ -388,9 +232,6 @@ class Media3VideoPlayer(
         val releaseAction = {
             releaseSubtitleFrameDrivers()
             embeddedSubtitleSink.set(null)
-            videoRenderer = null
-            outputResolution = null
-            effectsPipelineConfigured = false
             currentDataSource = null
             currentDataSourceHeaders = null
             currentSurface = null
@@ -662,11 +503,6 @@ class Media3VideoPlayer(
         if (tryRecoverFromDecoderError(error)) {
             return
         }
-        if (anime4kMode != Anime4kMode.MODE_OFF && !anime4kFallbackTriggered) {
-            anime4kFallbackTriggered = true
-            setAnime4kMode(Anime4kMode.MODE_OFF)
-            return
-        }
         mPlayerEventListener.onError(error)
     }
 
@@ -708,8 +544,6 @@ class Media3VideoPlayer(
         runCatching { oldPlayer.release() }
 
         player = buildPlayer()
-        videoRenderer = null
-        effectsPipelineConfigured = false
         videoOverrideApplied = false
         subtitleType = SubtitleType.UN_KNOW
         isPreparing = false
@@ -733,9 +567,6 @@ class Media3VideoPlayer(
             val parseSubtitlesDuringExtraction = shouldParseSubtitlesDuringExtraction()
             currentParseSubtitlesDuringExtraction = parseSubtitlesDuringExtraction
             mediaSource = getMediaSource(dataSource, headers, parseSubtitlesDuringExtraction = parseSubtitlesDuringExtraction)
-            if (anime4kMode != Anime4kMode.MODE_OFF) {
-                applyVideoEffects()
-            }
             isPreparing = true
             player.setMediaSource(mediaSource)
             player.prepare()
@@ -743,8 +574,6 @@ class Media3VideoPlayer(
                 player.seekTo(resumePosition)
             }
             player.playWhenReady = playWhenReady
-        } else if (anime4kMode != Anime4kMode.MODE_OFF) {
-            applyVideoEffects()
         }
 
         player.playWhenReady = playWhenReady

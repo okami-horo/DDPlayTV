@@ -29,7 +29,6 @@ class SettingController(
     private lateinit var searchDanmuView: SearchDanmuView
     private lateinit var videoSpeedView: SettingVideoSpeedView
     private lateinit var videoAspectView: SettingVideoAspectView
-    private lateinit var anime4kView: SettingAnime4kView
     private lateinit var danmuConfigureView: SettingDanmuConfigureView
     private lateinit var offsetTimeView: SettingOffsetTimeView
     private lateinit var subtitleStyleView: SettingSubtitleStyleView
@@ -186,14 +185,6 @@ class SettingController(
                     addView.invoke(videoAspectView)
                 }
                 return videoAspectView
-            }
-
-            SettingViewType.ANIME4K -> {
-                if (this::anime4kView.isInitialized.not()) {
-                    anime4kView = SettingAnime4kView(context)
-                    addView.invoke(anime4kView)
-                }
-                return anime4kView
             }
 
             SettingViewType.DANMU_STYLE -> {

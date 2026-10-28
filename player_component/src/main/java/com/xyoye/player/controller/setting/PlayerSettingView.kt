@@ -17,7 +17,6 @@ import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingAction
 import com.xyoye.player.info.SettingActionType
 import com.xyoye.player.info.SettingItem
-import com.xyoye.player.kernel.impl.mpv.MpvOptions
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.ItemPlayerSettingBinding
 import com.xyoye.player_component.databinding.ItemPlayerSettingTypeBinding
@@ -121,16 +120,6 @@ class PlayerSettingView(
             disabledActions.add(SettingAction.VIDEO_TRACK)
         }
 
-        val playerType = PlayerInitializer.playerType
-        val isAnime4kSupported =
-            when (playerType) {
-                PlayerType.TYPE_MPV_PLAYER -> MpvOptions.isAnime4kSupportedVideoOutput(PlayerConfig.getMpvVideoOutput())
-                PlayerType.TYPE_EXO_PLAYER -> true
-                else -> false
-            }
-        if (!isAnime4kSupported) {
-            disabledActions.add(SettingAction.ANIME4K)
-        }
         SettingAction
             .values()
             .asSequence()
@@ -198,10 +187,6 @@ class PlayerSettingView(
 
             SettingAction.VIDEO_ASPECT -> {
                 mControlWrapper.showSettingView(SettingViewType.VIDEO_ASPECT)
-            }
-
-            SettingAction.ANIME4K -> {
-                mControlWrapper.showSettingView(SettingViewType.ANIME4K)
             }
 
             SettingAction.AUDIO_TRACK -> {

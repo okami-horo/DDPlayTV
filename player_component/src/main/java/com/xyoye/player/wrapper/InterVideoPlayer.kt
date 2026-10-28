@@ -4,7 +4,6 @@ import android.graphics.Point
 import android.graphics.PointF
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.enums.VideoScreenScale
-import com.xyoye.player.kernel.anime4k.Anime4kMode
 import com.xyoye.player.surface.InterSurfaceView
 import com.xyoye.player.utils.DecodeType
 
@@ -142,13 +141,4 @@ interface InterVideoPlayer : InterVideoTrack {
      * 当前内容是否为直播
      */
     fun isLive(): Boolean = false
-
-    /**
-     * Anime4K 模式：0 关闭 / 1 性能 / 2 质量（单次播放，不持久化）
-     *
-     * 不同内核对模式支持程度不同，未支持时应回落到关闭或最接近的模式。
-     */
-    fun getAnime4kMode(): Int = Anime4kMode.MODE_OFF
-
-    fun setAnime4kMode(mode: Int) = Unit
 }
