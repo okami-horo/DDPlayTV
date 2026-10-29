@@ -4,6 +4,8 @@
 
 后续 mpv 已迁移到 Plezy AAR 的 `vo=mediacodec`，应用独立 libass 渲染库继续保留；本文历史 `mediacodec_embed`、GPU 视频路径及验证结果描述原审查版本。当前依赖与输出以 [mpv 打包记录](../mpv-build-notes.md)为准，迁移验证见[执行记录](../../docs/superpowers/plans/2026-10-29-plezy-mpv.md)，不将历史通过项自动算作新产物验收。
 
+再后续的 mpv 原生字幕接入已移除 `ass-full` 到第二个 libass 实例的桥接；本文关于该桥接、附件字体传递和位图限制的发现仅描述历史实现。Media3 的现有修复与未完成项继续有效。新实现及测试范围见[原生字幕记录](../../docs/superpowers/plans/2026-10-29-mpv-native-subtitles.md)。
+
 ## 2026-10-29 修复状态
 
 | 问题 | 实际变更与证据 | 剩余边界 |
@@ -64,7 +66,7 @@ mpv ass-full 活动事件桥接 ─────┼─> LibassGpuSubtitleSession
 | 用户设置 | 后端设置被隐藏，读取固定返回 LIBASS，写入不执行切换 | [SubtitleSettingFragment.kt](../../user_component/src/main/java/com/xyoye/user_component/ui/fragment/SubtitleSettingFragment.kt)，约 87 行 |
 | Media3 内嵌 ASS/SSA | 自定义 TextRenderer/decoder 把原始样本送入 sink，返回空 Cue 避免重复显示 | [LibassAwareRenderersFactory.kt](../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassAwareRenderersFactory.kt)、[LibassSsaStreamDecoder.kt](../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoder.kt) |
 | 外挂 ASS/SSA | 直接向自定义 native 渲染器加载文件，期间关闭内嵌 sink | [LibassRendererBackend.kt](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt)、[LibassGpuSubtitleSession.kt](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassGpuSubtitleSession.kt) |
-| mpv `mediacodec_embed` | 监听 `ass-full`、轨道和 codec private，解析活动事件后送入共享渲染器 | [MpvEmbeddedSubtitleBridge.kt](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvEmbeddedSubtitleBridge.kt) |
+| mpv `mediacodec_embed`（历史） | 监听 `ass-full`、轨道和 codec private，解析活动事件后送入共享渲染器 | 旧 `MpvEmbeddedSubtitleBridge.kt` 已被原生 OSD 接入替代 |
 | mpv `gpu`/`gpu-next` | 使用内核字幕能力；不能与自定义 libass 实例的行为混为一谈 | [MpvVideoPlayer.kt](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt)、[mpv 配置说明](../mpv_conf_supported_options.md) |
 | 普通文字、位图字幕 | 仍有原字幕控制器或内核路径；自定义后端不消费 `MixedSubtitle` | [LibassRendererBackend.kt](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt)，`render()`；[SubtitleController.kt](../../player_component/src/main/java/com/xyoye/player/controller/subtitle/SubtitleController.kt) |
 

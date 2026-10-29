@@ -1,6 +1,7 @@
 package com.xyoye.player_component.ui
 
 import android.graphics.ImageFormat
+import android.graphics.PixelFormat
 import android.media.ImageReader
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -14,6 +15,10 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.xyoye.common_component.log.model.LogLevel
 import com.xyoye.player.kernel.impl.mpv.MpvNativeBridge
 import fi.iki.elonen.NanoHTTPD
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -24,13 +29,14 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 @RunWith(AndroidJUnit4::class)
 class MpvSurfaceLifecycleTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
 
     @Test
-    fun embeddedAssSurvivesSeekAndSubtitleTrackDisable() {
+    fun nativeSubtitlePixelsSurviveVisibilitySeekAndBothSurfaceRecreation() {
         val fixture = File(instrumentation.targetContext.cacheDir, "mpv-ass-compatibility.mkv")
         instrumentation.context.assets.open("media3/subtitle-compatibility.mkv").use { input ->
             fixture.outputStream().use { input.copyTo(it) }
@@ -38,34 +44,203 @@ class MpvSurfaceLifecycleTest {
         val bridge = MpvNativeBridge()
         val events = CopyOnWriteArrayList<MpvNativeBridge.Event>()
         val (width, height) = videoSize(fixture)
-        val output = createOutput(width, height, AtomicInteger())
+        var output = createOutput(width, height, AtomicInteger())
+        val pixels = AtomicReference(PixelSnapshot())
+        var osd = createSubtitleOutput(pixels)
         try {
             bridge.setEventListener { events.add(it) }
             initialize(bridge)
             attach(bridge, output.surface)
+            attachSubtitles(bridge, osd.surface)
+            bridge.setSubtitleFonts("/system/fonts", "Roboto")
             load(bridge, fixture)
-            bridge.play()
-            await("ASS codec private", events) {
-                events.any { it is MpvNativeBridge.Event.SubtitleAssExtradata && it.value?.contains("[Script Info]") == true }
-            }
-            await("first ASS event", events) {
-                events.any { it is MpvNativeBridge.Event.SubtitleAssFull && it.value?.contains("Before seek") == true }
-            }
-            bridge.pause()
+            await("first native ASS pixels", events) { pixels.get().count > 50 }
+            val sid = bridge.listTracks().first { it.type == com.xyoye.data_component.enums.TrackType.SUBTITLE }.id
+            bridge.seek(2000)
+            await("subtitle-free interval", events) { pixels.get().count == 0 }
             bridge.seek(3200)
-            await("ASS event after seek", events) {
-                events.any { it is MpvNativeBridge.Event.SubtitleAssFull && it.value?.contains("After seek") == true }
-            }
+            await("native ASS pixels after paused seek", events) { pixels.get().count > 50 }
+            bridge.setSubtitleVisible(false)
+            await("transparent hidden subtitle plane", events) { pixels.get().count == 0 }
+            bridge.setSubtitleVisible(true)
+            await("paused visibility restore", events) { pixels.get().count > 50 }
+            bridge.setSubtitleDelay(10_000)
+            await("subtitle delay clears old pixels", events) { pixels.get().count == 0 }
+            bridge.setSubtitleDelay(0)
+            await("subtitle delay restore", events) { pixels.get().count > 50 }
+            val beforeMove = pixels.get()
+            bridge.setSubtitlePosition(20)
+            await("native subtitle moves upwards", events) { pixels.get().maxY in 0 until beforeMove.maxY - 20 }
+            bridge.setSubtitlePosition(0)
+            await("position reset", events) { pixels.get().maxY == beforeMove.maxY }
             assertTrue(bridge.deselectTrack(MpvNativeBridge.TRACK_TYPE_SUBTITLE))
-            await("disabled subtitle track", events) {
-                events.any { it is MpvNativeBridge.Event.SubtitleSid && it.value == "no" }
+            await("track disable clears pixels", events) { pixels.get().count == 0 }
+            assertTrue(bridge.selectTrack(MpvNativeBridge.TRACK_TYPE_SUBTITLE, sid))
+            await("track reselect redraws pixels", events) { pixels.get().count > 50 }
+
+            val restartsBeforeReplacement = events.count { it is MpvNativeBridge.Event.RenderingStart }
+            val positionBeforeReplacement = bridge.currentPosition()
+            assertTrue("The fixture must be paused within its second subtitle", positionBeforeReplacement in 3000..3999)
+            assertTrue(bridge.detachSubtitleSurface())
+            assertTrue(bridge.detachSurface())
+            osd.close()
+            output.close()
+            pixels.set(PixelSnapshot())
+            osd = createSubtitleOutput(pixels)
+            output = createOutput(width, height, AtomicInteger())
+            attachSubtitles(bridge, osd.surface)
+            attach(bridge, output.surface)
+            await("paused ASS redraw on replacement pair", events) { pixels.get().count > 50 }
+            await("settled playback restart after pair replacement", events) {
+                events.count { it is MpvNativeBridge.Event.RenderingStart } > restartsBeforeReplacement
             }
+            assertTrue(
+                "Paused position must be preserved: before=$positionBeforeReplacement after=${bridge.currentPosition()}",
+                kotlin.math.abs(bridge.currentPosition() - positionBeforeReplacement) < 250
+            )
         } finally {
+            bridge.detachSubtitleSurface()
             bridge.detachSurface()
             bridge.destroy()
+            osd.close()
             output.close()
             fixture.delete()
         }
+    }
+
+    @Test
+    fun externalNativeSubtitlesReportFailureAndCancelWithoutReplacingEmbeddedTrack() {
+        val fixture = File(instrumentation.targetContext.cacheDir, "mpv-external-test.mkv")
+        val srt = File(instrumentation.targetContext.cacheDir, "mpv-external.srt")
+        val ass = File(instrumentation.targetContext.cacheDir, "mpv-external.ass")
+        instrumentation.context.assets.open("media3/subtitle-compatibility.mkv").use { input ->
+            fixture.outputStream().use { input.copyTo(it) }
+        }
+        instrumentation.context.assets.open("media3/subtitle-compatibility.ass").use { input ->
+            ass.outputStream().use { input.copyTo(it) }
+        }
+        srt.writeText("1\n00:00:00,000 --> 00:00:20,000\nExternal SRT\n")
+        val bridge = MpvNativeBridge()
+        val events = CopyOnWriteArrayList<MpvNativeBridge.Event>()
+        val output = createOutput(64, 64, AtomicInteger())
+        val pixels = AtomicReference(PixelSnapshot())
+        val osd = createSubtitleOutput(pixels)
+        try {
+            bridge.setEventListener { events.add(it) }
+            initialize(bridge)
+            bridge.setSubtitleFonts("/system/fonts", "Roboto")
+            attach(bridge, output.surface)
+            attachSubtitles(bridge, osd.surface)
+            load(bridge, fixture)
+            await("embedded subtitle pixels", events) { pixels.get().count > 50 }
+            val sid = bridge.listTracks().first { it.type == com.xyoye.data_component.enums.TrackType.SUBTITLE }.id
+            bridge.seek(2000)
+            await("empty interval before external subtitle", events) { pixels.get().count == 0 }
+            assertTrue(runBlocking { bridge.loadExternalSubtitle(srt.absolutePath) })
+            await("external SRT rendered by mpv", events) { pixels.get().count > 50 }
+            val normalSize = pixels.get().count
+            bridge.setSubtitleScale(100)
+            await("native text scaling", events) { pixels.get().count > normalSize * 1.5 }
+            bridge.setSubtitleScale(0)
+            bridge.clearExternalSubtitle()
+            await("external removal clears pixels", events) { pixels.get().count == 0 }
+            assertFalse(runBlocking { bridge.loadExternalSubtitle(srt.absolutePath + ".missing") })
+            val invalid = File(instrumentation.targetContext.cacheDir, "mpv-invalid.ass").apply { writeText("") }
+            try {
+                assertFalse(runBlocking { bridge.loadExternalSubtitle(invalid.absolutePath) })
+            } finally {
+                invalid.delete()
+            }
+            assertTrue("Failed loads must not leave external tracks", bridge.listTracks().none { it.external })
+
+            assertTrue(runBlocking { bridge.loadExternalSubtitle(ass.absolutePath) })
+            bridge.seek(3200)
+            await("external ASS rendered by mpv", events) { pixels.get().count > 50 }
+            assertTrue(bridge.selectTrack(MpvNativeBridge.TRACK_TYPE_SUBTITLE, sid))
+            bridge.clearExternalSubtitle()
+            await("external cleanup preserves newly selected embedded track", events) {
+                bridge.listTracks().any { it.id == sid && it.selected } && bridge.listTracks().none { it.external }
+            }
+            assertTrue(pixels.get().count > 50)
+            val requested = CountDownLatch(1)
+            val responseGate = CountDownLatch(1)
+            val server =
+                object : NanoHTTPD("127.0.0.1", 0) {
+                    override fun serve(request: IHTTPSession): Response {
+                        requested.countDown()
+                        responseGate.await(5, TimeUnit.SECONDS)
+                        return newFixedLengthResponse(Response.Status.OK, "application/x-subrip", srt.readText())
+                    }
+                }
+            try {
+                server.start(5000, true)
+                runBlocking {
+                    val pending =
+                        launch(start = CoroutineStart.UNDISPATCHED) {
+                            bridge.loadExternalSubtitle("http://127.0.0.1:${server.listeningPort}/pending.srt")
+                        }
+                    assertTrue("Cancellation must happen during native subtitle IO", requested.await(5, TimeUnit.SECONDS))
+                    pending.cancelAndJoin()
+                    responseGate.countDown()
+                }
+                assertTrue(bridge.selectTrack(MpvNativeBridge.TRACK_TYPE_SUBTITLE, sid))
+                await("cancelled native IO leaves no external track", events) { bridge.listTracks().none { it.external } }
+            } finally {
+                responseGate.countDown()
+                server.stop()
+            }
+            assertTrue(bridge.selectTrack(MpvNativeBridge.TRACK_TYPE_SUBTITLE, sid))
+            await("cancelled load leaves no native external track", events) { bridge.listTracks().none { it.external } }
+            assertTrue(bridge.listTracks().any { it.id == sid && it.selected })
+            assertTrue(events.none { it is MpvNativeBridge.Event.Error })
+        } finally {
+            bridge.detachSubtitleSurface()
+            bridge.detachSurface()
+            bridge.destroy()
+            osd.close()
+            output.close()
+            fixture.delete()
+            srt.delete()
+            ass.delete()
+        }
+        assertFalse("Loads after release must complete instead of hanging", runBlocking { bridge.loadExternalSubtitle(srt.absolutePath) })
+    }
+
+    private data class PixelSnapshot(
+        val count: Int = 0,
+        val maxY: Int = -1
+    )
+
+    private fun createSubtitleOutput(pixels: AtomicReference<PixelSnapshot>): ImageReader =
+        ImageReader.newInstance(640, 360, PixelFormat.RGBA_8888, 3).apply {
+            setOnImageAvailableListener({ reader ->
+                reader.acquireLatestImage()?.use { frame ->
+                    val plane = frame.planes[0]
+                    var count = 0
+                    var maxY = -1
+                    for (y in 0 until frame.height) {
+                        for (x in 0 until frame.width) {
+                            val offset = y * plane.rowStride + x * plane.pixelStride
+                            // Ignore opaque black letterbox fill; require actual colored glyph pixels.
+                            if ((plane.buffer.get(offset + 3).toInt() and 255) > 0 &&
+                                (0..2).any { (plane.buffer.get(offset + it).toInt() and 255) > 20 }
+                            ) {
+                                count++
+                                maxY = y
+                            }
+                        }
+                    }
+                    pixels.set(PixelSnapshot(count, maxY))
+                }
+            }, Handler(Looper.getMainLooper()))
+        }
+
+    private fun attachSubtitles(
+        bridge: MpvNativeBridge,
+        surface: Surface
+    ) {
+        bridge.setSubtitleSurfaceSize(640, 360)
+        awaitResult(bridge) { bridge.setSubtitleSurface(surface, it) }
     }
 
     @Test

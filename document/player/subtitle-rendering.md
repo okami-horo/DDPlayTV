@@ -1,4 +1,4 @@
-# libass 字幕渲染维护说明
+# 字幕渲染维护说明
 
 源码核对日期：2026-10-29。本文说明当前实现边界；旧变更的 11/11 勾选仅是历史任务记录，不作为本轮测试结果。字幕简繁转换属于[另一项待实现需求](subtitle-language-conversion.md)。
 
@@ -8,7 +8,9 @@
 
 ## 渲染职责
 
-选择 LIBASS 后端并满足内核条件时，Media3 内嵌 ASS/SSA、mpv `mediacodec` 的 ASS 桥接以及外挂 ASS/SSA 共用以下渲染链：
+mpv 使用原生字幕，Media3 使用应用字幕渲染。运行时后端分别为 `MPV_NATIVE` 和 `LIBASS`；mpv 不修改 Media3 的后端偏好。
+
+Media3 内嵌 ASS/SSA 与其外挂 ASS/SSA 使用以下渲染链：
 
 ```text
 LibassRendererBackend
@@ -21,6 +23,8 @@ LibassRendererBackend
 [LibassRendererBackend](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt) 负责后端入口；[LibassGpuSubtitleSession](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassGpuSubtitleSession.kt) 管理独立 overlay、渲染线程、帧驱动和内嵌字幕 sink。外挂 ASS/SSA 直接交给 GPU renderer，加载期间关闭内嵌 sink，清除外挂后重新启用内嵌输入。普通文字／位图字幕仍有原控制器路径，不能据此声称它们都经过 libass。
 
 当前没有真正接管自定义 libass 渲染的 CPU fallback。`SubtitlePipelineMode.FALLBACK_CPU` 是保留的状态字段名；它在这里表示 GPU 管线降级，不能解释为已有 CPU 渲染器在输出字幕。后续更名需核对状态消费者和兼容性，不是本次新增功能承诺。
+
+以下显示、轨道、降级与恢复说明适用于应用 libass 后端；mpv 的独立契约见后文。
 
 ## 显示、轨道和加载契约
 
@@ -59,15 +63,18 @@ adjustedY = subtitleImageY - offsetPx
 
 因此正值上移、负值下移，方向与原字幕视图保持一致。native 将百分比限制在 -100～100；修改设置影响后续帧，暂停时会话请求一次重绘，无需重新开始播放。该路径同时覆盖上述内嵌和外挂 ASS/SSA，不应改用平移整个 overlay View，否则会改变 surface 裁剪边界。
 
-## mpv 内嵌 ASS 去重
+## mpv 原生字幕
 
-[MpvEmbeddedSubtitleBridge](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvEmbeddedSubtitleBridge.kt) 将 mpv `ass-full` 快照拆成带时间的事件注入共享 sink。[MpvAssFullSubtitleParser](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvAssFullSubtitleParser.kt) 抑制重复活动事件，并通过访问顺序淘汰、历史窗口和容量上限限制状态：
+[MpvSubtitleRendererBackend](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/MpvSubtitleRendererBackend.kt) 仅创建透明 `SubtitleSurfaceOverlay`，通过 Java ABI 的 `attachSurfaces(video, osd, videoGeneration, osdGeneration)` 交给固定版本 Plezy AAR。mpv 负责字幕解复用、字体、时间与绘制，应用不再观察 `ass-full`、拆解事件或向第二个 libass 实例注入。旧 `MpvEmbeddedSubtitleBridge`、`MpvAssFullSubtitleParser` 及其去重测试已删除。
 
-- 去重表最多保留 512 项；不能恢复为只增不减的 HashMap。
-- 超过 60 秒历史窗口且连续超过 2 个快照未出现的条目可被裁剪；容量不足时淘汰最旧条目。
-- seek、字幕轨道改变等时间线重置时清空去重状态并 flush 内嵌事件；重新绑定 sink 时可回放缓存快照。
+- 视频继续 `SurfaceView + vo=mediacodec + hwdec=mediacodec`；原生 OSD 自行合成字幕，不把视频转到应用 GPU。字幕 Surface 使用 media-overlay 层级，位于视频之上、应用控制器与弹幕之下，并跟随实际视频布局。`vo-mediacodec-video-rect` 传递这一坐标边界。
+- 视频与字幕各有独立 Surface generation。销毁字幕仅解绑 OSD，销毁视频交接到占位 Surface 并暂时解绑 OSD；视频回来后重新绑定仍有效的字幕 Surface。可 seek 的暂停视频维持先前位置并重绘。
+- 内嵌 ASS、普通文字和位图均由 mpv 原生处理；不再提示位图字幕必须切换内核。`embeddedfonts=yes` 允许 mpv 使用 MKV 字体附件，应用默认字体目录仍可作为回退。具体字体、位图格式的完整兼容矩阵仍需实际素材验收。
+- 外挂仍经过现有 `ExternalSubtitleManager`（包括 content URI 本地缓存），随后由 native `sub-add` 探测格式；SRT/ASS 不再转到应用解析器。等待真实命令结果后返回成功。取消中的请求有独立修订/所有权，不能覆盖后来选中的内嵌轨；清理只移除本次添加的外部轨道。界面保留一份外挂入口，隐藏 mpv 重复的外挂枚举。
+- 显示开关用 `sub-visibility`，隐藏保留轨道。应用时间偏移取反后写 `sub-delay`；字号偏移写 `sub-scale=1+offset/100`；正值上移对应 `sub-pos=100-offset`，保留 ASS 自身样式。特殊定位、位图与向屏幕下方移动的裁剪遵循 mpv 的限制。
+- mpv 没有等价的全局字幕透明度系数：此模式隐藏透明度控制并说明样式限制；重置只修改当前可用的字号与位置，不覆盖 Media3 的透明度偏好。
 
-这些限制约束的是 parser 去重表，不能据此断言整个 native 字幕会话或播放进程的内存均恒定。
+参考 [mpv 0.41.0 字幕参数](https://github.com/mpv-player/mpv/blob/v0.41.0/DOCS/man/options.rst)、[固定上游 OSD 实现](https://github.com/edde746/mpv-build/blob/b15bf59c043b45f9ad7fa227b2cc7d3164daf58f/patches/mpv/pool/0100-vo-mediacodec-timed-surface-with-osd-plane.patch) 和 [Plezy Surface 布局](https://github.com/edde746/plezy/blob/1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5/android/app/src/main/kotlin/com/edde746/plezy/shared/PlayerSurfaceHost.kt)。具体实施与验证见[本轮记录](../../docs/superpowers/plans/2026-10-29-mpv-native-subtitles.md)。
 
 ## 验证与已知限制
 
@@ -76,11 +83,11 @@ adjustedY = subtitleImageY - offsetPx
 | 测试 | 实际覆盖范围 |
 | --- | --- |
 | [LocalSubtitlePipelineApiTest](../../player_component/src/test/java/com/xyoye/player/subtitle/gpu/LocalSubtitlePipelineApiTest.kt) | 降级原因保留、恢复中状态及 recoverable 标记 |
-| [MpvAssFullSubtitleParserTest](../../player_component/src/test/java/com/xyoye/player/kernel/impl/mpv/MpvAssFullSubtitleParserTest.kt) | Dialogue 解析、时间线 reset 后重放、长播放裁剪和 512 项上限 |
+| [MpvSurfaceLifecycleTest](../../player_component/src/androidTest/java/com/xyoye/player_component/ui/MpvSurfaceLifecycleTest.kt) | 原生 OSD 像素、内嵌/外挂字幕、显示/时间/样式控制、双 Surface 重建、取消与失败清理，以及既有视频/HTTP 回归 |
 | [LibassSsaStreamDecoderTest](../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoderTest.kt) | 解码器初始化、时间基准与 Dialogue 归一化、codec private 向 sink 的格式传递 |
 | [LibassGpuRenderingTest](../../player_component/src/androidTest/java/com/xyoye/player_component/ui/LibassGpuRenderingTest.kt) | JNI/EGL/libass 实际像素：隐藏恢复、内外轨释放/切换、透明清屏、相同时间重绘、surface 重建、无效文件和大时间戳 |
 | [Media3SubtitleCompatibilityTest](../../player_component/src/androidTest/java/com/xyoye/player_component/ui/Media3SubtitleCompatibilityTest.kt) | 内嵌 ASS 数据/seek、禁用后重启、普通 Cue 输出；此类自身不检查 native 像素 |
 
 上述 JVM 用例不证明 EGL surface 恢复、native 坐标、跨内核画面或视觉裁剪正确。修改这些路径时，应在 Media3 和 mpv `mediacodec` 上分别检查内嵌／外挂 ASS/SSA、播放中及暂停时的正负偏移、surface 重建、seek／换轨后的恢复，并记录实际日志和画面结果。
 
-[MpvVideoPlayer](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt) 统一使用原生 SurfaceView 和 `mediacodec`，应用字幕控制器承接外挂字幕与内嵌 ASS/SSA；独立 GPU 字幕叠加层继续保留。当前内嵌位图字幕仍不可显示，界面提示切换 Media3；已取消 `gpu`／`gpu-next` 视频输出选择，不自动改用 GPU 视频合成。
+模拟器不能证明物理电视上的 PQ/HDR、字体完整覆盖或复杂字幕性能。性能收益不由删减代码量或减少桥接推断，需同素材真机比较。

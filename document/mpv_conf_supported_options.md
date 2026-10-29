@@ -22,7 +22,8 @@
 | `ao` | `audiotrack,opensles` |
 | `vo` / `force-window` | `mediacodec` / `no`；有效 Surface 到来前不加载片源 |
 | `stop-playback-on-init-failure` | `yes` |
-| `sub-visibility` / `osd-level` | `no` / `0`；字幕由应用独立叠加层显示 |
+| `sub-visibility` / `osd-level` | `yes` / `0`；字幕由 mpv 原生 OSD Surface 显示 |
+| `sub-auto` / `sub-ass-override` / `embeddedfonts` | `no` / `scale` / `yes`；应用管理外挂发现，mpv 保留样式和附件字体 |
 
 ## 应用设置与运行时参数
 
@@ -40,15 +41,17 @@
 | `sub-font-provider` | `none` |
 | `loop-file` / `speed` / `volume` | 循环、速度和音量 |
 | `sub-delay` | 字幕延迟；毫秒在 Kotlin 桥接中转为秒 |
+| `sub-visibility` / `sub-scale` / `sub-pos` | 显示、字号偏移与垂直偏移；无全局透明度覆盖 |
+| `vo-mediacodec-video-rect` | OSD 与实际视频布局同尺寸，传入 `width,height,0,0,width,height` |
 | `aid` / `sid` | 音频和字幕轨道；视频维持硬解直出 |
 
 `deinterlace`、`sigmoid-upscaling`、`sigmoid-upscaling-strength` 当前没有源码设置入口，已从实际暴露能力清单移除。参数注入成功不能单独证明设备上的实际效果。
 
 ## 命令与验证
 
-bridge 使用 `loadfile`、`seek`、`stop`、`audio-add`、`sub-add` 和 `change-list` 命令，不能将它们当作配置行。HTTP 请求头每次换源先清空，再用 `change-list http-header-fields append` 逐项传入原值，避免逗号和反斜杠被列表解析破坏。新增参数时核对内置 libmpv 支持、设置时机、错误返回和实际播放。原生库来源见 [打包记录](mpv-build-notes.md)。
+bridge 使用 `loadfile`、`seek`、`stop`、`audio-add`、`sub-add`、`sub-remove` 和 `change-list` 命令，不能将它们当作配置行。HTTP 请求头每次换源先清空，再用 `change-list http-header-fields append` 逐项传入原值，避免逗号和反斜杠被列表解析破坏。新增参数时核对内置 libmpv 支持、设置时机、错误返回和实际播放。原生库来源见 [打包记录](mpv-build-notes.md)。
 
-Surface 交接使用 AAR 的 `attachSurfaces` 与递增生命周期编号；销毁旧窗口前等待交接到应用持有的占位 Surface，随后重绑实际窗口。释放会话后再释放占位 Surface。关键设置失败向上报告错误。设备硬解不支持时应切换 Media3；当前内嵌位图字幕也需切换 Media3，ASS/SSA 和外挂字幕走应用字幕控制器，见[字幕渲染](player/subtitle-rendering.md)。
+Surface 交接使用 AAR 的 `attachSurfaces` 与视频/字幕独立生命周期编号；销毁旧视频窗口前等待交接到应用持有的占位 Surface，随后重绑实际窗口。字幕窗口销毁仅解绑 OSD。释放会话后再释放占位 Surface。关键设置失败向上报告错误。设备视频硬解不支持时应切换 Media3；字幕使用原生管线，见[字幕渲染](player/subtitle-rendering.md)。
 
 暂停且可 seek 时，解绑前保存时间，重绑后精确 seek 以重绘暂停帧；播放、停止和换源清除该位置，解绑期间的 seek 更新待恢复位置。不可 seek 的流不承诺精确恢复。同步 Surface/轨道调用最多等待 1.5 秒；超时报告失败，但不代表底层阻塞操作已经取消。
 

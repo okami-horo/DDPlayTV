@@ -27,11 +27,13 @@ import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.facoty.PlayerFactory
 import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
+import com.xyoye.player.kernel.impl.mpv.MpvVideoPlayer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.kernel.inter.VideoPlayerEventListener
 import com.xyoye.player.kernel.subtitle.SubtitleKernelBridge
 import com.xyoye.player.subtitle.backend.CanvasTextRendererBackend
 import com.xyoye.player.subtitle.backend.LibassRendererBackend
+import com.xyoye.player.subtitle.backend.MpvSubtitleRendererBackend
 import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
 import com.xyoye.player.subtitle.backend.SubtitleRenderEnvironment
 import com.xyoye.player.subtitle.backend.SubtitleRenderer
@@ -377,7 +379,7 @@ class DanDanVideoPlayer(
         val requestedBackend = PlayerInitializer.Subtitle.backend
         val resolvedBackend =
             when (requestedBackend) {
-                SubtitleRendererBackend.LIBASS ->
+                SubtitleRendererBackend.LIBASS, SubtitleRendererBackend.MPV_NATIVE ->
                     if (kernelBridge?.canStartGpuSubtitlePipeline() == false) {
                         SubtitleRendererBackend.LEGACY_CANVAS
                     } else {
@@ -388,7 +390,9 @@ class DanDanVideoPlayer(
         PlayerInitializer.Subtitle.backend = resolvedBackend
 
         val renderer: SubtitleRenderer =
-            if (resolvedBackend == SubtitleRendererBackend.LIBASS) {
+            if (mVideoPlayer is MpvVideoPlayer) {
+                MpvSubtitleRendererBackend((mVideoPlayer as MpvVideoPlayer).subtitleBridge)
+            } else if (resolvedBackend == SubtitleRendererBackend.LIBASS) {
                 LibassRendererBackend(kernelBridge)
             } else {
                 CanvasTextRendererBackend()

@@ -2,6 +2,8 @@
 
 日期：2026-10-29，按已完成的纯 TV 收敛修订。状态：**设计稿；本轮仅完善文档，具体实施留待后续安排**。
 
+**后续决策覆盖（2026-10-29）：**用户已选择 mpv 原生字幕。本文中 mpv 共用应用 libass、ASS 快照桥接、应用播放位置驱动、mpv 附件字体缺口及位图字幕切内核的设计前提已被[原生字幕方案](../plans/2026-10-29-mpv-native-subtitles.md)取代；旧 `mediacodec_embed` 已由固定 AAR 的 `mediacodec` 替代。Media3 的时钟、附件字体和性能优化仍延期，不能依据此次 mpv 实施视为完成。下文保留原设计上下文，涉及 mpv 的实施以新方案及[当前维护说明](../../../document/player/subtitle-rendering.md)为准。
+
 本文记录推荐架构、接口语义、阶段依赖与验收要求，不代表代码已经实现、参数已经定型或设备验收已经通过。当前行为以[字幕渲染维护说明](../../../document/player/subtitle-rendering.md)为准；既有修复与历史验证以[libass 接入审查](../../../document/player/libass-integration-audit.md)为准。后续实施再建立执行记录，避免将设计阶段写成完成账本。
 
 ## 1. 目标与范围
@@ -42,7 +44,7 @@ Jellyfin 使用视频 SurfaceView 和独立 ASS TextureView；DDPlayTV 使用独
 | [Media3VideoPlayer](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3VideoPlayer.kt)、[LibassAwareRenderersFactory](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassAwareRenderersFactory.kt) | 官方 Media3 视频链路；自定义 legacy ASS decoder，避免普通 Cue 重复输出 | 评估原始事件与字体的适配出口，保持 Media3 依赖集中 |
 | [LibassSsaStreamDecoder](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoder.kt) | 还原 codec private、Matroska 包装与 duration；独立缓冲池、sink 交接 | 保留 `1e12 us` 时间基数推断；需要明确 stream／period／window 映射 |
 | [Media3SubtitleFrameDriver](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3SubtitleFrameDriver.kt)、[SubtitleFrameDriver](../../../player_component/src/main/java/com/xyoye/player/kernel/subtitle/SubtitleFrameDriver.kt) | 视频 PTS 驱动；seek、换轨与时间线通知 | `releaseTimeNs` 被转成毫秒并命名为 `vsyncId`，未形成目标显示时间契约 |
-| [MpvVideoPlayer](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt)、[MpvEmbeddedSubtitleBridge](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvEmbeddedSubtitleBridge.kt) | 固定 Surface 直出、内嵌 ASS 头部／事件桥接；共享会话使用播放位置驱动 | 无精确视频帧 metadata；当前桥接没有附件字体输入；位图字幕提示切换 Media3 |
+| [MpvVideoPlayer](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt)、旧 `MpvEmbeddedSubtitleBridge`（后续已删除） | 原设计基线：固定 Surface 直出、内嵌 ASS 头部／事件桥接；共享会话使用播放位置驱动 | 原设计基线限制已由上方原生字幕方案取代 |
 | [LibassGpuSubtitleSession](../../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassGpuSubtitleSession.kt)、[AssGpuRenderer](../../../player_component/src/main/java/com/xyoye/player/subtitle/gpu/AssGpuRenderer.kt) | 内外轨仲裁、显隐、真实加载结果、有序状态命令、帧合并、释放和受控恢复 | 帧参数分开存储；引入呈现调度前需保证请求配对与状态失效 |
 | [ass_gpu_bridge.cpp](../../../player_component/src/main/cpp/ass_gpu_bridge.cpp) | GLES 2／3、透明清屏、纹理池、静态帧复用、swap 错误检查 | 无实际 presentation timestamp；逐 ASS_Image 上传／绘制；未显式配置 storage size、缓存预算或 MKV 附件字体 |
 | [SubtitleSurfaceOverlay](../../../player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleSurfaceOverlay.kt) | 透明 SurfaceView，对齐视频 View，surface 有序解绑／重建 | 需要分离源视频、栅格和显示尺寸；全窗口字幕属于后续产品选择 |

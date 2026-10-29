@@ -11,8 +11,11 @@ import androidx.media3.exoplayer.video.PlaceholderSurface
 import com.xyoye.common_component.log.model.LogLevel
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.mpv.PlezyMpvSession
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.coroutines.resume
 
 /** App policy and main-thread events over Plezy's independently owned native session. */
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -23,7 +26,8 @@ class MpvNativeBridge {
         val nativeType: Int,
         val title: String,
         val selected: Boolean,
-        val codec: String? = null
+        val codec: String? = null,
+        val external: Boolean = false
     )
 
     sealed interface Event {
@@ -53,14 +57,6 @@ class MpvNativeBridge {
             val message: String?
         ) : Event
 
-        data class SubtitleAssFull(
-            val value: String?
-        ) : Event
-
-        data class SubtitleAssExtradata(
-            val value: String?
-        ) : Event
-
         data class SubtitleSid(
             val value: String?
         ) : Event
@@ -77,6 +73,12 @@ class MpvNativeBridge {
     private var appContext: Context? = null
     private var placeholder: PlaceholderSurface? = null
     private var surfaceGeneration = 0L
+    private var subtitleSurfaceGeneration = 0L
+    private var videoTarget: Surface? = null
+    private var subtitleSurface: Surface? = null
+    private val externalSubtitleRevision = AtomicLong()
+    private var externalSubtitleId: Int? = null
+    private var externalSubtitleOwnerRevision = 0L
     private var surfaceAttached = false
     private var pausedSurfacePosition: Double? = null
     private var activeSource: Long? = null
@@ -174,8 +176,6 @@ class MpvNativeBridge {
                         "dheight" to "Int64",
                         "hwdec-current" to "String",
                         "track-list" to "None",
-                        "sub-text/ass-full" to "String",
-                        "sub-ass-extradata" to "String",
                         "sid" to "String"
                     ).forEach { (name, format) -> player.observe(name, format) }
                     isAvailable = !released
@@ -197,7 +197,8 @@ class MpvNativeBridge {
         enqueue(onResult = onResult) {
             check(surface.isValid) { "mpv video Surface is invalid" }
             val pausedPosition = pausedSurfacePosition ?: pausedSeekablePosition(it)
-            it.attachSurface(surface, ++surfaceGeneration)
+            it.attachSurfaces(surface, subtitleSurface, ++surfaceGeneration, subtitleSurfaceGeneration)
+            videoTarget = surface
             surfaceAttached = true
             pausedSurfacePosition = null
             if (pausedPosition != null && it.getFlag("pause") == true && it.getFlag("seekable") == true) {
@@ -212,11 +213,46 @@ class MpvNativeBridge {
             if (surfaceAttached) {
                 pausedSurfacePosition = pausedSeekablePosition(it)
                 val target = placeholder ?: PlaceholderSurface.newInstance(checkNotNull(appContext), false).also { placeholder = it }
-                it.attachSurface(target, ++surfaceGeneration)
+                it.attachSurfaces(target, null, ++surfaceGeneration, subtitleSurfaceGeneration)
+                videoTarget = target
                 surfaceAttached = false
             }
             true
         }
+
+    fun setSubtitleSurface(
+        surface: Surface,
+        onResult: (Boolean) -> Unit
+    ) {
+        enqueue(onResult = onResult) {
+            check(surface.isValid) { "mpv subtitle Surface is invalid" }
+            val generation = ++subtitleSurfaceGeneration
+            if (surfaceAttached) {
+                it.attachSurfaces(checkNotNull(videoTarget), surface, surfaceGeneration, generation)
+            }
+            subtitleSurface = surface
+        }
+    }
+
+    /** Retire the OSD consumer before Android destroys its Surface. */
+    fun detachSubtitleSurface(): Boolean =
+        call(false) {
+            videoTarget?.let { video ->
+                it.attachSurfaces(video, null, surfaceGeneration, subtitleSurfaceGeneration)
+            }
+            subtitleSurface = null
+            true
+        }
+
+    fun setSubtitleSurfaceSize(
+        width: Int,
+        height: Int
+    ) {
+        if (width > 0 && height > 0) {
+            // The overlay follows the actual laid-out video rectangle, including aspect changes.
+            setOption("vo-mediacodec-video-rect", "$width,$height,0,0,$width,$height")
+        }
+    }
 
     private fun pausedSeekablePosition(player: PlezyMpvSession): Double? =
         if (activeSource != null && player.getFlag("pause") == true && player.getFlag("seekable") == true) {
@@ -231,7 +267,9 @@ class MpvNativeBridge {
         onResult: (Boolean) -> Unit
     ) {
         val revision = ++sourceRevision
+        externalSubtitleRevision.incrementAndGet()
         enqueue(onResult = { if (revision == sourceRevision) onResult(it) }) {
+            externalSubtitleId = null
             videoStarted = false
             pausedSurfacePosition = null
             positionMs = 0
@@ -262,7 +300,9 @@ class MpvNativeBridge {
 
     fun stop() {
         sourceRevision++
+        externalSubtitleRevision.incrementAndGet()
         enqueue {
+            externalSubtitleId = null
             activeSource = null
             pausedSurfacePosition = null
             videoStarted = false
@@ -286,6 +326,12 @@ class MpvNativeBridge {
     fun setLooping(looping: Boolean) = setOption("loop-file", if (looping) "inf" else "no")
 
     fun setSubtitleDelay(offsetMs: Long) = enqueue { it.setProperty("sub-delay", offsetMs / 1000.0) }
+
+    fun setSubtitleVisible(visible: Boolean) = enqueue { it.setProperty("sub-visibility", visible) }
+
+    fun setSubtitleScale(offsetPercent: Int) = enqueue { it.setProperty("sub-scale", 1.0 + offsetPercent.coerceIn(-50, 400) / 100.0) }
+
+    fun setSubtitlePosition(offsetPercent: Int) = enqueue { it.setProperty("sub-pos", (100 - offsetPercent.coerceIn(-30, 30)).toDouble()) }
 
     fun setUserAgent(userAgent: String) = setOption("user-agent", userAgent)
 
@@ -327,19 +373,73 @@ class MpvNativeBridge {
     fun selectTrack(
         nativeType: Int,
         trackId: Int
-    ): Boolean =
-        call(false) {
+    ): Boolean {
+        if (nativeType == TRACK_TYPE_SUBTITLE) externalSubtitleRevision.incrementAndGet()
+        return call(false) {
             it.setProperty(if (nativeType == TRACK_TYPE_AUDIO) "aid" else "sid", trackId.toString())
             refreshTracks(it)
             true
         }
+    }
 
-    fun deselectTrack(nativeType: Int): Boolean =
-        call(false) {
+    fun deselectTrack(nativeType: Int): Boolean {
+        if (nativeType == TRACK_TYPE_SUBTITLE) externalSubtitleRevision.incrementAndGet()
+        return call(false) {
             it.setProperty(if (nativeType == TRACK_TYPE_AUDIO) "aid" else "sid", "no")
             refreshTracks(it)
             true
         }
+    }
+
+    suspend fun loadExternalSubtitle(path: String): Boolean =
+        suspendCancellableCoroutine { continuation ->
+            val revision = externalSubtitleRevision.incrementAndGet()
+            continuation.invokeOnCancellation {
+                externalSubtitleRevision.compareAndSet(revision, revision + 1)
+                enqueue {
+                    if (externalSubtitleOwnerRevision == revision) removeExternalSubtitle(it)
+                }
+            }
+            var loaded = false
+            enqueue(onResult = { success ->
+                if (continuation.isActive) continuation.resume(success && loaded && revision == externalSubtitleRevision.get())
+            }) { player ->
+                if (revision != externalSubtitleRevision.get()) return@enqueue
+                removeExternalSubtitle(player)
+                val previousIds = tracks.filter { it.type == TrackType.SUBTITLE }.map { it.id }.toSet()
+                player.command("sub-add", nativePath(path), "auto")
+                refreshTracks(player)
+                val added =
+                    tracks.firstOrNull { it.type == TrackType.SUBTITLE && it.external && it.id !in previousIds }
+                        ?: error("mpv did not load the external subtitle")
+                externalSubtitleId = added.id
+                externalSubtitleOwnerRevision = revision
+                if (revision != externalSubtitleRevision.get()) {
+                    removeExternalSubtitle(player)
+                    return@enqueue
+                }
+                try {
+                    player.setProperty("sid", added.id.toString())
+                    refreshTracks(player)
+                    loaded = true
+                } catch (error: Exception) {
+                    removeExternalSubtitle(player)
+                    throw error
+                }
+            }
+        }
+
+    fun clearExternalSubtitle() {
+        externalSubtitleRevision.incrementAndGet()
+        enqueue { removeExternalSubtitle(it) }
+    }
+
+    private fun removeExternalSubtitle(player: PlezyMpvSession) {
+        val id = externalSubtitleId ?: return
+        externalSubtitleId = null
+        player.command("sub-remove", id.toString())
+        refreshTracks(player)
+    }
 
     fun addExternalTrack(
         type: TrackType,
@@ -472,9 +572,10 @@ class MpvNativeBridge {
                     if (videoStarted) validateVideo(player)
                     null
                 }
-                "sub-text/ass-full" -> Event.SubtitleAssFull(value as? String)
-                "sub-ass-extradata" -> Event.SubtitleAssExtradata(value as? String)
-                "sid" -> Event.SubtitleSid(value as? String)
+                "sid" -> {
+                    refreshTracks(player)
+                    Event.SubtitleSid(value as? String)
+                }
                 else -> null
             }
         if (event != null) dispatchEvent(event, activeRevision)
@@ -520,7 +621,8 @@ class MpvNativeBridge {
                             if (type == TrackType.AUDIO) TRACK_TYPE_AUDIO else TRACK_TYPE_SUBTITLE,
                             title,
                             player.getFlag("$key/selected") == true,
-                            player.getString("$key/codec")
+                            player.getString("$key/codec"),
+                            player.getFlag("$key/external") == true
                         )
                     )
                 }
@@ -537,16 +639,22 @@ class MpvNativeBridge {
         action: (PlezyMpvSession) -> Unit
     ) {
         synchronized(worker) {
-            if (released) return
+            if (released) {
+                onResult?.let { mainHandler.post { it(false) } }
+                return
+            }
             worker.execute {
-                if (released) return@execute
+                if (released) {
+                    onResult?.let { mainHandler.post { it(false) } }
+                    return@execute
+                }
                 val result = runCatching { action(checkNotNull(session) { errorMessage ?: "mpv is not initialized" }) }
                 result.exceptionOrNull()?.let {
                     errorMessage = it.message
                     Log.w(TAG, "mpv operation failed", it)
                     if (onResult == null) dispatchEvent(Event.Error(null, null, errorMessage))
                 }
-                onResult?.let { callback -> mainHandler.post { if (!released) callback(result.isSuccess) } }
+                onResult?.let { callback -> mainHandler.post { callback(!released && result.isSuccess) } }
             }
         }
     }
@@ -593,7 +701,10 @@ class MpvNativeBridge {
                 "stop-playback-on-init-failure" to "yes",
                 "ao" to "audiotrack,opensles",
                 "force-window" to "no",
-                "sub-visibility" to "no",
+                "sub-visibility" to "yes",
+                "sub-auto" to "no",
+                "sub-ass-override" to "scale",
+                "embeddedfonts" to "yes",
                 "osd-level" to "0"
             )
     }

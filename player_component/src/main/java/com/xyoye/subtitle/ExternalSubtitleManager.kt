@@ -50,7 +50,7 @@ class ExternalSubtitleManager(
                         backendOwner = renderer
                         mTimedTextObject = null
                     } else {
-                        ToastCenter.showOriginalToast("加载 ASS/SSA 字幕失败，请检查文件内容")
+                        ToastCenter.showOriginalToast("加载字幕失败，请检查文件格式和内容")
                     }
                     loaded
                 }

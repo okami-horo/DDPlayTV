@@ -15,6 +15,7 @@
  - Media3 `1.11.1` (single version source: `gradle.properties`, default player), mpv and danmaku/subtitle rendering. VLC/libVLC was removed on all devices on 2026-10-29. The libass bridge retains raw ASS decoding with a method-scoped Media3 `ExperimentalApi` opt-in. ExoPlayer 2 dependency constants remain but are not referenced by current module build declarations.
  - mpv now comes from Plezy's pinned original Android AAR via `repository:mpv_native`, with a Java-only `repository:mpv` ABI wrapper keeping upstream Kotlin 2.4 metadata off the Kotlin 2.2.10 compile classpath. Debug/release/beta variants are supported; no compiler metadata bypass or AAR rewriting. Source lock, SHA-256, native versions, license and upgrade procedure have one authoritative home in `document/mpv-build-notes.md`; migration validation is tracked in `docs/superpowers/plans/2026-10-29-plezy-mpv.md`. The app retains its independent libass/OpenCC libraries; old mpv JNI/headers/FFmpeg binaries are removed.
  - NanoHTTPD/local proxy-related storage/playback components.
+ - mpv subtitles now use the pinned AAR's native OSD (`MPV_NATIVE` runtime backend); no new dependency/version is introduced. App libass remains for Media3. Source mapping, option limits and validation are in `document/player/subtitle-rendering.md` and `docs/superpowers/plans/2026-10-29-mpv-native-subtitles.md` (2026-10-29).
  - Robolectric `4.16.1`, JUnit4, AndroidX Test.
 
  ## Build Commands

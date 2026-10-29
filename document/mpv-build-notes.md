@@ -29,7 +29,7 @@
 
 应用层将本地 `file:/`、`file:///` URI 转为解码后的绝对路径，HTTP/content URI 保持原值。HTTP 头通过列表 append 命令逐项传入，并在每次加载前清空，保留逗号、反斜杠等值中的字符。
 
-应用自有的 `libass.so`、`libopen_cc.so` 及 `libass_bridge` 保留。上游 mpv 内置 libass，其 ELF 使用 SYMBOLIC 绑定；独立字幕叠加层仍链接应用的 `libass.so`，没有迁移到上游 OSD。现有字幕时钟、弹幕及 Media3 后端保持各自职责。
+mpv 字幕已迁移到 AAR 原生 OSD Surface：mpv 负责内嵌/外挂解析、时钟和字体，不再提取 ASS 快照交给应用的第二个 libass。视频仍硬解直出，弹幕由应用绘制。应用自有的 `libass.so`、`libopen_cc.so` 及 `libass_bridge` 为 Media3/既有功能保留；上游 mpv 内置 libass，其 ELF 使用 SYMBOLIC 绑定。详见[字幕维护说明](player/subtitle-rendering.md)与[原生字幕验证](../docs/superpowers/plans/2026-10-29-mpv-native-subtitles.md)。
 
 播放器 CMake 只编译 libass 桥接。Debug 从 `player_component/libs/` 打包保留的库；Release/Beta 的 strip 任务只处理这些本地库。mpv/FFmpeg 的原版 AAR 由 AGP 正常打包，不再与旧同名库混用。
 

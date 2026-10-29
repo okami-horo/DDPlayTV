@@ -48,7 +48,7 @@ class SettingSubtitleStyleView(
     }
 
     override fun onViewShowed() {
-        if (PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS) {
+        if (isLibassMode()) {
             viewBinding.subtitleVerticalOffsetSb.requestFocus()
         } else {
             viewBinding.subtitleSizeSb.requestFocus()
@@ -107,8 +107,8 @@ class SettingSubtitleStyleView(
     }
 
     private fun applyBackendVisibility() {
-        val enableLegacyStyling = PlayerInitializer.Subtitle.backend != SubtitleRendererBackend.LIBASS
-        val enableLibassScaling = PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS
+        val enableLegacyStyling = !isLibassMode()
+        val enableLibassScaling = isLibassMode()
         // libass 使用字幕文件自身样式，仅保留字号/颜色/描边等在传统后端
         viewBinding.subtitleSizeRow.isVisible = enableLegacyStyling
         viewBinding.subtitleSizeSb.isVisible = enableLegacyStyling
@@ -118,9 +118,9 @@ class SettingSubtitleStyleView(
         viewBinding.subtitleColorSb.isVisible = enableLegacyStyling
         viewBinding.subtitleStrokeColorRow.isVisible = enableLegacyStyling
         viewBinding.subtitleStrokeColorSb.isVisible = enableLegacyStyling
-        // 透明度在 libass 下同样生效（作为全局系数），因此始终可见
-        viewBinding.subtitleAlphaRow.isVisible = true
-        viewBinding.subtitleAlphaSb.isVisible = true
+        viewBinding.subtitleAlphaRow.isVisible = !isMpvMode()
+        viewBinding.subtitleAlphaSb.isVisible = !isMpvMode()
+        viewBinding.subtitleNativeStyleTips.isVisible = isMpvMode()
         // 字号偏移仅对 libass 生效
         viewBinding.subtitleFontScaleOffsetRow.isVisible = enableLibassScaling
         viewBinding.subtitleFontScaleOffsetSb.isVisible = enableLibassScaling
@@ -292,6 +292,11 @@ class SettingSubtitleStyleView(
     }
 
     private fun resetConfig() {
+        if (isMpvMode()) {
+            updateFontScaleOffset(PlayerInitializer.Subtitle.DEFAULT_FONT_SCALE_OFFSET_PERCENT)
+            updateVerticalOffset(PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET)
+            return
+        }
         updateSize(PlayerInitializer.Subtitle.DEFAULT_SIZE)
         updateStrokeWidth(PlayerInitializer.Subtitle.DEFAULT_STROKE)
         updateAlpha(PlayerInitializer.Subtitle.DEFAULT_ALPHA)
@@ -312,14 +317,19 @@ class SettingSubtitleStyleView(
         viewBinding.tvResetSubtitleConfig.isVisible = isConfigChanged()
     }
 
-    private fun isConfigChanged(): Boolean =
-        PlayerInitializer.Subtitle.textSize != PlayerInitializer.Subtitle.DEFAULT_SIZE ||
+    private fun isConfigChanged(): Boolean {
+        if (isMpvMode()) {
+            return PlayerInitializer.Subtitle.fontScaleOffsetPercent != PlayerInitializer.Subtitle.DEFAULT_FONT_SCALE_OFFSET_PERCENT ||
+                PlayerInitializer.Subtitle.verticalOffset != PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET
+        }
+        return PlayerInitializer.Subtitle.textSize != PlayerInitializer.Subtitle.DEFAULT_SIZE ||
             PlayerInitializer.Subtitle.strokeWidth != PlayerInitializer.Subtitle.DEFAULT_STROKE ||
             PlayerInitializer.Subtitle.textColor != PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR ||
             PlayerInitializer.Subtitle.strokeColor != PlayerInitializer.Subtitle.DEFAULT_STROKE_COLOR ||
             PlayerInitializer.Subtitle.alpha != PlayerInitializer.Subtitle.DEFAULT_ALPHA ||
             PlayerInitializer.Subtitle.fontScaleOffsetPercent != PlayerInitializer.Subtitle.DEFAULT_FONT_SCALE_OFFSET_PERCENT ||
             PlayerInitializer.Subtitle.verticalOffset != PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET
+    }
 
     private fun offsetValueToProgress(value: Int): Int = value + VERTICAL_OFFSET_MAX
 
@@ -336,5 +346,8 @@ class SettingSubtitleStyleView(
             "$offsetPercent%"
         }
 
-    private fun isLibassMode(): Boolean = PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS
+    private fun isLibassMode(): Boolean =
+        (SubtitleRendererRegistry.current()?.backend ?: PlayerInitializer.Subtitle.backend) != SubtitleRendererBackend.LEGACY_CANVAS
+
+    private fun isMpvMode(): Boolean = SubtitleRendererRegistry.current()?.backend == SubtitleRendererBackend.MPV_NATIVE
 }

@@ -16,7 +16,7 @@ interface SubtitleKernelBridge {
     /**
      * Whether the current kernel configuration supports attaching the GPU subtitle overlay.
      *
-     * mpv uses Plezy's `vo=mediacodec` Surface output beneath the independent subtitle overlay.
+     * mpv owns its native OSD and does not implement this app-rendered subtitle contract.
      */
     fun canStartGpuSubtitlePipeline(): Boolean = true
 

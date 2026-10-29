@@ -83,8 +83,8 @@ public final class PlezyMpvSession implements AutoCloseable {
     public void setProperty(String name, boolean value) { player.setProperty(name, value); }
     public void observe(String name, String format) { player.observeProperty(name, PropertyFormat.valueOf(format)); }
 
-    public void attachSurface(Surface surface, long generation) {
-        player.attachSurfaces(surface, null, generation, 0L, null);
+    public void attachSurfaces(Surface video, Surface osd, long videoGeneration, long osdGeneration) {
+        player.attachSurfaces(video, osd, videoGeneration, osdGeneration, null);
     }
 
     @Override

@@ -1,6 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="PrivateResource">
     <string name="app_name">player_component</string>
+    <string name="subtitle_native_style_tips">保留字幕原有样式，不提供全局透明度调整。字号和位置调整对部分特效或位图字幕可能不生效。</string>
     <string name="cant_parse_url">无法解析播放地址</string>
     <string name="video_record">记忆上次播放到</string>
     <string name="video_skip">继续播放</string>

@@ -1,8 +1,13 @@
 package com.okamihoro.ddplaytv.ui.tv
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.view.KeyEvent
+import android.view.PixelCopy
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -23,6 +28,8 @@ import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
 import com.xyoye.common_component.services.PlaybackRequestService
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.data_component.bean.LocalDanmuBean
+import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.data.AnimeData
 import com.xyoye.data_component.data.BangumiAnimeData
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -35,6 +42,7 @@ import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingAction
 import com.xyoye.player.info.SettingItem
+import com.xyoye.player.subtitle.ui.SubtitleSurfaceOverlay
 import com.xyoye.player_component.ui.activities.player.PlayerActivity
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
 import com.xyoye.storage_component.ui.fragment.storage_file.StorageFileFragment
@@ -45,6 +53,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class TvDpadRewriteInstrumentedTest {
@@ -180,6 +190,8 @@ class TvDpadRewriteInstrumentedTest {
         assertTrue(fixture.isFile)
         val previousKernel = PlayerConfig.getUsePlayerType()
         val previousScale = PlayerInitializer.screenScale
+        val previousSubtitleOffset = SubtitleConfig.getVerticalOffset()
+        val previousSubtitleAlpha = SubtitleConfig.getAlpha()
         PlayerConfig.putUsePlayerType(kernel.value)
         try {
             val provider = ARouter.getInstance().navigation(PlaybackRequestService::class.java)
@@ -196,6 +208,7 @@ class TvDpadRewriteInstrumentedTest {
             val intent = Intent(context, PlayerActivity::class.java).putExtra(PlaybackNavigation.REQUEST_ID, request.requestId)
             ActivityScenario.launch<PlayerActivity>(intent).use { scenario ->
                 await(scenario, 15000) { player(it).isPlaying() && it.hasWindowFocus() }
+                if (kernel == PlayerType.TYPE_MPV_PLAYER) verifyNativeSubtitleLayer(scenario)
                 send(KeyEvent.KEYCODE_MENU)
                 await(scenario) { it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)?.hasFocus() == true }
                 var position = 0L
@@ -225,6 +238,37 @@ class TvDpadRewriteInstrumentedTest {
                     val item = (list.adapter as BaseAdapter).items.getOrNull(list.getSelectedPosition())
                     list.hasFocus() && item is SettingItem && item.action == SettingAction.VIDEO_ASPECT
                 }
+                if (kernel == PlayerType.TYPE_MPV_PLAYER) {
+                    scenario.onActivity {
+                        assertEquals(
+                            com.xyoye.common_component.enums.SubtitleRendererBackend.MPV_NATIVE,
+                            com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
+                                .current()
+                                ?.backend
+                        )
+                        val list = it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
+                        val index =
+                            (list.adapter as BaseAdapter).items.indexOfFirst { item ->
+                                item is SettingItem && item.action == SettingAction.SUBTITLE_STYLE
+                            }
+                        list.setSelectedPosition(index)
+                    }
+                    send(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) { it.currentFocus?.id == com.xyoye.player_component.R.id.subtitle_vertical_offset_sb }
+                    scenario.onActivity {
+                        assertFalse(it.findViewById<android.view.View>(com.xyoye.player_component.R.id.subtitle_alpha_sb).isShown)
+                        assertTrue(it.findViewById<android.view.View>(com.xyoye.player_component.R.id.subtitle_native_style_tips).isShown)
+                    }
+                    send(KeyEvent.KEYCODE_DPAD_RIGHT)
+                    assertNotEquals(previousSubtitleOffset, SubtitleConfig.getVerticalOffset())
+                    assertEquals(previousSubtitleAlpha, SubtitleConfig.getAlpha())
+                    send(KeyEvent.KEYCODE_BACK)
+                    await(scenario) { activity ->
+                        val list = activity.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
+                        val item = (list.adapter as BaseAdapter).items.getOrNull(list.getSelectedPosition())
+                        list.hasFocus() && item is SettingItem && item.action == SettingAction.SUBTITLE_STYLE
+                    }
+                }
                 send(KeyEvent.KEYCODE_BACK)
                 await(scenario) { it.currentFocus is VideoController }
                 send(KeyEvent.KEYCODE_DPAD_CENTER)
@@ -235,12 +279,74 @@ class TvDpadRewriteInstrumentedTest {
         } finally {
             PlayerConfig.putUsePlayerType(previousKernel)
             PlayerInitializer.screenScale = previousScale
+            SubtitleConfig.putVerticalOffset(previousSubtitleOffset)
+            PlayerInitializer.Subtitle.verticalOffset = previousSubtitleOffset
         }
     }
 
     private fun gridPosition(activity: TvMainActivity): Int {
         val list = activity.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.page_anime_rv)
         return activity.currentFocus?.let { list?.findContainingViewHolder(it)?.bindingAdapterPosition } ?: -1
+    }
+
+    private fun verifyNativeSubtitleLayer(scenario: ActivityScenario<PlayerActivity>) {
+        val subtitle =
+            File(context.cacheDir, "native-subtitle-ui.srt").apply {
+                writeText("1\n00:00:00,000 --> 00:05:00,000\nMPV 原生字幕测试\n")
+            }
+        val danmaku =
+            File(context.cacheDir, "native-subtitle-danmaku.xml").apply {
+                writeText(
+                    "<i>" +
+                        (0..120).joinToString("") { second ->
+                            "<d p=\"$second,5,25,65280,0,0,test,$second\">弹幕叠加测试</d>"
+                        } + "</i>"
+                )
+            }
+        try {
+            lateinit var overlay: SubtitleSurfaceOverlay
+            scenario.onActivity {
+                val view = player(it)
+                val children = (0 until view.childCount).map(view::getChildAt)
+                val controller = children.filterIsInstance<VideoController>().single()
+                overlay = children.filterIsInstance<SubtitleSurfaceOverlay>().single()
+                assertTrue(
+                    "Controls and danmaku must remain above the subtitle plane",
+                    view.indexOfChild(controller) > view.indexOfChild(overlay)
+                )
+                controller.addExtendTrack(VideoTrackBean.subtitle(subtitle.absolutePath))
+                controller.addExtendTrack(VideoTrackBean.danmu(LocalDanmuBean(danmaku.absolutePath)))
+            }
+            var visiblePixels = 0
+            val deadline = SystemClock.elapsedRealtime() + 10000
+            while (visiblePixels < 50 && SystemClock.elapsedRealtime() < deadline) {
+                val bitmap = Bitmap.createBitmap(overlay.width, overlay.height, Bitmap.Config.ARGB_8888)
+                val copied = CountDownLatch(1)
+                var result = -1
+                PixelCopy.request(overlay, bitmap, {
+                    result = it
+                    copied.countDown()
+                }, Handler(Looper.getMainLooper()))
+                assertTrue(copied.await(3, TimeUnit.SECONDS))
+                if (result == PixelCopy.SUCCESS) {
+                    val colors = IntArray(bitmap.width * bitmap.height)
+                    bitmap.getPixels(colors, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+                    visiblePixels = colors.count { Color.alpha(it) > 0 && Color.red(it) > 40 }
+                }
+                bitmap.recycle()
+                if (visiblePixels < 50) SystemClock.sleep(25)
+            }
+            assertTrue("The application must load external subtitles into the actual native OSD", visiblePixels > 50)
+            instrumentation.uiAutomation.takeScreenshot()?.let { screenshot ->
+                File(context.getExternalFilesDir(null), "mpv-native-subtitles.png").outputStream().use {
+                    screenshot.compress(Bitmap.CompressFormat.PNG, 100, it)
+                }
+                screenshot.recycle()
+            }
+        } finally {
+            subtitle.delete()
+            danmaku.delete()
+        }
     }
 
     private fun storageList(activity: StorageFileActivity): DpadRecyclerView =

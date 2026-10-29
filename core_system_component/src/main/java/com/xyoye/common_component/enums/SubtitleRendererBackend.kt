@@ -5,13 +5,14 @@ package com.xyoye.common_component.enums
  */
 enum class SubtitleRendererBackend {
     LEGACY_CANVAS,
-    LIBASS;
+    LIBASS,
+    MPV_NATIVE;
 
     companion object {
         fun fromName(value: String?): SubtitleRendererBackend {
             val backend = values().firstOrNull { it.name == value } ?: LIBASS
             // Legacy backend is disabled; always normalize to libass.
-            return if (backend == LEGACY_CANVAS) LIBASS else backend
+            return if (backend == LEGACY_CANVAS || backend == MPV_NATIVE) LIBASS else backend
         }
     }
 }
