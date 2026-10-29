@@ -8,7 +8,6 @@ import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import androidx.core.view.isVisible
 import com.xyoye.common_component.config.DanmuConfig
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.utils.hideKeyboard
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.SettingViewType
@@ -27,7 +26,6 @@ class SettingDanmuConfigureView(
     defStyleAttr: Int = 0
 ) : BaseSettingView<LayoutSettingDanmuConfigureBinding>(context, attrs, defStyleAttr) {
     private var settingMode = BaseDanmaku.TYPE_SCROLL_RL
-    private val isTvUiMode: Boolean = context.isTelevisionUiMode()
     private val maxLineCommitCoordinator =
         DanmuMaxLineCommitCoordinator(
             debounceMillis = MAX_LINE_COMMIT_DEBOUNCE_MS,
@@ -51,7 +49,6 @@ class SettingDanmuConfigureView(
     override fun onViewHide() {
         flushPendingMaxLineCommit()
         hideKeyboard(viewBinding.etScreenMaxNum)
-        hideKeyboard(viewBinding.etMaxLine)
         viewBinding.playerSettingNsv.focusedChild?.clearFocus()
     }
 
@@ -78,14 +75,6 @@ class SettingDanmuConfigureView(
             if (event.action == KeyEvent.ACTION_DOWN) stepTvMaxLine(if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) -1 else 1)
             true
         }
-        viewBinding.groupLineLimitTv.isVisible = isTvUiMode
-        viewBinding.groupLineLimitInput.isVisible = isTvUiMode.not()
-        if (isTvUiMode) {
-            // Defensive: even if a device/skin toggles visibility unexpectedly, avoid EditText focus traps.
-            viewBinding.etMaxLine.isFocusable = false
-            viewBinding.etMaxLine.isFocusableInTouchMode = false
-        }
-
         viewBinding.tvLanguageOrigin.setOnClickListener {
             updateLanguage(DanmakuLanguage.ORIGINAL)
             mControlWrapper.setLanguage(DanmakuLanguage.ORIGINAL)
@@ -140,28 +129,6 @@ class SettingDanmuConfigureView(
         viewBinding.groupLineLimitTv.setOnClickListener {
             // Keep DPAD-left/right as the primary interaction; click increments as a convenience.
             stepTvMaxLine(+1)
-        }
-
-        viewBinding.tvLineNoLimit.setOnClickListener {
-            viewBinding.etMaxLine.clearFocus()
-            requestMaxLineChange(PlayerInitializer.Danmu.DEFAULT_MAX_LINE)
-        }
-
-        viewBinding.etMaxLine.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                // 输入为空或0，设置为无限制
-                val maxLineText = viewBinding.etMaxLine.text.toString()
-                var newMaxLine =
-                    maxLineText.toIntOrNull()
-                        ?: PlayerInitializer.Danmu.DEFAULT_MAX_LINE
-                newMaxLine =
-                    if (newMaxLine <= 0) PlayerInitializer.Danmu.DEFAULT_MAX_LINE else newMaxLine
-
-                requestMaxLineChange(newMaxLine)
-                hideKeyboard(viewBinding.etMaxLine)
-                return@setOnEditorActionListener true
-            }
-            return@setOnEditorActionListener false
         }
 
         viewBinding.tvScreenNoLimit.setOnClickListener {
@@ -348,11 +315,7 @@ class SettingDanmuConfigureView(
             } else {
                 line
             }
-        return if (isTvUiMode) {
-            normalizedLine.coerceIn(PlayerInitializer.Danmu.DEFAULT_MAX_LINE, TV_MAX_LINE_LIMIT)
-        } else {
-            normalizedLine
-        }
+        return normalizedLine.coerceIn(PlayerInitializer.Danmu.DEFAULT_MAX_LINE, TV_MAX_LINE_LIMIT)
     }
 
     private fun updateScreenLimit(limit: Int) {
@@ -363,43 +326,20 @@ class SettingDanmuConfigureView(
     }
 
     private fun applyMaxLineView(maxLine: Int) {
-        val normalizedMaxLine =
-            if (maxLine <= PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
-                PlayerInitializer.Danmu.DEFAULT_MAX_LINE
-            } else {
-                maxLine
-            }
-
-        if (isTvUiMode) {
-            val tvMaxLine = normalizedMaxLine.coerceIn(PlayerInitializer.Danmu.DEFAULT_MAX_LINE, TV_MAX_LINE_LIMIT)
-            viewBinding.groupLineLimitTv.isSelected = tvMaxLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE
-            viewBinding.tvLineLimitValue.text =
-                if (tvMaxLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
-                    context.getString(R.string.text_danmu_line_unlimited)
-                } else {
-                    tvMaxLine.toString()
-                }
-
-            // Keep TV UI range and actual behavior consistent.
-            if (tvMaxLine != normalizedMaxLine) {
-                requestMaxLineChange(tvMaxLine, debounce = false)
-            }
-        } else {
+        val normalizedMaxLine = maxLine.coerceIn(PlayerInitializer.Danmu.DEFAULT_MAX_LINE, TV_MAX_LINE_LIMIT)
+        viewBinding.groupLineLimitTv.isSelected = normalizedMaxLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE
+        viewBinding.tvLineLimitValue.text =
             if (normalizedMaxLine == PlayerInitializer.Danmu.DEFAULT_MAX_LINE) {
-                viewBinding.tvLineNoLimit.isSelected = true
-                viewBinding.etMaxLine.setText("")
+                context.getString(R.string.text_danmu_line_unlimited)
             } else {
-                viewBinding.tvLineNoLimit.isSelected = false
-                viewBinding.etMaxLine.setText(normalizedMaxLine.toString())
+                normalizedMaxLine.toString()
             }
+        if (normalizedMaxLine != maxLine) {
+            requestMaxLineChange(normalizedMaxLine, debounce = false)
         }
     }
 
     private fun stepTvMaxLine(delta: Int) {
-        if (isTvUiMode.not()) {
-            return
-        }
-
         val currentMaxLine =
             when (settingMode) {
                 BaseDanmaku.TYPE_SCROLL_RL -> PlayerInitializer.Danmu.maxScrollLine

@@ -6,18 +6,18 @@ import androidx.activity.addCallback
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
-import com.google.android.material.tabs.TabLayoutMediator
 import com.xyoye.anime_component.BR
 import com.xyoye.anime_component.R
 import com.xyoye.anime_component.databinding.ActivityAnimeDetailBinding
-import com.xyoye.anime_component.ui.adapter.AnimeDetailPageAdapter
+import com.xyoye.anime_component.ui.fragment.anime_episode.AnimeEpisodeFragment
+import com.xyoye.anime_component.ui.fragment.anime_intro.AnimeIntroFragment
+import com.xyoye.anime_component.ui.fragment.anime_recommend.AnimeRecommendFragment
 import com.xyoye.anime_component.utils.loadAnimeCover
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.clamp
 import com.xyoye.common_component.extension.dp
 import com.xyoye.common_component.extension.isNightMode
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.loadImage
 import com.xyoye.common_component.extension.opacity
 import com.xyoye.common_component.extension.setTextColorRes
@@ -60,7 +60,6 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
 
     // 返回事件拦截器
     private var backPressInterceptor: (() -> Boolean)? = null
-    private var tabLayoutMediator: TabLayoutMediator? = null
     private var tvPages: TvCategoryPages? = null
 
     override fun initViewModel() =
@@ -99,35 +98,19 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
     }
 
     private fun initViewPager(tabs: Array<AnimeDetailTab>) {
-        if (isTelevisionUiMode()) {
-            val pages =
-                tvPages ?: TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager).also { tvPages = it }
-            val factory = AnimeDetailPageAdapter(this, tabs)
-            pages.submit(tabs.mapIndexed { index, tab -> TvCategory(tab.name, tab.title) { factory.createFragment(index) } })
-            return
-        }
-        val viewPagerAdapter = dataBinding.viewpager.adapter as? AnimeDetailPageAdapter?
-        if (viewPagerAdapter != null && viewPagerAdapter.tabs.contentEquals(tabs)) {
-            return
-        }
-
-        tabLayoutMediator?.detach()
-        tabLayoutMediator = null
-
-        dataBinding.viewpager.adapter = AnimeDetailPageAdapter(this, tabs)
-        tabLayoutMediator =
-            TabLayoutMediator(
-                dataBinding.tabLayout,
-                dataBinding.viewpager,
-            ) { tab, position ->
-                tab.text = tabs[position].title
-            }.also { it.attach() }
-    }
-
-    override fun onDestroy() {
-        tabLayoutMediator?.detach()
-        tabLayoutMediator = null
-        super.onDestroy()
+        val pages =
+            tvPages ?: TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager).also { tvPages = it }
+        pages.submit(
+            tabs.map { tab ->
+                TvCategory(tab.name, tab.title) {
+                    when (tab) {
+                        AnimeDetailTab.INFO -> AnimeIntroFragment()
+                        AnimeDetailTab.EPISODES -> AnimeEpisodeFragment()
+                        AnimeDetailTab.RECOMMEND -> AnimeRecommendFragment()
+                    }
+                }
+            }
+        )
     }
 
     private fun initListener() {

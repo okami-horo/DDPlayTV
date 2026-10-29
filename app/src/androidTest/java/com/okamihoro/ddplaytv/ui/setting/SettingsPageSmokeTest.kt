@@ -6,13 +6,13 @@ import androidx.preference.Preference
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.user_component.ui.activities.setting_app.SettingAppActivity
 import com.xyoye.user_component.ui.activities.setting_developer.SettingDeveloperActivity
 import com.xyoye.user_component.ui.activities.setting_player.SettingPlayerActivity
 import com.xyoye.user_component.ui.fragment.AppSettingFragment
 import com.xyoye.user_component.ui.fragment.DeveloperSettingFragment
+import com.xyoye.user_component.ui.fragment.PlayerSettingFragment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -59,19 +59,16 @@ class SettingsPageSmokeTest {
     }
 
     @Test
-    fun playerSettingPageLoadsTabsAndPager() {
+    fun playerSettingPageLoadsRemoteCategoriesAndPreferences() {
         ActivityScenario.launch(SettingPlayerActivity::class.java).use { scenario ->
             InstrumentationRegistry.getInstrumentation().waitForIdleSync()
             scenario.onActivity { activity ->
-                val viewPager = activity.findViewById<ViewPager2>(com.xyoye.user_component.R.id.viewpager)
-                val tabLayout = activity.findViewById<TabLayout>(com.xyoye.user_component.R.id.tab_layout)
-                assertNotNull("Player setting ViewPager should be present", viewPager)
-                assertNotNull("Player setting TabLayout should be present", tabLayout)
-
-                val adapter = viewPager.adapter
-                assertNotNull("Player setting ViewPager adapter should be set", adapter)
-                assertEquals("Player setting should contain three tabs", 3, adapter?.itemCount)
-                assertEquals("Player setting TabLayout should contain three tabs", 3, tabLayout.tabCount)
+                val categories = activity.findViewById<DpadRecyclerView>(com.xyoye.user_component.R.id.tab_layout)
+                assertNotNull("Player setting categories should be present", categories)
+                assertEquals("Player setting should contain three categories", 3, categories.adapter?.itemCount)
+                val visible = activity.supportFragmentManager.fragments.filter { it.view?.isShown == true }
+                assertEquals(1, visible.size)
+                assertTrue(visible.single() is PlayerSettingFragment)
             }
         }
     }

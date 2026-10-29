@@ -13,7 +13,6 @@ class RemoteKeyDispatcher(
         val isLocked: Boolean,
         val isControllerShowing: Boolean,
         val isSettingShowing: Boolean,
-        val isPopupMode: Boolean,
         val hasControllerFocus: Boolean
     )
 
@@ -40,9 +39,6 @@ class RemoteKeyDispatcher(
         state: UiState,
         repeatCount: Int = 0
     ): DispatchResult {
-        if (state.isPopupMode) {
-            return DispatchResult.IGNORED
-        }
         if (state.isSettingShowing) {
             return if (keyCode == KeyEvent.KEYCODE_MENU) DispatchResult.CONSUMED else DispatchResult.PASS_TO_CONTROL
         }

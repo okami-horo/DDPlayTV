@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
-import com.xyoye.common_component.extension.isTelevisionUiMode
+import com.xyoye.common_component.utils.StatusBarStyle
 import com.xyoye.core_ui_component.R
 import java.lang.ref.WeakReference
 
@@ -27,6 +27,7 @@ abstract class BaseAppCompatActivity<V : ViewDataBinding> :
         super.onCreate(savedInstanceState)
 
         initStatusBar()
+        StatusBarStyle.applyFullscreenHideAllBars(this)
 
         initDataBinding()
 
@@ -44,11 +45,9 @@ abstract class BaseAppCompatActivity<V : ViewDataBinding> :
         mToolbar = findViewById(R.id.toolbar)
         mToolbar?.apply {
             this@BaseAppCompatActivity.setSupportActionBar(this)
-            if (isTelevisionUiMode()) {
-                touchscreenBlocksFocus = false
-                generateSequence(parent as? ViewGroup) { it.parent as? ViewGroup }.forEach {
-                    it.touchscreenBlocksFocus = false
-                }
+            touchscreenBlocksFocus = false
+            generateSequence(parent as? ViewGroup) { it.parent as? ViewGroup }.forEach {
+                it.touchscreenBlocksFocus = false
             }
         }
 

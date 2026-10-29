@@ -83,4 +83,4 @@ adjustedY = subtitleImageY - offsetPx
 
 上述 JVM 用例不证明 EGL surface 恢复、native 坐标、跨内核画面或视觉裁剪正确。修改这些路径时，应在 Media3 和 mpv `mediacodec_embed` 上分别检查内嵌／外挂 ASS/SSA、播放中及暂停时的正负偏移、surface 重建、seek／换轨后的恢复，并记录实际日志和画面结果。
 
-[MpvVideoPlayer](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt) 仍明确限制 `mediacodec_embed` 下的内嵌位图字幕显示；本轮整理与旧 libass 修复均未解决它，也不会自动切换视频输出。需要时由用户切换内核或在设置中选择 mpv `gpu`／`gpu-next`。
+[MpvVideoPlayer](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt) 统一使用原生 SurfaceView 和 `mediacodec_embed`，应用字幕控制器承接外挂字幕与内嵌 ASS/SSA；独立 GPU 字幕叠加层继续保留。当前内嵌位图字幕仍不可显示，界面提示切换 Media3；已取消 `gpu`／`gpu-next` 视频输出选择，不自动改用 GPU 视频合成。

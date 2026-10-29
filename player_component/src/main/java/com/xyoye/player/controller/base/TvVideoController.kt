@@ -127,7 +127,6 @@ abstract class TvVideoController(
             isLocked = isLocked(),
             isControllerShowing = controllerVisible,
             isSettingShowing = mControlWrapper.isSettingViewShowing(),
-            isPopupMode = isPopupMode(),
             hasControllerFocus = hasFocus,
         )
     }

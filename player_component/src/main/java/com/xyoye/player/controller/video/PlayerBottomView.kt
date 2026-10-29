@@ -266,9 +266,6 @@ class PlayerBottomView(
     override fun onVideoSizeChanged(videoSize: Point) {
     }
 
-    override fun onPopupModeChanged(isPopup: Boolean) {
-    }
-
     override fun onTrackChanged(type: TrackType) {
         if (type == TrackType.DANMU) {
             syncDanmuToggleState()

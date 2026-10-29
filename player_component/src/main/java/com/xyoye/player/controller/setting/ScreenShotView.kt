@@ -119,9 +119,6 @@ class ScreenShotView(
     override fun onVideoSizeChanged(videoSize: Point) {
     }
 
-    override fun onPopupModeChanged(isPopup: Boolean) {
-    }
-
     private fun prepareScreenShot() {
         mGenerateImageJob?.cancel()
         mGenerateImageJob =

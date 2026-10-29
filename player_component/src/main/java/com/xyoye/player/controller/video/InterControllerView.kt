@@ -38,10 +38,6 @@ interface InterControllerView {
         // Optional callback: not every control component depends on video size.
     }
 
-    fun onPopupModeChanged(isPopup: Boolean) {
-        // Optional callback: components that do not care about popup mode can ignore it.
-    }
-
     fun onTrackChanged(type: TrackType) {
         // Optional callback: components without track-related UI can ignore updates.
     }

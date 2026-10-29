@@ -1,22 +1,16 @@
 package com.xyoye.player.controller.base
 
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.graphics.Point
 import android.util.AttributeSet
-import android.view.OrientationEventListener
 import android.widget.FrameLayout
 import androidx.annotation.CallSuper
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.controller.video.InterControllerView
 import com.xyoye.player.controller.video.PlayerControlView
-import com.xyoye.player.info.PlayerInitializer
-import com.xyoye.player.utils.OrientationHelper
 import com.xyoye.player.wrapper.ControlWrapper
 import com.xyoye.player.wrapper.InterDanmuController
 import com.xyoye.player.wrapper.InterSettingController
@@ -39,16 +33,13 @@ abstract class BaseVideoController(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr),
-    InterVideoController,
-    OrientationHelper.OnOrientationChangeListener {
+    InterVideoController {
     protected lateinit var mControlWrapper: ControlWrapper
 
     protected var mIsLocked = false
     protected var mIsShowing = false
-    protected var mIsPopupMode = false
     protected var mDefaultTimeOutMs = 5000L
     protected val mControlComponents = LinkedHashMap<InterControllerView, Boolean>()
-    protected val mOrientationHelper = OrientationHelper(context)
     protected val attachLifecycle = (context as LifecycleOwner)
 
     // 播放失败回调
@@ -90,8 +81,6 @@ abstract class BaseVideoController(
         for (entry in mControlComponents.entries) {
             entry.key.attach(mControlWrapper)
         }
-        mOrientationHelper.mOnOrientationChangeListener = this
-        mOrientationHelper.enable()
     }
 
     protected fun addControlComponent(
@@ -107,11 +96,6 @@ abstract class BaseVideoController(
                 addView(controllerView.getView())
             }
         }
-    }
-
-    protected fun removeControlComponent(controllerView: InterControllerView) {
-        removeView(controllerView.getView())
-        mControlComponents.remove(controllerView)
     }
 
     override fun setTrackUpdated(type: TrackType) {
@@ -181,13 +165,6 @@ abstract class BaseVideoController(
 
     override fun isLocked() = mIsLocked
 
-    override fun setPopupMode(isPopup: Boolean) {
-        mIsPopupMode = isPopup
-        handlePopupModeChanged(isPopup)
-    }
-
-    override fun isPopupMode() = mIsPopupMode
-
     override fun startProgress() {
         if (mIsStartProgress) {
             return
@@ -208,35 +185,8 @@ abstract class BaseVideoController(
         handleProgressChanged(mControlWrapper.getDuration(), position)
     }
 
-    override fun onOrientationChanged(orientation: Int) {
-        if (!PlayerInitializer.isOrientationEnabled) {
-            return
-        }
-
-        if (attachLifecycle.lifecycle.currentState == Lifecycle.State.DESTROYED) {
-            return
-        }
-
-        if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN) {
-            return
-        }
-
-        val attachActivity = (context as AppCompatActivity)
-        if (orientation in 60..120) {
-            attachActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-        } else if (orientation in 240..300) {
-            attachActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        }
-    }
-
     @CallSuper
     open fun setPlayState(playState: PlayState) {
-        if (playState == PlayState.STATE_IDLE || playState == PlayState.STATE_START_ABORT) {
-            mOrientationHelper.disable()
-        } else {
-            mOrientationHelper.enable()
-        }
-
         for (entry in mControlComponents.entries) {
             entry.key.onPlayStateChanged(playState)
         }
@@ -270,9 +220,6 @@ abstract class BaseVideoController(
     }
 
     open fun onLockStateChanged(isLocked: Boolean) {
-    }
-
-    open fun onPopupModeChanged(isPopup: Boolean) {
     }
 
     open fun onProgressChanged(
@@ -319,13 +266,6 @@ abstract class BaseVideoController(
             entry.key.onLockStateChanged(isLocked)
         }
         onLockStateChanged(isLocked)
-    }
-
-    private fun handlePopupModeChanged(isPopup: Boolean) {
-        for (entry in mControlComponents.entries) {
-            entry.key.onPopupModeChanged(isPopup)
-        }
-        onPopupModeChanged(isPopup)
     }
 
     private fun handleProgressChanged(

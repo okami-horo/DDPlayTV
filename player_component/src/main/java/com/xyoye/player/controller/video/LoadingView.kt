@@ -11,7 +11,6 @@ import android.widget.FrameLayout
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
-import com.xyoye.common_component.utils.dp2px
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.player.wrapper.ControlWrapper
 import com.xyoye.player_component.R
@@ -81,18 +80,6 @@ class LoadingView(
     }
 
     override fun onVideoSizeChanged(videoSize: Point) {
-    }
-
-    override fun onPopupModeChanged(isPopup: Boolean) {
-        var loadingSize = dp2px(60)
-        if (isPopup) {
-            loadingSize /= 2
-        }
-
-        val layoutParams = viewBinding.loadingIv.layoutParams
-        layoutParams.width = loadingSize
-        layoutParams.height = loadingSize
-        viewBinding.loadingIv.layoutParams = layoutParams
     }
 
     private fun showLoading() {

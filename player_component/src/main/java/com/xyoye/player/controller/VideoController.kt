@@ -5,7 +5,6 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.data.DanmuEpisodeData
@@ -13,7 +12,7 @@ import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player.controller.action.PlayerAction
-import com.xyoye.player.controller.base.GestureVideoController
+import com.xyoye.player.controller.base.TvVideoController
 import com.xyoye.player.controller.danmu.DanmuController
 import com.xyoye.player.controller.setting.SettingController
 import com.xyoye.player.controller.subtitle.SubtitleController
@@ -21,7 +20,6 @@ import com.xyoye.player.controller.video.LoadingView
 import com.xyoye.player.controller.video.PlayerBottomView
 import com.xyoye.player.controller.video.PlayerControlView
 import com.xyoye.player.controller.video.PlayerGestureView
-import com.xyoye.player.controller.video.PlayerPopupControlView
 import com.xyoye.player.controller.video.PlayerTopView
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.utils.MessageTime
@@ -36,9 +34,7 @@ class VideoController(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : GestureVideoController(context, attrs, defStyleAttr) {
-    private val isTvUiMode: Boolean = context.isTelevisionUiMode()
-
+) : TvVideoController(context, attrs, defStyleAttr) {
     // 弹幕视图控制器
     private val mDanmuController = DanmuController(context)
 
@@ -63,7 +59,6 @@ class VideoController(
     private val loadingView = LoadingView(context)
 
     private val playerControlView = PlayerControlView(context)
-    private val playerPopupControlView = PlayerPopupControlView(context)
 
     private var lastPlayPosition = 0L
     private var settingCallerId = View.NO_ID
@@ -77,7 +72,7 @@ class VideoController(
     init {
         addControlComponent(mDanmuController.getView())
         addControlComponent(*mSubtitleController.getViews())
-        // TV 模式也需要手势视图用于展示快进/快退提示（触摸事件会在 TV 上被禁用）
+        // 遥控器快进/快退预览。
         addControlComponent(gestureView)
         addControlComponent(playerTopView)
         addControlComponent(playerBotView)
@@ -103,31 +98,6 @@ class VideoController(
 
     override fun setTrackAdded(track: VideoTrackBean) {
         trackAddedBlock?.invoke(track)
-    }
-
-    override fun onPopupModeChanged(isPopup: Boolean) {
-        super.onPopupModeChanged(isPopup)
-        mSettingController.setPopupMode(isPopup)
-
-        if (isPopup) {
-            addControlComponent(playerPopupControlView)
-
-            if (!isTvUiMode) {
-                removeControlComponent(gestureView)
-            }
-            removeControlComponent(playerTopView)
-            removeControlComponent(playerBotView)
-            removeControlComponent(playerControlView)
-        } else {
-            removeControlComponent(playerPopupControlView)
-
-            if (!isTvUiMode) {
-                addControlComponent(gestureView)
-            }
-            addControlComponent(playerTopView)
-            addControlComponent(playerBotView)
-            addControlComponent(playerControlView)
-        }
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
@@ -244,21 +214,6 @@ class VideoController(
     fun observerExitPlayer(block: () -> Unit) {
         mPlayCompletionBlock = block
         playerTopView.setExitPlayerObserver(block)
-        playerPopupControlView.setExitPlayerObserver(block)
-    }
-
-    /**
-     * 进入悬浮窗模式回调
-     */
-    fun observerEnterPopupMode(block: () -> Unit) {
-        playerTopView.setEnterPopupModeObserver(block)
-    }
-
-    /**
-     * 退出悬浮窗模式回调
-     */
-    fun observerExitPopupMode(block: () -> Unit) {
-        playerPopupControlView.setExitPopupModeObserver(block)
     }
 
     /**

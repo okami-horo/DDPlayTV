@@ -5,7 +5,6 @@ import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.application.DanDanPlay
 import com.xyoye.common_component.base.BaseFragment
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.utils.FastClickFilter
@@ -66,18 +65,14 @@ class ScanExtendFragment : BaseFragment<ScanExtendFragmentViewModel, FragmentSca
                                 folderTv.text = getFolderName(data.folderPath)
                                 fileCountTv.text = fileCountText
 
-                                if (mAttachActivity.isTelevisionUiMode()) {
-                                    itemLayout.setOnClickListener {
-                                        if (FastClickFilter.isNeedFilter()) {
-                                            return@setOnClickListener
-                                        }
-                                        showConfirmRemoveDialog(data)
+                                itemLayout.setOnClickListener {
+                                    if (FastClickFilter.isNeedFilter()) {
+                                        return@setOnClickListener
                                     }
-                                } else {
-                                    itemLayout.setOnClickListener(null)
+                                    showConfirmRemoveDialog(data)
                                 }
 
-                                removeFolderIv.isFocusable = !mAttachActivity.isTelevisionUiMode()
+                                removeFolderIv.isFocusable = false
                                 removeFolderIv.setOnClickListener {
                                     if (FastClickFilter.isNeedFilter()) {
                                         return@setOnClickListener

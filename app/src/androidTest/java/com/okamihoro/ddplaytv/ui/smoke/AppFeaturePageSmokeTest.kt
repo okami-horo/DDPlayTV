@@ -1,23 +1,19 @@
 package com.okamihoro.ddplaytv.ui.smoke
 
 import android.content.Intent
+import android.os.SystemClock
+import android.view.KeyEvent
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.tabs.TabLayout
 import com.okamihoro.ddplaytv.R
-import com.okamihoro.ddplaytv.ui.main.MainActivity
 import com.okamihoro.ddplaytv.ui.tv.TvMainActivity
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.anime_component.ui.activities.anime_season.AnimeSeasonActivity
 import com.xyoye.anime_component.ui.activities.search.SearchActivity
-import com.xyoye.anime_component.ui.fragment.home.HomeFragment
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.local_component.ui.activities.play_history.PlayHistoryActivity
 import com.xyoye.local_component.ui.activities.shooter_subtitle.ShooterSubtitleActivity
@@ -36,6 +32,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -44,24 +41,42 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class AppFeaturePageSmokeTest {
+    @Before
+    fun useRemoteInputMode() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+    }
+
     @Test
-    fun mainPageCanSwitchCoreTabs() {
-        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
-            waitForIdle()
+    fun mainPageCanSwitchCoreSectionsWithDpad() {
+        ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
+            val deadline = SystemClock.uptimeMillis() + 5000
+            var focused = false
+            while (!focused && SystemClock.uptimeMillis() < deadline) {
+                waitForIdle()
+                scenario.onActivity { activity ->
+                    val nav = activity.findViewById<DpadRecyclerView>(R.id.tv_nav_rv)
+                    focused = activity.hasWindowFocus() && nav.hasFocus() && nav.childCount > 0
+                }
+                if (!focused) SystemClock.sleep(25)
+            }
+            assertTrue("Main navigation must receive default focus", focused)
             scenario.onActivity { activity ->
-                val nav = activity.findViewById<BottomNavigationView>(R.id.navigation_view)
-                assertNotNull("BottomNavigationView should be present", nav)
-
                 activity.supportFragmentManager.executePendingTransactions()
-                assertFragmentTagIs<MediaFragment>(activity, "tag_fragment_media")
-
-                nav.selectedItemId = R.id.navigation_home
+                assertFragmentTagIs<MediaFragment>(activity, "tag_fragment_tv_media")
+            }
+            sendDpad(KeyEvent.KEYCODE_DPAD_DOWN)
+            sendDpad(KeyEvent.KEYCODE_DPAD_DOWN)
+            sendDpad(KeyEvent.KEYCODE_DPAD_CENTER)
+            scenario.onActivity { activity ->
                 activity.supportFragmentManager.executePendingTransactions()
-                assertFragmentTagIs<HomeFragment>(activity, "tag_fragment_home")
-
-                nav.selectedItemId = R.id.navigation_personal
+                assertFragmentTagIs<PersonalFragment>(activity, "tag_fragment_tv_personal")
+            }
+            sendDpad(KeyEvent.KEYCODE_DPAD_UP)
+            sendDpad(KeyEvent.KEYCODE_DPAD_UP)
+            sendDpad(KeyEvent.KEYCODE_DPAD_CENTER)
+            scenario.onActivity { activity ->
                 activity.supportFragmentManager.executePendingTransactions()
-                assertFragmentTagIs<PersonalFragment>(activity, "tag_fragment_personal")
+                assertFragmentTagIs<MediaFragment>(activity, "tag_fragment_tv_media")
             }
         }
     }
@@ -86,17 +101,8 @@ class AppFeaturePageSmokeTest {
         ActivityScenario.launch(ScanManagerActivity::class.java).use { scenario ->
             waitForIdle()
             scenario.onActivity { activity ->
-                if (activity.isTelevisionUiMode()) {
-                    assertEquals(2, activity.findViewById<DpadRecyclerView>(com.xyoye.user_component.R.id.tab_layout).adapter?.itemCount)
-                    assertEquals(1, activity.supportFragmentManager.fragments.count { it.view?.isShown == true })
-                    return@onActivity
-                }
-                val viewPager = activity.findViewById<ViewPager2>(com.xyoye.user_component.R.id.viewpager)
-                val tabLayout = activity.findViewById<TabLayout>(com.xyoye.user_component.R.id.tab_layout)
-                assertNotNull("Scan manager ViewPager should exist", viewPager)
-                assertNotNull("Scan manager TabLayout should exist", tabLayout)
-                assertEquals(2, viewPager.adapter?.itemCount)
-                assertEquals(2, tabLayout.tabCount)
+                assertEquals(2, activity.findViewById<DpadRecyclerView>(com.xyoye.user_component.R.id.tab_layout).adapter?.itemCount)
+                assertEquals(1, activity.supportFragmentManager.fragments.count { it.view?.isShown == true })
             }
         }
 
@@ -170,14 +176,8 @@ class AppFeaturePageSmokeTest {
         ActivityScenario.launch(SearchActivity::class.java).use { scenario ->
             waitForIdle()
             scenario.onActivity { activity ->
-                if (activity.isTelevisionUiMode()) {
-                    assertEquals(2, activity.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.tab_layout).adapter?.itemCount)
-                    assertEquals(1, activity.supportFragmentManager.fragments.count { it.view?.isShown == true })
-                    return@onActivity
-                }
-                val viewPager = activity.findViewById<ViewPager2>(com.xyoye.anime_component.R.id.viewpager)
-                assertNotNull("Anime search ViewPager should exist", viewPager)
-                assertEquals(2, viewPager.adapter?.itemCount)
+                assertEquals(2, activity.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.tab_layout).adapter?.itemCount)
+                assertEquals(1, activity.supportFragmentManager.fragments.count { it.view?.isShown == true })
             }
         }
 
@@ -247,5 +247,10 @@ class AppFeaturePageSmokeTest {
 
     private fun waitForIdle() {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+    }
+
+    private fun sendDpad(keyCode: Int) {
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(keyCode)
+        waitForIdle()
     }
 }

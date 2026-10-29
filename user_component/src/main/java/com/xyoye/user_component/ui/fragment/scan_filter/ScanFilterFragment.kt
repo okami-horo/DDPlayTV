@@ -4,7 +4,6 @@ import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseFragment
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.vertical
@@ -53,7 +52,7 @@ class ScanFilterFragment : BaseFragment<ScanFilterFragmentViewModel, FragmentSca
                                 folderTv.setTextColorRes(if (data.isFilter) R.color.text_red else R.color.text_black)
                                 fileCountTv.setTextColorRes(if (data.isFilter) R.color.text_red else R.color.text_gray)
 
-                                filterFolderCb.isFocusable = !requireContext().isTelevisionUiMode()
+                                filterFolderCb.isFocusable = false
                                 filterFolderCb.setOnCheckedChangeListener(null)
                                 filterFolderCb.isChecked = data.isFilter
                                 filterFolderCb.setOnCheckedChangeListener { _, isChecked ->

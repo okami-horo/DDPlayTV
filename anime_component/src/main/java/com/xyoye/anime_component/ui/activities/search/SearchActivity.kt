@@ -4,13 +4,9 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.inputmethod.EditorInfo
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
-import com.google.android.material.tabs.TabLayoutMediator
 import com.xyoye.anime_component.BR
 import com.xyoye.anime_component.R
 import com.xyoye.anime_component.databinding.ActivitySearchBinding
@@ -19,7 +15,6 @@ import com.xyoye.anime_component.ui.fragment.search_anime.SearchAnimeFragment
 import com.xyoye.anime_component.ui.fragment.search_magnet.SearchMagnetFragment
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.focus.TvCategory
 import com.xyoye.common_component.focus.TvCategoryPages
 import com.xyoye.common_component.focus.applyDpadEditTextPolicy
@@ -40,7 +35,6 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
     @JvmField
     var isSearchMagnet: Boolean = false
 
-    private lateinit var searchAdapter: SearchPageAdapter
     private var tvPages: TvCategoryPages? = null
 
     override fun initViewModel() =
@@ -54,35 +48,19 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
     override fun initView() {
         ARouter.getInstance().inject(this)
 
-        searchAdapter = SearchPageAdapter(searchWord)
+        tvPages =
+            TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager, ::updateSearchHint).apply {
+                submit(
+                    listOf(
+                        TvCategory("anime", "搜番剧") { SearchAnimeFragment.newInstance() },
+                        TvCategory("magnet", "搜资源") { SearchMagnetFragment.newInstance(searchWord) }
+                    ),
+                    if (isSearchMagnet) 1 else 0
+                )
+            }
+        dataBinding.searchCl.nextFocusDownId = dataBinding.tabLayout.id
 
-        if (isTelevisionUiMode()) {
-            tvPages =
-                TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager, ::updateSearchHint).apply {
-                    submit(
-                        listOf("anime", "magnet").mapIndexed { index, key ->
-                            TvCategory(key, searchAdapter.getItemTitle(index)) { searchAdapter.createFragment(index) }
-                        },
-                        if (isSearchMagnet) 1 else 0
-                    )
-                }
-            dataBinding.searchCl.nextFocusDownId = dataBinding.tabLayout.id
-        } else {
-            dataBinding.viewpager.adapter = searchAdapter
-            dataBinding.viewpager.currentItem = if (isSearchMagnet) 1 else 0
-            TabLayoutMediator(dataBinding.tabLayout, dataBinding.viewpager) { tab, position ->
-                tab.text = searchAdapter.getItemTitle(position)
-            }.attach()
-            updateSearchHint(dataBinding.viewpager.currentItem)
-        }
-
-        if (!isSearchMagnet && dataBinding.root.isInTouchMode) {
-            dataBinding.searchEt.postDelayed({
-                showKeyboard(dataBinding.searchEt)
-            }, 200)
-        }
-
-        if (isTelevisionUiMode() && !dataBinding.root.isInTouchMode) {
+        if (!dataBinding.root.isInTouchMode) {
             dataBinding.searchEt.applyDpadEditTextPolicy()
             dataBinding.searchCl.requestFocus()
         }
@@ -163,14 +141,6 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
             showKeyboard(dataBinding.searchEt)
             clearText()
         }
-
-        dataBinding.viewpager.registerOnPageChangeCallback(
-            object : ViewPager2.OnPageChangeCallback() {
-                override fun onPageSelected(position: Int) {
-                    updateSearchHint(position)
-                }
-            },
-        )
     }
 
     private fun search(searchText: String) {
@@ -181,12 +151,7 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
         getCurrentSearchFragment()?.onTextClear()
     }
 
-    private fun getCurrentSearchFragment(): SearchListener? {
-        tvPages?.let { return it.currentFragment as? SearchListener }
-        val currentItem = dataBinding.viewpager.currentItem
-        val fragmentTag = searchAdapter.getFragmentTag(currentItem)
-        return supportFragmentManager.findFragmentByTag(fragmentTag) as? SearchListener
-    }
+    private fun getCurrentSearchFragment(): SearchListener? = tvPages?.currentFragment as? SearchListener
 
     private fun updateSearchHint(position: Int) {
         dataBinding.searchEt.hint =
@@ -208,24 +173,5 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
         hideKeyboard(dataBinding.searchEt)
         dataBinding.searchEt.applyDpadEditTextPolicy()
         dataBinding.searchCl.requestFocus()
-    }
-
-    inner class SearchPageAdapter(
-        private val searchWord: String?
-    ) : FragmentStateAdapter(this@SearchActivity) {
-        private val titles = arrayOf("搜番剧", "搜资源")
-
-        override fun getItemCount(): Int = titles.size
-
-        override fun createFragment(position: Int): Fragment =
-            when (position) {
-                0 -> SearchAnimeFragment.newInstance()
-                1 -> SearchMagnetFragment.newInstance(searchWord)
-                else -> throw IndexOutOfBoundsException("only 2 fragment, but position : $position")
-            }
-
-        fun getItemTitle(position: Int): String = titles.getOrNull(position).orEmpty()
-
-        fun getFragmentTag(position: Int): String = "f${getItemId(position)}"
     }
 }

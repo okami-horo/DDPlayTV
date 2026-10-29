@@ -6,7 +6,6 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
-import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.xyoye.common_component.extension.toText
 import com.xyoye.common_component.focus.requestDefaultFocus
@@ -37,8 +36,6 @@ class PlayerTopView(
 
     private var exitPlayerObserver: (() -> Unit)? = null
 
-    private var enterPopupModeBlock: (() -> Unit)? = null
-
     private lateinit var mControlWrapper: ControlWrapper
 
     init {
@@ -49,19 +46,6 @@ class PlayerTopView(
 
         viewBinding.playerSettingsIv.setOnClickListener {
             mControlWrapper.showSettingView(SettingViewType.PLAYER_SETTING)
-        }
-
-        viewBinding.ivSwitchPopup.apply {
-            isVisible = false
-            /*
-            setOnClickListener {
-                if (OverlayPermissionActivity.hasOverlayPermission().not()) {
-                    OverlayPermissionActivity.requestOverlayPermission(context)
-                    return@setOnClickListener
-                }
-                enterPopupModeBlock?.invoke()
-            }
-             */
         }
 
         // 将初始焦点置于标题，而不是返回按钮
@@ -118,9 +102,6 @@ class PlayerTopView(
     override fun onVideoSizeChanged(videoSize: Point) {
     }
 
-    override fun onPopupModeChanged(isPopup: Boolean) {
-    }
-
     /*
     fun setBatteryHelper(helper: BatteryHelper) {
         helper.bindBatteryView(viewBinding.batteryView)
@@ -133,9 +114,5 @@ class PlayerTopView(
 
     fun setExitPlayerObserver(block: () -> Unit) {
         exitPlayerObserver = block
-    }
-
-    fun setEnterPopupModeObserver(block: () -> Unit) {
-        enterPopupModeBlock = block
     }
 }

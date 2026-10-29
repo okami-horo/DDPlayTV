@@ -33,7 +33,6 @@ import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.enums.SubtitleRendererBackend
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.media3.Media3SessionClient
@@ -86,7 +85,6 @@ import com.xyoye.player_component.sequential.SequentialPlaybackQueueItemId
 import com.xyoye.player_component.sequential.SequentialPlaybackSessionToken
 import com.xyoye.player_component.sequential.SequentialQueueRetirement
 import com.xyoye.player_component.utils.PlayRecorder
-import com.xyoye.player_component.widgets.popup.PlayerPopupManager
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.File
@@ -123,11 +121,6 @@ class PlayerActivity :
         DanDanVideoPlayer(this).apply {
             setSubtitleFallbackDispatcher(this@PlayerActivity)
         }
-    }
-
-    // 悬浮窗
-    private val popupManager: PlayerPopupManager by lazy {
-        PlayerPopupManager(this)
     }
 
     // 锁屏广播
@@ -211,8 +204,7 @@ class PlayerActivity :
                         PlayState.STATE_PREPARED -> Media3PlaybackState.READY
                         else -> Media3PlaybackState.INITIALIZING
                     }
-                // Popup is currently a no-op and the app service only exposes metadata.
-                // Notification/PIP capabilities require working local operations first.
+                // The TV player does not host background or picture-in-picture playback.
                 val modes = emptySet<Media3BackgroundMode>()
                 val capabilities =
                     buildSet {
@@ -233,12 +225,8 @@ class PlayerActivity :
                     is PlaybackAction.Seek -> videoController.seekPlaybackTo(action.positionMs)
                     is PlaybackAction.SetSpeed -> videoController.changePlaybackSpeed(action.speed)
                     PlaybackAction.Exit -> finish()
-                    PlaybackAction.EnterBackground -> enterTaskBackground()
-                    PlaybackAction.EnterPictureInPicture -> {
-                        enterPopupMode()
-                        if (!popupManager.isShowing()) return false
-                        enterTaskBackground()
-                    }
+                    PlaybackAction.EnterBackground,
+                    PlaybackAction.EnterPictureInPicture -> return false
                     is PlaybackAction.SelectQueueItem -> return false
                 }
                 return true
@@ -462,7 +450,6 @@ class PlayerActivity :
     override fun onResume() {
         super.onResume()
 
-        exitPopupMode()
         viewModel.refreshPlaybackState(playbackBackend)
     }
 
@@ -492,17 +479,12 @@ class PlayerActivity :
         exitConfirmGuard.reset()
         playingBeforeLifecyclePause = danDanPlayer.isPlaying()
 
-        val popupNotShowing = popupManager.isShowing().not()
-        val backgroundAllowed = PlayerConfig.isBackgroundPlay() && media3SupportsBackgroundPlayback()
-        val backgroundPlayDisable = backgroundAllowed.not()
         LogFacade.d(
             LogModule.PLAYER,
             TAG_ACTIVITY,
-            "onPause popupNotShowing=$popupNotShowing backgroundAllowed=$backgroundAllowed"
+            "onPause pause TV playback"
         )
-        if (popupNotShowing && backgroundPlayDisable) {
-            danDanPlayer.pause()
-        }
+        danDanPlayer.pause()
         danDanPlayer.recordPlayInfo()
         viewModel.savePlaybackProgress()
         super.onPause()
@@ -516,7 +498,6 @@ class PlayerActivity :
         danDanPlayer.seekCompleteListener = null
         beforePlayExit()
         unregisterReceiver()
-        popupManager.dismiss()
         viewModel.unbindPlayback(playbackBackend)
         /*
         batteryHelper.release()
@@ -529,7 +510,7 @@ class PlayerActivity :
             return
         }
 
-        if (isTelevisionUiMode() && exitConfirmGuard.shouldInterceptExit()) {
+        if (exitConfirmGuard.shouldInterceptExit()) {
             ToastCenter.showToast("再按一次退出播放")
             return
         }
@@ -641,11 +622,6 @@ class PlayerActivity :
             // 退出播放
             observerExitPlayer {
                 val source = danDanPlayer.getVideoSource()
-                if (popupManager.isShowing()) {
-                    LogFacade.d(LogModule.PLAYER, TAG_PLAYBACK, "exit from popup mode")
-                    danDanPlayer.recordPlayInfo()
-                }
-                popupManager.dismiss()
                 LogFacade.i(
                     LogModule.PLAYER,
                     TAG_PLAYBACK,
@@ -666,15 +642,6 @@ class PlayerActivity :
                 download = { danmuViewModel.downloadDanmu(it) },
                 searchResult = { danmuViewModel.danmuSearchLiveData }
             )
-            // 进入悬浮窗模式
-            observerEnterPopupMode {
-                viewModel.dispatchPlayback(PlaybackAction.EnterPictureInPicture)
-            }
-            // 退出悬浮窗模式
-            observerExitPopupMode {
-                exitPopupMode()
-                exitTaskBackground()
-            }
             // 轨道添加完成
             observerTrackAdded {
                 val source = videoSource ?: return@observerTrackAdded
@@ -743,7 +710,7 @@ class PlayerActivity :
             videoController.addExtendTrack(VideoTrackBean.danmu(historyDanmu))
         } else {
             val shouldAutoMatchDanmu = DanmuConfig.isAutoMatchDanmu() && source.getMediaType() != MediaType.FTP_SERVER
-            if (shouldAutoMatchDanmu && popupManager.isShowing().not()) {
+            if (shouldAutoMatchDanmu) {
                 LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto match start title=${source.getVideoTitle()}")
                 danmuViewModel.matchDanmu(source)
             }
@@ -855,11 +822,13 @@ class PlayerActivity :
         )
         // 是否使用SurfaceView
         PlayerInitializer.surfaceType =
-            if (PlayerConfig.isUseSurfaceView()) SurfaceType.VIEW_SURFACE else SurfaceType.VIEW_TEXTURE
+            if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER || PlayerConfig.isUseSurfaceView()) {
+                SurfaceType.VIEW_SURFACE
+            } else {
+                SurfaceType.VIEW_TEXTURE
+            }
         // 视频速度
         PlayerInitializer.Player.videoSpeed = PlayerConfig.getNewVideoSpeed()
-        // 长按视频速度
-        PlayerInitializer.Player.pressVideoSpeed = PlayerConfig.getPressVideoSpeed()
         // 自动播放下一集
         PlayerInitializer.Player.isAutoPlayNext = PlayerConfig.isAutoPlayNext()
 
@@ -966,55 +935,5 @@ class PlayerActivity :
 
     private fun switchVideoSource(index: Int) {
         viewModel.selectQueueItem(index)
-    }
-
-    private fun media3SupportsBackgroundPlayback(): Boolean =
-        viewModel.playbackState.value
-            ?.backgroundModes
-            ?.contains(Media3BackgroundMode.NOTIFICATION) == true
-
-    private fun media3SupportsPip(): Boolean =
-        viewModel.playbackState.value
-            ?.backgroundModes
-            ?.contains(Media3BackgroundMode.PIP) == true
-
-    private fun enterPopupMode() {
-        if (!media3SupportsPip()) {
-            ToastCenter.showWarning("当前播放不支持画中画模式")
-            return
-        }
-        if (popupManager.isShowing()) {
-            return
-        }
-        currentFocus?.clearFocus()
-        dataBinding.playerContainer.removeAllViews()
-        popupManager.show(danDanPlayer)
-
-        danDanPlayer.enterPopupMode()
-    }
-
-    private fun exitPopupMode() {
-        if (popupManager.isShowing().not()) {
-            return
-        }
-        popupManager.dismiss()
-
-        dataBinding.playerContainer.removeAllViews()
-        dataBinding.playerContainer.addView(danDanPlayer)
-        danDanPlayer.requestFocus()
-
-        danDanPlayer.exitPopupMode()
-    }
-
-    private fun enterTaskBackground() {
-        moveTaskToBack(true)
-    }
-
-    private fun exitTaskBackground() {
-        val intent =
-            Intent(this, javaClass).apply {
-                addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-            }
-        startActivity(intent)
     }
 }

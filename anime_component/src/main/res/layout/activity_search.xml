@@ -125,26 +125,16 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <com.google.android.material.tabs.TabLayout
+            <com.rubensousa.dpadrecyclerview.DpadRecyclerView
                 android:id="@+id/tab_layout"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:background="@color/item_bg_color"
-                app:tabBackground="@drawable/background_tab_press"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:tabGravity="center"
-                app:tabIndicatorColor="@color/indicator_checked_color"
-                app:tabIndicatorFullWidth="false"
-                app:tabMode="fixed"
-                app:tabPaddingEnd="40dp"
-                app:tabPaddingStart="40dp"
-                app:tabRippleColor="@android:color/transparent"
-                app:tabSelectedTextColor="@color/text_theme"
-                app:tabTextColor="@color/indicator_uncheck_color" />
+                app:layout_constraintBottom_toBottomOf="parent" />
 
         </com.google.android.material.appbar.AppBarLayout>
 
-        <androidx.viewpager2.widget.ViewPager2
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/viewpager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -42,7 +42,6 @@ class SettingController(
     }
 
     private val showingSettingViews = mutableListOf<InterSettingView>()
-    private var isPopupMode = false
 
     override fun isSettingViewShowing(): Boolean = showingSettingViews.find { it.isSettingShowing() } != null
 
@@ -50,10 +49,6 @@ class SettingController(
         viewType: SettingViewType,
         extra: Any?
     ) {
-        if (isPopupMode) {
-            return
-        }
-
         val settingView = getSettingView(viewType, extra)
         if (showingSettingViews.lastOrNull() === settingView && settingView.isSettingShowing()) return
         if (showingSettingViews.isEmpty()) onSettingShown?.invoke()
@@ -68,7 +63,7 @@ class SettingController(
         view.onSettingVisibilityChanged(false)
         view.getView().clearFocus()
         val previous = showingSettingViews.lastOrNull()
-        if (previous != null && !isPopupMode) {
+        if (previous != null) {
             previous.onSettingVisibilityChanged(true)
         } else {
             onSettingHidden?.invoke()
@@ -225,15 +220,6 @@ class SettingController(
                     setTrackType((extra as? TrackType) ?: TrackType.DANMU)
                 }
             }
-        }
-    }
-
-    fun setPopupMode(isPopupMode: Boolean) {
-        this.isPopupMode = isPopupMode
-        if (isPopupMode) {
-            showingSettingViews.forEach { it.onSettingVisibilityChanged(false) }
-            showingSettingViews.clear()
-            onSettingHidden?.invoke()
         }
     }
 }

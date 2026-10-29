@@ -20,7 +20,6 @@ import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.dp
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.isInvalid
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.loadStorageFileCover
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.toFile
@@ -246,11 +245,11 @@ class StorageFileAdapter(
                 when {
                     data.state == com.xyoye.common_component.storage.PagedStorage.State.LOADING -> Unit
                     data.state == com.xyoye.common_component.storage.PagedStorage.State.ERROR -> {
-                        viewModel.loadMore(showFailureToast = !activity.isTelevisionUiMode())
+                        viewModel.loadMore(showFailureToast = false)
                     }
 
                     data.state == com.xyoye.common_component.storage.PagedStorage.State.IDLE && data.hasMore -> {
-                        viewModel.loadMore(showFailureToast = !activity.isTelevisionUiMode())
+                        viewModel.loadMore(showFailureToast = false)
                     }
 
                     data.isDataEmpty -> onRefreshRequested.invoke()

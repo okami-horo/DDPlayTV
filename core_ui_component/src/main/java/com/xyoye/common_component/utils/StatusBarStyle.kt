@@ -72,6 +72,7 @@ public object StatusBarStyle {
     public fun applyFullscreenHideAllBars(activity: Activity) {
         ImmersionBar
             .with(activity)
+            .fitsSystemWindows(false)
             .fullScreen(true)
             .hideBar(BarHide.FLAG_HIDE_BAR)
             .init()

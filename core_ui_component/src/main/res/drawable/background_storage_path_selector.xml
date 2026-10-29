@@ -1,10 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/theme_light">
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape>
+                    <solid android:color="@color/item_bg_color" />
+                    <corners android:radius="20dp" />
+                </shape>
+            </item>
+
+            <item>
+                <shape>
+                    <solid android:color="@color/tv_focus_overlay_color" />
+                    <stroke
+                        android:width="@dimen/tv_focus_stroke_width"
+                        android:color="@color/tv_focus_stroke_color" />
+                    <corners android:radius="20dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <item android:state_pressed="true">
+        <shape>
+            <solid android:color="@color/theme_light" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+
     <item>
         <shape>
             <solid android:color="@color/item_bg_color" />
             <corners android:radius="20dp" />
         </shape>
     </item>
-</ripple>
+</selector>

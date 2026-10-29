@@ -16,7 +16,6 @@ import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.database.DatabaseProvider
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackNavigation
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
@@ -41,7 +40,6 @@ import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivit
 import com.xyoye.storage_component.ui.fragment.storage_file.StorageFileFragment
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -54,7 +52,6 @@ class TvDpadRewriteInstrumentedTest {
     private val context = instrumentation.targetContext
 
     @Before fun remoteMode() {
-        assumeTrue(context.isTelevisionUiMode())
         instrumentation.setInTouchMode(false)
     }
 

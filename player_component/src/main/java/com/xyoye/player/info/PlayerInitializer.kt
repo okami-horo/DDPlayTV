@@ -13,7 +13,6 @@ import com.xyoye.data_component.enums.VideoScreenScale
 
 object PlayerInitializer {
     var isPrintLog: Boolean = true
-    var isOrientationEnabled = true
     var isEnableAudioFocus = true
     var isLooping = false
     var playerType = PlayerType.TYPE_EXO_PLAYER
@@ -24,10 +23,8 @@ object PlayerInitializer {
 
     object Player {
         const val DEFAULT_SPEED = 1f
-        const val DEFAULT_PRESS_SPEED = 2f
 
         var videoSpeed = DEFAULT_SPEED
-        var pressVideoSpeed = DEFAULT_PRESS_SPEED
         var isAutoPlayNext = true
     }
 

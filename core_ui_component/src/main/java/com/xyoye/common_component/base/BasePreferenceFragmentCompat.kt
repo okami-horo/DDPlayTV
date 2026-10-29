@@ -10,7 +10,6 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceRecyclerViewAccessibilityDelegate
 import androidx.recyclerview.widget.RecyclerView
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.preference.TvEditTextPreferenceDialogFragmentCompat
 
 /**
@@ -24,15 +23,13 @@ abstract class BasePreferenceFragmentCompat : PreferenceFragmentCompat() {
         inflater: LayoutInflater,
         parent: ViewGroup,
         savedInstanceState: Bundle?
-    ): RecyclerView {
-        if (!requireContext().isTelevisionUiMode()) return super.onCreateRecyclerView(inflater, parent, savedInstanceState)
-        return DpadRecyclerView(requireContext()).apply {
+    ): RecyclerView =
+        DpadRecyclerView(requireContext()).apply {
             id = androidx.preference.R.id.recycler_view
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             setFocusOutAllowed(true, false)
             setAccessibilityDelegateCompat(PreferenceRecyclerViewAccessibilityDelegate(this))
         }
-    }
 
     override fun onDisplayPreferenceDialog(preference: Preference) {
         if (preference is EditTextPreference) {

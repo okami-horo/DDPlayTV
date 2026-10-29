@@ -78,9 +78,6 @@ class SubtitleImageView(
         }
     }
 
-    override fun onPopupModeChanged(isPopup: Boolean) {
-    }
-
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         refreshAnchor()

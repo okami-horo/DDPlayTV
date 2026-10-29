@@ -1,6 +1,6 @@
 # DDPlayTV
 
-一个弹幕/字幕视频播放器实现，主要优化 **Android TV（Leanback）** 端的遥控器（DPAD）操作与交互体验，移动端依然可用。
+一个面向 **Android TV 与电视盒子** 的弹幕/字幕视频播放器，统一使用遥控器（DPAD）界面。
 
 本项目使用的弹幕相关接口来自 [弹弹play 开放平台](https://api.dandanplay.net/swagger/ui/index)。
 
@@ -10,7 +10,7 @@
 
 ## 简介
 
-本仓库以“TV 优先的交互体验”为主要目标，在保留移动端可用性的前提下，围绕播放器内核、字幕渲染、网络媒体库等方向持续演进。
+本仓库专注 TV 端，围绕遥控交互、播放器内核、字幕渲染和网络媒体库持续演进，不再维护手机专属界面与触屏手势。
 
 ## 来源
 
@@ -22,7 +22,7 @@
 
 ### 与源项目的差异（简述）
 
-- 以 TV 端交互为先（Leanback 启动入口、DPAD 焦点/遥控器导航），移动端依然可用
+- 普通与 Leanback 启动入口统一进入 TV 界面；系统未报告电视模式的盒子同样采用 DPAD 控件
 - 播放内核调整：移除 **IJKPlayer / VLC**，使用 **Media3 / mpv** 双内核方案，默认 Media3
 - 字幕渲染增强：强化 **libass**（ASS/SSA）渲染能力，提升表现一致性
 - 媒体库扩展：新增 **115 Open / 百度网盘** 等来源；其中 115 Open 的 `access_token` / `refresh_token` 获取可参考 [OpenList 官方文档](https://www.oplist.org.cn/ecosystem/official_docs)
@@ -33,7 +33,8 @@
 ### 播放
 
 - 双内核：**Media3 / mpv**（可按设备兼容性与效果切换）
-- 倍速播放与长按加速、进度记忆与续播
+- 倍速播放、遥控快进快退、进度记忆与续播
+- mpv 使用原生 SurfaceView 与 MediaCodec 直出，ASS 字幕由独立叠加层渲染；内嵌位图字幕请切换 Media3
 - 轨道管理：音轨 / 字幕 / 弹幕
 - 对部分远端源提供本地 HTTP 代理，改善 Seek/Range 等兼容性问题
 

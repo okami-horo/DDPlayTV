@@ -16,7 +16,11 @@ class BaseInitializer : Initializer<Unit> {
                 "key_bilibili_tv_app_secret",
                 "key_bilibili_tv_app_key_encrypted",
                 "key_bilibili_tv_app_secret_encrypted",
-                "key_auto_enable_bilibili_live_danmaku"
+                "key_auto_enable_bilibili_live_danmaku",
+                "key_allow_orientation_change",
+                "key_press_video_speed",
+                "key_mpv_video_output",
+                "key_mpv_hwdec_priority"
             )
         )
     }

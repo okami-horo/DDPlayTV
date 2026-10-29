@@ -6,9 +6,10 @@
 
 | 主题 | 设计依据 | 执行状态与证据 |
 | --- | --- | --- |
+| 纯 TV 项目收敛 | 用户确认不再维护手机端，保留共享媒体能力与双内核 | [实施与验证记录](plans/2026-10-29-tv-only.md) |
 | Bilibili 全部功能退役 | 用户确认由 PiliPlus 接手，包括弹幕来源 | [移除执行记录](plans/2026-10-28-remove-bilibili.md) |
 | Media3 与 libass 接入完善 | [接入完善设计](designs/2026-10-29-media3-libass-integration-design.md) | 设计稿；仅更新文档，实施留待后续安排；现状与历史验证见 [libass 接入审查](../../document/player/libass-integration-audit.md) |
-| TV 遥控器与焦点重写 | [DpadRecyclerView 重写设计](designs/2026-10-28-tv-dpad-library-rewrite-design.md) | 待用户确认；仅完成源码与选型核查，尚未接入依赖或实施 |
+| TV 遥控器与焦点重写 | [DpadRecyclerView 重写设计](designs/2026-10-28-tv-dpad-library-rewrite-design.md) | [已实施与验证](plans/2026-10-28-tv-dpad-library-rewrite.md)；纯 TV 后续收敛见上行 |
 | 播放交接、活动会话与恢复 | [交接设计](designs/2026-07-18-playback-handoff-design.md) | [交接账本](plans/2026-10-27-playback-handoff-session.md)：历史计数 62/65，保留功能的集成验收仍由用户负责 |
 | 传输资源所有权与租约 | [传输租约设计](designs/2026-07-19-playback-transport-leases-design.md) | [租约账本](plans/2026-07-19-playback-transport-leases.md)：历史计数 37/37；当前协议、设备及验证范围以账本为准 |
 

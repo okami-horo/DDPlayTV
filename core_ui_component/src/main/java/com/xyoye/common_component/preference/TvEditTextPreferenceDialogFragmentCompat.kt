@@ -5,7 +5,6 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.EditText
 import androidx.preference.EditTextPreferenceDialogFragmentCompat
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.utils.showKeyboard
 
 /**
@@ -16,20 +15,11 @@ import com.xyoye.common_component.utils.showKeyboard
 class TvEditTextPreferenceDialogFragmentCompat : EditTextPreferenceDialogFragmentCompat() {
     private var boundEditText: EditText? = null
 
-    private val isTelevisionMode: Boolean
-        get() = context?.isTelevisionUiMode() == true
-
     override fun onBindDialogView(view: View) {
         super.onBindDialogView(view)
         boundEditText = view.findViewById(android.R.id.edit)
 
         val editText = boundEditText ?: return
-        if (!isTelevisionMode) {
-            // 手机/平板保持 AndroidX 默认行为（自动拉起键盘）
-            editText.showSoftInputOnFocus = true
-            return
-        }
-
         editText.showSoftInputOnFocus = false
         editText.setOnClickListener { showKeyboard(it) }
         editText.setOnKeyListener { _, keyCode, event ->
@@ -49,19 +39,10 @@ class TvEditTextPreferenceDialogFragmentCompat : EditTextPreferenceDialogFragmen
     }
 
     @SuppressLint("RestrictedApi")
-    override fun needInputMethod(): Boolean =
-        if (isTelevisionMode) {
-            false
-        } else {
-            super.needInputMethod()
-        }
+    override fun needInputMethod(): Boolean = false
 
     @SuppressLint("RestrictedApi")
-    override fun scheduleShowSoftInput() {
-        if (!isTelevisionMode) {
-            super.scheduleShowSoftInput()
-        }
-    }
+    override fun scheduleShowSoftInput() = Unit
 
     override fun onDestroyView() {
         boundEditText?.setOnClickListener(null)

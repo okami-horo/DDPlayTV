@@ -18,11 +18,7 @@
 #if MPV_PREBUILT_AVAILABLE
 extern "C" {
 #include <mpv/client.h>
-#include <mpv/render.h>
-#include <mpv/render_gl.h>
 }
-#include <EGL/egl.h>
-#include <GLES3/gl3.h>
 #endif
 
 namespace {
@@ -152,20 +148,10 @@ struct MpvSession {
     std::atomic<bool> running = false;
     std::mutex mutex;
     jobject surface_ref = nullptr;
-    ANativeWindow* native_window = nullptr;
-    std::atomic<bool> surface_changed = false;
+    bool video_started = false;
+    double paused_surface_position = -1.0;
     std::thread event_thread;
     EventCallbackRef event_callback;
-
-    std::atomic<bool> render_requested = false;
-    int surface_width = 0;
-    int surface_height = 0;
-    // Rendering state (lives on event thread)
-
-    EGLDisplay egl_display = EGL_NO_DISPLAY;
-    EGLContext egl_context = EGL_NO_CONTEXT;
-    EGLSurface egl_surface = EGL_NO_SURFACE;
-    mpv_render_context* render_context = nullptr;
 };
 
 bool runtimeLinked() {
@@ -191,36 +177,41 @@ bool runtimeLinked() {
     return true;
 }
 
-	mpv_handle* createHandle() {
-	    if (!runtimeLinked()) {
-	        set_last_error("libmpv.so is not packaged or cannot be loaded");
-	        return nullptr;
-	    }
-	    mpv_handle* handle = mpv_create();
-    if (handle == nullptr) {
-        const std::string message = "mpv_create returned null handle";
-        __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", message.c_str());
-        set_last_error(message);
+mpv_handle* createHandle() {
+    if (!runtimeLinked()) {
+        set_last_error("libmpv.so is not packaged or cannot be loaded");
         return nullptr;
     }
-	    mpv_set_option_string(handle, "config", "no");
-	    mpv_set_option_string(handle, "terminal", "no");
-	    mpv_set_option_string(handle, "pause", "yes");
-	    mpv_set_option_string(handle, "idle", "once");
-	    mpv_set_option_string(handle, "profile", "fast");
-	    mpv_set_option_string(handle, "gpu-context", "android");
-	    mpv_set_option_string(handle, "opengl-es", "yes");
-	    mpv_set_option_string(handle, "hwdec", "mediacodec,mediacodec-copy");
-	    mpv_set_option_string(handle, "ao", "audiotrack,opensles");
-	    // Disable video output until we have an Android surface (wid) to attach to.
-	    mpv_set_option_string(handle, "vo", "null");
-	    mpv_set_option_string(handle, "force-window", "no");
-	    const int initResult = mpv_initialize(handle);
+    mpv_handle* handle = mpv_create();
+    if (handle == nullptr) {
+        set_last_error("mpv_create returned null handle");
+        return nullptr;
+    }
+    const std::pair<const char*, const char*> options[] = {
+        {"config", "no"},
+        {"terminal", "no"},
+        {"pause", "yes"},
+        {"idle", "once"},
+        {"profile", "fast"},
+        {"hwdec", "mediacodec"},
+        {"vd-lavc-software-fallback", "no"},
+        {"stop-playback-on-init-failure", "yes"},
+        {"ao", "audiotrack,opensles"},
+        {"vo", "null"},
+        {"vid", "no"},
+        {"force-window", "no"}
+    };
+    for (const auto& option : options) {
+        const int result = mpv_set_option_string(handle, option.first, option.second);
+        if (result < 0) {
+            set_last_error(std::string("mpv option ") + option.first + ": " + mpv_error_string(result));
+            mpv_terminate_destroy(handle);
+            return nullptr;
+        }
+    }
+    const int initResult = mpv_initialize(handle);
     if (initResult < 0) {
-        char buffer[128] = {0};
-        snprintf(buffer, sizeof(buffer), "mpv_initialize failed: %d", initResult);
-        __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", buffer);
-        set_last_error(buffer);
+        set_last_error(std::string("mpv_initialize failed: ") + mpv_error_string(initResult));
         mpv_terminate_destroy(handle);
         return nullptr;
     }
@@ -422,251 +413,6 @@ void observeProperties(mpv_handle* handle) {
     mpv_observe_property(handle, 0, "sid", MPV_FORMAT_STRING);
 }
 
-void destroyRenderContext(MpvSession* session) {
-    if (session == nullptr) return;
-    if (session->render_context != nullptr) {
-        mpv_render_context_set_update_callback(session->render_context, nullptr, nullptr);
-        mpv_render_context_free(session->render_context);
-        session->render_context = nullptr;
-    }
-}
-
-void destroyEgl(MpvSession* session) {
-    if (session == nullptr) return;
-    if (session->egl_display != EGL_NO_DISPLAY) {
-        eglMakeCurrent(session->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    }
-    if (session->egl_surface != EGL_NO_SURFACE) {
-        eglDestroySurface(session->egl_display, session->egl_surface);
-        session->egl_surface = EGL_NO_SURFACE;
-    }
-    if (session->egl_context != EGL_NO_CONTEXT) {
-        eglDestroyContext(session->egl_display, session->egl_context);
-        session->egl_context = EGL_NO_CONTEXT;
-    }
-    if (session->egl_display != EGL_NO_DISPLAY) {
-        eglTerminate(session->egl_display);
-        session->egl_display = EGL_NO_DISPLAY;
-    }
-}
-
-void on_mpv_render_update(void* data) {
-    auto* session = static_cast<MpvSession*>(data);
-    if (session == nullptr) return;
-    session->render_requested = true;
-    if (session->handle != nullptr) {
-        mpv_wakeup(session->handle);
-    }
-}
-
-EGLContext createContext(EGLDisplay display, EGLConfig config, int version) {
-    const EGLint contextAttribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, version,
-        EGL_NONE
-    };
-    return eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs);
-}
-
-bool initEgl(MpvSession* session) {
-    if (session == nullptr || session->native_window == nullptr) {
-        return false;
-    }
-    destroyEgl(session);
-
-    session->egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (session->egl_display == EGL_NO_DISPLAY) {
-        const std::string message = "eglGetDisplay failed";
-        __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", message.c_str());
-        set_last_error(message);
-        return false;
-    }
-    if (!eglInitialize(session->egl_display, nullptr, nullptr)) {
-        const std::string message = "eglInitialize failed";
-        __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", message.c_str());
-        set_last_error(message);
-        destroyEgl(session);
-        return false;
-    }
-    const EGLint cfgAttribs[] = {
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
-        EGL_NONE
-    };
-    EGLConfig config = nullptr;
-    EGLint numConfigs = 0;
-    if (!eglChooseConfig(session->egl_display, cfgAttribs, &config, 1, &numConfigs) || numConfigs < 1) {
-        const std::string message = "eglChooseConfig failed";
-        __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", message.c_str());
-        set_last_error(message);
-        destroyEgl(session);
-        return false;
-    }
-
-    session->egl_surface = eglCreateWindowSurface(
-        session->egl_display,
-        config,
-        session->native_window,
-        nullptr
-    );
-    if (session->egl_surface == EGL_NO_SURFACE) {
-        const std::string message = "eglCreateWindowSurface failed";
-        __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", message.c_str());
-        set_last_error(message);
-        destroyEgl(session);
-        return false;
-    }
-
-    session->egl_context = createContext(session->egl_display, config, 3);
-    if (session->egl_context == EGL_NO_CONTEXT) {
-        session->egl_context = createContext(session->egl_display, config, 2);
-    }
-    if (session->egl_context == EGL_NO_CONTEXT) {
-        const std::string message = "eglCreateContext failed";
-        __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", message.c_str());
-        set_last_error(message);
-        destroyEgl(session);
-        return false;
-    }
-
-    if (!eglMakeCurrent(session->egl_display, session->egl_surface, session->egl_surface, session->egl_context)) {
-        const std::string message = "eglMakeCurrent failed";
-        __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", message.c_str());
-        set_last_error(message);
-        destroyEgl(session);
-        return false;
-    }
-
-    return true;
-}
-
-bool ensureRenderContext(MpvSession* session) {
-    if (session == nullptr || session->native_window == nullptr) {
-        return false;
-    }
-
-    destroyRenderContext(session);
-
-    if (!initEgl(session)) {
-        return false;
-    }
-
-    auto get_proc_address = [](void*, const char* name) -> void* {
-        return reinterpret_cast<void*>(eglGetProcAddress(name));
-    };
-
-    mpv_opengl_init_params gl_init_params{};
-    gl_init_params.get_proc_address = get_proc_address;
-    gl_init_params.get_proc_address_ctx = nullptr;
-
-    const char* api_type = MPV_RENDER_API_TYPE_OPENGL;
-    mpv_render_param params[] = {
-        {MPV_RENDER_PARAM_API_TYPE, const_cast<char*>(api_type)},
-        {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, &gl_init_params},
-        {MPV_RENDER_PARAM_INVALID, nullptr},
-    };
-
-    if (mpv_render_context_create(&session->render_context, session->handle, params) < 0) {
-        const std::string message = "mpv_render_context_create failed";
-        __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", message.c_str());
-        set_last_error(message);
-        destroyRenderContext(session);
-        destroyEgl(session);
-        return false;
-    }
-
-    mpv_render_context_set_update_callback(session->render_context, on_mpv_render_update, session);
-    session->render_requested = true;
-    return true;
-}
-
-bool makeCurrent(MpvSession* session) {
-    if (session == nullptr || session->egl_display == EGL_NO_DISPLAY) {
-        return false;
-    }
-    if (eglGetCurrentContext() == session->egl_context &&
-        eglGetCurrentDisplay() == session->egl_display &&
-        eglGetCurrentSurface(EGL_DRAW) == session->egl_surface) {
-        return true;
-    }
-    return eglMakeCurrent(session->egl_display, session->egl_surface, session->egl_surface, session->egl_context);
-}
-
-void renderFrame(MpvSession* session) {
-    if (session == nullptr || session->render_context == nullptr) {
-        return;
-    }
-    if (!makeCurrent(session)) {
-        set_last_error("eglMakeCurrent failed before rendering frame");
-        return;
-    }
-
-    if (session->surface_width == 0 || session->surface_height == 0) {
-        session->surface_width = ANativeWindow_getWidth(session->native_window);
-        session->surface_height = ANativeWindow_getHeight(session->native_window);
-    }
-
-    mpv_opengl_fbo fbo{
-        .fbo = 0,
-        .w = session->surface_width,
-        .h = session->surface_height,
-        .internal_format = 0
-    };
-    int flip = 1;
-    mpv_render_param render_params[] = {
-        {MPV_RENDER_PARAM_OPENGL_FBO, &fbo},
-        {MPV_RENDER_PARAM_FLIP_Y, &flip},
-        {MPV_RENDER_PARAM_INVALID, nullptr},
-    };
-
-    glViewport(0, 0, fbo.w, fbo.h);
-    glClearColor(0.f, 0.f, 0.f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    mpv_render_context_render(session->render_context, render_params);
-    eglSwapBuffers(session->egl_display, session->egl_surface);
-    session->render_requested = false;
-}
-
-void processRenderUpdates(JNIEnv* env, MpvSession* session) {
-    if (session == nullptr) {
-        return;
-    }
-    if (!session->render_requested.exchange(false)) {
-        return;
-    }
-    if (session->render_context == nullptr) {
-        return;
-    }
-
-    const int update_flags = mpv_render_context_update(session->render_context);
-    if (update_flags < 0) {
-        __android_log_print(
-            ANDROID_LOG_ERROR,
-            kLogTag,
-            "mpv_render_context_update failed: %d",
-            update_flags
-        );
-        char buffer[128] = {0};
-        snprintf(buffer, sizeof(buffer), "mpv_render_context_update failed: %d", update_flags);
-        dispatchError(env, session, buffer, update_flags, 0);
-        return;
-    }
-
-    if (update_flags & MPV_RENDER_UPDATE_FRAME) {
-        renderFrame(session);
-    }
-}
-
-void markSurfaceChanged(MpvSession* session) {
-    if (session == nullptr) return;
-    session->surface_changed = true;
-    if (session->handle != nullptr) {
-        mpv_wakeup(session->handle);
-    }
-}
 #endif
 
 void stopEventThread(JNIEnv* env, MpvSession* session) {
@@ -687,6 +433,57 @@ void stopEventThread(JNIEnv* env, MpvSession* session) {
 }
 
 #if MPV_PREBUILT_AVAILABLE
+bool hasSourceVideo(mpv_handle* handle) {
+    mpv_node tracks{};
+    if (mpv_get_property(handle, "track-list", MPV_FORMAT_NODE, &tracks) < 0) {
+        return false;
+    }
+    bool found = false;
+    if (tracks.format == MPV_FORMAT_NODE_ARRAY && tracks.u.list != nullptr) {
+        for (int index = 0; index < tracks.u.list->num && !found; index++) {
+            const mpv_node& track = tracks.u.list->values[index];
+            if (track.format != MPV_FORMAT_NODE_MAP || track.u.list == nullptr) continue;
+            bool video = false;
+            bool image = false;
+            for (int field = 0; field < track.u.list->num; field++) {
+                const char* key = track.u.list->keys[field];
+                const mpv_node& value = track.u.list->values[field];
+                if (strcmp(key, "type") == 0 && value.format == MPV_FORMAT_STRING) {
+                    video = strcmp(value.u.string, "video") == 0;
+                } else if ((strcmp(key, "image") == 0 || strcmp(key, "albumart") == 0) && value.format == MPV_FORMAT_FLAG) {
+                    image = image || value.u.flag != 0;
+                }
+            }
+            found = video && !image;
+        }
+    }
+    mpv_free_node_contents(&tracks);
+    return found;
+}
+
+bool validateVideoOutput(JNIEnv* env, MpvSession* session) {
+    int aborted = 0;
+    if (session->surface_ref == nullptr || !hasSourceVideo(session->handle) ||
+        (mpv_get_property(session->handle, "playback-abort", MPV_FORMAT_FLAG, &aborted) >= 0 && aborted)) {
+        return true;
+    }
+    char* hwdec = mpv_get_property_string(session->handle, "hwdec-current");
+    const bool mediaCodecActive = hwdec != nullptr && strcmp(hwdec, "mediacodec") == 0;
+    mpv_free(hwdec);
+    session->video_started = mediaCodecActive;
+    if (mediaCodecActive) return true;
+
+    // mpv may otherwise continue audio after its video decoder reaches forced EOF.
+    dispatchError(
+        env, session,
+        "mpv MediaCodec video decoding failed. Switch to Media3 for this file.",
+        MPV_ERROR_VO_INIT_FAILED, MPV_END_FILE_REASON_ERROR
+    );
+    const char* stop[] = {"stop", nullptr};
+    mpv_command_async(session->handle, 0, stop);
+    return false;
+}
+
 void eventLoop(MpvSession* session) {
     bool did_attach = false;
     JNIEnv* env = ensureEnv(&did_attach);
@@ -729,10 +526,17 @@ void eventLoop(MpvSession* session) {
                 break;
             }
             case MPV_EVENT_VIDEO_RECONFIG: {
+                std::lock_guard<std::mutex> guard(session->mutex);
                 int64_t width = 0;
                 int64_t height = 0;
                 mpv_get_property(session->handle, "width", MPV_FORMAT_INT64, &width);
                 mpv_get_property(session->handle, "height", MPV_FORMAT_INT64, &height);
+                if (session->video_started && !validateVideoOutput(env, session)) break;
+                if (session->surface_ref != nullptr && width > 0 && height > 0) {
+                    char* hwdec = mpv_get_property_string(session->handle, "hwdec-current");
+                    session->video_started = hwdec != nullptr && strcmp(hwdec, "mediacodec") == 0;
+                    mpv_free(hwdec);
+                }
                 session->video_width = static_cast<int>(width);
                 session->video_height = static_cast<int>(height);
                 dispatchEvent(env, session->event_callback, kEventVideoSize, width, height, nullptr);
@@ -743,7 +547,7 @@ void eventLoop(MpvSession* session) {
                 if (endFile != nullptr) {
                     if (endFile->reason == MPV_END_FILE_REASON_EOF) {
                         dispatchEvent(env, session->event_callback, kEventCompleted, 0, 0, nullptr);
-                    } else {
+                    } else if (endFile->reason == MPV_END_FILE_REASON_ERROR) {
                         const char* errorMsg = mpv_error_string(endFile->error);
                         dispatchEvent(env, session->event_callback, kEventError, endFile->error, endFile->reason, errorMsg);
                     }
@@ -751,6 +555,15 @@ void eventLoop(MpvSession* session) {
                 break;
             }
             case MPV_EVENT_PLAYBACK_RESTART: {
+                std::lock_guard<std::mutex> guard(session->mutex);
+                int seeking = 0;
+                int aborted = 0;
+                if (mpv_get_property(session->handle, "seeking", MPV_FORMAT_FLAG, &seeking) < 0 || seeking ||
+                    (mpv_get_property(session->handle, "playback-abort", MPV_FORMAT_FLAG, &aborted) >= 0 && aborted)) {
+                    // A queued restart can belong to the timeline preceding a Surface rebind or stop.
+                    break;
+                }
+                if (!validateVideoOutput(env, session)) break;
                 dispatchEvent(env, session->event_callback, kEventRenderingStart, 0, 0, nullptr);
                 break;
             }
@@ -1026,7 +839,6 @@ bool addExternalTrack(MpvSession*, jint, const std::string&) {
     return true;
 }
 
-void markSurfaceChanged(MpvSession*) {}
 #endif
 }  // namespace
 
@@ -1096,42 +908,59 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeDestroy(
     if (session == nullptr) return;
     stopEventThread(env, session);
 #if MPV_PREBUILT_AVAILABLE
-    {
-        std::lock_guard<std::mutex> guard(session->mutex);
-        if (session->surface_ref != nullptr) {
-            env->DeleteGlobalRef(session->surface_ref);
-            session->surface_ref = nullptr;
-        }
-        if (session->native_window != nullptr) {
-            ANativeWindow_release(session->native_window);
-            session->native_window = nullptr;
-        }
-    }
     if (session->handle != nullptr) {
         mpv_terminate_destroy(session->handle);
         session->handle = nullptr;
+    }
+    if (session->surface_ref != nullptr) {
+        env->DeleteGlobalRef(session->surface_ref);
+        session->surface_ref = nullptr;
     }
 #endif
     delete session;
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JNIEXPORT jboolean JNICALL
 Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetSurface(
     JNIEnv* env, jclass, jlong handle, jobject surface) {
     auto* session = fromHandle(handle);
-    if (session == nullptr) return;
+    if (session == nullptr) return JNI_FALSE;
 #if MPV_PREBUILT_AVAILABLE
     std::lock_guard<std::mutex> guard(session->mutex);
-    if (session->handle == nullptr) return;
+    if (session->handle == nullptr) return JNI_FALSE;
 
-    if (session->surface_ref != nullptr) {
-        int64_t wid = 0;
+    auto setProperty = [session](const char* name, const char* value) {
+        const int result = mpv_set_property_string(session->handle, name, value);
+        if (result < 0) {
+            set_last_error(std::string("mpv surface ") + name + ": " + mpv_error_string(result));
+            return false;
+        }
+        return true;
+    };
+    auto setWindow = [session](int64_t wid) {
         const int result = mpv_set_option(session->handle, "wid", MPV_FORMAT_INT64, &wid);
         if (result < 0) {
-            __android_log_print(ANDROID_LOG_WARN, kLogTag, "mpv_set_option(wid=0) failed: %d", result);
+            set_last_error(std::string("mpv surface wid: ") + mpv_error_string(result));
+            return false;
         }
-        mpv_set_property_string(session->handle, "vo", "null");
-        mpv_set_property_string(session->handle, "force-window", "no");
+        return true;
+    };
+
+    session->video_started = false;
+    if (session->surface_ref != nullptr) {
+        int paused = 0;
+        int seekable = 0;
+        double position = 0.0;
+        session->paused_surface_position = -1.0;
+        if (mpv_get_property(session->handle, "pause", MPV_FORMAT_FLAG, &paused) >= 0 && paused &&
+            mpv_get_property(session->handle, "seekable", MPV_FORMAT_FLAG, &seekable) >= 0 && seekable &&
+            tryGetDoubleProperty(session->handle, "time-pos", &position)) {
+            session->paused_surface_position = position;
+        }
+        // Stop the decoder/VO before the producer's Surface reference is released.
+        if (!setProperty("vid", "no") || !setProperty("vo", "null") || !setWindow(0)) {
+            return JNI_FALSE;
+        }
         env->DeleteGlobalRef(session->surface_ref);
         session->surface_ref = nullptr;
     }
@@ -1140,54 +969,42 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetSurface(
         session->surface_ref = env->NewGlobalRef(surface);
         if (session->surface_ref == nullptr) {
             set_last_error("Failed to allocate global surface reference");
-            return;
+            return JNI_FALSE;
         }
-
-        int64_t wid = reinterpret_cast<intptr_t>(session->surface_ref);
-        const int result = mpv_set_option(session->handle, "wid", MPV_FORMAT_INT64, &wid);
-        if (result < 0) {
-            char buffer[128] = {0};
-            snprintf(buffer, sizeof(buffer), "mpv_set_option(wid) failed: %d", result);
-            __android_log_print(ANDROID_LOG_ERROR, kLogTag, "%s", buffer);
-            set_last_error(buffer);
-        } else {
-            set_last_error("");
+        const auto wid = static_cast<int64_t>(reinterpret_cast<intptr_t>(session->surface_ref));
+        // TV video is rendered by MediaCodec; subtitles use the independent app overlay.
+        if (!setWindow(wid) || !setProperty("vo", "mediacodec_embed") || !setProperty("vid", "auto")) {
+            return JNI_FALSE;
         }
-
-        // Keep mpv rendering enabled while the surface is alive.
-        std::string target_vo = "gpu";
-        char* current_vo = mpv_get_property_string(session->handle, "vo");
-        if (current_vo != nullptr) {
-            std::string configured = current_vo;
-            if (!configured.empty() && configured != "null") {
-                target_vo = configured;
-            }
-            mpv_free(current_vo);
-        }
-        mpv_set_property_string(session->handle, "vo", target_vo.c_str());
-        mpv_set_property_string(session->handle, "force-window", "yes");
-
-        // Help mpv pick the correct output size.
         ANativeWindow* window = ANativeWindow_fromSurface(env, surface);
         if (window != nullptr) {
-            const int width = ANativeWindow_getWidth(window);
-            const int height = ANativeWindow_getHeight(window);
             char size[64] = {0};
-            snprintf(size, sizeof(size), "%dx%d", width, height);
+            snprintf(size, sizeof(size), "%dx%d", ANativeWindow_getWidth(window), ANativeWindow_getHeight(window));
             mpv_set_property_string(session->handle, "android-surface-size", size);
             ANativeWindow_release(window);
         }
+        int paused = 0;
+        if (session->paused_surface_position >= 0.0 &&
+            mpv_get_property(session->handle, "pause", MPV_FORMAT_FLAG, &paused) >= 0 && paused) {
+            // Reselecting vid resumes demuxing at a keyframe; redraw the actual paused timestamp.
+            char position[64] = {0};
+            snprintf(position, sizeof(position), "%.9f", session->paused_surface_position);
+            const char* seek[] = {"seek", position, "absolute+exact", nullptr};
+            const int result = mpv_command(session->handle, seek);
+            if (result < 0) {
+                set_last_error(std::string("mpv Surface paused seek: ") + mpv_error_string(result));
+                return JNI_FALSE;
+            }
+        }
+        session->paused_surface_position = -1.0;
     }
-    __android_log_print(
-        ANDROID_LOG_DEBUG,
-        kLogTag,
-        "nativeSetSurface updated Surface(wid ref): %p",
-        session->surface_ref
-    );
+    set_last_error("");
     mpv_wakeup(session->handle);
+    return JNI_TRUE;
 #else
     (void)env;
     (void)surface;
+    return JNI_FALSE;
 #endif
 }
 
@@ -1410,6 +1227,9 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSetDataSource(
     if (session->handle == nullptr) {
         return JNI_FALSE;
     }
+    std::lock_guard<std::mutex> guard(session->mutex);
+    session->video_started = false;
+    session->paused_surface_position = -1.0;
     applyHttpHeaders(session->handle, session->headers);
     if (!loadFile(session->handle, pathString.c_str())) {
         return JNI_FALSE;
@@ -1430,6 +1250,8 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativePlay(JNIEnv*, jclass
     auto* session = fromHandle(handle);
     if (session == nullptr) return;
 #if MPV_PREBUILT_AVAILABLE
+    std::lock_guard<std::mutex> guard(session->mutex);
+    session->paused_surface_position = -1.0;
     setFlagProperty(session->handle, "pause", false);
 #endif
     session->paused = false;
@@ -1440,7 +1262,16 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativePause(JNIEnv*, jclas
     auto* session = fromHandle(handle);
     if (session == nullptr) return;
 #if MPV_PREBUILT_AVAILABLE
+    std::lock_guard<std::mutex> guard(session->mutex);
     setFlagProperty(session->handle, "pause", true);
+    if (session->surface_ref == nullptr) {
+        int seekable = 0;
+        double position = 0.0;
+        if (mpv_get_property(session->handle, "seekable", MPV_FORMAT_FLAG, &seekable) >= 0 && seekable &&
+            tryGetDoubleProperty(session->handle, "time-pos", &position)) {
+            session->paused_surface_position = position;
+        }
+    }
 #endif
     session->paused = true;
 }
@@ -1450,6 +1281,9 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeStop(JNIEnv*, jclass
     auto* session = fromHandle(handle);
     if (session == nullptr) return;
 #if MPV_PREBUILT_AVAILABLE
+    std::lock_guard<std::mutex> guard(session->mutex);
+    session->video_started = false;
+    session->paused_surface_position = -1.0;
     const char* cmd[] = {"stop", nullptr};
     mpv_command(session->handle, cmd);
 #endif
@@ -1462,7 +1296,11 @@ Java_com_xyoye_player_kernel_impl_mpv_MpvNativeBridge_nativeSeek(
     auto* session = fromHandle(handle);
     if (session == nullptr) return;
 #if MPV_PREBUILT_AVAILABLE
+    std::lock_guard<std::mutex> guard(session->mutex);
     const double positionSeconds = static_cast<double>(positionMs) / 1000.0;
+    if (session->paused_surface_position >= 0.0) {
+        session->paused_surface_position = positionSeconds;
+    }
     char buffer[64] = {0};
     snprintf(buffer, sizeof(buffer), "%.3f", positionSeconds);
     const char* cmd[] = {"seek", buffer, "absolute+exact", nullptr};

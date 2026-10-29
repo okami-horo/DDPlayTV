@@ -56,4 +56,6 @@ dependencies {
     implementation(kotlin("reflect"))
 
     kapt(Dependencies.Alibaba.arouter_compiler)
+
+    testImplementation(Dependencies.Testing.robolectric)
 }

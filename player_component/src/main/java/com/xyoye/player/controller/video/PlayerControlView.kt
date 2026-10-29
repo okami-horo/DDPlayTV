@@ -82,10 +82,6 @@ class PlayerControlView(
         // 该视图不依赖视频尺寸进行布局。
     }
 
-    override fun onPopupModeChanged(isPopup: Boolean) {
-        // 截图/锁定控件的展示策略与 popup 模式无关。
-    }
-
     fun showMessage(
         text: String,
         time: MessageTime,

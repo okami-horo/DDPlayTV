@@ -14,12 +14,4 @@ interface InterGestureView : InterControllerView {
         currentPosition: Long,
         duration: Long
     )
-
-    fun onBrightnessChange(percent: Int)
-
-    fun onVolumeChange(percent: Int)
-
-    fun onStartAccelerate(speed: Float)
-
-    fun onStopAccelerate()
 }

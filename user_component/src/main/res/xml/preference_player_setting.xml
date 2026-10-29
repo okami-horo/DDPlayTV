@@ -39,17 +39,9 @@
         android:key="mpv_video_sync"
         android:title="MPV 视频同步（video-sync）"
         android:summary="默认：交给 MPV\ndisplay-resample：常用的同步策略\n如出现音画不同步/卡顿，可尝试切换" />
-    <ListPreference
-        android:key="mpv_hwdec_priority"
-        android:title="MPV 硬解优先级"
-        android:summary="mediacodec\nmediacodec-copy" />
-    <ListPreference
-        android:key="mpv_video_output"
-        android:title="MPV 视频输出"
-        android:summary="gpu：默认 OpenGL 渲染\ngpu-next：新渲染器（可能不兼容）\nmediacodec_embed：Android embed（系统硬件渲染）" />
     <SwitchPreference
         android:key="surface_renders"
-        android:summary="使用后视频渲染性能更高"
-        android:title="SurfaceView"
+        android:summary="使用 SurfaceView 输出 Media3 视频"
+        android:title="Media3 SurfaceView"
         app:icon="@drawable/ic_player_setting_surface" />
 </PreferenceScreen>

@@ -61,9 +61,6 @@ class PlayerGestureView(
     override fun onVideoSizeChanged(videoSize: Point) {
     }
 
-    override fun onPopupModeChanged(isPopup: Boolean) {
-    }
-
     override fun onStartSlide() {
         removeCallbacks(mFadeGestureOut)
         ViewCompat
@@ -86,9 +83,6 @@ class PlayerGestureView(
         duration: Long
     ) {
         viewBinding.positionTv.isVisible = true
-        viewBinding.volumeLl.isVisible = false
-        viewBinding.batteryLl.isVisible = false
-        viewBinding.accelerateLl.isVisible = false
 
         val durationFormat = formatDuration(duration)
         val newPositionFormat =
@@ -99,41 +93,6 @@ class PlayerGestureView(
 
         val updateText = "$newPositionFormat/$durationFormat\n${updateSecondText}秒"
         viewBinding.positionTv.text = updateText
-    }
-
-    override fun onBrightnessChange(percent: Int) {
-        viewBinding.batteryLl.isVisible = true
-        viewBinding.volumeLl.isVisible = false
-        viewBinding.positionTv.isVisible = false
-        viewBinding.accelerateLl.isVisible = false
-
-        val batteryText = "$percent%"
-        viewBinding.batteryTv.text = batteryText
-    }
-
-    override fun onVolumeChange(percent: Int) {
-        viewBinding.positionTv.isVisible = false
-        viewBinding.volumeLl.isVisible = true
-        viewBinding.batteryLl.isVisible = false
-        viewBinding.accelerateLl.isVisible = false
-
-        val volumeText = "$percent%"
-        viewBinding.volumeTv.text = volumeText
-    }
-
-    override fun onStartAccelerate(speed: Float) {
-        onStartSlide()
-        viewBinding.batteryLl.isVisible = false
-        viewBinding.volumeLl.isVisible = false
-        viewBinding.positionTv.isVisible = false
-        viewBinding.accelerateLl.isVisible = true
-
-        val batteryText = "x${speed}倍速播放中"
-        viewBinding.accelerateTv.text = batteryText
-    }
-
-    override fun onStopAccelerate() {
-        hideGestureView()
     }
 
     private fun hideGestureView() {
@@ -147,9 +106,6 @@ class PlayerGestureView(
                         super.onAnimationEnd(view)
                         viewBinding.gestureContainer.isVisible = false
                         viewBinding.positionTv.isVisible = false
-                        viewBinding.batteryLl.isVisible = false
-                        viewBinding.volumeLl.isVisible = false
-                        viewBinding.accelerateLl.isVisible = false
                     }
                 },
             ).start()

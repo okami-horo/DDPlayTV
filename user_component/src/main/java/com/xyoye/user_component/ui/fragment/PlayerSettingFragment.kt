@@ -20,8 +20,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
     private var isNormalizingRangeInterval = false
 
     companion object {
-        private const val DEFAULT_MPV_VIDEO_OUTPUT = "gpu"
-        private const val DEFAULT_MPV_HWDEC_PRIORITY = "mediacodec"
         private const val DEFAULT_MPV_AUDIO_OUTPUT = "default"
         private const val DEFAULT_MPV_VIDEO_SYNC = "default"
         private const val DEFAULT_LOCAL_PROXY_MODE = "1"
@@ -32,8 +30,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
         private const val KEY_MPV_LOCAL_PROXY_MODE = "mpv_local_proxy_mode"
         private const val KEY_MPV_AUDIO_OUTPUT = "mpv_audio_output"
         private const val KEY_MPV_VIDEO_SYNC = "mpv_video_sync"
-        private const val KEY_MPV_HWDEC_PRIORITY = "mpv_hwdec_priority"
-        private const val KEY_MPV_VIDEO_OUTPUT = "mpv_video_output"
         private const val KEY_SURFACE_RENDERS = "surface_renders"
 
         fun newInstance() = PlayerSettingFragment()
@@ -48,6 +44,7 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
             arrayOf(
                 KEY_EXO_PROXY_RANGE_INTERVAL_MS,
                 KEY_EXO_LOCAL_PROXY_MODE,
+                KEY_SURFACE_RENDERS,
             )
 
         val mpvPreference =
@@ -56,21 +53,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
                 KEY_MPV_LOCAL_PROXY_MODE,
                 KEY_MPV_AUDIO_OUTPUT,
                 KEY_MPV_VIDEO_SYNC,
-                KEY_MPV_HWDEC_PRIORITY,
-                KEY_MPV_VIDEO_OUTPUT,
-            )
-
-        val mpvVideoOutput =
-            mapOf(
-                Pair("gpu（默认，OpenGL 渲染）", "gpu"),
-                Pair("gpu-next（实验）", "gpu-next"),
-                Pair("mediacodec_embed（Android embed，系统硬件渲染）", "mediacodec_embed"),
-            )
-
-        val mpvHwdecPriority =
-            mapOf(
-                Pair("mediacodec", "mediacodec"),
-                Pair("mediacodec-copy", "mediacodec-copy"),
             )
 
         val mpvAudioOutput =
@@ -141,20 +123,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
             updateVisible(safeValue)
         }
 
-        // MPV视频输出
-        findPreference<ListPreference>(KEY_MPV_VIDEO_OUTPUT)?.apply {
-            entries = mpvVideoOutput.keys.toTypedArray()
-            entryValues = mpvVideoOutput.values.toTypedArray()
-            val safeValue =
-                value?.takeIf { mpvVideoOutput.containsValue(it) }
-                    ?: DEFAULT_MPV_VIDEO_OUTPUT
-            if (value != safeValue) {
-                value = safeValue
-                PlayerConfig.putMpvVideoOutput(safeValue)
-            }
-            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
-        }
-
         // MPV音频输出（ao）
         findPreference<ListPreference>(KEY_MPV_AUDIO_OUTPUT)?.apply {
             entries = mpvAudioOutput.keys.toTypedArray()
@@ -181,20 +149,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
             if (value != safeValue) {
                 value = safeValue
                 PlayerConfig.putMpvVideoSync(safeValue)
-            }
-            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
-        }
-
-        // MPV硬解优先级
-        findPreference<ListPreference>(KEY_MPV_HWDEC_PRIORITY)?.apply {
-            entries = mpvHwdecPriority.keys.toTypedArray()
-            entryValues = mpvHwdecPriority.values.toTypedArray()
-            val safeValue =
-                value?.takeIf { mpvHwdecPriority.containsValue(it) }
-                    ?: DEFAULT_MPV_HWDEC_PRIORITY
-            if (value != safeValue) {
-                value = safeValue
-                PlayerConfig.putMpvHwdecPriority(safeValue)
             }
             summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         }
@@ -279,133 +233,110 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
         }
     }
 
-    private inner class PlayerSettingDataStore : MappingPreferenceDataStore(
-        dataStoreName = "PlayerSettingDataStore",
-        stringReaders =
-            mapOf(
-                KEY_PLAYER_TYPE to {
-                    val currentType = PlayerConfig.getUsePlayerType()
-                    val safeType =
-                        when (PlayerType.valueOf(currentType)) {
-                            PlayerType.TYPE_MPV_PLAYER -> PlayerType.TYPE_MPV_PLAYER
-                            else -> PlayerType.TYPE_EXO_PLAYER
-                        }
-                    if (safeType.value != currentType) {
-                        PlayerConfig.putUsePlayerType(safeType.value)
-                    }
-                    safeType.value.toString()
-                },
-                KEY_MPV_VIDEO_OUTPUT to {
-                    val current = PlayerConfig.getMpvVideoOutput()
-                    val safeValue = current.takeIf { mpvVideoOutput.containsValue(it) } ?: DEFAULT_MPV_VIDEO_OUTPUT
-                    if (current != safeValue) {
-                        PlayerConfig.putMpvVideoOutput(safeValue)
-                    }
-                    safeValue
-                },
-                KEY_MPV_HWDEC_PRIORITY to {
-                    val current = PlayerConfig.getMpvHwdecPriority()
-                    val safeValue = current.takeIf { mpvHwdecPriority.containsValue(it) } ?: DEFAULT_MPV_HWDEC_PRIORITY
-                    if (current != safeValue) {
-                        PlayerConfig.putMpvHwdecPriority(safeValue)
-                    }
-                    safeValue
-                },
-                KEY_MPV_AUDIO_OUTPUT to {
-                    val current = PlayerConfig.getMpvAudioOutput()
-                    val safeValue = current.takeIf { mpvAudioOutput.containsValue(it) } ?: DEFAULT_MPV_AUDIO_OUTPUT
-                    if (current != safeValue) {
-                        PlayerConfig.putMpvAudioOutput(safeValue)
-                    }
-                    safeValue
-                },
-                KEY_MPV_VIDEO_SYNC to {
-                    val current = PlayerConfig.getMpvVideoSync()
-                    val safeValue = current.takeIf { mpvVideoSync.containsValue(it) } ?: DEFAULT_MPV_VIDEO_SYNC
-                    if (current != safeValue) {
-                        PlayerConfig.putMpvVideoSync(safeValue)
-                    }
-                    safeValue
-                },
-                KEY_MPV_LOCAL_PROXY_MODE to {
-                    val current = PlayerConfig.getMpvLocalProxyMode()
-                    val safeValue = LocalProxyMode.from(current).value.toString()
-                    if (current.toString() != safeValue) {
-                        PlayerConfig.putMpvLocalProxyMode(safeValue.toInt())
-                    }
-                    safeValue
-                },
-                KEY_EXO_LOCAL_PROXY_MODE to {
-                    val current = PlayerConfig.getExoLocalProxyMode()
-                    val safeValue = LocalProxyMode.from(current).value.toString()
-                    if (current.toString() != safeValue) {
-                        PlayerConfig.putExoLocalProxyMode(safeValue.toInt())
-                    }
-                    safeValue
-                },
-            ),
-        stringWriters =
-            mapOf(
-                KEY_PLAYER_TYPE to { value ->
-                    value?.toIntOrNull()?.let { parsedType ->
+    private inner class PlayerSettingDataStore :
+        MappingPreferenceDataStore(
+            dataStoreName = "PlayerSettingDataStore",
+            stringReaders =
+                mapOf(
+                    KEY_PLAYER_TYPE to {
+                        val currentType = PlayerConfig.getUsePlayerType()
                         val safeType =
-                            when (PlayerType.valueOf(parsedType)) {
+                            when (PlayerType.valueOf(currentType)) {
                                 PlayerType.TYPE_MPV_PLAYER -> PlayerType.TYPE_MPV_PLAYER
                                 else -> PlayerType.TYPE_EXO_PLAYER
                             }
-                        PlayerConfig.putUsePlayerType(safeType.value)
-                    }
-                },
-                KEY_MPV_VIDEO_OUTPUT to { value ->
-                    val safeValue = value?.takeIf { mpvVideoOutput.containsValue(it) } ?: DEFAULT_MPV_VIDEO_OUTPUT
-                    PlayerConfig.putMpvVideoOutput(safeValue)
-                },
-                KEY_MPV_HWDEC_PRIORITY to { value ->
-                    val safeValue = value?.takeIf { mpvHwdecPriority.containsValue(it) } ?: DEFAULT_MPV_HWDEC_PRIORITY
-                    PlayerConfig.putMpvHwdecPriority(safeValue)
-                },
-                KEY_MPV_AUDIO_OUTPUT to { value ->
-                    val safeValue = value?.takeIf { mpvAudioOutput.containsValue(it) } ?: DEFAULT_MPV_AUDIO_OUTPUT
-                    PlayerConfig.putMpvAudioOutput(safeValue)
-                },
-                KEY_MPV_VIDEO_SYNC to { value ->
-                    val safeValue = value?.takeIf { mpvVideoSync.containsValue(it) } ?: DEFAULT_MPV_VIDEO_SYNC
-                    PlayerConfig.putMpvVideoSync(safeValue)
-                },
-                KEY_MPV_LOCAL_PROXY_MODE to { value ->
-                    val safeValue = LocalProxyMode.from(value?.toIntOrNull()).value
-                    PlayerConfig.putMpvLocalProxyMode(safeValue)
-                },
-                KEY_EXO_LOCAL_PROXY_MODE to { value ->
-                    val safeValue = LocalProxyMode.from(value?.toIntOrNull()).value
-                    PlayerConfig.putExoLocalProxyMode(safeValue)
-                },
-            ),
-        intReaders =
-            mapOf(
-                KEY_MPV_PROXY_RANGE_INTERVAL_MS to {
-                    normalizeMpvRangeInterval(PlayerConfig.getMpvProxyRangeMinIntervalMs())
-                },
-                KEY_EXO_PROXY_RANGE_INTERVAL_MS to {
-                    normalizeMpvRangeInterval(PlayerConfig.getExoProxyRangeMinIntervalMs())
-                },
-            ),
-        intWriters =
-            mapOf(
-                KEY_MPV_PROXY_RANGE_INTERVAL_MS to { value ->
-                    PlayerConfig.putMpvProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
-                },
-                KEY_EXO_PROXY_RANGE_INTERVAL_MS to { value ->
-                    PlayerConfig.putExoProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
-                },
-            ),
-        booleanReaders =
-            mapOf(
-                KEY_SURFACE_RENDERS to { PlayerConfig.isUseSurfaceView() },
-            ),
-        booleanWriters =
-            mapOf(
-                KEY_SURFACE_RENDERS to { value -> PlayerConfig.putUseSurfaceView(value) },
-            ),
-    )
+                        if (safeType.value != currentType) {
+                            PlayerConfig.putUsePlayerType(safeType.value)
+                        }
+                        safeType.value.toString()
+                    },
+                    KEY_MPV_AUDIO_OUTPUT to {
+                        val current = PlayerConfig.getMpvAudioOutput()
+                        val safeValue = current.takeIf { mpvAudioOutput.containsValue(it) } ?: DEFAULT_MPV_AUDIO_OUTPUT
+                        if (current != safeValue) {
+                            PlayerConfig.putMpvAudioOutput(safeValue)
+                        }
+                        safeValue
+                    },
+                    KEY_MPV_VIDEO_SYNC to {
+                        val current = PlayerConfig.getMpvVideoSync()
+                        val safeValue = current.takeIf { mpvVideoSync.containsValue(it) } ?: DEFAULT_MPV_VIDEO_SYNC
+                        if (current != safeValue) {
+                            PlayerConfig.putMpvVideoSync(safeValue)
+                        }
+                        safeValue
+                    },
+                    KEY_MPV_LOCAL_PROXY_MODE to {
+                        val current = PlayerConfig.getMpvLocalProxyMode()
+                        val safeValue = LocalProxyMode.from(current).value.toString()
+                        if (current.toString() != safeValue) {
+                            PlayerConfig.putMpvLocalProxyMode(safeValue.toInt())
+                        }
+                        safeValue
+                    },
+                    KEY_EXO_LOCAL_PROXY_MODE to {
+                        val current = PlayerConfig.getExoLocalProxyMode()
+                        val safeValue = LocalProxyMode.from(current).value.toString()
+                        if (current.toString() != safeValue) {
+                            PlayerConfig.putExoLocalProxyMode(safeValue.toInt())
+                        }
+                        safeValue
+                    },
+                ),
+            stringWriters =
+                mapOf(
+                    KEY_PLAYER_TYPE to { value ->
+                        value?.toIntOrNull()?.let { parsedType ->
+                            val safeType =
+                                when (PlayerType.valueOf(parsedType)) {
+                                    PlayerType.TYPE_MPV_PLAYER -> PlayerType.TYPE_MPV_PLAYER
+                                    else -> PlayerType.TYPE_EXO_PLAYER
+                                }
+                            PlayerConfig.putUsePlayerType(safeType.value)
+                        }
+                    },
+                    KEY_MPV_AUDIO_OUTPUT to { value ->
+                        val safeValue = value?.takeIf { mpvAudioOutput.containsValue(it) } ?: DEFAULT_MPV_AUDIO_OUTPUT
+                        PlayerConfig.putMpvAudioOutput(safeValue)
+                    },
+                    KEY_MPV_VIDEO_SYNC to { value ->
+                        val safeValue = value?.takeIf { mpvVideoSync.containsValue(it) } ?: DEFAULT_MPV_VIDEO_SYNC
+                        PlayerConfig.putMpvVideoSync(safeValue)
+                    },
+                    KEY_MPV_LOCAL_PROXY_MODE to { value ->
+                        val safeValue = LocalProxyMode.from(value?.toIntOrNull()).value
+                        PlayerConfig.putMpvLocalProxyMode(safeValue)
+                    },
+                    KEY_EXO_LOCAL_PROXY_MODE to { value ->
+                        val safeValue = LocalProxyMode.from(value?.toIntOrNull()).value
+                        PlayerConfig.putExoLocalProxyMode(safeValue)
+                    },
+                ),
+            intReaders =
+                mapOf(
+                    KEY_MPV_PROXY_RANGE_INTERVAL_MS to {
+                        normalizeMpvRangeInterval(PlayerConfig.getMpvProxyRangeMinIntervalMs())
+                    },
+                    KEY_EXO_PROXY_RANGE_INTERVAL_MS to {
+                        normalizeMpvRangeInterval(PlayerConfig.getExoProxyRangeMinIntervalMs())
+                    },
+                ),
+            intWriters =
+                mapOf(
+                    KEY_MPV_PROXY_RANGE_INTERVAL_MS to { value ->
+                        PlayerConfig.putMpvProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
+                    },
+                    KEY_EXO_PROXY_RANGE_INTERVAL_MS to { value ->
+                        PlayerConfig.putExoProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
+                    },
+                ),
+            booleanReaders =
+                mapOf(
+                    KEY_SURFACE_RENDERS to { PlayerConfig.isUseSurfaceView() },
+                ),
+            booleanWriters =
+                mapOf(
+                    KEY_SURFACE_RENDERS to { value -> PlayerConfig.putUseSurfaceView(value) },
+                ),
+        )
 }

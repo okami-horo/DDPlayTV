@@ -103,7 +103,7 @@
             app:layout_constraintVertical_bias="0"
             app:layout_scrollFlags="scroll" />
 
-        <com.google.android.material.tabs.TabLayout
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
             android:id="@+id/tab_layout"
             android:layout_width="0dp"
             android:layout_height="40dp"
@@ -111,18 +111,12 @@
             android:layout_marginTop="10dp"
             android:layout_marginEnd="10dp"
             android:background="@drawable/background_bottom_sheet"
-            app:tabBackground="@drawable/background_tab_press"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_weight="2"
             app:layout_constraintStart_toEndOf="@id/banner"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tabIndicatorColor="@color/indicator_checked_color"
-            app:tabIndicatorFullWidth="false"
-            app:tabRippleColor="@android:color/transparent"
-            app:tabSelectedTextColor="@color/indicator_checked_color"
-            app:tabTextColor="@color/indicator_uncheck_color" />
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <androidx.viewpager2.widget.ViewPager2
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/viewpager"
             android:layout_width="0dp"
             android:layout_height="0dp"

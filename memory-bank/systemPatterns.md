@@ -22,13 +22,12 @@
  - Repository AAR wrappers should be direct deps only where needed.
 
  ## UI Patterns
- - TV-specific structural differences may use separate activities/pages.
- - Small same-screen differences should branch at runtime with `isTelevisionUiMode()`.
- - Pure visual TV differences should use resource qualifiers/selectors.
- - TV lists, grids and dynamic menus use DpadRecyclerView 1.4.3. `TvViewInflater` replaces only XML lists marked `tvDpadList` in TV mode; mobile retains ordinary RecyclerView. Layout helpers configure the library's layout manager instead of replacing it. Both old list delegates and index/retry navigation were removed on 2026-10-28.
- - `TvCategoryPages` displays one active Fragment and explicit category navigation; mobile keeps TabLayout/ViewPager2. Browsing focus and activating a category are separate. `DpadFocusOwner` retains only the cross-module content-entry operation.
+ - TV is the sole maintained UI target (2026-10-29). Both launcher categories use TvSplashActivity/TvMainActivity; old mobile component names are aliases. Shared feature pages remain in use.
+ - TV lists, grids and dynamic menus use DpadRecyclerView 1.4.3. `TvViewInflater` replaces XML lists marked `tvDpadList` regardless of system UI mode. Focus selectors are default resources; the unused `isTelevisionUiMode()` helper is removed. Actual input-mode checks remain where needed. Layout helpers configure the library's layout manager instead of replacing it.
+ - `TvCategoryPages` directly binds XML DpadRecyclerView/FragmentContainerView and displays one active Fragment with explicit category navigation; phone adapters and runtime TabLayout/ViewPager2 replacement are removed. Browsing focus and activating a category are separate. `DpadFocusOwner` retains only the cross-module content-entry operation.
+ - Player controls inherit TvVideoController directly; touch-only gesture/acceleration, orientation sensors and the no-op popup host are removed. Seek feedback, media rotation/aspect and session ownership remain. mpv uses SurfaceView/mediacodec_embed/mediacodec only; independent libass GPU subtitles remain. Media3 Surface selection is separate. Current behavior is maintained in `document/mpv_conf_supported_options.md` and `document/player/subtitle-rendering.md`; validation is in the TV-only ledger below.
  - Page-specific stable keys and library state restore lists; storage scopes DpadStateRegistry by directory. The shell only provides sidebar/content handoff. Android window focus retains dialog callers without delayed recursive restoration. Player panel boundaries contain native/library navigation, and RemoteKeyDispatcher owns playback key semantics through one dispatch entry.
- - Migration coverage and evidence are authoritative in `docs/superpowers/plans/2026-10-28-tv-dpad-library-rewrite.md`; physical-TV acceptance remains distinct from AVD verification.
+ - TV-only migration evidence is maintained in `docs/superpowers/plans/2026-10-29-tv-only.md`; the earlier DPAD rewrite evidence remains in `docs/superpowers/plans/2026-10-28-tv-dpad-library-rewrite.md`. Physical-TV acceptance remains distinct from AVD verification.
 
  ## Retired Integration Compatibility (2026-10-28)
  - Room 16->17 removes Bilibili media libraries and their history before removed enum values can fall back to generic streaming. Other rows and local danmaku bindings remain.

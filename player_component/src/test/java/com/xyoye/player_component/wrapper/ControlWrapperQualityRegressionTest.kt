@@ -281,7 +281,6 @@ private class FakeVideoPlayer : InterVideoPlayer {
 
 private class FakeVideoController : InterVideoController {
     var lockedState: Boolean = false
-    var popupModeState: Boolean = false
 
     var startProgressCalls: Int = 0
     var hideControllerCalls: Int = 0
@@ -311,12 +310,6 @@ private class FakeVideoController : InterVideoController {
     }
 
     override fun isLocked(): Boolean = lockedState
-
-    override fun setPopupMode(isPopup: Boolean) {
-        popupModeState = isPopup
-    }
-
-    override fun isPopupMode(): Boolean = popupModeState
 
     override fun startProgress() {
         startProgressCalls += 1

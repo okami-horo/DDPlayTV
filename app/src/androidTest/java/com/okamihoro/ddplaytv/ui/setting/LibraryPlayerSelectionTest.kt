@@ -1,13 +1,16 @@
 package com.okamihoro.ddplaytv.ui.setting
 
+import android.app.Instrumentation
 import android.content.Intent
+import android.os.Bundle
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.R
@@ -16,7 +19,6 @@ import com.xyoye.storage_component.ui.dialog.WebDavStorageEditDialog
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -35,7 +37,6 @@ class LibraryPlayerSelectionTest {
         ActivityScenario.launch<StoragePlusActivity>(intent).use { scenario ->
             lateinit var dialog: WebDavStorageEditDialog
             scenario.onActivity {
-                assumeTrue(it.isTelevisionUiMode())
                 dialog =
                     StoragePlusActivity::class.java
                         .getDeclaredField("storageEditDialog")
@@ -71,9 +72,33 @@ class LibraryPlayerSelectionTest {
                 assertTrue(dialog.findViewById<View>(R.id.follow_global_tv)!!.isSelected)
                 assertFalse(dialog.findViewById<View>(R.id.mpv_tv)!!.isSelected)
             }
+
+            fun backState(label: String): String {
+                var state = ""
+                instrumentation.runOnMainSync {
+                    val decor = dialog.window?.decorView
+                    val focus = dialog.currentFocus
+                    val imeVisible =
+                        decor?.let {
+                            ViewCompat.getRootWindowInsets(it)?.isVisible(WindowInsetsCompat.Type.ime())
+                        }
+                    state = "$label: showing=${dialog.isShowing}, " +
+                        "windowFocus=${decor?.hasWindowFocus()}, " +
+                        "focus=${focus?.javaClass?.simpleName}:${focus?.id}, imeVisible=$imeVisible"
+                }
+                instrumentation.sendStatus(
+                    0,
+                    Bundle().apply {
+                        putString(Instrumentation.REPORT_KEY_STREAMRESULT, "\nLibraryPlayerSelectionTest $state\n")
+                    }
+                )
+                return state
+            }
+            val beforeBack = backState("before BACK")
             instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
             instrumentation.waitForIdleSync()
-            assertFalse(dialog.isShowing)
+            val afterBack = backState("after BACK")
+            assertFalse("$beforeBack; $afterBack", dialog.isShowing)
         }
     }
 }

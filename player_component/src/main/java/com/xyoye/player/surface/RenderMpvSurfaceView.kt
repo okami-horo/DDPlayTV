@@ -1,6 +1,7 @@
 package com.xyoye.player.surface
 
 import android.content.Context
+import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.xyoye.data_component.enums.VideoScreenScale
@@ -14,6 +15,7 @@ class RenderMpvSurfaceView(
     InterSurfaceView {
     private val measureHelper = RenderMeasureHelper()
     private lateinit var videoPlayer: AbstractVideoPlayer
+    private var boundSurface: Surface? = null
 
     private val surfaceCallback =
         object : SurfaceHolder.Callback {
@@ -29,11 +31,12 @@ class RenderMpvSurfaceView(
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
+                clearSurface()
             }
 
             override fun surfaceCreated(holder: SurfaceHolder) {
                 if (this@RenderMpvSurfaceView::videoPlayer.isInitialized) {
-                    videoPlayer.setSurface(holder.surface)
+                    bindSurface(holder.surface)
                     val frame = holder.surfaceFrame
                     if (frame.width() > 0 && frame.height() > 0) {
                         (videoPlayer as? MpvVideoPlayer)?.setSurfaceSize(frame.width(), frame.height())
@@ -47,7 +50,9 @@ class RenderMpvSurfaceView(
     }
 
     override fun attachPlayer(player: AbstractVideoPlayer) {
+        clearSurface()
         videoPlayer = player
+        if (holder.surface.isValid) bindSurface(holder.surface)
     }
 
     override fun setVideoSize(
@@ -81,6 +86,7 @@ class RenderMpvSurfaceView(
     }
 
     override fun release() {
+        clearSurface()
         holder.removeCallback(surfaceCallback)
     }
 
@@ -92,8 +98,16 @@ class RenderMpvSurfaceView(
         setMeasuredDimension(measuredSize[0], measuredSize[1])
     }
 
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        holder.removeCallback(surfaceCallback)
+    private fun bindSurface(surface: Surface) {
+        boundSurface = surface
+        videoPlayer.setSurface(surface)
+    }
+
+    private fun clearSurface() {
+        val surface = boundSurface ?: return
+        boundSurface = null
+        if (this::videoPlayer.isInitialized) {
+            (videoPlayer as? MpvVideoPlayer)?.clearSurface(surface)
+        }
     }
 }

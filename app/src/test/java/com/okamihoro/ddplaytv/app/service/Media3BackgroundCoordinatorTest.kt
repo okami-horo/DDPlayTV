@@ -33,7 +33,7 @@ class Media3BackgroundCoordinatorTest {
                     PlaybackOperationResult.Success
                 }
             val command = PlaybackCommand(version, PlaybackAction.Pause)
-            assertEquals(PlaybackOperationResult.Success, coordinator.dispatch(command, state(setOf(Media3Capability.PAUSE)), false))
+            assertEquals(PlaybackOperationResult.Success, coordinator.dispatch(command, state(setOf(Media3Capability.PAUSE))))
             assertEquals(listOf(command), commands)
         }
 
@@ -45,11 +45,11 @@ class Media3BackgroundCoordinatorTest {
                     PlaybackOperationResult.Success
                 }
             val command = PlaybackCommand(version.copy(sourceRevision = 1), PlaybackAction.Play)
-            assertTrue(coordinator.dispatch(command, state(setOf(Media3Capability.PLAY)), false) is PlaybackOperationResult.Rejected)
-            assertTrue(coordinator.dispatch(command, null, false) is PlaybackOperationResult.Rejected)
+            assertTrue(coordinator.dispatch(command, state(setOf(Media3Capability.PLAY))) is PlaybackOperationResult.Rejected)
+            assertTrue(coordinator.dispatch(command, null) is PlaybackOperationResult.Rejected)
         }
 
-    @Test fun tvAndUnavailableLocalOperationsRejectBackgroundCommands() =
+    @Test fun tvProductRejectsBackgroundAndPipEvenWhenTheSourceAdvertisesThem() =
         runBlocking {
             val commands = mutableListOf<PlaybackCommand>()
             val coordinator =
@@ -57,11 +57,16 @@ class Media3BackgroundCoordinatorTest {
                     commands += it
                     PlaybackOperationResult.Success
                 }
-            val command = PlaybackCommand(version, PlaybackAction.EnterPictureInPicture)
-            assertTrue(coordinator.dispatch(command, state(setOf(Media3Capability.PIP)), true) is PlaybackOperationResult.Rejected)
-            assertTrue(coordinator.dispatch(command, state(emptySet()), false) is PlaybackOperationResult.Rejected)
+            for (action in listOf(PlaybackAction.EnterBackground, PlaybackAction.EnterPictureInPicture)) {
+                val command = PlaybackCommand(version, action)
+                assertTrue(
+                    coordinator.dispatch(
+                        command,
+                        state(setOf(Media3Capability.PIP, Media3Capability.BACKGROUND))
+                    ) is PlaybackOperationResult.Rejected
+                )
+                assertTrue(coordinator.dispatch(command, state(emptySet())) is PlaybackOperationResult.Rejected)
+            }
             assertTrue(commands.isEmpty())
-            assertEquals(PlaybackOperationResult.Success, coordinator.dispatch(command, state(setOf(Media3Capability.PIP)), false))
-            assertEquals(listOf(command), commands)
         }
 }

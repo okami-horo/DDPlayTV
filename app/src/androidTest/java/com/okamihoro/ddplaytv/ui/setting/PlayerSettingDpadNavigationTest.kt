@@ -4,6 +4,7 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import androidx.fragment.app.Fragment
 import androidx.preference.ListPreference
+import androidx.preference.Preference
 import androidx.preference.PreferenceGroupAdapter
 import androidx.preference.SwitchPreference
 import androidx.test.core.app.ActivityScenario
@@ -11,14 +12,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.config.PlayerConfig
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.user_component.R
 import com.xyoye.user_component.ui.activities.setting_player.SettingPlayerActivity
 import com.xyoye.user_component.ui.fragment.DanmuSettingFragment
 import com.xyoye.user_component.ui.fragment.PlayerSettingFragment
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,7 +56,6 @@ class PlayerSettingDpadNavigationTest {
     @Test
     fun categoriesRequireExplicitNavigationAndSurviveRecreation() {
         ActivityScenario.launch(SettingPlayerActivity::class.java).use { scenario ->
-            scenario.onActivity { assumeTrue(it.isTelevisionUiMode()) }
             await(scenario) { it.findViewById<DpadRecyclerView>(R.id.tab_layout).hasFocus() && it.hasWindowFocus() }
             send(KeyEvent.KEYCODE_DPAD_DOWN)
             await(scenario) { active(it) is PlayerSettingFragment && (active(it) as PlayerSettingFragment).listView.hasFocus() }
@@ -86,11 +85,41 @@ class PlayerSettingDpadNavigationTest {
 
     @Test
     fun switchExecutesOnceAndPersistsAcrossRecreation() {
+        val originalKernel = PlayerConfig.getUsePlayerType()
+        PlayerConfig.putUsePlayerType(2)
+        try {
+            verifySurfaceSwitchPersists()
+        } finally {
+            PlayerConfig.putUsePlayerType(originalKernel)
+        }
+    }
+
+    @Test
+    fun mpvOutputIsFixedAndSurfaceSettingOnlyAppliesToMedia3() {
+        val originalKernel = PlayerConfig.getUsePlayerType()
+        try {
+            for (kernel in listOf(4, 2)) {
+                PlayerConfig.putUsePlayerType(kernel)
+                ActivityScenario.launch(SettingPlayerActivity::class.java).use { scenario ->
+                    scenario.onActivity {
+                        val fragment = active(it) as PlayerSettingFragment
+                        assertNull(fragment.findPreference<Preference>("mpv_video_output"))
+                        assertNull(fragment.findPreference<Preference>("mpv_hwdec_priority"))
+                        assertEquals(kernel == 2, fragment.findPreference<Preference>("surface_renders")!!.isVisible)
+                        assertEquals(kernel == 4, fragment.findPreference<Preference>("mpv_audio_output")!!.isVisible)
+                    }
+                }
+            }
+        } finally {
+            PlayerConfig.putUsePlayerType(originalKernel)
+        }
+    }
+
+    private fun verifySurfaceSwitchPersists() {
         ActivityScenario.launch(SettingPlayerActivity::class.java).use { scenario ->
             var original = false
             var position = -1
             scenario.onActivity { activity ->
-                assumeTrue(activity.isTelevisionUiMode())
                 val fragment = active(activity) as PlayerSettingFragment
                 original = fragment.findPreference<SwitchPreference>("surface_renders")!!.isChecked
                 val list = fragment.listView as DpadRecyclerView

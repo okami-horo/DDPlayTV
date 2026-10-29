@@ -62,24 +62,6 @@ class SubtitleTextView(
     override fun onVideoSizeChanged(videoSize: Point) {
     }
 
-    override fun onPopupModeChanged(isPopup: Boolean) {
-        // 悬浮窗状态下，将字幕文字大小与描边缩小为原来的50%
-        val fontScale = subtitleFontScale()
-        val textSize = PlayerInitializer.Subtitle.textSize
-        var realSize = 40f * textSize / 100f * fontScale
-        if (isPopup) {
-            realSize *= 0.5f
-        }
-        setTextSize(realSize.toInt())
-
-        val strokeWidth = PlayerInitializer.Subtitle.strokeWidth
-        var realWidth = 10f * strokeWidth / 100f * fontScale
-        if (isPopup) {
-            realWidth *= 0.5f
-        }
-        setStrokeWidth(realWidth.toInt())
-    }
-
     fun setSubtitle(subtitle: List<SubtitleText>?) {
         lastSubtitle = subtitle ?: emptyList()
         showSubtitle(lastSubtitle)

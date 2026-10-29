@@ -5,7 +5,6 @@ import android.os.Binder
 import android.os.IBinder
 import androidx.lifecycle.LifecycleService
 import com.alibaba.android.arouter.launcher.ARouter
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.media3.Media3SessionClient
 import com.xyoye.common_component.playback.handoff.PlaybackCommand
 import com.xyoye.common_component.playback.handoff.PlaybackOperationResult
@@ -24,7 +23,7 @@ class Media3SessionService : LifecycleService() {
             override fun playback(): StateFlow<PlaybackStateView?> = provider.observePlayback()
 
             override suspend fun dispatch(command: PlaybackCommand): PlaybackOperationResult =
-                coordinator.dispatch(command, playback().value, applicationContext.isTelevisionUiMode())
+                coordinator.dispatch(command, playback().value)
         }
     }
 

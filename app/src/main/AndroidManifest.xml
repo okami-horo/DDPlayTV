@@ -35,18 +35,6 @@
         tools:targetApi="n">
 
 	        <activity
-	            android:name="com.okamihoro.ddplaytv.ui.splash.SplashActivity"
-	            android:configChanges="orientation|screenSize"
-	            android:theme="@style/SplashTheme"
-	            android:exported="true">
-	            <intent-filter>
-	                <action android:name="android.intent.action.MAIN" />
-
-	                <category android:name="android.intent.category.LAUNCHER" />
-	            </intent-filter>
-	        </activity>
-
-	        <activity
 	            android:name="com.okamihoro.ddplaytv.ui.splash.TvSplashActivity"
 	            android:configChanges="orientation|screenSize"
 	            android:theme="@style/SplashTheme"
@@ -55,17 +43,24 @@
 	            <intent-filter>
 	                <action android:name="android.intent.action.MAIN" />
 
+	                <category android:name="android.intent.category.LAUNCHER" />
 	                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
 	            </intent-filter>
 	        </activity>
 
 	        <activity
-	            android:name="com.okamihoro.ddplaytv.ui.main.MainActivity"
-	            android:launchMode="singleTask" />
-
-	        <activity
 	            android:name="com.okamihoro.ddplaytv.ui.tv.TvMainActivity"
 	            android:launchMode="singleTask" />
+
+        <activity-alias
+            android:name="com.okamihoro.ddplaytv.ui.splash.SplashActivity"
+            android:targetActivity="com.okamihoro.ddplaytv.ui.splash.TvSplashActivity"
+            android:exported="true" />
+
+        <activity-alias
+            android:name="com.okamihoro.ddplaytv.ui.main.MainActivity"
+            android:targetActivity="com.okamihoro.ddplaytv.ui.tv.TvMainActivity"
+            android:exported="false" />
 
         <service
             android:name="com.okamihoro.ddplaytv.app.service.Media3SessionService"

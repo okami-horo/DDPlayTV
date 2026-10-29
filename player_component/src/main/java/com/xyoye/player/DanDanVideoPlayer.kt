@@ -516,16 +516,6 @@ class DanDanVideoPlayer(
         }
     }
 
-    fun enterPopupMode() {
-        mVideoController?.setPopupMode(true)
-        mRenderView?.refresh()
-    }
-
-    fun exitPopupMode() {
-        mVideoController?.setPopupMode(false)
-        mRenderView?.refresh()
-    }
-
     fun attachSubtitleOverlay(view: View) {
         val controllerIndex = if (mVideoController != null) indexOfChild(mVideoController) else -1
         val insertIndex = if (controllerIndex >= 0) controllerIndex else childCount
@@ -547,10 +537,6 @@ class DanDanVideoPlayer(
 
     fun setSubtitleFallbackDispatcher(dispatcher: SubtitleFallbackDispatcher) {
         subtitleFallbackDispatcher = dispatcher
-    }
-
-    fun setPopupGestureHandler(handler: OnTouchListener?) {
-        mVideoController?.setPopupGestureHandler(handler)
     }
 
     fun addPlayStateListener(listener: (PlayState) -> Unit) {

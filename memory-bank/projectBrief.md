@@ -1,10 +1,10 @@
  # Project Brief
 
  ## Project
- DDPlayTV is a modular Android TV-first media app built with Kotlin, XML views, MVVM, ARouter, and Gradle multi-module structure.
+ DDPlayTV is a modular Android TV media app built with Kotlin, XML views, MVVM, ARouter, and Gradle multi-module structure.
 
  ## Core Goals
- - Provide a TV-friendly media experience controlled primarily by DPAD/remote.
+ - Maintain a TV-only media experience controlled by DPAD/remote. The user retired mobile support and authorized migration on 2026-10-29; both launcher categories and shared controls now use TV defaults. Migration verification is tracked in `docs/superpowers/plans/2026-10-29-tv-only.md`.
  - Compose feature modules through `:app` while keeping reusable foundations in `core_*` modules.
  - Keep feature modules independent; cross-feature collaboration goes through `:core_contract_component` contracts/routing.
  - Support local media, storage/casting, player UI/capabilities, anime search, and user/settings. Bilibili integration is retired; PiliPlus owns that functionality (user decision, 2026-10-28).

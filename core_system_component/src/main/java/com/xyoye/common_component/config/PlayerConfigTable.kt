@@ -7,10 +7,6 @@ import com.xyoye.mmkv_annotation.MMKVKotlinClass
 
 @MMKVKotlinClass(className = "PlayerConfig")
 object PlayerConfigTable {
-    // 是否允许屏幕旋转
-    @MMKVFiled
-    const val allowOrientationChange = true
-
     // 是否使用surface view
     @MMKVFiled
     const val useSurfaceView = true
@@ -22,10 +18,6 @@ object PlayerConfigTable {
     // 视频倍速
     @MMKVFiled
     val newVideoSpeed = 1f
-
-    // 视频长按速率
-    @MMKVFiled
-    val pressVideoSpeed = 2f
 
     // 自动播放下一集
     @MMKVFiled
@@ -50,14 +42,6 @@ object PlayerConfigTable {
     // Media3(Exo) 本地 HTTP 代理：开关策略（关闭 / 自动 / 强制）
     @MMKVFiled
     val exoLocalProxyMode = LocalProxyMode.AUTO.value
-
-    // MPV 视频输出（vo）：gpu / gpu-next / mediacodec_embed
-    @MMKVFiled
-    val mpvVideoOutput = "gpu"
-
-    // MPV 硬解优先级：mediacodec / mediacodec-copy
-    @MMKVFiled
-    val mpvHwdecPriority = "mediacodec"
 
     // MPV 音频输出（ao）：default / opensles / audiotrack
     @MMKVFiled

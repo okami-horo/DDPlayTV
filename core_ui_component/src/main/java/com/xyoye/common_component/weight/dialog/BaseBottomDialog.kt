@@ -17,7 +17,6 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.core_ui_component.R
@@ -40,7 +39,7 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus && initialFocusPending && context.isTelevisionUiMode() && !rootViewBinding.root.isInTouchMode) {
+        if (hasFocus && initialFocusPending && !rootViewBinding.root.isInTouchMode) {
             initialFocusPending = false
             if (!rootViewBinding.containerFl.requestFocus()) {
                 if (!rootViewBinding.negativeBt.requestFocus()) rootViewBinding.positiveBt.requestFocus()
@@ -59,7 +58,7 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
                 null,
                 false,
             )
-        if (context.isTelevisionUiMode()) rootViewBinding.root.isFocusable = false
+        rootViewBinding.root.isFocusable = false
 
         val childViewBinding =
             DataBindingUtil.inflate<T>(
@@ -70,6 +69,10 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
             )
 
         window?.apply {
+            setSoftInputMode(
+                (attributes.softInputMode and WindowManager.LayoutParams.SOFT_INPUT_MASK_STATE.inv()) or
+                    WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
+            )
             decorView.setPadding(0, decorView.top, 0, decorView.bottom)
 
             val layoutParams = attributes
@@ -82,7 +85,7 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
 
         // 默认展开
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
-        if (context.isTelevisionUiMode()) behavior.isDraggable = false
+        behavior.isDraggable = false
 
         setContentView(rootViewBinding.root)
 

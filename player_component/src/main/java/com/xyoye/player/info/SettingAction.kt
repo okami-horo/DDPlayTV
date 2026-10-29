@@ -15,7 +15,6 @@ enum class SettingAction(
 
     VIDEO_SPEED(SettingActionType.VIDEO, "倍速", R.drawable.ic_setting_video_speed),
 
-
     BACKGROUND_PLAY(SettingActionType.VIDEO, "后台播放", R.drawable.ic_setting_background_play),
 
     DANMU_TRACK(SettingActionType.DANMU, "弹幕轨", R.drawable.ic_setting_danmu_track),
@@ -31,8 +30,6 @@ enum class SettingAction(
     SUBTITLE_STYLE(SettingActionType.SUBTITLE, "样式", R.drawable.ic_setting_style),
 
     SUBTITLE_TIME(SettingActionType.SUBTITLE, "时间", R.drawable.ic_setting_time),
-
-    SCREEN_ORIENTATION(SettingActionType.OTHER, "屏幕翻转", R.drawable.ic_setting_rotate),
 
     NEXT_EPISODE(SettingActionType.OTHER, "顺序播放", R.drawable.ic_setting_order_play),
 

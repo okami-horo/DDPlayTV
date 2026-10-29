@@ -1,6 +1,5 @@
 package com.xyoye.app.quality
 
-import android.content.res.Configuration
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.View
@@ -16,7 +15,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,7 +33,6 @@ class DialogDpadFocusSmokeTest {
         ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
             waitForIdle()
             scenario.onActivity { activity ->
-                assumeTrue(activity.isTvUiMode())
                 assertVisibleFocus(activity.currentFocus)
                 host = activity.currentFocus!!
                 dialog =
@@ -90,11 +87,6 @@ class DialogDpadFocusSmokeTest {
             SystemClock.sleep(25)
         }
         assertTrue("Expected an actionable list item in the dialog window: $diagnostic", ready)
-    }
-
-    private fun TvMainActivity.isTvUiMode(): Boolean {
-        val mask = resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK
-        return mask == Configuration.UI_MODE_TYPE_TELEVISION
     }
 
     private fun assertVisibleFocus(focus: View?) {

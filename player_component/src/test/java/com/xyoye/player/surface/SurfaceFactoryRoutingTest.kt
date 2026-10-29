@@ -7,7 +7,7 @@ import org.junit.Test
 
 class SurfaceFactoryRoutingTest {
     @Test
-    fun retainedPlayersRespectSurfaceSelection() {
+    fun mpvAlwaysUsesSurfaceWhileMedia3RespectsSelection() {
         val mpvSurface =
             SurfaceFactory.getFactory(
                 PlayerType.TYPE_MPV_PLAYER,
@@ -30,7 +30,7 @@ class SurfaceFactoryRoutingTest {
             )
 
         assertTrue(mpvSurface is MpvSurfaceViewFactory)
-        assertTrue(mpvTexture is MpvViewFactory)
+        assertTrue(mpvTexture is MpvSurfaceViewFactory)
         assertTrue(media3Surface is SurfaceViewFactory)
         assertTrue(media3Texture is TextureViewFactory)
     }

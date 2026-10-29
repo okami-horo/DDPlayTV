@@ -16,7 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.alibaba.android.arouter.launcher.ARouter
 import com.okamihoro.ddplaytv.app.service.Media3SessionService
-import com.okamihoro.ddplaytv.ui.main.MainActivity
+import com.okamihoro.ddplaytv.ui.tv.TvMainActivity
 import com.xyoye.anime_component.ui.fragment.anime_episode.AnimeEpisodeFragmentViewModel
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.ScreencastConfig
@@ -527,7 +527,7 @@ class PlaybackEntriesInstrumentedTest {
             sender.start()
             ScreencastConfig.putReceiveNeedConfirm(false)
             try {
-                ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+                ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
                     scenario.onActivity { ScreencastReceiveService.start(it, receiverPort, null) }
                     val readyDeadline = SystemClock.elapsedRealtime() + 5000
                     while (true) {

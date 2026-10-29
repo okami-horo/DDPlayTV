@@ -10,7 +10,6 @@ import com.xyoye.common_component.base.BasePreferenceFragmentCompat
 import com.xyoye.common_component.config.DevelopConfig
 import com.xyoye.common_component.config.DeveloperCredentialStore
 import com.xyoye.common_component.extension.addToClipboard
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.log.BuglyReporter
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.LogSystem
@@ -94,9 +93,7 @@ class DeveloperSettingFragment : BasePreferenceFragmentCompat() {
         initBuglyTestPreference()
         initDeveloperCredentialPreferences()
 
-        if (requireContext().isTelevisionUiMode()) {
-            view.post { requestPreferenceItemFocus(KEY_HTTP_LOG_SERVER_ENABLE) }
-        }
+        view.post { requestPreferenceItemFocus(KEY_HTTP_LOG_SERVER_ENABLE) }
     }
 
     override fun onResume() {
@@ -747,42 +744,43 @@ class DeveloperSettingFragment : BasePreferenceFragmentCompat() {
         return if (all.isEmpty()) "-" else all.joinToString(separator = "\n")
     }
 
-    private class DeveloperSettingDataStore : MappingPreferenceDataStore(
-        dataStoreName = "DeveloperSettingDataStore",
-        booleanReaders =
-            mapOf(
-                KEY_APP_LOG_ENABLE to { LogSystem.getRuntimeState().debugSessionEnabled },
-                KEY_HTTP_LOG_SERVER_ENABLE to { LogSystem.getHttpLogServerState().enabled },
-            ),
-        booleanWriters =
-            mapOf(
-                KEY_APP_LOG_ENABLE to {
-                    DevelopConfig.putDdLogEnable(LogSystem.getRuntimeState().debugSessionEnabled)
-                },
-            ),
-        stringReaders =
-            mapOf(
-                KEY_LOG_LEVEL to {
-                    LogSystem
-                        .getRuntimeState()
-                        .activePolicy.defaultLevel.name
-                },
-            ),
-        stringWriters =
-            mapOf(
-                KEY_LOG_LEVEL to { value ->
-                    value?.let { raw ->
-                        runCatching { LogLevel.valueOf(raw) }.getOrNull()?.let { level ->
-                            val current = LogSystem.getRuntimeState()
-                            LogSystem.updateLoggingPolicy(
-                                current.activePolicy.copy(defaultLevel = level),
-                                PolicySource.USER_OVERRIDE,
-                            )
+    private class DeveloperSettingDataStore :
+        MappingPreferenceDataStore(
+            dataStoreName = "DeveloperSettingDataStore",
+            booleanReaders =
+                mapOf(
+                    KEY_APP_LOG_ENABLE to { LogSystem.getRuntimeState().debugSessionEnabled },
+                    KEY_HTTP_LOG_SERVER_ENABLE to { LogSystem.getHttpLogServerState().enabled },
+                ),
+            booleanWriters =
+                mapOf(
+                    KEY_APP_LOG_ENABLE to {
+                        DevelopConfig.putDdLogEnable(LogSystem.getRuntimeState().debugSessionEnabled)
+                    },
+                ),
+            stringReaders =
+                mapOf(
+                    KEY_LOG_LEVEL to {
+                        LogSystem
+                            .getRuntimeState()
+                            .activePolicy.defaultLevel.name
+                    },
+                ),
+            stringWriters =
+                mapOf(
+                    KEY_LOG_LEVEL to { value ->
+                        value?.let { raw ->
+                            runCatching { LogLevel.valueOf(raw) }.getOrNull()?.let { level ->
+                                val current = LogSystem.getRuntimeState()
+                                LogSystem.updateLoggingPolicy(
+                                    current.activePolicy.copy(defaultLevel = level),
+                                    PolicySource.USER_OVERRIDE,
+                                )
+                            }
                         }
-                    }
-                },
-            ),
-    )
+                    },
+                ),
+        )
 
     private fun requestPreferenceItemFocus(key: String) {
         val preference = findPreference<Preference>(key) ?: return

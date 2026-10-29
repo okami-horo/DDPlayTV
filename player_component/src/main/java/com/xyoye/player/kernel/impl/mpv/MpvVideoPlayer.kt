@@ -7,7 +7,6 @@ import android.view.Surface
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import com.xyoye.common_component.config.PlayerConfig
-import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.BuglyReporter
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.LogSystem
@@ -15,6 +14,7 @@ import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
@@ -38,6 +38,7 @@ class MpvVideoPlayer(
 
     private val appContext: Context = context.applicationContext
     private val nativeBridge = MpvNativeBridge()
+    private var boundSurface: Surface? = null
     private var dataSource: String? = null
     private var headers: Map<String, String> = emptyMap()
     private var userAgent: String? = null
@@ -47,6 +48,7 @@ class MpvVideoPlayer(
     private var videoSize = Point(0, 0)
     private var isPrepared = false
     private var isPreparing = false
+    private var preparePendingSurface = false
     private var isPlaying = false
     private var decodeType: DecodeType = DecodeType.SW
     private var playbackSpeed = PlayerInitializer.Player.videoSpeed
@@ -120,14 +122,14 @@ class MpvVideoPlayer(
                 "play.kernel" to "mpv",
                 "play.looping" to looping.toString(),
                 "play.speed" to playbackSpeed.toString(),
+                "play.vo" to "mediacodec_embed",
+                "play.hwdec" to "mediacodec",
                 "play.sub_backend" to PlayerInitializer.Subtitle.backend.name,
                 "play.sub_gpu_pipe" to canStartGpuSubtitlePipeline().toString(),
             ),
         )
-        applyHwdecPriority()
         applyAudioOutputPreference()
         applyVideoSyncPreference()
-        applyVideoOutputPreference()
     }
 
     override fun setDataSource(
@@ -207,16 +209,31 @@ class MpvVideoPlayer(
 
     override fun setSurface(surface: Surface) {
         if (!nativeBridge.isAvailable) return
-        applyVideoOutputPreference()
-        nativeBridge.setSurface(surface)
+        if (!surface.isValid) return
+        if (!nativeBridge.setSurface(surface)) {
+            nativeBridge.stop()
+            failInitialization(nativeBridge.lastError() ?: "Failed to bind mpv video surface")
+            return
+        }
+        boundSurface = surface
         BuglyReporter.updateContext("surf.set", "1")
         recordBuglyBreadcrumb(
             message = "setSurface",
             context =
                 mapOf(
-                    "vo" to MpvOptions.resolveVideoOutput(PlayerConfig.getMpvVideoOutput()),
+                    "vo" to "mediacodec_embed",
                 ),
         )
+        if (preparePendingSurface) prepareAsync()
+    }
+
+    fun clearSurface(surface: Surface) {
+        if (boundSurface !== surface) return
+        boundSurface = null
+        if (!nativeBridge.setSurface(null)) {
+            nativeBridge.stop()
+            failInitialization(nativeBridge.lastError() ?: "Failed to detach mpv video surface")
+        }
     }
 
     fun setSurfaceSize(
@@ -250,6 +267,12 @@ class MpvVideoPlayer(
             mPlayerEventListener.onInfo(PlayerConstant.MEDIA_INFO_URL_EMPTY, 0)
             return
         }
+        if (boundSurface?.isValid != true) {
+            preparePendingSurface = true
+            isPreparing = true
+            return
+        }
+        preparePendingSurface = false
         BuglyReporter.updateContext("mpv.event", "PrepareStart")
         recordBuglyBreadcrumb(
             message = "prepareAsync",
@@ -323,6 +346,7 @@ class MpvVideoPlayer(
     }
 
     override fun stop() {
+        preparePendingSurface = false
         if (!isPrepared) return
         nativeBridge.stop()
         isPlaying = false
@@ -336,6 +360,7 @@ class MpvVideoPlayer(
         pendingExternalTracks.clear()
         isPrepared = false
         isPreparing = false
+        preparePendingSurface = false
         isPlaying = false
         decodeType = DecodeType.SW
         videoSize = Point(0, 0)
@@ -350,6 +375,7 @@ class MpvVideoPlayer(
         stop()
         nativeBridge.clearEventListener()
         nativeBridge.destroy()
+        boundSurface = null
         isPrepared = false
         isPreparing = false
         isPlaying = false
@@ -363,9 +389,7 @@ class MpvVideoPlayer(
             message = "seekTo",
             context = mapOf("pos_ms" to timeMs.toString()),
         )
-        if (canStartGpuSubtitlePipeline()) {
-            embeddedSubtitleBridge.resetForTimelineChange()
-        }
+        embeddedSubtitleBridge.resetForTimelineChange()
         if (!proxySeekEnabled) {
             val path = dataSource
             if (!path.isNullOrEmpty()) {
@@ -404,9 +428,7 @@ class MpvVideoPlayer(
     override fun setSubtitleOffset(offsetMs: Long) {
         if (!isPrepared) return
         nativeBridge.setSubtitleDelay(-offsetMs)
-        if (canStartGpuSubtitlePipeline()) {
-            embeddedSubtitleBridge.resetForTimelineChange()
-        }
+        embeddedSubtitleBridge.resetForTimelineChange()
     }
 
     override fun isPlaying(): Boolean = isPrepared && isPlaying
@@ -445,16 +467,16 @@ class MpvVideoPlayer(
     override fun supportAddTrack(type: TrackType): Boolean =
         when (type) {
             TrackType.AUDIO -> true
-            TrackType.SUBTITLE -> !shouldRouteExternalSubtitleToController()
+            TrackType.SUBTITLE -> false
             else -> false
         }
 
     override fun addTrack(track: VideoTrackBean): Boolean {
-        if (track.type == TrackType.SUBTITLE && shouldRouteExternalSubtitleToController()) {
+        if (track.type == TrackType.SUBTITLE) {
             LogFacade.i(
                 LogModule.PLAYER,
                 "MpvVideoPlayer",
-                "external subtitle routed to subtitle controller (libass+mediacodec_embed): ${track.trackResource}",
+                "external subtitle routed to subtitle controller: ${track.trackResource}",
             )
             recordBuglyBreadcrumb(
                 message = "addTrack routed",
@@ -498,9 +520,6 @@ class MpvVideoPlayer(
         return true
     }
 
-    private fun shouldRouteExternalSubtitleToController(): Boolean =
-        canStartGpuSubtitlePipeline() && PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS
-
     override fun getTracks(type: TrackType): List<VideoTrackBean> {
         if (!isPrepared) return emptyList()
         return nativeBridge
@@ -523,9 +542,7 @@ class MpvVideoPlayer(
                 message = "selectTrack disable",
                 context = mapOf("type" to track.type.name),
             )
-            if (canStartGpuSubtitlePipeline()) {
-                embeddedSubtitleBridge.resetForTimelineChange()
-            }
+            embeddedSubtitleBridge.resetForTimelineChange()
             nativeBridge.deselectTrack(MpvNativeBridge.TRACK_TYPE_SUBTITLE)
             return
         }
@@ -541,7 +558,7 @@ class MpvVideoPlayer(
                     "id" to trackId.toString(),
                 ),
         )
-        if (track.type == TrackType.SUBTITLE && canStartGpuSubtitlePipeline()) {
+        if (track.type == TrackType.SUBTITLE) {
             embeddedSubtitleBridge.resetForTimelineChange()
         }
         nativeBridge.selectTrack(nativeType, trackId)
@@ -557,7 +574,7 @@ class MpvVideoPlayer(
                 TrackType.AUDIO -> MpvNativeBridge.TRACK_TYPE_AUDIO
                 else -> return
             }
-        if (type == TrackType.SUBTITLE && canStartGpuSubtitlePipeline()) {
+        if (type == TrackType.SUBTITLE) {
             embeddedSubtitleBridge.resetForTimelineChange()
         }
         nativeBridge.deselectTrack(nativeType)
@@ -626,7 +643,7 @@ class MpvVideoPlayer(
                         "mpv.last_error" to (fallbackMessage ?: ""),
                         "play.session" to playbackSessionId,
                         "play.src_hash" to (dataSource?.let { Integer.toHexString(it.hashCode()) } ?: ""),
-                        "play.vo" to MpvOptions.resolveVideoOutput(PlayerConfig.getMpvVideoOutput()),
+                        "play.vo" to "mediacodec_embed",
                         "play.sub_backend" to PlayerInitializer.Subtitle.backend.name,
                         "play.sub_gpu_pipe" to canStartGpuSubtitlePipeline().toString(),
                     ),
@@ -696,14 +713,10 @@ class MpvVideoPlayer(
                 mPlayerEventListener.onVideoSizeChange(event.width, event.height)
             }
             is MpvNativeBridge.Event.SubtitleAssExtradata -> {
-                if (canStartGpuSubtitlePipeline()) {
-                    embeddedSubtitleBridge.onAssExtradata(event.value)
-                }
+                embeddedSubtitleBridge.onAssExtradata(event.value)
             }
             is MpvNativeBridge.Event.SubtitleAssFull -> {
-                if (canStartGpuSubtitlePipeline()) {
-                    embeddedSubtitleBridge.onAssFull(event.value)
-                }
+                embeddedSubtitleBridge.onAssFull(event.value)
             }
             is MpvNativeBridge.Event.SubtitleSid -> {
                 BuglyReporter.updateContext("mpv.sid", event.value.orEmpty())
@@ -711,9 +724,7 @@ class MpvVideoPlayer(
                     message = "subtitle sid",
                     context = mapOf("sid" to event.value.orEmpty()),
                 )
-                if (canStartGpuSubtitlePipeline()) {
-                    embeddedSubtitleBridge.onSid(event.value)
-                }
+                embeddedSubtitleBridge.onSid(event.value)
                 warnUnsupportedEmbeddedBitmapSubtitle(trigger = "sid_changed")
             }
         }
@@ -750,25 +761,6 @@ class MpvVideoPlayer(
             } else {
                 DecodeType.HW
             }
-    }
-
-    private fun applyVideoOutputPreference() {
-        val vo = MpvOptions.resolveVideoOutput(PlayerConfig.getMpvVideoOutput())
-        nativeBridge.setVideoOutput(vo)
-        BuglyReporter.updateContext("play.vo", vo)
-    }
-
-    private fun applyHwdecPriority() {
-        val configured = PlayerConfig.getMpvHwdecPriority().orEmpty().trim()
-        val preferCopy = configured.equals("mediacodec-copy", ignoreCase = true)
-        val hwdec =
-            if (preferCopy) {
-                "mediacodec-copy,mediacodec"
-            } else {
-                "mediacodec,mediacodec-copy"
-            }
-        nativeBridge.setHwdecPriority(hwdec)
-        BuglyReporter.updateContext("play.hwdec", hwdec)
     }
 
     private fun applyAudioOutputPreference() {
@@ -831,8 +823,7 @@ class MpvVideoPlayer(
         return details.joinToString(" | ").ifEmpty { "mpv playback error" }
     }
 
-    override fun canStartGpuSubtitlePipeline(): Boolean =
-        MpvOptions.resolveVideoOutput(PlayerConfig.getMpvVideoOutput()) == MpvOptions.VO_MEDIACODEC_EMBED
+    override fun canStartGpuSubtitlePipeline(): Boolean = true
 
     override fun setEmbeddedSubtitleSink(sink: EmbeddedSubtitleSink?) {
         embeddedSubtitleBridge.setSink(sink)
@@ -840,14 +831,16 @@ class MpvVideoPlayer(
 
     private fun warnUnsupportedEmbeddedBitmapSubtitle(trigger: String) {
         if (!nativeBridge.isAvailable || !isPrepared) return
-        if (!canStartGpuSubtitlePipeline()) return
-        if (PlayerInitializer.Subtitle.backend != SubtitleRendererBackend.LIBASS) return
         val selected =
             nativeBridge
                 .listTracks()
                 .firstOrNull { it.type == TrackType.SUBTITLE && it.selected }
                 ?: return
-        val codec = selected.codec?.trim()?.lowercase().orEmpty()
+        val codec =
+            selected.codec
+                ?.trim()
+                ?.lowercase()
+                .orEmpty()
         if (codec.isEmpty() || !isBitmapSubtitleCodec(codec)) {
             return
         }
@@ -856,11 +849,12 @@ class MpvVideoPlayer(
         }
         lastUnsupportedBitmapSubtitleTrackId = selected.id
         lastUnsupportedBitmapSubtitleCodec = codec
+        ToastCenter.showWarning("mpv 不支持当前内嵌位图字幕，请切换 Media3 内核")
 
         LogFacade.w(
             LogModule.PLAYER,
             LOG_TAG_SUBTITLE,
-            "mpv vo=mediacodec_embed 无法渲染内嵌位图字幕：codec=$codec sid=${selected.id} trigger=$trigger；将保持不显示（避免自动切换 vo）。如需显示请切 Media3，或在设置中手动将 mpv「视频输出」改为 gpu/gpu-next。",
+            "mpv 不支持当前内嵌位图字幕（$codec），请切换 Media3 内核。sid=${selected.id} trigger=$trigger",
         )
     }
 

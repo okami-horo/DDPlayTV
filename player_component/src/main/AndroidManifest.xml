@@ -3,12 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
 
-    <queries>
-        <intent>
-            <action android:name="android.settings.action.MANAGE_OVERLAY_PERMISSION" />
-        </intent>
-    </queries>
-
 
     <application android:supportsRtl="true">
         <activity
@@ -1136,11 +1130,6 @@
                 <data android:mimeType="video/*" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.activities.overlay_permission.OverlayPermissionActivity"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
-            android:screenOrientation="portrait" />
-
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"

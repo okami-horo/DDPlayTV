@@ -146,10 +146,6 @@ class PlayerSettingView(
                 selected = PlayerConfig.isBackgroundPlay()
             }
 
-            SettingAction.SCREEN_ORIENTATION -> {
-                selected = PlayerInitializer.isOrientationEnabled
-            }
-
             SettingAction.NEXT_EPISODE -> {
                 selected = PlayerInitializer.Player.isAutoPlayNext
             }
@@ -161,13 +157,6 @@ class PlayerSettingView(
 
     private fun onItemClick(item: SettingItem) {
         when (item.action) {
-            SettingAction.SCREEN_ORIENTATION -> {
-                val newStatus = !PlayerInitializer.isOrientationEnabled
-                PlayerInitializer.isOrientationEnabled = newStatus
-                PlayerConfig.putAllowOrientationChange(newStatus)
-                updateItemStatus(item.action, newStatus)
-            }
-
             SettingAction.BACKGROUND_PLAY -> {
                 val newStatus = PlayerConfig.isBackgroundPlay().not()
                 PlayerConfig.putBackgroundPlay(newStatus)

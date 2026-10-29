@@ -4,13 +4,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.inputmethod.EditorInfo
-import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
-import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.utils.hideKeyboard
@@ -32,7 +30,6 @@ class KeywordBlockView(
 ) : BaseSettingView<LayoutKeywordBlockBinding>(context, attrs, defStyleAttr) {
     private var addKeyword: ((keyword: String, isRegex: Boolean) -> Unit)? = null
     private var removeKeyword: ((id: Int) -> Unit)? = null
-    private val keywordList = mutableListOf<DanmuBlockEntity>()
 
     init {
         initSettingListener()
@@ -49,27 +46,22 @@ class KeywordBlockView(
     }
 
     private fun initSettingListener() {
-        val television = context.isTelevisionUiMode()
-        viewBinding.keywordScroll.isVisible = !television
-        viewBinding.keywordRv.isVisible = television
-        if (television) {
-            viewBinding.keywordRv.apply {
-                layoutManager = vertical()
-                adapter =
-                    buildAdapter {
-                        setupDiffUtil { areItemsTheSame { old, new -> (old as DanmuBlockEntity).id == (new as DanmuBlockEntity).id } }
-                        addItem<DanmuBlockEntity, ItemSettingTracksBinding>(R.layout.item_setting_tracks) {
-                            initView { data, _, _ ->
-                                itemBinding.tvName.text = data.keyword
-                                itemBinding.tvName.isSelected = data.isRegex
-                                itemBinding.tvName.setOnClickListener {
-                                    mControlWrapper.removeBlackList(data.isRegex, data.keyword)
-                                    removeKeyword?.invoke(data.id)
-                                }
+        viewBinding.keywordRv.apply {
+            layoutManager = vertical()
+            adapter =
+                buildAdapter {
+                    setupDiffUtil { areItemsTheSame { old, new -> (old as DanmuBlockEntity).id == (new as DanmuBlockEntity).id } }
+                    addItem<DanmuBlockEntity, ItemSettingTracksBinding>(R.layout.item_setting_tracks) {
+                        initView { data, _, _ ->
+                            itemBinding.tvName.text = data.keyword
+                            itemBinding.tvName.isSelected = data.isRegex
+                            itemBinding.tvName.setOnClickListener {
+                                mControlWrapper.removeBlackList(data.isRegex, data.keyword)
+                                removeKeyword?.invoke(data.id)
                             }
                         }
                     }
-            }
+                }
         }
         viewBinding.ivClose.setOnClickListener {
             closeSettingView()
@@ -77,13 +69,6 @@ class KeywordBlockView(
 
         viewBinding.keywordBlockLl.setOnClickListener {
             closeSettingView()
-        }
-
-        viewBinding.keywordLabelsView.setOnLabelClickListener { _, data, _ ->
-            if (data is DanmuBlockEntity) {
-                mControlWrapper.removeBlackList(data.isRegex, data.keyword)
-                removeKeyword?.invoke(data.id)
-            }
         }
 
         viewBinding.keywordBlockAddTv.setOnClickListener {
@@ -130,21 +115,7 @@ class KeywordBlockView(
         addKeyword = add
         removeKeyword = remove
         queryAll.invoke().observe(context as LifecycleOwner) {
-            keywordList.clear()
-            keywordList.addAll(it)
-            if (context.isTelevisionUiMode()) viewBinding.keywordRv.setData(it)
-            viewBinding.keywordLabelsView.setLabels(keywordList) { _, _, data ->
-                data?.keyword ?: ""
-            }
-
-            // 设置正则类型的标签为选中状态
-            val regexPositionList = mutableListOf<Int>()
-            for ((index, entity) in it.withIndex()) {
-                if (entity.isRegex) {
-                    regexPositionList.add(index)
-                }
-            }
-            viewBinding.keywordLabelsView.setSelects(regexPositionList)
+            viewBinding.keywordRv.setData(it)
 
             // 按正则和关键字屏蔽
             val regexList = mutableListOf<String>()

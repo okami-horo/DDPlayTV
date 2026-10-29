@@ -118,22 +118,12 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <com.google.android.material.tabs.TabLayout
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
             android:id="@+id/tab_layout"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:background="@color/item_bg_color"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar_layout"
-            app:tabBackground="@drawable/background_tab_press"
-            app:tabGravity="center"
-            app:tabIndicatorColor="@color/indicator_checked_color"
-            app:tabIndicatorFullWidth="false"
-            app:tabMode="fixed"
-            app:tabPaddingEnd="40dp"
-            app:tabPaddingStart="40dp"
-            app:tabRippleColor="@android:color/transparent"
-            app:tabSelectedTextColor="@color/text_theme"
-            app:tabTextColor="@color/indicator_uncheck_color" />
+            app:layout_constraintTop_toBottomOf="@+id/toolbar_layout" />
 
         <include
             android:id="@+id/video_layout"
@@ -142,7 +132,7 @@
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/tab_layout" />
 
-        <androidx.viewpager2.widget.ViewPager2
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/viewpager"
             android:layout_width="0dp"
             android:layout_height="0dp"

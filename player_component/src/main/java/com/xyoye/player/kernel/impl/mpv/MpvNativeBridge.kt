@@ -77,6 +77,9 @@ class MpvNativeBridge {
     @Volatile
     private var eventLoopStarted = false
 
+    @Volatile
+    private var eventGeneration = 0L
+
     val availabilityReason: String?
         get() = availabilityMessage
 
@@ -109,6 +112,7 @@ class MpvNativeBridge {
     }
 
     fun destroy() {
+        eventGeneration++
         if (nativeHandle != 0L) {
             if (eventLoopStarted) {
                 nativeStopEventLoop(nativeHandle)
@@ -122,11 +126,7 @@ class MpvNativeBridge {
         }
     }
 
-    fun setSurface(surface: Surface?) {
-        if (nativeHandle != 0L) {
-            nativeSetSurface(nativeHandle, surface)
-        }
-    }
+    fun setSurface(surface: Surface?): Boolean = nativeHandle != 0L && nativeSetSurface(nativeHandle, surface)
 
     fun setDataSource(
         path: String,
@@ -210,12 +210,6 @@ class MpvNativeBridge {
         setOption("force-seekable", if (enabled) "yes" else "no")
     }
 
-    fun setHwdecPriority(value: String) {
-        if (nativeHandle == 0L) return
-        if (value.isBlank()) return
-        setOption("hwdec", value)
-    }
-
     fun setAudioOutput(value: String) {
         if (nativeHandle == 0L) return
         if (value.isBlank()) return
@@ -226,12 +220,6 @@ class MpvNativeBridge {
         if (nativeHandle == 0L) return
         if (value.isBlank()) return
         setOption("video-sync", value)
-    }
-
-    fun setVideoOutput(output: String) {
-        if (nativeHandle == 0L) return
-        if (output.isBlank()) return
-        setOption("vo", output)
     }
 
     fun setSubtitleFonts(
@@ -259,6 +247,7 @@ class MpvNativeBridge {
     }
 
     fun setEventListener(listener: (Event) -> Unit) {
+        eventGeneration++
         synchronized(listenerLock) {
             eventListeners.clear()
             eventListeners.add(listener)
@@ -290,6 +279,7 @@ class MpvNativeBridge {
     }
 
     fun clearEventListener() {
+        eventGeneration++
         synchronized(listenerLock) {
             eventListeners.clear()
         }
@@ -322,7 +312,12 @@ class MpvNativeBridge {
             val id = parts[1].toIntOrNull() ?: return@mapNotNull null
             val selected = parts[2] == "1"
             val title = parts[3].ifEmpty { "Track $id" }
-            val codec = parts.getOrNull(4)?.trim().orEmpty().ifEmpty { null }
+            val codec =
+                parts
+                    .getOrNull(4)
+                    ?.trim()
+                    .orEmpty()
+                    .ifEmpty { null }
             val trackType =
                 when (nativeType) {
                     TRACK_TYPE_AUDIO -> TrackType.AUDIO
@@ -377,6 +372,7 @@ class MpvNativeBridge {
         arg2: Long,
         message: String?
     ) {
+        val generation = eventGeneration
         val event =
             when (type) {
                 EVENT_PREPARED -> Event.Prepared
@@ -406,8 +402,10 @@ class MpvNativeBridge {
         }
 
         mainHandler.post {
+            if (generation != eventGeneration) return@post
             listeners.forEach { listener ->
-                runCatching { listener(event) }
+                val isRegistered = synchronized(listenerLock) { listener in eventListeners }
+                if (isRegistered) runCatching { listener(event) }
             }
         }
     }
@@ -492,7 +490,7 @@ class MpvNativeBridge {
         private external fun nativeSetSurface(
             handle: Long,
             surface: Surface?
-        )
+        ): Boolean
 
         @JvmStatic
         private external fun nativeStartEventLoop(

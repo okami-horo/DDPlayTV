@@ -32,18 +32,12 @@ class SettingVideoSpeedView(
         viewBinding.speedSlider.value = PlayerInitializer.Player.videoSpeed
         viewBinding.speedSlider.labelBehavior = LabelFormatter.LABEL_VISIBLE
 
-        viewBinding.sliderPressSpeed.value = PlayerInitializer.Player.pressVideoSpeed
-        viewBinding.sliderPressSpeed.labelBehavior = LabelFormatter.LABEL_VISIBLE
-
         viewBinding.speedSlider.requestFocus()
     }
 
     override fun onViewHide() {
         viewBinding.speedSlider.labelBehavior = LabelFormatter.LABEL_WITHIN_BOUNDS
         viewBinding.speedSlider.clearFocus()
-
-        viewBinding.sliderPressSpeed.labelBehavior = LabelFormatter.LABEL_WITHIN_BOUNDS
-        viewBinding.sliderPressSpeed.clearFocus()
     }
 
     private fun initVideoSpeed() {
@@ -59,19 +53,6 @@ class SettingVideoSpeedView(
         viewBinding.resetTv.setOnClickListener {
             viewBinding.speedSlider.value = PlayerInitializer.Player.DEFAULT_SPEED
             viewBinding.speedSlider.requestFocus()
-        }
-
-        viewBinding.sliderPressSpeed.addOnChangeListener { _, approximation, _ ->
-            val value = (approximation * 100).roundToInt() / 100f
-            viewBinding.tvResetPressSpeed.isGone = value == PlayerInitializer.Player.DEFAULT_PRESS_SPEED
-
-            PlayerConfig.putPressVideoSpeed(value)
-            PlayerInitializer.Player.pressVideoSpeed = value
-        }
-
-        viewBinding.tvResetPressSpeed.setOnClickListener {
-            viewBinding.sliderPressSpeed.value = PlayerInitializer.Player.DEFAULT_PRESS_SPEED
-            viewBinding.sliderPressSpeed.requestFocus()
         }
     }
 }

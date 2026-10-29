@@ -7,6 +7,7 @@
 | 需要了解 | 入口 |
 | --- | --- |
 | 产品功能与构建入口 | [项目 README](../README.md) |
+| 纯 TV 收敛范围、执行与验证 | [实施记录](../docs/superpowers/plans/2026-10-29-tv-only.md) |
 | 开发、提交与验证要求 | [贡献指南](Contributing.md)、[本地开发环境](project_local_dev_env.md) |
 | 模块职责与依赖限制 | [模块治理](architecture/module_dependency_governance.md)、[构建门禁](architecture/architecture_governance_guardrails.md) |
 | 播放会话、资源所有权与恢复设计 | [设计与执行账本导航](../docs/superpowers/README.md) |

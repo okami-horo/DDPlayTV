@@ -1,8 +1,6 @@
 package com.xyoye.common_component.focus
 
 import android.view.KeyEvent
-import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
@@ -12,8 +10,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
@@ -37,19 +33,17 @@ class TvCategoryState(
         }
 }
 
-/** TV category controls and one active Fragment, sharing the phone page's layout slots. */
+/** Remote-controlled categories and one active Fragment. */
 class TvCategoryPages(
     owner: ViewModelStoreOwner,
     private val fragmentManager: FragmentManager,
-    tabs: TabLayout,
-    pager: ViewPager2,
+    val navigation: DpadRecyclerView,
+    val content: FragmentContainerView,
     private val onSelected: (Int) -> Unit = {}
 ) {
-    val navigation = DpadRecyclerView(tabs.context)
-    val content = FragmentContainerView(pager.context)
-    private val state = ViewModelProvider(owner)["tv_categories_${pager.id}", TvCategoryState::class.java]
+    private val state = ViewModelProvider(owner)["tv_categories_${content.id}", TvCategoryState::class.java]
     private var categories = emptyList<TvCategory>()
-    private val tagPrefix = "tv_category_${pager.id}:"
+    private val tagPrefix = "tv_category_${content.id}:"
     private val adapter =
         buildAdapter {
             setupDiffUtil {
@@ -70,9 +64,6 @@ class TvCategoryPages(
     val currentFragment: Fragment? get() = fragmentManager.findFragmentByTag(tagPrefix + state.activeKey)
 
     init {
-        replace(tabs, navigation)
-        pager.adapter = null
-        replace(pager, content)
         navigation.setOrientation(RecyclerView.HORIZONTAL)
         navigation.setFocusOutAllowed(false, false)
         navigation.adapter = adapter
@@ -124,16 +115,4 @@ class TvCategoryPages(
     }
 
     fun requestNavigationFocus(): Boolean = navigation.requestFocus()
-
-    private fun replace(
-        old: View,
-        replacement: View
-    ) {
-        val parent = old.parent as ViewGroup
-        val index = parent.indexOfChild(old)
-        replacement.id = old.id
-        replacement.layoutParams = old.layoutParams
-        parent.removeViewAt(index)
-        parent.addView(replacement, index)
-    }
 }

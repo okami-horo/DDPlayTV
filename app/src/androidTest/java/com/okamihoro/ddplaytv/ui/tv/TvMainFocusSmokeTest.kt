@@ -1,5 +1,7 @@
 package com.okamihoro.ddplaytv.ui.tv
 
+import android.app.UiModeManager
+import android.content.Context
 import android.content.res.Configuration
 import android.os.SystemClock
 import android.view.KeyEvent
@@ -9,10 +11,11 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.okamihoro.ddplaytv.R
+import com.okamihoro.ddplaytv.ui.splash.TvSplashActivity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
+import org.junit.Assume.assumeFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,6 +34,42 @@ class TvMainFocusSmokeTest {
             scenario.onActivity { activity ->
                 assertNavigationItem(activity, 0)
             }
+        }
+    }
+
+    @Test
+    fun normalUiModeStillLaunchesTvShellAndSupportsDpadAndBack() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val systemUiMode = (context.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager).currentModeType
+        assumeFalse(systemUiMode == Configuration.UI_MODE_TYPE_TELEVISION)
+        val packageManager = context.packageManager
+        assertEquals(
+            TvSplashActivity::class.java.name,
+            packageManager.getLaunchIntentForPackage(context.packageName)?.component?.className
+        )
+        assertEquals(
+            TvSplashActivity::class.java.name,
+            packageManager.getLeanbackLaunchIntentForPackage(context.packageName)?.component?.className
+        )
+        ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
+            awaitMedia(scenario)
+            scenario.onActivity { activity ->
+                assertEquals(
+                    "The application must preserve the real system UI mode",
+                    systemUiMode,
+                    activity.resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK
+                )
+                assertNavigationItem(activity, 0)
+            }
+            sendDpad(KeyEvent.KEYCODE_DPAD_RIGHT)
+            waitForIdle()
+            scenario.onActivity { activity ->
+                val media = activity.findViewById<RecyclerView>(com.xyoye.local_component.R.id.media_lib_rv)
+                assertNotNull("RIGHT must enter a media item", media.findContainingViewHolder(activity.currentFocus!!))
+            }
+            sendDpad(KeyEvent.KEYCODE_BACK)
+            waitForIdle()
+            scenario.onActivity { activity -> assertNavigationItem(activity, 0) }
         }
     }
 
@@ -62,7 +101,6 @@ class TvMainFocusSmokeTest {
         while (!ready && SystemClock.uptimeMillis() < deadline) {
             waitForIdle()
             scenario.onActivity { activity ->
-                assumeTrue(activity.isTvUiMode())
                 val media = activity.findViewById<RecyclerView>(com.xyoye.local_component.R.id.media_lib_rv)
                 ready = activity.hasWindowFocus() && (media?.adapter?.itemCount ?: 0) > 0
             }
@@ -90,11 +128,6 @@ class TvMainFocusSmokeTest {
 
     private fun waitForIdle() {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
-
-    private fun TvMainActivity.isTvUiMode(): Boolean {
-        val mask = resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK
-        return mask == Configuration.UI_MODE_TYPE_TELEVISION
     }
 
     private fun assertVisibleFocus(focus: View?) {

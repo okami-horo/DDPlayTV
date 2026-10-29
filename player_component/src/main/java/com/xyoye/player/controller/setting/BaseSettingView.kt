@@ -184,9 +184,6 @@ abstract class BaseSettingView<V : ViewDataBinding>
         override fun onLockStateChanged(isLocked: Boolean) {
         }
 
-        override fun onPopupModeChanged(isPopup: Boolean) {
-        }
-
         override fun onVideoSizeChanged(videoSize: Point) {
         }
 
