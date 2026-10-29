@@ -3,7 +3,7 @@
  ## Platform
  - OS/workspace: Windows, repo at `E:\Project\DDPlayTV`.
  - Android project, Kotlin `2.2.10`, JVM target `1.8` (Media3 upgrade, 2026-10-28).
- - Android Gradle Plugin `8.10.1`, Gradle `8.11.1`, JDK 17; compileSdk 36, targetSdk 35, minSdk 23.
+ - Android Gradle Plugin `8.10.1`, Gradle `8.11.1`, JDK 17; compileSdk 36, targetSdk 35, minSdk 25 (Android 7.1; raised on 2026-10-29 in `buildSrc/src/main/java/Versions.kt`).
 
  ## Main Libraries
  - AndroidX Lifecycle/ViewModel, Room, Preference, RecyclerView, Startup.

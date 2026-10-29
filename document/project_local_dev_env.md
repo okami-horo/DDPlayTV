@@ -4,7 +4,7 @@
 
 ## 工程要求
 
-当前使用 JDK 17、Gradle 8.11.1、Android Gradle Plugin 8.10.1、Kotlin 2.2.10（JVM target 1.8），compile SDK 36、target SDK 35、min SDK 23（Android 6.0）。Media3 为 1.11.1。公共 NDK 为 `25.2.9519653`，播放器 CMake 最低为 `3.22.1`。
+当前使用 JDK 17、Gradle 8.11.1、Android Gradle Plugin 8.10.1、Kotlin 2.2.10（JVM target 1.8），compile SDK 36、target SDK 35、min SDK 25（Android 7.1，2026-10-29 提升）。Media3 为 1.11.1。公共 NDK 为 `25.2.9519653`，播放器 CMake 最低为 `3.22.1`。
 
 Moshi 和 Room 的代码生成使用 KSP `2.2.10-2.0.2`；Moshi 1.x 的自定义 qualifier 需要保留 `ksp.useKSP2=false`。ARouter、MMKV 和 DataBinding 继续使用 KAPT。升级原因与验证结果见 [Media3 升级记录](../docs/superpowers/plans/2026-10-28-media3-upgrade.md)。
 

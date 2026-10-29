@@ -1,7 +1,7 @@
 object Versions {
     const val applicationId = "com.okamihoro.ddplaytv"
     const val compileSdkVersion = 36
-    const val minSdkVersion = 23
+    const val minSdkVersion = 25
     const val targetSdkVersion = 35
     const val versionCode = 69
     const val versionName = "4.2.2"

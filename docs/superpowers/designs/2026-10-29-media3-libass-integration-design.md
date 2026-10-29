@@ -1,6 +1,6 @@
 # Media3 与 libass 接入完善设计
 
-日期：2026-10-29。状态：**设计稿；本轮仅完善文档，具体实施留待后续安排**。
+日期：2026-10-29，按已完成的纯 TV 收敛修订。状态：**设计稿；本轮仅完善文档，具体实施留待后续安排**。
 
 本文记录推荐架构、接口语义、阶段依赖与验收要求，不代表代码已经实现、参数已经定型或设备验收已经通过。当前行为以[字幕渲染维护说明](../../../document/player/subtitle-rendering.md)为准；既有修复与历史验证以[libass 接入审查](../../../document/player/libass-integration-audit.md)为准。后续实施再建立执行记录，避免将设计阶段写成完成账本。
 
@@ -8,13 +8,15 @@
 
 以 Jellyfin Android TV 校准 Media3、字幕适配、会话和显示资源的职责；参考 Plezy 完善目标呈现时间、尺寸语义和资源控制，再根据实际瓶颈决定是否引入 atlas 与计算／GL 线程拆分。
 
-目标是让 ASS/SSA 在保留原始样式、字体、定位和动画的前提下，具备明确的时间坐标、媒体资源作用域与可测量的显示行为。保留本项目 Media3、外挂 ASS 和 mpv `mediacodec_embed` 共用 libass 会话的边界。
+目标是让 ASS/SSA 在保留原始样式、字体、定位和动画的前提下，具备明确的时间坐标、媒体资源作用域与可测量的显示行为。项目仅维护 TV 交互及 Media3、mpv 两个内核，保留 Media3、外挂 ASS 和 mpv `mediacodec_embed` 共用 libass 会话的边界；字幕选择、偏移设置和返回均以 DPAD 验收。
 
-本设计不包含视频解码策略重写、视频 effects、Anime4K 恢复、整个播放器迁库、新增 Gradle 模块、字幕简繁转换或后台／画中画改造。VLC 与 mpv `gpu`／`gpu-next` 的原生字幕路径继续由对应内核负责；普通文字和位图字幕保持各自已有路径。mpv `mediacodec_embed` 的既有内嵌位图限制不在这里宣称解决。
+本设计不包含视频解码策略重写、视频 effects、Anime4K 恢复、整个播放器迁库、新增 Gradle 模块、字幕简繁转换或后台／画中画改造。VLC 及 mpv `gpu`／`gpu-next` 视频路径已经移除，不再作为维护或回归对象。普通文字和支持的位图字幕保持各自已有路径；mpv 内嵌位图字幕继续提示切换 Media3，不将其列为已支持能力。
+
+mpv 视频固定使用原生 SurfaceView、`vo=mediacodec_embed`、`hwdec=mediacodec`。字幕功能及故障恢复不得改用 GPU 视频合成、TextureView 或软件解码回退。独立 libass GPU 字幕层继续保留，只绘制字幕；Media3 的视频输出配置保持独立，字幕改造不改变其既有选择。TV 画面设置效果保持生效属于实机验收要求，不能仅由输出类型推断。
 
 ## 2. 证据基线与参考取舍
 
-本地核对基线：`b56748002fa37c21372becbf03834da331e9e5d9`，Media3 `1.11.1`。当前代码入口见第 3 节。
+初稿代码核对基线为 `b56748002fa37c21372becbf03834da331e9e5d9`；本次修订的本地基线为纯 TV 收敛提交 `501533000`，Media3 仍为 `1.11.1`。当前代码入口见第 3 节，已完成的入口、mpv Surface 与本地验证记录见[纯 TV 实施账本](../plans/2026-10-29-tv-only.md)。这些结果不代表本设计中的字体、字幕呈现时序或视频／字幕组合重建已经验收。
 
 外部源码于 2026-10-29 核对，固定版本如下。源码机制与目标设备性能是不同证据，本轮未构建外部项目、未执行同机对照，也未确认它们在本项目设备上更稳定。
 
@@ -40,6 +42,7 @@ Jellyfin 使用视频 SurfaceView 和独立 ASS TextureView；DDPlayTV 使用独
 | [Media3VideoPlayer](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3VideoPlayer.kt)、[LibassAwareRenderersFactory](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassAwareRenderersFactory.kt) | 官方 Media3 视频链路；自定义 legacy ASS decoder，避免普通 Cue 重复输出 | 评估原始事件与字体的适配出口，保持 Media3 依赖集中 |
 | [LibassSsaStreamDecoder](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoder.kt) | 还原 codec private、Matroska 包装与 duration；独立缓冲池、sink 交接 | 保留 `1e12 us` 时间基数推断；需要明确 stream／period／window 映射 |
 | [Media3SubtitleFrameDriver](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3SubtitleFrameDriver.kt)、[SubtitleFrameDriver](../../../player_component/src/main/java/com/xyoye/player/kernel/subtitle/SubtitleFrameDriver.kt) | 视频 PTS 驱动；seek、换轨与时间线通知 | `releaseTimeNs` 被转成毫秒并命名为 `vsyncId`，未形成目标显示时间契约 |
+| [MpvVideoPlayer](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt)、[MpvEmbeddedSubtitleBridge](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvEmbeddedSubtitleBridge.kt) | 固定 Surface 直出、内嵌 ASS 头部／事件桥接；共享会话使用播放位置驱动 | 无精确视频帧 metadata；当前桥接没有附件字体输入；位图字幕提示切换 Media3 |
 | [LibassGpuSubtitleSession](../../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassGpuSubtitleSession.kt)、[AssGpuRenderer](../../../player_component/src/main/java/com/xyoye/player/subtitle/gpu/AssGpuRenderer.kt) | 内外轨仲裁、显隐、真实加载结果、有序状态命令、帧合并、释放和受控恢复 | 帧参数分开存储；引入呈现调度前需保证请求配对与状态失效 |
 | [ass_gpu_bridge.cpp](../../../player_component/src/main/cpp/ass_gpu_bridge.cpp) | GLES 2／3、透明清屏、纹理池、静态帧复用、swap 错误检查 | 无实际 presentation timestamp；逐 ASS_Image 上传／绘制；未显式配置 storage size、缓存预算或 MKV 附件字体 |
 | [SubtitleSurfaceOverlay](../../../player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleSurfaceOverlay.kt) | 透明 SurfaceView，对齐视频 View，surface 有序解绑／重建 | 需要分离源视频、栅格和显示尺寸；全窗口字幕属于后续产品选择 |
@@ -61,6 +64,7 @@ Jellyfin 使用视频 SurfaceView 和独立 ASS TextureView；DDPlayTV 使用独
 ```mermaid
 flowchart TD
     M[Media3 音视频] --> V[既有视频输出]
+    PV[mpv MediaCodec 视频] --> PS[固定 SurfaceView 直出]
     A[Media3 原始 ASS 与字体适配] --> S[既有 libass 会话]
     E[外挂 ASS 文件] --> S
     P[mpv mediacodec_embed 桥接] --> S
@@ -69,6 +73,7 @@ flowchart TD
     L --> G[GL 上传与合成]
     G --> O[独立透明字幕 Surface]
     V --> C[Android 系统合成]
+    PS --> C
     O --> C
 ```
 
@@ -86,7 +91,7 @@ flowchart TD
 | `targetPresentTimeNs` | 可缺省的目标显示时间，64 位纳秒 | 使用 `System.nanoTime()`／`CLOCK_MONOTONIC` 时间域；缺省表示立即提交 |
 | `stateRevision` | 当前会话渲染状态版本 | 与时间组成不可变请求，一次发布；尺寸、轨道、时间线、显隐或样式失效后拒绝旧结果 |
 
-Media3 的 `C.TIME_UNSET` 在适配边界转成“无目标时间”；通用接口不依赖 Media3 常量。Choreographer 帧时间和 `elapsedRealtimeNanos()` 不直接冒充视频未来显示目标。使用播放器位置补画时，只有内容时间，采用立即提交。
+Media3 使用归一后的视频 PTS 作为内容时间；仅有效 `releaseTimeNs` 可作为目标呈现时间，`C.TIME_UNSET` 在适配边界转成“无目标时间”，通用接口不依赖 Media3 常量。当前 mpv 没有精确视频帧 metadata，使用播放位置驱动，`targetPresentTimeNs` 缺省并立即提交。Choreographer 仅提供绘制节拍，其帧时间和 `elapsedRealtimeNanos()` 不冒充视频未来显示目标。暂停补画及无 metadata 时的位置驱动路径同样采用立即提交。
 
 字幕偏移沿用当前设置约定：正值加到内容时间，使字幕取样前移；最终显示行为及正负方向要用样例确认。不要同时改内容时间和目标显示时间而重复补偿。设备显示链路补偿是另一种量，本轮不新增自动补偿设置。
 
@@ -98,9 +103,11 @@ Media3 的 `C.TIME_UNSET` 在适配边界转成“无目标时间”；通用接
 
 ### 5.3 显示提交
 
+本节定义后续启用精确呈现调度时的契约。基础交付先保证时间单位、完整请求快照、立即提交和失效规则正确；精确调度的启用由实机时序偏差与收益测量决定，不阻塞时间归一化或字体出口交付。未启用时不宣称已按目标时间呈现。
+
 有效目标时间沿 frame driver → session → renderer → JNI 保留纳秒值，在 swap 前设置 presentation timestamp；探测扩展支持并检查调用结果。扩展不可用时立即提交并记录调度能力，继续正常字幕输出，不伪报精确同步。
 
-使用有界、可取消的调度；迟到帧记录迟到程度，避免追赶历史请求。不得在当前唯一状态处理线程中长时间 sleep 等待目标时刻。阶段 B 先评估非阻塞调度能否满足要求；若必须分离提交线程，先定义第 7 节的缓冲所有权，再启用目标时间调度。
+使用有界、可取消的调度；迟到帧记录迟到程度，避免追赶历史请求。不得在当前唯一状态处理线程中长时间 sleep 等待目标时刻。启用前先评估非阻塞调度能否满足要求；若必须分离提交线程，先定义第 7 节的缓冲所有权，再启用目标时间调度。
 
 隐藏、清屏、暂停设置更新和停止不等待未来视频帧；它们立即生效并使相冲突的旧请求失效。已提交到系统 BufferQueue 的帧不能仅靠应用版本号撤回，需提交新的透明／正确帧，并验证队列不会使旧内容重新可见。
 
@@ -111,6 +118,8 @@ EGL 目标时间是提交意图，不能保证两个 Surface 同一刷新周期�
 ### 6.1 容器输入
 
 MKV 附件提取位于 Media3／容器适配边界。向会话传递字体名称和字节，利用 libass 的字体注册能力；Android View 的 Typeface 不能替代这条链路。复用现有桥接，必要时补一个明确字体入口，不新增跨模块附件总线。
+
+首期附件字体出口覆盖 Media3。当前 mpv 桥接只传递 ASS 头部与事件，共享 libass 会话不会自动取得 mpv 所在容器的字体附件；该缺口独立保留，不以 Media3 字体测试通过宣称 mpv 字体完整。后续若扩展 mpv 字体获取，再确定其容器出口、媒体归属和验收，不为本期字体接线引入另一套解复用器。
 
 字体可能早于字幕头部到达。当前媒体内暂存并按顺序注册，已取得的字体在使用它的首帧布局前完成注册；后到字体触发字体选择更新及重绘。是否需要重建 renderer，以所用 libass API 的真实行为和测试确定。
 
@@ -142,7 +151,7 @@ MKV 附件提取位于 Media3／容器适配边界。向会话传递字体名称
 
 ### 8.1 布局与栅格分离
 
-独立传递 ASS 脚本坐标、原始视频 storage size、字幕栅格 frame size、最终 Surface 尺寸和视频显示矩形。storage size 使用实际视频存储尺寸，像素宽高比、旋转、fit／fill／zoom 与显示矩形在几何适配处解释，不将解挤压后的显示宽度冒充存储宽度。
+独立传递 ASS 脚本坐标、原始视频 storage size、字幕栅格 frame size、最终 Surface 尺寸和视频显示矩形。storage size 使用实际视频存储尺寸，像素宽高比、媒体旋转元数据、fit／fill／zoom 与显示矩形在几何适配处解释，不将解挤压后的显示宽度冒充存储宽度。旋转范围仅指媒体变换，不恢复已移除的手机方向传感器或随设备旋转行为。
 
 降采样仅等比缩小 frame 和相应 margins，保留源尺寸与脚本坐标，再由 GL 映射到输出尺寸。默认保持 1.0 比例，确认清晰度与耗时后再选择像素预算；不预设低分辨率必然更适合全部 ASS。
 
@@ -182,26 +191,30 @@ Plezy 默认的 10,000 glyph／128 MB bitmap cache 及多缓冲不是本项目�
 | --- | --- |
 | 外挂文件失败／取消 | 保留现行清理与恢复内嵌输入语义，等待真实 native 结果后报告 |
 | 无 EGL presentation 扩展 | 立即提交并记录能力；字幕仍可用，时序验收标注能力限制 |
-| 无视频 metadata 回调 | 检查 tunneling／内核能力；明确使用位置驱动的立即提交路径或限制不兼容配置，不能长期无字幕；最终取舍在阶段 B 以当前内核配置核实 |
-| Surface 失效／重建 | 拒绝旧提交，有序解绑，重建后即使内容时间相同也重绘 |
+| mpv 无精确帧 metadata | 使用播放位置驱动并立即提交；不等待不存在的目标时间，也不因字幕调度改变固定视频输出 |
+| Media3 无视频 metadata 回调 | 核实 tunneling 等配置下的回调能力；保证可用的位置驱动与立即提交路径，不能长期无字幕；启停与回调恢复时避免双重驱动 |
+| 字幕 Surface 失效／重建 | 拒绝旧提交，有序解绑，重建后即使内容时间相同也重绘 |
+| mpv 视频 Surface 重建 | 沿用内核已有解绑／重绑语义；可 seek 媒体的非零暂停位置恢复后，字幕按恢复位置重绘；不将非 seekable 流列入精确位置恢复的通过范围 |
+| mpv 内嵌位图字幕 | 明确提示切换 Media3；不回退到 GPU 视频输出，也不把切换内核记作 mpv 已支持该格式 |
 | GL／swap 或 native 失败 | 保留错误类别与恢复状态，不每帧重建；恢复失败沿现有 UI 提示处理 |
 | 字体／渲染预算不足 | 按对应资源策略处理并记录画面质量／降级原因，不中断视频或静默丢部分字幕 |
 
-视频继续既有输出路径，不能仅凭字幕独立叠加就宣称 HDR、DRM 或所有 TV 合成行为正确；目标设备单独验收。Media3 升级时重新核对 parser、decoder、extractor 与帧回调语义，记录固定依赖，避免只验证编译。
+视频继续第 1 节约定的输出路径。字幕开启、关闭、切轨、显示层重建及错误恢复后，目标 TV 的画面设置效果应保持生效；这与 HDR、DRM、厂商合成行为一起在实机验收，不能仅凭独立叠加或模拟器通过宣称正确。Media3 升级时重新核对 parser、decoder、extractor 与帧回调语义，记录固定依赖，避免只验证编译。
 
 ## 11. 后续实施顺序与决策门槛
 
 以下阶段均为**待实施**，不是本轮任务清单或通过记录。后续实施按阶段建立最小任务与执行证据，不提前铺开全部优化。
 
-| 阶段 | 产出与依赖 | 进入下一阶段的证据 |
+| 阶段 | 产出与依赖 | 该项交付或启用所需的证据 |
 | --- | --- | --- |
-| A：数据与资源边界 | 确定时间映射方案、MKV 字体出口及媒体作用域；保留既有字幕分流／释放 | 原始事件／duration、非零起点／多 period、字体画面及跨媒体清理通过 |
-| B：呈现契约 | 原子帧请求、完整目标时间、立即提交、失效规则与扩展处理；需要拆线程时先完成缓冲所有权 | 暂停／seek／显隐竞态不回显旧内容；目标与实际呈现可观测；无回调与不支持扩展路径有验证 |
+| A1：时间与输入边界 | 确定时间映射方案；保留既有原始 ASS 输入、分流与释放 | 原始事件／duration、非零起点／多 period、seek／倍速及大时间戳通过 |
+| A2：字体资源 | 独立确定 Media3 MKV 字体出口、预算及媒体作用域；明确 mpv 未覆盖范围 | 字体画面、延迟附件隔离、同媒体保留与跨媒体清理通过 |
+| B：帧请求正确性 | 原子帧请求、完整时间单位、立即提交与状态失效；区分两种内核时钟 | 暂停／seek／显隐竞态不回显旧内容；mpv 位置驱动与 Media3 无回调路径均有验证 |
 | C：尺寸与预算 | storage／frame／output 分离；冻结代表设备缓存、字体、纹理和像素预算 | 定位与变换画面正确；资源峰值、长播放及降采样影响可量化 |
-| D：按瓶颈优化 | 根据 A–C 测量决定 atlas／线程拆分是否需要；不需要时保留当前路径 | 同样片／同设备画面一致；目标瓶颈改善，内存和视频播放指标不劣化到预算外 |
-| E：可选研究 | 推测、预热、自动校准 | 单独对照收益、取消成本和设备覆盖；不阻塞 A–C 的交付 |
+| D：按测量完善呈现与性能 | 根据实际时序偏差或性能瓶颈决定精确呈现调度、atlas／线程拆分是否需要；需要拆线程时先完成缓冲所有权 | 同样片／同设备画面一致；时序或性能改善可量化，内存、视频播放和 TV 画面设置效果不超出验收边界；无扩展路径仍可用 |
+| E：可选研究 | 推测、预热、自动校准 | 单独对照收益、取消成本和设备覆盖；不阻塞基础正确性与资源边界的交付 |
 
-阶段 A 的容器出口、时间 offset API 和阶段 B 的无 metadata 策略尚待实现前小范围源码／样例验证。缓存数值、提交提前量、缓冲槽数、时序容差和 atlas 退路不能从上游数字直接推导；相应阶段开始时先记录样机、样片和预算，再冻结验收参数。若存在影响产品行为的选择，再针对该具体选择沟通，不将常规接线变成额外审批流程。
+A1 与 B 的正确性优先，A2 字体出口可独立推进，不与精确呈现调度互相阻塞。Media3 容器出口、时间 offset API 和无 metadata 时的驱动启停仍需实施前的小范围源码／样例验证；mpv 位置驱动边界已明确。缓存数值、提交提前量、缓冲槽数、时序容差和 atlas 退路不能从上游数字直接推导；相应阶段开始时先记录样机、样片和预算，再冻结验收参数。若存在影响产品行为的选择，再针对该具体选择沟通，不将常规接线变成额外审批流程。
 
 ## 12. 验收与证据要求
 
@@ -209,22 +222,25 @@ Plezy 默认的 10,000 glyph／128 MB bitmap cache 及多缓冲不是本项目�
 
 | 范围 | 至少覆盖 |
 | --- | --- |
-| 输入与分流 | MKV 内嵌 ASS/SSA、外挂 ASS/SSA；ASS → SRT／支持的位图路径；关闭与恢复；失败文件／取消 |
-| 字体 | 附件早于轨道、缺失／不可用／超预算字体、多字体；同媒体切轨和换媒体隔离；媒体 A 的字体在切换 B 后延迟返回，不污染 B；重建后恢复 |
-| 时间 | 0 与非零起点、前后 seek、暂停 seek、跨 period、0.5／1／2 倍速、正负偏移、大时间戳；缺少 metadata 和扩展能力受限 |
+| 输入与分流 | 两内核分别检查 MKV 内嵌 ASS/SSA、外挂 ASS/SSA、普通文字切换、关闭与恢复、失败文件／取消；Media3 位图路径保持可用，mpv 内嵌位图提示切换 Media3 且不回退 GPU 视频输出 |
+| 字体 | Media3 覆盖附件早于轨道、缺失／不可用／超预算字体、多字体；同媒体切轨和换媒体隔离；媒体 A 的字体在切换 B 后延迟返回，不污染 B；重建后恢复；mpv 附件字体缺口单独标注 |
+| 时间 | 0 与非零起点、前后 seek、暂停 seek、0.5／1／2 倍速、正负偏移、大时间戳；Media3 另测跨 period、有效／缺省目标时间及缺少 metadata；mpv 验证位置驱动与立即提交；启用精确调度时再验证扩展受限路径 |
 | ASS 视觉 | 静态对白、`\pos`、`\move`、`\t`、`\k`、模糊、描边阴影、半透明交叠、多个事件与不同脚本分辨率 |
-| 几何 | fit／fill／zoom、旋转、非方形像素、分辨率／Surface 变化、垂直偏移与降采样；保持当前裁剪行为 |
-| 生命周期 | 快速换轨／内外字幕切换、隐藏时仍有旧任务、释放时待提交、页面退出再进入、无效与重建 Surface；媒体 A 的样本／外挂加载在切换 B 后返回，不污染 B |
+| 几何 | fit／fill／zoom、媒体旋转元数据、非方形像素、分辨率／Surface 变化、垂直偏移与降采样；保持当前裁剪行为，不含手机传感器旋转 |
+| 生命周期 | 快速换轨／内外字幕切换、隐藏时仍有旧任务、释放时待提交、页面退出再进入；视频 Surface 与字幕 overlay 分别及组合销毁／重建；可 seek 媒体在非零暂停位置恢复后视频与字幕一致、无旧内容回显；媒体 A 的样本／外挂加载在切换 B 后返回，不污染 B |
 | 资源与设备 | 长播放／重复 seek／换媒体后的 native 与纹理曲线；GLES 2／3、代表性 TV；HDR／DRM 单独记录 |
-| 跨内核／TV | Media3 与共享 libass 的 mpv 路径分别回归；VLC／mpv 原生路径无回归；DPAD 完成字幕选择、偏移设置、返回与退出 |
+| TV 画面设置 | 同一实机、样片、画面预设和视频输出下，对照字幕关闭／开启、切轨、overlay 重建与恢复前后的画面设置效果；SDR 与设备支持的 HDR 模式分别记录，不以输出配置或 AVD 结果代替 |
+| 跨内核／TV | Media3 与固定直出的 mpv 共享 libass 路径分别回归；普通 UI mode 的盒子同样使用 TV 行为；DPAD 完成字幕选择、偏移设置、返回与退出 |
 
 ### 12.2 测量方法
 
 复用现有 [LibassSsaStreamDecoderTest](../../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoderTest.kt)、[LibassGpuRenderingTest](../../../player_component/src/androidTest/java/com/xyoye/player_component/ui/LibassGpuRenderingTest.kt)、[Media3SubtitleCompatibilityTest](../../../player_component/src/androidTest/java/com/xyoye/player_component/ui/Media3SubtitleCompatibilityTest.kt)，按行为缺口增加用例。JVM sink 断言不替代 native 像素；native 像素也不替代真实呈现时序。
 
+已有 [MpvSurfaceLifecycleTest](../../../player_component/src/androidTest/java/com/xyoye/player_component/ui/MpvSurfaceLifecycleTest.kt) 验证真实视频帧、暂停位置及 Surface 重绑；其通过不覆盖字幕 overlay。后续组合用例需在重建前后检查相同媒体位置的字幕画面，不以视频继续出帧代替字幕同步证据。
+
 分别记录 libass、pack、upload、draw／swap 的 CPU 耗时及队列等待、目标迟到、纹理／native 内存、视频掉帧。CPU 提交耗时不能标作 GPU 完成时间；支持时结合 Surface 帧时间／Perfetto 观察。对照使用同一设备、样片、轨道、字体、视频输出、刷新率和渲染比例，并记录预热条件与重复次数。
 
-针对字幕变化帧，尽可能比较同一 PTS 的视频与字幕实际呈现；只有 target timestamp 或 swap 日志时标为调度证据。阶段 B 需冻结时序容差与统计方法，再判断验收，不能用平均耗时或“已传 releaseTimeNs”代替。静态帧已有复用，不把没有重复提交计作掉帧。
+针对字幕变化帧，尽可能比较同一 PTS 的视频与字幕实际呈现；只有 target timestamp 或 swap 日志时标为调度证据。启用阶段 D 的精确呈现调度前需冻结时序容差与统计方法，再判断验收，不能用平均耗时或“已传 releaseTimeNs”代替。静态帧已有复用，不把没有重复提交计作掉帧。
 
 ### 12.3 构建与完成声明
 
