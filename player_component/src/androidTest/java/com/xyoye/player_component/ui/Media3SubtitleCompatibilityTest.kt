@@ -9,10 +9,10 @@ import androidx.media3.common.text.CueGroup
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.xyoye.player.kernel.impl.media3.LibassAwareRenderersFactory
-import com.xyoye.player.kernel.impl.media3.RewritingExtractorsFactory
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -122,7 +122,7 @@ class Media3SubtitleCompatibilityTest {
                     ProgressiveMediaSource
                         .Factory(
                             DefaultDataSource.Factory(context),
-                            RewritingExtractorsFactory(parseSubtitles)
+                            DefaultExtractorsFactory().experimentalSetTextTrackTranscodingEnabled(parseSubtitles)
                         ).createMediaSource(MediaItem.fromUri(Uri.fromFile(fixture)))
                 )
                 player.prepare()

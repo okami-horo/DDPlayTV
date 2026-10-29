@@ -2,7 +2,8 @@ package com.xyoye.player.kernel.impl.media3
 
 import androidx.media3.common.Format
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
+import androidx.media3.exoplayer.DecoderReuseEvaluation
+import androidx.media3.exoplayer.analytics.AnalyticsListener
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.log.privacy.SensitiveDataSanitizer
@@ -57,138 +58,126 @@ object Media3Diagnostics {
         telemetryListener?.invoke(event, data)
     }
 
-    fun logDecoderSelected(
-        mime: String,
-        secure: Boolean,
-        decoder: MediaCodecInfo?
-    ) {
-        log {
-            LogFacade.i(MODULE, TAG, "Decoder selected: mime=$mime secure=$secure name=${decoder?.name ?: "<none>"}")
-        }
-        emit("decoder_selected", mapOf("mime" to mime, "secure" to secure.toString(), "decoder" to (decoder?.name ?: "")))
-    }
+    fun createDecoderListener(): AnalyticsListener =
+        object : AnalyticsListener {
+            override fun onVideoDecoderInitialized(
+                eventTime: AnalyticsListener.EventTime,
+                decoderName: String,
+                initializedTimestampMs: Long,
+                initializationDurationMs: Long
+            ) {
+                logDecoderInitialized("video", decoderName, initializedTimestampMs, initializationDurationMs)
+            }
 
-    fun logDecoderCandidates(
-        mime: String,
-        secure: Boolean,
-        candidates: List<MediaCodecInfo>
-    ) {
-        log {
-            val names = candidates.joinToString { it.name }
-            LogFacade.d(MODULE, TAG, "Decoder candidates for mime=$mime secure=$secure -> [$names]")
-        }
-    }
+            override fun onAudioDecoderInitialized(
+                eventTime: AnalyticsListener.EventTime,
+                decoderName: String,
+                initializedTimestampMs: Long,
+                initializationDurationMs: Long
+            ) {
+                logDecoderInitialized("audio", decoderName, initializedTimestampMs, initializationDurationMs)
+            }
 
-    fun logDecoderBlacklisted(
-        decoder: String,
-        reason: String?
-    ) {
-        log {
-            LogFacade.w(MODULE, TAG, "Blacklisting decoder=$decoder due to ${reason ?: "runtime failure"}")
-        }
-    }
+            override fun onVideoDecoderReleased(
+                eventTime: AnalyticsListener.EventTime,
+                decoderName: String
+            ) {
+                logDecoderReleased("video", decoderName)
+            }
 
-    fun logDecoderRetry(
-        decoder: String,
-        attempt: Int
-    ) {
-        log {
-            LogFacade.i(MODULE, TAG, "Retry playback with decoder fallback, decoder=$decoder attempt=$attempt")
-        }
-    }
+            override fun onAudioDecoderReleased(
+                eventTime: AnalyticsListener.EventTime,
+                decoderName: String
+            ) {
+                logDecoderReleased("audio", decoderName)
+            }
 
-    fun logDecoderGiveUp(
-        decoder: String?,
-        reason: String?
-    ) {
-        log {
-            LogFacade.e(MODULE, TAG, "Exhausted decoder fallbacks. lastDecoder=${decoder ?: "unknown"} reason=${reason ?: "unknown"}")
-        }
-    }
+            override fun onVideoInputFormatChanged(
+                eventTime: AnalyticsListener.EventTime,
+                format: Format,
+                decoderReuseEvaluation: DecoderReuseEvaluation?
+            ) {
+                logDecoderFormat("video", format)
+            }
 
-    fun logFormatRewritten(
-        original: Format,
-        rewritten: Format
-    ) {
-        if (original === rewritten) return
-        log {
-            LogFacade.i(MODULE, TAG, "Format rewritten: mime=${original.sampleMimeType} -> ${rewritten.sampleMimeType}")
-        }
-    }
+            override fun onAudioInputFormatChanged(
+                eventTime: AnalyticsListener.EventTime,
+                format: Format,
+                decoderReuseEvaluation: DecoderReuseEvaluation?
+            ) {
+                logDecoderFormat("audio", format)
+            }
 
-    fun logHdrSelection(
-        format: Format,
-        hdrDisplay: Boolean,
-        hdrTier: Int
+            override fun onVideoCodecError(
+                eventTime: AnalyticsListener.EventTime,
+                videoCodecError: Exception
+            ) {
+                logDecoderError("video", videoCodecError)
+            }
+
+            override fun onAudioCodecError(
+                eventTime: AnalyticsListener.EventTime,
+                audioCodecError: Exception
+            ) {
+                logDecoderError("audio", audioCodecError)
+            }
+        }
+
+    private fun logDecoderInitialized(
+        track: String,
+        decoderName: String,
+        initializedTimestampMs: Long,
+        initializationDurationMs: Long
     ) {
-        val transfer = format.colorInfo?.colorTransfer
-        val isDv = format.sampleMimeType == androidx.media3.common.MimeTypes.VIDEO_DOLBY_VISION
         log {
             LogFacade.i(
                 MODULE,
                 TAG,
-                "HDR preference applied: selected codec=${format.codecs} hdrDisplay=$hdrDisplay hdrTier=$hdrTier transfer=$transfer isDv=$isDv",
+                "Decoder initialized: track=$track name=$decoderName durationMs=$initializationDurationMs timestampMs=$initializedTimestampMs"
             )
         }
-    }
-
-    fun logDrmFallbackDecision(
-        mime: String,
-        allowed: Boolean,
-        reason: String
-    ) {
-        val action = if (allowed) "allow" else "block"
-        log {
-            LogFacade.w(MODULE, TAG, "DRM fallback decision: action=$action mime=$mime reason=$reason")
-        }
-        emit("drm_fallback", mapOf("mime" to mime, "action" to action, "reason" to reason))
-    }
-
-    fun logSecureRequirement(
-        mime: String,
-        requiresSecure: Boolean,
-        allowFallback: Boolean
-    ) {
-        log {
-            LogFacade.d(MODULE, TAG, "Secure decoder request: mime=$mime requiresSecure=$requiresSecure allowFallback=$allowFallback")
-        }
-    }
-
-    fun logPlaybackDescriptor(descriptor: Media3CodecPolicy.PlaybackDescriptor?) {
-        descriptor ?: return
-        val safeUri =
-            SensitiveDataSanitizer.sanitizeUrl(
-                descriptor.uri.toString(),
-                SensitiveDataSanitizer.UrlMode.SAFE,
+        emit(
+            "decoder_initialized",
+            mapOf(
+                "track" to track,
+                "decoder" to decoderName,
+                "initializationDurationMs" to initializationDurationMs.toString(),
+                "initializedTimestampMs" to initializedTimestampMs.toString()
             )
-        log {
-            LogFacade.d(
-                MODULE,
-                TAG,
-                "Playback descriptor: uri=$safeUri container=${descriptor.containerHint} ext=${descriptor.extension} declaredMime=${descriptor.declaredMimeType}",
-            )
-        }
+        )
     }
 
-    fun logFormatDowngrade(
-        fromMime: String,
-        toMime: String,
-        reason: String
+    private fun logDecoderReleased(
+        track: String,
+        decoderName: String
     ) {
-        log {
-            LogFacade.w(MODULE, TAG, "Format downgrade: $fromMime -> $toMime reason=$reason")
-        }
-        emit("format_downgrade", mapOf("from" to fromMime, "to" to toMime, "reason" to reason))
+        log { LogFacade.i(MODULE, TAG, "Decoder released: track=$track name=$decoderName") }
+        emit("decoder_released", mapOf("track" to track, "decoder" to decoderName))
     }
 
-    fun logDolbyVisionFallback(
-        codecs: String?,
-        target: String,
-        displayInfo: String
+    private fun logDecoderFormat(
+        track: String,
+        format: Format
     ) {
+        val details =
+            if (track == "video") {
+                "size=${format.width}x${format.height} fps=${format.frameRate} colorTransfer=${format.colorInfo?.colorTransfer}"
+            } else {
+                "sampleRate=${format.sampleRate} channels=${format.channelCount}"
+            }
         log {
-            LogFacade.i(MODULE, TAG, "Dolby Vision fallback: codecs=$codecs target=$target display=$displayInfo")
+            LogFacade.i(MODULE, TAG, "Decoder input format: track=$track mime=${format.sampleMimeType} codecs=${format.codecs} $details")
         }
+        emit("decoder_format", mapOf("track" to track, "mime" to format.sampleMimeType.orEmpty(), "codecs" to format.codecs.orEmpty()))
+    }
+
+    private fun logDecoderError(
+        track: String,
+        error: Exception
+    ) {
+        val reason = SensitiveDataSanitizer.sanitizeFreeText(error.message.orEmpty())
+        log { LogFacade.w(MODULE, TAG, "Decoder error: track=$track type=${error.javaClass.simpleName} reason=$reason") }
+        emit("decoder_error", mapOf("track" to track, "type" to error.javaClass.simpleName, "reason" to reason))
     }
 
     fun logHttpOpen(

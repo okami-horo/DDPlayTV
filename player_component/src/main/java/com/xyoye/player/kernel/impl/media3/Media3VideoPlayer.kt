@@ -1,15 +1,12 @@
 package com.xyoye.player.kernel.impl.media3
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Point
 import android.os.Handler
 import android.os.Looper
-import android.view.Display
 import android.view.Surface
 import androidx.media3.common.C
 import androidx.media3.common.Format
-import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
@@ -31,8 +28,8 @@ import androidx.media3.exoplayer.trackselection.TrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.exoplayer.util.EventLogger
 import androidx.media3.ui.DefaultTrackNameProvider
-import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.config.SubtitlePreferenceUpdater
+import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.extension.mapByLength
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
@@ -49,7 +46,6 @@ import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.subtitle.MixedSubtitle
 import com.xyoye.subtitle.SubtitleType
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.roundToInt
 
 @UnstableApi
 class Media3VideoPlayer(
@@ -70,7 +66,6 @@ class Media3VideoPlayer(
     private val trackSelector: TrackSelector by lazy { DefaultTrackSelector(appContext) }
     private val loadControl: LoadControl by lazy { DefaultLoadControl() }
     private lateinit var speedParameters: PlaybackParameters
-    private var videoOverrideApplied = false
 
     private var subtitleType = SubtitleType.UN_KNOW
     private var hasSsaLikeTextTrack = false
@@ -83,12 +78,6 @@ class Media3VideoPlayer(
 
     private val subtitleFrameDrivers = mutableSetOf<SubtitleFrameDriver>()
 
-    // 将解码器回退的重试配额按轨道类型分别计数，避免音频失败占用视频回退配额
-    private val maxVideoDecoderRecoveries = 3 // 三个候选解码器：常规/低时延/软件，各自最多尝试一次
-    private val maxAudioDecoderRecoveries = 2
-    private var videoDecoderRecoveryCount = 0
-    private var audioDecoderRecoveryCount = 0
-
     private val trackNameProvider by lazy { DefaultTrackNameProvider(appContext.resources) }
 
     override fun initPlayer() {
@@ -97,14 +86,11 @@ class Media3VideoPlayer(
         }
 
         if (trackSelector is DefaultTrackSelector) {
-            val preferredMimeTypes =
-                Media3FormatUtil.preferredVideoMimeTypes(appContext).toTypedArray()
             trackSelector.parameters =
                 DefaultTrackSelector.Parameters
                     .Builder(appContext)
                     .setPreferredTextLanguage("zh")
                     .setPreferredAudioLanguage("jap")
-                    .setPreferredVideoMimeTypes(*preferredMimeTypes)
                     .build()
         }
 
@@ -123,7 +109,6 @@ class Media3VideoPlayer(
         val renderersFactory =
             LibassAwareRenderersFactory(
                 appContext,
-                AggressiveMediaCodecSelector(),
                 embeddedSinkProvider = { embeddedSinkRef.get() },
             ).apply {
                 setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
@@ -138,6 +123,7 @@ class Media3VideoPlayer(
             .setBandwidthMeter(DefaultBandwidthMeter.Builder(appContext).build())
             .setAnalyticsCollector(DefaultAnalyticsCollector(Clock.DEFAULT))
             .build()
+            .apply { addAnalyticsListener(Media3Diagnostics.createDecoderListener()) }
     }
 
     private fun createMediaSourceFactory(): DefaultMediaSourceFactory {
@@ -174,9 +160,6 @@ class Media3VideoPlayer(
         val parseSubtitlesDuringExtraction = shouldParseSubtitlesDuringExtraction()
         currentParseSubtitlesDuringExtraction = parseSubtitlesDuringExtraction
         mediaSource = getMediaSource(path, headers, parseSubtitlesDuringExtraction = parseSubtitlesDuringExtraction)
-        videoOverrideApplied = false
-        videoDecoderRecoveryCount = 0
-        audioDecoderRecoveryCount = 0
     }
 
     override fun setSurface(surface: Surface) {
@@ -193,7 +176,6 @@ class Media3VideoPlayer(
         }
 
         isPreparing = true
-        // 为单一 MediaSource 注入比特流修补（仅 H.264 avcC -> Annex-B，目前媒体管线已覆盖大部分情况）
         player.setMediaSource(mediaSource)
         player.prepare()
     }
@@ -218,7 +200,6 @@ class Media3VideoPlayer(
         isBuffering = false
         lastReportedPlaybackState = Player.STATE_IDLE
         lastReportedPlayWhenReady = false
-        videoOverrideApplied = false
     }
 
     override fun release() {
@@ -343,7 +324,8 @@ class Media3VideoPlayer(
             LogFacade.d(
                 LogModule.PLAYER,
                 "PlayerSubtitle",
-                "media3 backend changed target=$target parseSubtitlesDuringExtraction=$targetParseSubtitlesDuringExtraction hasSource=${!currentDataSource.isNullOrBlank()}",
+                "media3 backend changed target=$target parseSubtitlesDuringExtraction=$targetParseSubtitlesDuringExtraction hasSource=${!currentDataSource
+                    .isNullOrBlank()}",
             )
         }
         if (!this::player.isInitialized || currentDataSource.isNullOrBlank()) {
@@ -495,14 +477,10 @@ class Media3VideoPlayer(
     override fun onTracksChanged(tracks: Tracks) {
         subtitleType = SubtitleType.UN_KNOW
         logTextTracks(tracks)
-        applyHdrSdrPreference(tracks)
     }
 
     override fun onPlayerError(error: PlaybackException) {
         super.onPlayerError(error)
-        if (tryRecoverFromDecoderError(error)) {
-            return
-        }
         mPlayerEventListener.onError(error)
     }
 
@@ -544,7 +522,6 @@ class Media3VideoPlayer(
         runCatching { oldPlayer.release() }
 
         player = buildPlayer()
-        videoOverrideApplied = false
         subtitleType = SubtitleType.UN_KNOW
         isPreparing = false
         isBuffering = false
@@ -668,7 +645,11 @@ class Media3VideoPlayer(
                 LogFacade.d(
                     LogModule.PLAYER,
                     "PlayerSubtitle",
-                    "media3 textTrack g=$groupIndex t=$trackIndex selected=${group.isTrackSelected(trackIndex)} supported=${group.isTrackSupported(trackIndex)} disabled=$textDisabled mime=${format.sampleMimeType} codecs=${format.codecs} label=${format.label} lang=${format.language} name=$name ssaLike=$isSsaTrack ssaCodec=$ssaCodec media3Cue=$isMedia3CueTrack initData=$initDataSummary",
+                    "media3 textTrack g=$groupIndex t=$trackIndex selected=${group.isTrackSelected(
+                        trackIndex
+                    )} supported=${group.isTrackSupported(
+                        trackIndex
+                    )} disabled=$textDisabled mime=${format.sampleMimeType} codecs=${format.codecs} label=${format.label} lang=${format.language} name=$name ssaLike=$isSsaTrack ssaCodec=$ssaCodec media3Cue=$isMedia3CueTrack initData=$initDataSummary",
                 )
             }
         }
@@ -687,8 +668,7 @@ class Media3VideoPlayer(
         PlayerInitializer.Subtitle.backend == SubtitleRendererBackend.LIBASS &&
             hasSsaLikeTextTrack
 
-    private fun shouldParseSubtitlesDuringExtraction(): Boolean =
-        PlayerInitializer.Subtitle.backend != SubtitleRendererBackend.LIBASS
+    private fun shouldParseSubtitlesDuringExtraction(): Boolean = PlayerInitializer.Subtitle.backend != SubtitleRendererBackend.LIBASS
 
     private fun formatInitializationDataSummary(format: Format): String {
         val initData = format.initializationData
@@ -720,199 +700,6 @@ class Media3VideoPlayer(
             builder.append("...")
         }
         return builder.toString()
-    }
-
-    private fun applyHdrSdrPreference(tracks: Tracks) {
-        if (videoOverrideApplied) return
-        val selector = trackSelector as? DefaultTrackSelector ?: return
-
-        val videoGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
-        if (videoGroups.isEmpty()) return
-
-        val displaySupport =
-            DisplayHdrSupport.fromTypes(Media3FormatUtil.getDisplayHdrTypes(appContext))
-        val supportsHdr = displaySupport.supportsAnyHdr
-
-        var bestGroupIdx = -1
-        var bestTrackIdx = -1
-        var bestScore = Long.MIN_VALUE
-
-        videoGroups.forEachIndexed { groupIndex, group ->
-            for (trackIndex in 0 until group.length) {
-                if (!group.isTrackSupported(trackIndex)) continue
-                val format = group.getTrackFormat(trackIndex)
-                val tier = hdrTier(format, displaySupport) // 4:DV, 3:HDR10(+), 2:HLG, 1:SDR
-
-                val hdrScore =
-                    if (supportsHdr) {
-                        tier
-                    } else if (tier > 1) {
-                        0
-                    } else {
-                        1
-                    }
-                val height = format.height
-                val bitrate = format.bitrate
-                val frameRate = format.frameRate.takeUnless { it.isNaN() || it <= 0f } ?: 0f
-                val frameRateScore = (frameRate * 500).roundToInt() // 60fps≈30k，远小于 HDR/分辨率
-                val score =
-                    hdrScore.toLong() * 1_000_000_000L +
-                        height.toLong() * 10_000L +
-                        (bitrate / 1000).toLong() +
-                        frameRateScore.toLong()
-                if (score > bestScore) {
-                    bestScore = score
-                    bestGroupIdx = groupIndex
-                    bestTrackIdx = trackIndex
-                }
-            }
-        }
-
-        if (bestGroupIdx >= 0 && bestTrackIdx >= 0) {
-            val group = videoGroups[bestGroupIdx]
-            val override = androidx.media3.common.TrackSelectionOverride(group.mediaTrackGroup, bestTrackIdx)
-            selector.parameters =
-                selector.parameters
-                    .buildUpon()
-                    .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, false)
-                    .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
-                    .addOverride(override)
-                    .build()
-            videoOverrideApplied = true
-            val selectedFormat = group.getTrackFormat(bestTrackIdx)
-            Media3Diagnostics.logHdrSelection(selectedFormat, supportsHdr, hdrTier(selectedFormat, displaySupport))
-        }
-    }
-
-    private fun hdrTier(
-        format: androidx.media3.common.Format,
-        displaySupport: DisplayHdrSupport
-    ): Int {
-        if (format.sampleMimeType == MimeTypes.VIDEO_DOLBY_VISION) {
-            val descriptor = Media3FormatUtil.describeDolbyVision(format)
-            val displayInfo = displaySupport.describe()
-            return when {
-                displaySupport.supportsDv -> 4
-                Media3FormatUtil.hasHdr10Fallback(descriptor) && displaySupport.supportsHdr10Family -> {
-                    Media3Diagnostics.logDolbyVisionFallback(format.codecs, "HDR10", displayInfo)
-                    3
-                }
-                Media3FormatUtil.hasHlgFallback(descriptor) && displaySupport.supportsHlg -> {
-                    Media3Diagnostics.logDolbyVisionFallback(format.codecs, "HLG", displayInfo)
-                    2
-                }
-                Media3FormatUtil.hasSdrFallback(descriptor) -> {
-                    Media3Diagnostics.logDolbyVisionFallback(format.codecs, "SDR", displayInfo)
-                    1
-                }
-                else -> {
-                    Media3Diagnostics.logDolbyVisionFallback(format.codecs, "UNSUPPORTED", displayInfo)
-                    0
-                }
-            }
-        }
-        val hasHdrStatic = format.colorInfo?.hdrStaticInfo != null
-        val transfer = format.colorInfo?.colorTransfer
-        return when {
-            hasHdrStatic -> if (displaySupport.supportsHdr10Family) 3 else 2
-            transfer == C.COLOR_TRANSFER_HLG -> if (displaySupport.supportsHlg) 2 else 1
-            else -> 1
-        }
-    }
-
-    @SuppressLint("InlinedApi")
-    private data class DisplayHdrSupport(
-        val supportsDv: Boolean,
-        val supportsHdr10Plus: Boolean,
-        val supportsHdr10: Boolean,
-        val supportsHlg: Boolean
-    ) {
-        val supportsAnyHdr: Boolean
-            get() = supportsDv || supportsHdr10Plus || supportsHdr10 || supportsHlg
-
-        val supportsHdr10Family: Boolean
-            get() = supportsDv || supportsHdr10Plus || supportsHdr10
-
-        companion object {
-            fun fromTypes(types: IntArray): DisplayHdrSupport {
-                val hdrSet = types.toSet()
-                return DisplayHdrSupport(
-                    supportsDv = hdrSet.contains(Display.HdrCapabilities.HDR_TYPE_DOLBY_VISION),
-                    supportsHdr10Plus = hdrSet.contains(Display.HdrCapabilities.HDR_TYPE_HDR10_PLUS),
-                    supportsHdr10 = hdrSet.contains(Display.HdrCapabilities.HDR_TYPE_HDR10),
-                    supportsHlg = hdrSet.contains(Display.HdrCapabilities.HDR_TYPE_HLG),
-                )
-            }
-        }
-
-        fun describe(): String = "dv=$supportsDv,hdr10Plus=$supportsHdr10Plus,hdr10=$supportsHdr10,hlg=$supportsHlg"
-    }
-
-    private fun tryRecoverFromDecoderError(error: PlaybackException): Boolean {
-        if (!this::mediaSource.isInitialized) {
-            return false
-        }
-        // 不使用回退 MIME，交由异常自带信息判断，以便正确区分音频/视频失败
-        val failure =
-            Media3CodecPolicy.decoderFailureFromException(error, fallbackMimeType = null)
-                ?: return false
-        val blacklisted = Media3CodecPolicy.recordDecoderFailure(failure)
-        if (!blacklisted) {
-            Media3Diagnostics.logDecoderGiveUp(failure.decoderName, failure.diagnosticInfo)
-            return false
-        }
-        // 依据失败的 MIME/解码器名称推断轨道类型
-        val mime = failure.mimeType
-        val nameLower = failure.decoderName.lowercase()
-        val isVideoFailure =
-            when {
-                mime?.startsWith("video/") == true -> true
-                mime?.startsWith("audio/") == true -> false
-                // 无法从 MIME 判断时，用常见编解码器名猜测
-                nameLower.contains("hevc") || nameLower.contains("avc") || nameLower.contains("vp9") || nameLower.contains("av1") -> true
-                nameLower.contains("flac") ||
-                    nameLower.contains("aac") ||
-                    nameLower.contains("opus") ||
-                    nameLower.contains("vorbis") ||
-                    nameLower.contains("mp3") -> false
-                else -> true // 保守认定为视频失败
-            }
-
-        if (isVideoFailure) {
-            if (videoDecoderRecoveryCount >= maxVideoDecoderRecoveries) {
-                Media3Diagnostics.logDecoderGiveUp(failure.decoderName, failure.diagnosticInfo)
-                return false
-            }
-            videoDecoderRecoveryCount++
-            Media3Diagnostics.logDecoderRetry(failure.decoderName, videoDecoderRecoveryCount)
-        } else {
-            if (audioDecoderRecoveryCount >= maxAudioDecoderRecoveries) {
-                Media3Diagnostics.logDecoderGiveUp(failure.decoderName, failure.diagnosticInfo)
-                return false
-            }
-            audioDecoderRecoveryCount++
-            Media3Diagnostics.logDecoderRetry(failure.decoderName, audioDecoderRecoveryCount)
-        }
-        restartAfterDecoderFailure()
-        return true
-    }
-
-    private fun restartAfterDecoderFailure() {
-        val resumePosition = player.contentPosition
-        val playWhenReady = player.playWhenReady
-        isPreparing = true
-        isBuffering = false
-        player.stop()
-        videoOverrideApplied = false
-        player.setMediaSource(mediaSource)
-        if (this::speedParameters.isInitialized) {
-            player.playbackParameters = speedParameters
-        }
-        player.prepare()
-        if (resumePosition > 0) {
-            player.seekTo(resumePosition)
-        }
-        player.playWhenReady = playWhenReady
     }
 
     private companion object {

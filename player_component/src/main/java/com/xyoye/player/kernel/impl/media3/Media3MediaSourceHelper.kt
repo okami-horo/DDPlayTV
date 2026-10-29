@@ -17,6 +17,7 @@ import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.smoothstreaming.SsMediaSource
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.extractor.DefaultExtractorsFactory
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.utils.PathHelper
 import java.util.Locale
@@ -45,12 +46,10 @@ object Media3MediaSourceHelper {
         mediaId: String? = null,
     ): MediaSource {
         val contentUri = Uri.parse(uri)
-        val normalizedMime = Media3FormatUtil.normalizeMime(appContext, contentUri)
         val mediaItemBuilder =
             MediaItem
                 .Builder()
                 .setUri(contentUri)
-                .setMimeType(normalizedMime)
                 .apply {
                     if (!mediaId.isNullOrBlank()) {
                         setMediaId(mediaId)
@@ -58,8 +57,6 @@ object Media3MediaSourceHelper {
                 }
 
         val headersWithDefaults = headers?.toMap()
-
-        Media3CodecPolicy.updateDescriptor(contentUri, inferContentType(uri), normalizedMime)
 
         headersWithDefaults?.let { applyHeaders(it) }
 
@@ -94,7 +91,8 @@ object Media3MediaSourceHelper {
                 ProgressiveMediaSource
                     .Factory(
                         dataSourceFactory,
-                        RewritingExtractorsFactory(parseSubtitlesDuringExtraction),
+                        DefaultExtractorsFactory()
+                            .experimentalSetTextTrackTranscodingEnabled(parseSubtitlesDuringExtraction),
                     ).createMediaSource(mediaItem)
         }
     }

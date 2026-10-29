@@ -4,8 +4,8 @@ import android.content.Context
 import android.os.Looper
 import androidx.media3.common.util.ExperimentalApi
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.Renderer
-import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.text.TextRenderer
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
@@ -13,9 +13,12 @@ import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 @UnstableApi
 class LibassAwareRenderersFactory(
     context: Context,
-    selector: MediaCodecSelector = AggressiveMediaCodecSelector(),
     private val embeddedSinkProvider: () -> EmbeddedSubtitleSink?
-) : AggressiveRenderersFactory(context, selector) {
+) : DefaultRenderersFactory(context) {
+    init {
+        setEnableDecoderFallback(true)
+    }
+
     // Raw ASS samples still need the legacy decoder path for the libass bridge.
     @androidx.annotation.OptIn(ExperimentalApi::class)
     override fun buildTextRenderers(
