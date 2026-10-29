@@ -4,6 +4,8 @@
 
 问题由来、修复状态和验证命令见 [libass 接入审查](libass-integration-audit.md)。本轮修复显示/轨道清理、错误回传、GLES 2 实现与重建问题，并通过模拟器 native 像素测试；MKV 附件字体、Media3 时间基数推断、目标 GLES 2 电视和复杂字幕矩阵仍未关闭。
 
+后续接入架构、字体作用域、呈现时序与 GPU 优化见[接入完善设计](../../docs/superpowers/designs/2026-10-29-media3-libass-integration-design.md)。该文档为设计稿，具体实施留待后续安排，不改变本文的当前行为与验收状态。
+
 ## 渲染职责
 
 选择 LIBASS 后端并满足内核条件时，Media3 内嵌 ASS/SSA、mpv `mediacodec_embed` 的 ASS 桥接以及外挂 ASS/SSA 共用以下渲染链：
