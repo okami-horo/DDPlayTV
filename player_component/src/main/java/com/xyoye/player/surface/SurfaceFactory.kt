@@ -17,7 +17,6 @@ abstract class SurfaceFactory {
             when {
                 playerType == PlayerType.TYPE_MPV_PLAYER && surfaceType == SurfaceType.VIEW_SURFACE -> MpvSurfaceViewFactory()
                 playerType == PlayerType.TYPE_MPV_PLAYER -> MpvViewFactory()
-                playerType == PlayerType.TYPE_VLC_PLAYER -> VLCViewFactory(useTextureView = surfaceType == SurfaceType.VIEW_TEXTURE)
                 surfaceType == SurfaceType.VIEW_SURFACE -> SurfaceViewFactory()
                 surfaceType == SurfaceType.VIEW_TEXTURE -> TextureViewFactory()
                 else -> SurfaceViewFactory()

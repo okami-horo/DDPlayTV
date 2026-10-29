@@ -15,10 +15,7 @@ import com.xyoye.common_component.utils.MediaUtils
 import com.xyoye.common_component.utils.getScreenHeight
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.enums.PlayState
-import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SettingViewType
-import com.xyoye.data_component.enums.SurfaceType
-import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.wrapper.ControlWrapper
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutSceenShotBinding
@@ -130,7 +127,6 @@ class ScreenShotView(
         mGenerateImageJob =
             mAttachActivity.lifecycleScope.launch(Dispatchers.Main) {
                 val videoSize = controlWrapper.getVideoSize()
-                fixVlcTextureSize(videoSize)
                 bitmap =
                     withContext(Dispatchers.IO) {
                         generateVideoImage(videoSize)
@@ -146,22 +142,6 @@ class ScreenShotView(
 
                 viewBinding.shotIv.setImageBitmap(bitmap)
             }
-    }
-
-    /**
-     *  VLC TextureView 通过视频尺寸获取到的截图会扭曲，需要通过View尺寸获取截图
-     */
-    private fun fixVlcTextureSize(videoSize: Point) {
-        if (PlayerInitializer.playerType != PlayerType.TYPE_VLC_PLAYER) {
-            return
-        }
-        if (PlayerInitializer.surfaceType != SurfaceType.VIEW_TEXTURE) {
-            return
-        }
-        controlWrapper.getRenderView()?.getView()?.let {
-            videoSize.x = it.width
-            videoSize.y = it.height
-        }
     }
 
     private suspend fun generateVideoImage(videoSize: Point): Bitmap? {

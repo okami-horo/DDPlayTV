@@ -40,7 +40,6 @@
     <string name="tips_player_kernel">播放器内核</string>
     <string name="text_follow_global">跟随全局</string>
     <string name="text_player_media3">Media3</string>
-    <string name="text_player_vlc">VLC</string>
     <string name="text_player_mpv">MPV</string>
     <string name="text_player_fixed_suffix">（固定）</string>
 

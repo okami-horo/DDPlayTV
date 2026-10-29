@@ -12,7 +12,7 @@ The app follows a modular MVVM layout. The composition root lives in `app/` (lau
 - Feature/business modules (5)
   - `:anime_component`: anime/resource search, filters, details, follow/history (including magnet-search UI).
   - `:local_component`: local media library + playback entry; playback history; danmaku/subtitle source binding and downloads (e.g. Bilibili danmaku, Shooter subtitles).
-  - `:player_component`: player capabilities + UI (Media3/VLC/mpv adapters, subtitles/ASS rendering, danmaku rendering/filtering, TV/gesture controls, caching, etc.).
+  - `:player_component`: player capabilities + UI (Media3/mpv adapters, subtitles/ASS rendering, danmaku rendering/filtering, TV/gesture controls, caching, etc.).
   - `:storage_component`: storage + “streaming/casting” UI (file browsing, remote storage config, QR/remote scan, casting provider/receiver, etc.).
   - `:user_component`: user center + settings (login/profile, theme, player/app/developer settings, cache/scan management, about/licenses, etc.).
 - Infrastructure integration modules (1)
@@ -334,7 +334,7 @@ Sensitive tokens belong in `local.properties` or Gradle properties; never hard-c
 - Kotlin `1.9.25`（JVM target `1.8`）、Android Gradle Plugin `8.7.2`、Gradle `8.9`
 - AndroidX（Lifecycle/ViewModel、Room、Preference、RecyclerView、Startup 等）、Kotlin Coroutines、ARouter
 - 网络与数据：Retrofit + OkHttp、Moshi、Room、MMKV
-- 播放与媒体：Media3（可开关）、ExoPlayer 2、VLC、弹幕/字幕渲染、本地代理（NanoHTTPD）
+- 播放与媒体：Media3、mpv、弹幕/字幕渲染、本地代理（NanoHTTPD）；VLC 已全端移除，不再维护适配
 - 存储与集成：Bilibili 能力集成、多协议存储、7zip、thunder、video cache
 - 工程与质量：ktlint（`org.jlleitschuh.gradle.ktlint`）、JaCoCo、SonarCloud workflow（`SonarSource/sonarqube-scan-action@v6`）
 - 测试：JUnit4、AndroidX Test、Robolectric `4.16.1`、Kotlin Coroutines Test

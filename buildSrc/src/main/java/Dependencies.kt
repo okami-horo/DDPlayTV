@@ -120,7 +120,4 @@ object Dependencies {
         const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     }
 
-    object VLC {
-        const val vlc = "org.videolan.android:libvlc-all:4.0.0-eap23"
-    }
 }

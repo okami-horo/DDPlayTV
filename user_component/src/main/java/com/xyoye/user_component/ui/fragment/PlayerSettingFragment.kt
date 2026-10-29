@@ -5,15 +5,11 @@ import android.view.View
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.SeekBarPreference
-import androidx.preference.SwitchPreference
 import com.xyoye.common_component.base.BasePreferenceFragmentCompat
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.preference.MappingPreferenceDataStore
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.enums.LocalProxyMode
 import com.xyoye.data_component.enums.PlayerType
-import com.xyoye.data_component.enums.VLCAudioOutput
-import com.xyoye.data_component.enums.VLCHWDecode
 import com.xyoye.user_component.R
 
 /**
@@ -30,11 +26,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
         private const val DEFAULT_MPV_VIDEO_SYNC = "default"
         private const val DEFAULT_LOCAL_PROXY_MODE = "1"
         private const val KEY_PLAYER_TYPE = "player_type"
-        private const val KEY_VLC_HARDWARE_ACCELERATION = "vlc_hardware_acceleration"
-        private const val KEY_VLC_AUDIO_OUTPUT = "vlc_audio_output"
-        private const val KEY_VLC_PROXY_RANGE_INTERVAL_MS = "vlc_proxy_range_interval_ms"
-        private const val KEY_VLC_LOCAL_PROXY_MODE = "vlc_local_proxy_mode"
-        private const val KEY_VLC_PROXY_ALLOW_INSECURE_TLS = "vlc_proxy_allow_insecure_tls"
         private const val KEY_EXO_PROXY_RANGE_INTERVAL_MS = "exo_proxy_range_interval_ms"
         private const val KEY_EXO_LOCAL_PROXY_MODE = "exo_local_proxy_mode"
         private const val KEY_MPV_PROXY_RANGE_INTERVAL_MS = "mpv_proxy_range_interval_ms"
@@ -50,31 +41,7 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
         val playerData =
             mapOf(
                 Pair("Media3 Player", PlayerType.TYPE_EXO_PLAYER.value.toString()),
-                Pair("VLC Player", PlayerType.TYPE_VLC_PLAYER.value.toString()),
                 Pair("mpv Player", PlayerType.TYPE_MPV_PLAYER.value.toString()),
-            )
-
-        val vlcHWDecode =
-            mapOf(
-                Pair("自动", VLCHWDecode.HW_ACCELERATION_AUTO.value.toString()),
-                Pair("禁用", VLCHWDecode.HW_ACCELERATION_DISABLE.value.toString()),
-                Pair("解码加速", VLCHWDecode.HW_ACCELERATION_DECODING.value.toString()),
-                Pair("完全加速", VLCHWDecode.HW_ACCELERATION_FULL.value.toString()),
-            )
-
-        val vlcAudioOutput =
-            mapOf(
-                Pair("自动", VLCAudioOutput.AUTO.value),
-                Pair("OpenSL ES", VLCAudioOutput.OPEN_SL_ES.value),
-            )
-
-        val vlcPreference =
-            arrayOf(
-                KEY_VLC_HARDWARE_ACCELERATION,
-                KEY_VLC_AUDIO_OUTPUT,
-                KEY_VLC_PROXY_RANGE_INTERVAL_MS,
-                KEY_VLC_LOCAL_PROXY_MODE,
-                KEY_VLC_PROXY_ALLOW_INSECURE_TLS,
             )
 
         val exoPreference =
@@ -143,7 +110,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
         addPreferencesFromResource(R.xml.preference_player_setting)
         setupRangeIntervalPreference(KEY_EXO_PROXY_RANGE_INTERVAL_MS)
         setupRangeIntervalPreference(KEY_MPV_PROXY_RANGE_INTERVAL_MS)
-        setupRangeIntervalPreference(KEY_VLC_PROXY_RANGE_INTERVAL_MS)
     }
 
     override fun onViewCreated(
@@ -173,18 +139,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
             }
 
             updateVisible(safeValue)
-        }
-
-        // VLC硬件加速
-        findPreference<ListPreference>(KEY_VLC_HARDWARE_ACCELERATION)?.apply {
-            entries = vlcHWDecode.keys.toTypedArray()
-            entryValues = vlcHWDecode.values.toTypedArray()
-        }
-
-        // VLC音频输出
-        findPreference<ListPreference>(KEY_VLC_AUDIO_OUTPUT)?.apply {
-            entries = vlcAudioOutput.keys.toTypedArray()
-            entryValues = vlcAudioOutput.values.toTypedArray()
         }
 
         // MPV视频输出
@@ -262,34 +216,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
             summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
         }
 
-        // VLC 本地防风控代理（HttpPlayServer）
-        findPreference<ListPreference>(KEY_VLC_LOCAL_PROXY_MODE)?.apply {
-            entries = localProxyMode.keys.toTypedArray()
-            entryValues = localProxyMode.values.toTypedArray()
-            val stored = PlayerConfig.getVlcLocalProxyMode()
-            val safeValue = LocalProxyMode.from(stored).value.toString()
-            val resolved =
-                value?.takeIf { localProxyMode.containsValue(it) }
-                    ?: safeValue.takeIf { localProxyMode.containsValue(it) }
-                    ?: DEFAULT_LOCAL_PROXY_MODE
-            if (value != resolved) {
-                value = resolved
-                PlayerConfig.putVlcLocalProxyMode(resolved.toInt())
-            }
-            summaryProvider = ListPreference.SimpleSummaryProvider.getInstance()
-        }
-
-        findPreference<SwitchPreference>(KEY_VLC_PROXY_ALLOW_INSECURE_TLS)?.apply {
-            onPreferenceChangeListener =
-                Preference.OnPreferenceChangeListener { _, newValue ->
-                    val enabled = newValue as? Boolean ?: return@OnPreferenceChangeListener true
-                    if (enabled) {
-                        ToastCenter.showWarning("已启用不安全TLS：VLC 代理将忽略证书/主机名校验，存在中间人攻击风险")
-                    }
-                    true
-                }
-        }
-
         // Media3 本地防风控代理（HttpPlayServer）
         findPreference<ListPreference>(KEY_EXO_LOCAL_PROXY_MODE)?.apply {
             entries = localProxyMode.keys.toTypedArray()
@@ -342,18 +268,11 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
 
     private fun updateVisible(playerType: String) {
         when (playerType) {
-            PlayerType.TYPE_VLC_PLAYER.value.toString() -> {
-                vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
-                mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
-                exoPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
-            }
             PlayerType.TYPE_MPV_PLAYER.value.toString() -> {
-                vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
                 mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
                 exoPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
             }
             else -> {
-                vlcPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
                 mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = false }
                 exoPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
             }
@@ -368,7 +287,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
                     val currentType = PlayerConfig.getUsePlayerType()
                     val safeType =
                         when (PlayerType.valueOf(currentType)) {
-                            PlayerType.TYPE_VLC_PLAYER -> PlayerType.TYPE_VLC_PLAYER
                             PlayerType.TYPE_MPV_PLAYER -> PlayerType.TYPE_MPV_PLAYER
                             else -> PlayerType.TYPE_EXO_PLAYER
                         }
@@ -377,8 +295,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
                     }
                     safeType.value.toString()
                 },
-                KEY_VLC_HARDWARE_ACCELERATION to { PlayerConfig.getUseVLCHWDecoder().toString() },
-                KEY_VLC_AUDIO_OUTPUT to { PlayerConfig.getUseVLCAudioOutput() },
                 KEY_MPV_VIDEO_OUTPUT to {
                     val current = PlayerConfig.getMpvVideoOutput()
                     val safeValue = current.takeIf { mpvVideoOutput.containsValue(it) } ?: DEFAULT_MPV_VIDEO_OUTPUT
@@ -419,14 +335,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
                     }
                     safeValue
                 },
-                KEY_VLC_LOCAL_PROXY_MODE to {
-                    val current = PlayerConfig.getVlcLocalProxyMode()
-                    val safeValue = LocalProxyMode.from(current).value.toString()
-                    if (current.toString() != safeValue) {
-                        PlayerConfig.putVlcLocalProxyMode(safeValue.toInt())
-                    }
-                    safeValue
-                },
                 KEY_EXO_LOCAL_PROXY_MODE to {
                     val current = PlayerConfig.getExoLocalProxyMode()
                     val safeValue = LocalProxyMode.from(current).value.toString()
@@ -442,18 +350,11 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
                     value?.toIntOrNull()?.let { parsedType ->
                         val safeType =
                             when (PlayerType.valueOf(parsedType)) {
-                                PlayerType.TYPE_VLC_PLAYER -> PlayerType.TYPE_VLC_PLAYER
                                 PlayerType.TYPE_MPV_PLAYER -> PlayerType.TYPE_MPV_PLAYER
                                 else -> PlayerType.TYPE_EXO_PLAYER
                             }
                         PlayerConfig.putUsePlayerType(safeType.value)
                     }
-                },
-                KEY_VLC_HARDWARE_ACCELERATION to { value ->
-                    value?.toIntOrNull()?.let { PlayerConfig.putUseVLCHWDecoder(it) }
-                },
-                KEY_VLC_AUDIO_OUTPUT to { value ->
-                    value?.let { PlayerConfig.putUseVLCAudioOutput(it) }
                 },
                 KEY_MPV_VIDEO_OUTPUT to { value ->
                     val safeValue = value?.takeIf { mpvVideoOutput.containsValue(it) } ?: DEFAULT_MPV_VIDEO_OUTPUT
@@ -475,10 +376,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
                     val safeValue = LocalProxyMode.from(value?.toIntOrNull()).value
                     PlayerConfig.putMpvLocalProxyMode(safeValue)
                 },
-                KEY_VLC_LOCAL_PROXY_MODE to { value ->
-                    val safeValue = LocalProxyMode.from(value?.toIntOrNull()).value
-                    PlayerConfig.putVlcLocalProxyMode(safeValue)
-                },
                 KEY_EXO_LOCAL_PROXY_MODE to { value ->
                     val safeValue = LocalProxyMode.from(value?.toIntOrNull()).value
                     PlayerConfig.putExoLocalProxyMode(safeValue)
@@ -489,9 +386,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
                 KEY_MPV_PROXY_RANGE_INTERVAL_MS to {
                     normalizeMpvRangeInterval(PlayerConfig.getMpvProxyRangeMinIntervalMs())
                 },
-                KEY_VLC_PROXY_RANGE_INTERVAL_MS to {
-                    normalizeMpvRangeInterval(PlayerConfig.getVlcProxyRangeMinIntervalMs())
-                },
                 KEY_EXO_PROXY_RANGE_INTERVAL_MS to {
                     normalizeMpvRangeInterval(PlayerConfig.getExoProxyRangeMinIntervalMs())
                 },
@@ -501,9 +395,6 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
                 KEY_MPV_PROXY_RANGE_INTERVAL_MS to { value ->
                     PlayerConfig.putMpvProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
                 },
-                KEY_VLC_PROXY_RANGE_INTERVAL_MS to { value ->
-                    PlayerConfig.putVlcProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
-                },
                 KEY_EXO_PROXY_RANGE_INTERVAL_MS to { value ->
                     PlayerConfig.putExoProxyRangeMinIntervalMs(normalizeMpvRangeInterval(value))
                 },
@@ -511,12 +402,10 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
         booleanReaders =
             mapOf(
                 KEY_SURFACE_RENDERS to { PlayerConfig.isUseSurfaceView() },
-                KEY_VLC_PROXY_ALLOW_INSECURE_TLS to { PlayerConfig.isVlcProxyAllowInsecureTls() },
             ),
         booleanWriters =
             mapOf(
                 KEY_SURFACE_RENDERS to { value -> PlayerConfig.putUseSurfaceView(value) },
-                KEY_VLC_PROXY_ALLOW_INSECURE_TLS to { value -> PlayerConfig.putVlcProxyAllowInsecureTls(value) },
             ),
     )
 }

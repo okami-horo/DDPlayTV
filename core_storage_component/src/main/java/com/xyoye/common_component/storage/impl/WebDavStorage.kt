@@ -112,12 +112,6 @@ class WebDavStorage(
                         PlayerConfig.getMpvProxyRangeMinIntervalMs().toLong(),
                         false,
                     )
-                PlayerType.TYPE_VLC_PLAYER ->
-                    Triple(
-                        PlayerConfig.getVlcLocalProxyMode(),
-                        PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong(),
-                        false,
-                    )
                 else -> return directPlaybackTransport(upstream)
             }
 

@@ -63,7 +63,7 @@ mpv ass-full 活动事件桥接 ─────┼─> LibassGpuSubtitleSession
 | Media3 内嵌 ASS/SSA | 自定义 TextRenderer/decoder 把原始样本送入 sink，返回空 Cue 避免重复显示 | [LibassAwareRenderersFactory.kt](../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassAwareRenderersFactory.kt)、[LibassSsaStreamDecoder.kt](../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoder.kt) |
 | 外挂 ASS/SSA | 直接向自定义 native 渲染器加载文件，期间关闭内嵌 sink | [LibassRendererBackend.kt](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt)、[LibassGpuSubtitleSession.kt](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassGpuSubtitleSession.kt) |
 | mpv `mediacodec_embed` | 监听 `ass-full`、轨道和 codec private，解析活动事件后送入共享渲染器 | [MpvEmbeddedSubtitleBridge.kt](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvEmbeddedSubtitleBridge.kt) |
-| mpv `gpu`/`gpu-next`、VLC | 使用内核字幕能力；不能与自定义 libass 实例的行为混为一谈 | [MpvVideoPlayer.kt](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt)、[mpv 配置说明](../mpv_conf_supported_options.md) |
+| mpv `gpu`/`gpu-next` | 使用内核字幕能力；不能与自定义 libass 实例的行为混为一谈 | [MpvVideoPlayer.kt](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt)、[mpv 配置说明](../mpv_conf_supported_options.md) |
 | 普通文字、位图字幕 | 仍有原字幕控制器或内核路径；自定义后端不消费 `MixedSubtitle` | [LibassRendererBackend.kt](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassRendererBackend.kt)，`render()`；[SubtitleController.kt](../../player_component/src/main/java/com/xyoye/player/controller/subtitle/SubtitleController.kt) |
 
 因此，不能把当前行为概括为“用户选择是否开启 libass”或“所有字幕都走同一个 libass 渲染器”。mpv `mediacodec_embed` 下内嵌位图字幕的既有限制也没有因接入 libass 自动解决。
@@ -197,7 +197,7 @@ mpv 的 [sub/sd_ass.c](https://github.com/mpv-player/mpv/blob/master/sub/sd_ass.
 
 VLC 的 [modules/codec/libass.c](https://github.com/videolan/vlc/blob/master/modules/codec/libass.c) 加载附件字体，按输入包 PTS/时长调用 `ass_process_chunk()`，将结果交给字幕图像队列，并维护解码器与排队字幕共享资源的生命周期。不能将其 flush 行为简单描述为每次都清空 libass 所有事件。
 
-对本项目而言，mpv `gpu`/`gpu-next` 和 VLC 已有原生路径，应优先利用已有能力。是否改变 mpv `mediacodec_embed` 必须结合 TV 视频输出与性能约束评估，不能仅因字幕集成较复杂就自动切换输出模式。
+对本项目而言，mpv `gpu`/`gpu-next` 已有原生路径，应优先利用已有能力。VLC 已于 2026-10-29 全端移除，本文保留的 VLC 内容仅作外部实现比较。是否改变 mpv `mediacodec_embed` 必须结合 TV 视频输出与性能约束评估，不能仅因字幕集成较复杂就自动切换输出模式。
 
 ## 保留项与尚未成立的问题
 
@@ -239,7 +239,7 @@ VLC 的 [modules/codec/libass.c](https://github.com/videolan/vlc/blob/master/mod
 | V10 | 长时间播放和复杂字幕负载 | 记录 native/进程内存、纹理峰值、帧延迟、降载及恢复；比较趋势，不预设泄漏 | 未验证 |
 | V11 | TV 与移动端控制回归 | TV 全程 DPAD 完成设置、关闭、切轨与返回；移动端仍可操作；验证设置持久化 | 未验证 |
 
-V01–V08 中适用的共享渲染场景需要分别覆盖 Media3 与 mpv `mediacodec_embed`。mpv 原生输出和 VLC 作为行为对照，不能代替共享渲染链验收。测试证据按[项目格式](../monitoring/test_evidence_format.md)记录。
+V01–V08 中适用的共享渲染场景需要分别覆盖 Media3 与 mpv `mediacodec_embed`。mpv 原生输出作为行为对照，不能代替共享渲染链验收。测试证据按[项目格式](../monitoring/test_evidence_format.md)记录。
 
 ## 已执行验证
 

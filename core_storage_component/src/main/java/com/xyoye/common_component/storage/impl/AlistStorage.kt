@@ -113,7 +113,7 @@ class AlistStorage(
         profile: PlaybackProfile
     ): PlaybackTransportLease {
         val playerType = profile.playerType
-        if (playerType != PlayerType.TYPE_MPV_PLAYER && playerType != PlayerType.TYPE_VLC_PLAYER) {
+        if (playerType != PlayerType.TYPE_MPV_PLAYER) {
             return directPlaybackTransport(getStorageFileUrl(file) ?: throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable))
         }
 
@@ -125,8 +125,6 @@ class AlistStorage(
             when (playerType) {
                 PlayerType.TYPE_MPV_PLAYER ->
                     PlayerConfig.getMpvLocalProxyMode() to PlayerConfig.getMpvProxyRangeMinIntervalMs().toLong()
-                PlayerType.TYPE_VLC_PLAYER ->
-                    PlayerConfig.getVlcLocalProxyMode() to PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong()
                 else -> return directPlaybackTransport(upstream)
             }
 

@@ -5,7 +5,6 @@ import androidx.media3.common.util.UnstableApi
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.player.kernel.impl.media3.Media3PlayerFactory
 import com.xyoye.player.kernel.impl.mpv.MpvPlayerFactory
-import com.xyoye.player.kernel.impl.vlc.VlcPlayerFactory
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 
 /**
@@ -18,7 +17,6 @@ abstract class PlayerFactory {
         fun getFactory(playerType: PlayerType): PlayerFactory =
             when (playerType) {
                 PlayerType.TYPE_EXO_PLAYER -> Media3PlayerFactory()
-                PlayerType.TYPE_VLC_PLAYER -> VlcPlayerFactory()
                 PlayerType.TYPE_MPV_PLAYER -> MpvPlayerFactory()
                 else -> Media3PlayerFactory()
             }

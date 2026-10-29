@@ -59,8 +59,6 @@ import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.data_component.enums.SurfaceType
 import com.xyoye.data_component.enums.TrackType
-import com.xyoye.data_component.enums.VLCAudioOutput
-import com.xyoye.data_component.enums.VLCHWDecode
 import com.xyoye.data_component.media3.entity.Media3BackgroundMode
 import com.xyoye.data_component.media3.entity.Media3Capability
 import com.xyoye.data_component.media3.entity.Media3PlaybackState
@@ -68,7 +66,6 @@ import com.xyoye.player.DanDanVideoPlayer
 import com.xyoye.player.controller.VideoController
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.impl.media3.Media3Diagnostics
-import com.xyoye.player.kernel.impl.vlc.VlcAudioPolicy
 import com.xyoye.player.subtitle.backend.SubtitleFallbackDispatcher
 import com.xyoye.player.utils.PlaybackErrorFormatter
 import com.xyoye.player_component.BR
@@ -865,16 +862,6 @@ class PlayerActivity :
         PlayerInitializer.Player.pressVideoSpeed = PlayerConfig.getPressVideoSpeed()
         // 自动播放下一集
         PlayerInitializer.Player.isAutoPlayNext = PlayerConfig.isAutoPlayNext()
-
-        PlayerInitializer.Player.vlcHWDecode =
-            VLCHWDecode.valueOf(PlayerConfig.getUseVLCHWDecoder())
-        val preferredAudioOutput = VLCAudioOutput.valueOf(PlayerConfig.getUseVLCAudioOutput())
-        PlayerInitializer.Player.vlcAudioOutput = VlcAudioPolicy.resolveOutput(preferredAudioOutput)
-        LogFacade.d(
-            LogModule.PLAYER,
-            TAG_CONFIG,
-            "vlc hw=${PlayerInitializer.Player.vlcHWDecode} audio=${PlayerInitializer.Player.vlcAudioOutput} compat=${PlayerConfig.isVlcAudioCompatMode()}"
-        )
 
         // 弹幕配置
         PlayerInitializer.Danmu.size = DanmuConfig.getDanmuSize()

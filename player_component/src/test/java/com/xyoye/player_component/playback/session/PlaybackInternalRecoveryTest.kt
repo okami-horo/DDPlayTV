@@ -23,7 +23,7 @@ class PlaybackInternalRecoveryTest {
             val snapshot = f.blob.data
             before.playback.source.setSubtitlePath("retained.ass")
             f.backend.playbackProgress = PlaybackProgress(900, false)
-            val fallback = PlaybackProfile(PlayerType.TYPE_VLC_PLAYER, PlaybackProfileSource.FALLBACK)
+            val fallback = PlaybackProfile(PlayerType.TYPE_MPV_PLAYER, PlaybackProfileSource.FALLBACK)
             assertTrue(f.session.fallbackKernel(before.version, fallback) is SessionRequestResult.Activated)
             assertSame(before.playback.source, f.backend.current)
             assertEquals(before.version, f.session.runtime!!.version)

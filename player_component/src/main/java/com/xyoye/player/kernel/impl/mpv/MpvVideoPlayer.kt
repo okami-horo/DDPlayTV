@@ -860,7 +860,7 @@ class MpvVideoPlayer(
         LogFacade.w(
             LogModule.PLAYER,
             LOG_TAG_SUBTITLE,
-            "mpv vo=mediacodec_embed 无法渲染内嵌位图字幕：codec=$codec sid=${selected.id} trigger=$trigger；将保持不显示（避免自动切换 vo）。如需显示请切 VLC/Media3，或在设置中手动将 mpv「视频输出」改为 gpu/gpu-next。",
+            "mpv vo=mediacodec_embed 无法渲染内嵌位图字幕：codec=$codec sid=${selected.id} trigger=$trigger；将保持不显示（避免自动切换 vo）。如需显示请切 Media3，或在设置中手动将 mpv「视频输出」改为 gpu/gpu-next。",
         )
     }
 

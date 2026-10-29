@@ -10,6 +10,7 @@
 | 开发、提交与验证要求 | [贡献指南](Contributing.md)、[本地开发环境](project_local_dev_env.md) |
 | 模块职责与依赖限制 | [模块治理](architecture/module_dependency_governance.md)、[构建门禁](architecture/architecture_governance_guardrails.md) |
 | 播放会话、资源所有权与恢复设计 | [设计与执行账本导航](../docs/superpowers/README.md) |
+| Media3/mpv 内核选择、VLC 退役与旧配置回退 | [播放内核说明](player/player-kernels.md) |
 | Media3 默认解码选择、初始化回退与实际运行日志 | [Media3 解码说明](player/media3-decoding.md) |
 | ASS/SSA 字幕渲染、偏移与 GPU 恢复 | [字幕渲染](player/subtitle-rendering.md) |
 | libass 接入缺口、同类项目比较与修复验收 | [libass 接入审查](player/libass-integration-audit.md) |

@@ -267,8 +267,6 @@ class Open115Storage(
                 when (playerType) {
                     PlayerType.TYPE_MPV_PLAYER ->
                         PlayerConfig.getMpvLocalProxyMode() to PlayerConfig.getMpvProxyRangeMinIntervalMs().toLong()
-                    PlayerType.TYPE_VLC_PLAYER ->
-                        PlayerConfig.getVlcLocalProxyMode() to PlayerConfig.getVlcProxyRangeMinIntervalMs().toLong()
                     PlayerType.TYPE_EXO_PLAYER ->
                         PlayerConfig.getExoLocalProxyMode() to PlayerConfig.getExoProxyRangeMinIntervalMs().toLong()
                     else -> return@runCatching directPlaybackTransport(upstream.url)
@@ -380,7 +378,6 @@ class Open115Storage(
     override fun supportedPlayerTypes(): Set<PlayerType> =
         setOf(
             PlayerType.TYPE_EXO_PLAYER,
-            PlayerType.TYPE_VLC_PLAYER,
             PlayerType.TYPE_MPV_PLAYER,
         )
 

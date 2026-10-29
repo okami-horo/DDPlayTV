@@ -12,7 +12,7 @@
  - ARouter.
  - Retrofit, OkHttp, Moshi `1.15.1`, Room `2.6.1`. Moshi and Room codegen use KSP `2.2.10-2.0.2` with `ksp.useKSP2=false` because Moshi 1.x custom qualifiers fail with KSP2. ARouter/MMKV/DataBinding retain KAPT. Database schema remains version 17 with no exported changes. See the Media3 upgrade ledger for failure evidence and compatibility tests.
  - MMKV.
- - Media3 `1.11.1` (single version source: `gradle.properties`), VLC, mpv and danmaku/subtitle rendering. The libass bridge retains raw ASS decoding with a method-scoped Media3 `ExperimentalApi` opt-in. ExoPlayer 2 dependency constants remain but are not referenced by current module build declarations.
+ - Media3 `1.11.1` (single version source: `gradle.properties`, default player), mpv and danmaku/subtitle rendering. VLC/libVLC was removed on all devices on 2026-10-29. The libass bridge retains raw ASS decoding with a method-scoped Media3 `ExperimentalApi` opt-in. ExoPlayer 2 dependency constants remain but are not referenced by current module build declarations.
  - NanoHTTPD/local proxy-related storage/playback components.
  - Robolectric `4.16.1`, JUnit4, AndroidX Test.
 

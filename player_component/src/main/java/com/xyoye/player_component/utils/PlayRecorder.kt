@@ -28,10 +28,8 @@ import com.xyoye.common_component.utils.SupervisorScope
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.player.surface.InterSurfaceView
-import com.xyoye.player_component.R
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.videolan.libvlc.util.VLCVideoLayout
 import java.util.Date
 
 /**
@@ -137,16 +135,6 @@ object PlayRecorder {
             is TextureView -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && view.surfaceTexture != null) {
                     return recordTextureView(view, imageSize)
-                }
-            }
-
-            is VLCVideoLayout -> {
-                val textureView = view.findViewById<TextureView>(R.id.texture_video)
-                val surfaceView = view.findViewById<SurfaceView>(R.id.surface_video)
-                if (textureView != null && textureView.surfaceTexture != null) {
-                    return recordTextureView(textureView, imageSize)
-                } else if (surfaceView != null) {
-                    return recordSurfaceView(surfaceView, imageSize)
                 }
             }
         }

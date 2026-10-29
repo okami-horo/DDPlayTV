@@ -33,21 +33,25 @@ import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class PlaybackHandoffInstrumentedTest {
-    @Test fun completedSeekImmediatelyPersistsEncryptedRecoveryPosition() = verifySeek(PlayerType.TYPE_EXO_PLAYER, "Media3VideoPlayer")
+    @Test fun completedSeekImmediatelyPersistsEncryptedRecoveryPosition() =
+        verifySeek(
+            PlayerType.TYPE_EXO_PLAYER.value,
+            "Media3VideoPlayer"
+        )
 
-    @Test fun vlcCompletedSeekPersistsRecoveryPosition() = verifySeek(PlayerType.TYPE_VLC_PLAYER, "VlcVideoPlayer")
+    @Test fun retiredPlayerPreferenceFallsBackAndPersistsSeek() = verifySeek(3, "Media3VideoPlayer")
 
-    @Test fun mpvCompletedSeekPersistsRecoveryPosition() = verifySeek(PlayerType.TYPE_MPV_PLAYER, "MpvVideoPlayer")
+    @Test fun mpvCompletedSeekPersistsRecoveryPosition() = verifySeek(PlayerType.TYPE_MPV_PLAYER.value, "MpvVideoPlayer")
 
     private fun verifySeek(
-        kernelType: PlayerType,
+        savedKernelValue: Int,
         kernelClass: String
     ) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val fixture = File("/sdcard/Download/ddplaytv-lease-playback-long.mp4")
         assertTrue(fixture.isFile)
         val originalKernel = PlayerConfig.getUsePlayerType()
-        PlayerConfig.putUsePlayerType(kernelType.value)
+        PlayerConfig.putUsePlayerType(savedKernelValue)
         try {
             val provider = ARouter.getInstance().navigation(PlaybackRequestService::class.java)
             val request =
@@ -73,6 +77,7 @@ class PlaybackHandoffInstrumentedTest {
                                 .apply { isAccessible = true }
                                 .get(player(it))
                         assertEquals("Kernel fallback is not evidence of the requested kernel", kernelClass, kernel.javaClass.simpleName)
+                        assertEquals(PlayerType.valueOf(savedKernelValue).value, PlayerConfig.getUsePlayerType())
                     }
                     // Seeking during playback must save without a pause event or the five-second ticker.
                     scenario.onActivity { player(it).seekTo(9000) }

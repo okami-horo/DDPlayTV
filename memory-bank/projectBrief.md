@@ -20,12 +20,13 @@
  - [Jellyfin Android TV](https://github.com/jellyfin/jellyfin-androidtv) is an important implementation reference selected by the user on 2026-10-29.
  - Intended reference areas include TV media browsing/details, DPAD navigation and focus restoration, back behavior, playback controls, subtitle/audio selection, and settings.
  - [Plezy](https://github.com/edde746/plezy) is a secondary implementation reference selected by the user on 2026-10-29. Intended reference areas include mpv/ExoPlayer/libass integration, subtitle/audio handling, playback progress synchronization, and multi-server client flows. Its Flutter UI and cross-platform architecture require local adaptation.
- - Adapt relevant behavior and implementation to DDPlayTV's module ownership, multi-source media, danmaku/subtitles, and Media3/VLC/mpv setup. Assess upstream source and compatibility for each concrete change.
+ - Adapt relevant behavior and implementation to DDPlayTV's module ownership, multi-source media, danmaku/subtitles, and Media3/mpv setup. Assess upstream source and compatibility for each concrete change.
 
  ## Non-negotiables
  - TV/DPAD UX first: focus must be reachable, visible, restorable, and returnable.
  - Preserve module dependency layering; run `./gradlew verifyModuleDependencies` when dependency edges change.
  - Do not restore Bilibili video/live/library/danmaku integrations; local danmaku parsing remains supported.
+ - VLC is retired on all devices (user decision, 2026-10-29). Maintain Media3 (default) and mpv only; old player values follow the compatibility rules in `document/player/player-kernels.md`.
  - Never hard-code secrets; use local/Gradle properties.
  - Do not revert user changes without explicit approval.
 

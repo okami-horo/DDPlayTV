@@ -5,8 +5,6 @@ import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.SurfaceType
-import com.xyoye.data_component.enums.VLCAudioOutput
-import com.xyoye.data_component.enums.VLCHWDecode
 import com.xyoye.data_component.enums.VideoScreenScale
 
 /**
@@ -18,7 +16,7 @@ object PlayerInitializer {
     var isOrientationEnabled = true
     var isEnableAudioFocus = true
     var isLooping = false
-    var playerType = PlayerType.TYPE_VLC_PLAYER
+    var playerType = PlayerType.TYPE_EXO_PLAYER
     var surfaceType = SurfaceType.VIEW_TEXTURE
     var screenScale = VideoScreenScale.SCREEN_SCALE_DEFAULT
 
@@ -28,10 +26,8 @@ object PlayerInitializer {
         const val DEFAULT_SPEED = 1f
         const val DEFAULT_PRESS_SPEED = 2f
 
-        var vlcHWDecode = VLCHWDecode.HW_ACCELERATION_AUTO
         var videoSpeed = DEFAULT_SPEED
         var pressVideoSpeed = DEFAULT_PRESS_SPEED
-        var vlcAudioOutput = VLCAudioOutput.AUTO
         var isAutoPlayNext = true
     }
 

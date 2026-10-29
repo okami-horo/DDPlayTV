@@ -180,8 +180,6 @@ dependencies {
     testImplementation("androidx.media3:media3-test-utils:$media3Version")
     androidTestImplementation("androidx.media3:media3-test-utils:$media3Version")
 
-    implementation(Dependencies.VLC.vlc)
-
     kapt(Dependencies.Alibaba.arouter_compiler)
 
     testImplementation(Dependencies.Kotlin.coroutines_test)

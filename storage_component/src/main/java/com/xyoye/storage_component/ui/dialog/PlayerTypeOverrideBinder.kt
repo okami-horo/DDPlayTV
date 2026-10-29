@@ -19,7 +19,6 @@ object PlayerTypeOverrideBinder {
 
         binding.followGlobalTv.isVisible = allowFollowGlobal
         binding.media3Tv.isVisible = supportedPlayerTypes.contains(PlayerType.TYPE_EXO_PLAYER)
-        binding.vlcTv.isVisible = supportedPlayerTypes.contains(PlayerType.TYPE_VLC_PLAYER)
         binding.mpvTv.isVisible = supportedPlayerTypes.contains(PlayerType.TYPE_MPV_PLAYER)
 
         updateFixedLabelsIfNeeded(binding, supportedPlayerTypes, allowFollowGlobal)
@@ -45,13 +44,6 @@ object PlayerTypeOverrideBinder {
         binding.media3Tv.setOnClickListener {
             if (!supportedPlayerTypes.contains(PlayerType.TYPE_EXO_PLAYER)) return@setOnClickListener
             val value = PlayerType.TYPE_EXO_PLAYER.value
-            library.playerTypeOverride = value
-            render(binding, value, allowFollowGlobal, supportedPlayerTypes, preferredPlayerType)
-            onChanged?.invoke()
-        }
-        binding.vlcTv.setOnClickListener {
-            if (!supportedPlayerTypes.contains(PlayerType.TYPE_VLC_PLAYER)) return@setOnClickListener
-            val value = PlayerType.TYPE_VLC_PLAYER.value
             library.playerTypeOverride = value
             render(binding, value, allowFollowGlobal, supportedPlayerTypes, preferredPlayerType)
             onChanged?.invoke()
@@ -85,9 +77,6 @@ object PlayerTypeOverrideBinder {
             if (supportedPlayerTypes.contains(PlayerType.TYPE_EXO_PLAYER)) {
                 binding.media3Tv.text = binding.media3Tv.context.getString(R.string.text_player_media3) + fixedSuffix
             }
-            if (supportedPlayerTypes.contains(PlayerType.TYPE_VLC_PLAYER)) {
-                binding.vlcTv.text = binding.vlcTv.context.getString(R.string.text_player_vlc) + fixedSuffix
-            }
             if (supportedPlayerTypes.contains(PlayerType.TYPE_MPV_PLAYER)) {
                 binding.mpvTv.text = binding.mpvTv.context.getString(R.string.text_player_mpv) + fixedSuffix
             }
@@ -95,7 +84,6 @@ object PlayerTypeOverrideBinder {
         }
 
         binding.media3Tv.setText(R.string.text_player_media3)
-        binding.vlcTv.setText(R.string.text_player_vlc)
         binding.mpvTv.setText(R.string.text_player_mpv)
     }
 
@@ -146,7 +134,6 @@ object PlayerTypeOverrideBinder {
             )
         val followGlobalSelected = normalized == 0
         val media3Selected = normalized == PlayerType.TYPE_EXO_PLAYER.value
-        val vlcSelected = normalized == PlayerType.TYPE_VLC_PLAYER.value
         val mpvSelected = normalized == PlayerType.TYPE_MPV_PLAYER.value
 
         binding.followGlobalTv.isSelected = followGlobalSelected
@@ -154,9 +141,6 @@ object PlayerTypeOverrideBinder {
 
         binding.media3Tv.isSelected = media3Selected
         binding.media3Tv.setTextColorRes(if (media3Selected) R.color.text_white else R.color.text_black)
-
-        binding.vlcTv.isSelected = vlcSelected
-        binding.vlcTv.setTextColorRes(if (vlcSelected) R.color.text_white else R.color.text_black)
 
         binding.mpvTv.isSelected = mpvSelected
         binding.mpvTv.setTextColorRes(if (mpvSelected) R.color.text_white else R.color.text_black)

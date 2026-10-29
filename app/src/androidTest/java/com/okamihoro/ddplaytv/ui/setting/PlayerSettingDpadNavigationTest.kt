@@ -3,12 +3,14 @@
 import android.os.SystemClock
 import android.view.KeyEvent
 import androidx.fragment.app.Fragment
+import androidx.preference.ListPreference
 import androidx.preference.PreferenceGroupAdapter
 import androidx.preference.SwitchPreference
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
+import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.extension.isTelevisionUiMode
 import com.xyoye.user_component.R
 import com.xyoye.user_component.ui.activities.setting_player.SettingPlayerActivity
@@ -28,6 +30,27 @@ class PlayerSettingDpadNavigationTest {
     @Before
     fun useRemoteInputMode() {
         instrumentation.setInTouchMode(false)
+    }
+
+    @Test
+    fun retiredPlayerPreferenceIsNormalizedAndSurvivesRecreation() {
+        val original = PlayerConfig.getUsePlayerType()
+        PlayerConfig.putUsePlayerType(3)
+        try {
+            ActivityScenario.launch(SettingPlayerActivity::class.java).use { scenario ->
+                repeat(2) { pass ->
+                    if (pass > 0) scenario.recreate()
+                    scenario.onActivity {
+                        val preference = (active(it) as PlayerSettingFragment).findPreference<ListPreference>("player_type")!!
+                        assertEquals(listOf("2", "4"), preference.entryValues.map(CharSequence::toString))
+                        assertEquals("2", preference.value)
+                        assertEquals(2, PlayerConfig.getUsePlayerType())
+                    }
+                }
+            }
+        } finally {
+            PlayerConfig.putUsePlayerType(original)
+        }
     }
 
     @Test

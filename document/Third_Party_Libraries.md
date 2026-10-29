@@ -7,7 +7,6 @@
 | 组件 | 当前用途与位置 |
 | --- | --- |
 | AndroidX Media3 | `player_component` 的 Exo 内核、Session、UI、数据源和扩展；Cast 依赖不代表完整投屏已实现 |
-| libVLC | VLC 内核，`org.videolan.android:libvlc-all` |
 | libmpv / FFmpeg | mpv 内核，预编译库位于 `player_component/libs/<abi>/`，见 [原生库记录](mpv-build-notes.md) |
 | libass / 字体依赖 | ASS/SSA 与字体支持，位于播放器原生库目录 |
 | OpenCC | 简繁转换包装、词典与 `libopen_cc.so`，位于 `player_component` |

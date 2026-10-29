@@ -23,7 +23,7 @@
 ### 与源项目的差异（简述）
 
 - 以 TV 端交互为先（Leanback 启动入口、DPAD 焦点/遥控器导航），移动端依然可用
-- 播放内核调整：移除已弃用的 **IJKPlayer**，新增 **mpv**，与 **Media3 / VLC** 组成多内核方案
+- 播放内核调整：移除 **IJKPlayer / VLC**，使用 **Media3 / mpv** 双内核方案，默认 Media3
 - 字幕渲染增强：强化 **libass**（ASS/SSA）渲染能力，提升表现一致性
 - 媒体库扩展：新增 **115 Open / 百度网盘** 等来源；其中 115 Open 的 `access_token` / `refresh_token` 获取可参考 [OpenList 官方文档](https://www.oplist.org.cn/ecosystem/official_docs)
 - TV 交互：独立的 Leanback 入口、默认焦点与遥控器导航反馈
@@ -32,7 +32,7 @@
 
 ### 播放
 
-- 多内核：**Media3 / VLC / mpv**（可按设备兼容性与效果切换）
+- 双内核：**Media3 / mpv**（可按设备兼容性与效果切换）
 - 倍速播放与长按加速、进度记忆与续播
 - 轨道管理：音轨 / 字幕 / 弹幕
 - 对部分远端源提供本地 HTTP 代理，改善 Seek/Range 等兼容性问题

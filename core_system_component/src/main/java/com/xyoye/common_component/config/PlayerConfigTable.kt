@@ -2,8 +2,6 @@ package com.xyoye.common_component.config
 
 import com.xyoye.data_component.enums.LocalProxyMode
 import com.xyoye.data_component.enums.PlayerType
-import com.xyoye.data_component.enums.VLCAudioOutput
-import com.xyoye.data_component.enums.VLCHWDecode
 import com.xyoye.mmkv_annotation.MMKVFiled
 import com.xyoye.mmkv_annotation.MMKVKotlinClass
 
@@ -19,23 +17,7 @@ object PlayerConfigTable {
 
     // 使用播放器类型
     @MMKVFiled
-    val usePlayerType = PlayerType.TYPE_VLC_PLAYER.value
-
-    // VLC内核硬件加速
-    @MMKVFiled
-    val useVLCHWDecoder = VLCHWDecode.HW_ACCELERATION_AUTO.value
-
-    // VLC音频输出
-    @MMKVFiled
-    val useVLCAudioOutput = VLCAudioOutput.AUTO.value
-
-    // VLC音频兼容模式（自动降级）
-    @MMKVFiled
-    val vlcAudioCompatMode = false
-
-    // VLC音频能力是否已探测
-    @MMKVFiled
-    val vlcAudioCompatChecked = false
+    val usePlayerType = PlayerType.TYPE_EXO_PLAYER.value
 
     // 视频倍速
     @MMKVFiled
@@ -60,18 +42,6 @@ object PlayerConfigTable {
     // MPV 本地 HTTP 代理：开关策略（关闭 / 自动 / 强制）
     @MMKVFiled
     val mpvLocalProxyMode = LocalProxyMode.AUTO.value
-
-    // VLC 本地 HTTP 代理：Range 请求最小间隔（毫秒），用于降低上游风控触发概率
-    @MMKVFiled
-    val vlcProxyRangeMinIntervalMs = 1000
-
-    // VLC 本地 HTTP 代理：开关策略（关闭 / 自动 / 强制）
-    @MMKVFiled
-    val vlcLocalProxyMode = LocalProxyMode.AUTO.value
-
-    // VLC 代理拉流 TLS 降级：仅当用户显式开启时，允许信任所有证书 + 忽略主机名校验（强警告）
-    @MMKVFiled
-    val vlcProxyAllowInsecureTls = false
 
     // Media3(Exo) 本地 HTTP 代理：Range 请求最小间隔（毫秒），用于降低上游风控触发概率
     @MMKVFiled
