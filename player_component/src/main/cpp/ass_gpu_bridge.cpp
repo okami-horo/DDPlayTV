@@ -46,6 +46,25 @@ void main() {
     outColor = vec4(rgb, alpha);
 }
 )";
+constexpr const char *kVertexShaderSrcEs2 = R"(
+attribute vec2 aPosition;
+attribute vec2 aTexCoord;
+varying vec2 vTexCoord;
+void main() {
+    vTexCoord = aTexCoord;
+    gl_Position = vec4(aPosition, 0.0, 1.0);
+}
+)";
+constexpr const char *kFragmentShaderSrcEs2 = R"(
+precision mediump float;
+varying vec2 vTexCoord;
+uniform sampler2D uBitmap;
+uniform vec4 uColor;
+void main() {
+    float alpha = uColor.a * texture2D(uBitmap, vTexCoord).a;
+    gl_FragColor = vec4(uColor.rgb * alpha, alpha);
+}
+)";
 constexpr long long kDefaultEmbeddedChunkDurationMs = 5000;
 
 struct GpuContext {
@@ -193,6 +212,8 @@ std::vector<ScoredConfig> EnumerateAndScoreConfigs(EGLDisplay display, int windo
         candidate.config = cfg;
         candidate.gles_version = es3 ? 3 : 2;
         candidate.alpha = GetConfigAttr(display, cfg, EGL_ALPHA_SIZE);
+        // The subtitle surface must remain transparent over the video.
+        if (candidate.alpha < 8) continue;
         candidate.native_visual = GetConfigAttr(display, cfg, EGL_NATIVE_VISUAL_ID);
         candidate.recordable = GetConfigAttr(display, cfg, EGL_RECORDABLE_ANDROID);
         candidate.red = GetConfigAttr(display, cfg, EGL_RED_SIZE);
@@ -217,6 +238,11 @@ std::vector<ScoredConfig> EnumerateAndScoreConfigs(EGLDisplay display, int windo
         }
         candidate.score = score;
         scored.push_back(candidate);
+        if (es3 && es2) {
+            candidate.gles_version = 2;
+            candidate.score -= 4;
+            scored.push_back(candidate);
+        }
     }
 
 std::sort(scored.begin(), scored.end(), [](const ScoredConfig &a, const ScoredConfig &b) {
@@ -283,9 +309,10 @@ void DestroyAss(GpuContext *context) {
     }
 }
 
-void EnsureAss(GpuContext *context) {
+bool EnsureAss(GpuContext *context) {
     if (context->library == nullptr) {
         context->library = ass_library_init();
+        if (context->library == nullptr) return false;
         ass_set_message_cb(context->library, [](int level, const char *fmt, va_list args, void *) {
             char buffer[1024];
             if (fmt != nullptr) {
@@ -308,8 +335,10 @@ void EnsureAss(GpuContext *context) {
     }
     if (context->renderer == nullptr) {
         context->renderer = ass_renderer_init(context->library);
+        if (context->renderer == nullptr) return false;
         ass_set_font_scale(context->renderer, context->user_font_scale);
     }
+    return true;
 }
 
 void ConfigureFonts(GpuContext *context, const std::string &default_font,
@@ -360,8 +389,9 @@ GLuint CompileShader(GLenum type, const char *source) {
 
 bool EnsureProgram(GpuContext *context) {
     if (context->program != 0) return true;
-    GLuint vertex = CompileShader(GL_VERTEX_SHADER, kVertexShaderSrc);
-    GLuint fragment = CompileShader(GL_FRAGMENT_SHADER, kFragmentShaderSrc);
+    const bool es3 = context->gles_version >= 3;
+    GLuint vertex = CompileShader(GL_VERTEX_SHADER, es3 ? kVertexShaderSrc : kVertexShaderSrcEs2);
+    GLuint fragment = CompileShader(GL_FRAGMENT_SHADER, es3 ? kFragmentShaderSrc : kFragmentShaderSrcEs2);
     if (vertex == 0 || fragment == 0) {
         if (vertex != 0) glDeleteShader(vertex);
         if (fragment != 0) glDeleteShader(fragment);
@@ -370,6 +400,8 @@ bool EnsureProgram(GpuContext *context) {
     GLuint program = glCreateProgram();
     glAttachShader(program, vertex);
     glAttachShader(program, fragment);
+    glBindAttribLocation(program, 0, "aPosition");
+    glBindAttribLocation(program, 1, "aTexCoord");
     glLinkProgram(program);
     glDeleteShader(vertex);
     glDeleteShader(fragment);
@@ -401,20 +433,16 @@ bool EnsureProgram(GpuContext *context) {
 
 void DestroyEgl(GpuContext *context, bool destroy_context = true) {
     if (context == nullptr) return;
-    if (context->egl_display != EGL_NO_DISPLAY && context->egl_surface != EGL_NO_SURFACE) {
-        eglDestroySurface(context->egl_display, context->egl_surface);
-        context->egl_surface = EGL_NO_SURFACE;
-    }
     if (destroy_context && context->egl_display != EGL_NO_DISPLAY &&
         context->egl_context != EGL_NO_CONTEXT) {
         if (context->program != 0 || context->vertex_buffer != 0 ||
             !context->texture_pool.empty()) {
-            eglMakeCurrent(context->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                           context->egl_context);
-            if (context->program != 0) {
+            const bool current = eglMakeCurrent(context->egl_display, context->egl_surface,
+                                                context->egl_surface, context->egl_context) == EGL_TRUE;
+            if (current && context->program != 0) {
                 glDeleteProgram(context->program);
             }
-            if (context->vertex_buffer != 0) {
+            if (current && context->vertex_buffer != 0) {
                 glDeleteBuffers(1, &context->vertex_buffer);
             }
             if (!context->texture_pool.empty()) {
@@ -423,17 +451,22 @@ void DestroyEgl(GpuContext *context, bool destroy_context = true) {
                 for (const auto &entry : context->texture_pool) {
                     if (entry.id != 0) ids.push_back(entry.id);
                 }
-                if (!ids.empty()) {
+                if (current && !ids.empty()) {
                     glDeleteTextures(static_cast<GLsizei>(ids.size()), ids.data());
                 }
                 context->texture_pool.clear();
                 context->texture_pool_pos = 0;
             }
         }
+        eglMakeCurrent(context->egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglDestroyContext(context->egl_display, context->egl_context);
         context->egl_context = EGL_NO_CONTEXT;
         context->program = 0;
         context->vertex_buffer = 0;
+    }
+    if (context->egl_display != EGL_NO_DISPLAY && context->egl_surface != EGL_NO_SURFACE) {
+        eglDestroySurface(context->egl_display, context->egl_surface);
+        context->egl_surface = EGL_NO_SURFACE;
     }
     if (destroy_context && context->egl_display != EGL_NO_DISPLAY) {
         eglTerminate(context->egl_display);
@@ -442,6 +475,7 @@ void DestroyEgl(GpuContext *context, bool destroy_context = true) {
     context->uniform_color = -1;
     context->uniform_sampler = -1;
     context->egl_config = nullptr;
+    context->pending_invalidate = true;
 }
 
 bool InitEglAndSurface(GpuContext *context) {
@@ -550,6 +584,20 @@ bool EnsureSurface(GpuContext *context) {
     return EnsureProgram(context);
 }
 
+bool ClearSurface(GpuContext *context) {
+    context->pending_invalidate = true;
+    // Clearing must not recreate a destroyed surface or discard subtitle events.
+    if (!MakeCurrent(context)) return false;
+    glViewport(0, 0, context->width, context->height);
+    glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
+    glClear(GL_COLOR_BUFFER_BIT);
+    if (eglSwapBuffers(context->egl_display, context->egl_surface) != EGL_TRUE) {
+        LogError(FormatEglError("Failed to submit transparent subtitle frame").c_str());
+        return false;
+    }
+    return true;
+}
+
 void WriteRenderMetrics(JNIEnv *env, jlongArray metrics_out, jlong render_ms, jlong upload_ms,
                         jlong composite_ms) {
     if (metrics_out == nullptr) {
@@ -588,7 +636,9 @@ GpuContext::TextureEntry &AcquireTexture(GpuContext *context, int width, int hei
         entry.params_set = true;
     }
     if (entry.width != width || entry.height != height) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE,
+        const bool es3 = context->gles_version >= 3;
+        glTexImage2D(GL_TEXTURE_2D, 0, es3 ? GL_R8 : GL_ALPHA, width, height, 0,
+                     es3 ? GL_RED : GL_ALPHA, GL_UNSIGNED_BYTE,
                      nullptr);
         entry.width = width;
         entry.height = height;
@@ -666,6 +716,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeAttachSurface(
         LogError("Failed to set up EGL surface for GPU pipeline");
         return JNI_FALSE;
     }
+    if (!ClearSurface(context)) return JNI_FALSE;
     LogInfo("GPU surface attached");
     return JNI_TRUE;
 }
@@ -700,7 +751,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeLoadTrack(
     auto *context = reinterpret_cast<GpuContext *>(handle);
     if (context == nullptr) return JNI_FALSE;
     std::lock_guard<std::mutex> guard(context->mutex);
-    EnsureAss(context);
+    if (!EnsureAss(context)) return JNI_FALSE;
     const std::string track_path = JStringToUtf8(env, path);
     const auto fontDirectories = JObjectArrayToStrings(env, font_dirs);
     const std::string defaultFontPath = JStringToUtf8(env, default_font);
@@ -709,17 +760,21 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeLoadTrack(
         ass_free_track(context->track);
         context->track = nullptr;
     }
+    ClearSurface(context);
     context->track = ass_read_file(context->library, track_path.c_str(), nullptr);
-    if (context->track == nullptr) {
+    if (context->track == nullptr || context->track->n_events == 0) {
+        if (context->track != nullptr) ass_free_track(context->track);
+        context->track = nullptr;
         LogError("Failed to load subtitle track for GPU pipeline");
         return JNI_FALSE;
     }
     UpdateFrameSizeIfNeeded(context);
+    context->pending_invalidate = true;
     LogInfo("GPU subtitle track loaded");
     return JNI_TRUE;
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JNIEXPORT jboolean JNICALL
 Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeInitEmbeddedTrack(
     JNIEnv *env,
     jobject /*thiz*/,
@@ -728,9 +783,9 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeInitEmbeddedTrack(
     jobjectArray font_dirs,
     jstring default_font) {
     auto *context = reinterpret_cast<GpuContext *>(handle);
-    if (context == nullptr) return;
+    if (context == nullptr) return JNI_FALSE;
     std::lock_guard<std::mutex> guard(context->mutex);
-    EnsureAss(context);
+    if (!EnsureAss(context)) return JNI_FALSE;
     const auto fontDirectories = JObjectArrayToStrings(env, font_dirs);
     const std::string defaultFontPath = JStringToUtf8(env, default_font);
     ConfigureFonts(context, defaultFontPath, fontDirectories);
@@ -738,15 +793,17 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeInitEmbeddedTrack(
         ass_free_track(context->track);
         context->track = nullptr;
     }
+    ClearSurface(context);
     context->track = ass_new_track(context->library);
     if (context->track == nullptr) {
         LogError("Failed to create embedded SSA/ASS track");
-        return;
+        return JNI_FALSE;
     }
     if (codec_private != nullptr) {
         const jsize length = env->GetArrayLength(codec_private);
         if (length > 0) {
             jbyte *bytes = env->GetByteArrayElements(codec_private, nullptr);
+            if (bytes == nullptr) return JNI_FALSE;
             ass_process_codec_private(context->track,
                                       reinterpret_cast<char *>(bytes),
                                       length);
@@ -756,6 +813,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeInitEmbeddedTrack(
     UpdateFrameSizeIfNeeded(context);
     context->pending_invalidate = true;
     LogInfo("Embedded SSA/ASS track initialized");
+    return JNI_TRUE;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -778,6 +836,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeAppendEmbeddedChunk(
         return;
     }
     jbyte *bytes = env->GetByteArrayElements(data, nullptr);
+    if (bytes == nullptr) return;
     const long long safe_duration = duration_ms > 0 ? duration_ms : kDefaultEmbeddedChunkDurationMs;
     ass_process_chunk(context->track,
                       reinterpret_cast<char *>(bytes),
@@ -799,6 +858,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeFlushEmbeddedEvents(
         ass_flush_events(context->track);
         context->pending_invalidate = true;
     }
+    ClearSurface(context);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -812,6 +872,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeClearEmbeddedTrack(
         ass_free_track(context->track);
         context->track = nullptr;
     }
+    ClearSurface(context);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -850,7 +911,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
         render_start = std::chrono::steady_clock::now();
     }
     ASS_Image *img = ass_render_frame(context->renderer, context->track,
-                                      static_cast<int>(subtitle_pts_ms), &change);
+                                      static_cast<long long>(subtitle_pts_ms), &change);
     std::chrono::steady_clock::time_point render_end;
     if (collect_metrics) {
         render_end = std::chrono::steady_clock::now();
@@ -889,7 +950,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
                   (static_cast<float>(context->user_vertical_offset_percent) / 100.0F);
 
     for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
-        if (cur->w <= 0 || cur->h <= 0) continue;
+        if (cur->w <= 0 || cur->h <= 0 || cur->bitmap == nullptr || cur->stride < cur->w) continue;
         const float base_alpha = static_cast<float>(AssAlphaToAndroid(cur->color)) / 255.0F;
         const float final_alpha = base_alpha * context->user_alpha;
         if (final_alpha <= 0.0F) continue;
@@ -908,7 +969,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
                 glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
             }
         } else {
-            const size_t required = static_cast<size_t>(cur->w * cur->h);
+            const size_t required = static_cast<size_t>(cur->w) * static_cast<size_t>(cur->h);
             if (context->upload_buffer.size() < required) {
                 context->upload_buffer.resize(required);
             }
@@ -918,7 +979,8 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
                 std::memcpy(coverage + static_cast<size_t>(y * cur->w), src_row,
                             static_cast<size_t>(cur->w));
             }
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h, GL_RED, GL_UNSIGNED_BYTE,
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h,
+                            context->gles_version >= 3 ? GL_RED : GL_ALPHA, GL_UNSIGNED_BYTE,
                             coverage);
         }
         if (collect_metrics) {
@@ -972,7 +1034,12 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     if (collect_metrics) {
         swap_start = std::chrono::steady_clock::now();
     }
-    eglSwapBuffers(context->egl_display, context->egl_surface);
+    if (glGetError() != GL_NO_ERROR ||
+        eglSwapBuffers(context->egl_display, context->egl_surface) != EGL_TRUE) {
+        context->pending_invalidate = true;
+        LogError(FormatEglError("Failed to render or submit subtitle frame").c_str());
+        return JNI_FALSE;
+    }
     if (collect_metrics) {
         const auto swap_end = std::chrono::steady_clock::now();
         composite_ms +=
@@ -997,14 +1064,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeFlush(
         return;
     }
     std::lock_guard<std::mutex> guard(context->mutex);
-    if (context->egl_display != EGL_NO_DISPLAY && context->egl_surface != EGL_NO_SURFACE &&
-        context->egl_context != EGL_NO_CONTEXT) {
-        MakeCurrent(context);
-        glFinish();
-        LogInfo("GPU pipeline flush requested");
-        return;
-    }
-    LogInfo("GPU pipeline flush requested");
+    ClearSurface(context);
 }
 
 extern "C" JNIEXPORT void JNICALL

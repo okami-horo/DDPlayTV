@@ -26,18 +26,24 @@ class LibassSsaStreamDecoder(
     private val format: Format,
     private val sinkProvider: () -> EmbeddedSubtitleSink?
 ) : SimpleDecoder<SubtitleInputBuffer, SubtitleOutputBuffer, SubtitleDecoderException>(
-        INPUT_BUFFER_POOL,
-        OUTPUT_BUFFER_POOL,
+        Array(BUFFER_POOL_SIZE) { SubtitleInputBuffer() },
+        Array<SubtitleOutputBuffer>(BUFFER_POOL_SIZE) {
+            object : SubtitleOutputBuffer() {
+                override fun release() = clear()
+            }
+        },
     ),
     SubtitleDecoder {
     private val decoderName = "LibassSsaStreamDecoder"
     private val decodeLogCounter = AtomicInteger(0)
     private val sinkMissLogCounter = AtomicInteger(0)
     private var sampleRelativeAnchorUs: Long? = null
+    private var activeSink: EmbeddedSubtitleSink? = null
 
     init {
         setInitialInputBufferSize(INITIAL_INPUT_BUFFER_SIZE)
         val sink = sinkProvider()
+        activeSink = sink
         val codecPrivate = buildCodecPrivateForLibass(format.initializationData)
         sink?.onFormat(codecPrivate)
         if (PlayerInitializer.isPrintLog) {
@@ -51,6 +57,12 @@ class LibassSsaStreamDecoder(
     }
 
     override fun getName(): String = decoderName
+
+    override fun release() {
+        super.release()
+        activeSink?.onRelease()
+        activeSink = null
+    }
 
     override fun setPositionUs(positionUs: Long) {
         sampleRelativeAnchorUs = null
@@ -68,9 +80,15 @@ class LibassSsaStreamDecoder(
         outputBuffer: SubtitleOutputBuffer,
         reset: Boolean
     ): SubtitleDecoderException? {
+        val sink = sinkProvider()
+        if (sink !== activeSink) {
+            activeSink?.onRelease()
+            activeSink = sink
+            sink?.onFormat(buildCodecPrivateForLibass(format.initializationData))
+        }
         if (reset) {
             sampleRelativeAnchorUs = null
-            sinkProvider()?.onFlush()
+            sink?.onFlush()
             if (PlayerInitializer.isPrintLog && shouldLog(decodeLogCounter.incrementAndGet())) {
                 LogFacade.d(LogModule.PLAYER, LOG_TAG, "decode reset=true")
             }
@@ -80,7 +98,6 @@ class LibassSsaStreamDecoder(
         if (payload.isNotEmpty()) {
             val normalized = normalizeMedia3MatroskaSample(payload)
             val sinkTimeUs = normalizeSampleTimeUs(inputBuffer.timeUs, inputBuffer.subsampleOffsetUs)
-            val sink = sinkProvider()
             sink?.onSample(normalized.data, sinkTimeUs, normalized.durationUs)
             if (PlayerInitializer.isPrintLog && shouldLog(decodeLogCounter.incrementAndGet())) {
                 LogFacade.d(
@@ -315,6 +332,7 @@ class LibassSsaStreamDecoder(
 
         private const val SSA_TIMECODE_LENGTH = 10
         private const val SSA_TIMECODE_LAST_VALUE_SCALING_FACTOR = 10_000L
+
         // Media3 ExoPlayer anchors renderer timestamps at a large positive base (~1e12 us).
         // SubtitleInputBuffer.timeUs includes this base, while our GPU renderer clock uses
         // player window position. Infer and subtract the anchor for sample-relative timelines.
@@ -328,20 +346,6 @@ class LibassSsaStreamDecoder(
         private val FORMAT_PREFIX = FORMAT_PREFIX_TEXT.toByteArray(Charsets.UTF_8)
         private val EVENTS_HEADER = "\n[Events]\n".toByteArray(Charsets.UTF_8)
         private val NEWLINE = "\n".toByteArray(Charsets.UTF_8)
-
-        private val INPUT_BUFFER_POOL: Array<SubtitleInputBuffer> =
-            Array(BUFFER_POOL_SIZE) { SubtitleInputBuffer() }
-        private val OUTPUT_BUFFER_POOL: Array<SubtitleOutputBuffer> =
-            Array(BUFFER_POOL_SIZE) {
-                // Keep pool component type as SubtitleOutputBuffer to avoid ArrayStoreException when
-                // SimpleDecoder replaces placeholders via createOutputBuffer().
-                // Placeholder entries; they are replaced in SimpleDecoder's constructor via createOutputBuffer().
-                object : SubtitleOutputBuffer() {
-                    override fun release() {
-                        clear()
-                    }
-                }
-            }
     }
 
     private fun createDecoderOutputBuffer(): SubtitleOutputBuffer =

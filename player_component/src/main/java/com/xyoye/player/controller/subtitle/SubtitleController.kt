@@ -5,6 +5,7 @@ import androidx.media3.common.util.UnstableApi
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.controller.video.InterControllerView
+import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.player.wrapper.InterSubtitleController
 import com.xyoye.subtitle.MixedSubtitle
 import com.xyoye.subtitle.SubtitleType
@@ -68,6 +69,7 @@ class SubtitleController(
     }
 
     override fun setUserSubtitleVisible(visible: Boolean) {
+        SubtitleRendererRegistry.current()?.setVisible(visible)
         if (userSubtitleVisible == visible) {
             return
         }

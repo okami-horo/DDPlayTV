@@ -28,6 +28,35 @@ class Media3SubtitleCompatibilityTest {
     private lateinit var player: ExoPlayer
 
     @Test
+    fun disablingAndReenablingText_releasesAndRecreatesEmbeddedTrack() {
+        val sink = RecordingSink()
+        withPlayer(sink, parseSubtitles = false) { player ->
+            await { sink.samples.any { it.text.contains("Before seek") } }
+            instrumentation.runOnMainSync {
+                player.pause()
+                player.trackSelectionParameters =
+                    player.trackSelectionParameters
+                        .buildUpon()
+                        .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+                        .build()
+            }
+            await { sink.releases.get() == 1 }
+            sink.samples.clear()
+            instrumentation.runOnMainSync {
+                player.trackSelectionParameters =
+                    player.trackSelectionParameters
+                        .buildUpon()
+                        .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                        .build()
+                player.seekTo(0)
+                player.play()
+            }
+            await { sink.samples.any { it.text.contains("Before seek") } }
+            assertTrue(sink.formats.get() >= 2)
+        }
+    }
+
+    @Test
     fun embeddedAssReachesLibassBridgeAfterForwardAndBackwardSeek() {
         val sink = RecordingSink()
         withPlayer(sink, parseSubtitles = false) { player ->
@@ -119,8 +148,11 @@ class Media3SubtitleCompatibilityTest {
         @Volatile var codecPrivate: String? = null
         val samples = CopyOnWriteArrayList<Sample>()
         val flushes = AtomicInteger()
+        val releases = AtomicInteger()
+        val formats = AtomicInteger()
 
         override fun onFormat(codecPrivate: ByteArray?) {
+            formats.incrementAndGet()
             this.codecPrivate = codecPrivate?.toString(Charsets.UTF_8)
         }
 
@@ -136,7 +168,9 @@ class Media3SubtitleCompatibilityTest {
             flushes.incrementAndGet()
         }
 
-        override fun onRelease() = Unit
+        override fun onRelease() {
+            releases.incrementAndGet()
+        }
     }
 
     private data class Sample(

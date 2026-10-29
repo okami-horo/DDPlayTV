@@ -27,7 +27,7 @@ class AssGpuNativeBridge {
         surface: Surface?,
         target: SubtitleOutputTarget
     ): Boolean {
-        if (!isReady) return false
+        if (!isReady || surface?.isValid != true) return false
         val vsyncId = target.vsyncId ?: 0L
         return nativeAttachSurface(
             handle,
@@ -96,19 +96,13 @@ class AssGpuNativeBridge {
         path: String,
         fontDirs: List<String>,
         defaultFont: String?
-    ) {
-        if (!isReady) return
-        nativeLoadTrack(handle, path, fontDirs.toTypedArray(), defaultFont)
-    }
+    ): Boolean = isReady && nativeLoadTrack(handle, path, fontDirs.toTypedArray(), defaultFont)
 
     fun initEmbeddedTrack(
         codecPrivate: ByteArray?,
         fontDirs: List<String>,
         defaultFont: String?
-    ) {
-        if (!isReady) return
-        nativeInitEmbeddedTrack(handle, codecPrivate, fontDirs.toTypedArray(), defaultFont)
-    }
+    ): Boolean = isReady && nativeInitEmbeddedTrack(handle, codecPrivate, fontDirs.toTypedArray(), defaultFont)
 
     fun appendEmbeddedChunk(
         data: ByteArray,
@@ -192,14 +186,14 @@ class AssGpuNativeBridge {
         path: String,
         fontDirs: Array<String>,
         defaultFont: String?
-    )
+    ): Boolean
 
     private external fun nativeInitEmbeddedTrack(
         handle: Long,
         codecPrivate: ByteArray?,
         fontDirs: Array<String>,
         defaultFont: String?
-    )
+    ): Boolean
 
     private external fun nativeAppendEmbeddedChunk(
         handle: Long,

@@ -11,7 +11,6 @@ import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.subtitle.SubtitleFontManager
 import com.xyoye.data_component.enums.SubtitleFallbackReason
 import com.xyoye.data_component.enums.SubtitlePipelineFallbackReason
-import com.xyoye.data_component.enums.SubtitlePipelineMode
 import com.xyoye.data_component.enums.SubtitlePipelineStatus
 import com.xyoye.data_component.enums.SubtitleViewType
 import com.xyoye.player.info.PlayerInitializer
@@ -25,11 +24,13 @@ import com.xyoye.player.subtitle.gpu.SubtitlePipelineController
 import com.xyoye.player.subtitle.gpu.SubtitleRecoveryCoordinator
 import com.xyoye.player.subtitle.gpu.SubtitleSurfaceLifecycleHandler
 import com.xyoye.player.subtitle.ui.SubtitleSurfaceOverlay
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 
 @UnstableApi
@@ -52,6 +53,9 @@ internal class LibassGpuSubtitleSession(
             scope = sessionScope,
             pipelineErrorListener = ::onPipelineError,
             pipelineRecoveryListener = ::onRecoveryResult,
+            surfaceReadyListener = {
+                onMainThread { renderOnceIfPaused(environment.playerView?.getCurrentPosition() ?: 0L) }
+            },
         )
     private val fallbackController = SubtitleFallbackController(pipelineController)
     private val tracker = SubtitleOutputTargetTracker()
@@ -79,9 +83,12 @@ internal class LibassGpuSubtitleSession(
 
     private var choreographer: Choreographer? = null
     private var choreographerRunning = false
+    private var externalTrackRevision = 0L
+    private var released = false
 
     fun start() {
         attachOverlay()
+        setVisible(environment.subtitleController?.isUserSubtitleVisible() ?: true)
         gpuRenderer.updateOpacity(PlayerInitializer.Subtitle.alpha)
         gpuRenderer.updateFontScale(offsetPercentToScale(PlayerInitializer.Subtitle.fontScaleOffsetPercent))
         gpuRenderer.updateVerticalOffset(PlayerInitializer.Subtitle.verticalOffset)
@@ -90,6 +97,8 @@ internal class LibassGpuSubtitleSession(
     }
 
     fun release() {
+        released = true
+        externalTrackRevision++
         runCatching { stopFrameDriver() }
         runCatching { embeddedSink?.onRelease() }
         embeddedSink = null
@@ -108,23 +117,48 @@ internal class LibassGpuSubtitleSession(
         environment.clearUiReferences()
     }
 
-    fun loadExternalTrack(path: String) {
-        embeddedSinkController?.setEnabled(false)
-        val fonts = buildFontDirectories(environment.context)
-        val defaultFont = SubtitleFontManager.getDefaultFontPath(environment.context)
-        gpuRenderer.loadTrack(path, fonts, defaultFont)
-        gpuRenderer.frameCleaner.onTrackChanged()
-        recoveryCoordinator.attemptRecovery(SubtitlePipelineFallbackReason.TRACK_CHANGED)
-        val positionMs = environment.playerView?.getCurrentPosition() ?: 0L
-        renderOnceIfPaused(positionMs)
+    suspend fun loadExternalTrack(path: String): Boolean =
+        withContext(Dispatchers.Main.immediate) {
+            if (released) return@withContext false
+            val revision = ++externalTrackRevision
+            embeddedSinkController?.setEnabled(false)
+            val fonts = buildFontDirectories(environment.context)
+            val defaultFont = SubtitleFontManager.getDefaultFontPath(environment.context)
+            val loaded =
+                try {
+                    gpuRenderer.loadTrack(path, fonts, defaultFont)
+                } catch (cancelled: CancellationException) {
+                    if (!released && externalTrackRevision == revision) clearActiveTrack()
+                    throw cancelled
+                }
+            if (released || externalTrackRevision != revision) return@withContext false
+            if (!loaded) {
+                clearActiveTrack()
+                return@withContext false
+            }
+            recoveryCoordinator.attemptRecovery(SubtitlePipelineFallbackReason.TRACK_CHANGED)
+            renderOnceIfPaused(environment.playerView?.getCurrentPosition() ?: 0L)
+            true
+        }
+
+    fun setVisible(visible: Boolean) {
+        onMainThread {
+            gpuRenderer.setVisible(visible)
+            if (visible) renderOnce(environment.playerView?.getCurrentPosition() ?: 0L)
+        }
     }
 
     fun clearActiveTrack() {
+        onMainThread { clearActiveTrackOnMainThread() }
+    }
+
+    private fun clearActiveTrackOnMainThread() {
+        externalTrackRevision++
+        gpuRenderer.clearEmbeddedTrack()
         // External subtitle removed: allow embedded sink again and restore embedded-track mode.
         embeddedSinkController?.setEnabled(true)
         // Re-register the sink to replay cached embedded ASS data when supported (e.g. mpv bridge).
         kernelBridge?.setEmbeddedSubtitleSink(embeddedSink)
-        gpuRenderer.frameCleaner.onTrackChanged()
         recoveryCoordinator.attemptRecovery(SubtitlePipelineFallbackReason.TRACK_CHANGED)
         val positionMs = environment.playerView?.getCurrentPosition() ?: 0L
         renderOnceIfPaused(positionMs)
@@ -132,6 +166,7 @@ internal class LibassGpuSubtitleSession(
 
     fun updateOpacity(alphaPercent: Int) {
         gpuRenderer.updateOpacity(alphaPercent)
+        onMainThread { renderOnceIfPaused(environment.playerView?.getCurrentPosition() ?: 0L) }
     }
 
     fun updateFontScaleOffset(offsetPercent: Int) {
@@ -296,19 +331,6 @@ internal class LibassGpuSubtitleSession(
         val overlay =
             SubtitleSurfaceOverlay(environment.context).apply {
                 bindPlayerView(playerView)
-                setOnFrameSizeChanged { width, height ->
-                    val surface = holder.surface
-                    if (surface != null && surface.isValid) {
-                        lifecycleHandler.onSurfaceSizeChanged(
-                            surface = surface,
-                            viewType = SubtitleViewType.SurfaceView,
-                            width = width,
-                            height = height,
-                            rotation = 0,
-                            telemetryEnabled = true,
-                        )
-                    }
-                }
                 setSurfaceStateListener(
                     object : SubtitleSurfaceOverlay.SurfaceStateListener {
                         override fun onSurfaceDestroyed() {
@@ -360,7 +382,9 @@ internal class LibassGpuSubtitleSession(
         val defaultFont = SubtitleFontManager.getDefaultFontPath(environment.context)
         val sink =
             SwitchableEmbeddedSubtitleSink(
-                LibassEmbeddedSubtitleSink(gpuRenderer, fonts, defaultFont),
+                LibassEmbeddedSubtitleSink(gpuRenderer, fonts, defaultFont) {
+                    onMainThread { renderOnceIfPaused(environment.playerView?.getCurrentPosition() ?: 0L) }
+                },
             )
         embeddedSink = sink
         embeddedSinkController = sink
@@ -370,6 +394,14 @@ internal class LibassGpuSubtitleSession(
     private fun buildFontDirectories(context: android.content.Context): List<String> {
         SubtitleFontManager.ensureDefaultFont(context)
         return SubtitleFontManager.getFontsDirectoryPath(context)?.let { listOf(it) } ?: emptyList()
+    }
+
+    private fun onMainThread(action: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            if (!released) action()
+        } else {
+            mainHandler.post { if (!released) action() }
+        }
     }
 
     private fun renderOnceIfPaused(positionMs: Long) {

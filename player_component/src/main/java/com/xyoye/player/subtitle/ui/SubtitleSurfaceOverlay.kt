@@ -32,7 +32,6 @@ class SubtitleSurfaceOverlay
             private const val LOG_TAG = "SubtitleSurface"
         }
 
-        private var frameSizeListener: ((Int, Int) -> Unit)? = null
         private var surfaceStateListener: SurfaceStateListener? = null
         private var playerView: DanDanVideoPlayer? = null
         private var anchorView: View? = null
@@ -59,10 +58,6 @@ class SubtitleSurfaceOverlay
             }
             refreshAnchor()
             post { alignToRenderView() }
-        }
-
-        fun setOnFrameSizeChanged(listener: (width: Int, height: Int) -> Unit) {
-            frameSizeListener = listener
         }
 
         fun setSurfaceStateListener(listener: SurfaceStateListener?) {
@@ -94,7 +89,6 @@ class SubtitleSurfaceOverlay
             width: Int,
             height: Int
         ) {
-            frameSizeListener?.invoke(width, height)
             surfaceStateListener?.onSurfaceChanged(holder.surface, width, height)
         }
 
@@ -208,7 +202,6 @@ class SubtitleSurfaceOverlay
             }
             if (changed) {
                 setLayoutParams(layoutParams)
-                frameSizeListener?.invoke(layoutParams.width, layoutParams.height)
             }
         }
 

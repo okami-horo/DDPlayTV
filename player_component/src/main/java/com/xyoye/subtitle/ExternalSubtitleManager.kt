@@ -10,11 +10,14 @@ import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.utils.PathHelper
 import com.xyoye.common_component.utils.getFileExtension
 import com.xyoye.common_component.weight.ToastCenter
+import com.xyoye.player.subtitle.backend.SubtitleRenderer
 import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.player_component.utils.PlayerErrorReporter
 import com.xyoye.subtitle.exception.FatalParsingException
 import com.xyoye.subtitle.format.FormatFactory
 import com.xyoye.subtitle.info.TimedTextObject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
@@ -32,37 +35,42 @@ class ExternalSubtitleManager(
     private val unsupportedFormatCallback: ((String, SubtitleRendererBackend) -> Unit)? = null
 ) {
     private var mTimedTextObject: TimedTextObject? = null
-    private var handledByBackend = false
+    private var backendOwner: SubtitleRenderer? = null
 
-    fun loadSubtitle(subtitlePath: String): Boolean {
-        val resolvedPath = resolveToLocalPath(subtitlePath) ?: return false
-        handledByBackend = false
+    suspend fun loadSubtitle(subtitlePath: String): Boolean {
+        val resolvedPath = withContext(Dispatchers.IO) { resolveToLocalPath(subtitlePath) } ?: return false
+        backendOwner = null
         val renderer = SubtitleRendererRegistry.current()
         if (renderer != null) {
             val extension = getFileExtension(resolvedPath).lowercase(Locale.ROOT)
-            if (renderer.supportsExternalTrack(extension) && renderer.loadExternalSubtitle(resolvedPath)) {
-                handledByBackend = true
-                mTimedTextObject = null
-                return true
-            } else if (!renderer.supportsExternalTrack(extension)) {
+            if (renderer.supportsExternalTrack(extension)) {
+                return withContext(Dispatchers.Main.immediate) {
+                    val loaded = renderer.loadExternalSubtitle(resolvedPath)
+                    if (loaded) {
+                        backendOwner = renderer
+                        mTimedTextObject = null
+                    } else {
+                        ToastCenter.showOriginalToast("加载 ASS/SSA 字幕失败，请检查文件内容")
+                    }
+                    loaded
+                }
+            } else if (FormatFactory.findFormat(resolvedPath) == null) {
                 notifyUnsupportedFormat(extension, renderer.backend)
             }
         }
-        mTimedTextObject = parserSource(resolvedPath)
+        mTimedTextObject = withContext(Dispatchers.IO) { parserSource(resolvedPath) }
         return mTimedTextObject != null
     }
 
     fun clearBackendSubtitle(): Boolean {
-        if (!handledByBackend) {
-            return false
-        }
-        SubtitleRendererRegistry.current()?.clearExternalSubtitle()
-        handledByBackend = false
+        val renderer = backendOwner ?: return false
+        backendOwner = null
+        renderer.clearExternalSubtitle()
         return true
     }
 
     fun getSubtitle(position: Long): MixedSubtitle? {
-        if (handledByBackend) {
+        if (backendOwner != null) {
             return null
         }
         if (mTimedTextObject == null) {

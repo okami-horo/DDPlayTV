@@ -15,16 +15,15 @@ import java.util.concurrent.atomic.AtomicInteger
 class LibassEmbeddedSubtitleSink(
     private val renderer: AssGpuRenderer,
     private val fontDirectories: List<String>,
-    private val defaultFont: String?
+    private val defaultFont: String?,
+    private val onContentChanged: () -> Unit = {}
 ) : EmbeddedSubtitleSink {
     private val lock = Any()
-    private var released = false
     private var initialized = false
     private val sampleLogCounter = AtomicInteger(0)
 
     override fun onFormat(codecPrivate: ByteArray?) {
         synchronized(lock) {
-            if (released) return
             renderer.initEmbeddedTrack(codecPrivate, fontDirectories, defaultFont)
             initialized = true
             if (PlayerInitializer.isPrintLog) {
@@ -43,7 +42,6 @@ class LibassEmbeddedSubtitleSink(
         durationUs: Long?
     ) {
         synchronized(lock) {
-            if (released) return
             if (!initialized) {
                 renderer.initEmbeddedTrack(null, fontDirectories, defaultFont)
                 initialized = true
@@ -51,6 +49,7 @@ class LibassEmbeddedSubtitleSink(
             val timeMs = TimeUnit.MICROSECONDS.toMillis(timeUs)
             val durationMs = durationUs?.let { TimeUnit.MICROSECONDS.toMillis(it) }
             renderer.appendEmbeddedSample(data, timeMs, durationMs)
+            onContentChanged()
             if (PlayerInitializer.isPrintLog && shouldLog(sampleLogCounter.incrementAndGet())) {
                 LogFacade.d(
                     LogModule.PLAYER,
@@ -63,8 +62,8 @@ class LibassEmbeddedSubtitleSink(
 
     override fun onFlush() {
         synchronized(lock) {
-            if (released) return
             renderer.flushEmbeddedEvents()
+            onContentChanged()
             if (PlayerInitializer.isPrintLog) {
                 LogFacade.d(LogModule.PLAYER, LOG_TAG, "embedded sink onFlush")
             }
@@ -73,9 +72,8 @@ class LibassEmbeddedSubtitleSink(
 
     override fun onRelease() {
         synchronized(lock) {
-            if (released) return
             renderer.clearEmbeddedTrack()
-            released = true
+            initialized = false
             if (PlayerInitializer.isPrintLog) {
                 LogFacade.d(LogModule.PLAYER, LOG_TAG, "embedded sink onRelease")
             }

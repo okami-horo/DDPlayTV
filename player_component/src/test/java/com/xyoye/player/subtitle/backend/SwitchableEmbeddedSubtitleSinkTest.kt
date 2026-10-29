@@ -6,6 +6,34 @@ import org.junit.Test
 
 class SwitchableEmbeddedSubtitleSinkTest {
     @Test
+    fun releaseWhileMuted_dropsCachedFormatWithoutClearingExternalTrack() {
+        val delegate = RecordingEmbeddedSubtitleSink()
+        val sink = SwitchableEmbeddedSubtitleSink(delegate)
+        sink.onFormat("old track".toByteArray())
+        sink.setEnabled(false)
+
+        sink.onRelease()
+        sink.setEnabled(true)
+
+        assertEquals(0, delegate.releaseCount)
+        assertEquals(1, delegate.receivedFormats.size)
+    }
+
+    @Test
+    fun releaseThenNewFormat_startsAnotherEmbeddedTrack() {
+        val delegate = RecordingEmbeddedSubtitleSink()
+        val sink = SwitchableEmbeddedSubtitleSink(delegate)
+        sink.onFormat("first".toByteArray())
+        sink.onRelease()
+        sink.onFormat("second".toByteArray())
+        sink.onSample("event".toByteArray(), 1_000L, 2_000L)
+
+        assertEquals(1, delegate.releaseCount)
+        assertEquals(2, delegate.receivedFormats.size)
+        assertEquals(1, delegate.receivedSamples.size)
+    }
+
+    @Test
     fun onFormat_replaysCachedCodecPrivateWhenReEnabled() {
         val delegate = RecordingEmbeddedSubtitleSink()
         val sink = SwitchableEmbeddedSubtitleSink(delegate)
@@ -40,13 +68,19 @@ class SwitchableEmbeddedSubtitleSinkTest {
 
         assertEquals(1, delegate.receivedSamples.size)
         assertEquals(1, delegate.flushCount)
-        assertTrue(delegate.receivedSamples.single().first.contentEquals(payload))
+        assertTrue(
+            delegate.receivedSamples
+                .single()
+                .first
+                .contentEquals(payload)
+        )
     }
 
     private class RecordingEmbeddedSubtitleSink : EmbeddedSubtitleSink {
         val receivedFormats = mutableListOf<ByteArray?>()
         val receivedSamples = mutableListOf<Triple<ByteArray, Long, Long?>>()
         var flushCount: Int = 0
+        var releaseCount: Int = 0
 
         override fun onFormat(codecPrivate: ByteArray?) {
             receivedFormats += codecPrivate?.copyOf()
@@ -64,6 +98,8 @@ class SwitchableEmbeddedSubtitleSinkTest {
             flushCount++
         }
 
-        override fun onRelease() = Unit
+        override fun onRelease() {
+            releaseCount++
+        }
     }
 }

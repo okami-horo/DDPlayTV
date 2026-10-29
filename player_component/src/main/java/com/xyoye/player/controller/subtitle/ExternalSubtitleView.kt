@@ -19,6 +19,7 @@ import com.xyoye.subtitle.MixedSubtitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 
 /**
  * Created by xyoye on 2023/3/23
@@ -151,6 +152,8 @@ class ExternalSubtitleView(
         }
         mTrackSelected = selected
         if (!selected) {
+            mLoadSubtitleJob?.cancel()
+            mSubtitleLoading = false
             mFindSubtitleJob?.cancel()
             lifecycleScope.launch(Dispatchers.Main) {
                 sendEmptySubtitle()
@@ -176,18 +179,20 @@ class ExternalSubtitleView(
         mSubtitleLoaded = false
         mSubtitleLoading = true
         mLoadSubtitleJob =
-            lifecycleScope.launch(Dispatchers.IO) {
-            // 设置加载状态未完成
+            lifecycleScope.launch(Dispatchers.Main) {
+                // 设置加载状态未完成
                 try {
                     // 释放旧的已加载的字幕数据
                     mSubtitleManager.release()
                     // 发送一条空字幕，用于清空上一条显示的字幕
-                    launch(Dispatchers.Main) { sendEmptySubtitle() }
+                    sendEmptySubtitle()
 
                     // 加载字幕
                     mSubtitleLoaded = mSubtitleManager.loadSubtitle(subtitlePath)
                 } finally {
-                    mSubtitleLoading = false
+                    if (coroutineContext[Job] === mLoadSubtitleJob) {
+                        mSubtitleLoading = false
+                    }
                 }
             }
     }

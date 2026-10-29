@@ -53,11 +53,19 @@ class LibassRendererBackend(
                 else -> false
             }
 
-    override fun loadExternalSubtitle(path: String): Boolean {
+    override suspend fun loadExternalSubtitle(path: String): Boolean {
         val current = session ?: return false
-        LogFacade.i(LogModule.PLAYER, TAG, "GPU libass track loaded: $path")
-        current.loadExternalTrack(path)
-        return true
+        val loaded = current.loadExternalTrack(path)
+        if (loaded) {
+            LogFacade.i(LogModule.PLAYER, TAG, "GPU libass track loaded: $path")
+        } else {
+            LogFacade.w(LogModule.PLAYER, TAG, "GPU libass track load failed: $path")
+        }
+        return loaded
+    }
+
+    override fun setVisible(visible: Boolean) {
+        session?.setVisible(visible)
     }
 
     override fun clearExternalSubtitle() {

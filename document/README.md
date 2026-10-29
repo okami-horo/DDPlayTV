@@ -11,6 +11,7 @@
 | 模块职责与依赖限制 | [模块治理](architecture/module_dependency_governance.md)、[构建门禁](architecture/architecture_governance_guardrails.md) |
 | 播放会话、资源所有权与恢复设计 | [设计与执行账本导航](../docs/superpowers/README.md) |
 | ASS/SSA 字幕渲染、偏移与 GPU 恢复 | [字幕渲染](player/subtitle-rendering.md) |
+| libass 接入缺口、同类项目比较与修复验收 | [libass 接入审查](player/libass-integration-audit.md) |
 | 简繁转换现状和字幕待实现需求 | [简繁转换](player/subtitle-language-conversion.md) |
 | 顺序续播的集成与 TV 验收 | [播放验证待办](player/playback-validation-followup.md) |
 | mpv 原生库与运行参数 | [产物来源与更新](mpv-build-notes.md)、[配置项](mpv_conf_supported_options.md) |

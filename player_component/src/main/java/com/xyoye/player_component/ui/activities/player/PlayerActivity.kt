@@ -585,6 +585,7 @@ class PlayerActivity :
             error?.message?.let { detail -> "libass subtitles degraded, recovery pending: $reason ($detail)" }
                 ?: "libass subtitles degraded, recovery pending: $reason"
         LogFacade.w(LogModule.PLAYER, TAG_SUBTITLE, message)
+        videoController.showMessage("字幕渲染失败，可尝试重新选择字幕或切换播放器内核")
     }
 
     private fun initListener() {

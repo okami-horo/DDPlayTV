@@ -6,12 +6,39 @@ import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @Media3Dependent("Prevent regressions that break libass SSA decoder initialization")
 class LibassSsaStreamDecoderTest {
+    @Test
+    fun concurrentDecoders_doNotShareInputBuffers() {
+        val first = createDecoder()
+        val second = createDecoder()
+        try {
+            assertNotSame(first.dequeueInputBuffer(), second.dequeueInputBuffer())
+        } finally {
+            first.release()
+            second.release()
+        }
+    }
+
+    @Test
+    fun release_notifiesTheSinkThatOwnedTheTrack() {
+        val first = TestEmbeddedSink()
+        val replacement = TestEmbeddedSink()
+        var activeSink: EmbeddedSubtitleSink = first
+        val decoder = LibassSsaStreamDecoder(Format.Builder().setSampleMimeType("text/x-ssa").build()) { activeSink }
+        activeSink = replacement
+
+        decoder.release()
+
+        assertEquals(1, first.releaseCount)
+        assertEquals(0, replacement.releaseCount)
+    }
+
     @Test
     fun constructor_initializesWithoutArrayStoreException() {
         val decoder =
@@ -160,6 +187,7 @@ class LibassSsaStreamDecoderTest {
 
     private class TestEmbeddedSink : EmbeddedSubtitleSink {
         var lastCodecPrivate: ByteArray? = null
+        var releaseCount = 0
 
         override fun onFormat(codecPrivate: ByteArray?) {
             lastCodecPrivate = codecPrivate
@@ -173,6 +201,8 @@ class LibassSsaStreamDecoderTest {
 
         override fun onFlush() = Unit
 
-        override fun onRelease() = Unit
+        override fun onRelease() {
+            releaseCount++
+        }
     }
 }

@@ -26,7 +26,11 @@ interface SubtitleRenderer {
 
     fun supportsExternalTrack(extension: String): Boolean
 
-    fun loadExternalSubtitle(path: String): Boolean
+    suspend fun loadExternalSubtitle(path: String): Boolean
+
+    fun setVisible(visible: Boolean) {
+        // The legacy views are managed by SubtitleController.
+    }
 
     /**
      * Clears any active external subtitle track owned by this renderer.

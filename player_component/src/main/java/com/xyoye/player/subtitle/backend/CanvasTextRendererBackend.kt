@@ -30,5 +30,5 @@ class CanvasTextRendererBackend : SubtitleRenderer {
 
     override fun supportsExternalTrack(extension: String) = false
 
-    override fun loadExternalSubtitle(path: String) = false
+    override suspend fun loadExternalSubtitle(path: String) = false
 }

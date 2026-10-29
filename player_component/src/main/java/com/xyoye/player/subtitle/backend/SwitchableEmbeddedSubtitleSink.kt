@@ -31,31 +31,25 @@ class SwitchableEmbeddedSubtitleSink(
     private var cachedCodecPrivate: ByteArray? = null
 
     override fun setEnabled(enabled: Boolean) {
-        val replayCodecPrivate: ByteArray?
-        val shouldReplayFormat: Boolean
         synchronized(lock) {
             val wasEnabled = this.enabled
             this.enabled = enabled
-            shouldReplayFormat = !wasEnabled && enabled && hasCachedFormat
-            replayCodecPrivate = cachedCodecPrivate?.copyOf()
-        }
-        if (shouldReplayFormat) {
-            delegate.onFormat(replayCodecPrivate)
+            if (!wasEnabled && enabled && hasCachedFormat) {
+                delegate.onFormat(cachedCodecPrivate?.copyOf())
+            }
         }
     }
 
     override fun isEnabled(): Boolean = enabled
 
     override fun onFormat(codecPrivate: ByteArray?) {
-        val shouldDispatch: Boolean
         val codecPrivateCopy = codecPrivate?.copyOf()
         synchronized(lock) {
             cachedCodecPrivate = codecPrivateCopy
             hasCachedFormat = true
-            shouldDispatch = enabled
-        }
-        if (shouldDispatch) {
-            delegate.onFormat(codecPrivateCopy)
+            if (enabled) {
+                delegate.onFormat(codecPrivateCopy)
+            }
         }
     }
 
@@ -64,17 +58,23 @@ class SwitchableEmbeddedSubtitleSink(
         timeUs: Long,
         durationUs: Long?
     ) {
-        if (!enabled) return
-        delegate.onSample(data, timeUs, durationUs)
+        synchronized(lock) {
+            if (enabled) delegate.onSample(data, timeUs, durationUs)
+        }
     }
 
     override fun onFlush() {
-        if (!enabled) return
-        delegate.onFlush()
+        synchronized(lock) {
+            if (enabled) delegate.onFlush()
+        }
     }
 
     override fun onRelease() {
-        // Always release underlying resources, even when muted.
-        delegate.onRelease()
+        synchronized(lock) {
+            hasCachedFormat = false
+            cachedCodecPrivate = null
+            // A muted embedded track must not clear the external track using the same renderer.
+            if (enabled) delegate.onRelease()
+        }
     }
 }
