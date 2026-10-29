@@ -2,6 +2,8 @@
 
 审查日期：2026-10-28；修复更新：2026-10-29。本文保留审查时的问题依据和后续验证，当前实现以本节修复状态及[字幕渲染](subtitle-rendering.md)为准，未进行库迁移。
 
+后续 mpv 已迁移到 Plezy AAR 的 `vo=mediacodec`，应用独立 libass 渲染库继续保留；本文历史 `mediacodec_embed`、GPU 视频路径及验证结果描述原审查版本。当前依赖与输出以 [mpv 打包记录](../mpv-build-notes.md)为准，迁移验证见[执行记录](../../docs/superpowers/plans/2026-10-29-plezy-mpv.md)，不将历史通过项自动算作新产物验收。
+
 ## 2026-10-29 修复状态
 
 | 问题 | 实际变更与证据 | 剩余边界 |

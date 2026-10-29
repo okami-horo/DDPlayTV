@@ -171,12 +171,16 @@ class TvDpadRewriteInstrumentedTest {
         }
     }
 
-    @Test fun playerPanelArrowsDoNotSeekAndBackReturnsToTheCallingSetting() {
+    @Test fun playerPanelArrowsDoNotSeekAndBackReturnsToTheCallingSetting() = verifyPlayerPanelNavigation(PlayerType.TYPE_EXO_PLAYER)
+
+    @Test fun mpvPlayerPanelSupportsDpadPauseResumeAndBack() = verifyPlayerPanelNavigation(PlayerType.TYPE_MPV_PLAYER)
+
+    private fun verifyPlayerPanelNavigation(kernel: PlayerType) {
         val fixture = File("/sdcard/Download/ddplaytv-lease-playback-long.mp4")
         assertTrue(fixture.isFile)
         val previousKernel = PlayerConfig.getUsePlayerType()
         val previousScale = PlayerInitializer.screenScale
-        PlayerConfig.putUsePlayerType(PlayerType.TYPE_EXO_PLAYER.value)
+        PlayerConfig.putUsePlayerType(kernel.value)
         try {
             val provider = ARouter.getInstance().navigation(PlaybackRequestService::class.java)
             val request =

@@ -1,5 +1,5 @@
 {
-  "module_count": 20,
+  "module_count": 22,
   "modules": [
     {
       "build_file": "app/build.gradle.kts",
@@ -310,6 +310,11 @@
           "configuration": "implementation",
           "module": ":repository:video_cache",
           "scope": "main"
+        },
+        {
+          "configuration": "implementation",
+          "module": ":repository:mpv",
+          "scope": "main"
         }
       ]
     },
@@ -522,6 +527,34 @@
       "build_file": "repository/video_cache/build.gradle.kts",
       "dir": "repository/video_cache",
       "name": ":repository:video_cache",
+      "project_dependencies": []
+    },
+    {
+      "build_file": "repository/mpv/build.gradle.kts",
+      "dir": "repository/mpv",
+      "name": ":repository:mpv",
+      "project_dependencies": [
+        {
+          "configuration": "compileOnly",
+          "module": ":repository:mpv_native",
+          "scope": "main"
+        },
+        {
+          "configuration": "runtimeOnly",
+          "module": ":repository:mpv_native",
+          "scope": "main"
+        },
+        {
+          "configuration": "testImplementation",
+          "module": ":repository:mpv_native",
+          "scope": "test"
+        }
+      ]
+    },
+    {
+      "build_file": "repository/mpv_native/build.gradle.kts",
+      "dir": "repository/mpv_native",
+      "name": ":repository:mpv_native",
       "project_dependencies": []
     }
   ],

@@ -66,14 +66,15 @@
 | :app | 5 个业务模块，以及 system、log、ui、contract、data；不直接依赖 network、database、storage 实现 |
 | :anime_component | 普通业务基础依赖 |
 | :local_component、:user_component、:storage_component | 普通业务基础依赖 |
-| :player_component | 普通业务基础依赖，以及 :repository:danmaku、:repository:panel_switch、:repository:video_cache |
+| :player_component | 普通业务基础依赖，以及 :repository:danmaku、:repository:panel_switch、:repository:video_cache、:repository:mpv |
 | :core_ui_component | contract、system、log、data，以及 :repository:immersion_bar |
 | :core_storage_component | contract、network、database、system、log、data，以及 :repository:seven_zip、:repository:thunder |
 | :core_network_component | system、log、data |
 | :core_database_component | system、data |
 | :core_system_component | contract、log、data |
 | :core_log_component、:core_contract_component | data |
-| :data_component、:repository、:repository:* | 无本工程 project 依赖 |
+| :repository:mpv | 仅 :repository:mpv_native；Java 包装层使用 compileOnly + runtimeOnly 隔离上游 Kotlin 元数据 |
+| :data_component、:repository、其余 :repository:* | 无本工程 project 依赖 |
 
 表中省略前缀的 core 名称均指对应 :core_*_component，data 指 :data_component。
 

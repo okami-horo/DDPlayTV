@@ -8,10 +8,12 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import android.view.Surface
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.xyoye.common_component.log.model.LogLevel
 import com.xyoye.player.kernel.impl.mpv.MpvNativeBridge
+import fi.iki.elonen.NanoHTTPD
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -19,11 +21,97 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 @RunWith(AndroidJUnit4::class)
 class MpvSurfaceLifecycleTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
+
+    @Test
+    fun embeddedAssSurvivesSeekAndSubtitleTrackDisable() {
+        val fixture = File(instrumentation.targetContext.cacheDir, "mpv-ass-compatibility.mkv")
+        instrumentation.context.assets.open("media3/subtitle-compatibility.mkv").use { input ->
+            fixture.outputStream().use { input.copyTo(it) }
+        }
+        val bridge = MpvNativeBridge()
+        val events = CopyOnWriteArrayList<MpvNativeBridge.Event>()
+        val (width, height) = videoSize(fixture)
+        val output = createOutput(width, height, AtomicInteger())
+        try {
+            bridge.setEventListener { events.add(it) }
+            initialize(bridge)
+            attach(bridge, output.surface)
+            load(bridge, fixture)
+            bridge.play()
+            await("ASS codec private", events) {
+                events.any { it is MpvNativeBridge.Event.SubtitleAssExtradata && it.value?.contains("[Script Info]") == true }
+            }
+            await("first ASS event", events) {
+                events.any { it is MpvNativeBridge.Event.SubtitleAssFull && it.value?.contains("Before seek") == true }
+            }
+            bridge.pause()
+            bridge.seek(3200)
+            await("ASS event after seek", events) {
+                events.any { it is MpvNativeBridge.Event.SubtitleAssFull && it.value?.contains("After seek") == true }
+            }
+            assertTrue(bridge.deselectTrack(MpvNativeBridge.TRACK_TYPE_SUBTITLE))
+            await("disabled subtitle track", events) {
+                events.any { it is MpvNativeBridge.Event.SubtitleSid && it.value == "no" }
+            }
+        } finally {
+            bridge.detachSurface()
+            bridge.destroy()
+            output.close()
+            fixture.delete()
+        }
+    }
+
+    @Test
+    fun httpHeaderValuesSurviveListEscapingAndAreClearedForNextSource() {
+        val fixture = File(instrumentation.targetContext.cacheDir, "mpv-http-headers.mkv")
+        instrumentation.context.assets.open("media3/decoder-lifecycle.mkv").use { input ->
+            fixture.outputStream().use { input.copyTo(it) }
+        }
+        val requests = CopyOnWriteArrayList<Pair<String, String?>>()
+        val server =
+            object : NanoHTTPD("127.0.0.1", 0) {
+                override fun serve(request: IHTTPSession): Response {
+                    requests.add(request.uri to request.headers["x-mpv-test"])
+                    return newFixedLengthResponse(Response.Status.OK, "video/x-matroska", fixture.inputStream(), fixture.length())
+                }
+            }
+        val bridge = MpvNativeBridge()
+        val events = CopyOnWriteArrayList<MpvNativeBridge.Event>()
+        val (width, height) = videoSize(fixture)
+        val output = createOutput(width, height, AtomicInteger())
+        val headerValue = "alpha,beta\\gamma"
+        try {
+            server.start(5000, true)
+            bridge.setEventListener { events.add(it) }
+            initialize(bridge)
+            attach(bridge, output.surface)
+            awaitResult(bridge) {
+                bridge.setDataSource("http://127.0.0.1:${server.listeningPort}/first", mapOf("X-Mpv-Test" to headerValue), it)
+            }
+            bridge.play()
+            await("first HTTP header", events) { requests.any { it.first == "/first" } }
+            assertTrue("Unexpected test header: $requests", requests.filter { it.first == "/first" }.all { it.second == headerValue })
+            awaitResult(bridge) {
+                bridge.setDataSource("http://127.0.0.1:${server.listeningPort}/second", emptyMap(), it)
+            }
+            bridge.play()
+            await("second HTTP request", events) { requests.any { it.first == "/second" } }
+            assertTrue("Headers must not leak to the next source", requests.filter { it.first == "/second" }.all { it.second == null })
+        } finally {
+            bridge.detachSurface()
+            bridge.destroy()
+            server.stop()
+            output.close()
+            fixture.delete()
+        }
+    }
 
     @Test
     fun unsupportedVideoWithPlayableAudio_reportsErrorWithoutAudioOnlyPlayback() {
@@ -43,16 +131,14 @@ class MpvSurfaceLifecycleTest {
         val events = CopyOnWriteArrayList<MpvNativeBridge.Event>()
         var output: ImageReader? = null
         try {
-            assertTrue("Real mpv JNI must be available: ${bridge.availabilityReason}", bridge.isAvailable)
-            instrumentation.runOnMainSync {
-                MpvNativeBridge.registerAndroidAppContext(instrumentation.targetContext)
+            run {
+                initialize(bridge)
                 bridge.setEventListener { events.add(it) }
-                assertTrue("mpv core initialization failed: ${bridge.lastError()}", bridge.ensureCreated())
                 bridge.applyDefaultOptions(LogLevel.INFO)
                 bridge.setVolume(0f)
                 output = createOutput(640, 360, AtomicInteger())
-                assertTrue("Surface bind failed: ${bridge.lastError()}", bridge.setSurface(output!!.surface))
-                assertTrue("Fixture load failed: ${bridge.lastError()}", bridge.setDataSource(fixture.absolutePath, emptyMap()))
+                attach(bridge, output!!.surface)
+                load(bridge, fixture)
                 bridge.play()
             }
             val deadline = SystemClock.elapsedRealtime() + 10_000
@@ -65,7 +151,8 @@ class MpvSurfaceLifecycleTest {
                 events.none { it is MpvNativeBridge.Event.RenderingStart }
             )
         } finally {
-            instrumentation.runOnMainSync {
+            run {
+                bridge.detachSurface()
                 bridge.destroy()
                 output?.setOnImageAvailableListener(null, null)
                 output?.close()
@@ -90,30 +177,28 @@ class MpvSurfaceLifecycleTest {
         var replacementOutput: ImageReader? = null
         var pausedPosition = 0L
         try {
-            assertTrue("Real mpv JNI must be available: ${bridge.availabilityReason}", bridge.isAvailable)
             val (width, height) = videoSize(fixture)
-            instrumentation.runOnMainSync {
-                MpvNativeBridge.registerAndroidAppContext(context)
+            run {
+                initialize(bridge)
                 bridge.setEventListener {
                     events.add(it)
                     if (it is MpvNativeBridge.Event.RenderingStart) {
                         positionTrace.add("restart=${bridge.currentPosition()}")
                     }
                 }
-                assertTrue("mpv core initialization failed: ${bridge.lastError()}", bridge.ensureCreated())
                 bridge.applyDefaultOptions(LogLevel.INFO)
                 bridge.setVolume(0f)
                 bridge.setLooping(true)
                 firstOutput = createOutput(width, height, firstFrames)
-                assertTrue("Initial Surface bind failed: ${bridge.lastError()}", bridge.setSurface(firstOutput!!.surface))
-                assertTrue("Fixture load failed: ${bridge.lastError()}", bridge.setDataSource(fixture.absolutePath, emptyMap()))
+                attach(bridge, firstOutput!!.surface)
+                load(bridge, fixture)
                 bridge.play()
             }
             await("initial decoded frame", events) { firstFrames.get() > 0 }
             assertMediaCodecOutput(bridge, events)
             await("initial playback restart", events) { events.any { it is MpvNativeBridge.Event.RenderingStart } }
             val restartsBeforeSeek = events.count { it is MpvNativeBridge.Event.RenderingStart }
-            instrumentation.runOnMainSync {
+            run {
                 bridge.pause()
                 bridge.seek(1000)
             }
@@ -122,17 +207,17 @@ class MpvSurfaceLifecycleTest {
             }
             val restartsBeforeReplacement = events.count { it is MpvNativeBridge.Event.RenderingStart }
 
-            instrumentation.runOnMainSync {
+            run {
                 pausedPosition = bridge.currentPosition()
                 assertTrue("The paused Surface regression must begin at a nonzero position: $pausedPosition", pausedPosition >= 750)
                 positionTrace.add("paused=$pausedPosition")
-                assertTrue("Surface detach failed: ${bridge.lastError()}", bridge.setSurface(null))
+                assertTrue("Surface detach failed: ${bridge.lastError()}", bridge.detachSurface())
                 positionTrace.add("detached=${bridge.currentPosition()}")
                 firstOutput!!.setOnImageAvailableListener(null, null)
                 firstOutput!!.close()
                 firstOutput = null
                 replacementOutput = createOutput(width, height, replacementFrames)
-                assertTrue("Replacement Surface bind failed: ${bridge.lastError()}", bridge.setSurface(replacementOutput!!.surface))
+                attach(bridge, replacementOutput!!.surface)
                 positionTrace.add("attached=${bridge.currentPosition()}")
             }
             await("paused frame on replacement Surface", events) { replacementFrames.get() > 0 }
@@ -140,7 +225,7 @@ class MpvSurfaceLifecycleTest {
                 events.count { it is MpvNativeBridge.Event.RenderingStart } > restartsBeforeReplacement
             }
             assertMediaCodecOutput(bridge, events)
-            instrumentation.runOnMainSync {
+            run {
                 val replacementPosition = bridge.currentPosition()
                 positionTrace.add("replacementFrame=$replacementPosition")
                 Log.i("MpvSurfaceLifecycleTest", positionTrace.joinToString())
@@ -155,8 +240,8 @@ class MpvSurfaceLifecycleTest {
 
             val preparedBeforeReload = events.count { it is MpvNativeBridge.Event.Prepared }
             val framesBeforeReload = replacementFrames.get()
-            instrumentation.runOnMainSync {
-                assertTrue("Fixture reload failed: ${bridge.lastError()}", bridge.setDataSource(fixture.absolutePath, emptyMap()))
+            run {
+                load(bridge, fixture)
                 bridge.play()
             }
             await("decoded frames after replacing the source", events) {
@@ -164,11 +249,11 @@ class MpvSurfaceLifecycleTest {
             }
             assertMediaCodecOutput(bridge, events)
 
-            instrumentation.runOnMainSync {
+            run {
                 bridge.stop()
-                assertTrue("Final Surface detach failed: ${bridge.lastError()}", bridge.setSurface(null))
+                assertTrue("Final Surface detach failed: ${bridge.lastError()}", bridge.detachSurface())
                 bridge.destroy()
-                assertFalse("A released core must reject Surface binding", bridge.setSurface(replacementOutput!!.surface))
+                assertFalse("A released core must be unavailable", bridge.isAvailable)
             }
             instrumentation.waitForIdleSync()
             val eventCountAfterRelease = events.size
@@ -177,7 +262,8 @@ class MpvSurfaceLifecycleTest {
             assertEquals("Native events must stop after release", eventCountAfterRelease, events.size)
             assertTrue("Unexpected mpv error: $events", events.none { it is MpvNativeBridge.Event.Error })
         } finally {
-            instrumentation.runOnMainSync {
+            run {
+                bridge.detachSurface()
                 bridge.destroy()
                 firstOutput?.setOnImageAvailableListener(null, null)
                 firstOutput?.close()
@@ -186,6 +272,46 @@ class MpvSurfaceLifecycleTest {
             }
             fixture.delete()
         }
+    }
+
+    private fun initialize(bridge: MpvNativeBridge) {
+        awaitResult(bridge) { callback ->
+            instrumentation.runOnMainSync { bridge.initialize(instrumentation.targetContext, callback) }
+        }
+        assertTrue("Real Plezy JNI must be available: ${bridge.lastError()}", bridge.isAvailable)
+    }
+
+    private fun attach(
+        bridge: MpvNativeBridge,
+        surface: Surface
+    ) {
+        awaitResult(bridge) { callback ->
+            instrumentation.runOnMainSync { bridge.setSurface(surface, callback) }
+        }
+    }
+
+    private fun load(
+        bridge: MpvNativeBridge,
+        fixture: File
+    ) {
+        awaitResult(bridge) { callback ->
+            instrumentation.runOnMainSync { bridge.setDataSource(fixture.absolutePath, emptyMap(), callback) }
+        }
+    }
+
+    private fun awaitResult(
+        bridge: MpvNativeBridge,
+        operation: ((Boolean) -> Unit) -> Unit
+    ) {
+        val completed = CountDownLatch(1)
+        var success = false
+        operation {
+            assertEquals("Native result must return on the main thread", Looper.getMainLooper(), Looper.myLooper())
+            success = it
+            completed.countDown()
+        }
+        assertTrue("Native operation timed out: ${bridge.lastError()}", completed.await(10, TimeUnit.SECONDS))
+        assertTrue("Native operation failed: ${bridge.lastError()}", success)
     }
 
     private fun createOutput(
@@ -222,9 +348,9 @@ class MpvSurfaceLifecycleTest {
         bridge: MpvNativeBridge,
         events: List<MpvNativeBridge.Event>
     ) {
-        instrumentation.runOnMainSync { assertEquals("mediacodec", bridge.hwdecCurrent()) }
-        await("mediacodec_embed output log", events) {
-            events.any { it is MpvNativeBridge.Event.LogMessage && it.message?.contains("VO: [mediacodec_embed]") == true }
+        await("observed MediaCodec decoder", events) { bridge.hwdecCurrent() == "mediacodec" }
+        await("mediacodec output log", events) {
+            events.any { it is MpvNativeBridge.Event.LogMessage && it.message?.contains("VO: [mediacodec]") == true }
         }
     }
 

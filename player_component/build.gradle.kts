@@ -48,7 +48,6 @@ android {
             pickFirsts.add("lib/**/libc++_shared.so")
             // Prevent duplicate packaging when the same prebuilt .so is present in both jniLibs and
             // externalNativeBuild (CMake IMPORTED targets are copied into intermediates/cxx).
-            pickFirsts.add("lib/**/libmpv.so")
             pickFirsts.add("lib/**/libass.so")
         }
     }
@@ -63,7 +62,7 @@ android {
             jniLibs.srcDir(strippedJniLibsDir)
         }
         // `moduleSetup()` defines a `beta` buildType for all library modules. Ensure beta builds
-        // ship the same stripped native binaries as release; otherwise mpv will appear "missing"
+        // ship the same local libass/OpenCC binaries as release; otherwise they will be missing
         // only in beta/release-like packages.
         getByName("beta") {
             jniLibs.srcDir(strippedJniLibsDir)
@@ -122,7 +121,7 @@ val stripReleaseJniLibs by tasks.registering {
                 }
             }
 
-        val duplicateNames = setOf("libmpv.so", "libass.so")
+        val duplicateNames = setOf("libass.so")
         val cxxIntermediates =
             layout.buildDirectory
                 .dir("intermediates/cxx")
@@ -159,6 +158,7 @@ dependencies {
 
     implementation(project(":repository:danmaku"))
     implementation(project(":repository:video_cache"))
+    implementation(project(":repository:mpv"))
 
     implementation(Dependencies.Github.keyboard_panel)
     implementation(Dependencies.Tencent.mmkv)

@@ -8,8 +8,8 @@
 
 ## 汇总
 
-- 模块数：20
-- 依赖条目数：78（生产 75 / 测试 3）
+- 模块数：22
+- 依赖条目数：82（生产 78 / 测试 4）
 
 ## 依赖列表（按模块）
 
@@ -56,7 +56,7 @@
 ### :player_component
 
 **生产依赖**
-- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component, :repository:danmaku, :repository:video_cache
+- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component, :repository:danmaku, :repository:mpv, :repository:video_cache
 
 **测试依赖**
 - （无）
@@ -173,6 +173,23 @@
 **测试依赖**
 - （无）
 
+### :repository:mpv
+
+**生产依赖**
+- `compileOnly`：:repository:mpv_native
+- `runtimeOnly`：:repository:mpv_native
+
+**测试依赖**
+- `testImplementation`：:repository:mpv_native
+
+### :repository:mpv_native
+
+**生产依赖**
+- （无）
+
+**测试依赖**
+- （无）
+
 ## Mermaid（生产依赖）
 
 ```mermaid
@@ -191,6 +208,8 @@ graph TD
   player_component[":player_component"]
   repository_danmaku[":repository:danmaku"]
   repository_immersion_bar[":repository:immersion_bar"]
+  repository_mpv[":repository:mpv"]
+  repository_mpv_native[":repository:mpv_native"]
   repository_panel_switch[":repository:panel_switch"]
   repository_seven_zip[":repository:seven_zip"]
   repository_thunder[":repository:thunder"]
@@ -256,7 +275,9 @@ graph TD
   player_component --> core_ui_component
   player_component --> data_component
   player_component --> repository_danmaku
+  player_component --> repository_mpv
   player_component --> repository_video_cache
+  repository_mpv --> repository_mpv_native
   storage_component --> core_contract_component
   storage_component --> core_database_component
   storage_component --> core_log_component

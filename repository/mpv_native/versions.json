@@ -1,0 +1,415 @@
+{
+  "formatVersion": 1,
+  "refreshContract": {
+    "rules": [
+      "Audit each new upstream release before changing its version, URL, ref, commit, or SHA-256.",
+      "For an archive or prebuilt, verify upstream release evidence first, hash the complete reviewed file, and update URL and SHA-256 together.",
+      "For Git, verify the upstream release-producing tag record, record the full dereferenced root commit, and review its dependency lock or gitlinks before updating.",
+      "Run python3 scripts/patches.py check after changing any patch pool or series file, and bash scripts/test_patches.sh after changing scripts/patches.py.",
+      "Never derive an expected checksum from bytes inside the production build or verification command."
+    ]
+  },
+  "components": {
+    "mpv": {
+      "kind": "git",
+      "version": "v0.41.0",
+      "url": "https://github.com/mpv-player/mpv",
+      "ref": "v0.41.0",
+      "commit": "41f6a645068483470267271e1d09966ca3b9f413",
+      "provenance": "Tag carried over from main.swift; commit is the annotated tag's dereferenced target, resolved 2026-09-01 with `git ls-remote https://github.com/mpv-player/mpv 'refs/tags/v0.41.0*'` (peeled ^{} line).",
+      "platforms": [
+        "apple",
+        "android",
+        "linux",
+        "windows"
+      ],
+      "overrides": {}
+    },
+    "ffmpeg": {
+      "kind": "git",
+      "version": "n8.0.1",
+      "url": "https://github.com/FFmpeg/FFmpeg",
+      "ref": "n8.0.1",
+      "commit": "894da5ca7d742e4429ffb2af534fcda0103ef593",
+      "provenance": "Tag carried over from main.swift; commit is the annotated tag's dereferenced target, resolved 2026-09-01 with `git ls-remote https://github.com/FFmpeg/FFmpeg 'refs/tags/n8.0.1*'` (peeled ^{} line).",
+      "platforms": [
+        "apple",
+        "android",
+        "linux",
+        "windows"
+      ],
+      "overrides": {}
+    },
+    "libass": {
+      "kind": "git",
+      "version": "0.17.5",
+      "url": "https://github.com/libass/libass",
+      "ref": "0.17.5",
+      "commit": "4a05d8127f525943ebf45fdc6497c9e665947f0d",
+      "provenance": "Resolved 2026-09-09 with `git ls-remote https://github.com/libass/libass 'refs/tags/0.17.5*'`; the annotated tag's peeled ^{} line is the commit. Upstream libass; everything the edde746/libass fork carried on top now lives in patches/libass/series.common.",
+      "platforms": [
+        "apple",
+        "android",
+        "linux",
+        "windows"
+      ],
+      "overrides": {}
+    },
+    "mpv-winbuild-cmake": {
+      "kind": "git",
+      "version": "master-2026-09-19",
+      "url": "https://github.com/shinchiro/mpv-winbuild-cmake",
+      "ref": "master",
+      "commit": "87e22100409984f2e46fc1895e3265a64f999893",
+      "provenance": "Windows meta-build system (clang/rust toolchain plus the full dependency graph feeding libmpv-2.dll). Upstream publishes no release tags, so the pin is a master commit frozen by its hash; its internal dependency pins are keyed through this commit (see platforms/windows/README.md). First resolved 2026-09-01 as the master tip cd1edc11; moved 2026-10-13 to 87e22100 (\"curl: fix build with current libssh\", the next master commit after cd1edc11), because libssh master moved the SCP declarations out of libssh.h and curl stopped compiling. The master commits after it (llvm release/23.x, libvpl, libaribcaption, angle-headers) are deliberately not taken.",
+      "platforms": [
+        "windows"
+      ],
+      "overrides": {}
+    },
+    "mingw-w64": {
+      "kind": "git",
+      "version": "master-2026-08-05",
+      "url": "https://github.com/mingw-w64/mingw-w64",
+      "ref": "master",
+      "commit": "5ea8e9facd013b815f5f29f20ef26a566319a3de",
+      "provenance": "Headers and CRT for the windows cross-toolchain. winbuild clones the master tip at toolchain-bootstrap time, which is the one ABI-defining input the winbuild commit pin cannot see. Pinned to the master tip as of 2026-08-05T15:47Z, the moment upstream winbuild last built its own toolchain cache (llvm_clang.yml run 31022056534): every green daily mpv_clang build since compiles the full dependency graph, libvpl included, against exactly these headers. Later mingw-w64 master (the late-August secure-API restructure and its preparatory series) breaks libvpl's MinGW compat macros, and one intermediate commit (ca4cc40b) additionally ships a Makefile.in out of sync with its own tree. Resolved 2026-09-01 from the GitHub commits API (master, until=2026-08-05T15:47:20Z) and frozen by commit.",
+      "platforms": [
+        "windows"
+      ],
+      "overrides": {}
+    },
+    "llvm": {
+      "kind": "git",
+      "version": "release-22.x-2026-06-15",
+      "url": "https://github.com/llvm/llvm-project",
+      "ref": "release/22.x",
+      "commit": "ca7933e47d3a3451d81e72ac174dcb5aa28b59d1",
+      "provenance": "Host clang/lld cross-toolchain sources; winbuild clones the release/22.x branch tip at bootstrap time, the last live-fetch in the toolchain after the mingw-w64 pin. Pinned to the current branch tip (unmoved since 2026-06-15, and the same tip upstream's own 2026-08-05 toolchain build used), resolved 2026-09-01 with the GitHub commits API for release/22.x and frozen by commit.",
+      "platforms": [
+        "windows"
+      ],
+      "overrides": {}
+    },
+    "svt-av1": {
+      "kind": "git",
+      "version": "v3.1.2",
+      "url": "https://gitlab.com/AOMediaCodec/SVT-AV1",
+      "ref": "v3.1.2",
+      "commit": "b33dcc56cc64fcb3b3569094af8ab1d0d81ab4c1",
+      "provenance": "SVT-AV1 encoder for the windows ffmpeg. winbuild builds the master tip, which follows ffmpeg master; SVT-AV1 4.0 removed EbSvtAv1EncConfiguration.enable_adaptive_quantization, which the pinned ffmpeg n8.0.1 still sets unguarded, so the master tip cannot link against a release ffmpeg. v3.1.2 is the newest release that keeps the 3.x API. Resolved 2026-09-01 from the GitLab tags API (annotated tag dereferenced to commit) and frozen by commit.",
+      "platforms": [
+        "windows"
+      ],
+      "overrides": {}
+    },
+    "nv-codec-headers": {
+      "kind": "git",
+      "version": "n13.0.19.1",
+      "url": "https://github.com/FFmpeg/nv-codec-headers",
+      "ref": "n13.0.19.1",
+      "commit": "88fee5c37318c991a8762d423530f91681e32e3a",
+      "provenance": "NVIDIA codec headers (ffnvcodec) for the windows and linux ffmpeg. winbuild builds the master tip (13.1 in-dev), which follows ffmpeg master; 13.1 reshapes NV_ENC_CLOCK_TIMESTAMP_SET, whose countingType member the pinned ffmpeg n8.0.1 nvenc wrapper still uses, so the tip cannot build with a release ffmpeg. n13.0.19.1 is the newest 13.0-series release. The linux ffmpeg 7.1 override's configure accepts ffnvcodec >= 12.1.14.0, which this pin satisfies. Resolved 2026-09-01 from the GitHub commits API for the tag and frozen by commit.",
+      "platforms": [
+        "linux",
+        "windows"
+      ],
+      "overrides": {}
+    },
+    "libaribcaption": {
+      "kind": "git",
+      "version": "v1.1.2",
+      "url": "https://github.com/xqq/libaribcaption",
+      "ref": "v1.1.2",
+      "commit": "c64c23b8905ba514b87c9789269e9f66f949ffe0",
+      "provenance": "ARIB STD-B24 caption decoder for the windows ffmpeg. winbuild builds the master tip and compiles it with -DHAVE_OPENSSL=1; master 6c3b4f36 (2026-10-06) renamed the bundled MD5 to aribcc_md5_* and stopped mapping it to OpenSSL's, while src/base/md5.c is still compiled out under HAVE_OPENSSL, so the master tip leaves aribcc_md5_init/update/final undefined and the ffmpeg link fails. v1.1.2 is the newest release and predates the rename. Lightweight tag; resolved 2026-10-13 from the GitHub tags and git refs APIs and frozen by commit.",
+      "platforms": [
+        "windows"
+      ],
+      "overrides": {}
+    },
+    "dav1d": {
+      "kind": "git",
+      "version": "1.5.4",
+      "url": "https://code.videolan.org/videolan/dav1d.git",
+      "mirror": "https://github.com/videolan/dav1d.git",
+      "ref": "1.5.4",
+      "commit": "54706fc6bc0cdecab7e9593974a4039cc038fca7",
+      "provenance": "Official VideoLAN GitLab tag record 1.5.4 dereferences to this root commit; upstream's own GitHub mirror (videolan/dav1d, not a fork) reports the same annotated tag object 191bdda98ec3c68137754dc97da1db34043d7cd4 dereferencing to that same commit. The tag is annotated by the dav1d maintainers but not GPG-verified by GitHub; the two independent remotes agreeing on the tag object and root commit is the pinning evidence. The mirror is consulted only after the primary fails, and the commit pin is verified identically either way. Shared by android and linux since android moved up from 1.5.3.",
+      "platforms": [
+        "android",
+        "linux"
+      ],
+      "overrides": {}
+    },
+    "shaderc": {
+      "kind": "git",
+      "version": "2024.4",
+      "url": "https://github.com/google/shaderc.git",
+      "ref": "v2024.4",
+      "commit": "caa54d9779d5605aca4e1a0c0c962a3d8f4aeb31",
+      "provenance": "Official GitHub annotated tag object 3cd72062f297df05e6a042f2616c42bc8956c326 dereferences to this root commit; its DEPS file pins synchronized dependencies by full commit.",
+      "platforms": [
+        "linux"
+      ],
+      "overrides": {}
+    },
+    "freetype": {
+      "kind": "git",
+      "version": "2.14.1",
+      "url": "https://gitlab.freedesktop.org/freetype/freetype",
+      "ref": "VER-2-14-1",
+      "commit": "526ec5c47b9ebccc4754c85ac0c0cdf7c85a5e9b",
+      "provenance": "Official freedesktop GitLab annotated tag object 3bd82b5f543bc84ccf2b1d0cdb63b95218099ee6 (VER-2-14-1) dereferences to this root commit; the pinned version is carried over from libmpv-android's depinfo.",
+      "platforms": [
+        "android"
+      ],
+      "overrides": {}
+    },
+    "fribidi": {
+      "kind": "git",
+      "version": "1.0.16",
+      "url": "https://github.com/fribidi/fribidi",
+      "ref": "v1.0.16",
+      "commit": "68162babff4f39c4e2dc164a5e825af93bda9983",
+      "provenance": "Official fribidi GitHub annotated tag object 9123b467f080c7ea15509bd7cbd457817544a7e1 (v1.0.16) dereferences to this root commit; the pinned version is carried over from libmpv-android's depinfo.",
+      "platforms": [
+        "android"
+      ],
+      "overrides": {}
+    },
+    "harfbuzz": {
+      "kind": "git",
+      "version": "12.3.2",
+      "url": "https://github.com/harfbuzz/harfbuzz",
+      "ref": "12.3.2",
+      "commit": "b42511e071162fe76102f613a6ccc009726c99af",
+      "provenance": "Official harfbuzz GitHub annotated tag object bf8ab7cd50cbcbcb2fd9021a3269d788991185f6 (12.3.2) dereferences to this root commit; the pinned version is carried over from libmpv-android's depinfo.",
+      "platforms": [
+        "android"
+      ],
+      "overrides": {}
+    },
+    "lua": {
+      "kind": "archive",
+      "version": "5.2.4",
+      "url": "https://www.lua.org/ftp/lua-5.2.4.tar.gz",
+      "sha256": "b9e2e4aad6789b3b63a056d442f7b39f0ecfca3ae0f1fc0ae4e9614401b69f4b",
+      "provenance": "Hashed the complete archive fetched from upstream lua.org over https on 2026-09-01; the digest equals lua.org's long-published 5.2.4 checksum. libmpv-android pinned the same version over plain http without a hash.",
+      "platforms": [
+        "android"
+      ],
+      "overrides": {}
+    },
+    "libunibreak": {
+      "kind": "prebuilt",
+      "version": "0.17.4",
+      "url": "https://github.com/mpvkit/libass-build/releases/download/0.17.4/libunibreak-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "overrides": {
+        "android": {
+          "kind": "archive",
+          "version": "6.1",
+          "url": "https://github.com/adah1972/libunibreak/releases/download/libunibreak_6_1/libunibreak-6.1.tar.gz",
+          "sha256": "cc4de0099cf7ff05005ceabff4afed4c582a736abc38033e70fdac86335ce93f",
+          "provenance": "Hashed the complete 6.1 release tarball fetched from the upstream adah1972/libunibreak GitHub release on 2026-09-01; the pinned version is carried over from libmpv-android's depinfo. TODO(provenance): cross-check the upstream release record's own published checksum before the next bump."
+        }
+      }
+    },
+    "libfreetype": {
+      "kind": "prebuilt",
+      "version": "0.17.4",
+      "url": "https://github.com/mpvkit/libass-build/releases/download/0.17.4/libfreetype-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "libfribidi": {
+      "kind": "prebuilt",
+      "version": "0.17.4",
+      "url": "https://github.com/mpvkit/libass-build/releases/download/0.17.4/libfribidi-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "libharfbuzz": {
+      "kind": "prebuilt",
+      "version": "0.17.4",
+      "url": "https://github.com/mpvkit/libass-build/releases/download/0.17.4/libharfbuzz-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "libbluray": {
+      "kind": "prebuilt",
+      "version": "1.4.0",
+      "url": "https://github.com/mpvkit/libbluray-build/releases/download/1.4.0/libbluray-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "openssl": {
+      "kind": "prebuilt",
+      "version": "3.3.5",
+      "url": "https://github.com/mpvkit/openssl-build/releases/download/3.3.5/openssl-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple",
+        "windows",
+        "android"
+      ],
+      "overrides": {
+        "windows": {
+          "kind": "git",
+          "version": "4.0.3",
+          "url": "https://github.com/openssl/openssl",
+          "ref": "openssl-4.0.3",
+          "commit": "af1775b60dfa141a4ad762585052cabeb9f37e9e",
+          "provenance": "TLS backend of the windows ffmpeg. winbuild pins an unreleased master snapshot (d8bf6cdd, 4.1.0-dev); since openssl/openssl 4a08aa1346 added the SLH-DSA TLS 1.3 schemes, its default ClientHello offers 34 signature algorithms, and LibreSSL servers answer more than 32 with a decode_error alert, so playback from them failed (edde746/plezy#2604). 4.0.3 offers 22. Official openssl/openssl GitHub annotated tag object ae89995a4fdd66c460a916dce3950948a0b5a8e6 (openssl-4.0.3, tagged by openssl-machine 2026-09-29) dereferences to this commit; GitHub does not know the signing key, so the tag signature is unverified here. Resolved 2026-10-08 from the GitHub git refs API. Its gitlinks are test-only (pyca-cryptography, krb5, gost-engine, wycheproof, tlsfuzzer, python-ecdsa, tlslite-ng, oqs-provider, cloudflare-quiche, fuzz/corpora) and winbuild clones with GIT_SUBMODULES \"\". 4.0.3 already carries winbuild's MinGW SIO_UDP_NETRESET workaround; winbuild's openssl-0001 patch still applies cleanly and is redundant."
+        },
+        "android": {
+          "kind": "git",
+          "version": "4.0.3",
+          "url": "https://github.com/openssl/openssl",
+          "ref": "openssl-4.0.3",
+          "commit": "af1775b60dfa141a4ad762585052cabeb9f37e9e",
+          "provenance": "TLS backend of the android ffmpeg, replacing mbedTLS 3.6.5 (edde746/plezy#2643). On a 32-bit Fire TV Stick 4K Max core the libavformat HTTPS read path cost 31.8 cycles/byte with mbedTLS, which offers ChaCha20-Poly1305 first and so gets it from servers that honor client order, and 24.5 when AES-256-GCM is forced, since its GCM runs one 16-byte block per call; OpenSSL's Armv8 assembly negotiates AES-256-GCM at 9.2. Same pin and tag verification as overrides.windows; download.sh clones it without submodules, which are test-only."
+        }
+      }
+    },
+    "libuavs3d": {
+      "kind": "prebuilt",
+      "version": "1.2.1-fix",
+      "url": "https://github.com/mpvkit/libuavs3d-build/releases/download/1.2.1-fix/libuavs3d-all.zip",
+      "sha256": "8644c7a8182679dbe762b522356606220bb6d2196a5ec65511eda42ef48b3e7a",
+      "provenance": "Upstream mpvkit/libuavs3d-build 1.2.1-fix release; the complete archive checksum was independently verified.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "libdovi": {
+      "kind": "prebuilt",
+      "version": "3.3.2",
+      "url": "https://github.com/mpvkit/libdovi-build/releases/download/3.3.2/libdovi-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "overrides": {
+        "android": {
+          "kind": "git",
+          "version": "2.3.1",
+          "url": "https://github.com/quietvoid/dovi_tool",
+          "ref": "2.3.1",
+          "commit": "b25558062e4a56973482ec70133bd7b891320e48",
+          "provenance": "Source for the former v2.3.1 prebuilts, now rebuilt with the Android parser bounds patch. Verified upstream release 2.3.1 and lightweight tag b25558062e4a56973482ec70133bd7b891320e48 via git ls-remote on 2026-09-04; reviewed dolby_vision/Cargo.lock (registry checksums, no git dependencies), used with --locked."
+        }
+      }
+    },
+    "vulkan": {
+      "kind": "prebuilt",
+      "version": "1.4.1",
+      "url": "https://github.com/mpvkit/moltenvk-build/releases/download/1.4.1/MoltenVK-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "libshaderc": {
+      "kind": "prebuilt",
+      "version": "2025.5.0",
+      "url": "https://github.com/mpvkit/libshaderc-build/releases/download/2025.5.0/libshaderc-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "lcms2": {
+      "kind": "prebuilt",
+      "version": "2.17.0",
+      "url": "https://github.com/mpvkit/lcms2-build/releases/download/2.17.0/lcms2-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "libplacebo": {
+      "kind": "prebuilt",
+      "version": "7.351.0-2512",
+      "url": "https://github.com/mpvkit/libplacebo-build/releases/download/7.351.0-2512/libplacebo-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple",
+        "linux",
+        "android"
+      ],
+      "overrides": {
+        "android": {
+          "kind": "git",
+          "version": "7.360.1",
+          "url": "https://code.videolan.org/videolan/libplacebo.git",
+          "mirror": "https://github.com/haasn/libplacebo.git",
+          "ref": "v7.360.1",
+          "commit": "cee9b076f2c63104ccfd497fa79c39a867293ec4",
+          "provenance": "Official VideoLAN GitLab annotated tag object 719cc95244a1f1d648dd72459822e026e6530f22 (v7.360.1, PGP-signed by llyyr) dereferences to this root commit; upstream's own author repository (haasn/libplacebo, not a fork) reports the same tag object and commit. Its gitlinks are identical to v7.360.0's, which the android driver already cloned recursively. Ships the OpenGL sync-object leak fix (upstream c93aa134) the android series used to carry."
+        },
+        "linux": {
+          "kind": "git",
+          "version": "7.360.1",
+          "url": "https://code.videolan.org/videolan/libplacebo.git",
+          "mirror": "https://github.com/haasn/libplacebo.git",
+          "ref": "v7.360.1",
+          "commit": "cee9b076f2c63104ccfd497fa79c39a867293ec4",
+          "provenance": "Same pin as overrides.android: official VideoLAN GitLab annotated tag object 719cc95244a1f1d648dd72459822e026e6530f22 (v7.360.1, PGP-signed by llyyr) dereferences to this root commit, and haasn/libplacebo reports the same tag object and commit. Gitlinks are identical to v7.360.0's. The mirror is consulted only after the primary fails, and the commit pin is verified identically either way. Brings the OpenGL sync-object leak fix (mpv#12708) to this GL-only build."
+        }
+      }
+    },
+    "libdav1d": {
+      "kind": "prebuilt",
+      "version": "1.5.3-neon",
+      "url": "https://github.com/edde746/libdav1d-build/releases/download/1.5.3-neon/libdav1d-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "libuchardet": {
+      "kind": "prebuilt",
+      "version": "0.0.8-xcode",
+      "url": "https://github.com/mpvkit/libuchardet-build/releases/download/0.0.8-xcode/libuchardet-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "libluajit": {
+      "kind": "prebuilt",
+      "version": "2.1.0-xcode",
+      "url": "https://github.com/mpvkit/libluajit-build/releases/download/2.1.0-xcode/libluajit-all.zip",
+      "provenance": "TODO(provenance): the apple driver has never hash-pinned this -all.zip (only the per-framework xcframework zips carry published checksums); hash the complete audited archive and add sha256 before the next version bump.",
+      "platforms": [
+        "apple"
+      ]
+    },
+    "spatialaudiobridge": {
+      "kind": "git",
+      "version": "2.0.0",
+      "url": "https://github.com/kristofferR/SpatialAudioBridge",
+      "ref": "f0d376a8de4ef3dccb21ad66f45dad734f6b8809",
+      "commit": "f0d376a8de4ef3dccb21ad66f45dad734f6b8809",
+      "provenance": "Source of 2.0.0. The annotated tag 2.0.0 (object 20e21ddae92836354d78634b491be041a4f0150d, by the release workflow) dereferences to 61ed9b602b0736954d34288aa635731a67217a59, a release-only commit whose sole parent is this commit and which changes only Package.swift, to download the prebuilt core; this pin builds the core from source instead. Resolved 2026-10-17 with `git ls-remote https://github.com/kristofferR/SpatialAudioBridge 'refs/tags/2.0.0*'`. Cargo.lock and the dependencies in Cargo.toml are unchanged since 1.6.1: the lock pins both decoder repositories by commit and every crate by checksum. Built with Rust 1.99.0.",
+      "platforms": [
+        "apple"
+      ]
+    }
+  }
+}

@@ -16,7 +16,7 @@ interface SubtitleKernelBridge {
     /**
      * Whether the current kernel configuration supports attaching the GPU subtitle overlay.
      *
-     * For example, mpv can only guarantee correct z-ordering when using `vo=mediacodec_embed`.
+     * mpv uses Plezy's `vo=mediacodec` Surface output beneath the independent subtitle overlay.
      */
     fun canStartGpuSubtitlePipeline(): Boolean = true
 

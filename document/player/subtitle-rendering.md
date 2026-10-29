@@ -8,7 +8,7 @@
 
 ## 渲染职责
 
-选择 LIBASS 后端并满足内核条件时，Media3 内嵌 ASS/SSA、mpv `mediacodec_embed` 的 ASS 桥接以及外挂 ASS/SSA 共用以下渲染链：
+选择 LIBASS 后端并满足内核条件时，Media3 内嵌 ASS/SSA、mpv `mediacodec` 的 ASS 桥接以及外挂 ASS/SSA 共用以下渲染链：
 
 ```text
 LibassRendererBackend
@@ -81,6 +81,6 @@ adjustedY = subtitleImageY - offsetPx
 | [LibassGpuRenderingTest](../../player_component/src/androidTest/java/com/xyoye/player_component/ui/LibassGpuRenderingTest.kt) | JNI/EGL/libass 实际像素：隐藏恢复、内外轨释放/切换、透明清屏、相同时间重绘、surface 重建、无效文件和大时间戳 |
 | [Media3SubtitleCompatibilityTest](../../player_component/src/androidTest/java/com/xyoye/player_component/ui/Media3SubtitleCompatibilityTest.kt) | 内嵌 ASS 数据/seek、禁用后重启、普通 Cue 输出；此类自身不检查 native 像素 |
 
-上述 JVM 用例不证明 EGL surface 恢复、native 坐标、跨内核画面或视觉裁剪正确。修改这些路径时，应在 Media3 和 mpv `mediacodec_embed` 上分别检查内嵌／外挂 ASS/SSA、播放中及暂停时的正负偏移、surface 重建、seek／换轨后的恢复，并记录实际日志和画面结果。
+上述 JVM 用例不证明 EGL surface 恢复、native 坐标、跨内核画面或视觉裁剪正确。修改这些路径时，应在 Media3 和 mpv `mediacodec` 上分别检查内嵌／外挂 ASS/SSA、播放中及暂停时的正负偏移、surface 重建、seek／换轨后的恢复，并记录实际日志和画面结果。
 
-[MpvVideoPlayer](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt) 统一使用原生 SurfaceView 和 `mediacodec_embed`，应用字幕控制器承接外挂字幕与内嵌 ASS/SSA；独立 GPU 字幕叠加层继续保留。当前内嵌位图字幕仍不可显示，界面提示切换 Media3；已取消 `gpu`／`gpu-next` 视频输出选择，不自动改用 GPU 视频合成。
+[MpvVideoPlayer](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvVideoPlayer.kt) 统一使用原生 SurfaceView 和 `mediacodec`，应用字幕控制器承接外挂字幕与内嵌 ASS/SSA；独立 GPU 字幕叠加层继续保留。当前内嵌位图字幕仍不可显示，界面提示切换 Media3；已取消 `gpu`／`gpu-next` 视频输出选择，不自动改用 GPU 视频合成。

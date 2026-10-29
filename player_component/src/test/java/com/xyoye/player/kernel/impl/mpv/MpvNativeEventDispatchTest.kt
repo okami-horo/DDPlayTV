@@ -15,6 +15,16 @@ import org.robolectric.annotation.LooperMode
 @LooperMode(LooperMode.Mode.PAUSED)
 class MpvNativeEventDispatchTest {
     @Test
+    fun fileUrisBecomeDecodedPathsWhileNetworkUrlsRemainUnchanged() {
+        assertEquals("/sdcard/a b#c%.mp4", MpvNativeBridge.nativePath("file:/sdcard/a%20b%23c%25.mp4"))
+        assertEquals("/sdcard/a b.mp4", MpvNativeBridge.nativePath("file:///sdcard/a%20b.mp4"))
+        assertEquals("/sdcard/a.mp4", MpvNativeBridge.nativePath("file://localhost/sdcard/a.mp4"))
+        listOf("/sdcard/a%20b.mp4", "https://example.com/a%20b.mp4?token=a%2Cb", "content://media/video/42").forEach {
+            assertEquals(it, MpvNativeBridge.nativePath(it))
+        }
+    }
+
+    @Test
     fun clearingListenerDiscardsAlreadyQueuedNativeEvent() {
         val bridge = MpvNativeBridge()
         val events = mutableListOf<MpvNativeBridge.Event>()
@@ -58,15 +68,18 @@ class MpvNativeEventDispatchTest {
     }
 
     private fun postPrepared(bridge: MpvNativeBridge) {
-        val callback =
-            MpvNativeBridge::class.java.getDeclaredMethod(
-                "onNativeEvent",
-                Int::class.javaPrimitiveType,
-                Long::class.javaPrimitiveType,
-                Long::class.javaPrimitiveType,
-                String::class.java
-            )
-        callback.isAccessible = true
-        callback.invoke(bridge, 1, 0L, 0L, null)
+        bridge.dispatchEvent(MpvNativeBridge.Event.Prepared)
+    }
+
+    @Test
+    fun replacingSourceDiscardsAlreadyQueuedPreparedEvent() {
+        val bridge = MpvNativeBridge()
+        val events = mutableListOf<MpvNativeBridge.Event>()
+        bridge.setEventListener { events.add(it) }
+        postPrepared(bridge)
+        bridge.setDataSource("replacement.mkv", emptyMap()) { }
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(events.isEmpty())
+        bridge.destroy()
     }
 }

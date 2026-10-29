@@ -39,6 +39,8 @@ class MpvVideoPlayer(
     private val appContext: Context = context.applicationContext
     private val nativeBridge = MpvNativeBridge()
     private var boundSurface: Surface? = null
+    private var surfaceRevision = 0L
+    private var surfaceReady = false
     private var dataSource: String? = null
     private var headers: Map<String, String> = emptyMap()
     private var userAgent: String? = null
@@ -75,31 +77,9 @@ class MpvVideoPlayer(
 
     override fun initPlayer() {
         initializationError = null
-        MpvNativeBridge.registerAndroidAppContext(context)
         nativeBridge.setEventListener(::onNativeEvent)
-        if (!nativeBridge.isAvailable) {
-            val reason = nativeBridge.availabilityReason ?: "libmpv.so missing or failed to link"
-            BuglyReporter.updateContext(
-                mapOf(
-                    "play.kernel" to "mpv",
-                    "mpv.event" to "initPlayerUnavailable",
-                    "mpv.last_error" to reason,
-                ),
-            )
-            failInitialization(reason)
-            return
-        }
-        if (!nativeBridge.ensureCreated()) {
-            val reason = nativeBridge.lastError() ?: "Failed to initialize mpv native session"
-            BuglyReporter.updateContext(
-                mapOf(
-                    "play.kernel" to "mpv",
-                    "mpv.event" to "initPlayerCreateFailed",
-                    "mpv.last_error" to reason,
-                ),
-            )
-            failInitialization(reason)
-            return
+        nativeBridge.initialize(context) { success ->
+            if (!success) failInitialization(nativeBridge.lastError() ?: "Failed to initialize mpv native session")
         }
         setOptions()
     }
@@ -122,7 +102,7 @@ class MpvVideoPlayer(
                 "play.kernel" to "mpv",
                 "play.looping" to looping.toString(),
                 "play.speed" to playbackSpeed.toString(),
-                "play.vo" to "mediacodec_embed",
+                "play.vo" to MpvNativeBridge.VIDEO_OUTPUT,
                 "play.hwdec" to "mediacodec",
                 "play.sub_backend" to PlayerInitializer.Subtitle.backend.name,
                 "play.sub_gpu_pipe" to canStartGpuSubtitlePipeline().toString(),
@@ -208,29 +188,30 @@ class MpvVideoPlayer(
     }
 
     override fun setSurface(surface: Surface) {
-        if (!nativeBridge.isAvailable) return
         if (!surface.isValid) return
-        if (!nativeBridge.setSurface(surface)) {
-            nativeBridge.stop()
-            failInitialization(nativeBridge.lastError() ?: "Failed to bind mpv video surface")
-            return
-        }
         boundSurface = surface
-        BuglyReporter.updateContext("surf.set", "1")
-        recordBuglyBreadcrumb(
-            message = "setSurface",
-            context =
-                mapOf(
-                    "vo" to "mediacodec_embed",
-                ),
-        )
-        if (preparePendingSurface) prepareAsync()
+        surfaceReady = false
+        val revision = ++surfaceRevision
+        nativeBridge.setSurface(surface) { success ->
+            if (revision != surfaceRevision || boundSurface !== surface) return@setSurface
+            if (!success) {
+                nativeBridge.stop()
+                failInitialization(nativeBridge.lastError() ?: "Failed to bind mpv video surface")
+                return@setSurface
+            }
+            surfaceReady = true
+            BuglyReporter.updateContext("surf.set", "1")
+            recordBuglyBreadcrumb("setSurface", mapOf("vo" to MpvNativeBridge.VIDEO_OUTPUT))
+            if (preparePendingSurface) prepareAsync()
+        }
     }
 
     fun clearSurface(surface: Surface) {
         if (boundSurface !== surface) return
+        surfaceRevision++
         boundSurface = null
-        if (!nativeBridge.setSurface(null)) {
+        surfaceReady = false
+        if (!nativeBridge.detachSurface()) {
             nativeBridge.stop()
             failInitialization(nativeBridge.lastError() ?: "Failed to detach mpv video surface")
         }
@@ -240,7 +221,6 @@ class MpvVideoPlayer(
         width: Int,
         height: Int
     ) {
-        if (!nativeBridge.isAvailable) return
         nativeBridge.setSurfaceSize(width, height)
         BuglyReporter.updateContext("surf.size", "${width}x$height")
         recordBuglyBreadcrumb(
@@ -267,7 +247,7 @@ class MpvVideoPlayer(
             mPlayerEventListener.onInfo(PlayerConstant.MEDIA_INFO_URL_EMPTY, 0)
             return
         }
-        if (boundSurface?.isValid != true) {
+        if (!surfaceReady || boundSurface?.isValid != true) {
             preparePendingSurface = true
             isPreparing = true
             return
@@ -288,49 +268,22 @@ class MpvVideoPlayer(
             )
         }
         isPreparing = true
-        var dataSourceError: Exception? = null
-        val success =
-            try {
-                userAgent?.let { nativeBridge.setUserAgent(it) }
-                runCatching {
-                    nativeBridge.setForceSeekable(LocalProxy.isServingUrl(path))
-                }.getOrNull()
-                nativeBridge.setDataSource(path, headers)
-            } catch (e: Exception) {
-                dataSourceError = e
-                ErrorReportHelper.postCatchedExceptionWithContext(
-                    e,
-                    "MpvVideoPlayer",
-                    "prepareAsync",
-                    "Failed to set mpv data source",
-                )
-                false
+        userAgent?.let { nativeBridge.setUserAgent(it) }
+        nativeBridge.setForceSeekable(LocalProxy.isServingUrl(path))
+        nativeBridge.setDataSource(path, headers) { success ->
+            if (!success) {
+                nativeBridge.stop()
+                isPreparing = false
+                isPrepared = false
+                isPlaying = false
+                val reason = nativeBridge.lastError() ?: "mpv rejected data source"
+                BuglyReporter.updateContext(mapOf("mpv.event" to "SetDataSourceFailed", "mpv.last_error" to reason))
+                recordBuglyBreadcrumb("setDataSource failed", mapOf("reason" to reason))
+                failInitialization(reason)
+            } else {
+                nativeBridge.play()
             }
-        if (!success) {
-            isPreparing = false
-            val reason =
-                nativeBridge.lastError()
-                    ?: dataSourceError?.message
-                    ?: "mpv bridge rejected data source"
-            BuglyReporter.updateContext(
-                mapOf(
-                    "mpv.event" to "SetDataSourceFailed",
-                    "mpv.err" to reason,
-                    "mpv.last_error" to (nativeBridge.lastError().orEmpty()),
-                ),
-            )
-            recordBuglyBreadcrumb(
-                message = "setDataSource failed",
-                context =
-                    mapOf(
-                        "reason" to reason,
-                        "src_hash" to Integer.toHexString(path.hashCode()),
-                    ),
-            )
-            failInitialization(reason, cause = dataSourceError)
-            return
         }
-        nativeBridge.play()
     }
 
     override fun start() {
@@ -374,6 +327,9 @@ class MpvVideoPlayer(
         clearPlayerEventListener()
         stop()
         nativeBridge.clearEventListener()
+        if (boundSurface != null) nativeBridge.detachSurface()
+        surfaceRevision++
+        surfaceReady = false
         nativeBridge.destroy()
         boundSurface = null
         isPrepared = false
@@ -643,7 +599,7 @@ class MpvVideoPlayer(
                         "mpv.last_error" to (fallbackMessage ?: ""),
                         "play.session" to playbackSessionId,
                         "play.src_hash" to (dataSource?.let { Integer.toHexString(it.hashCode()) } ?: ""),
-                        "play.vo" to "mediacodec_embed",
+                        "play.vo" to MpvNativeBridge.VIDEO_OUTPUT,
                         "play.sub_backend" to PlayerInitializer.Subtitle.backend.name,
                         "play.sub_gpu_pipe" to canStartGpuSubtitlePipeline().toString(),
                     ),
@@ -685,7 +641,7 @@ class MpvVideoPlayer(
                 }
                 BuglyReporter.updateContext("mpv.event", "RenderingStart")
                 recordBuglyBreadcrumb(message = "rendering start")
-                isPlaying = true
+                isPlaying = !nativeBridge.isPaused()
                 refreshDecodeTypeFromNative()
                 flushPendingExternalTracks()
                 val path = dataSource

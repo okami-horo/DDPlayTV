@@ -1,23 +1,21 @@
 package com.xyoye.player.kernel.impl.mpv
 
 import android.content.Context
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.Surface
-import androidx.annotation.Keep
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.video.PlaceholderSurface
 import com.xyoye.common_component.log.model.LogLevel
 import com.xyoye.data_component.enums.TrackType
+import com.xyoye.mpv.PlezyMpvSession
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
-private const val TAG = "MpvNativeBridge"
-
-/**
- * Lightweight JNI wrapper for libmpv.
- *
- * The native side currently falls back to no-op behavior when libmpv
- * is not packaged, so callers should check [isAvailable] before invoking
- * player commands to surface a readable error to the UI.
- */
+/** App policy and main-thread events over Plezy's independently owned native session. */
+@androidx.annotation.OptIn(UnstableApi::class)
 class MpvNativeBridge {
     data class TrackInfo(
         val id: Int,
@@ -68,172 +66,254 @@ class MpvNativeBridge {
         ) : Event
     }
 
-    private var nativeHandle: Long = 0
     private val mainHandler = Handler(Looper.getMainLooper())
-
+    private val listeners = LinkedHashSet<(Event) -> Unit>()
     private val listenerLock = Any()
-    private val eventListeners = LinkedHashSet<(Event) -> Unit>()
-
-    @Volatile
-    private var eventLoopStarted = false
-
-    @Volatile
-    private var eventGeneration = 0L
-
-    val availabilityReason: String?
-        get() = availabilityMessage
-
-    val isAvailable: Boolean
-        get() = nativeLoaded && nativeLinked
-
-    fun lastError(): String? {
-        if (!nativeLoaded) {
-            return availabilityMessage
+    private val worker =
+        Executors.newSingleThreadExecutor { task ->
+            Thread(task, "ddplay-mpv").apply { isDaemon = true }
         }
-        return nativeLastError()
-    }
+    private var session: PlezyMpvSession? = null
+    private var appContext: Context? = null
+    private var placeholder: PlaceholderSurface? = null
+    private var surfaceGeneration = 0L
+    private var surfaceAttached = false
+    private var pausedSurfacePosition: Double? = null
+    private var activeSource: Long? = null
+    private var activeRevision = 0L
+    private var hasVideo = false
+    private var videoStarted = false
 
-    fun ensureCreated(): Boolean {
-        if (!isAvailable) return false
-        if (nativeHandle != 0L) return true
-        nativeHandle = nativeCreate()
-        if (nativeHandle == 0L) {
-            Log.w(TAG, "nativeCreate returned null handle")
-            return false
-        }
-        val hasListeners =
-            synchronized(listenerLock) {
-                eventListeners.isNotEmpty()
+    @Volatile private var released = false
+
+    @Volatile private var eventGeneration = 0L
+
+    @Volatile private var sourceRevision = 0L
+
+    @Volatile private var errorMessage: String? = null
+
+    @Volatile private var positionMs = 0L
+
+    @Volatile private var durationMs = 0L
+
+    @Volatile private var dimensions = 0 to 0
+
+    @Volatile private var decoder: String? = null
+
+    @Volatile private var paused = true
+
+    @Volatile private var tracks: List<TrackInfo> = emptyList()
+
+    @Volatile var isAvailable = false
+        private set
+
+    val availabilityReason: String? get() = errorMessage
+
+    fun lastError(): String? = errorMessage
+
+    fun currentPosition(): Long = positionMs
+
+    fun duration(): Long = durationMs
+
+    fun videoSize(): Pair<Int, Int> = dimensions
+
+    fun hwdecCurrent(): String? = decoder
+
+    fun isPaused(): Boolean = paused
+
+    fun listTracks(): List<TrackInfo> = tracks
+
+    fun initialize(
+        context: Context,
+        onReady: (Boolean) -> Unit
+    ) {
+        appContext = context.applicationContext
+        worker.execute {
+            if (released) return@execute
+            val result =
+                runCatching {
+                    session =
+                        PlezyMpvSession(
+                            context.applicationContext,
+                            DEFAULT_OPTIONS,
+                            object : PlezyMpvSession.Listener {
+                                override fun onEvent(
+                                    type: Int,
+                                    sourceId: Long?,
+                                    code: Int,
+                                    reason: Int,
+                                    message: String?
+                                ) {
+                                    enqueue {
+                                        if (type == 2) {
+                                            dispatchEvent(Event.LogMessage(code, message))
+                                        } else if (sourceId != null && sourceId == activeSource) {
+                                            handleEvent(it, type, code, reason, message)
+                                        }
+                                    }
+                                }
+
+                                override fun onProperty(
+                                    name: String,
+                                    sourceId: Long?,
+                                    value: Any?
+                                ) {
+                                    enqueue {
+                                        if (sourceId != null && sourceId == activeSource) handleProperty(it, name, value)
+                                    }
+                                }
+                            }
+                        )
+                    val player = checkNotNull(session)
+                    mapOf(
+                        "time-pos" to "Double",
+                        "duration" to "Double",
+                        "pause" to "Flag",
+                        "paused-for-cache" to "Flag",
+                        "dwidth" to "Int64",
+                        "dheight" to "Int64",
+                        "hwdec-current" to "String",
+                        "track-list" to "None",
+                        "sub-text/ass-full" to "String",
+                        "sub-ass-extradata" to "String",
+                        "sid" to "String"
+                    ).forEach { (name, format) -> player.observe(name, format) }
+                    isAvailable = !released
+                }
+            result.exceptionOrNull()?.let {
+                errorMessage = "Failed to initialize Plezy mpv: ${it.message}"
+                Log.e(TAG, errorMessage, it)
+                runCatching { session?.close() }
+                session = null
             }
-        if (hasListeners) {
-            startEventLoop()
+            mainHandler.post { if (!released) onReady(result.isSuccess) }
         }
-        return true
     }
 
-    fun destroy() {
-        eventGeneration++
-        if (nativeHandle != 0L) {
-            if (eventLoopStarted) {
-                nativeStopEventLoop(nativeHandle)
+    fun setSurface(
+        surface: Surface,
+        onResult: (Boolean) -> Unit
+    ) {
+        enqueue(onResult = onResult) {
+            check(surface.isValid) { "mpv video Surface is invalid" }
+            val pausedPosition = pausedSurfacePosition ?: pausedSeekablePosition(it)
+            it.attachSurface(surface, ++surfaceGeneration)
+            surfaceAttached = true
+            pausedSurfacePosition = null
+            if (pausedPosition != null && it.getFlag("pause") == true && it.getFlag("seekable") == true) {
+                it.command("seek", pausedPosition.toString(), "absolute+exact")
             }
-            nativeDestroy(nativeHandle)
-            nativeHandle = 0
-        }
-        eventLoopStarted = false
-        synchronized(listenerLock) {
-            eventListeners.clear()
         }
     }
 
-    fun setSurface(surface: Surface?): Boolean = nativeHandle != 0L && nativeSetSurface(nativeHandle, surface)
+    /** SurfaceHolder destruction must wait until native has retired the old window. */
+    fun detachSurface(): Boolean =
+        call(false) {
+            if (surfaceAttached) {
+                pausedSurfacePosition = pausedSeekablePosition(it)
+                val target = placeholder ?: PlaceholderSurface.newInstance(checkNotNull(appContext), false).also { placeholder = it }
+                it.attachSurface(target, ++surfaceGeneration)
+                surfaceAttached = false
+            }
+            true
+        }
+
+    private fun pausedSeekablePosition(player: PlezyMpvSession): Double? =
+        if (activeSource != null && player.getFlag("pause") == true && player.getFlag("seekable") == true) {
+            player.getDouble("time-pos")?.takeIf { it.isFinite() && it >= 0 }
+        } else {
+            null
+        }
 
     fun setDataSource(
         path: String,
-        headers: Map<String, String>
-    ): Boolean {
-        if (nativeHandle == 0L) return false
-        val headerArray =
-            headers.entries
-                .sortedBy { it.key.lowercase() }
-                .map { "${it.key}: ${it.value}" }
-                .toTypedArray()
-        val success = nativeSetDataSource(nativeHandle, path, headerArray)
-        if (!success) {
-            Log.w(TAG, "mpv setDataSource failed: ${lastError().orEmpty()}")
+        headers: Map<String, String>,
+        onResult: (Boolean) -> Unit
+    ) {
+        val revision = ++sourceRevision
+        enqueue(onResult = { if (revision == sourceRevision) onResult(it) }) {
+            videoStarted = false
+            pausedSurfacePosition = null
+            positionMs = 0
+            durationMs = 0
+            tracks = emptyList()
+            it.command("change-list", "http-header-fields", "clr", "")
+            headers.entries.sortedBy { it.key.lowercase() }.forEach { header ->
+                it.command("change-list", "http-header-fields", "append", "${header.key}: ${header.value}")
+            }
+            activeSource = it.command("loadfile", nativePath(path), "replace")
+            check(activeSource != null) { "mpv loadfile did not return a source ID" }
+            activeRevision = revision
         }
-        return success
     }
 
-    fun play() {
-        if (nativeHandle != 0L) nativePlay(nativeHandle)
-    }
+    fun play() =
+        enqueue {
+            pausedSurfacePosition = null
+            it.setProperty("pause", false)
+            paused = false
+        }
 
-    fun pause() {
-        if (nativeHandle != 0L) nativePause(nativeHandle)
-    }
+    fun pause() =
+        enqueue {
+            it.setProperty("pause", true)
+            paused = true
+        }
 
     fun stop() {
-        if (nativeHandle != 0L) nativeStop(nativeHandle)
-    }
-
-    fun seek(positionMs: Long) {
-        if (nativeHandle != 0L) nativeSeek(nativeHandle, positionMs)
-    }
-
-    fun setSpeed(speed: Float) {
-        if (nativeHandle != 0L) nativeSetSpeed(nativeHandle, speed)
-    }
-
-    fun setVolume(volume: Float) {
-        if (nativeHandle != 0L) nativeSetVolume(nativeHandle, volume)
-    }
-
-    fun setLooping(looping: Boolean) {
-        if (nativeHandle != 0L) nativeSetLooping(nativeHandle, looping)
-    }
-
-    fun setSubtitleDelay(offsetMs: Long) {
-        if (nativeHandle != 0L) nativeSetSubtitleDelay(nativeHandle, offsetMs)
-    }
-
-    fun applyDefaultOptions(logLevel: LogLevel?) {
-        if (nativeHandle == 0L) return
-        val mpvLevel =
-            when (logLevel) {
-                null -> "no"
-                LogLevel.ERROR -> "error"
-                LogLevel.WARN -> "warn"
-                LogLevel.INFO -> "info"
-                LogLevel.DEBUG -> "v"
-            }
-        if (!nativeSetLogLevel(nativeHandle, mpvLevel)) {
-            Log.w(TAG, "mpv setLogLevel($mpvLevel) failed: ${lastError().orEmpty()}")
-        }
-        if (logLevel == LogLevel.DEBUG) {
-            // Increase verbosity for networking/demuxing issues (HTTP status, redirects, range, etc.).
-            // Unknown modules are ignored by mpv, so this is safe across versions.
-            setOption("msg-level", "all=v,ffmpeg=trace,stream=trace,network=trace")
-            // Ask libavformat/libavcodec to output trace logs (useful for HTTP and demuxer errors).
-            setOption("demuxer-lavf-o", "loglevel=trace")
+        sourceRevision++
+        enqueue {
+            activeSource = null
+            pausedSurfacePosition = null
+            videoStarted = false
+            it.command("stop")
+            paused = true
+            positionMs = 0
         }
     }
 
-    fun setUserAgent(userAgent: String) {
-        if (nativeHandle == 0L) return
-        if (userAgent.isBlank()) return
-        setOption("user-agent", userAgent)
-    }
+    fun seek(positionMs: Long) =
+        enqueue {
+            it.command("seek", (positionMs / 1000.0).toString(), "absolute+exact")
+            if (!surfaceAttached && it.getFlag("pause") == true) pausedSurfacePosition = positionMs / 1000.0
+            Unit
+        }
 
-    fun setForceSeekable(enabled: Boolean) {
-        if (nativeHandle == 0L) return
-        setOption("force-seekable", if (enabled) "yes" else "no")
-    }
+    fun setSpeed(speed: Float) = enqueue { it.setProperty("speed", speed.toDouble()) }
 
-    fun setAudioOutput(value: String) {
-        if (nativeHandle == 0L) return
-        if (value.isBlank()) return
-        setOption("ao", value)
-    }
+    fun setVolume(volume: Float) = enqueue { it.setProperty("volume", volume.coerceIn(0f, 1f) * 100.0) }
 
-    fun setVideoSync(value: String) {
-        if (nativeHandle == 0L) return
-        if (value.isBlank()) return
-        setOption("video-sync", value)
-    }
+    fun setLooping(looping: Boolean) = setOption("loop-file", if (looping) "inf" else "no")
+
+    fun setSubtitleDelay(offsetMs: Long) = enqueue { it.setProperty("sub-delay", offsetMs / 1000.0) }
+
+    fun setUserAgent(userAgent: String) = setOption("user-agent", userAgent)
+
+    fun setForceSeekable(enabled: Boolean) = setOption("force-seekable", if (enabled) "yes" else "no")
+
+    fun setAudioOutput(value: String) = setOption("ao", value)
+
+    fun setVideoSync(value: String) = setOption("video-sync", value)
+
+    fun applyDefaultOptions(logLevel: LogLevel?) =
+        enqueue {
+            it.setLogLevel(
+                when (logLevel) {
+                    null -> "no"
+                    LogLevel.ERROR -> "error"
+                    LogLevel.WARN -> "warn"
+                    LogLevel.INFO -> "info"
+                    LogLevel.DEBUG -> "v"
+                }
+            )
+        }
 
     fun setSubtitleFonts(
         fontsDir: String,
         defaultFontFamily: String
     ) {
-        if (nativeHandle == 0L) return
-        if (fontsDir.isNotBlank()) {
-            setOption("sub-fonts-dir", fontsDir)
-        }
-        if (defaultFontFamily.isNotBlank()) {
-            setOption("sub-font", defaultFontFamily)
-        }
-        // On Android builds we ship fonts via app cache, so don't rely on system font providers.
+        if (fontsDir.isNotBlank()) setOption("sub-fonts-dir", fontsDir)
+        if (defaultFontFamily.isNotBlank()) setOption("sub-font", defaultFontFamily)
         setOption("sub-font-provider", "none")
     }
 
@@ -241,371 +321,280 @@ class MpvNativeBridge {
         width: Int,
         height: Int
     ) {
-        if (nativeHandle == 0L) return
-        if (width <= 0 || height <= 0) return
-        setOption("android-surface-size", "${width}x$height")
-    }
-
-    fun setEventListener(listener: (Event) -> Unit) {
-        eventGeneration++
-        synchronized(listenerLock) {
-            eventListeners.clear()
-            eventListeners.add(listener)
-        }
-        if (nativeHandle != 0L) {
-            startEventLoop()
-        }
-    }
-
-    fun addEventListener(listener: (Event) -> Unit) {
-        synchronized(listenerLock) {
-            eventListeners.add(listener)
-        }
-        if (nativeHandle != 0L) {
-            startEventLoop()
-        }
-    }
-
-    fun removeEventListener(listener: (Event) -> Unit) {
-        val shouldStop =
-            synchronized(listenerLock) {
-                eventListeners.remove(listener)
-                eventListeners.isEmpty()
-            }
-        if (shouldStop && nativeHandle != 0L && eventLoopStarted) {
-            nativeStopEventLoop(nativeHandle)
-            eventLoopStarted = false
-        }
-    }
-
-    fun clearEventListener() {
-        eventGeneration++
-        synchronized(listenerLock) {
-            eventListeners.clear()
-        }
-        if (nativeHandle != 0L && eventLoopStarted) {
-            nativeStopEventLoop(nativeHandle)
-        }
-        eventLoopStarted = false
-    }
-
-    fun videoSize(): Pair<Int, Int> {
-        if (nativeHandle == 0L) return 0 to 0
-        val packed = nativeGetVideoSize(nativeHandle)
-        val width = (packed shr 32).toInt()
-        val height = (packed and 0xffffffffL).toInt()
-        return width to height
-    }
-
-    fun hwdecCurrent(): String? {
-        if (nativeHandle == 0L) return null
-        return nativeGetHwdecCurrent(nativeHandle)
-    }
-
-    fun listTracks(): List<TrackInfo> {
-        if (nativeHandle == 0L) return emptyList()
-        val rawTracks = nativeListTracks(nativeHandle) ?: return emptyList()
-        return rawTracks.mapNotNull { raw ->
-            val parts = raw.split("|")
-            if (parts.size < 4) return@mapNotNull null
-            val nativeType = parts[0].toIntOrNull() ?: return@mapNotNull null
-            val id = parts[1].toIntOrNull() ?: return@mapNotNull null
-            val selected = parts[2] == "1"
-            val title = parts[3].ifEmpty { "Track $id" }
-            val codec =
-                parts
-                    .getOrNull(4)
-                    ?.trim()
-                    .orEmpty()
-                    .ifEmpty { null }
-            val trackType =
-                when (nativeType) {
-                    TRACK_TYPE_AUDIO -> TrackType.AUDIO
-                    TRACK_TYPE_SUBTITLE -> TrackType.SUBTITLE
-                    else -> return@mapNotNull null
-                }
-            TrackInfo(id, trackType, nativeType, title, selected, codec)
-        }
+        if (width > 0 && height > 0) setOption("android-surface-size", "${width}x$height")
     }
 
     fun selectTrack(
         nativeType: Int,
         trackId: Int
-    ): Boolean {
-        if (nativeHandle == 0L) return false
-        return nativeSelectTrack(nativeHandle, nativeType, trackId)
-    }
+    ): Boolean =
+        call(false) {
+            it.setProperty(if (nativeType == TRACK_TYPE_AUDIO) "aid" else "sid", trackId.toString())
+            refreshTracks(it)
+            true
+        }
 
-    fun deselectTrack(nativeType: Int): Boolean {
-        if (nativeHandle == 0L) return false
-        return nativeDeselectTrack(nativeHandle, nativeType)
-    }
+    fun deselectTrack(nativeType: Int): Boolean =
+        call(false) {
+            it.setProperty(if (nativeType == TRACK_TYPE_AUDIO) "aid" else "sid", "no")
+            refreshTracks(it)
+            true
+        }
 
     fun addExternalTrack(
         type: TrackType,
         path: String
-    ): Boolean {
-        if (nativeHandle == 0L || path.isEmpty()) return false
-        val nativeType =
-            when (type) {
-                TrackType.AUDIO -> TRACK_TYPE_AUDIO
-                TrackType.SUBTITLE -> TRACK_TYPE_SUBTITLE
-                else -> return false
+    ): Boolean =
+        call(false) {
+            val command =
+                when (type) {
+                    TrackType.AUDIO -> "audio-add"
+                    TrackType.SUBTITLE -> "sub-add"
+                    else -> return@call false
+                }
+            it.command(command, nativePath(path), "select")
+            refreshTracks(it)
+            true
+        }
+
+    fun setEventListener(listener: (Event) -> Unit) {
+        eventGeneration++
+        synchronized(listenerLock) {
+            listeners.clear()
+            listeners.add(listener)
+        }
+    }
+
+    fun addEventListener(listener: (Event) -> Unit) {
+        synchronized(listenerLock) { listeners.add(listener) }
+    }
+
+    fun removeEventListener(listener: (Event) -> Unit) {
+        synchronized(listenerLock) { listeners.remove(listener) }
+    }
+
+    fun clearEventListener() {
+        eventGeneration++
+        synchronized(listenerLock) { listeners.clear() }
+    }
+
+    fun destroy() {
+        synchronized(worker) {
+            if (released) return
+            released = true
+            isAvailable = false
+            clearEventListener()
+            worker.execute {
+                try {
+                    session?.close()
+                } catch (error: Exception) {
+                    Log.w(TAG, "mpv close failed", error)
+                } finally {
+                    session = null
+                    placeholder?.release()
+                    placeholder = null
+                }
             }
-        return nativeAddExternalTrack(nativeHandle, nativeType, path)
+            worker.shutdown()
+        }
     }
 
-    fun currentPosition(): Long {
-        if (nativeHandle == 0L) return 0
-        return nativeGetPosition(nativeHandle)
-    }
-
-    fun duration(): Long {
-        if (nativeHandle == 0L) return 0
-        return nativeGetDuration(nativeHandle)
-    }
-
-    @Keep
-    private fun onNativeEvent(
-        type: Int,
-        arg1: Long,
-        arg2: Long,
-        message: String?
+    internal fun dispatchEvent(
+        event: Event,
+        revision: Long = sourceRevision
     ) {
         val generation = eventGeneration
+        val targets = synchronized(listenerLock) { listeners.toList() }
+        mainHandler.post {
+            if (released || generation != eventGeneration || revision != sourceRevision) return@post
+            targets.forEach { listener ->
+                if (synchronized(listenerLock) { listener in listeners }) runCatching { listener(event) }
+            }
+        }
+    }
+
+    private fun handleEvent(
+        player: PlezyMpvSession,
+        type: Int,
+        code: Int,
+        reason: Int,
+        message: String?
+    ) {
+        when (type) {
+            8 -> {
+                refreshTracks(player)
+                dispatchEvent(Event.Prepared, activeRevision)
+            }
+            21 -> {
+                decoder = player.getString("hwdec-current")
+                paused = player.getFlag("pause") ?: paused
+                positionMs = ((player.getDouble("time-pos") ?: 0.0) * 1000).toLong()
+                if (validateVideo(player)) dispatchEvent(Event.RenderingStart, activeRevision)
+            }
+            7 ->
+                when (reason) {
+                    0 -> dispatchEvent(Event.Completed, activeRevision)
+                    4 -> dispatchEvent(Event.Error(code, reason, message), activeRevision)
+                }
+        }
+    }
+
+    private fun handleProperty(
+        player: PlezyMpvSession,
+        name: String,
+        value: Any?
+    ) {
         val event =
-            when (type) {
-                EVENT_PREPARED -> Event.Prepared
-                EVENT_VIDEO_SIZE -> Event.VideoSize(arg1.toInt(), arg2.toInt())
-                EVENT_RENDERING_START -> Event.RenderingStart
-                EVENT_COMPLETED -> Event.Completed
-                EVENT_BUFFERING_START -> Event.Buffering(true)
-                EVENT_BUFFERING_END -> Event.Buffering(false)
-                EVENT_ERROR -> Event.Error(arg1.toInt(), arg2.toInt(), message)
-                EVENT_LOG_MESSAGE -> Event.LogMessage(arg1.toInt(), message)
-                EVENT_SUBTITLE_ASS_FULL -> Event.SubtitleAssFull(message)
-                EVENT_SUBTITLE_ASS_EXTRADATA -> Event.SubtitleAssExtradata(message)
-                EVENT_SUBTITLE_SID -> Event.SubtitleSid(message)
+            when (name) {
+                "time-pos" -> {
+                    positionMs = ((value as? Number)?.toDouble()?.times(1000) ?: 0.0).toLong()
+                    null
+                }
+                "duration" -> {
+                    durationMs = ((value as? Number)?.toDouble()?.times(1000) ?: 0.0).toLong()
+                    null
+                }
+                "pause" -> {
+                    paused = value as? Boolean ?: true
+                    null
+                }
+                "paused-for-cache" -> Event.Buffering(value == true)
+                "track-list" -> {
+                    refreshTracks(player)
+                    null
+                }
+                "dwidth", "dheight" -> {
+                    dimensions = (player.getInt("dwidth") ?: 0) to (player.getInt("dheight") ?: 0)
+                    Event.VideoSize(dimensions.first, dimensions.second)
+                }
+                "hwdec-current" -> {
+                    decoder = value as? String
+                    if (videoStarted) validateVideo(player)
+                    null
+                }
+                "sub-text/ass-full" -> Event.SubtitleAssFull(value as? String)
+                "sub-ass-extradata" -> Event.SubtitleAssExtradata(value as? String)
+                "sid" -> Event.SubtitleSid(value as? String)
                 else -> null
             }
-
-        if (event == null) {
-            return
-        }
-
-        val listeners =
-            synchronized(listenerLock) {
-                eventListeners.toList()
-            }
-        if (listeners.isEmpty()) {
-            return
-        }
-
-        mainHandler.post {
-            if (generation != eventGeneration) return@post
-            listeners.forEach { listener ->
-                val isRegistered = synchronized(listenerLock) { listener in eventListeners }
-                if (isRegistered) runCatching { listener(event) }
-            }
-        }
+        if (event != null) dispatchEvent(event, activeRevision)
     }
 
-    private fun startEventLoop() {
-        if (eventLoopStarted || nativeHandle == 0L) return
-        nativeStartEventLoop(nativeHandle, this)
-        eventLoopStarted = true
+    private fun validateVideo(player: PlezyMpvSession): Boolean {
+        if (!surfaceAttached || !hasVideo || player.getFlag("playback-abort") == true) return true
+        if (decoder == "mediacodec") {
+            videoStarted = true
+            return true
+        }
+        videoStarted = false
+        errorMessage = "mpv MediaCodec video decoding failed. Switch to Media3 for this file."
+        dispatchEvent(Event.Error(PlezyMpvSession.VIDEO_OUTPUT_ERROR, 4, errorMessage), activeRevision)
+        player.command("stop")
+        return false
     }
 
-    companion object {
-        private const val EVENT_PREPARED = 1
-        private const val EVENT_VIDEO_SIZE = 2
-        private const val EVENT_RENDERING_START = 3
-        private const val EVENT_COMPLETED = 4
-        private const val EVENT_ERROR = 5
-        private const val EVENT_BUFFERING_START = 6
-        private const val EVENT_BUFFERING_END = 7
-        private const val EVENT_LOG_MESSAGE = 8
-        private const val EVENT_SUBTITLE_ASS_FULL = 9
-        private const val EVENT_SUBTITLE_ASS_EXTRADATA = 10
-        private const val EVENT_SUBTITLE_SID = 11
-
-        const val TRACK_TYPE_AUDIO = 1
-        const val TRACK_TYPE_SUBTITLE = 2
-
-        private val nativeLoaded: Boolean
-        private val nativeLinked: Boolean
-        private val availabilityMessage: String?
-
-        @Volatile
-        private var appContextRegistered: Boolean = false
-
-        init {
-            var loaded = false
-            var linked = false
-            var availability: String? = null
-            try {
-                System.loadLibrary("mpv_bridge")
-                loaded = true
-                linked = nativeIsLinked()
-                if (!linked) {
-                    availability = nativeLastError()
-                        ?: "libmpv.so not packaged; mpv bridge will operate in stub mode"
-                    Log.w(TAG, availability)
+    private fun refreshTracks(player: PlezyMpvSession) {
+        hasVideo = false
+        tracks =
+            buildList {
+                repeat(player.getInt("track-list/count") ?: 0) { index ->
+                    val key = "track-list/$index"
+                    val type =
+                        when (player.getString("$key/type")) {
+                            "audio" -> TrackType.AUDIO
+                            "sub" -> TrackType.SUBTITLE
+                            "video" -> {
+                                if (player.getFlag("$key/image") != true && player.getFlag("$key/albumart") != true) hasVideo = true
+                                return@repeat
+                            }
+                            else -> return@repeat
+                        }
+                    val id = player.getInt("$key/id") ?: return@repeat
+                    val title =
+                        player.getString("$key/title")?.takeIf { it.isNotBlank() }
+                            ?: player.getString("$key/lang")?.takeIf { it.isNotBlank() } ?: "Track $id"
+                    add(
+                        TrackInfo(
+                            id,
+                            type,
+                            if (type == TrackType.AUDIO) TRACK_TYPE_AUDIO else TRACK_TYPE_SUBTITLE,
+                            title,
+                            player.getFlag("$key/selected") == true,
+                            player.getString("$key/codec")
+                        )
+                    )
                 }
-            } catch (e: UnsatisfiedLinkError) {
-                availability = "Failed to load mpv_bridge: ${e.message}"
-                Log.e(TAG, availability)
-            } catch (e: SecurityException) {
-                availability = "SecurityException loading mpv_bridge: ${e.message}"
-                Log.e(TAG, availability)
             }
-            nativeLoaded = loaded
-            nativeLinked = linked
-            availabilityMessage = availability
-        }
-
-        fun registerAndroidAppContext(context: Context) {
-            if (!nativeLoaded || !nativeLinked || appContextRegistered) return
-            try {
-                nativeSetAndroidAppContext(context.applicationContext)
-                appContextRegistered = true
-            } catch (e: Throwable) {
-                Log.w(TAG, "nativeSetAndroidAppContext failed: ${e.message}")
-            }
-        }
-
-        @JvmStatic
-        private external fun nativeLastError(): String?
-
-        @JvmStatic
-        private external fun nativeIsLinked(): Boolean
-
-        @JvmStatic
-        private external fun nativeCreate(): Long
-
-        @JvmStatic
-        private external fun nativeDestroy(handle: Long)
-
-        @JvmStatic
-        private external fun nativeSetSurface(
-            handle: Long,
-            surface: Surface?
-        ): Boolean
-
-        @JvmStatic
-        private external fun nativeStartEventLoop(
-            handle: Long,
-            bridge: MpvNativeBridge
-        )
-
-        @JvmStatic
-        private external fun nativeStopEventLoop(handle: Long)
-
-        @JvmStatic
-        private external fun nativeSetOptionString(
-            handle: Long,
-            name: String,
-            value: String
-        ): Boolean
-
-        @JvmStatic
-        private external fun nativeSetLogLevel(
-            handle: Long,
-            level: String
-        ): Boolean
-
-        @JvmStatic
-        private external fun nativeGetVideoSize(handle: Long): Long
-
-        @JvmStatic
-        private external fun nativeGetHwdecCurrent(handle: Long): String?
-
-        @JvmStatic
-        private external fun nativeListTracks(handle: Long): Array<String>?
-
-        @JvmStatic
-        private external fun nativeSelectTrack(
-            handle: Long,
-            trackType: Int,
-            trackId: Int
-        ): Boolean
-
-        @JvmStatic
-        private external fun nativeDeselectTrack(
-            handle: Long,
-            trackType: Int
-        ): Boolean
-
-        @JvmStatic
-        private external fun nativeAddExternalTrack(
-            handle: Long,
-            trackType: Int,
-            path: String
-        ): Boolean
-
-        @JvmStatic
-        private external fun nativeSetDataSource(
-            handle: Long,
-            path: String,
-            headers: Array<String>?
-        ): Boolean
-
-        @JvmStatic
-        private external fun nativePlay(handle: Long)
-
-        @JvmStatic
-        private external fun nativePause(handle: Long)
-
-        @JvmStatic
-        private external fun nativeStop(handle: Long)
-
-        @JvmStatic
-        private external fun nativeSeek(
-            handle: Long,
-            positionMs: Long
-        )
-
-        @JvmStatic
-        private external fun nativeSetSpeed(
-            handle: Long,
-            speed: Float
-        )
-
-        @JvmStatic
-        private external fun nativeSetVolume(
-            handle: Long,
-            volume: Float
-        )
-
-        @JvmStatic
-        private external fun nativeSetLooping(
-            handle: Long,
-            looping: Boolean
-        )
-
-        @JvmStatic
-        private external fun nativeSetSubtitleDelay(
-            handle: Long,
-            offsetMs: Long
-        )
-
-        @JvmStatic
-        private external fun nativeGetPosition(handle: Long): Long
-
-        @JvmStatic
-        private external fun nativeGetDuration(handle: Long): Long
-
-        @JvmStatic
-        private external fun nativeSetAndroidAppContext(context: Any)
     }
 
     private fun setOption(
         name: String,
         value: String
+    ) = enqueue { it.setProperty(name, value) }
+
+    private fun enqueue(
+        onResult: ((Boolean) -> Unit)? = null,
+        action: (PlezyMpvSession) -> Unit
     ) {
-        val success = nativeSetOptionString(nativeHandle, name, value)
-        if (!success) {
-            Log.w(TAG, "mpv option $name=$value rejected: ${lastError().orEmpty()}")
+        synchronized(worker) {
+            if (released) return
+            worker.execute {
+                if (released) return@execute
+                val result = runCatching { action(checkNotNull(session) { errorMessage ?: "mpv is not initialized" }) }
+                result.exceptionOrNull()?.let {
+                    errorMessage = it.message
+                    Log.w(TAG, "mpv operation failed", it)
+                    if (onResult == null) dispatchEvent(Event.Error(null, null, errorMessage))
+                }
+                onResult?.let { callback -> mainHandler.post { if (!released) callback(result.isSuccess) } }
+            }
         }
+    }
+
+    private fun <T> call(
+        fallback: T,
+        action: (PlezyMpvSession) -> T
+    ): T {
+        if (released) return fallback
+        return try {
+            worker.submit<T> { action(checkNotNull(session)) }.get(1500, TimeUnit.MILLISECONDS)
+        } catch (error: Exception) {
+            errorMessage = error.cause?.message ?: error.message
+            Log.w(TAG, "mpv synchronous operation failed", error)
+            fallback
+        }
+    }
+
+    companion object {
+        private const val TAG = "MpvNativeBridge"
+        const val VIDEO_OUTPUT = "mediacodec"
+        const val TRACK_TYPE_AUDIO = 1
+        const val TRACK_TYPE_SUBTITLE = 2
+
+        internal fun nativePath(path: String): String {
+            val uri = Uri.parse(path)
+            return if (uri.scheme == "file" && (uri.authority.isNullOrEmpty() || uri.authority == "localhost")) {
+                uri.path ?: path
+            } else {
+                path
+            }
+        }
+
+        private val DEFAULT_OPTIONS =
+            mapOf(
+                "config" to "no",
+                "terminal" to "no",
+                "pause" to "yes",
+                "idle" to "yes",
+                "profile" to "fast",
+                "hwdec" to "mediacodec",
+                "vo" to VIDEO_OUTPUT,
+                "vd-lavc-software-fallback" to "no",
+                "stop-playback-on-init-failure" to "yes",
+                "ao" to "audiotrack,opensles",
+                "force-window" to "no",
+                "sub-visibility" to "no",
+                "osd-level" to "0"
+            )
     }
 }

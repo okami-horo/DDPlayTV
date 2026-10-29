@@ -73,39 +73,3 @@ target_compile_definitions(libass_bridge
     PRIVATE
         ASS_GPU_RENDER=1
 )
-
-set(MPV_PREBUILT "${PREBUILT_LIBS_DIR}/${ANDROID_ABI}/libmpv.so")
-
-if (EXISTS "${MPV_PREBUILT}")
-    add_library(mpv_prebuilt SHARED IMPORTED)
-    set_target_properties(mpv_prebuilt PROPERTIES IMPORTED_LOCATION "${MPV_PREBUILT}")
-    set(MPV_IMPORTED_LIBS mpv_prebuilt)
-else()
-    message(WARNING "libmpv.so not found at ${MPV_PREBUILT}, building mpv_bridge without mpv linkage")
-    set(MPV_IMPORTED_LIBS "")
-endif()
-
-add_library(mpv_bridge SHARED
-    mpv_bridge.cpp
-)
-
-target_include_directories(mpv_bridge
-    PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/include"
-)
-
-set(MPV_BRIDGE_LINK_LIBS ${COMMON_LINK_LIBS})
-
-if (MPV_IMPORTED_LIBS)
-    list(APPEND MPV_BRIDGE_LINK_LIBS ${MPV_IMPORTED_LIBS})
-endif()
-
-target_link_libraries(mpv_bridge
-    PRIVATE
-        ${MPV_BRIDGE_LINK_LIBS}
-)
-
-target_compile_definitions(mpv_bridge
-    PRIVATE
-        MPV_PREBUILT_AVAILABLE=$<BOOL:${MPV_IMPORTED_LIBS}>
-)

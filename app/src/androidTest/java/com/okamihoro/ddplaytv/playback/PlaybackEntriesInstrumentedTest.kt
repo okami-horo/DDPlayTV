@@ -473,8 +473,12 @@ class PlaybackEntriesInstrumentedTest {
             }
         }
 
-    @Test fun externalIntentUsesIdOnlyNavigationAndReentersExistingPlayer() =
-        withFixture { fixture ->
+    @Test fun externalIntentUsesIdOnlyNavigationAndReentersExistingPlayer() = verifyExternalIntentReentry(PlayerType.TYPE_EXO_PLAYER)
+
+    @Test fun mpvExternalIntentReentersExistingPlayer() = verifyExternalIntentReentry(PlayerType.TYPE_MPV_PLAYER)
+
+    private fun verifyExternalIntentReentry(kernel: PlayerType) =
+        withFixture(kernel) { fixture ->
             val models = ViewModelStore()
             val viewModel = model(models, PlayerIntentViewModel::class.java)
             try {
@@ -653,13 +657,16 @@ class PlaybackEntriesInstrumentedTest {
         throw AssertionError("Entry request did not reach actual playback")
     }
 
-    private fun withFixture(block: (File) -> Unit) {
+    private fun withFixture(
+        kernel: PlayerType = PlayerType.TYPE_EXO_PLAYER,
+        block: (File) -> Unit
+    ) {
         val originalKernel = PlayerConfig.getUsePlayerType()
         val input = File("/sdcard/Download/ddplaytv-lease-playback-long.mp4")
         assertTrue("Install the documented playback fixture", input.isFile)
         val fixture = File.createTempFile("handoff-entry-", ".mp4", context.cacheDir)
         input.copyTo(fixture, overwrite = true)
-        PlayerConfig.putUsePlayerType(PlayerType.TYPE_EXO_PLAYER.value)
+        PlayerConfig.putUsePlayerType(kernel.value)
         try {
             block(fixture)
         } finally {
