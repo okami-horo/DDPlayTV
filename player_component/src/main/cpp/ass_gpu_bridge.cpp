@@ -9,6 +9,7 @@
 #include <GLES3/gl3.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <cstring>
@@ -66,6 +67,10 @@ void main() {
 }
 )";
 constexpr long long kDefaultEmbeddedChunkDurationMs = 5000;
+constexpr size_t kSingleFontLimit = 16 * 1024 * 1024;
+constexpr size_t kMediaFontLimit = 32 * 1024 * 1024;
+constexpr size_t kTextureLimit = 64 * 1024 * 1024;
+constexpr size_t kMaxImages = 4096;
 
 struct GpuContext {
     std::mutex mutex;
@@ -79,7 +84,16 @@ struct GpuContext {
     std::string color_format;
     bool supports_hardware_buffer = false;
     bool telemetry_enabled = true;
-    int64_t last_vsync_id = 0;
+    int64_t target_present_time_ns = 0;
+    std::atomic<int64_t> state_revision{0};
+    int storage_width = 0;
+    int storage_height = 0;
+    double pixel_ratio = 1.0;
+    int video_rotation = 0;
+    std::string default_font;
+    std::vector<std::string> font_dirs;
+    size_t font_bytes = 0;
+    size_t peak_texture_bytes = 0;
     int gles_version = 3;
     EGLDisplay egl_display = EGL_NO_DISPLAY;
     EGLContext egl_context = EGL_NO_CONTEXT;
@@ -303,6 +317,8 @@ void DestroyAss(GpuContext *context) {
         ass_renderer_done(context->renderer);
         context->renderer = nullptr;
     }
+    context->last_frame_width = 0;
+    context->last_frame_height = 0;
     if (context->library != nullptr) {
         ass_library_done(context->library);
         context->library = nullptr;
@@ -337,6 +353,10 @@ bool EnsureAss(GpuContext *context) {
         context->renderer = ass_renderer_init(context->library);
         if (context->renderer == nullptr) return false;
         ass_set_font_scale(context->renderer, context->user_font_scale);
+        // Select the documented libass defaults explicitly, rather than importing fork budgets.
+        ass_set_cache_limits(context->renderer, 0, 0);
+        ass_set_storage_size(context->renderer, context->storage_width, context->storage_height);
+        ass_set_pixel_aspect(context->renderer, context->pixel_ratio);
     }
     return true;
 }
@@ -346,6 +366,8 @@ void ConfigureFonts(GpuContext *context, const std::string &default_font,
     if (context == nullptr || context->library == nullptr || context->renderer == nullptr) {
         return;
     }
+    context->default_font = default_font;
+    context->font_dirs = font_dirs;
     const std::string *selected_dir = nullptr;
     for (const auto &dir : font_dirs) {
         if (!dir.empty()) {
@@ -610,13 +632,16 @@ void WriteRenderMetrics(JNIEnv *env, jlongArray metrics_out, jlong render_ms, jl
 void UpdateFrameSizeIfNeeded(GpuContext *context) {
     if (context == nullptr || context->renderer == nullptr) return;
     if (context->width <= 0 || context->height <= 0) return;
-    if (context->width == context->last_frame_width &&
-        context->height == context->last_frame_height) {
+    const bool rotated = context->video_rotation == 90 || context->video_rotation == 270;
+    const int frame_width = rotated ? context->height : context->width;
+    const int frame_height = rotated ? context->width : context->height;
+    if (frame_width == context->last_frame_width && frame_height == context->last_frame_height) {
         return;
     }
-    ass_set_frame_size(context->renderer, context->width, context->height);
-    context->last_frame_width = context->width;
-    context->last_frame_height = context->height;
+    ass_set_frame_size(context->renderer, frame_width, frame_height);
+    context->last_frame_width = frame_width;
+    context->last_frame_height = frame_height;
+    context->pending_invalidate = true;
 }
 
 GpuContext::TextureEntry &AcquireTexture(GpuContext *context, int width, int height) {
@@ -707,7 +732,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeAttachSurface(
     context->rotation = rotation;
     context->color_format = JStringToUtf8(env, color_format);
     context->supports_hardware_buffer = supports_hardware_buffer == JNI_TRUE;
-    context->last_vsync_id = vsync_id;
+    context->target_present_time_ns = 0;
     if (context->window == nullptr) {
         LogError("Failed to attach GPU surface (window null)");
         return JNI_FALSE;
@@ -717,7 +742,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeAttachSurface(
         return JNI_FALSE;
     }
     if (!ClearSurface(context)) return JNI_FALSE;
-    LogInfo("GPU surface attached");
+    LogInfo("GPU surface attached; presentation=immediate; rasterScale=1; cache=libass-default; textureLimit=64MiB");
     return JNI_TRUE;
 }
 
@@ -736,7 +761,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeDetachSurface(
     context->height = 0;
     context->last_frame_width = 0;
     context->last_frame_height = 0;
-    context->last_vsync_id = 0;
+    context->target_present_time_ns = 0;
     LogInfo("GPU surface detached");
 }
 
@@ -876,19 +901,99 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeClearEmbeddedTrack(
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeAddFont(
+    JNIEnv *env, jobject, jlong handle, jstring name, jbyteArray data) {
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr || data == nullptr) return JNI_FALSE;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    const jsize size = env->GetArrayLength(data);
+    if (size < 4 || static_cast<size_t>(size) > kSingleFontLimit ||
+        static_cast<size_t>(size) > kMediaFontLimit - context->font_bytes || !EnsureAss(context)) {
+        LogError("Font attachment skipped: invalid size or media font budget");
+        return JNI_FALSE;
+    }
+    jbyte *bytes = env->GetByteArrayElements(data, nullptr);
+    if (bytes == nullptr) return JNI_FALSE;
+    const std::string font_name = JStringToUtf8(env, name);
+    ass_add_font(context->library, font_name.c_str(), reinterpret_cast<const char *>(bytes), size);
+    env->ReleaseByteArrayElements(data, bytes, JNI_ABORT);
+    context->font_bytes += static_cast<size_t>(size);
+    // Rebuild font selection and glyph caches, including previously selected fallback fonts.
+    ass_renderer_done(context->renderer);
+    context->renderer = nullptr;
+    context->last_frame_width = 0;
+    context->last_frame_height = 0;
+    if (!EnsureAss(context)) return JNI_FALSE;
+    ConfigureFonts(context, context->default_font, context->font_dirs);
+    UpdateFrameSizeIfNeeded(context);
+    context->pending_invalidate = true;
+    __android_log_print(ANDROID_LOG_INFO, kGpuLogTag, "font registered: %s bytes=%d mediaBytes=%zu",
+                        font_name.c_str(), size, context->font_bytes);
+    return JNI_TRUE;
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeResetMedia(
+    JNIEnv *, jobject, jlong handle) {
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr) return;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    DestroyAss(context);
+    context->font_bytes = 0;
+    context->peak_texture_bytes = 0;
+    if (MakeCurrent(context)) {
+        for (const auto &entry : context->texture_pool) glDeleteTextures(1, &entry.id);
+        context->texture_pool.clear();
+    }
+    std::vector<uint8_t>().swap(context->upload_buffer);
+    ClearSurface(context);
+    LogInfo("Media subtitle track/fonts/textures cleared");
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeInvalidateState(
+    JNIEnv *, jobject, jlong handle, jlong revision) {
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context != nullptr) context->state_revision.store(revision);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeSetVideoGeometry(
+    JNIEnv *, jobject, jlong handle, jint width, jint height, jfloat pixel_ratio, jint rotation) {
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr || width <= 0 || height <= 0) return;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    context->storage_width = width;
+    context->storage_height = height;
+    context->pixel_ratio = pixel_ratio > 0 ? pixel_ratio : 1.0;
+    context->video_rotation = ((rotation % 360) + 360) % 360;
+    if (context->renderer != nullptr) {
+        ass_set_storage_size(context->renderer, width, height);
+        ass_set_pixel_aspect(context->renderer, context->pixel_ratio);
+        UpdateFrameSizeIfNeeded(context);
+    }
+    context->pending_invalidate = true;
+    __android_log_print(ANDROID_LOG_INFO, kGpuLogTag, "geometry storage=%dx%d output=%dx%d par=%.4f rotation=%d",
+                        width, height, context->width, context->height, context->pixel_ratio, context->video_rotation);
+}
+
+extern "C" JNIEXPORT jint JNICALL
 Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     JNIEnv *env,
     jobject /*thiz*/,
     jlong handle,
-    jlong subtitle_pts_ms,
-    jlong vsync_id,
+    jlong content_time_us,
+    jlong target_present_time_ns,
+    jlong state_revision,
     jlongArray metrics_out) {
     auto *context = reinterpret_cast<GpuContext *>(handle);
     if (context == nullptr) {
         return JNI_FALSE;
     }
     std::lock_guard<std::mutex> guard(context->mutex);
-    context->last_vsync_id = vsync_id;
+    if (context->state_revision.load() != state_revision) return JNI_FALSE;
+    // Preserved for diagnostics; precise scheduling remains disabled pending device measurements.
+    context->target_present_time_ns = target_present_time_ns;
     const bool collect_metrics = metrics_out != nullptr && context->telemetry_enabled;
     if (context->window == nullptr || context->renderer == nullptr || context->track == nullptr ||
         context->width <= 0 || context->height <= 0) {
@@ -911,7 +1016,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
         render_start = std::chrono::steady_clock::now();
     }
     ASS_Image *img = ass_render_frame(context->renderer, context->track,
-                                      static_cast<long long>(subtitle_pts_ms), &change);
+                                      static_cast<long long>(content_time_us / 1000), &change);
     std::chrono::steady_clock::time_point render_end;
     if (collect_metrics) {
         render_end = std::chrono::steady_clock::now();
@@ -921,7 +1026,40 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
         if (collect_metrics) {
             WriteRenderMetrics(env, metrics_out, 0, 0, 0);
         }
-        return JNI_TRUE;
+        return 2; // Reused content; no BufferQueue submission.
+    }
+    if (context->state_revision.load() != state_revision) {
+        context->pending_invalidate = true;
+        return JNI_FALSE;
+    }
+    size_t frame_texture_bytes = 0;
+    size_t image_count = 0;
+    GLint max_texture_size = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+    for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
+        if (cur->w <= 0 || cur->h <= 0 || cur->bitmap == nullptr || cur->stride < cur->w) continue;
+        const size_t bytes = static_cast<size_t>(cur->w) * static_cast<size_t>(cur->h);
+        if (++image_count > kMaxImages || cur->w > max_texture_size || cur->h > max_texture_size ||
+            bytes > kTextureLimit - frame_texture_bytes) {
+            LogError("Subtitle texture budget exceeded; rejecting the entire frame");
+            ClearSurface(context);
+            return JNI_FALSE;
+        }
+        frame_texture_bytes += bytes;
+    }
+    // Discard unused retained textures, and resize changed slots before allocating new storage.
+    size_t retained_bytes = 0;
+    for (const auto &entry : context->texture_pool) {
+        retained_bytes += static_cast<size_t>(entry.width) * static_cast<size_t>(entry.height);
+    }
+    if (context->texture_pool.size() > image_count || retained_bytes + frame_texture_bytes > kTextureLimit) {
+        for (const auto &entry : context->texture_pool) glDeleteTextures(1, &entry.id);
+        context->texture_pool.clear();
+    }
+    if (frame_texture_bytes > context->peak_texture_bytes) {
+        context->peak_texture_bytes = frame_texture_bytes;
+        __android_log_print(ANDROID_LOG_DEBUG, kGpuLogTag, "texturePeakBytes=%zu images=%zu targetNs=%lld presentation=immediate",
+                            frame_texture_bytes, image_count, static_cast<long long>(target_present_time_ns));
     }
     context->pending_invalidate = false;
 
@@ -943,11 +1081,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
                           reinterpret_cast<void *>(sizeof(float) * 2));
     glEnableVertexAttribArray(1);
 
-    const float vertical_offset_px =
-        context->height <= 0
-            ? 0.0F
-            : static_cast<float>(context->height) *
-                  (static_cast<float>(context->user_vertical_offset_percent) / 100.0F);
+    const float vertical_offset_ndc = 2.0F * context->user_vertical_offset_percent / 100.0F;
 
     for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
         if (cur->w <= 0 || cur->h <= 0 || cur->bitmap == nullptr || cur->stride < cur->w) continue;
@@ -990,20 +1124,20 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
                          1000.0;
         }
 
-        const float left = (static_cast<float>(cur->dst_x) / static_cast<float>(context->width)) *
+        const float left = (static_cast<float>(cur->dst_x) / static_cast<float>(context->last_frame_width)) *
                                2.0F -
                            1.0F;
         const float right = (static_cast<float>(cur->dst_x + cur->w) /
-                             static_cast<float>(context->width)) *
+                             static_cast<float>(context->last_frame_width)) *
                                  2.0F -
                              1.0F;
-        const float adjusted_dst_y = static_cast<float>(cur->dst_y) - vertical_offset_px;
+        const float adjusted_dst_y = static_cast<float>(cur->dst_y);
         const float top = 1.0F -
-                          (adjusted_dst_y / static_cast<float>(context->height)) *
+                          (adjusted_dst_y / static_cast<float>(context->last_frame_height)) *
                                2.0F;
         const float bottom =
             1.0F -
-            ((adjusted_dst_y + static_cast<float>(cur->h)) / static_cast<float>(context->height)) *
+            ((adjusted_dst_y + static_cast<float>(cur->h)) / static_cast<float>(context->last_frame_height)) *
                 2.0F;
 
         const std::chrono::steady_clock::time_point draw_start =
@@ -1013,12 +1147,23 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
         const float blue = static_cast<float>((cur->color >> 8) & 0xFF) / 255.0F;
         glUniform4f(context->uniform_color, red, green, blue, final_alpha);
 
-        const float vertices[] = {
+        float vertices[] = {
             left,  top,    0.0F, 0.0F,  // left-top
             right, top,    1.0F, 0.0F,  // right-top
             left,  bottom, 0.0F, 1.0F,  // left-bottom
             right, bottom, 1.0F, 1.0F   // right-bottom
         };
+        for (int i = 0; i < 16; i += 4) {
+            const float x = vertices[i];
+            const float y = vertices[i + 1];
+            switch (context->video_rotation) {
+                case 90: vertices[i] = y; vertices[i + 1] = -x; break;
+                case 180: vertices[i] = -x; vertices[i + 1] = -y; break;
+                case 270: vertices[i] = -y; vertices[i + 1] = x; break;
+                default: break;
+            }
+            vertices[i + 1] += vertical_offset_ndc;
+        }
 
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -1034,6 +1179,10 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     if (collect_metrics) {
         swap_start = std::chrono::steady_clock::now();
     }
+    if (context->state_revision.load() != state_revision) {
+        context->pending_invalidate = true;
+        return JNI_FALSE;
+    }
     if (glGetError() != GL_NO_ERROR ||
         eglSwapBuffers(context->egl_display, context->egl_surface) != EGL_TRUE) {
         context->pending_invalidate = true;
@@ -1047,10 +1196,9 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
             1000.0;
 
         const auto render_latency =
-            std::chrono::duration_cast<std::chrono::microseconds>(render_end - render_start).count() /
-            1000;
-        WriteRenderMetrics(env, metrics_out, render_latency, static_cast<jlong>(upload_ms),
-                           static_cast<jlong>(composite_ms));
+            std::chrono::duration_cast<std::chrono::microseconds>(render_end - render_start).count();
+        WriteRenderMetrics(env, metrics_out, render_latency, static_cast<jlong>(upload_ms * 1000.0),
+                           static_cast<jlong>(composite_ms * 1000.0));
     }
     return JNI_TRUE;
 }

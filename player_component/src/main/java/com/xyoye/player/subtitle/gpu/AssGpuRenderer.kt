@@ -32,7 +32,15 @@ class AssGpuRenderer(
     private val pipelineRecoveryListener: ((SubtitlePipelineFallbackReason, Boolean) -> Unit)? = null,
     private val surfaceReadyListener: (() -> Unit)? = null
 ) {
-    private val nativeBridge: AssGpuNativeBridge by lazy(LazyThreadSafetyMode.NONE) { nativeBridgeFactory() }
+    @Volatile private var initializedBridge: AssGpuNativeBridge? = null
+    private val nativeBridge: AssGpuNativeBridge by lazy(LazyThreadSafetyMode.NONE) {
+        nativeBridgeFactory().also { bridge ->
+            synchronized(frameLock) {
+                bridge.invalidateState(stateRevision.get())
+                initializedBridge = bridge
+            }
+        }
+    }
     private val telemetryCollector =
         SubtitleTelemetryCollector(
             pipelineController = pipelineController,
@@ -42,14 +50,19 @@ class AssGpuRenderer(
     val frameCleaner = SubtitleFrameCleaner { flush() }
 
     private val frameLock = Any()
-    private val pendingPtsMs = AtomicLong(0L)
-    private val pendingVsyncId = AtomicLong(0L)
+    private var pendingFrame: SubtitleFrameRequest? = null
+    private val stateRevision = AtomicLong(0L)
     private val surfaceRevision = AtomicLong(0L)
     private var surfaceAttached = false
     private var trackLoaded = false
     private var visible = true
     private var blockedByFailure = false
     private val embeddedSampleLogCounter = AtomicLong(0L)
+    private var renderedFrameCount = 0L
+    private var videoWidth = 0
+    private var videoHeight = 0
+    private var videoPixelRatio = 1f
+    private var videoRotation = 0
 
     @Volatile
     private var telemetryEnabled = true
@@ -63,12 +76,8 @@ class AssGpuRenderer(
     private val renderRunnable: Runnable =
         object : Runnable {
             override fun run() {
-                if (!released) {
-                    renderOnRenderThread(
-                        subtitlePtsMs = pendingPtsMs.get(),
-                        vsyncId = pendingVsyncId.get(),
-                    )
-                }
+                val request = synchronized(frameLock) { pendingFrame.also { pendingFrame = null } }
+                if (request != null && isCurrent(request)) renderOnRenderThread(request)
             }
         }
 
@@ -81,8 +90,8 @@ class AssGpuRenderer(
     ) {
         if (released) return
         val revision = surfaceRevision.incrementAndGet()
-        renderHandler.post {
-            if (released || revision != surfaceRevision.get()) return@post
+        postStateCommand {
+            if (revision != surfaceRevision.get()) return@postStateCommand
             initJob?.cancel()
             surfaceAttached = false
             blockedByFailure = false
@@ -99,7 +108,7 @@ class AssGpuRenderer(
                         SubtitlePipelineFallbackReason.SURFACE_LOST
                     }
                 pipelineErrorListener?.invoke(reason, null)
-                return@post
+                return@postStateCommand
             }
             surfaceAttached = true
             initJob =
@@ -123,24 +132,68 @@ class AssGpuRenderer(
     }
 
     fun renderFrame(
-        subtitlePtsMs: Long,
-        vsyncId: Long
+        contentTimeUs: Long,
+        targetPresentTimeNs: Long? = null
     ) {
-        if (released) return
-        pendingPtsMs.set(subtitlePtsMs)
-        pendingVsyncId.set(vsyncId)
-        // Move a queued frame behind state/track commands already submitted to this looper.
-        // This matters when a paused redraw races with hide/seek/track changes.
         synchronized(frameLock) {
+            if (released) return
+            pendingFrame = SubtitleFrameRequest(contentTimeUs, targetPresentTimeNs, stateRevision.get(), surfaceRevision.get())
             renderHandler.removeCallbacks(renderRunnable)
             renderHandler.post(renderRunnable)
         }
     }
 
+    private fun postStateCommand(action: () -> Unit): Boolean =
+        synchronized(frameLock) {
+            if (released) return@synchronized false
+            invalidateFrames()
+            renderHandler.post { if (!released) action() }
+        }
+
+    private fun invalidateFrames() {
+        val revision = stateRevision.incrementAndGet()
+        initializedBridge?.invalidateState(revision)
+        pendingFrame = null
+        renderHandler.removeCallbacks(renderRunnable)
+    }
+
+    private fun isCurrent(request: SubtitleFrameRequest): Boolean =
+        !released && request.stateRevision == stateRevision.get() && request.surfaceRevision == surfaceRevision.get()
+
+    fun resetMedia() {
+        postStateCommand {
+            trackLoaded = false
+            nativeBridge.resetMedia()
+        }
+    }
+
+    fun addFont(
+        name: String,
+        data: ByteArray
+    ) {
+        postStateCommand { nativeBridge.addFont(name, data) }
+    }
+
+    fun updateVideoGeometry(
+        width: Int,
+        height: Int,
+        pixelRatio: Float,
+        rotationDegrees: Int
+    ) {
+        if (width <= 0 || height <= 0) return
+        synchronized(frameLock) {
+            if (videoWidth == width && videoHeight == height && videoPixelRatio == pixelRatio && videoRotation == rotationDegrees) return
+            videoWidth = width
+            videoHeight = height
+            videoPixelRatio = pixelRatio
+            videoRotation = rotationDegrees
+            postStateCommand { nativeBridge.setVideoGeometry(width, height, pixelRatio, rotationDegrees) }
+        }
+    }
+
     fun setVisible(visible: Boolean) {
         if (released) return
-        renderHandler.post {
-            if (released) return@post
+        postStateCommand {
             this.visible = visible
             if (!visible) nativeBridge.flush()
         }
@@ -157,8 +210,7 @@ class AssGpuRenderer(
 
     fun updateOpacity(alphaPercent: Int) {
         if (released) return
-        renderHandler.post {
-            if (released) return@post
+        postStateCommand {
             nativeBridge.setGlobalOpacity(alphaPercent)
         }
     }
@@ -166,16 +218,14 @@ class AssGpuRenderer(
     fun updateFontScale(scale: Float) {
         if (released) return
         val clampedScale = scale.coerceIn(0.1f, 5f)
-        renderHandler.post {
-            if (released) return@post
+        postStateCommand {
             nativeBridge.setFontScale(clampedScale)
         }
     }
 
     fun updateVerticalOffset(offsetPercent: Int) {
         if (released) return
-        renderHandler.post {
-            if (released) return@post
+        postStateCommand {
             nativeBridge.setVerticalOffsetPercent(offsetPercent)
         }
     }
@@ -183,6 +233,7 @@ class AssGpuRenderer(
     fun detachSurface() {
         if (released) return
         surfaceRevision.incrementAndGet()
+        synchronized(frameLock) { invalidateFrames() }
         val detach = {
             initJob?.cancel()
             surfaceAttached = false
@@ -224,7 +275,7 @@ class AssGpuRenderer(
                     trackLoaded = loaded
                     continuation.resume(loaded)
                 }
-            if (!renderHandler.post(task)) continuation.resume(false)
+            if (!postStateCommand { task.run() }) continuation.resume(false)
             continuation.invokeOnCancellation { renderHandler.removeCallbacks(task) }
         }
 
@@ -234,8 +285,7 @@ class AssGpuRenderer(
         defaultFont: String?
     ) {
         if (released) return
-        renderHandler.post {
-            if (released) return@post
+        postStateCommand {
             trackLoaded = nativeBridge.initEmbeddedTrack(codecPrivate, fontDirs, defaultFont)
             if (PlayerInitializer.isPrintLog) {
                 LogFacade.d(
@@ -269,16 +319,14 @@ class AssGpuRenderer(
 
     fun flushEmbeddedEvents() {
         if (released) return
-        renderHandler.post {
-            if (released) return@post
+        postStateCommand {
             nativeBridge.flushEmbeddedEvents()
         }
     }
 
     fun clearEmbeddedTrack() {
         if (released) return
-        renderHandler.post {
-            if (released) return@post
+        postStateCommand {
             trackLoaded = false
             nativeBridge.clearEmbeddedTrack()
         }
@@ -286,15 +334,17 @@ class AssGpuRenderer(
 
     fun flush() {
         if (released) return
-        renderHandler.post {
-            if (released) return@post
+        postStateCommand {
             nativeBridge.flush()
         }
     }
 
     fun release() {
         if (released) return
-        released = true
+        synchronized(frameLock) {
+            released = true
+            invalidateFrames()
+        }
         surfaceRevision.incrementAndGet()
 
         renderHandler.removeCallbacks(renderRunnable)
@@ -311,20 +361,30 @@ class AssGpuRenderer(
         }
     }
 
-    private fun renderOnRenderThread(
-        subtitlePtsMs: Long,
-        vsyncId: Long
-    ) {
+    private fun renderOnRenderThread(request: SubtitleFrameRequest) {
         if (blockedByFailure || !surfaceAttached || !visible || !trackLoaded) return
         val state = pipelineController.currentState()
         if (state?.status == SubtitlePipelineStatus.Degraded) return
 
         if (!telemetryCollector.allowRender()) {
-            telemetryCollector.recordSkippedFrame(subtitlePtsMs, vsyncId)
+            telemetryCollector.recordSkippedFrame(request.contentTimeUs / 1000L, request.targetPresentTimeNs)
             return
         }
-        val result = nativeBridge.renderFrame(subtitlePtsMs, vsyncId, telemetryEnabled)
-        telemetryCollector.recordRenderResult(result, subtitlePtsMs, vsyncId, telemetryEnabled)
+        if (!isCurrent(request)) return
+        val renderStartedNs = System.nanoTime()
+        val result = nativeBridge.renderFrame(request.contentTimeUs, request.targetPresentTimeNs, telemetryEnabled, request.stateRevision)
+        if (!isCurrent(request)) return
+        telemetryCollector.recordRenderResult(result, request.contentTimeUs / 1000L, request.targetPresentTimeNs, telemetryEnabled)
+        renderedFrameCount++
+        if (PlayerInitializer.isPrintLog && (renderedFrameCount <= 6 || renderedFrameCount % 50 == 0L)) {
+            val queueUs = (renderStartedNs - request.requestedAtNs) / 1000L
+            val targetDeltaUs = request.targetPresentTimeNs?.let { (System.nanoTime() - it) / 1000L }
+            LogFacade.d(
+                LogModule.PLAYER,
+                TAG,
+                "frame contentUs=${request.contentTimeUs} revision=${request.stateRevision} queueUs=$queueUs targetNs=${request.targetPresentTimeNs} targetDeltaUs=$targetDeltaUs presentation=immediate submitted=${result.submitted} cpuLayoutMs=${result.renderLatencyMs} cpuUploadMs=${result.uploadLatencyMs} cpuDrawSwapMs=${result.compositeLatencyMs}"
+            )
+        }
 
         if (!result.rendered && trackLoaded && state?.status == SubtitlePipelineStatus.Active) {
             blockedByFailure = true

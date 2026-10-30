@@ -6,9 +6,10 @@ import com.xyoye.data_component.media3.telemetry.subtitle.SubtitleOutputTarget
 class AssGpuNativeBridge {
     data class NativeRenderResult(
         val rendered: Boolean,
-        val renderLatencyMs: Long,
-        val uploadLatencyMs: Long,
-        val compositeLatencyMs: Long
+        val renderLatencyMs: Double,
+        val uploadLatencyMs: Double,
+        val compositeLatencyMs: Double,
+        val submitted: Boolean = rendered
     )
 
     companion object {
@@ -48,33 +49,52 @@ class AssGpuNativeBridge {
     }
 
     fun renderFrame(
-        subtitlePtsMs: Long,
-        vsyncId: Long,
-        telemetryEnabled: Boolean = true
+        contentTimeUs: Long,
+        targetPresentTimeNs: Long?,
+        telemetryEnabled: Boolean = true,
+        stateRevision: Long = 0L
     ): NativeRenderResult {
         if (!isReady) {
-            return NativeRenderResult(rendered = false, renderLatencyMs = 0, uploadLatencyMs = 0, compositeLatencyMs = 0)
+            return NativeRenderResult(rendered = false, renderLatencyMs = 0.0, uploadLatencyMs = 0.0, compositeLatencyMs = 0.0)
         }
-        return if (!telemetryEnabled) {
-            val rendered = nativeRender(handle, subtitlePtsMs, vsyncId, null)
-            NativeRenderResult(rendered = rendered, renderLatencyMs = 0, uploadLatencyMs = 0, compositeLatencyMs = 0)
-        } else {
-            metricsBuffer[0] = 0
-            metricsBuffer[1] = 0
-            metricsBuffer[2] = 0
-            val rendered = nativeRender(handle, subtitlePtsMs, vsyncId, metricsBuffer)
-            NativeRenderResult(
-                rendered = rendered,
-                renderLatencyMs = metricsBuffer[0],
-                uploadLatencyMs = metricsBuffer[1],
-                compositeLatencyMs = metricsBuffer[2],
-            )
-        }
+        metricsBuffer.fill(0)
+        val status =
+            nativeRender(handle, contentTimeUs, targetPresentTimeNs ?: 0L, stateRevision, metricsBuffer.takeIf { telemetryEnabled })
+        return NativeRenderResult(
+            rendered = status != 0,
+            renderLatencyMs = metricsBuffer[0] / 1000.0,
+            uploadLatencyMs = metricsBuffer[1] / 1000.0,
+            compositeLatencyMs = metricsBuffer[2] / 1000.0,
+            submitted = status == 1
+        )
     }
 
     fun setTelemetryEnabled(enabled: Boolean) {
         if (!isReady) return
         nativeSetTelemetryEnabled(handle, enabled)
+    }
+
+    @Synchronized
+    fun invalidateState(revision: Long) {
+        if (isReady) nativeInvalidateState(handle, revision)
+    }
+
+    fun resetMedia() {
+        if (isReady) nativeResetMedia(handle)
+    }
+
+    fun addFont(
+        name: String,
+        data: ByteArray
+    ): Boolean = isReady && nativeAddFont(handle, name, data)
+
+    fun setVideoGeometry(
+        width: Int,
+        height: Int,
+        pixelRatio: Float,
+        rotationDegrees: Int
+    ) {
+        if (isReady) nativeSetVideoGeometry(handle, width, height, pixelRatio, rotationDegrees)
     }
 
     fun setGlobalOpacity(percent: Int) {
@@ -128,6 +148,7 @@ class AssGpuNativeBridge {
         nativeFlush(handle)
     }
 
+    @Synchronized
     fun release() {
         if (!isReady) return
         nativeDestroy(handle)
@@ -154,10 +175,32 @@ class AssGpuNativeBridge {
 
     private external fun nativeRender(
         handle: Long,
-        subtitlePtsMs: Long,
-        vsyncId: Long,
+        contentTimeUs: Long,
+        targetPresentTimeNs: Long,
+        stateRevision: Long,
         metricsOut: LongArray?
+    ): Int
+
+    private external fun nativeInvalidateState(
+        handle: Long,
+        revision: Long
+    )
+
+    private external fun nativeResetMedia(handle: Long)
+
+    private external fun nativeAddFont(
+        handle: Long,
+        name: String,
+        data: ByteArray
     ): Boolean
+
+    private external fun nativeSetVideoGeometry(
+        handle: Long,
+        width: Int,
+        height: Int,
+        pixelRatio: Float,
+        rotationDegrees: Int
+    )
 
     private external fun nativeFlush(handle: Long)
 

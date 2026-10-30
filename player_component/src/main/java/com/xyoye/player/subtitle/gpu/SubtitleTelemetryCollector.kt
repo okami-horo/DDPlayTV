@@ -1,8 +1,8 @@
 package com.xyoye.player.subtitle.gpu
 
 import com.xyoye.common_component.log.SubtitleTelemetryLogger
-import com.xyoye.data_component.media3.telemetry.subtitle.TelemetrySample
 import com.xyoye.data_component.enums.SubtitleFrameStatus
+import com.xyoye.data_component.media3.telemetry.subtitle.TelemetrySample
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -19,7 +19,7 @@ class SubtitleTelemetryCollector(
 
     fun recordSkippedFrame(
         subtitlePtsMs: Long,
-        _vsyncId: Long,
+        _targetPresentTimeNs: Long?,
         reason: String = DROP_REASON_LOAD_SHED
     ) {
         val sample =
@@ -40,7 +40,7 @@ class SubtitleTelemetryCollector(
     fun recordRenderResult(
         result: AssGpuNativeBridge.NativeRenderResult,
         subtitlePtsMs: Long,
-        _vsyncId: Long,
+        _targetPresentTimeNs: Long?,
         telemetryEnabled: Boolean
     ) {
         val frameStatus =

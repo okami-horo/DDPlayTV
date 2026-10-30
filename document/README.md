@@ -15,7 +15,7 @@
 | Media3 默认解码选择、初始化回退与实际运行日志 | [Media3 解码说明](player/media3-decoding.md) |
 | ASS/SSA 字幕渲染、偏移与 GPU 恢复 | [字幕渲染](player/subtitle-rendering.md) |
 | libass 接入缺口、同类项目比较与修复验收 | [libass 接入审查](player/libass-integration-audit.md) |
-| Media3／libass 后续架构、呈现时序与 GPU 优化设计 | [接入完善设计](../docs/superpowers/designs/2026-10-29-media3-libass-integration-design.md)（设计稿，待后续实施） |
+| Media3 应用 libass 时间、字体、帧请求与资源边界 | [设计契约](../docs/superpowers/designs/2026-10-29-media3-libass-integration-design.md)、[实施与验证](../docs/superpowers/plans/2026-10-30-media3-libass.md)；精确呈现与性能优化保留测量门槛，mpv 保持原生字幕 |
 | 简繁转换现状和字幕待实现需求 | [简繁转换](player/subtitle-language-conversion.md) |
 | 顺序续播的集成与 TV 验收 | [播放验证待办](player/playback-validation-followup.md) |
 | mpv 原生库与运行参数 | [产物来源与更新](mpv-build-notes.md)、[配置项](mpv_conf_supported_options.md) |

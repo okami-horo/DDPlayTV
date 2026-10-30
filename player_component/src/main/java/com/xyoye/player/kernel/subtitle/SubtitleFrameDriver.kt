@@ -14,13 +14,20 @@ interface SubtitleFrameDriver {
     /**
      * Callback invoked by frame drivers.
      *
-     * All timestamps are in the media timeline (milliseconds) unless otherwise specified.
+     * Frame time is media window time in microseconds; targets use System.nanoTime().
      */
     interface Callback {
         fun onVideoFrame(
-            videoPtsMs: Long,
-            vsyncId: Long
+            contentTimeUs: Long,
+            targetPresentTimeNs: Long?
         )
+
+        fun onVideoGeometry(
+            width: Int,
+            height: Int,
+            pixelRatio: Float,
+            rotationDegrees: Int
+        ) = Unit
 
         fun onTimelineJump(
             positionMs: Long,

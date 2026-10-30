@@ -3,7 +3,6 @@ package com.xyoye.player.subtitle.backend
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
-import android.os.SystemClock
 import android.view.Choreographer
 import android.view.Surface
 import androidx.media3.common.util.UnstableApi
@@ -188,18 +187,28 @@ internal class LibassGpuSubtitleSession(
     }
 
     fun onOffsetChanged(positionMs: Long) {
-        renderOnceIfPaused(positionMs)
+        gpuRenderer.flush()
+        renderOnce(positionMs)
     }
 
     override fun onVideoFrame(
-        videoPtsMs: Long,
-        vsyncId: Long
+        contentTimeUs: Long,
+        targetPresentTimeNs: Long?
     ) {
         if (tracker.currentTarget == null) return
         val pts =
-            (videoPtsMs + SubtitlePreferenceUpdater.currentOffset())
+            (contentTimeUs + SubtitlePreferenceUpdater.currentOffset() * 1000L)
                 .coerceAtLeast(0L)
-        gpuRenderer.renderFrame(pts, vsyncId)
+        gpuRenderer.renderFrame(pts, targetPresentTimeNs)
+    }
+
+    override fun onVideoGeometry(
+        width: Int,
+        height: Int,
+        pixelRatio: Float,
+        rotationDegrees: Int
+    ) {
+        gpuRenderer.updateVideoGeometry(width, height, pixelRatio, rotationDegrees)
     }
 
     override fun onTimelineJump(
@@ -319,8 +328,7 @@ internal class LibassGpuSubtitleSession(
                         playerView.getCurrentPosition().let { current ->
                             (current + SubtitlePreferenceUpdater.currentOffset()).coerceAtLeast(0L)
                         }
-                    val vsyncId = frameTimeNanos / 1_000_000L
-                    gpuRenderer.renderFrame(pts, vsyncId)
+                    gpuRenderer.renderFrame(pts * 1000L, null)
                 }
                 choreographer?.postFrameCallback(this)
             }
@@ -382,7 +390,12 @@ internal class LibassGpuSubtitleSession(
         val defaultFont = SubtitleFontManager.getDefaultFontPath(environment.context)
         val sink =
             SwitchableEmbeddedSubtitleSink(
-                LibassEmbeddedSubtitleSink(gpuRenderer, fonts, defaultFont) {
+                LibassEmbeddedSubtitleSink(gpuRenderer, fonts, defaultFont, onMediaReset = {
+                    onMainThread {
+                        externalTrackRevision++
+                        embeddedSinkController?.setEnabled(true)
+                    }
+                }) {
                     onMainThread { renderOnceIfPaused(environment.playerView?.getCurrentPosition() ?: 0L) }
                 },
             )
@@ -416,8 +429,7 @@ internal class LibassGpuSubtitleSession(
         val pts =
             (positionMs + SubtitlePreferenceUpdater.currentOffset())
                 .coerceAtLeast(0L)
-        val vsyncId = SystemClock.elapsedRealtimeNanos() / 1_000_000L
-        gpuRenderer.renderFrame(pts, vsyncId)
+        gpuRenderer.renderFrame(pts * 1000L, null)
     }
 
     private fun offsetPercentToScale(offsetPercent: Int): Float {

@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.xyoye.data_component.enums.VideoScreenScale
+import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
 import com.xyoye.player.kernel.inter.AbstractVideoPlayer
 import com.xyoye.player.utils.RenderMeasureHelper
 
@@ -28,7 +29,11 @@ class RenderSurfaceView(
             ) {
             }
 
+            @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
             override fun surfaceDestroyed(holder: SurfaceHolder) {
+                if (this@RenderSurfaceView::mVideoPlayer.isInitialized) {
+                    (mVideoPlayer as? Media3VideoPlayer)?.clearSurface(holder.surface)
+                }
             }
 
             override fun surfaceCreated(holder: SurfaceHolder) {

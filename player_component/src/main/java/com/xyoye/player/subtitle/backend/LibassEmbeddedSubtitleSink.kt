@@ -16,11 +16,30 @@ class LibassEmbeddedSubtitleSink(
     private val renderer: AssGpuRenderer,
     private val fontDirectories: List<String>,
     private val defaultFont: String?,
+    private val onMediaReset: () -> Unit = {},
     private val onContentChanged: () -> Unit = {}
 ) : EmbeddedSubtitleSink {
     private val lock = Any()
     private var initialized = false
     private val sampleLogCounter = AtomicInteger(0)
+
+    override fun onMediaChanged() {
+        synchronized(lock) {
+            initialized = false
+            renderer.resetMedia()
+            onMediaReset()
+        }
+    }
+
+    override fun onFont(
+        name: String,
+        data: ByteArray
+    ) {
+        synchronized(lock) {
+            renderer.addFont(name, data)
+            onContentChanged()
+        }
+    }
 
     override fun onFormat(codecPrivate: ByteArray?) {
         synchronized(lock) {

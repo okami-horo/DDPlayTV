@@ -17,16 +17,25 @@ class LibassSubtitleDecoderFactory(
     private val defaultFactory = SubtitleDecoderFactory.DEFAULT
     private val supportsLogCounter = AtomicInteger(0)
     private val createLogCounter = AtomicInteger(0)
+    private var sourceInput: Media3SubtitleInput? = null
+
+    internal fun useSource(input: Media3SubtitleInput?) {
+        sourceInput = input
+    }
+
+    internal fun hasSink(): Boolean = sourceInput != null || sinkProvider() != null
+
+    private fun currentSink(): EmbeddedSubtitleSink? = sourceInput?.createDecoderSink(allowDetached = true) ?: sinkProvider()
 
     override fun supportsFormat(format: Format): Boolean {
-        val sink = sinkProvider()
+        val sinkPresent = hasSink()
         val ssaMime = Media3SubtitleFormatClassifier.isSsaMime(format.sampleMimeType)
-        val supportsByLibass = sink != null && ssaMime
+        val supportsByLibass = sinkPresent && ssaMime
         if (shouldLog(supportsLogCounter.incrementAndGet())) {
             logDecision(
                 prefix = "supportsFormat",
                 format = format,
-                sinkPresent = sink != null,
+                sinkPresent = sinkPresent,
                 isSsaMime = ssaMime,
                 useLibassPath = supportsByLibass,
             )
@@ -38,7 +47,7 @@ class LibassSubtitleDecoderFactory(
     }
 
     override fun createDecoder(format: Format): SubtitleDecoder =
-        if (sinkProvider() != null && Media3SubtitleFormatClassifier.isSsaMime(format.sampleMimeType)) {
+        if (hasSink() && Media3SubtitleFormatClassifier.isSsaMime(format.sampleMimeType)) {
             if (shouldLog(createLogCounter.incrementAndGet())) {
                 logDecision(
                     prefix = "createDecoder",
@@ -48,10 +57,11 @@ class LibassSubtitleDecoderFactory(
                     useLibassPath = true,
                 )
             }
-            LibassSsaStreamDecoder(format, sinkProvider)
+            val sink = currentSink()
+            LibassSsaStreamDecoder(format) { sink }
         } else {
             if (shouldLog(createLogCounter.incrementAndGet())) {
-                val sinkPresent = sinkProvider() != null
+                val sinkPresent = hasSink()
                 val ssaMime = Media3SubtitleFormatClassifier.isSsaMime(format.sampleMimeType)
                 logDecision(
                     prefix = "createDecoder",

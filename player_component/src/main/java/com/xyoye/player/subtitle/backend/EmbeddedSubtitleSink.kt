@@ -7,6 +7,13 @@ import androidx.media3.common.util.UnstableApi
  */
 @UnstableApi
 interface EmbeddedSubtitleSink {
+    fun onMediaChanged() = Unit
+
+    fun onFont(
+        name: String,
+        data: ByteArray
+    ) = Unit
+
     fun onFormat(codecPrivate: ByteArray?)
 
     fun onSample(

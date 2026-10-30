@@ -46,10 +46,13 @@ object Media3MediaSourceHelper {
         mediaId: String? = null,
     ): MediaSource {
         val contentUri = Uri.parse(uri)
+        val subtitleInput = Media3SubtitleInput()
+        val fontAttachmentSink = subtitleInput.beginMedia()
         val mediaItemBuilder =
             MediaItem
                 .Builder()
                 .setUri(contentUri)
+                .setTag(subtitleInput)
                 .apply {
                     if (!mediaId.isNullOrBlank()) {
                         setMediaId(mediaId)
@@ -91,8 +94,12 @@ object Media3MediaSourceHelper {
                 ProgressiveMediaSource
                     .Factory(
                         dataSourceFactory,
-                        DefaultExtractorsFactory()
-                            .experimentalSetTextTrackTranscodingEnabled(parseSubtitlesDuringExtraction),
+                        if (!parseSubtitlesDuringExtraction) {
+                            LibassExtractorsFactory(fontAttachmentSink)
+                        } else {
+                            DefaultExtractorsFactory()
+                                .experimentalSetTextTrackTranscodingEnabled(parseSubtitlesDuringExtraction)
+                        },
                     ).createMediaSource(mediaItem)
         }
     }

@@ -8,6 +8,8 @@ import android.os.Looper
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.PixelCopy
+import android.view.SurfaceView
+import android.view.View
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -208,7 +210,7 @@ class TvDpadRewriteInstrumentedTest {
             val intent = Intent(context, PlayerActivity::class.java).putExtra(PlaybackNavigation.REQUEST_ID, request.requestId)
             ActivityScenario.launch<PlayerActivity>(intent).use { scenario ->
                 await(scenario, 15000) { player(it).isPlaying() && it.hasWindowFocus() }
-                if (kernel == PlayerType.TYPE_MPV_PLAYER) verifyNativeSubtitleLayer(scenario)
+                verifySubtitleLayer(scenario, kernel)
                 send(KeyEvent.KEYCODE_MENU)
                 await(scenario) { it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)?.hasFocus() == true }
                 var position = 0L
@@ -289,10 +291,24 @@ class TvDpadRewriteInstrumentedTest {
         return activity.currentFocus?.let { list?.findContainingViewHolder(it)?.bindingAdapterPosition } ?: -1
     }
 
-    private fun verifyNativeSubtitleLayer(scenario: ActivityScenario<PlayerActivity>) {
+    private fun verifySubtitleLayer(
+        scenario: ActivityScenario<PlayerActivity>,
+        kernel: PlayerType
+    ) {
+        val media3 = kernel == PlayerType.TYPE_EXO_PLAYER
         val subtitle =
-            File(context.cacheDir, "native-subtitle-ui.srt").apply {
-                writeText("1\n00:00:00,000 --> 00:05:00,000\nMPV 原生字幕测试\n")
+            File(context.cacheDir, if (media3) "media3-subtitle-ui.ass" else "native-subtitle-ui.srt").apply {
+                writeText(
+                    if (media3) {
+                        "[Script Info]\nScriptType: v4.00+\nPlayResX: 1920\nPlayResY: 1080\n" +
+                            "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, Alignment\n" +
+                            "Style: Default,Noto Sans CJK SC,72,&H00FFFFFF,2\n" +
+                            "[Events]\nFormat: Layer, Start, End, Style, Text\n" +
+                            "Dialogue: 0,0:00:00.00,0:05:00.00,Default,Media3 ASS 字幕测试\n"
+                    } else {
+                        "1\n00:00:00,000 --> 00:05:00,000\nMPV 原生字幕测试\n"
+                    }
+                )
             }
         val danmaku =
             File(context.cacheDir, "native-subtitle-danmaku.xml").apply {
@@ -317,28 +333,62 @@ class TvDpadRewriteInstrumentedTest {
                 controller.addExtendTrack(VideoTrackBean.subtitle(subtitle.absolutePath))
                 controller.addExtendTrack(VideoTrackBean.danmu(LocalDanmuBean(danmaku.absolutePath)))
             }
-            var visiblePixels = 0
-            val deadline = SystemClock.elapsedRealtime() + 10000
-            while (visiblePixels < 50 && SystemClock.elapsedRealtime() < deadline) {
-                val bitmap = Bitmap.createBitmap(overlay.width, overlay.height, Bitmap.Config.ARGB_8888)
-                val copied = CountDownLatch(1)
-                var result = -1
-                PixelCopy.request(overlay, bitmap, {
-                    result = it
-                    copied.countDown()
-                }, Handler(Looper.getMainLooper()))
-                assertTrue(copied.await(3, TimeUnit.SECONDS))
-                if (result == PixelCopy.SUCCESS) {
-                    val colors = IntArray(bitmap.width * bitmap.height)
-                    bitmap.getPixels(colors, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-                    visiblePixels = colors.count { Color.alpha(it) > 0 && Color.red(it) > 40 }
+
+            fun assertSurfacePixels(surface: SurfaceView) {
+                var visiblePixels = 0
+                val deadline = SystemClock.elapsedRealtime() + 10000
+                while (visiblePixels < 50 && SystemClock.elapsedRealtime() < deadline) {
+                    val bitmap = Bitmap.createBitmap(surface.width, surface.height, Bitmap.Config.ARGB_8888)
+                    val copied = CountDownLatch(1)
+                    var result = -1
+                    PixelCopy.request(surface, bitmap, {
+                        result = it
+                        copied.countDown()
+                    }, Handler(Looper.getMainLooper()))
+                    assertTrue(copied.await(3, TimeUnit.SECONDS))
+                    if (result == PixelCopy.SUCCESS) {
+                        val colors = IntArray(bitmap.width * bitmap.height)
+                        bitmap.getPixels(colors, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+                        visiblePixels = colors.count { Color.alpha(it) > 0 && Color.red(it) > 40 }
+                    }
+                    bitmap.recycle()
+                    if (visiblePixels < 50) SystemClock.sleep(25)
                 }
-                bitmap.recycle()
-                if (visiblePixels < 50) SystemClock.sleep(25)
+                assertTrue("The actual video/subtitle surface must contain visible pixels", visiblePixels > 50)
             }
-            assertTrue("The application must load external subtitles into the actual native OSD", visiblePixels > 50)
+            assertSurfacePixels(overlay)
+            if (media3) {
+                lateinit var video: SurfaceView
+                var pausedPosition = 0L
+                scenario.onActivity {
+                    val view = player(it)
+                    view.pause()
+                    pausedPosition = view.getCurrentPosition()
+                    video = view.getRenderView()!!.getView() as SurfaceView
+                    video.visibility = View.INVISIBLE
+                    overlay.visibility = View.INVISIBLE
+                }
+                await(scenario) { !video.holder.surface.isValid && !overlay.holder.surface.isValid }
+                scenario.onActivity {
+                    video.visibility = View.VISIBLE
+                    overlay.visibility = View.VISIBLE
+                }
+                await(scenario) {
+                    video.holder.surface.isValid &&
+                        overlay.holder.surface.isValid &&
+                        !player(it).isPlaying() &&
+                        kotlin.math.abs(player(it).getCurrentPosition() - pausedPosition) < 250
+                }
+                assertSurfacePixels(overlay)
+                assertSurfacePixels(video)
+                scenario.onActivity { player(it).start() }
+                await(scenario) { player(it).isPlaying() }
+            }
             instrumentation.uiAutomation.takeScreenshot()?.let { screenshot ->
-                File(context.getExternalFilesDir(null), "mpv-native-subtitles.png").outputStream().use {
+                File(
+                    context.getExternalFilesDir(null),
+                    if (media3) "media3-libass-subtitles.png" else "mpv-native-subtitles.png"
+                ).outputStream().use {
                     screenshot.compress(Bitmap.CompressFormat.PNG, 100, it)
                 }
                 screenshot.recycle()

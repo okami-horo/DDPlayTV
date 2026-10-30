@@ -59,7 +59,7 @@ class LibassSsaStreamDecoderTest {
         val decoder = createDecoder()
 
         assertEquals(500_000L, decoder.normalizeSampleTimeUs(1_000_000_500_000L, 1_000_000_000_000L))
-        assertEquals(500_000L, decoder.normalizeSampleTimeUs(1_000_000_500_000L, Format.OFFSET_SAMPLE_RELATIVE))
+        assertEquals(1_000_000_500_000L, decoder.normalizeSampleTimeUs(1_000_000_500_000L, Format.OFFSET_SAMPLE_RELATIVE))
         assertEquals(500_000L, decoder.normalizeSampleTimeUs(500_000L, Format.OFFSET_SAMPLE_RELATIVE))
         assertEquals(1_000_000_000_000L, decoder.normalizeSampleTimeUs(1_000_000_000_000L, C.TIME_UNSET))
 
@@ -67,11 +67,29 @@ class LibassSsaStreamDecoderTest {
     }
 
     @Test
-    fun normalizeSampleTimeUs_adaptsSampleRelativeAnchorAcrossTimelines() {
+    fun normalizeSampleTimeUs_doesNotGuessAnOffsetFromLargeContentTimestamps() {
+        val decoder = createDecoder()
+        try {
+            assertEquals(
+                2_000_000_400_000L,
+                decoder.normalizeSampleTimeUs(2_000_000_400_000L, Format.OFFSET_SAMPLE_RELATIVE)
+            )
+            assertEquals(
+                14_500_000L,
+                decoder.normalizeSampleTimeUs(4_500_000L + 873_001_234L, 873_001_234L - 10_000_000L)
+            )
+            assertEquals(-2_000_000L, decoder.normalizeSampleTimeUs(873_001_234L, 875_001_234L))
+        } finally {
+            decoder.release()
+        }
+    }
+
+    @Test
+    fun normalizeSampleTimeUs_usesExplicitOffsetsAcrossTimelines() {
         val decoder = createDecoder()
 
-        assertEquals(200_000L, decoder.normalizeSampleTimeUs(2_000_000_200_000L, Format.OFFSET_SAMPLE_RELATIVE))
-        assertEquals(400_000L, decoder.normalizeSampleTimeUs(2_000_000_400_000L, Format.OFFSET_SAMPLE_RELATIVE))
+        assertEquals(200_000L, decoder.normalizeSampleTimeUs(2_000_000_200_000L, 2_000_000_000_000L))
+        assertEquals(400_000L, decoder.normalizeSampleTimeUs(2_000_000_400_000L, 2_000_000_000_000L))
         assertEquals(300_000L, decoder.normalizeSampleTimeUs(300_000L, Format.OFFSET_SAMPLE_RELATIVE))
 
         decoder.release()

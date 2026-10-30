@@ -30,6 +30,21 @@ class SwitchableEmbeddedSubtitleSink(
     private var hasCachedFormat: Boolean = false
     private var cachedCodecPrivate: ByteArray? = null
 
+    override fun onMediaChanged() {
+        synchronized(lock) {
+            hasCachedFormat = false
+            cachedCodecPrivate = null
+            delegate.onMediaChanged()
+        }
+    }
+
+    override fun onFont(
+        name: String,
+        data: ByteArray
+    ) {
+        synchronized(lock) { delegate.onFont(name, data) }
+    }
+
     override fun setEnabled(enabled: Boolean) {
         synchronized(lock) {
             val wasEnabled = this.enabled

@@ -37,7 +37,6 @@ class LibassSsaStreamDecoder(
     private val decoderName = "LibassSsaStreamDecoder"
     private val decodeLogCounter = AtomicInteger(0)
     private val sinkMissLogCounter = AtomicInteger(0)
-    private var sampleRelativeAnchorUs: Long? = null
     private var activeSink: EmbeddedSubtitleSink? = null
 
     init {
@@ -65,7 +64,7 @@ class LibassSsaStreamDecoder(
     }
 
     override fun setPositionUs(positionUs: Long) {
-        sampleRelativeAnchorUs = null
+        // Timing is carried by each input format, including after seek/period changes.
     }
 
     override fun createInputBuffer(): SubtitleInputBuffer = SubtitleInputBuffer()
@@ -87,7 +86,6 @@ class LibassSsaStreamDecoder(
             sink?.onFormat(buildCodecPrivateForLibass(format.initializationData))
         }
         if (reset) {
-            sampleRelativeAnchorUs = null
             sink?.onFlush()
             if (PlayerInitializer.isPrintLog && shouldLog(decodeLogCounter.incrementAndGet())) {
                 LogFacade.d(LogModule.PLAYER, LOG_TAG, "decode reset=true")
@@ -270,46 +268,16 @@ class LibassSsaStreamDecoder(
         sampleTimeUs: Long,
         subsampleOffsetUs: Long
     ): Long {
-        // Media3 passes subtitle samples to decoders in ExoPlayer renderer time. This is typically
-        // offset by a large positive base (see ExoPlayerImplInternal/MediaPeriodQueue in Media3).
-        // DDPlayTV's GPU subtitle renderer uses player window position (0-based), so strip the
-        // offset here to keep libass timestamps aligned with UI position.
+        // LibassTimelineRenderer supplies the actual stream offset minus period position.
+        // A decoder used without that adapter must never infer an offset from timestamp magnitude.
         val effectiveOffsetUs =
             when (subsampleOffsetUs) {
-                Format.OFFSET_SAMPLE_RELATIVE -> resolveSampleRelativeOffsetUs(sampleTimeUs)
+                Format.OFFSET_SAMPLE_RELATIVE -> 0L
                 C.TIME_UNSET -> 0L
                 else -> subsampleOffsetUs
             }
-        return (sampleTimeUs - effectiveOffsetUs).coerceAtLeast(0L)
-    }
-
-    private fun resolveSampleRelativeOffsetUs(sampleTimeUs: Long): Long {
-        if (sampleTimeUs <= 0L) {
-            sampleRelativeAnchorUs = 0L
-            return 0L
-        }
-
-        val inferredAnchorUs = inferSampleRelativeAnchorUs(sampleTimeUs)
-        val currentAnchorUs = sampleRelativeAnchorUs
-        val anchorUs =
-            if (currentAnchorUs == null ||
-                sampleTimeUs < currentAnchorUs ||
-                sampleTimeUs - currentAnchorUs >= SAMPLE_RELATIVE_TIMESTAMP_ANCHOR_STEP_US
-            ) {
-                inferredAnchorUs
-            } else {
-                currentAnchorUs
-            }
-
-        sampleRelativeAnchorUs = anchorUs
-        return anchorUs
-    }
-
-    private fun inferSampleRelativeAnchorUs(sampleTimeUs: Long): Long {
-        if (sampleTimeUs < SAMPLE_RELATIVE_TIMESTAMP_ANCHOR_STEP_US) {
-            return 0L
-        }
-        return (sampleTimeUs / SAMPLE_RELATIVE_TIMESTAMP_ANCHOR_STEP_US) * SAMPLE_RELATIVE_TIMESTAMP_ANCHOR_STEP_US
+        // Negative starts are meaningful for events overlapping a clipped window's beginning.
+        return sampleTimeUs - effectiveOffsetUs
     }
 
     private object EmptySubtitle : Subtitle {
@@ -332,11 +300,6 @@ class LibassSsaStreamDecoder(
 
         private const val SSA_TIMECODE_LENGTH = 10
         private const val SSA_TIMECODE_LAST_VALUE_SCALING_FACTOR = 10_000L
-
-        // Media3 ExoPlayer anchors renderer timestamps at a large positive base (~1e12 us).
-        // SubtitleInputBuffer.timeUs includes this base, while our GPU renderer clock uses
-        // player window position. Infer and subtract the anchor for sample-relative timelines.
-        private const val SAMPLE_RELATIVE_TIMESTAMP_ANCHOR_STEP_US = 1_000_000_000_000L
 
         private val SSA_PREFIX =
             "Dialogue: 0:00:00:00,".toByteArray(Charsets.UTF_8)

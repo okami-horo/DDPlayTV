@@ -7,6 +7,7 @@ import android.os.Looper
 import android.view.Surface
 import androidx.media3.common.C
 import androidx.media3.common.Format
+import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
@@ -45,7 +46,6 @@ import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import com.xyoye.player.utils.PlayerConstant
 import com.xyoye.subtitle.MixedSubtitle
 import com.xyoye.subtitle.SubtitleType
-import java.util.concurrent.atomic.AtomicReference
 
 @UnstableApi
 class Media3VideoPlayer(
@@ -61,7 +61,8 @@ class Media3VideoPlayer(
     private var currentDataSourceHeaders: Map<String, String>? = null
     private var currentSurface: Surface? = null
 
-    private val embeddedSubtitleSink = AtomicReference<EmbeddedSubtitleSink?>()
+    private var subtitleInput = Media3SubtitleInput()
+    private var subtitleSink: EmbeddedSubtitleSink? = null
 
     private val trackSelector: TrackSelector by lazy { DefaultTrackSelector(appContext) }
     private val loadControl: LoadControl by lazy { DefaultLoadControl() }
@@ -105,11 +106,10 @@ class Media3VideoPlayer(
     }
 
     private fun buildPlayer(): ExoPlayer {
-        val embeddedSinkRef = embeddedSubtitleSink
         val renderersFactory =
             LibassAwareRenderersFactory(
                 appContext,
-                embeddedSinkProvider = { embeddedSinkRef.get() },
+                embeddedSinkProvider = { subtitleInput.createDecoderSink() },
             ).apply {
                 setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             }
@@ -159,12 +159,24 @@ class Media3VideoPlayer(
         }
         val parseSubtitlesDuringExtraction = shouldParseSubtitlesDuringExtraction()
         currentParseSubtitlesDuringExtraction = parseSubtitlesDuringExtraction
-        mediaSource = getMediaSource(path, headers, parseSubtitlesDuringExtraction = parseSubtitlesDuringExtraction)
+        mediaSource =
+            getMediaSource(
+                path,
+                headers,
+                parseSubtitlesDuringExtraction = parseSubtitlesDuringExtraction
+            )
+        activateSubtitleInput(mediaSource.mediaItem)
     }
 
     override fun setSurface(surface: Surface) {
         currentSurface = surface
         player.setVideoSurface(surface)
+    }
+
+    fun clearSurface(surface: Surface) {
+        if (currentSurface !== surface) return
+        currentSurface = null
+        player.clearVideoSurface(surface)
     }
 
     override fun prepareAsync() {
@@ -212,7 +224,9 @@ class Media3VideoPlayer(
 
         val releaseAction = {
             releaseSubtitleFrameDrivers()
-            embeddedSubtitleSink.set(null)
+            subtitleInput.setSink(null)
+            subtitleInput.beginMedia()
+            subtitleSink = null
             currentDataSource = null
             currentDataSourceHeaders = null
             currentSurface = null
@@ -311,7 +325,23 @@ class Media3VideoPlayer(
     override fun canStartGpuSubtitlePipeline(): Boolean = true
 
     override fun setEmbeddedSubtitleSink(sink: EmbeddedSubtitleSink?) {
-        embeddedSubtitleSink.set(sink)
+        subtitleSink = sink
+        subtitleInput.setSink(sink)
+    }
+
+    override fun onMediaItemTransition(
+        mediaItem: MediaItem?,
+        reason: Int
+    ) {
+        activateSubtitleInput(mediaItem)
+    }
+
+    private fun activateSubtitleInput(mediaItem: MediaItem?) {
+        val input = mediaItem?.localConfiguration?.tag as? Media3SubtitleInput ?: return
+        if (input === subtitleInput) return
+        subtitleInput.setSink(null)
+        subtitleInput = input
+        subtitleInput.setSink(subtitleSink)
     }
 
     override fun onSubtitleBackendChanged(target: SubtitleRendererBackend) {
@@ -543,7 +573,13 @@ class Media3VideoPlayer(
         if (!dataSource.isNullOrBlank()) {
             val parseSubtitlesDuringExtraction = shouldParseSubtitlesDuringExtraction()
             currentParseSubtitlesDuringExtraction = parseSubtitlesDuringExtraction
-            mediaSource = getMediaSource(dataSource, headers, parseSubtitlesDuringExtraction = parseSubtitlesDuringExtraction)
+            mediaSource =
+                getMediaSource(
+                    dataSource,
+                    headers,
+                    parseSubtitlesDuringExtraction = parseSubtitlesDuringExtraction
+                )
+            activateSubtitleInput(mediaSource.mediaItem)
             isPreparing = true
             player.setMediaSource(mediaSource)
             player.prepare()
@@ -582,7 +618,7 @@ class Media3VideoPlayer(
                 LogFacade.d(
                     LogModule.PLAYER,
                     "PlayerSubtitle",
-                    "media3 cues type=$subtitleType count=${cues.size} $cueSummary backend=${PlayerInitializer.Subtitle.backend} sinkPresent=${embeddedSubtitleSink.get() != null} expectBypass=${isLibassBypassExpected()} ssaTrack=$hasSsaLikeTextTrack cuesTrack=$hasMedia3CueTextTrack",
+                    "media3 cues type=$subtitleType count=${cues.size} $cueSummary backend=${PlayerInitializer.Subtitle.backend} sinkPresent=${subtitleInput.hasSink()} expectBypass=${isLibassBypassExpected()} ssaTrack=$hasSsaLikeTextTrack cuesTrack=$hasMedia3CueTextTrack",
                 )
             }
         }
