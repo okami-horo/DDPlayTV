@@ -37,12 +37,6 @@
     <string name="strict_tls_mode">严格（推荐）</string>
     <string name="insecure_tls_mode">不安全</string>
 
-    <string name="tips_player_kernel">播放器内核</string>
-    <string name="text_follow_global">跟随全局</string>
-    <string name="text_player_media3">Media3</string>
-    <string name="text_player_mpv">MPV</string>
-    <string name="text_player_fixed_suffix">（固定）</string>
-
     <string name="text_start_screen_cast_server">启动投屏服务</string>
     <string name="text_stop_screen_cast_server">停止投屏服务</string>
     <string name="text_screencast_connect_type">连接方式</string>
@@ -62,10 +56,6 @@
     <string name="tips_screencast_receive_service">投屏接收服务</string>
     <string name="tips_need_confirm_screencast">投屏接收时，需弹窗确认播放</string>
     <string name="tips_start_receive_when_start">应用启动时，自动启动接收服务</string>
-
-    <string name="tips_group_mode">分组模式</string>
-    <string name="text_group_by_file">原始文件</string>
-    <string name="text_group_by_anime">番剧ID</string>
 
     <string name="text_empty_video">视频文件为空</string>
 

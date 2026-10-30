@@ -34,6 +34,7 @@ import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
 import com.xyoye.common_component.services.PlaybackRequestService
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.handoff.PlaybackReferenceFactory
+import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.file.impl.VideoStorageFile
 import com.xyoye.common_component.storage.impl.VideoStorage
@@ -408,7 +409,14 @@ class PlaybackEntriesInstrumentedTest {
         }
 
     @Test fun storageHistoryAnimeAndLinksSubmitRealRequestsWithIsolatedInputs() =
-        withFixture { fixture ->
+        verifyStorageHistoryAnimeAndLinks(
+            PlayerType.TYPE_EXO_PLAYER
+        )
+
+    @Test fun mpvStorageHistoryAnimeAndLinksFollowTheGlobalKernel() = verifyStorageHistoryAnimeAndLinks(PlayerType.TYPE_MPV_PLAYER)
+
+    private fun verifyStorageHistoryAnimeAndLinks(kernel: PlayerType) =
+        withFixture(kernel) { fixture ->
             val models = ViewModelStore()
             val video = VideoEntity(fileId = 0, filePath = fixture.path, folderPath = fixture.parent!!)
             val storage = VideoStorage(MediaLibraryEntity.LOCAL)
@@ -470,6 +478,37 @@ class PlaybackEntriesInstrumentedTest {
                         database.getPlayHistoryDao().delete(it.id)
                     }
                 }
+            }
+        }
+
+    @Test fun globalKernelChangeAppliesToTheNextSourceAndKeepsTheActiveSourceOnRecreation() =
+        withFixture { fixture ->
+            val models = ViewModelStore()
+            try {
+                val intentModel = model(models, PlayerIntentViewModel::class.java)
+                val request = submit(intentModel.playEvents) { intentModel.openIntentUrl(fixture.toURI().toString()) }
+                ActivityScenario.launch<PlayerActivity>(playerIntent(request)).use { scenario ->
+                    var activity: PlayerActivity? = null
+                    scenario.onActivity { activity = it }
+                    val first = awaitSource { activity } as StorageVideoSource
+                    assertEquals(PlayerType.TYPE_EXO_PLAYER, first.getPlaybackProfile().playerType)
+                    scenario.onActivity { assertKernel(it, PlayerType.TYPE_EXO_PLAYER) }
+                    PlayerConfig.putUsePlayerType(PlayerType.TYPE_MPV_PLAYER.value)
+                    scenario.recreate()
+                    scenario.onActivity { activity = it }
+                    assertSame(first, awaitSource { activity })
+                    assertEquals(PlayerType.TYPE_EXO_PLAYER, first.getPlaybackProfile().playerType)
+                    scenario.onActivity { assertKernel(it, PlayerType.TYPE_EXO_PLAYER) }
+
+                    val next = submit(intentModel.playEvents) { intentModel.openIntentUrl(fixture.toURI().toString()) }
+                    instrumentation.runOnMainSync { context.startActivity(playerIntent(next).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                    val replacement = awaitSource(first) { topPlayer() } as StorageVideoSource
+                    assertEquals(PlayerType.TYPE_MPV_PLAYER, replacement.getPlaybackProfile().playerType)
+                    instrumentation.runOnMainSync { assertKernel(checkNotNull(topPlayer()), PlayerType.TYPE_MPV_PLAYER) }
+                    assertEquals(PlayerType.TYPE_MPV_PLAYER.value, PlayerConfig.getUsePlayerType())
+                }
+            } finally {
+                instrumentation.runOnMainSync { models.clear() }
             }
         }
 
@@ -615,7 +654,11 @@ class PlaybackEntriesInstrumentedTest {
         ActivityScenario.launch<PlayerActivity>(playerIntent(id)).use { scenario ->
             var activity: PlayerActivity? = null
             scenario.onActivity { activity = it }
-            check(awaitSource { activity })
+            val source = awaitSource { activity } as StorageVideoSource
+            val expected = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
+            assertEquals(expected, source.getPlaybackProfile().playerType)
+            scenario.onActivity { assertKernel(it, expected) }
+            check(source)
         }
     }
 
@@ -623,6 +666,19 @@ class PlaybackEntriesInstrumentedTest {
 
     private fun player(activity: PlayerActivity) =
         activity.findViewById<FrameLayout>(com.xyoye.player_component.R.id.player_container).getChildAt(0) as DanDanVideoPlayer
+
+    private fun assertKernel(
+        activity: PlayerActivity,
+        expected: PlayerType
+    ) {
+        val kernel =
+            DanDanVideoPlayer::class.java
+                .getDeclaredField("mVideoPlayer")
+                .apply { isAccessible = true }
+                .get(player(activity))
+        val expectedClass = if (expected == PlayerType.TYPE_MPV_PLAYER) "MpvVideoPlayer" else "Media3VideoPlayer"
+        assertEquals("The backend must use the requested global kernel", expectedClass, kernel.javaClass.simpleName)
+    }
 
     // Inspect the real internal kernel without adding a production API or an app ExoPlayer dependency.
     private fun exoPlayer(activity: PlayerActivity): Any =

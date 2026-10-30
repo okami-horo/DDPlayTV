@@ -28,7 +28,6 @@ class ExternalStorageEditDialog(
     private lateinit var binding: DialogExternalStorageEditBinding
     private var mDocumentFile: DocumentFile? = null
 
-    private lateinit var editLibrary: MediaLibraryEntity
     private lateinit var autoSaveHelper: StorageAutoSaveHelper
 
     private val documentTreeLauncher = DocumentTreeLauncher(activity, onResult())
@@ -37,14 +36,6 @@ class ExternalStorageEditDialog(
 
     override fun initView(binding: DialogExternalStorageEditBinding) {
         this.binding = binding
-
-        editLibrary =
-            library ?: MediaLibraryEntity(
-                0,
-                "",
-                "",
-                MediaType.EXTERNAL_STORAGE,
-            )
 
         if (library == null) {
             setTitle("添加设备存储库")
@@ -66,11 +57,6 @@ class ExternalStorageEditDialog(
             )
         registerAutoSaveHelper(autoSaveHelper)
 
-        PlayerTypeOverrideBinder.bind(
-            binding.playerTypeOverrideLayout,
-            editLibrary,
-            onChanged = { autoSaveHelper.requestSave() },
-        )
         autoSaveHelper.markSaved(buildLibraryIfValid(showToast = false))
 
         initListener()
@@ -103,7 +89,6 @@ class ExternalStorageEditDialog(
             val displayName = getDisplayNameByEdit(library)
             return library.copy(
                 displayName = displayName,
-                playerTypeOverride = editLibrary.playerTypeOverride,
             )
         }
 
@@ -126,7 +111,7 @@ class ExternalStorageEditDialog(
             url = documentFile.uri.toString(),
             describe = getDescribe(documentFile),
             mediaType = MediaType.EXTERNAL_STORAGE,
-        ).apply { playerTypeOverride = editLibrary.playerTypeOverride }
+        )
     }
 
     private fun getDisplayNameByEdit(storage: MediaLibraryEntity): String {

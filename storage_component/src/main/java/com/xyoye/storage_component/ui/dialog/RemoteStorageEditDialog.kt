@@ -47,8 +47,6 @@ class RemoteStorageEditDialog(
         setTitle(if (isEditStorage) "编辑PC端媒体库帐号" else "添加PC端媒体库帐号")
         binding.remoteData = remoteData
 
-        setGroupMode(remoteData.remoteAnimeGrouping)
-
         // TV 端移除扫码入口，隐藏按钮并保留原实现注释
         binding.scanLl.isVisible = false
         binding.scanLl.setOnClickListener(null)
@@ -61,11 +59,6 @@ class RemoteStorageEditDialog(
             )
         registerAutoSaveHelper(autoSaveHelper)
 
-        PlayerTypeOverrideBinder.bind(
-            binding.playerTypeOverrideLayout,
-            remoteData,
-            onChanged = { autoSaveHelper.requestSave() },
-        )
         autoSaveHelper.markSaved(buildLibraryIfValid(remoteData, showToast = false))
 
         binding.addressEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
@@ -88,18 +81,6 @@ class RemoteStorageEditDialog(
         binding.serverTestConnectTv.setOnClickListener {
             val testLibrary = buildLibraryIfValid(remoteData, showToast = true) ?: return@setOnClickListener
             activity.testStorage(testLibrary)
-        }
-
-        binding.tvGroupByFile.setOnClickListener {
-            remoteData.remoteAnimeGrouping = false
-            setGroupMode(false)
-            autoSaveHelper.requestSave()
-        }
-
-        binding.tvGroupByAnime.setOnClickListener {
-            remoteData.remoteAnimeGrouping = true
-            setGroupMode(true)
-            autoSaveHelper.requestSave()
         }
     }
 
@@ -145,18 +126,6 @@ class RemoteStorageEditDialog(
             displayName = displayName,
             url = normalizedUrl,
             describe = normalizedUrl,
-        )
-    }
-
-    private fun setGroupMode(isGroupByAnime: Boolean) {
-        binding.tvGroupByAnime.isSelected = isGroupByAnime
-        binding.tvGroupByAnime.setTextColorRes(
-            if (isGroupByAnime) R.color.text_white else R.color.text_black,
-        )
-
-        binding.tvGroupByFile.isSelected = !isGroupByAnime
-        binding.tvGroupByFile.setTextColorRes(
-            if (!isGroupByAnime) R.color.text_white else R.color.text_black,
         )
     }
 

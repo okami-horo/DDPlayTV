@@ -1,5 +1,6 @@
 package com.xyoye.common_component.storage.transport
 
+import com.xyoye.common_component.source.handoff.PlaybackSourceResolverTest.DefaultPreferences
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.AbstractStorageFile
 import com.xyoye.common_component.storage.file.StorageFile
@@ -24,7 +25,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
+@Config(manifest = Config.NONE, shadows = [DefaultPreferences::class])
 class PlaybackTransportRoutingTest {
     private val profile = PlaybackProfile(PlayerType.TYPE_EXO_PLAYER, PlaybackProfileSource.GLOBAL)
 

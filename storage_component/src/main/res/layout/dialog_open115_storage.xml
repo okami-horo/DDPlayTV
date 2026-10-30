@@ -107,10 +107,6 @@
             android:textColor="@color/text_gray"
             android:textSize="12sp" />
 
-        <include
-            android:id="@+id/player_type_override_layout"
-            layout="@layout/layout_player_type_override" />
-
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"

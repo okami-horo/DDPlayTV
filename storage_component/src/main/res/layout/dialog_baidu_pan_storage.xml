@@ -97,10 +97,6 @@
                 tools:text="baidupan://uk/123456" />
         </FrameLayout>
 
-        <include
-            android:id="@+id/player_type_override_layout"
-            layout="@layout/layout_player_type_override" />
-
         <TextView
             android:id="@+id/hint_tv"
             android:layout_width="match_parent"

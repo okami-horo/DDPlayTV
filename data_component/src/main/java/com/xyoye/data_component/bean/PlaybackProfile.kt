@@ -9,6 +9,5 @@ data class PlaybackProfile(
 
 enum class PlaybackProfileSource {
     GLOBAL,
-    LIBRARY_OVERRIDE,
     FALLBACK
 }

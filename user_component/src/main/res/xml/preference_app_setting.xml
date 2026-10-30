@@ -38,6 +38,12 @@
             android:title="展示APP启动页"
             app:icon="@drawable/ic_app_setting_splash" />
 
+        <SwitchPreference
+            android:key="remote_anime_grouping"
+            android:summary="适用于所有 PC 端媒体库，重新进入后生效"
+            android:title="PC 端按番剧分组"
+            app:icon="@drawable/ic_app_setting_hide_file" />
+
         <Preference
             android:key="dark_mode"
             android:title="深色模式"

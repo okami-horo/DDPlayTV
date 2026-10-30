@@ -1,17 +1,18 @@
 package com.xyoye.common_component.storage.impl
 
 import android.net.Uri
+import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.repository.RemoteRepository
 import com.xyoye.common_component.network.request.NetworkException
-import com.xyoye.common_component.storage.transport.PlaybackTransportLease
-import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
-import com.xyoye.common_component.storage.transport.directPlaybackTransport
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.helper.RemoteFileHelper
 import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.danmu.DanmuFinder
 import com.xyoye.common_component.utils.subtitle.SubtitleUtils
@@ -32,9 +33,11 @@ import kotlin.coroutines.cancellation.CancellationException
 class RemoteStorage internal constructor(
     library: MediaLibraryEntity,
     private val fetchFiles: suspend (RemoteStorage) -> Result<List<RemoteVideoData>>
-) : AbstractStorage(library), PlaybackTransportProvider {
+) : AbstractStorage(library),
+    PlaybackTransportProvider {
     constructor(library: MediaLibraryEntity) : this(library, { RemoteRepository.getStorageFiles(it) })
 
+    private val groupByAnime = AppConfig.isRemoteAnimeGrouping()
     private var storageFilesSnapshot = listOf<RemoteVideoData>()
     private var resolvedTree: List<RemoteVideoData>? = null
 
@@ -59,17 +62,23 @@ class RemoteStorage internal constructor(
         isDirectory: Boolean
     ): StorageFile? = resolvePlaybackReference(path, null, isDirectory)
 
-    internal suspend fun resolvePlaybackReference(path: String, videoId: String?, isDirectory: Boolean): StorageFile? {
+    internal suspend fun resolvePlaybackReference(
+        path: String,
+        videoId: String?,
+        isDirectory: Boolean
+    ): StorageFile? {
         if (resolvedTree == null) {
             val files = fetchFiles(this).getOrThrow()
             storageFilesSnapshot = files
-            resolvedTree = if (library.remoteAnimeGrouping) {
-                RemoteFileHelper.convertGroupData(files)
-            } else {
-                RemoteFileHelper.convertTreeData(files)
-            }
+            resolvedTree =
+                if (groupByAnime) {
+                    RemoteFileHelper.convertGroupData(files)
+                } else {
+                    RemoteFileHelper.convertTreeData(files)
+                }
         }
         if (isDirectory && path == "/") return getRootFile()
+
         fun find(items: List<RemoteVideoData>): RemoteVideoData? {
             for (item in items) {
                 if (item.isFolder == isDirectory && item.absolutePath == path) return item
@@ -77,11 +86,12 @@ class RemoteStorage internal constructor(
             }
             return null
         }
-        val data = if (videoId != null && !isDirectory) {
-            storageFilesSnapshot.firstOrNull { it.Id == videoId }
-        } else {
-            find(resolvedTree.orEmpty())
-        }
+        val data =
+            if (videoId != null && !isDirectory) {
+                storageFilesSnapshot.firstOrNull { it.Id == videoId }
+            } else {
+                find(resolvedTree.orEmpty())
+            }
         return data?.let { RemoteStorageFile(this, it) }
     }
 
@@ -177,7 +187,7 @@ class RemoteStorage internal constructor(
     override suspend fun test(): Boolean = getRemoteRootFiles() != null
 
     private suspend fun getRemoteRootFiles(): List<RemoteVideoData>? {
-        val result = RemoteRepository.getStorageFiles(this)
+        val result = fetchFiles(this)
         if (result.isFailure) {
             val exception = result.exceptionOrNull() ?: return null
             if (exception.cause is CancellationException) {
@@ -197,7 +207,7 @@ class RemoteStorage internal constructor(
         return result.getOrNull()?.let {
             storageFilesSnapshot = it
 
-            if (library.remoteAnimeGrouping) {
+            if (groupByAnime) {
                 RemoteFileHelper.convertGroupData(it)
             } else {
                 RemoteFileHelper.convertTreeData(it)

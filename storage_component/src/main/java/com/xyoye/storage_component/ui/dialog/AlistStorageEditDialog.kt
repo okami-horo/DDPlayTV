@@ -46,11 +46,6 @@ class AlistStorageEditDialog(
             )
         registerAutoSaveHelper(autoSaveHelper)
 
-        PlayerTypeOverrideBinder.bind(
-            binding.playerTypeOverrideLayout,
-            editLibrary,
-            onChanged = { autoSaveHelper.requestSave() },
-        )
         autoSaveHelper.markSaved(buildLibraryIfValid(editLibrary, showToast = false))
 
         binding.addressEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })

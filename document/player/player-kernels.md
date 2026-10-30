@@ -1,6 +1,6 @@
 # 播放内核与旧配置兼容
 
-更新日期：2026-10-29。按用户决定，VLC 已从所有设备端移除，不再作为播放内核适配、维护或提供选择。
+更新日期：2026-10-30。默认内核统一使用全局设置，存储源不再保存内核覆盖。VLC 已从所有设备端移除。
 
 ## 当前内核
 
@@ -9,16 +9,19 @@
 | Media3 | `2` | 默认播放器；解码策略见 [Media3 解码说明](media3-decoding.md) |
 | mpv | `4` | 可选播放器；输出模式与参数见 [mpv 配置](../mpv_conf_supported_options.md) |
 
-全局设置和媒体库覆盖项只提供这两种内核。媒体库保留“跟随全局”选项及存储来源自身的支持范围限制。编号不会因删除内核而重新排列。
+在“设置 → 播放器”中统一选择内核，所有存储来源及播放入口采用同一全局选择。修改立即保存，下一次新建播放源时采用；当前播放和已准备的源保持实际内核，Activity 重建继续复用活动会话。编号保持不变。
+
+mpv 播放失败后可“使用 Media3 重试”，只改变当前会话的实际内核，不改写全局设置。全局配置和运行时故障回退分别由持久化设置与 `PlaybackProfile` 管理。
 
 ## 升级兼容
 
 - 旧全局编号 `3` 与其他未知值经 `PlayerType.valueOf(Int)` 回退到 Media3；打开播放器或播放器设置时写回 `2`。新安装默认使用 Media3。
-- 旧媒体库覆盖值 `3` 按现有无效覆盖规则跟随全局设置；如果该来源不支持全局内核，则使用来源的首选受支持内核。编辑媒体库时将无效覆盖归一化为“跟随全局”（单内核来源使用其固定值）。不批量改写媒体库，也不变更 Room schema。
-- 播放恢复快照保存来源描述，不保存播放器枚举；恢复时按当前全局设置、媒体库覆盖与来源支持范围重新解析，不会恢复已删除的内核。
+- Room 17→18 移除旧媒体库内核覆盖和 PC 单库分组字段；旧覆盖值不写入全局设置。连接参数、主键、自增高水位、协议选项、播放历史和加密凭据引用保留。
+- PC 分组改为“设置 → 应用 → PC 端按番剧分组”，默认按文件，适用于全部 PC 来源，重新进入后生效。无 Hash 视频在两种模式下使用相同的规范化文件路径身份；旧历史和快照仅在来源、视频 ID 及旧身份可验证时兼容恢复。
+- 播放恢复快照保存来源描述，不保存播放器枚举；进程恢复时重新读取当前全局内核，不修改快照格式。
 - VLC 专属硬解、音频兼容、代理和 TLS 设置读写已删除；既有 MMKV 中的相关旧键不再使用。共享代理与 Media3/mpv 的设置保持各自原有行为。
 
-对应实现：[PlayerType](../../data_component/src/main/java/com/xyoye/data_component/enums/PlayerType.kt)、[默认配置](../../core_system_component/src/main/java/com/xyoye/common_component/config/PlayerConfigTable.kt)、[来源配置解析](../../core_storage_component/src/main/java/com/xyoye/common_component/resolver/PlaybackProfileResolver.kt)、[媒体库选择绑定](../../storage_component/src/main/java/com/xyoye/storage_component/ui/dialog/PlayerTypeOverrideBinder.kt)。
+对应实现：[PlayerType](../../data_component/src/main/java/com/xyoye/data_component/enums/PlayerType.kt)、[默认配置](../../core_system_component/src/main/java/com/xyoye/common_component/config/PlayerConfigTable.kt)、[全局播放配置](../../core_storage_component/src/main/java/com/xyoye/common_component/source/factory/StorageVideoSourceFactory.kt)、[数据库迁移](../../core_database_component/src/main/java/com/xyoye/common_component/database/DatabaseManager.kt)。设计与本轮验证见[全局配置收敛记录](../../docs/superpowers/plans/2026-10-30-global-settings.md)。
 
 ## 移除范围与验证
 

@@ -5,8 +5,8 @@ import android.text.method.PasswordTransformationMethod
 import androidx.core.view.isGone
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
-import com.xyoye.common_component.storage.StorageProtocolDefaults
 import com.xyoye.common_component.extension.setTextColorRes
+import com.xyoye.common_component.storage.StorageProtocolDefaults
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
@@ -54,11 +54,6 @@ class SmbStorageEditDialog(
             )
         registerAutoSaveHelper(autoSaveHelper)
 
-        PlayerTypeOverrideBinder.bind(
-            binding.playerTypeOverrideLayout,
-            serverData,
-            onChanged = { autoSaveHelper.requestSave() },
-        )
         autoSaveHelper.markSaved(buildLibraryIfValid(serverData, showToast = false))
 
         binding.addressEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })

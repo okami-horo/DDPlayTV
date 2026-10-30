@@ -894,7 +894,7 @@ class PlayerActivity :
                 }
 
         if (PlayerInitializer.playerType == PlayerType.TYPE_MPV_PLAYER) {
-            builder.setPositiveButton("切换默认内核重试") { dialog, _ ->
+            builder.setPositiveButton("使用 Media3 重试") { dialog, _ ->
                 dialog.dismiss()
                 val expected = viewModel.playbackVersion ?: return@setPositiveButton
 

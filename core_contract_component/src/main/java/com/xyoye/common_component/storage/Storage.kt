@@ -5,7 +5,6 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
-import com.xyoye.data_component.enums.PlayerType
 import java.io.InputStream
 
 /**
@@ -64,16 +63,6 @@ interface Storage {
      * 根据播放记录获取文件
      */
     suspend fun historyFile(history: PlayHistoryEntity): StorageFile?
-
-    /**
-     * 当前媒体库支持的播放器内核集合，用于对“全局/媒体库覆盖”的选择做能力裁剪。
-     */
-    fun supportedPlayerTypes(): Set<PlayerType> = PlayerType.values().toSet()
-
-    /**
-     * 当用户选择的播放器不被 supportedPlayerTypes 支持时的回退目标。
-     */
-    fun preferredPlayerType(): PlayerType = PlayerType.TYPE_EXO_PLAYER
 
     /**
      * 缓存弹幕文件到本地

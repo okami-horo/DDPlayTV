@@ -50,11 +50,6 @@ class WebDavStorageEditDialog(
             )
         registerAutoSaveHelper(autoSaveHelper)
 
-        PlayerTypeOverrideBinder.bind(
-            binding.playerTypeOverrideLayout,
-            serverData,
-            onChanged = { autoSaveHelper.requestSave() },
-        )
         autoSaveHelper.markSaved(buildLibraryIfValid(serverData, showToast = false))
 
         binding.addressEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })

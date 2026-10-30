@@ -6,11 +6,9 @@ import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.resolver.PlaybackProfileResolver
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.impl.LinkStorage
 import com.xyoye.common_component.storage.transport.PlaybackTransportFactory
 import com.xyoye.common_component.storage.transport.PlaybackTransportLease
 import com.xyoye.common_component.storage.transport.TransportAcquisitionResult
@@ -19,6 +17,7 @@ import com.xyoye.common_component.utils.getDirPath
 import com.xyoye.common_component.utils.isFileExist
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.PlaybackProfile
+import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.enums.PlayerType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -136,17 +135,11 @@ object StorageVideoSourceFactory {
         }
     }
 
-    internal fun resolvePlaybackProfile(storage: Storage): PlaybackProfile {
-        val globalPlayerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType())
-        val resolvedLibrary = storage.library.takeIf { storage !is LinkStorage }
-        return PlaybackProfileResolver.resolve(
-            library = resolvedLibrary,
-            globalPlayerType = globalPlayerType,
-            mediaType = storage.library.mediaType,
-            supportedPlayerTypes = storage.supportedPlayerTypes(),
-            preferredPlayerType = storage.preferredPlayerType()
+    internal fun resolvePlaybackProfile(): PlaybackProfile =
+        PlaybackProfile(
+            playerType = PlayerType.valueOf(PlayerConfig.getUsePlayerType()),
+            source = PlaybackProfileSource.GLOBAL
         )
-    }
 
     private suspend fun findLocalDanmu(
         file: StorageFile,

@@ -18,6 +18,7 @@ object RemoteFileHelper {
     fun convertGroupData(videoData: List<RemoteVideoData>): MutableList<RemoteVideoData> =
         videoData
             .asSequence()
+            .onEach { it.absolutePath = formatPath(it.Path) }
             .filter { it.AnimeId != 0 }
             .groupBy { it.AnimeId }
             .entries

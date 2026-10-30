@@ -1,6 +1,9 @@
 package com.xyoye.storage_component.ui.dialog
 
 import android.os.Bundle
+import android.view.KeyEvent
+import android.view.View
+import android.widget.EditText
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.lifecycleScope
 import com.xyoye.common_component.weight.dialog.BaseBottomDialog
@@ -29,6 +32,23 @@ abstract class StorageEditDialog<T : ViewDataBinding>(
         setOnDismissListener {
             doBeforeDismiss()
         }
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val focused = currentFocus
+        if (focused is EditText && !focused.isInTouchMode && event.action == KeyEvent.ACTION_DOWN && event.hasNoModifiers()) {
+            val direction =
+                when (event.keyCode) {
+                    KeyEvent.KEYCODE_DPAD_UP -> View.FOCUS_UP
+                    KeyEvent.KEYCODE_DPAD_DOWN -> View.FOCUS_DOWN
+                    else -> null
+                }
+            // Single-line editors consume vertical arrows before the window can move focus.
+            if (direction != null && focused.focusSearch(direction)?.requestFocus(direction) == true) {
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     protected fun registerAutoSaveHelper(helper: StorageAutoSaveHelper) {

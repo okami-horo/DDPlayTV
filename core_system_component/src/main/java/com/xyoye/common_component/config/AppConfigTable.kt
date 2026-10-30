@@ -72,6 +72,10 @@ object AppConfigTable {
     @MMKVFiled
     var storageSortDirectoryFirst: Boolean = true
 
+    // PC media grouping applies to every PC source on the next entry.
+    @MMKVFiled
+    var remoteAnimeGrouping: Boolean = false
+
     // 播放历史排序类型
     @MMKVFiled
     var historySortType: Int = HistorySort.TIME.value

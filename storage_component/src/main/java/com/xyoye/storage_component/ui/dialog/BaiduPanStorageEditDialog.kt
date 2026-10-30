@@ -53,11 +53,6 @@ class BaiduPanStorageEditDialog(
             )
         registerAutoSaveHelper(autoSaveHelper)
 
-        PlayerTypeOverrideBinder.bind(
-            binding.playerTypeOverrideLayout,
-            editLibrary,
-            onChanged = { autoSaveHelper.requestSave() },
-        )
         binding.displayNameEt.addTextChangedListener(afterTextChanged = { autoSaveHelper.requestSave() })
 
         autoSaveHelper.markSaved(buildLibraryIfValid(showToast = false))

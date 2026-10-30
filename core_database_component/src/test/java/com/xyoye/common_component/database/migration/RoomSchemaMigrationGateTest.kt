@@ -1,9 +1,13 @@
 package com.xyoye.common_component.database.migration
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import com.xyoye.common_component.database.DatabaseInfo
 import com.xyoye.common_component.database.DatabaseManager
@@ -59,13 +63,9 @@ class RoomSchemaMigrationGateTest {
             expectedLibraries = rows(database.rawQuery("SELECT * FROM media_library WHERE id = 1", null))
             expectedHistory = rows(database.rawQuery("SELECT * FROM play_history WHERE id = 1", null))
         }
-        val roomDb =
-            Room
-                .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
-                .addMigrations(DatabaseManager.MIGRATION_16_17)
-                .build()
+        val roomDb = openHistoricalDatabase(context, 17, DatabaseManager.MIGRATION_16_17)
         try {
-            val database = roomDb.openHelper.writableDatabase
+            val database = roomDb.writableDatabase
             assertEquals(17, database.version)
             assertEquals(expectedLibraries, rows(database.query("SELECT * FROM media_library")))
             assertEquals(expectedHistory, rows(database.query("SELECT * FROM play_history")))
@@ -85,6 +85,131 @@ class RoomSchemaMigrationGateTest {
         }
 
     @Test
+    fun migration17To18PreservesConnectionRowsHistoryIndexAndSequence() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        deleteDatabaseFiles(context, TEST_DB_NAME)
+        val dbFile = context.getDatabasePath(TEST_DB_NAME).also { it.parentFile?.mkdirs() }
+        createDatabaseFromRoomSchemaJson(dbFile, loadSchemaJson(17), 17)
+        loadSchemaJson(CURRENT_VERSION)
+        val expectedLibraries: List<List<String?>>
+        val expectedHistory: List<List<String?>>
+        openHistoricalDatabase(context, 17).use { helper ->
+            val database = helper.writableDatabase
+            seedMediaLibraryRows(database)
+            seedPlayHistoryRows(database)
+            database.execSQL(
+                "UPDATE media_library SET player_type_override = 4, account = NULL, password = NULL, " +
+                    "describe = NULL, smb_share_path = NULL, remote_secret = NULL WHERE id = 2"
+            )
+            reserveDeletedLibraryId(database)
+            expectedLibraries = rows(database.query("SELECT $RETAINED_COLUMNS FROM media_library ORDER BY id"))
+            expectedHistory = rows(database.query("SELECT * FROM play_history ORDER BY id"))
+        }
+
+        val roomDb = openCurrentDatabase(context)
+        try {
+            val database = roomDb.openHelper.writableDatabase
+            assertCurrentLibrarySchema(database)
+            assertEquals(expectedLibraries, rows(database.query("SELECT $RETAINED_COLUMNS FROM media_library ORDER BY id")))
+            assertEquals(expectedHistory, rows(database.query("SELECT * FROM play_history ORDER BY id")))
+            insertCurrentLibrary(database)
+            assertEquals(100L, lastLibraryId(database))
+            val duplicateFailure = runCatching { insertCurrentLibrary(database) }.exceptionOrNull()
+            assertTrue("The source URL/type unique index must remain enforced", duplicateFailure is SQLiteConstraintException)
+        } finally {
+            roomDb.close()
+            deleteDatabaseFiles(context, TEST_DB_NAME)
+        }
+    }
+
+    @Test
+    fun migration17To18HandlesLibraryWithoutAnyRows() {
+        migrateEmptyLibrary(hadDeletedLibrary = false)
+    }
+
+    @Test
+    fun migration17To18PreservesDeletedHighIdWhenLibraryIsEmpty() {
+        migrateEmptyLibrary(hadDeletedLibrary = true)
+    }
+
+    private fun migrateEmptyLibrary(hadDeletedLibrary: Boolean) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        deleteDatabaseFiles(context, TEST_DB_NAME)
+        val dbFile = context.getDatabasePath(TEST_DB_NAME).also { it.parentFile?.mkdirs() }
+        createDatabaseFromRoomSchemaJson(dbFile, loadSchemaJson(17), 17)
+        if (hadDeletedLibrary) {
+            openHistoricalDatabase(context, 17).use { helper ->
+                val database = helper.writableDatabase
+                seedMediaLibraryRows(database)
+                reserveDeletedLibraryId(database)
+                database.execSQL("DELETE FROM media_library")
+            }
+        }
+        val roomDb = openCurrentDatabase(context)
+        try {
+            val database = roomDb.openHelper.writableDatabase
+            assertCurrentLibrarySchema(database)
+            assertTrue(rows(database.query("SELECT * FROM media_library")).isEmpty())
+            insertCurrentLibrary(database)
+            assertEquals(if (hadDeletedLibrary) 100L else 1L, lastLibraryId(database))
+        } finally {
+            roomDb.close()
+            deleteDatabaseFiles(context, TEST_DB_NAME)
+        }
+    }
+
+    @Test
+    fun migration15And16To18PreservesConnectionDataAndTlsValues() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        for (version in listOf(15, 16)) {
+            deleteDatabaseFiles(context, TEST_DB_NAME)
+            val dbFile = context.getDatabasePath(TEST_DB_NAME).also { it.parentFile?.mkdirs() }
+            createDatabaseFromRoomSchemaJson(dbFile, loadSchemaJson(version), version)
+            val expectedLibraries: List<List<String?>>
+            val expectedHistory: List<List<String?>>
+            openHistoricalDatabase(context, version).use { helper ->
+                val database = helper.writableDatabase
+                seedMediaLibraryRows(database, includeTls = version >= 16)
+                seedPlayHistoryRows(database)
+                val projection =
+                    if (version == 15) {
+                        RETAINED_COLUMNS.replace(COLUMN_WEB_DAV_ALLOW_INSECURE_TLS, "0 AS $COLUMN_WEB_DAV_ALLOW_INSECURE_TLS")
+                    } else {
+                        RETAINED_COLUMNS
+                    }
+                expectedLibraries = rows(database.query("SELECT $projection FROM media_library ORDER BY id"))
+                expectedHistory = rows(database.query("SELECT * FROM play_history ORDER BY id"))
+            }
+            val roomDb = openCurrentDatabase(context)
+            try {
+                val database = roomDb.openHelper.writableDatabase
+                assertCurrentLibrarySchema(database)
+                assertEquals(expectedLibraries, rows(database.query("SELECT $RETAINED_COLUMNS FROM media_library ORDER BY id")))
+                assertEquals(expectedHistory, rows(database.query("SELECT * FROM play_history ORDER BY id")))
+            } finally {
+                roomDb.close()
+                deleteDatabaseFiles(context, TEST_DB_NAME)
+            }
+        }
+    }
+
+    @Test
+    fun newDatabaseContainsOnlySourceConnectionColumns() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        deleteDatabaseFiles(context, TEST_DB_NAME)
+        val roomDb = openCurrentDatabase(context)
+        try {
+            val database = roomDb.openHelper.writableDatabase
+            assertCurrentLibrarySchema(database)
+            insertCurrentLibrary(database)
+            assertEquals(1L, lastLibraryId(database))
+        } finally {
+            roomDb.close()
+            deleteDatabaseFiles(context, TEST_DB_NAME)
+        }
+    }
+
+    @Test
     fun schemaExportEnabledAndMigration15To16Works() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         deleteDatabaseFiles(context, TEST_DB_NAME)
@@ -98,14 +223,10 @@ class RoomSchemaMigrationGateTest {
         loadSchemaJson(version = NEW_VERSION)
         createDatabaseFromRoomSchemaJson(dbFile, schemaJson, version = OLD_VERSION)
 
-        val roomDb =
-            Room
-                .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
-                .addMigrations(DatabaseManager.MIGRATION_15_16, DatabaseManager.MIGRATION_16_17)
-                .build()
+        val roomDb = openHistoricalDatabase(context, NEW_VERSION, DatabaseManager.MIGRATION_15_16)
 
         try {
-            val supportDb = roomDb.openHelper.writableDatabase
+            val supportDb = roomDb.writableDatabase
             val columnNames = queryColumnNames(supportDb, tableName = TABLE_MEDIA_LIBRARY)
 
             assertTrue(
@@ -131,14 +252,10 @@ class RoomSchemaMigrationGateTest {
         val schemaJson = loadSchemaJson(version = NEW_VERSION)
         createDatabaseFromRoomSchemaJson(dbFile, schemaJson, version = NEW_VERSION)
 
-        val roomDb =
-            Room
-                .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
-                .addMigrations(DatabaseManager.MIGRATION_16_17)
-                .build()
+        val roomDb = openHistoricalDatabase(context, NEW_VERSION)
 
         try {
-            val supportDb = roomDb.openHelper.writableDatabase
+            val supportDb = roomDb.writableDatabase
             seedMediaLibraryRows(supportDb)
 
             DatabaseManager.MIGRATION_16_15.migrate(supportDb)
@@ -180,14 +297,10 @@ class RoomSchemaMigrationGateTest {
         val schemaJson = loadSchemaJson(version = NEW_VERSION)
         createDatabaseFromRoomSchemaJson(dbFile, schemaJson, version = NEW_VERSION)
 
-        val roomDb =
-            Room
-                .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
-                .addMigrations(DatabaseManager.MIGRATION_16_17)
-                .build()
+        val roomDb = openHistoricalDatabase(context, NEW_VERSION)
 
         try {
-            val supportDb = roomDb.openHelper.writableDatabase
+            val supportDb = roomDb.writableDatabase
             seedMediaLibraryRows(supportDb)
 
             DatabaseManager.MIGRATION_16_15.migrate(supportDb)
@@ -224,14 +337,10 @@ class RoomSchemaMigrationGateTest {
         val schemaJson = loadSchemaJson(version = NEW_VERSION)
         createDatabaseFromRoomSchemaJson(dbFile, schemaJson, version = NEW_VERSION)
 
-        val roomDb =
-            Room
-                .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
-                .addMigrations(DatabaseManager.MIGRATION_16_17)
-                .build()
+        val roomDb = openHistoricalDatabase(context, NEW_VERSION)
 
         try {
-            val supportDb = roomDb.openHelper.writableDatabase
+            val supportDb = roomDb.writableDatabase
             seedMediaLibraryRows(supportDb)
             seedPlayHistoryRows(supportDb)
 
@@ -247,6 +356,88 @@ class RoomSchemaMigrationGateTest {
             deleteDatabaseFiles(context, TEST_DB_NAME)
         }
     }
+
+    private fun openCurrentDatabase(context: Context): DatabaseInfo =
+        Room
+            .databaseBuilder(context, DatabaseInfo::class.java, TEST_DB_NAME)
+            .addMigrations(
+                DatabaseManager.MIGRATION_15_16,
+                DatabaseManager.MIGRATION_16_17,
+                DatabaseManager.MIGRATION_17_18
+            ).build()
+
+    private fun assertCurrentLibrarySchema(database: SupportSQLiteDatabase) {
+        assertEquals(CURRENT_VERSION, database.version)
+        assertEquals(RETAINED_COLUMNS.split(", ").toSet(), queryColumnNames(database, TABLE_MEDIA_LIBRARY))
+        database.query("PRAGMA index_list(media_library)").use { cursor ->
+            var found = false
+            while (cursor.moveToNext()) {
+                if (cursor.getString(cursor.getColumnIndexOrThrow("name")) == "index_media_library_url_media_type") {
+                    found = true
+                    assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("unique")))
+                }
+            }
+            assertTrue("The source URL/type unique index must remain present", found)
+        }
+        database.query("PRAGMA index_info(index_media_library_url_media_type)").use { cursor ->
+            val columns = mutableListOf<String>()
+            while (cursor.moveToNext()) columns.add(cursor.getString(cursor.getColumnIndexOrThrow("name")))
+            assertEquals(listOf("url", "media_type"), columns)
+        }
+    }
+
+    private fun insertCurrentLibrary(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            "INSERT INTO media_library(${RETAINED_COLUMNS.removePrefix("id, ")}) VALUES(" +
+                "'New source', 'https://example.com/new', 'webdav_server', NULL, NULL, 1, 443, NULL, " +
+                "0, '', 'UTF-8', 1, NULL, NULL, 1, 0, '')"
+        )
+    }
+
+    private fun reserveDeletedLibraryId(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            "INSERT INTO media_library SELECT 99, 'Deleted', 'https://example.com/deleted', " +
+                "media_type, account, password, is_anonymous, port, describe, ftp_mode, ftp_address, " +
+                "ftp_encoding, smb_v2, smb_share_path, remote_secret, web_dav_strict, " +
+                "web_dav_allow_insecure_tls, screencast_address, remote_anime_grouping, player_type_override " +
+                "FROM media_library WHERE id = 1"
+        )
+        database.execSQL("DELETE FROM media_library WHERE id = 99")
+    }
+
+    private fun lastLibraryId(database: SupportSQLiteDatabase): Long =
+        database.query("SELECT MAX(id) FROM media_library").use { cursor ->
+            check(cursor.moveToFirst())
+            cursor.getLong(0)
+        }
+
+    private fun openHistoricalDatabase(
+        context: Context,
+        version: Int,
+        migration: Migration? = null
+    ): SupportSQLiteOpenHelper =
+        FrameworkSQLiteOpenHelperFactory().create(
+            SupportSQLiteOpenHelper.Configuration
+                .builder(context)
+                .name(TEST_DB_NAME)
+                .callback(
+                    object : SupportSQLiteOpenHelper.Callback(version) {
+                        override fun onCreate(db: SupportSQLiteDatabase) {
+                            error("Historical fixture is missing")
+                        }
+
+                        override fun onUpgrade(
+                            db: SupportSQLiteDatabase,
+                            oldVersion: Int,
+                            newVersion: Int
+                        ) {
+                            val required = checkNotNull(migration)
+                            check(required.startVersion == oldVersion && required.endVersion == newVersion)
+                            required.migrate(db)
+                        }
+                    }
+                ).build()
+        )
 
     private fun loadSchemaJson(version: Int): JSONObject {
         val workingDir = checkNotNull(System.getProperty("user.dir")) { "System property user.dir is null" }
@@ -321,27 +512,31 @@ class RoomSchemaMigrationGateTest {
         }
     }
 
-    private fun seedMediaLibraryRows(database: SupportSQLiteDatabase) {
+    private fun seedMediaLibraryRows(
+        database: SupportSQLiteDatabase,
+        includeTls: Boolean = true
+    ) {
+        val tlsColumn = if (includeTls) "web_dav_allow_insecure_tls, " else ""
         database.execSQL(
             "INSERT INTO media_library(" +
                 "id, display_name, url, media_type, account, password, is_anonymous, port, describe," +
                 "ftp_mode, ftp_address, ftp_encoding, smb_v2, smb_share_path, remote_secret," +
-                "web_dav_strict, web_dav_allow_insecure_tls, screencast_address, remote_anime_grouping, player_type_override" +
+                "web_dav_strict, ${tlsColumn}screencast_address, remote_anime_grouping, player_type_override" +
                 ") VALUES(" +
                 "1, 'LibraryA', 'https://example.com/a', 'webdav', 'a', 'pa', 0, 443, 'desc-a'," +
                 "0, '', 'UTF-8', 1, '/a', 'secret-a'," +
-                "1, 1, 'cast-a', 0, 2" +
+                "1, ${if (includeTls) "1, " else ""}'cast-a', 0, 2" +
                 ")",
         )
         database.execSQL(
             "INSERT INTO media_library(" +
                 "id, display_name, url, media_type, account, password, is_anonymous, port, describe," +
                 "ftp_mode, ftp_address, ftp_encoding, smb_v2, smb_share_path, remote_secret," +
-                "web_dav_strict, web_dav_allow_insecure_tls, screencast_address, remote_anime_grouping, player_type_override" +
+                "web_dav_strict, ${tlsColumn}screencast_address, remote_anime_grouping, player_type_override" +
                 ") VALUES(" +
                 "2, 'LibraryB', 'https://example.com/b', 'webdav', 'b', 'pb', 1, 80, 'desc-b'," +
                 "0, '', 'UTF-8', 0, '/b', 'secret-b'," +
-                "1, 0, 'cast-b', 1, 0" +
+                "1, ${if (includeTls) "0, " else ""}'cast-b', 1, 0" +
                 ")",
         )
     }
@@ -522,11 +717,16 @@ class RoomSchemaMigrationGateTest {
     private companion object {
         const val OLD_VERSION = 15
         const val NEW_VERSION = 16
+        const val CURRENT_VERSION = 18
         const val TEST_DB_NAME = "room_migration_gate_test.db"
         private const val ROOM_TABLE_NAME_PLACEHOLDER = "${'$'}{TABLE_NAME}"
         private const val ROOM_VIEW_NAME_PLACEHOLDER = "${'$'}{VIEW_NAME}"
         private const val TABLE_MEDIA_LIBRARY = "media_library"
         private const val TABLE_MEDIA_LIBRARY_SIDECAR = "media_library_v16_ext"
         private const val COLUMN_WEB_DAV_ALLOW_INSECURE_TLS = "web_dav_allow_insecure_tls"
+        private const val RETAINED_COLUMNS =
+            "id, display_name, url, media_type, account, password, is_anonymous, port, describe, " +
+                "ftp_mode, ftp_address, ftp_encoding, smb_v2, smb_share_path, remote_secret, " +
+                "web_dav_strict, web_dav_allow_insecure_tls, screencast_address"
     }
 }

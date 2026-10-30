@@ -6,11 +6,6 @@ import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.network.repository.Cloud115Repository
 import com.xyoye.common_component.network.repository.ResourceRepository
-import com.xyoye.common_component.storage.transport.PlaybackTransportLease
-import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
-import com.xyoye.common_component.storage.transport.directPlaybackTransport
-import com.xyoye.common_component.storage.transport.TransportAcquisitionException
-import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.AuthStorage
 import com.xyoye.common_component.storage.PagedStorage
@@ -23,6 +18,9 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.Cloud115StorageFile
 import com.xyoye.common_component.storage.file.payloadAs
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.data.cloud115.Cloud115FileInfo
@@ -428,14 +426,6 @@ class Cloud115Storage(
                 }.getOrNull()
             }
         }
-
-    override fun supportedPlayerTypes(): Set<PlayerType> =
-        setOf(
-            PlayerType.TYPE_EXO_PLAYER,
-            PlayerType.TYPE_MPV_PLAYER,
-        )
-
-    override fun preferredPlayerType(): PlayerType = PlayerType.TYPE_EXO_PLAYER
 
     override fun getNetworkHeaders(): Map<String, String> {
         val cookie =

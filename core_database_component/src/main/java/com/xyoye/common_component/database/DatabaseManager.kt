@@ -262,6 +262,56 @@ class DatabaseManager private constructor() {
                 }
             }
 
+        val MIGRATION_17_18 =
+            object : Migration(17, 18) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    val sequence =
+                        database.query("SELECT seq FROM sqlite_sequence WHERE name = 'media_library'").use { cursor ->
+                            if (cursor.moveToFirst()) cursor.getLong(0) else 0L
+                        }
+                    database.execSQL(
+                        "CREATE TABLE $MEDIA_LIBRARY_TEMP_TABLE(" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                            "display_name TEXT NOT NULL," +
+                            "url TEXT NOT NULL," +
+                            "media_type TEXT NOT NULL," +
+                            "account TEXT," +
+                            "password TEXT," +
+                            "is_anonymous INTEGER NOT NULL," +
+                            "port INTEGER NOT NULL," +
+                            "describe TEXT," +
+                            "ftp_mode INTEGER NOT NULL," +
+                            "ftp_address TEXT NOT NULL," +
+                            "ftp_encoding TEXT NOT NULL," +
+                            "smb_v2 INTEGER NOT NULL," +
+                            "smb_share_path TEXT," +
+                            "remote_secret TEXT," +
+                            "web_dav_strict INTEGER NOT NULL," +
+                            "web_dav_allow_insecure_tls INTEGER NOT NULL," +
+                            "screencast_address TEXT NOT NULL" +
+                            ")"
+                    )
+                    val columns =
+                        "id, display_name, url, media_type, account, password, is_anonymous, port, describe, " +
+                            "ftp_mode, ftp_address, ftp_encoding, smb_v2, smb_share_path, remote_secret, " +
+                            "web_dav_strict, web_dav_allow_insecure_tls, screencast_address"
+                    database.execSQL(
+                        "INSERT INTO $MEDIA_LIBRARY_TEMP_TABLE($columns) SELECT $columns FROM media_library"
+                    )
+                    database.execSQL("DROP TABLE media_library")
+                    database.execSQL("ALTER TABLE $MEDIA_LIBRARY_TEMP_TABLE RENAME TO media_library")
+                    database.execSQL(
+                        "CREATE UNIQUE INDEX index_media_library_url_media_type ON media_library(url, media_type)"
+                    )
+                    // Credentials and history reference library IDs, including IDs of deleted libraries.
+                    database.execSQL("DELETE FROM sqlite_sequence WHERE name = 'media_library'")
+                    database.execSQL(
+                        "INSERT INTO sqlite_sequence(name, seq) VALUES ('media_library', ?)",
+                        arrayOf(sequence)
+                    )
+                }
+            }
+
         val MIGRATION_16_15 =
             object : Migration(16, 15) {
                 override fun migrate(database: SupportSQLiteDatabase) {
@@ -351,7 +401,7 @@ class DatabaseManager private constructor() {
                 MIGRATION_14_15,
                 MIGRATION_15_16,
                 MIGRATION_16_17,
+                MIGRATION_17_18,
                 MIGRATION_16_15,
-            )
-            .build()
+            ).build()
 }

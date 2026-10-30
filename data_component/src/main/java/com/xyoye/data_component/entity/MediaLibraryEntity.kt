@@ -57,11 +57,7 @@ data class MediaLibraryEntity(
     @ColumnInfo(name = "web_dav_allow_insecure_tls")
     var webDavAllowInsecureTls: Boolean = false,
     @ColumnInfo(name = "screencast_address")
-    var screencastAddress: String = "",
-    @ColumnInfo(name = "remote_anime_grouping")
-    var remoteAnimeGrouping: Boolean = false,
-    @ColumnInfo(name = "player_type_override")
-    var playerTypeOverride: Int = 0
+    var screencastAddress: String = ""
 ) : Parcelable {
     companion object {
         val LOCAL =
@@ -178,9 +174,7 @@ data class MediaLibraryEntity(
             "remoteSecret=$maskedRemoteSecret, " +
             "webDavStrict=$webDavStrict, " +
             "webDavAllowInsecureTls=$webDavAllowInsecureTls, " +
-            "screencastAddress=$screencastAddress, " +
-            "remoteAnimeGrouping=$remoteAnimeGrouping, " +
-            "playerTypeOverride=$playerTypeOverride" +
+            "screencastAddress=$screencastAddress" +
             ")"
     }
 }
