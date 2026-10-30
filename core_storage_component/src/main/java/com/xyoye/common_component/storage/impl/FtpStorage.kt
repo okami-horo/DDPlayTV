@@ -22,6 +22,7 @@ import kotlinx.coroutines.ensureActive
 import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
+import org.apache.commons.net.ftp.FTPReply
 import java.io.FilterInputStream
 import java.io.InputStream
 
@@ -39,12 +40,16 @@ class FtpStorage internal constructor(
     private var pendingRead: PendingRead? = null
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> =
-        access(emptyList()) {
+        access(emptyList(), failOnError = true) {
             if (file.storage !== this) return@access emptyList()
             if (client.printWorkingDirectory() != "/" && !client.changeWorkingDirectory("/")) {
-                return@access emptyList()
+                throw java.io.IOException("FTP working directory could not be selected")
             }
-            client.listFiles(file.filePath()).map { FtpStorageFile(this, file.filePath(), it) }
+            val files = client.listFiles(file.filePath())
+            if (FTPReply.isNegativeTransient(client.replyCode) || FTPReply.isNegativePermanent(client.replyCode)) {
+                throw java.io.IOException("FTP directory listing failed (${client.replyCode})")
+            }
+            files.map { FtpStorageFile(this, file.filePath(), it) }
         }
 
     override suspend fun getRootFile(): StorageFile =
@@ -171,7 +176,10 @@ class FtpStorage internal constructor(
             }
         if (!loggedIn) {
             disconnectConnection()
-            if (throwPlaybackErrors) throw javax.security.auth.login.LoginException("FTP authentication failed")
+            if (throwPlaybackErrors) {
+                throw javax.security.auth.login
+                    .LoginException("FTP authentication failed")
+            }
             return false
         }
         if (library.isActiveFTP) client.enterLocalActiveMode() else client.enterLocalPassiveMode()
@@ -235,19 +243,29 @@ class FtpStorage internal constructor(
 
     private inline fun <T> access(
         fallback: T,
+        failOnError: Boolean = false,
         operation: () -> T
     ): T =
         synchronized(connectionLock) {
-            if (closed) return fallback
+            if (closed) {
+                if (failOnError) throw java.io.IOException("FTP storage is closed")
+                return fallback
+            }
             try {
                 finishPending()
-                if (!checkConnection()) return fallback
+                if (!checkConnection()) {
+                    if (failOnError) {
+                        throw javax.security.auth.login
+                            .LoginException("FTP authentication failed")
+                    }
+                    return fallback
+                }
                 operation()
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
                 disconnectConnection()
-                if (throwPlaybackErrors) throw failure
+                if (throwPlaybackErrors || failOnError) throw failure
                 LogFacade.w(LogModule.STORAGE, "FtpStorage", "FTP operation failed")
                 fallback
             }

@@ -77,6 +77,13 @@ class PlayerGestureView(
         postDelayed(mFadeGestureOut, 800)
     }
 
+    override fun onCancelSlide() {
+        removeCallbacks(mFadeGestureOut)
+        ViewCompat.animate(viewBinding.gestureContainer).setListener(null).cancel()
+        viewBinding.gestureContainer.isVisible = false
+        viewBinding.positionTv.isVisible = false
+    }
+
     override fun onPositionChange(
         newPosition: Long,
         currentPosition: Long,

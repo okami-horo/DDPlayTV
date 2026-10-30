@@ -1,7 +1,9 @@
 package com.xyoye.anime_component.ui.fragment.search_magnet
 
+import android.app.Dialog
 import android.os.Bundle
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.anime_component.BR
 import com.xyoye.anime_component.R
@@ -19,9 +21,11 @@ import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.addToClipboard
+import com.xyoye.common_component.extension.collectAtStarted
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.vertical
+import com.xyoye.common_component.focus.applyDpadFocusable
 import com.xyoye.common_component.utils.MagnetUtils
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
@@ -44,6 +48,7 @@ class SearchMagnetFragment :
     }
 
     private val actionData = ManageMagnet.values().map { it.toSheetActionBean() }
+    private var activeDialog: Dialog? = null
 
     override fun initViewModel() =
         ViewModelInit(
@@ -73,17 +78,15 @@ class SearchMagnetFragment :
         }
 
         dataBinding.domainTv.setOnClickListener {
+            viewModel.cancelDialogRequest()
             showInputDomainDialog()
         }
 
         val isResDomainExist = AppConfig.getMagnetResDomain() != null
         dataBinding.domainTv.setTextColorRes(if (isResDomainExist) R.color.text_theme else R.color.text_red)
 
-        arguments?.apply {
-            val searchWord = getString("search_word")
-            if (!searchWord.isNullOrEmpty()) {
-                search(searchWord)
-            }
+        if (viewModel.initializeSearch(arguments?.getString("search_word"))) {
+            (mAttachActivity as? SearchActivity)?.onSearch(viewModel.searchText.get().orEmpty())
         }
     }
 
@@ -146,33 +149,52 @@ class SearchMagnetFragment :
     }
 
     private fun initObserver() {
-        viewModel.magnetLiveData.observe(viewLifecycleOwner) {
-            dataBinding.magnetRv.setData(it)
+        viewModel.queryState.collectAtStarted(viewLifecycleOwner) { state ->
+            dataBinding.historyCl.isVisible = state.keyword.isEmpty()
+            dataBinding.magnetRv.isVisible = state.items.isNotEmpty() || (state.loaded && state.error == null)
+            dataBinding.magnetRv.setData(state.items)
+            dataBinding.queryStatusTv.apply {
+                val error = state.filterError ?: state.error
+                val retryable = error != null
+                text =
+                    when {
+                        state.filterLoading -> "正在加载筛选…"
+                        state.loading -> "正在搜索…"
+                        retryable -> "$error\n按确定重试"
+                        state.loaded && state.items.isEmpty() -> "未找到结果"
+                        else -> ""
+                    }
+                isVisible = text.isNotEmpty()
+                setOnClickListener { viewModel.retry() }
+                applyDpadFocusable(retryable, clickable = retryable)
+            }
         }
 
         viewModel.searchHistoryLiveData.observe(viewLifecycleOwner) {
             dataBinding.historyLabelsView.setLabels(it)
         }
 
-        viewModel.magnetTypeData.observe(viewLifecycleOwner) {
-            MagnetScreenDialog(mAttachActivity, it, MagnetScreenType.TYPE) { entity ->
-                viewModel.magnetTypeId.set(entity.screenId)
-                viewModel.magnetTypeText.set(entity.screenName)
-                viewModel.search()
-            }.show()
-        }
-
-        viewModel.magnetSubgroupData.observe(viewLifecycleOwner) {
-            MagnetScreenDialog(mAttachActivity, it, MagnetScreenType.SUBGROUP) { entity ->
-                viewModel.magnetSubgroupId.set(entity.screenId)
-                viewModel.magnetSubgroupText.set(entity.screenName)
-                viewModel.search()
-            }.show()
-        }
-
-        viewModel.domainErrorLiveData.observe(viewLifecycleOwner) {
-            ToastCenter.showError("请完善节点信息")
-            showInputDomainDialog()
+        viewModel.dialogRequests.collectAtStarted(viewLifecycleOwner, Lifecycle.State.RESUMED) { request ->
+            if (!isVisible || !viewModel.isCurrentDialog(request)) return@collectAtStarted
+            activeDialog?.dismiss()
+            when (request) {
+                is SearchMagnetFragmentViewModel.DialogRequest.Domain -> showInputDomainDialog()
+                is SearchMagnetFragmentViewModel.DialogRequest.Filter -> {
+                    activeDialog =
+                        MagnetScreenDialog(mAttachActivity, request.items, request.type) { entity ->
+                            if (viewModel.isCurrentDialog(request)) {
+                                if (request.type == MagnetScreenType.TYPE) {
+                                    viewModel.magnetTypeId.set(entity.screenId)
+                                    viewModel.magnetTypeText.set(entity.screenName)
+                                } else {
+                                    viewModel.magnetSubgroupId.set(entity.screenId)
+                                    viewModel.magnetSubgroupText.set(entity.screenName)
+                                }
+                                viewModel.search()
+                            }
+                        }.also { it.show() }
+                }
+            }
         }
     }
 
@@ -187,15 +209,25 @@ class SearchMagnetFragment :
     }
 
     override fun onTextClear() {
+        viewModel.clearSearch()
         dataBinding.historyCl.isVisible = true
         dataBinding.magnetRv.isVisible = false
     }
 
     private fun showInputDomainDialog() {
-        SearchDomainDialog(requireActivity()) {
-            dataBinding.domainTv.setTextColorRes(R.color.text_theme)
-            AppConfig.putMagnetResDomain(it)
-        }.show()
+        activeDialog?.dismiss()
+        activeDialog =
+            SearchDomainDialog(requireActivity()) {
+                dataBinding.domainTv.setTextColorRes(R.color.text_theme)
+                AppConfig.putMagnetResDomain(it)
+                viewModel.onDomainChanged()
+            }.also { it.show() }
+    }
+
+    override fun onDestroyView() {
+        activeDialog?.dismiss()
+        activeDialog = null
+        super.onDestroyView()
     }
 
     private fun showActionDialog(data: MagnetData) {

@@ -25,16 +25,20 @@ import com.xyoye.data_component.data.baidupan.xpan.BaiduPanXpanFileItem
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.runBlocking
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
 
-class BaiduPanStorage(
-    library: MediaLibraryEntity
+class BaiduPanStorage internal constructor(
+    library: MediaLibraryEntity,
+    private val pageLoader: (suspend (String, Int) -> List<BaiduPanXpanFileItem>)?
 ) : AbstractStorage(library),
     PagedStorage,
     AuthStorage,
     PlaybackTransportProvider {
+    constructor(library: MediaLibraryEntity) : this(library, null)
+
     private val rangeUnsupportedRefreshLock = Any()
 
     private val storageKey = BaiduPanAuthStore.storageKey(library)
@@ -47,6 +51,15 @@ class BaiduPanStorage(
     private var pagingHasMore: Boolean = true
 
     override var state: PagedStorage.State = PagedStorage.State.IDLE
+
+    override fun snapshotPaging() = PagedStorage.Snapshot(pagingDir, pagingStart, pagingHasMore, state)
+
+    override fun restorePaging(snapshot: PagedStorage.Snapshot) {
+        pagingDir = snapshot.directoryKey
+        pagingStart = snapshot.offset
+        pagingHasMore = snapshot.hasMore
+        state = snapshot.state
+    }
 
     override fun isConnected(): Boolean = repository.isAuthorized()
 
@@ -88,21 +101,12 @@ class BaiduPanStorage(
         file: StorageFile,
         refresh: Boolean
     ): List<StorageFile> {
-        directory = file
         val dirPath = normalizePath(file.filePath())
-        if (refresh || pagingDir != dirPath) {
-            resetPaging(dirPath)
-        }
 
-        val response =
-            repository
-                .xpanList(
-                    dir = dirPath,
-                    start = 0,
-                    limit = DEFAULT_PAGE_LIMIT,
-                ).getOrThrow()
-
-        val items = response.list.orEmpty()
+        val items = loadPage(dirPath, 0)
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
+        directory = file
+        pagingDir = dirPath
         pagingStart = items.size
         pagingHasMore = items.size >= DEFAULT_PAGE_LIMIT
         state = if (pagingHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
@@ -335,21 +339,15 @@ class BaiduPanStorage(
 
         state = PagedStorage.State.LOADING
         return runCatching {
-            val response =
-                repository
-                    .xpanList(
-                        dir = dirPath,
-                        start = pagingStart,
-                        limit = DEFAULT_PAGE_LIMIT,
-                    ).getOrThrow()
-
-            val items = response.list.orEmpty()
+            val items = loadPage(dirPath, pagingStart)
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
             pagingStart += items.size
             pagingHasMore = items.size >= DEFAULT_PAGE_LIMIT
             items.map { BaiduPanStorageFile(it, this) }
         }.onSuccess {
             state = if (pagingHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
         }.onFailure {
+            if (it is kotlinx.coroutines.CancellationException) throw it
             state = PagedStorage.State.ERROR
         }
     }
@@ -430,6 +428,17 @@ class BaiduPanStorage(
         pagingHasMore = true
         state = PagedStorage.State.IDLE
     }
+
+    private suspend fun loadPage(
+        path: String,
+        offset: Int
+    ): List<BaiduPanXpanFileItem> =
+        pageLoader?.invoke(path, offset)
+            ?: repository
+                .xpanList(dir = path, start = offset, limit = DEFAULT_PAGE_LIMIT)
+                .getOrThrow()
+                .list
+                .orEmpty()
 
     private fun withAccessToken(
         url: String,

@@ -5,7 +5,6 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
-import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.entity.DanmuBlockEntity
@@ -14,6 +13,7 @@ import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player.controller.action.PlayerAction
 import com.xyoye.player.controller.base.TvVideoController
 import com.xyoye.player.controller.danmu.DanmuController
+import com.xyoye.player.controller.setting.DanmuPanelState
 import com.xyoye.player.controller.setting.SettingController
 import com.xyoye.player.controller.subtitle.SubtitleController
 import com.xyoye.player.controller.video.LoadingView
@@ -60,7 +60,6 @@ class VideoController(
 
     private val playerControlView = PlayerControlView(context)
 
-    private var lastPlayPosition = 0L
     private var settingCallerId = View.NO_ID
     private var lastVideoSpeed: Float? = null
 
@@ -103,7 +102,6 @@ class VideoController(
     override fun onPlayStateChanged(playState: PlayState) {
         super.onPlayStateChanged(playState)
         if (playState == PlayState.STATE_PLAYING) {
-            considerSeekToLastPlay()
             considerSetVideoSpeed()
         } else if (playState == PlayState.STATE_COMPLETED) {
             if (PlayerInitializer.Player.isAutoPlayNext) {
@@ -144,10 +142,10 @@ class VideoController(
 
     override fun release() {
         clearSourceScopedState()
-        lastPlayPosition = 0
     }
 
     override fun destroy() {
+        cancelPendingSeek()
     }
 
     private fun onSettingHidden() {
@@ -171,16 +169,7 @@ class VideoController(
     /**
      * 添加扩展轨道
      */
-    fun addExtendTrack(track: VideoTrackBean) {
-        mControlWrapper.addTrack(track)
-    }
-
-    /**
-     * 设置上次播放位置
-     */
-    fun setLastPosition(position: Long) {
-        lastPlayPosition = position
-    }
+    fun addExtendTrack(track: VideoTrackBean): Boolean = mControlWrapper.addTrack(track)
 
     /**
      * 设置上次播放速度
@@ -241,6 +230,7 @@ class VideoController(
     }
 
     fun clearSourceScopedState() {
+        cancelPendingSeek()
         mDanmuController.danmuRelease()
         mSubtitleController.clearExternalTrack()
         mSettingController.hideSettingView()
@@ -266,10 +256,12 @@ class VideoController(
     fun observerDanmuSearch(
         search: (String) -> Unit,
         download: (DanmuEpisodeData) -> Unit,
-        searchResult: () -> LiveData<List<DanmuEpisodeData>>
+        searchResult: () -> LiveData<DanmuPanelState>
     ) {
         mSettingController.setDanmuSearch(search, download, searchResult)
     }
+
+    fun onDanmuApplied() = mSettingController.onDanmuApplied()
 
     /**
      * 更新字幕内容
@@ -278,30 +270,6 @@ class VideoController(
      */
     fun onSubtitleTextOutput(subtitle: MixedSubtitle) {
         mSubtitleController.onSubtitleTextOutput(subtitle)
-    }
-
-    private fun considerSeekToLastPlay() {
-        if (lastPlayPosition <= 0) {
-            return
-        }
-        if (!mControlWrapper.isUserSeekAllowed()) {
-            lastPlayPosition = 0
-            return
-        }
-
-        // 上次进度大于90%时，不执行自动定位进度
-        val duration = mControlWrapper.getDuration()
-        if (duration <= 0) {
-            lastPlayPosition = 0
-            return
-        }
-        if (1.0 * lastPlayPosition / duration >= 0.9) {
-            return
-        }
-
-        mControlWrapper.seekTo(lastPlayPosition)
-        showMessage("已为你定位至：${formatDuration(lastPlayPosition)}", MessageTime.LONG)
-        lastPlayPosition = 0
     }
 
     private fun considerSetVideoSpeed() {

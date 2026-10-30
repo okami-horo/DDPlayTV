@@ -94,20 +94,31 @@ class SearchDanmuView(
 
     private fun download(data: DanmuEpisodeData) {
         download?.invoke(data)
-        mControlWrapper.hideSettingView()
     }
 
     fun setDanmuSearch(
         search: (String) -> Unit,
         download: (DanmuEpisodeData) -> Unit,
-        searchResult: () -> LiveData<List<DanmuEpisodeData>>
+        searchResult: () -> LiveData<DanmuPanelState>
     ) {
         this.search = search
         this.download = download
-        searchResult.invoke().observe(context as LifecycleOwner) {
-            mSearchDanmuData.clear()
-            mSearchDanmuData.addAll(it)
-            viewBinding.danmuRv.setData(mSearchDanmuData)
-        }
+        searchResult.invoke().observe(context as LifecycleOwner, ::renderState)
+    }
+
+    internal fun renderState(state: DanmuPanelState) {
+        val episodes = (state.search as? DanmuSearchState.Content)?.episodes.orEmpty()
+        mSearchDanmuData.clear()
+        mSearchDanmuData.addAll(episodes)
+        viewBinding.danmuRv.setData(mSearchDanmuData)
+        viewBinding.danmuStatusTv.text =
+            when {
+                state.downloading -> "正在下载弹幕…"
+                state.downloadError != null -> state.downloadError
+                state.search is DanmuSearchState.Loading -> "正在搜索…"
+                state.search is DanmuSearchState.Error -> state.search.message
+                state.search is DanmuSearchState.Empty -> "没有找到弹幕，可修改关键词重试"
+                else -> ""
+            }
     }
 }

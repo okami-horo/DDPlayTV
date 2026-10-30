@@ -33,9 +33,8 @@ object SubtitleFontCacheHelper {
         return try {
             storage.openDirectory(fontDirectory, false)
         } catch (e: Exception) {
-            if (e !is CancellationException) {
-                LogFacade.w(LogModule.SUBTITLE, TAG, "open font directory failed: ${e.message}")
-            }
+            if (e is CancellationException) throw e
+            LogFacade.w(LogModule.SUBTITLE, TAG, "open font directory failed: ${e.message}")
             emptyList()
         } finally {
             storage.directory = currentDirectory

@@ -27,6 +27,9 @@ dependencies {
     implementation(Dependencies.Huawei.scan)
 
     kapt(Dependencies.Alibaba.arouter_compiler)
+    testImplementation(Dependencies.Testing.robolectric)
+    testImplementation(Dependencies.Testing.androidx_test_core)
+    testImplementation(Dependencies.Kotlin.coroutines_test)
 }
 android {
     namespace = "com.xyoye.storage_component"

@@ -1,6 +1,5 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
-import android.text.TextUtils
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -15,212 +14,140 @@ import com.xyoye.common_component.storage.baidupan.auth.BaiduPanReAuthRequiredEx
 import com.xyoye.common_component.storage.cloud115.auth.Cloud115ReAuthRequiredException
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.open115.auth.Open115ReAuthRequiredException
-import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.thunder.ThunderManager
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.TrackType
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import java.io.FileNotFoundException
 
-class StorageFileFragmentViewModel : BaseViewModel() {
-    companion object {
-        private val lastPlayDirectory =
-            PlayHistoryEntity(
-                url = "",
-                mediaType = MediaType.OTHER_STORAGE,
-                videoName = "",
-            ).apply {
-                isLastPlay = true
+class StorageFileFragmentViewModel(
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val hidePointFiles: () -> Boolean = { !AppConfig.isShowHiddenFile() },
+    private val historyLookup: suspend (StorageFile) -> PlayHistoryEntity? = { file ->
+        PlayHistoryRepository.findOrClaimLegacyHistory(
+            file.uniqueKey(),
+            file.storage.library.id,
+            file.storage.library.mediaType,
+            file.fileUrl()
+        )
+    },
+    private val lastPlayLookup: suspend (Int) -> PlayHistoryEntity? = { PlayHistoryRepository.getStorageLastPlay(it) },
+    private val comparator: () -> Comparator<StorageFile> = { StorageSortOption.comparator() }
+) : BaseViewModel() {
+    private val _state = MutableLiveData(StorageBrowseState())
+    val state: LiveData<StorageBrowseState> = _state
+    private val _loginRequiredLiveData = MutableLiveData<MediaLibraryEntity?>()
+    val loginRequiredLiveData: LiveData<MediaLibraryEntity?> = _loginRequiredLiveData
+    private var boundStorage: Storage? = null
+    var storage: Storage
+        get() = requireNotNull(boundStorage)
+        set(value) {
+            val previous = boundStorage
+            boundStorage = value
+            if (previous != null && previous !== value) {
+                requestVersion++
+                requestJob?.cancel()
+                operation = null
+                searchResults = null
+                pagingSnapshot = null
+                _state.value = StorageBrowseState(query = current.query)
             }
+        }
+    var operationLock = Mutex()
+    var isPageActive: () -> Boolean = { true }
+    private var requestVersion = 0L
+    private var requestJob: Job? = null
+    private var operation: Operation? = null
+    private var searchResults: List<StorageFile>? = null
+    private var pagingSnapshot: PagedStorage.Snapshot? = null
+    private val current get() = requireNotNull(_state.value)
+
+    fun consumeLoginRequest() {
+        _loginRequiredLiveData.value = null
     }
 
-    private val _fileLiveData = MutableLiveData<List<Any>>()
-    val fileLiveData: LiveData<List<Any>> = _fileLiveData
+    fun cancelRequests() {
+        requestVersion++
+        requestJob?.cancel()
+        operation = null
+        publish(current)
+    }
 
-    private val _loginRequiredLiveData = MutableLiveData<MediaLibraryEntity>()
-    val loginRequiredLiveData: LiveData<MediaLibraryEntity> = _loginRequiredLiveData
-
-    lateinit var storage: Storage
-
-    @Volatile
-    var lastListError: String? = null
-        private set
-
-    // 当前媒体库中最后一次播放记录
-    private var storageLastPlay: PlayHistoryEntity? = null
-
-    // 是否隐藏.开头的文件
-    private val hidePointFile = AppConfig.isShowHiddenFile().not()
-
-    // 文件列表快照
-    private var filesSnapshot = listOf<Any>()
-
-    /**
-     * 展开文件夹
-     */
     fun listFile(
         directory: StorageFile?,
         refresh: Boolean = false,
         directoryPath: String? = null
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            lastListError = null
-            try {
-                if (storage.library.mediaType == MediaType.MAGNET_LINK) {
-                    val errorMessage = ThunderManager.ensureInitializedOrErrorMessage()
-                    if (errorMessage != null) {
-                        ToastCenter.showError(errorMessage)
-                        emptyList<Any>()
-                            .apply { _fileLiveData.postValue(this) }
-                            .also { filesSnapshot = it }
-                        return@launch
-                    }
-                }
-
-                val authStorage = storage as? AuthStorage
-                if (authStorage != null && authStorage.requiresLogin(directory) && !authStorage.isConnected()) {
-                    ToastCenter.showWarning("请先${authStorage.loginActionText(directory)}")
-                    _loginRequiredLiveData.postValue(storage.library)
-                    emptyList<Any>()
-                        .apply { _fileLiveData.postValue(this) }
-                        .also { filesSnapshot = it }
-                    return@launch
-                }
-
-                val target =
-                    directory ?: if (directoryPath != null && directoryPath != "/") {
-                        storage.pathFile(directoryPath, isDirectory = true)
-                    } else {
-                        storage.getRootFile()
-                    }
-                if (target == null) {
-                    emptyList<Any>()
-                        .apply { _fileLiveData.postValue(this) }
-                        .also { filesSnapshot = it }
-                    return@launch
-                }
-
-                if (authStorage != null && authStorage.requiresLogin(target) && !authStorage.isConnected()) {
-                    ToastCenter.showWarning("请先${authStorage.loginActionText(target)}")
-                    _loginRequiredLiveData.postValue(storage.library)
-                    emptyList<Any>()
-                        .apply { _fileLiveData.postValue(this) }
-                        .also { filesSnapshot = it }
-                    return@launch
-                }
-
-                refreshStorageLastPlay()
-                storage
-                    .openDirectory(target, refresh)
-                    .filter { isDisplayFile(it) }
-                    .sortedWith(StorageSortOption.comparator())
-                    .onEach { it.playHistory = getHistory(it) }
-                    .let { buildDisplayItems(it) }
-                    .apply { _fileLiveData.postValue(this) }
-                    .also { filesSnapshot = it }
-            } catch (e: Exception) {
-                lastListError = e.message
-                ErrorReportHelper.postCatchedExceptionWithContext(
-                    e,
-                    "StorageFileFragmentViewModel",
-                    "listFile",
-                    "加载文件列表失败: ${directory?.fileName() ?: "root"}",
-                )
-
-                if (handleLoginRequiredIfNeeded(e, clearList = true)) {
-                    return@launch
-                }
-
-                ToastCenter.showError("加载文件列表失败: ${e.message}")
-                // 刷新失败时保留旧数据，避免列表突然清空导致不可操作（尤其是 TV 场景）
-                if (refresh && filesSnapshot.isNotEmpty()) {
-                    _fileLiveData.postValue(filesSnapshot)
-                } else {
-                    _fileLiveData.postValue(emptyList())
-                }
+        request(Operation.DIRECTORY) { requestStorage ->
+            val auth = requestStorage as? AuthStorage
+            if (auth != null && auth.requiresLogin(directory) && !auth.isConnected()) {
+                throw LoginRequiredException("请先" + auth.loginActionText(directory))
             }
+            val result =
+                withContext(ioDispatcher) {
+                    if (requestStorage.library.mediaType == MediaType.MAGNET_LINK) {
+                        ThunderManager.ensureInitializedOrErrorMessage()?.let { throw IllegalStateException(it) }
+                    }
+                    val target =
+                        directory ?: if (directoryPath != null && directoryPath != "/") {
+                            requestStorage.pathFile(directoryPath, isDirectory = true)
+                        } else {
+                            requestStorage.getRootFile()
+                        } ?: throw FileNotFoundException("媒体库目录不可用")
+                    currentCoroutineContext().ensureActive()
+                    if (auth != null && auth.requiresLogin(target) && !auth.isConnected()) {
+                        throw LoginRequiredException("请先" + auth.loginActionText(target))
+                    }
+                    val files = requestStorage.openDirectory(target, refresh)
+                    currentCoroutineContext().ensureActive()
+                    val originals = annotateHistory(files, requestStorage)
+                    target to originals
+                }
+            ensureRequest()
+            searchResults = null
+            pagingSnapshot = (requestStorage as? PagedStorage)?.snapshotPaging()
+            val next = current.copy(directory = result.first, directoryFiles = result.second, hasDirectory = true)
+            requestStorage.directory = result.first
+            requestStorage.directoryFiles = result.second
+            publish(next)
         }
     }
 
-    /**
-     * 修改文件排序
-     */
     fun changeSortOption() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                lastListError = null
-                val currentFiles = _fileLiveData.value?.filterIsInstance<StorageFile>() ?: return@launch
-                val sorted =
-                    mutableListOf<StorageFile>()
-                        .plus(currentFiles)
-                        .sortedWith(StorageSortOption.comparator())
-                val items = buildDisplayItems(sorted)
-                _fileLiveData.postValue(items)
-                filesSnapshot = items
-            } catch (e: Exception) {
-                ErrorReportHelper.postCatchedExceptionWithContext(
-                    e,
-                    "StorageFileFragmentViewModel",
-                    "changeSortOption",
-                    "文件排序失败",
-                )
-                ToastCenter.showError("文件排序失败: ${e.message}")
-            }
-        }
+        _state.value = current.copy(items = displayItems(current))
     }
 
-    /**
-     * 搜索文件
-     */
     fun searchByText(text: String) {
-        if (text.isEmpty()) {
-            _fileLiveData.postValue(filesSnapshot)
+        searchResults = null
+        val updated =
+            if (current.hasDirectory) {
+                current.copy(query = text, error = null, loginRequired = false)
+            } else {
+                current.copy(query = text)
+            }
+        _state.value = updated.copy(items = displayItems(updated))
+        if (operation == Operation.DIRECTORY || !current.hasDirectory) return
+        if (text.isEmpty() || !storage.supportSearch()) {
+            if (operation == Operation.SEARCH) cancelRequests()
             return
         }
-
-        // 媒体库支持文件搜索，由媒体库处理搜索
-        if (storage.supportSearch()) {
-            viewModelScope.launch(Dispatchers.IO) {
-                try {
-                    lastListError = null
-                    refreshStorageLastPlay()
-                    storage
-                        .search(text)
-                        .filter { isDisplayFile(it) }
-                        .sortedWith(StorageSortOption.comparator())
-                        .onEach { it.playHistory = getHistory(it) }
-                        .let { files ->
-                            _fileLiveData.postValue(files)
-                        }
-                } catch (e: Exception) {
-                    if (handleLoginRequiredIfNeeded(e, clearList = true)) {
-                        return@launch
-                    }
-                    ErrorReportHelper.postCatchedExceptionWithContext(
-                        e,
-                        "StorageFileFragmentViewModel",
-                        "searchByText",
-                        "搜索文件失败: $text",
-                    )
-                    ToastCenter.showError("搜索失败: ${e.message}")
-                    // 发生错误时显示空列表
-                    _fileLiveData.postValue(emptyList())
-                }
-            }
-            return
+        request(Operation.SEARCH) { requestStorage ->
+            val files = withContext(ioDispatcher) { annotateHistory(requestStorage.search(text), requestStorage) }
+            ensureRequest()
+            searchResults = files
+            publish(current)
         }
-
-        // 在当前文件列表进行搜索
-        val currentFiles = _fileLiveData.value?.filterIsInstance<StorageFile>() ?: return
-        mutableListOf<StorageFile>()
-            .plus(currentFiles)
-            .filter { it.fileName().contains(text) }
-            .let { files ->
-                _fileLiveData.postValue(files)
-            }
     }
 
     /**
@@ -230,7 +157,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         file: StorageFile,
         audioPath: String
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val playHistory = getStorageFileHistory(file)
             playHistory.audioPath = audioPath
             PlayHistoryRepository.insert(playHistory)
@@ -247,7 +174,7 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         file: StorageFile,
         resource: TrackType
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             when (resource) {
                 TrackType.DANMU -> {
                     PlayHistoryRepository.updateDanmu(
@@ -280,222 +207,171 @@ class StorageFileFragmentViewModel : BaseViewModel() {
         }
     }
 
-    /**
-     * 更新文件相关的播放历史
-     */
     fun updateHistory() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val fileList = _fileLiveData.value?.filterIsInstance<StorageFile>() ?: return@launch
-
-            refreshStorageLastPlay()
+        if (!current.hasDirectory) return
+        if (current.query.isNotEmpty() && storage.supportSearch() && searchResults == null) {
+            searchByText(current.query)
+            return
+        }
+        request(Operation.HISTORY) { requestStorage ->
+            val originals = current.directoryFiles
+            val results = searchResults
             val updated =
-                fileList
-                    .map {
-                        val history = getHistory(it)
-                        val isSameHistory =
-                            if (it.isFile()) {
-                                it.playHistory == history && it.playHistory?.isLastPlay == history?.isLastPlay
-                            } else {
-                                it.playHistory?.id == history?.id
-                            }
-                        if (isSameHistory) {
-                            return@map it
-                        }
-                        // 历史记录不一致时，返回拷贝的新对象
-                        it.clone().apply { playHistory = history }
-                    }
-            val items = buildDisplayItems(updated)
-            _fileLiveData.postValue(items)
-            filesSnapshot = items
+                withContext(ioDispatcher) {
+                    annotateHistory(originals, requestStorage) to results?.let { annotateHistory(it, requestStorage) }
+                }
+            ensureRequest()
+            searchResults = updated.second
+            requestStorage.directoryFiles = updated.first
+            publish(current.copy(directoryFiles = updated.first))
         }
     }
 
-    fun loadMore(showFailureToast: Boolean = true) {
-        val pagedStorage = storage as? PagedStorage ?: return
-        if (pagedStorage.state == PagedStorage.State.LOADING) {
-            return
-        }
-        if (!pagedStorage.hasMore()) {
-            pagedStorage.state = PagedStorage.State.NO_MORE
-            _fileLiveData.postValue(buildDisplayItems(_fileLiveData.value?.filterIsInstance<StorageFile>().orEmpty()))
-            return
-        }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            pagedStorage.state = PagedStorage.State.LOADING
-            _fileLiveData.postValue(buildDisplayItems(_fileLiveData.value?.filterIsInstance<StorageFile>().orEmpty()))
-
-            val current = _fileLiveData.value?.filterIsInstance<StorageFile>().orEmpty()
-            val result = pagedStorage.loadMore()
-            if (result.isFailure) {
-                val exception = result.exceptionOrNull()
-                if (exception != null && handleLoginRequiredIfNeeded(exception, clearList = false)) {
-                    _fileLiveData.postValue(buildDisplayItems(current))
-                    return@launch
-                }
-                if (showFailureToast) {
-                    ToastCenter.showError("加载更多失败: ${exception?.message}")
-                }
-                _fileLiveData.postValue(buildDisplayItems(current))
-                return@launch
-            }
-
+    fun loadMore() {
+        val paged = storage as? PagedStorage ?: return
+        if (current.query.isNotEmpty() || current.loading || !current.hasDirectory) return
+        if (pagingSnapshot?.hasMore == false) return
+        request(Operation.PAGE) { requestStorage ->
             val appended =
-                result
-                    .getOrNull()
-                    .orEmpty()
-                    .filter { isDisplayFile(it) }
-            val existingKeys = current.map { it.uniqueKey() }.toHashSet()
-            val merged =
-                current.toMutableList<StorageFile>().apply {
-                    appended.forEach { file ->
-                        if (existingKeys.add(file.uniqueKey())) {
-                            file.playHistory = getHistory(file)
-                            add(file)
+                withContext(ioDispatcher) {
+                    paged.loadMore().getOrThrow().let { annotateHistory(it, requestStorage) }
+                }
+            ensureRequest()
+            val keys = current.directoryFiles.map { it.uniqueKey() }.toHashSet()
+            val merged = current.directoryFiles + appended.filter { keys.add(it.uniqueKey()) }
+            pagingSnapshot = paged.snapshotPaging()
+            requestStorage.directoryFiles = merged
+            publish(current.copy(directoryFiles = merged))
+        }
+    }
+
+    private suspend fun ensureRequest() {
+        currentCoroutineContext().ensureActive()
+        if (!isPageActive()) throw CancellationException("Directory is no longer active")
+    }
+
+    private fun request(
+        kind: Operation,
+        action: suspend (Storage) -> Unit
+    ) {
+        val version = ++requestVersion
+        val requestStorage = storage
+        requestJob?.cancel()
+        operation = kind
+        val loading = current.copy(loading = true, error = null, loginRequired = false)
+        _state.value = loading.copy(items = displayItems(loading))
+        requestJob =
+            viewModelScope.launch {
+                try {
+                    operationLock.withLock {
+                        if (version != requestVersion || requestStorage !== storage || !isPageActive()) return@withLock
+                        val previousDirectory = requestStorage.directory
+                        val previousFiles = requestStorage.directoryFiles
+                        val previousPaging = (requestStorage as? PagedStorage)?.snapshotPaging()
+                        var accepted = false
+                        try {
+                            if (current.hasDirectory) {
+                                requestStorage.directory = current.directory
+                                requestStorage.directoryFiles = current.directoryFiles
+                                pagingSnapshot?.let { (requestStorage as? PagedStorage)?.restorePaging(it) }
+                            }
+                            action(requestStorage)
+                            ensureRequest()
+                            accepted = version == requestVersion
+                        } finally {
+                            if (!accepted) {
+                                requestStorage.directory = previousDirectory
+                                requestStorage.directoryFiles = previousFiles
+                                previousPaging?.let { (requestStorage as? PagedStorage)?.restorePaging(it) }
+                            }
                         }
                     }
+                    if (kind == Operation.DIRECTORY &&
+                        version == requestVersion &&
+                        isPageActive() &&
+                        current.query.isNotEmpty() &&
+                        storage.supportSearch()
+                    ) {
+                        operation = null
+                        searchByText(current.query)
+                    }
+                } catch (cancelled: CancellationException) {
+                    if (version == requestVersion && isPageActive()) publish(current)
+                    throw cancelled
+                } catch (failure: Exception) {
+                    if (version != requestVersion || !isPageActive()) return@launch
+                    if (kind == Operation.PAGE) pagingSnapshot = pagingSnapshot?.copy(state = PagedStorage.State.ERROR)
+                    val loginRequired =
+                        failure is LoginRequiredException ||
+                            failure is BaiduPanReAuthRequiredException ||
+                            failure is Open115ReAuthRequiredException ||
+                            failure is Cloud115ReAuthRequiredException
+                    publish(current.copy(error = failure.message ?: "加载失败，请重试", loginRequired = loginRequired))
+                    if (loginRequired) _loginRequiredLiveData.value = storage.library
+                } finally {
+                    if (version == requestVersion) operation = null
                 }
-
-            val displayFiles =
-                if (storage.library.mediaType == MediaType.BAIDU_PAN_STORAGE ||
-                    storage.library.mediaType == MediaType.OPEN_115_STORAGE ||
-                    storage.library.mediaType == MediaType.CLOUD_115_STORAGE
-                ) {
-                    merged.sortedWith(StorageSortOption.comparator())
-                } else {
-                    merged
-                }
-
-            val items = buildDisplayItems(displayFiles)
-            _fileLiveData.postValue(items)
-            filesSnapshot = items
-        }
-    }
-
-    /**
-     * 获取文件播放历史
-     */
-    private suspend fun getHistory(file: StorageFile): PlayHistoryEntity? {
-        if (file.isDirectory()) {
-            return lastPlayDirectoryHistory(file)
-        }
-        if (file.isVideoFile().not()) {
-            return null
-        }
-
-        var history: PlayHistoryEntity? =
-            PlayHistoryRepository.getPlayHistory(file.uniqueKey(), file.storage.library.id)
-        if (history == null) {
-            // 这是一步补救措施，数据库11版本之前，没有存储storageId字段
-            // 因此为了避免弹幕等历史数据无法展示，依旧需要通过mediaType查询
-            history =
-                PlayHistoryRepository.getPlayHistory(file.uniqueKey(), file.storage.library.mediaType)
-            // 补充storageId字段
-            if (history != null) {
-                history.storageId = file.storage.library.id
-                PlayHistoryRepository.insert(history)
             }
-        }
-        if (history != null && storageLastPlay != null) {
-            history.isLastPlay = history.id == storageLastPlay!!.id
-        }
-
-        return history
     }
 
-    /**
-     * 刷新最后一次播放记录
-     */
-    private suspend fun refreshStorageLastPlay() {
-        storageLastPlay =
-            PlayHistoryRepository.getStorageLastPlay(storage.library.id)
-        storageLastPlay?.isLastPlay = true
+    private fun publish(value: StorageBrowseState) {
+        val settled = value.copy(loading = false)
+        _state.value = settled.copy(items = displayItems(settled))
     }
 
-    /**
-     * 文件夹是否为最后一次播放记录的父文件夹
-     * 是：返回最后播放的标签
-     * 否：null
-     */
-    private fun lastPlayDirectoryHistory(file: StorageFile): PlayHistoryEntity? {
-        val lastPlayStoragePath =
-            storageLastPlay?.storagePath
-                ?: return null
-        if (TextUtils.isEmpty(lastPlayStoragePath)) {
-            return null
-        }
-        if (file.isStoragePathParent(lastPlayStoragePath).not()) {
-            return null
-        }
-        return lastPlayDirectory
-    }
-
-    /**
-     * 是否可展示的文件
-     */
-    private fun isDisplayFile(storageFile: StorageFile): Boolean {
-        // .开头的文件，根据配置展示
-        if (hidePointFile && storageFile.fileName().startsWith(".")) {
-            return false
-        }
-        // 文件夹，展示
-        if (storageFile.isDirectory()) {
-            return true
-        }
-        // 视频文件，展示
-        return storageFile.isVideoFile()
-    }
-
-    private suspend fun getStorageFileHistory(storageFile: StorageFile): PlayHistoryEntity =
-        PlayHistoryRepository.getPlayHistory(
-            storageFile.uniqueKey(),
-            storageFile.storage.library.id,
-        ) ?: PlayHistoryEntity(
-            0,
-            "",
-            "",
-            mediaType = storageFile.storage.library.mediaType,
-            uniqueKey = storageFile.uniqueKey(),
-            storageId = storageFile.storage.library.id,
-        )
-
-    private fun buildDisplayItems(files: List<StorageFile>): List<Any> {
-        val items = files.toMutableList<Any>()
+    private fun displayItems(value: StorageBrowseState): List<Any> {
+        val files = if (value.query.isNotEmpty() && storage.supportSearch()) searchResults.orEmpty() else value.directoryFiles
+        val displayed =
+            files
+                .filter { isDisplayFile(it) }
+                .filter { value.query.isEmpty() || storage.supportSearch() || it.fileName().contains(value.query) }
+                .sortedWith(comparator())
+        val items = displayed.toMutableList<Any>()
         val paged = storage as? PagedStorage
-        if (paged != null && paged.shouldShowPagingItem(storage.directory)) {
-            items.add(StoragePagingItem(paged.state, paged.hasMore(), files.isEmpty()))
+        val paging = pagingSnapshot
+        if (value.query.isEmpty() && paged != null && paging != null && paged.shouldShowPagingItem(value.directory)) {
+            val pagingState = if (value.loading) PagedStorage.State.LOADING else paging.state
+            items.add(StoragePagingItem(pagingState, paging.hasMore, displayed.isEmpty()))
         }
         return items
     }
 
-    private fun handleLoginRequiredIfNeeded(
-        throwable: Throwable,
-        clearList: Boolean
-    ): Boolean {
-        val authStorage = storage as? AuthStorage ?: return false
-
-        val message =
-            when (throwable) {
-                is BaiduPanReAuthRequiredException ->
-                    throwable.message?.takeIf { it.isNotBlank() }
-                        ?: "登录已失效，请重新${authStorage.loginActionText(storage.directory)}"
-                is Open115ReAuthRequiredException ->
-                    "授权已失效，请更新 token"
-                is Cloud115ReAuthRequiredException ->
-                    throwable.message?.takeIf { it.isNotBlank() }
-                        ?: "授权已失效，请重新${authStorage.loginActionText(storage.directory)}"
-                else -> return false
-            }
-
-        ToastCenter.showWarning(message)
-        _loginRequiredLiveData.postValue(storage.library)
-
-        if (clearList) {
-            val empty = emptyList<Any>()
-            _fileLiveData.postValue(empty)
-            filesSnapshot = empty
+    private suspend fun annotateHistory(
+        files: List<StorageFile>,
+        requestStorage: Storage
+    ): List<StorageFile> {
+        val lastPlay = lastPlayLookup(requestStorage.library.id)
+        return files.map { file ->
+            val history =
+                when {
+                    file.isDirectory() ->
+                        lastPlay
+                            ?.takeIf {
+                                !it.storagePath.isNullOrEmpty() && file.isStoragePathParent(it.storagePath!!)
+                            }?.copy()
+                            ?.apply { isLastPlay = true }
+                    file.isVideoFile() -> historyLookup(file)?.copy()?.apply { isLastPlay = id == lastPlay?.id }
+                    else -> null
+                }
+            file.clone().apply { playHistory = history }
         }
-
-        return true
     }
+
+    private fun isDisplayFile(file: StorageFile): Boolean =
+        !(hidePointFiles() && file.fileName().startsWith(".")) && (file.isDirectory() || file.isVideoFile())
+
+    private suspend fun getStorageFileHistory(file: StorageFile): PlayHistoryEntity =
+        historyLookup(file) ?: PlayHistoryEntity(
+            videoName = "",
+            url = "",
+            mediaType = file.storage.library.mediaType,
+            uniqueKey = file.uniqueKey(),
+            storageId = file.storage.library.id
+        )
+
+    private class LoginRequiredException(
+        message: String
+    ) : IllegalStateException(message)
+
+    private enum class Operation { DIRECTORY, SEARCH, HISTORY, PAGE }
 }

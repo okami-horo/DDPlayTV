@@ -2,24 +2,19 @@ package com.okamihoro.ddplaytv.ui.shell
 
 import android.os.Bundle
 import androidx.databinding.ViewDataBinding
-import androidx.lifecycle.LiveData
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.launcher.ARouter
 import com.okamihoro.ddplaytv.BR
 import com.xyoye.common_component.base.BaseActivity
-import com.xyoye.common_component.bridge.LoginObserver
 import com.xyoye.common_component.config.ScreencastConfig
-import com.xyoye.common_component.session.UserSessionManager
 import com.xyoye.common_component.services.ScreencastReceiveService
+import com.xyoye.common_component.session.UserSessionManager
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
-import com.xyoye.data_component.data.LoginData
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
-abstract class BaseShellActivity<V : ViewDataBinding> :
-    BaseActivity<ShellViewModel, V>(),
-    LoginObserver {
+abstract class BaseShellActivity<V : ViewDataBinding> : BaseActivity<ShellViewModel, V>() {
     @Autowired
     lateinit var receiveService: ScreencastReceiveService
 
@@ -30,8 +25,6 @@ abstract class BaseShellActivity<V : ViewDataBinding> :
             BR.viewModel,
             ShellViewModel::class.java,
         )
-
-    override fun getLoginLiveData(): LiveData<LoginData> = viewModel.reLoginLiveData
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // 提前完成 ARouter 注入，避免菜单回调先于 initShell 触发导致依赖未初始化。

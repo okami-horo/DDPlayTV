@@ -4,7 +4,6 @@ import android.net.Uri
 import com.xyoye.common_component.config.AppConfig
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.repository.RemoteRepository
-import com.xyoye.common_component.network.request.NetworkException
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
@@ -13,7 +12,6 @@ import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
 import com.xyoye.common_component.storage.transport.PlaybackTransportLease
 import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
 import com.xyoye.common_component.storage.transport.directPlaybackTransport
-import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.danmu.DanmuFinder
 import com.xyoye.common_component.utils.subtitle.SubtitleUtils
 import com.xyoye.data_component.bean.LocalDanmuBean
@@ -23,6 +21,8 @@ import com.xyoye.data_component.data.remote.RemoteVideoData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import java.io.InputStream
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -45,7 +45,7 @@ class RemoteStorage internal constructor(
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> =
         if (file.isRootFile()) {
-            resolvedTree ?: getRemoteRootFiles() ?: emptyList()
+            resolvedTree ?: getRemoteRootFiles()
         } else {
             (file as RemoteStorageFile).getRealFile().childData
         }.map { RemoteStorageFile(this, it) }
@@ -184,35 +184,22 @@ class RemoteStorage internal constructor(
             .map { RemoteStorageFile(this, it) }
     }
 
-    override suspend fun test(): Boolean = getRemoteRootFiles() != null
-
-    private suspend fun getRemoteRootFiles(): List<RemoteVideoData>? {
-        val result = fetchFiles(this)
-        if (result.isFailure) {
-            val exception = result.exceptionOrNull() ?: return null
-            if (exception.cause is CancellationException) {
-                // ignore
-            } else {
-                val message =
-                    if (exception is NetworkException && exception.code == 401) {
-                        "连接失败：密钥验证失败"
-                    } else {
-                        "连接失败：${exception.message}"
-                    }
-                ErrorReportHelper.postCatchedException(exception, "RemoteStorage", message)
-            }
-            return null
+    override suspend fun test(): Boolean =
+        try {
+            getRemoteRootFiles()
+            true
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            false
         }
 
-        return result.getOrNull()?.let {
-            storageFilesSnapshot = it
-
-            if (groupByAnime) {
-                RemoteFileHelper.convertGroupData(it)
-            } else {
-                RemoteFileHelper.convertTreeData(it)
-            }
-        }
+    private suspend fun getRemoteRootFiles(): List<RemoteVideoData> {
+        val files = fetchFiles(this).getOrThrow()
+        currentCoroutineContext().ensureActive()
+        val tree = if (groupByAnime) RemoteFileHelper.convertGroupData(files) else RemoteFileHelper.convertTreeData(files)
+        storageFilesSnapshot = files
+        return tree
     }
 
     private fun generateRootUri(): Uri {

@@ -51,6 +51,8 @@ interface DanmuFinder {
      */
     suspend fun search(text: String): List<DanmuAnimeData>
 
+    suspend fun searchResult(text: String): Result<List<DanmuAnimeData>> = Result.success(search(text))
+
     /**
      * 获取弹幕的第三方资源
      */

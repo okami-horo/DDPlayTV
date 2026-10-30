@@ -98,6 +98,8 @@ class MpvNativeBridge {
 
     @Volatile private var durationMs = 0L
 
+    @Volatile private var seekable = false
+
     @Volatile private var dimensions = 0 to 0
 
     @Volatile private var decoder: String? = null
@@ -116,6 +118,8 @@ class MpvNativeBridge {
     fun currentPosition(): Long = positionMs
 
     fun duration(): Long = durationMs
+
+    fun isSeekable(): Boolean = seekable
 
     fun videoSize(): Pair<Int, Int> = dimensions
 
@@ -274,6 +278,7 @@ class MpvNativeBridge {
             pausedSurfacePosition = null
             positionMs = 0
             durationMs = 0
+            seekable = false
             tracks = emptyList()
             it.command("change-list", "http-header-fields", "clr", "")
             headers.entries.sortedBy { it.key.lowercase() }.forEach { header ->
@@ -522,6 +527,8 @@ class MpvNativeBridge {
     ) {
         when (type) {
             8 -> {
+                seekable = player.getFlag("seekable") == true
+                durationMs = ((player.getDouble("duration") ?: 0.0) * 1000).toLong()
                 refreshTracks(player)
                 dispatchEvent(Event.Prepared, activeRevision)
             }

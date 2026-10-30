@@ -30,11 +30,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import master.flame.danmaku.danmaku.model.BaseDanmaku
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 class PlayerViewModel : BaseViewModel() {
+    private val danmuBindingWrites = Mutex()
     private val requestService = PlaybackRequestServiceImpl()
     internal val playbackState = requestService.observePlayback()
     private var retainedPlaybackSession: ActivePlaybackSession? = null
@@ -189,6 +192,20 @@ class PlayerViewModel : BaseViewModel() {
         val storageId = videoSource.getStorageId()
         val historyDao = DatabaseProvider.instance.getPlayHistoryDao()
 
+        if (track.type == TrackType.DANMU) {
+            val danmu = track.type.getDanmu(track.trackResource) ?: return
+            if (danmu == videoSource.getDanmu()) return
+            videoSource.setDanmu(danmu)
+            viewModelScope.launch {
+                danmuBindingWrites.withLock {
+                    if (videoSource.getDanmu() == danmu) {
+                        historyDao.updateDanmu(uniqueKey, storageId, danmu.danmuPath, danmu.episodeId)
+                    }
+                }
+            }
+            return
+        }
+
         viewModelScope.launch {
             when (track.type) {
                 TrackType.AUDIO -> {
@@ -207,15 +224,7 @@ class PlayerViewModel : BaseViewModel() {
                     }
                 }
 
-                TrackType.DANMU -> {
-                    val danmu = track.type.getDanmu(track.trackResource)
-                    if (danmu != null && danmu != videoSource.getDanmu()) {
-                        videoSource.setDanmu(danmu)
-                        historyDao.updateDanmu(uniqueKey, storageId, danmu.danmuPath, danmu.episodeId)
-                    }
-                }
-
-                TrackType.VIDEO -> Unit
+                TrackType.DANMU, TrackType.VIDEO -> Unit
             }
         }
     }

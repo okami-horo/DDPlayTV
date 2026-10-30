@@ -62,6 +62,7 @@ class DanDanVideoPlayer(
     InterVideoTrack,
     VideoPlayerEventListener {
     private val playStateListeners = LinkedHashSet<(PlayState) -> Unit>()
+    var seekRequestedListener: ((Long) -> Unit)? = null
     var seekCompleteListener: (() -> Unit)? = null
 
     // 播放状态
@@ -170,6 +171,7 @@ class DanDanVideoPlayer(
 
     override fun seekTo(timeMs: Long) {
         if (timeMs >= 0 && isInPlayState()) {
+            seekRequestedListener?.invoke(timeMs)
             mVideoPlayer.seekTo(timeMs)
             subtitleRenderer?.onSeek(timeMs)
         }
@@ -226,7 +228,7 @@ class DanDanVideoPlayer(
 
     override fun isSeekable(): Boolean {
         val exoPlayer = exoPlayerOrNull()
-        return exoPlayer?.isCurrentMediaItemSeekable ?: (getDuration() > 0)
+        return exoPlayer?.isCurrentMediaItemSeekable ?: (this::mVideoPlayer.isInitialized && mVideoPlayer.isSeekable())
     }
 
     override fun isLive(): Boolean {

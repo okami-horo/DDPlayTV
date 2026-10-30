@@ -6,7 +6,6 @@ import androidx.core.view.isVisible
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseFragment
-import com.xyoye.common_component.bridge.LoginObserver
 import com.xyoye.common_component.bridge.ServiceLifecycleBridge
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.config.UserConfig
@@ -45,25 +44,21 @@ class PersonalFragment :
 
         applyLoginData(null)
 
-        viewModel.relationLiveData.observe(this) {
+        viewModel.relationLiveData.observe(viewLifecycleOwner) {
+            if (!UserSessionManager.isLoggedIn()) return@observe
             val numberFormat = NumberFormat.getIntegerInstance()
             dataBinding.followAnimeTv.text = numberFormat.format(it.first)
             dataBinding.followAnimeTv.setTextColorRes(R.color.text_pink)
             dataBinding.cloudHistoryTv.text = numberFormat.format(it.second)
         }
 
-        UserSessionManager.loginState().observe(this) {
+        UserSessionManager.loginState().observe(viewLifecycleOwner) {
             applyLoginData(it)
+            viewModel.onLoginChanged(it)
         }
 
-        ServiceLifecycleBridge.getScreencastReceiveObserver().observe(this) {
+        ServiceLifecycleBridge.getScreencastReceiveObserver().observe(viewLifecycleOwner) {
             dataBinding.screencastStatusTv.isVisible = it
-        }
-
-        if (mAttachActivity is LoginObserver) {
-            (mAttachActivity as LoginObserver).getLoginLiveData().observe(this) {
-                applyLoginData(it)
-            }
         }
     }
 
@@ -89,7 +84,6 @@ class PersonalFragment :
         if (loginData != null) {
             dataBinding.userNameTv.text = loginData.screenName
             dataBinding.tipsLoginBt.isVisible = false
-            viewModel.getUserRelationInfo()
         } else {
             dataBinding.userNameTv.text = "登录账号"
             dataBinding.tipsLoginBt.isVisible = true

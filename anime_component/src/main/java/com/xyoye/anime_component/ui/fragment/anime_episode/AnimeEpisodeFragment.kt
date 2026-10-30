@@ -132,24 +132,24 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
     }
 
     private fun initObserver() {
-        parentViewModel.animeDetailLiveData.observe(this) {
+        parentViewModel.animeDetailLiveData.observe(viewLifecycleOwner) {
             viewModel.setBangumiData(it)
         }
 
-        viewModel.displayEpisodesFlow.collectAtStarted(this) {
+        viewModel.displayEpisodesFlow.collectAtStarted(viewLifecycleOwner) {
             dataBinding.episodeRv.setData(it)
         }
 
-        viewModel.ascendingFlow.collectAtStarted(this) {
+        viewModel.ascendingFlow.collectAtStarted(viewLifecycleOwner) {
             updateLayoutBySort(it)
         }
 
-        viewModel.markModeFlow.collectAtStarted(this) {
+        viewModel.markModeFlow.collectAtStarted(viewLifecycleOwner) {
             dataBinding.actionLayout.isVisible = it
             dataBinding.titleCl.isVisible = it.not()
         }
 
-        viewModel.refreshBangumiFlow.collectAtStarted(this) {
+        viewModel.refreshBangumiFlow.collectAtStarted(viewLifecycleOwner) {
             animeDetailActivity?.refreshAnimeDetail()
         }
 

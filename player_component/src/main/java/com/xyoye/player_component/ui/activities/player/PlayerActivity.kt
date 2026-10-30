@@ -133,6 +133,8 @@ class PlayerActivity :
     private var exitPlayerReceiver: BroadcastReceiver? = null
 
     private var videoSource: BaseVideoSource? = null
+    private var boundPlaybackVersion: PlaybackSessionVersion? = null
+    private val pendingResume = PendingPlaybackResume()
     private var activityArguments = PlaybackActivityArguments(null, null)
     private var explicitPlaybackExit = false
     private var pauseAfterPrepare = false
@@ -162,18 +164,24 @@ class PlayerActivity :
                 check(danDanPlayer.release()) { "BackendDetachFailed" }
                 media3SequentialPlaybackAdapter.onBackendDetached()
                 videoSource = null
+                boundPlaybackVersion = null
+                pendingResume.clear()
                 videoController.release()
                 val source = playback.source
                 check(source.getVideoUrl().isNotEmpty())
                 initPlayerConfig(overrideProfile = playback.runtimeProfile)
                 // Set the borrowed reference before starting: an apply failure may still retain it in the kernel.
                 videoSource = source
+                boundPlaybackVersion = version
+                danmuViewModel.activateSource(version)
                 pauseAfterPrepare = !progress.playWhenReady
-                val position = positionConstraints(source).normalize(progress.positionMs)
+                // A detached kernel has no capabilities yet; retain the explicit position until ready.
+                val position = progress.positionMs.coerceAtLeast(0)
                 preparingProgress = progress.copy(positionMs = position)
-                updatePlayer(source, position)
+                pendingResume.prepare(source, position)
+                updatePlayer(source)
                 bindNativeQueue(playback, version)
-                afterInitPlayer()
+                afterInitPlayer(version)
             }
 
             override fun currentSource() = (media3SequentialPlaybackAdapter.currentSource() ?: videoSource) as? StorageVideoSource
@@ -260,14 +268,19 @@ class PlayerActivity :
                 playback: PreparedPlayback,
                 version: PlaybackSessionVersion
             ) {
+                videoController.cancelPendingSeek()
+                pendingResume.clear()
                 val previous = videoSource
                 if (previous != null) PlayRecorder.recordProgress(previous, 0, danDanPlayer.getDuration().coerceAtLeast(0))
                 videoSource = playback.source
+                boundPlaybackVersion = version
+                danmuViewModel.activateSource(version)
                 danDanPlayer.setVideoSource(playback.source)
                 videoController.setVideoTitle(playback.source.getVideoTitle())
-                restoreSourceScopedState(playback.source)
+                restoreSourceScopedState(playback.source, version)
                 bindNativeQueue(playback, version)
-                if (playback.positionMs > 0 && danDanPlayer.isSeekable()) danDanPlayer.seekTo(playback.positionMs)
+                pendingResume.prepare(playback.source, playback.positionMs)
+                applyPendingPlaybackResume()
             }
 
             override fun detach() {
@@ -277,12 +290,15 @@ class PlayerActivity :
                 nativeQueueToken = null
                 videoController.release()
                 videoSource = null
+                boundPlaybackVersion = null
+                pendingResume.clear()
                 preparingProgress = null
             }
         }
     }
 
     private val handoffPlayStateListener: (PlayState) -> Unit = { state ->
+        if (state == PlayState.STATE_PREPARED) applyPendingPlaybackResume()
         if (state == PlayState.STATE_PLAYING) preparingProgress = null
         if (pauseAfterPrepare && state == PlayState.STATE_PLAYING) {
             pauseAfterPrepare = false
@@ -421,7 +437,13 @@ class PlayerActivity :
         initListener()
 
         danDanPlayer.addPlayStateListener(handoffPlayStateListener)
+        danDanPlayer.seekRequestedListener = { position ->
+            // A seek can precede the first rendering callback, including while paused.
+            // Recreation must retain that newer target instead of the initial resume position.
+            preparingProgress = preparingProgress?.copy(positionMs = position)
+        }
         danDanPlayer.seekCompleteListener = {
+            preparingProgress = null
             val expected = viewModel.playbackVersion
             danDanPlayer.post {
                 if (!isDestroyed && expected != null && viewModel.playbackVersion == expected) {
@@ -495,6 +517,7 @@ class PlayerActivity :
         sequentialPlaybackCoordinator.invalidateActiveSession()
         danDanPlayer.removePlayStateListener(sequentialPlayStateListener)
         danDanPlayer.removePlayStateListener(handoffPlayStateListener)
+        danDanPlayer.seekRequestedListener = null
         danDanPlayer.seekCompleteListener = null
         beforePlayExit()
         unregisterReceiver()
@@ -567,36 +590,35 @@ class PlayerActivity :
     }
 
     private fun initListener() {
-        danmuViewModel.loadDanmuLiveData.observe(this) { (videoUrl, matchDanmu) ->
-            val curVideoSource = danDanPlayer.getVideoSource()
-            val curVideoUrl = curVideoSource.getVideoUrl()
-            if (curVideoUrl != videoUrl) {
-                LogFacade.d(LogModule.PLAYER, TAG_DANMAKU, "skip load result mismatch url")
-                return@observe
-            }
+        danmuViewModel.pending.observe(this) { applyPendingDanmu() }
+    }
 
-            val trackHint =
-                when (matchDanmu) {
-                    is com.xyoye.data_component.bean.DanmuTrackResource.LocalFile -> "cid=${matchDanmu.danmu.episodeId}"
-                }
-            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "match success $trackHint title=${curVideoSource.getVideoTitle()}")
-            videoController.showMessage("匹配弹幕成功")
-            videoController.addExtendTrack(VideoTrackBean.danmu(matchDanmu))
+    private fun applyPendingDanmu() {
+        val pending = danmuViewModel.pending.value ?: return
+        val version = boundPlaybackVersion ?: return
+        val source = videoSource ?: return
+        if (danDanPlayer.getVideoSource() !== source) return
+        val result = danmuViewModel.takePending(version, pending.requestId) ?: return
+        if (videoController.addExtendTrack(VideoTrackBean.danmu(result.resource))) {
+            videoController.showMessage(if (result.manual) "下载弹幕成功" else "匹配弹幕成功")
+            if (result.manual) videoController.onDanmuApplied()
+        } else {
+            danmuViewModel.reportApplyFailure()
         }
+    }
 
-        danmuViewModel.downloadDanmuLiveData.observe(this) { searchDanmu ->
-            if (searchDanmu == null) {
-                LogFacade.w(LogModule.PLAYER, TAG_DANMAKU, "download failed")
-                videoController.showMessage("下载弹幕失败")
-                return@observe
-            }
-
-            val episodeId =
-                (searchDanmu as? com.xyoye.data_component.bean.DanmuTrackResource.LocalFile)?.danmu?.episodeId
-            LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "download success id=$episodeId")
-            videoController.showMessage("下载弹幕成功")
-            videoController.addExtendTrack(VideoTrackBean.danmu(searchDanmu))
-        }
+    private fun applyPendingPlaybackResume() {
+        val source = videoSource ?: return
+        if (danDanPlayer.getVideoSource() !== source) return
+        val constraints =
+            PlaybackPositionConstraints(
+                seekable = danDanPlayer.isSeekable() && !danDanPlayer.isLive(),
+                durationMs = danDanPlayer.getDuration().takeIf { it > 0 }
+            )
+        val position = pendingResume.take(source, constraints) ?: return
+        preparingProgress = preparingProgress?.copy(positionMs = position)
+        // Seeking after preparation uses actual kernel capabilities; unknown duration keeps the position.
+        if (constraints.seekable) videoController.seekPlaybackTo(position)
     }
 
     private fun initPlayer() {
@@ -640,7 +662,7 @@ class PlayerActivity :
             observerDanmuSearch(
                 search = { danmuViewModel.searchDanmu(it) },
                 download = { danmuViewModel.downloadDanmu(it) },
-                searchResult = { danmuViewModel.danmuSearchLiveData }
+                searchResult = { danmuViewModel.panelState }
             )
             // 轨道添加完成
             observerTrackAdded {
@@ -654,14 +676,9 @@ class PlayerActivity :
         }
     }
 
-    private fun updatePlayer(
-        source: BaseVideoSource,
-        restoredPositionMs: Long? = null
-    ) {
+    private fun updatePlayer(source: BaseVideoSource) {
         videoController.apply {
             setVideoTitle(source.getVideoTitle())
-            val seekPosition = restoredPositionMs ?: source.getCurrentPosition()
-            setLastPosition(seekPosition)
             setLastPlaySpeed(PlayerConfig.getNewVideoSpeed())
         }
 
@@ -683,12 +700,15 @@ class PlayerActivity :
         }
     }
 
-    private fun afterInitPlayer() {
+    private fun afterInitPlayer(version: PlaybackSessionVersion) {
         val source = videoSource ?: return
-        restoreSourceScopedState(source)
+        restoreSourceScopedState(source, version)
     }
 
-    private fun restoreSourceScopedState(source: BaseVideoSource) {
+    private fun restoreSourceScopedState(
+        source: BaseVideoSource,
+        version: PlaybackSessionVersion
+    ) {
         videoController.clearSourceScopedState()
 
         // 设置当前视频的父目录（若为本地可访问路径），用于字幕/字体同目录检索
@@ -712,7 +732,7 @@ class PlayerActivity :
             val shouldAutoMatchDanmu = DanmuConfig.isAutoMatchDanmu() && source.getMediaType() != MediaType.FTP_SERVER
             if (shouldAutoMatchDanmu) {
                 LogFacade.i(LogModule.PLAYER, TAG_DANMAKU, "auto match start title=${source.getVideoTitle()}")
-                danmuViewModel.matchDanmu(source)
+                danmuViewModel.matchDanmu(version, source)
             }
         }
 
@@ -729,6 +749,7 @@ class PlayerActivity :
             LogFacade.i(LogModule.PLAYER, TAG_SOURCE, "load history path=$historyAudio")
             videoController.addExtendTrack(VideoTrackBean.audio(historyAudio))
         }
+        applyPendingDanmu()
     }
 
     private fun registerReceiver() {

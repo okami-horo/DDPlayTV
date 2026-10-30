@@ -91,7 +91,8 @@ class StorageFileAdapter(
                     val directory = activity.directory
                     val authStorage = activity.storage as? AuthStorage
                     val requiresLogin =
-                        authStorage?.let { it.requiresLogin(directory) && !it.isConnected() } == true
+                        viewModel.state.value?.loginRequired == true ||
+                            authStorage?.let { it.requiresLogin(directory) && !it.isConnected() } == true
 
                     itemBinding.emptyActionTv.isVisible = true
 
@@ -104,7 +105,7 @@ class StorageFileAdapter(
                         return@initEmptyView
                     }
 
-                    if (!viewModel.lastListError.isNullOrBlank()) {
+                    if (viewModel.state.value?.error != null) {
                         itemBinding.emptyTv.text = "加载失败，请检查网络后重试"
                         itemBinding.emptyActionTv.text = "重试加载"
                     } else {
@@ -245,11 +246,11 @@ class StorageFileAdapter(
                 when {
                     data.state == com.xyoye.common_component.storage.PagedStorage.State.LOADING -> Unit
                     data.state == com.xyoye.common_component.storage.PagedStorage.State.ERROR -> {
-                        viewModel.loadMore(showFailureToast = false)
+                        viewModel.loadMore()
                     }
 
                     data.state == com.xyoye.common_component.storage.PagedStorage.State.IDLE && data.hasMore -> {
-                        viewModel.loadMore(showFailureToast = false)
+                        viewModel.loadMore()
                     }
 
                     data.isDataEmpty -> onRefreshRequested.invoke()

@@ -101,10 +101,14 @@ class SettingController(
     fun setDanmuSearch(
         search: (String) -> Unit,
         download: (DanmuEpisodeData) -> Unit,
-        searchResult: () -> LiveData<List<DanmuEpisodeData>>
+        searchResult: () -> LiveData<DanmuPanelState>
     ) {
         (getSettingView(SettingViewType.SEARCH_DANMU) as SearchDanmuView)
             .setDanmuSearch(search, download, searchResult)
+    }
+
+    fun onDanmuApplied() {
+        if (this::searchDanmuView.isInitialized && showingSettingViews.lastOrNull() === searchDanmuView) hideSettingView()
     }
 
     fun setSwitchVideoSourceBlock(block: (Int) -> Unit) {

@@ -1,12 +1,10 @@
 package com.okamihoro.ddplaytv.ui.shell
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.services.CloudDanmuBlockService
 import com.xyoye.common_component.services.UserSessionService
-import com.xyoye.data_component.data.LoginData
 import kotlinx.coroutines.launch
 
 /**
@@ -14,8 +12,6 @@ import kotlinx.coroutines.launch
  */
 
 class ShellViewModel : BaseViewModel() {
-    val reLoginLiveData = MutableLiveData<LoginData>()
-
     private val userSessionService: UserSessionService? by lazy {
         ARouter.getInstance().navigation(UserSessionService::class.java)
     }
@@ -26,8 +22,7 @@ class ShellViewModel : BaseViewModel() {
 
     fun reLogin() {
         viewModelScope.launch {
-            val loginData = userSessionService?.refreshTokenAndLogin() ?: return@launch
-            reLoginLiveData.postValue(loginData)
+            userSessionService?.refreshTokenAndLogin()
         }
     }
 

@@ -28,6 +28,9 @@ dependencies {
     implementation(Dependencies.Github.banner)
 
     kapt(Dependencies.Alibaba.arouter_compiler)
+
+    testImplementation(Dependencies.Kotlin.coroutines_test)
+    testImplementation(Dependencies.Testing.robolectric)
 }
 android {
     namespace = "com.xyoye.anime_component"

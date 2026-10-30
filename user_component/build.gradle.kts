@@ -25,6 +25,9 @@ dependencies {
     implementation(project(":data_component"))
 
     kapt(Dependencies.Alibaba.arouter_compiler)
+
+    testImplementation(Dependencies.Kotlin.coroutines_test)
+    testImplementation(Dependencies.Testing.robolectric)
 }
 android {
     namespace = "com.xyoye.user_component"

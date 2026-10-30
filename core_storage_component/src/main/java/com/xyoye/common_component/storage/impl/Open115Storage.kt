@@ -27,15 +27,19 @@ import com.xyoye.data_component.data.open115.Open115SearchItem
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.runBlocking
 import java.io.InputStream
 
-class Open115Storage(
-    library: MediaLibraryEntity
+class Open115Storage internal constructor(
+    library: MediaLibraryEntity,
+    private val pageLoader: (suspend (String, Int) -> List<Open115FileItem>)?
 ) : AbstractStorage(library),
     PagedStorage,
     AuthStorage,
     PlaybackTransportProvider {
+    constructor(library: MediaLibraryEntity) : this(library, null)
+
     private val rangeUnsupportedRefreshLock = Any()
 
     private val storageKey = Open115AuthStore.storageKey(library)
@@ -48,6 +52,15 @@ class Open115Storage(
     private var pagingHasMore: Boolean = true
 
     override var state: PagedStorage.State = PagedStorage.State.IDLE
+
+    override fun snapshotPaging() = PagedStorage.Snapshot(pagingCid, pagingOffset, pagingHasMore, state)
+
+    override fun restorePaging(snapshot: PagedStorage.Snapshot) {
+        pagingCid = snapshot.directoryKey
+        pagingOffset = snapshot.offset
+        pagingHasMore = snapshot.hasMore
+        state = snapshot.state
+    }
 
     override fun isConnected(): Boolean = repository.isAuthorized()
 
@@ -106,24 +119,13 @@ class Open115Storage(
         file: StorageFile,
         refresh: Boolean
     ): List<StorageFile> {
-        directory = file
-
         val cid = resolveCid(file)
-        if (refresh || pagingCid != cid) {
-            resetPaging(cid)
-        }
-
-        val response =
-            repository
-                .listFiles(
-                    cid = cid,
-                    limit = DEFAULT_PAGE_LIMIT,
-                    offset = 0,
-                    showDir = "1",
-                ).getOrThrow()
 
         val parentPath = file.filePath()
-        val items = response.data.orEmpty()
+        val items = loadPage(cid, 0)
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
+        directory = file
+        pagingCid = cid
         cacheFolderParents(items, cid)
         val files = items.map { Open115StorageFile(it, parentPath, this) }
 
@@ -178,17 +180,9 @@ class Open115Storage(
 
         state = PagedStorage.State.LOADING
         return runCatching {
-            val response =
-                repository
-                    .listFiles(
-                        cid = cid,
-                        limit = DEFAULT_PAGE_LIMIT,
-                        offset = pagingOffset,
-                        showDir = "1",
-                    ).getOrThrow()
-
             val parentPath = currentDirectory.filePath()
-            val items = response.data.orEmpty()
+            val items = loadPage(cid, pagingOffset)
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
             cacheFolderParents(items, cid)
             val files = items.map { Open115StorageFile(it, parentPath, this) }
             pagingOffset += files.size
@@ -197,6 +191,7 @@ class Open115Storage(
         }.onSuccess {
             state = if (pagingHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
         }.onFailure {
+            if (it is kotlinx.coroutines.CancellationException) throw it
             state = PagedStorage.State.ERROR
         }
     }
@@ -605,6 +600,17 @@ class Open115Storage(
         pagingHasMore = true
         state = PagedStorage.State.IDLE
     }
+
+    private suspend fun loadPage(
+        cid: String,
+        offset: Int
+    ): List<Open115FileItem> =
+        pageLoader?.invoke(cid, offset)
+            ?: repository
+                .listFiles(cid, DEFAULT_PAGE_LIMIT, offset, showDir = "1")
+                .getOrThrow()
+                .data
+                .orEmpty()
 
     private fun buildParentPath(breadcrumbIds: List<String>): String {
         if (breadcrumbIds.isEmpty()) {

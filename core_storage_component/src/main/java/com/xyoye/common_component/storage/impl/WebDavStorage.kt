@@ -7,13 +7,13 @@ import com.xyoye.common_component.network.helper.OkHttpTlsPolicy
 import com.xyoye.common_component.network.helper.UnsafeTlsApi
 import com.xyoye.common_component.network.helper.WebDavOkHttpClient
 import com.xyoye.common_component.network.helper.WebDavOkHttpClientFactory
-import com.xyoye.common_component.storage.transport.PlaybackTransportLease
-import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
-import com.xyoye.common_component.storage.transport.directPlaybackTransport
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.WebDavStorageFile
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -33,7 +33,8 @@ import java.util.Date
 
 class WebDavStorage(
     library: MediaLibraryEntity
-) : AbstractStorage(library), PlaybackTransportProvider {
+) : AbstractStorage(library),
+    PlaybackTransportProvider {
     @OptIn(UnsafeTlsApi::class)
     private val sardine =
         OkHttpSardine(
@@ -65,16 +66,10 @@ class WebDavStorage(
         }
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> =
-        try {
-            sardine
-                .list(file.fileUrl())
-                .filter { isChildFile(file.fileUrl(), it.href) }
-                .map { WebDavStorageFile(it, this) }
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException || throwPlaybackErrors) throw e
-            ErrorReportHelper.postCatchedException(e, "WebDAV", "获取文件列表失败: ${file.fileUrl()}")
-            emptyList()
-        }
+        sardine
+            .list(file.fileUrl())
+            .filter { isChildFile(file.fileUrl(), it.href) }
+            .map { WebDavStorageFile(it, this) }
 
     override suspend fun pathFile(
         path: String,
@@ -162,8 +157,17 @@ class WebDavStorage(
         child: URI
     ): Boolean {
         try {
-            val parentPath = URI(parent).path
-            val childPath = child.path
+            val parentPath =
+                URI(parent)
+                    .path
+                    .orEmpty()
+                    .trimEnd('/')
+                    .ifEmpty { "/" }
+            val childPath =
+                child.path
+                    .orEmpty()
+                    .trimEnd('/')
+                    .ifEmpty { "/" }
             return parentPath != childPath
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedException(e, "WebDAV", "路径解析失败: parent=$parent, child=$child")

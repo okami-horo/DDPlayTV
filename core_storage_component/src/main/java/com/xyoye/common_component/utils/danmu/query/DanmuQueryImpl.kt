@@ -3,16 +3,19 @@ package com.xyoye.common_component.utils.danmu.query
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuContentData
-import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.data.DanmuRelatedUrlData
+import com.xyoye.data_component.data.DanmuSearchData
 import com.xyoye.data_component.data.MatchMethod
 import com.xyoye.data_component.data.MatchResult
+import kotlinx.coroutines.CancellationException
 
 /**
  * Created by xyoye on 2024/1/14.
  */
 
-class DanmuQueryImpl : DanmuQuery {
+class DanmuQueryImpl(
+    private val searchRequest: suspend (String) -> Result<DanmuSearchData> = ResourceRepository::searchDanmu
+) : DanmuQuery {
     override suspend fun match(
         hash: String,
         fileName: String?,
@@ -35,13 +38,13 @@ class DanmuQueryImpl : DanmuQuery {
         }
     }
 
-    override suspend fun search(text: String): List<DanmuAnimeData> =
-        ResourceRepository
-            .searchDanmu(text)
-            .getOrNull()
-            ?.animes
-            ?.filter { it.episodes.isNotEmpty() }
-            ?.map { anime ->
+    override suspend fun search(text: String): List<DanmuAnimeData> = searchResult(text).getOrDefault(emptyList())
+
+    override suspend fun searchResult(text: String): Result<List<DanmuAnimeData>> {
+        val result = searchRequest(text)
+        (result.exceptionOrNull() as? CancellationException)?.let { throw it }
+        return result.map { data ->
+            data.animes.filter { it.episodes.isNotEmpty() }.map { anime ->
                 anime.copy(
                     episodes =
                         anime.episodes.map {
@@ -49,7 +52,8 @@ class DanmuQueryImpl : DanmuQuery {
                         },
                 )
             }
-            ?: emptyList()
+        }
+    }
 
     override suspend fun source(episodeId: String): List<DanmuRelatedUrlData> =
         ResourceRepository

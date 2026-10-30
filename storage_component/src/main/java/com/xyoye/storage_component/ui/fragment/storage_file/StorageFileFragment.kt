@@ -1,7 +1,6 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
 import android.os.Bundle
-import android.view.KeyEvent
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -38,6 +37,7 @@ class StorageFileFragment :
     private var savedFileKey: String? = null
     private val listKey get() = "${ownerActivity.storage.library.id}|${arguments?.getString("directory_path")}"
     private var lastPagingHintState: com.xyoye.common_component.storage.PagedStorage.State? = null
+    private var lastError: String? = null
 
     companion object {
         private const val TAG = "StorageFileFocus"
@@ -92,19 +92,30 @@ class StorageFileFragment :
         initRecyclerView()
 
         viewModel.storage = ownerActivity.storage
+        viewModel.operationLock = ownerActivity.storageOperations
+        viewModel.isPageActive = { ownerActivity.isCurrentDirectory(this) }
 
         dataBinding.refreshLayout.setOnRefreshListener {
             reloadDirectory(refresh = true)
         }
 
-        viewModel.fileLiveData.observe(viewLifecycleOwner) {
-            dataBinding.loading.isVisible = false
-            dataBinding.refreshLayout.isVisible = true
-            dataBinding.refreshLayout.isRefreshing = false
-            ownerActivity.onDirectoryOpened(this, it.filterIsInstance<StorageFile>())
+        viewModel.state.observe(viewLifecycleOwner) { state ->
+            val it = state.items
+            dataBinding.loading.isVisible = state.loading && !state.hasDirectory
+            dataBinding.refreshLayout.isVisible = !state.loading || state.hasDirectory
+            dataBinding.refreshLayout.isRefreshing = state.loading && state.hasDirectory
+            if (state.hasDirectory && !state.loading) {
+                ownerActivity.onDirectoryOpened(this, state.directory, state.directoryFiles, it.filterIsInstance<StorageFile>())
+            }
             dataBinding.storageFileRv.setData(it)
+            // The adapter reuses one empty-item sentinel; its diff cannot observe state-only changes.
+            if (it.isEmpty()) dataBinding.storageFileRv.adapter?.notifyItemChanged(0)
+            if (state.error != null && state.error != lastError && state.items.isNotEmpty() && ownerActivity.isCurrentDirectory(this)) {
+                ToastCenter.showError(state.error)
+            }
+            lastError = state.error
             val list = dataBinding.storageFileRv as? DpadRecyclerView
-            if (list != null && restoreLayout) {
+            if (list != null && restoreLayout && !state.loading) {
                 restoreLayout = false
                 listState.getScrollState().restore(list, listKey, requireNotNull(list.adapter))
                 val position = it.indexOfFirst { file -> (file as? StorageFile)?.uniqueKey() == savedFileKey }
@@ -125,18 +136,26 @@ class StorageFileFragment :
         }
 
         viewModel.loginRequiredLiveData.observe(viewLifecycleOwner) { library ->
-            if (ownerActivity.isCurrentDirectory(this)) showLoginDialog(library)
+            if (library != null && ownerActivity.isCurrentDirectory(this)) {
+                viewModel.consumeLoginRequest()
+                showLoginDialog(library)
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        if (!loaded) {
+        if (!loaded || viewModel.state.value?.hasDirectory != true) {
             loaded = true
             reloadDirectory()
         } else {
             viewModel.updateHistory()
         }
+    }
+
+    override fun onPause() {
+        viewModel.cancelRequests()
+        super.onPause()
     }
 
     private fun initRecyclerView() {
@@ -177,15 +196,6 @@ class StorageFileFragment :
             (this as? DpadRecyclerView)?.apply {
                 isSaveEnabled = false
                 setFocusOutAllowed(true, false)
-                setOnKeyInterceptListener(
-                    object : DpadRecyclerView.OnKeyInterceptListener {
-                        override fun onInterceptKeyEvent(event: KeyEvent): Boolean {
-                            if (event.keyCode != KeyEvent.KEYCODE_MENU && event.keyCode != KeyEvent.KEYCODE_SETTINGS) return false
-                            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) triggerTvRefresh()
-                            return true
-                        }
-                    }
-                )
             }
         }
     }

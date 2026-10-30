@@ -9,6 +9,10 @@ interface InterGestureView : InterControllerView {
 
     fun onStopSlide()
 
+    fun onCancelSlide() {
+        onStopSlide()
+    }
+
     fun onPositionChange(
         newPosition: Long,
         currentPosition: Long,

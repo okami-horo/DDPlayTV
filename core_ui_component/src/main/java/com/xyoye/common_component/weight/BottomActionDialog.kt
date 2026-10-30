@@ -1,6 +1,8 @@
 package com.xyoye.common_component.weight
 
 import android.app.Activity
+import android.view.LayoutInflater
+import android.view.View
 import androidx.core.view.isGone
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
@@ -66,6 +68,35 @@ class BottomActionDialog(
                 }
 
             setData(actionData)
+
+            // DpadRecyclerView treats wrap_content as the parent's size. A scroll container
+            // measures it with UNSPECIFIED height, which otherwise produces a zero viewport.
+            fun updateViewport(width: Int) {
+                val widthSpec = View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY)
+                val unspecified = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                rootViewBinding.bottomActionLl.measure(widthSpec, unspecified)
+                val limit =
+                    (resources.displayMetrics.heightPixels * 0.85f).toInt() -
+                        rootViewBinding.titleTv.layoutParams.height - rootViewBinding.bottomActionLl.measuredHeight
+                val row = ItemBottomActionVerticalBinding.inflate(LayoutInflater.from(context), this, false)
+                var contentHeight = 0
+                for (action in actionData) {
+                    row.actionNameTv.text = action.actionName
+                    row.actionDescribeTv.isGone = action.describe.isNullOrEmpty()
+                    row.actionDescribeTv.text = action.describe
+                    row.root.measure(widthSpec, unspecified)
+                    contentHeight += row.root.measuredHeight
+                    if (contentHeight >= limit) break
+                }
+                val height = contentHeight.coerceAtMost(limit.coerceAtLeast(1))
+                if (layoutParams.height != height) {
+                    layoutParams = layoutParams.apply { this.height = height }
+                }
+            }
+            updateViewport(resources.displayMetrics.widthPixels)
+            addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
+                if (right - left != oldRight - oldLeft) updateViewport(right - left)
+            }
         }
     }
 }

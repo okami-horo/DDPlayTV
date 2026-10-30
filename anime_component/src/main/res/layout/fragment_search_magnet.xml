@@ -112,6 +112,16 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <TextView
+            android:id="@+id/query_status_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/background_item_press"
+            android:padding="16dp"
+            android:textColor="@color/text_black"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/screen_cl" />
+
         <androidx.recyclerview.widget.RecyclerView
             app:tvDpadList="true"
             android:id="@+id/magnet_rv"
@@ -119,7 +129,7 @@
             android:layout_height="0dp"
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/copyright_tv"
-            app:layout_constraintTop_toBottomOf="@id/screen_cl"
+            app:layout_constraintTop_toBottomOf="@id/query_status_tv"
             tools:visibility="visible" />
 
         <TextView

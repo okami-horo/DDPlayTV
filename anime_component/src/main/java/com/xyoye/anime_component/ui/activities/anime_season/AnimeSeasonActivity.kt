@@ -1,5 +1,6 @@
 package com.xyoye.anime_component.ui.activities.anime_season
 
+import androidx.core.view.isVisible
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.xyoye.anime_component.BR
 import com.xyoye.anime_component.R
@@ -12,11 +13,13 @@ import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
+import com.xyoye.common_component.extension.collectAtStarted
 import com.xyoye.common_component.extension.grid
 import com.xyoye.common_component.extension.gridEmpty
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.toResColor
+import com.xyoye.common_component.focus.applyDpadFocusable
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationDrawable
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
@@ -171,11 +174,26 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
             dataBinding.seasonRv.setData(it)
         }
 
-        viewModel.animeLiveData.observe(this) {
-            // 保留recycler view位置，避免滚动
-            val recyclerSaveState = dataBinding.animeRv.layoutManager?.onSaveInstanceState()
-            dataBinding.animeRv.setData(it)
-            dataBinding.animeRv.layoutManager?.onRestoreInstanceState(recyclerSaveState)
+        viewModel.queryState.collectAtStarted(this) { state ->
+            dataBinding.animeRv.isVisible = state.items.isNotEmpty() || (state.loaded && state.error == null)
+            if (animeAdapter.items != state.items) {
+                val recyclerSaveState = dataBinding.animeRv.layoutManager?.onSaveInstanceState()
+                dataBinding.animeRv.setData(state.items)
+                dataBinding.animeRv.layoutManager?.onRestoreInstanceState(recyclerSaveState)
+            }
+            dataBinding.queryStatusTv.apply {
+                val retryable = state.error != null
+                text =
+                    when {
+                        state.loading -> "正在加载…"
+                        retryable -> "${state.error}\n按确定重试"
+                        state.loaded && state.items.isEmpty() -> "暂无番剧"
+                        else -> ""
+                    }
+                isVisible = text.isNotEmpty()
+                setOnClickListener { viewModel.retry() }
+                applyDpadFocusable(retryable, clickable = retryable)
+            }
         }
 
         viewModel.sortLiveData.observe(this) {

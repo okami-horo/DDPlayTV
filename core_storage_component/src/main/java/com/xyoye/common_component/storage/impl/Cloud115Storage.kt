@@ -27,15 +27,19 @@ import com.xyoye.data_component.data.cloud115.Cloud115FileInfo
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.runBlocking
 import java.io.InputStream
 
-class Cloud115Storage(
-    library: MediaLibraryEntity
+class Cloud115Storage internal constructor(
+    library: MediaLibraryEntity,
+    private val pageLoader: (suspend (String, Int) -> List<Cloud115FileInfo>)?
 ) : AbstractStorage(library),
     PagedStorage,
     AuthStorage,
     PlaybackTransportProvider {
+    constructor(library: MediaLibraryEntity) : this(library, null)
+
     private val rangeUnsupportedRefreshLock = Any()
 
     private val storageKey = Cloud115AuthStore.storageKey(library)
@@ -48,6 +52,15 @@ class Cloud115Storage(
     private var pagingHasMore: Boolean = true
 
     override var state: PagedStorage.State = PagedStorage.State.IDLE
+
+    override fun snapshotPaging() = PagedStorage.Snapshot(pagingCid, pagingOffset, pagingHasMore, state)
+
+    override fun restorePaging(snapshot: PagedStorage.Snapshot) {
+        pagingCid = snapshot.directoryKey
+        pagingOffset = snapshot.offset
+        pagingHasMore = snapshot.hasMore
+        state = snapshot.state
+    }
 
     override fun isConnected(): Boolean = repository.isAuthorized()
 
@@ -118,26 +131,15 @@ class Cloud115Storage(
         file: StorageFile,
         refresh: Boolean
     ): List<StorageFile> {
-        directory = file
-
         val cid = resolveDirectoryCid(file)
-        if (refresh || pagingCid != cid) {
-            resetPaging(cid)
-        }
 
-        val response =
+        val items =
             runCatching {
-                repository
-                    .listFiles(
-                        cid = cid,
-                        limit = DEFAULT_PAGE_LIMIT,
-                        offset = 0,
-                        showDir = 1,
-                    ).getOrThrow()
+                loadPage(cid, 0)
             }.getOrElse { t ->
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 val dirPath = runCatching { file.filePath() }.getOrNull()
                 val cookie = redactedCookie()
-                state = PagedStorage.State.ERROR
                 LogFacade.e(
                     LogModule.STORAGE,
                     LOG_TAG,
@@ -163,7 +165,9 @@ class Cloud115Storage(
             }
 
         val parentPath = file.filePath()
-        val items = response.data.orEmpty()
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
+        directory = file
+        pagingCid = cid
         val files = items.map { Cloud115StorageFile(it, parentPath, this) }
 
         pagingOffset = files.size
@@ -209,17 +213,9 @@ class Cloud115Storage(
         state = PagedStorage.State.LOADING
         val dirPath = runCatching { currentDirectory.filePath() }.getOrNull()
         return runCatching {
-            val response =
-                repository
-                    .listFiles(
-                        cid = cid,
-                        limit = DEFAULT_PAGE_LIMIT,
-                        offset = pagingOffset,
-                        showDir = 1,
-                    ).getOrThrow()
-
             val parentPath = currentDirectory.filePath()
-            val items = response.data.orEmpty()
+            val items = loadPage(cid, pagingOffset)
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
             val files = items.map { Cloud115StorageFile(it, parentPath, this) }
             pagingOffset += files.size
             pagingHasMore = files.size >= DEFAULT_PAGE_LIMIT
@@ -227,6 +223,7 @@ class Cloud115Storage(
         }.onSuccess {
             state = if (pagingHasMore) PagedStorage.State.IDLE else PagedStorage.State.NO_MORE
         }.onFailure {
+            if (it is kotlinx.coroutines.CancellationException) throw it
             state = PagedStorage.State.ERROR
             val cookie = redactedCookie()
             LogFacade.e(
@@ -627,6 +624,17 @@ class Cloud115Storage(
         pagingHasMore = true
         state = PagedStorage.State.IDLE
     }
+
+    private suspend fun loadPage(
+        cid: String,
+        offset: Int
+    ): List<Cloud115FileInfo> =
+        pageLoader?.invoke(cid, offset)
+            ?: repository
+                .listFiles(cid, DEFAULT_PAGE_LIMIT, offset, showDir = 1)
+                .getOrThrow()
+                .data
+                .orEmpty()
 
     private fun redactedCookie(): String =
         runCatching { Cloud115Headers.redactCookie(Cloud115AuthStore.read(storageKey).cookie) }

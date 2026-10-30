@@ -2,7 +2,6 @@ package com.xyoye.common_component.utils.danmu.query
 
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuContentData
-import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.data.DanmuRelatedUrlData
 import com.xyoye.data_component.data.MatchResult
 
@@ -31,6 +30,8 @@ interface DanmuQuery {
      * 搜索弹幕
      */
     suspend fun search(text: String): List<DanmuAnimeData>
+
+    suspend fun searchResult(text: String): Result<List<DanmuAnimeData>> = Result.success(search(text))
 
     /**
      * 获取弹幕源

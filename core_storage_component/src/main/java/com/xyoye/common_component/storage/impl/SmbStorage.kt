@@ -35,7 +35,7 @@ class SmbStorage internal constructor(
     override var rootUri: Uri = Uri.parse("smb://${library.url}")
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> =
-        access(emptyList()) {
+        access(emptyList(), failOnError = true) {
             if (file.storage !== this) return@access emptyList()
             if (file.isRootFile()) return@access connection.shares().map { SmbStorageFile(this, it, "") }
             val smbFile = file as? SmbStorageFile ?: return@access emptyList()
@@ -43,14 +43,14 @@ class SmbStorage internal constructor(
             connection.selectShare(share)
             connection.list(file.filePath()).mapNotNull { name ->
                 val path = listOf(file.filePath(), name).filter { it.isNotEmpty() }.joinToString("/")
-                access<StorageFile?>(null) { resolvedFile(share, path) }
+                access<StorageFile?>(null, failOnError = true) { resolvedFile(share, path) }
             }
         }
 
     override suspend fun getRootFile(): StorageFile? {
         val share = library.smbSharePath?.let { Uri.parse(it).pathSegments.firstOrNull() }
-        if (share == null) return access(null) { SmbStorageFile(this, null, "") }
-        return access(null) {
+        if (share == null) return access(null, failOnError = true) { SmbStorageFile(this, null, "") }
+        return access(null, failOnError = true) {
             connection.selectShare(share)
             SmbStorageFile(this, share, "")
         }
@@ -122,16 +122,20 @@ class SmbStorage internal constructor(
 
     private inline fun <T> access(
         fallback: T,
+        failOnError: Boolean = false,
         operation: () -> T
     ): T =
         synchronized(connectionLock) {
-            if (closed) return fallback
+            if (closed) {
+                if (failOnError) throw java.io.IOException("SMB storage is closed")
+                return fallback
+            }
             try {
                 operation()
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
-                if (throwPlaybackErrors) throw failure
+                if (throwPlaybackErrors || failOnError) throw failure
                 LogFacade.w(LogModule.STORAGE, "SmbStorage", "SMB operation failed")
                 fallback
             }

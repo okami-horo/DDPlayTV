@@ -381,6 +381,8 @@ class MpvVideoPlayer(
         return nativeBridge.currentPosition()
     }
 
+    override fun isSeekable(): Boolean = nativeBridge.isSeekable()
+
     override fun getDuration(): Long {
         if (!isPrepared) return 0
         return nativeBridge.duration()

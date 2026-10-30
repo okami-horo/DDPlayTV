@@ -80,13 +80,17 @@ class MediaFragment :
                                 libraryCoverIv.setImageResource(data.mediaType.cover)
 
                                 itemLayout.setOnClickListener {
-                                    DanDanPlay.permission.storage.request(this@MediaFragment) {
-                                        onGranted {
-                                            launchMediaStorage(data)
+                                    if (data.mediaType == MediaType.LOCAL_STORAGE) {
+                                        DanDanPlay.permission.storage.request(this@MediaFragment) {
+                                            onGranted {
+                                                launchMediaStorage(data)
+                                            }
+                                            onDenied {
+                                                ToastCenter.showError("获取文件读取权限失败，无法打开本地媒体库")
+                                            }
                                         }
-                                        onDenied {
-                                            ToastCenter.showError("获取文件读取权限失败，无法打开媒体库")
-                                        }
+                                    } else {
+                                        launchMediaStorage(data)
                                     }
                                 }
                                 itemLayout.setOnLongClickListener {

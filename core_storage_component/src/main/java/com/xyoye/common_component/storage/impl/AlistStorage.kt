@@ -4,17 +4,16 @@ import android.net.Uri
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.network.repository.AlistRepository
 import com.xyoye.common_component.network.repository.ResourceRepository
-import com.xyoye.common_component.storage.transport.PlaybackTransportLease
-import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
-import com.xyoye.common_component.storage.transport.directPlaybackTransport
-import com.xyoye.common_component.storage.transport.TransportAcquisitionException
-import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.LocalProxy
 import com.xyoye.common_component.storage.file.impl.AlistStorageFile
 import com.xyoye.common_component.storage.file.payloadAs
-import com.xyoye.common_component.utils.ErrorReportHelper
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.TransportAcquisitionException
+import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.data.alist.AlistFileData
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -29,47 +28,33 @@ import java.io.InputStream
 
 class AlistStorage(
     library: MediaLibraryEntity
-) : AbstractStorage(library), PlaybackTransportProvider {
+) : AbstractStorage(library),
+    PlaybackTransportProvider {
     private val rangeUnsupportedRefreshLock = Any()
 
     private var token: String = ""
 
     private val rootUrl by lazy { rootUri.toString() }
 
-    override suspend fun listFiles(file: StorageFile): List<StorageFile> =
-        AlistRepository
-            .openDirectory(rootUrl, token, file.filePath())
-            .getOrNull()
-            ?.successData
-            ?.fileList
-            ?.map {
-                AlistStorageFile(file.filePath(), it, this)
-            } ?: emptyList()
+    override suspend fun listFiles(file: StorageFile): List<StorageFile> {
+        val response = AlistRepository.openDirectory(rootUrl, token, file.filePath()).getOrThrow()
+        val data = response.successData ?: throw java.io.IOException(response.message.ifBlank { "Alist directory request failed" })
+        return data.fileList.map { AlistStorageFile(file.filePath(), it, this) }
+    }
 
     override suspend fun getRootFile(): StorageFile? {
-        val newToken = refreshToken() ?: return null
+        val username = library.account ?: throw IllegalStateException("Alist username is missing")
+        val password = library.password ?: throw IllegalStateException("Alist password is missing")
+        val login = AlistRepository.login(rootUrl, username, password).getOrThrow()
+        val newToken =
+            login.successData?.token?.takeIf { it.isNotBlank() }
+                ?: throw javax.security.auth.login
+                    .LoginException(login.message.ifBlank { "Alist authentication failed" })
         this.token = newToken
 
-        val result = AlistRepository.getUserInfo(rootUrl, token)
-        if (result.isFailure) {
-            result.exceptionOrNull()?.let { e ->
-                ErrorReportHelper.postCatchedException(
-                    e,
-                    "AlistStorage",
-                    "获取用户信息失败: $rootUrl",
-                )
-            }
-            return null
-        }
-
-        return result
-            .getOrNull()
-            ?.successData
-            ?.let {
-                AlistFileData("/", true)
-            }?.let {
-                AlistStorageFile("", it, this)
-            }
+        val user = AlistRepository.getUserInfo(rootUrl, token).getOrThrow()
+        if (user.successData == null) throw java.io.IOException(user.message.ifBlank { "Alist user request failed" })
+        return AlistStorageFile("", AlistFileData("/", true), this)
     }
 
     override suspend fun openFile(file: StorageFile): InputStream? {
@@ -114,10 +99,14 @@ class AlistStorage(
     ): PlaybackTransportLease {
         val playerType = profile.playerType
         if (playerType != PlayerType.TYPE_MPV_PLAYER) {
-            return directPlaybackTransport(getStorageFileUrl(file) ?: throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable))
+            return directPlaybackTransport(
+                getStorageFileUrl(file) ?: throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable)
+            )
         }
 
-        val upstream = getStorageFileProxyUrl(file) ?: getStorageFileUrl(file) ?: throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable)
+        val upstream =
+            getStorageFileProxyUrl(file) ?: getStorageFileUrl(file)
+                ?: throw TransportAcquisitionException(TransportAcquisitionFailure.UpstreamUnavailable)
         val fileName = runCatching { file.fileName() }.getOrNull().orEmpty().ifEmpty { "video" }
         val contentLength = runCatching { file.fileLength() }.getOrNull() ?: -1L
 

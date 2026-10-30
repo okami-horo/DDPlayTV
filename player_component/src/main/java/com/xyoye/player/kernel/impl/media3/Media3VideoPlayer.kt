@@ -457,8 +457,8 @@ class Media3VideoPlayer(
     }
 
     override fun onRenderedFirstFrame() {
+        notifyPrepared()
         mPlayerEventListener.onInfo(PlayerConstant.MEDIA_INFO_VIDEO_RENDERING_START, 0)
-        isPreparing = false
         val path = currentDataSource
         if (!path.isNullOrBlank()) {
             runCatching {
@@ -469,8 +469,7 @@ class Media3VideoPlayer(
 
     override fun onPlaybackStateChanged(state: Int) {
         if (isPreparing && state == Player.STATE_READY) {
-            mPlayerEventListener.onPrepared()
-            isPreparing = false
+            notifyPrepared()
         }
         if (isPreparing) {
             return
@@ -502,6 +501,14 @@ class Media3VideoPlayer(
         }
         lastReportedPlaybackState = state
         lastReportedPlayWhenReady = playWhenReady
+    }
+
+    private fun notifyPrepared() {
+        if (!isPreparing) return
+        // First-frame and READY callbacks may arrive in either order. Publish readiness once,
+        // before playback starts, so restoration cannot be skipped by the first-frame event.
+        isPreparing = false
+        mPlayerEventListener.onPrepared()
     }
 
     override fun onTracksChanged(tracks: Tracks) {

@@ -127,6 +127,8 @@ abstract class AbstractVideoPlayer : InterVideoTrack {
      */
     abstract fun getDuration(): Long
 
+    open fun isSeekable(): Boolean = getDuration() > 0
+
     /**
      * 获取当前倍速
      */

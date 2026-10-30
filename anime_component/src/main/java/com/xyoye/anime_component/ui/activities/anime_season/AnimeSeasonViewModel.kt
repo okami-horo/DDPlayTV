@@ -4,7 +4,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.anime_component.R
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.extension.reportAndToastOnFailure
 import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.network.repository.AnimeRepository
 import com.xyoye.common_component.session.UserSessionManager
@@ -14,11 +13,32 @@ import com.xyoye.data_component.data.AnimeData
 import com.xyoye.data_component.data.BangumiAnimeData
 import com.xyoye.data_component.data.CommonTypeData
 import com.xyoye.data_component.enums.AnimeSortType
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Collections
 
-class AnimeSeasonViewModel : BaseViewModel() {
+class AnimeSeasonViewModel(
+    private val seasonRequest: suspend (String, String) -> Result<BangumiAnimeData> = AnimeRepository::getSeasonAnime
+) : BaseViewModel() {
+    data class QueryState(
+        val year: String = "",
+        val month: String = "",
+        val loading: Boolean = false,
+        val loaded: Boolean = false,
+        val items: List<AnimeData> = emptyList(),
+        val error: String? = null
+    )
+
+    private val _queryState = MutableStateFlow(QueryState())
+    val queryState = _queryState.asStateFlow()
+    private var queryVersion = 0L
+    private var queryJob: Job? = null
     private val seasonData =
         mutableListOf(
             CommonTypeData("10月", "10"),
@@ -51,12 +71,15 @@ class AnimeSeasonViewModel : BaseViewModel() {
 
     val yearsLiveData = MutableLiveData<MutableList<CommonTypeData>>()
     val seasonLiveData = MutableLiveData<MutableList<CommonTypeData>>()
-    val animeLiveData = MutableLiveData<MutableList<AnimeData>>()
     val sortLiveData = MutableLiveData<MutableList<CommonTypeData>>()
 
     fun getYearsData() {
         yearsLiveData.postValue(years)
-        checkYear(years[0].typeId)
+        if (_queryState.value.year.isEmpty()) {
+            checkYear(years[0].typeId)
+        } else {
+            seasonLiveData.postValue(seasonData)
+        }
     }
 
     fun getSortData() {
@@ -112,7 +135,7 @@ class AnimeSeasonViewModel : BaseViewModel() {
     }
 
     fun checkSort(position: Int) {
-        if (!this::seasonAnimeData.isInitialized) {
+        if (!_queryState.value.loaded) {
             return
         }
 
@@ -197,33 +220,48 @@ class AnimeSeasonViewModel : BaseViewModel() {
         year: String,
         month: String
     ) {
-        viewModelScope.launch {
-            val result = AnimeRepository.getSeasonAnime(year, month)
-
-            if (result.reportAndToastOnFailure(
-                    unknownErrorMessage = "Get season anime failed with unknown error",
-                    className = "AnimeSeasonViewModel",
-                    methodName = "getSeasonAnime",
-                    reportMessage = "年份: $year, 月份: $month",
-                )
-            ) {
-                return@launch
+        val version = ++queryVersion
+        queryJob?.cancel()
+        val previous = _queryState.value
+        _queryState.value =
+            if (previous.year == year && previous.month == month) {
+                previous.copy(loading = true, error = null)
+            } else {
+                QueryState(year = year, month = month, loading = true)
             }
-
-            result.getOrNull()?.let {
-                seasonAnimeData = it
-                showSearchResult()
+        queryJob =
+            viewModelScope.launch {
+                try {
+                    val data = seasonRequest(year, month).getOrThrow()
+                    currentCoroutineContext().ensureActive()
+                    if (version != queryVersion) return@launch
+                    seasonAnimeData = data
+                    showSearchResult()
+                    _queryState.value = _queryState.value.copy(loaded = true)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    if (version == queryVersion) {
+                        _queryState.value = _queryState.value.copy(error = failure.message ?: "加载失败，请重试")
+                    }
+                } finally {
+                    if (version == queryVersion) _queryState.value = _queryState.value.copy(loading = false)
+                }
             }
-        }
+    }
+
+    fun retry() {
+        val current = _queryState.value
+        if (current.year.isNotEmpty()) getSeasonAnime(current.year, current.month)
     }
 
     private fun showSearchResult() {
         if (sortType == AnimeSortType.NONE) {
-            animeLiveData.postValue(seasonAnimeData.bangumiList)
+            _queryState.value = _queryState.value.copy(items = seasonAnimeData.bangumiList.toList())
             return
         }
         if (!UserSessionManager.isLoggedIn() && sortType == AnimeSortType.FOLLOW) {
-            animeLiveData.postValue(seasonAnimeData.bangumiList)
+            _queryState.value = _queryState.value.copy(items = seasonAnimeData.bangumiList.toList())
             return
         }
         if (this::seasonAnimeData.isInitialized) {
@@ -245,7 +283,7 @@ class AnimeSeasonViewModel : BaseViewModel() {
                     }
                 },
             )
-            animeLiveData.postValue(sortedList)
+            _queryState.value = _queryState.value.copy(items = sortedList)
         }
     }
 }

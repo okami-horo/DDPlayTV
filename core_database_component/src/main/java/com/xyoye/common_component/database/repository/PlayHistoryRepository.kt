@@ -8,6 +8,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 object PlayHistoryRepository {
+    suspend fun findOrClaimLegacyHistory(
+        uniqueKey: String,
+        storageId: Int,
+        mediaType: MediaType,
+        fileUrl: String
+    ): PlayHistoryEntity? =
+        withContext(Dispatchers.IO) {
+            DatabaseProvider.instance.getPlayHistoryDao().findOrClaimLegacyHistory(uniqueKey, storageId, mediaType, fileUrl)
+        }
+
     suspend fun getAll(): MutableList<PlayHistoryEntity> =
         withContext(Dispatchers.IO) {
             DatabaseProvider.instance
@@ -37,16 +47,6 @@ object PlayHistoryRepository {
             DatabaseProvider.instance
                 .getPlayHistoryDao()
                 .getPlayHistory(uniqueKey, storageId)
-        }
-
-    suspend fun getPlayHistory(
-        uniqueKey: String,
-        mediaType: MediaType,
-    ): PlayHistoryEntity? =
-        withContext(Dispatchers.IO) {
-            DatabaseProvider.instance
-                .getPlayHistoryDao()
-                .getPlayHistory(uniqueKey, mediaType)
         }
 
     suspend fun getStorageLastPlay(storageId: Int): PlayHistoryEntity? =

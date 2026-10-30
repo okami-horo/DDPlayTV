@@ -95,6 +95,16 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <TextView
+            android:id="@+id/query_status_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/background_item_press"
+            android:padding="16dp"
+            android:textColor="@color/text_black"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/sort_cl" />
+
         <androidx.recyclerview.widget.RecyclerView
             app:tvDpadList="true"
             android:id="@+id/anime_rv"
@@ -103,7 +113,7 @@
             android:layout_marginTop="5dp"
             android:background="@color/item_bg_color"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/sort_cl" />
+            app:layout_constraintTop_toBottomOf="@id/query_status_tv" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/history_cl"

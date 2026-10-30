@@ -58,4 +58,4 @@ scripts/dev-env/gradlew-local.bat :app:assembleDebug :app:assembleRelease :app:a
 
 新原生 UI 和 TMDB 不在本次实施范围。当前无真实 PC 服务配置，分组、刷新及有／无 Hash 历史／快照／队列兼容采用固定响应数据回归；真实连接测试、物理电视的焦点／播放表现尚未验收。
 
-额外手动观察：从主页“添加媒体库”进入的“新增网络媒体库”选择器内容区为空，且没有默认焦点，见 `.tmp/global-settings-final-chooser.xml`。该链路由 `MediaFragment` 本地枚举生成 9 个来源，无网络请求；`MediaFragment`、`MediaType`／扩展、`BottomActionDialog`、`BaseBottomDialog` 和相关布局与基线未变。未执行基线 APK 对照，具体根因尚未确认，不能宣称基线同样复现，也不能将九类编辑页直接启动的测试解释为该完整新增路径已通过。本次未扩展修改选择器，后续原生 UI 重构需处理该入口；全局设置 DPAD 冒烟和上述编辑页用例的已通过结果仍分别成立。
+额外手动观察：从主页“添加媒体库”进入的“新增网络媒体库”选择器内容区为空，且没有默认焦点，见 `.tmp/global-settings-final-chooser.xml`。该链路由 `MediaFragment` 本地枚举生成 9 个来源，无网络请求；当时该链路与基线未变，未执行基线 APK 对照，不能宣称基线同样复现，也不能将九类编辑页直接启动的测试解释为完整新增路径通过。该问题随后在 [UI 前置修复 R9](2026-10-30-ui-readiness-repairs.md) 中证实为列表视口高度 0，并完成实际主页入口、九项遍历、编辑／返回、长列表及焦点回归；此处保留原始发现，不再作为未解决根因。

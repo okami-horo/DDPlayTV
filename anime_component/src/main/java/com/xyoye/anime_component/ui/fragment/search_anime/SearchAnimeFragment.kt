@@ -13,11 +13,13 @@ import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.base.BaseFragment
+import com.xyoye.common_component.extension.collectAtStarted
 import com.xyoye.common_component.extension.grid
 import com.xyoye.common_component.extension.gridEmpty
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.toResColor
+import com.xyoye.common_component.focus.applyDpadFocusable
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationDrawable
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
@@ -79,6 +81,7 @@ class SearchAnimeFragment :
     }
 
     override fun onTextClear() {
+        viewModel.clearSearch()
         dataBinding.historyCl.isVisible = true
     }
 
@@ -171,11 +174,27 @@ class SearchAnimeFragment :
             dataBinding.sortRv.setData(it)
         }
 
-        viewModel.animeLiveData.observe(viewLifecycleOwner) {
-            // 保留recycler view位置，避免滚动
-            val recyclerSaveState = dataBinding.animeRv.layoutManager?.onSaveInstanceState()
-            dataBinding.animeRv.setData(it)
-            dataBinding.animeRv.layoutManager?.onRestoreInstanceState(recyclerSaveState)
+        viewModel.queryState.collectAtStarted(viewLifecycleOwner) { state ->
+            dataBinding.historyCl.isVisible = state.keyword.isEmpty()
+            dataBinding.animeRv.isVisible = state.items.isNotEmpty() || (state.loaded && state.error == null)
+            if (animeAdapter.items != state.items) {
+                val recyclerSaveState = dataBinding.animeRv.layoutManager?.onSaveInstanceState()
+                dataBinding.animeRv.setData(state.items)
+                dataBinding.animeRv.layoutManager?.onRestoreInstanceState(recyclerSaveState)
+            }
+            dataBinding.queryStatusTv.apply {
+                val retryable = state.error != null
+                text =
+                    when {
+                        state.loading -> "正在搜索…"
+                        retryable -> "${state.error}\n按确定重试"
+                        state.loaded && state.items.isEmpty() -> "未找到结果"
+                        else -> ""
+                    }
+                isVisible = text.isNotEmpty()
+                setOnClickListener { viewModel.search() }
+                applyDpadFocusable(retryable, clickable = retryable)
+            }
         }
 
         viewModel.searchHistoryLiveData.observe(viewLifecycleOwner) {

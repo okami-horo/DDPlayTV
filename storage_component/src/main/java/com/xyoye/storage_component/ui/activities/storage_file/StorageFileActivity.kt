@@ -49,6 +49,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
@@ -60,6 +62,8 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     lateinit var storage: Storage
         private set
+
+    internal val storageOperations = Mutex()
 
     private data class RouteEntry(
         val path: StorageFilePath,
@@ -250,6 +254,17 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_MENU || event.keyCode == KeyEvent.KEYCODE_SETTINGS) {
+            // AppCompat handles MENU before dispatching to the focused list.
+            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+                routeStack.lastOrNull()?.fragment?.triggerTvRefresh()
+            }
+            return true
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onKeyDown(
         keyCode: Int,
         event: KeyEvent?
@@ -321,8 +336,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     private fun syncStorageToCurrentRoute() {
         val entry = routeStack.lastOrNull() ?: return
-        storage.directory = entry.directory
-        storage.directoryFiles = entry.directoryFilesSnapshot
         updateToolbarSubtitle(entry.displayVideoCount, entry.displayDirectoryCount)
     }
 
@@ -457,6 +470,8 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     fun onDirectoryOpened(
         fragment: StorageFileFragment,
+        requestDirectory: StorageFile?,
+        directoryFiles: List<StorageFile>,
         displayFiles: List<StorageFile>
     ) {
         val entry =
@@ -466,21 +481,10 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
                     return
                 }
 
-        val storageDirectory = storage.directory
-        val directoryMatchesRoute = storageDirectory?.filePath() == entry.path.route
-        if (!directoryMatchesRoute) {
-            val message =
-                "onDirectoryOpened directory mismatch, route=${entry.path.route}, storage=${storageDirectory?.filePath()}"
-            if (entry.path.route == "/") {
-                LogFacade.d(LogModule.STORAGE, TAG, message)
-            } else {
-                LogFacade.w(LogModule.STORAGE, TAG, message)
-            }
-        }
-        if (storageDirectory != null) {
-            entry.directory = storageDirectory
-        }
-        entry.directoryFilesSnapshot = storage.directoryFiles
+        if (requestDirectory == null || requestDirectory.storage !== storage) return
+        if (entry.path.route != "/" && requestDirectory.filePath() != entry.path.route) return
+        entry.directory = requestDirectory
+        entry.directoryFilesSnapshot = directoryFiles
 
         entry.displayVideoCount = displayFiles.count { it.isFile() }
         entry.displayDirectoryCount = displayFiles.count { it.isDirectory() }
@@ -491,9 +495,15 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     fun openFile(file: StorageFile) {
+        val entry = routeStack.lastOrNull() ?: return
         lifecycleScope.launch {
-            if (prepareRemoteFontsIfNeeded(file)) {
-                viewModel.playItem(file)
+            storageOperations.withLock {
+                if (routeStack.lastOrNull() !== entry) return@withLock
+                storage.directory = entry.directory
+                storage.directoryFiles = entry.directoryFilesSnapshot
+                if (prepareRemoteFontsIfNeeded(file) && routeStack.lastOrNull() === entry) {
+                    viewModel.playItem(file)
+                }
             }
         }
     }

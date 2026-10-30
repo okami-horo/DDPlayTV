@@ -17,7 +17,12 @@ interface PlayHistoryDao {
     suspend fun getById(id: Int): PlayHistoryEntity?
 
     @Query("UPDATE play_history SET unique_key = (:uniqueKey), storage_path = (:storagePath), storage_id = (:storageId) WHERE id = (:id)")
-    suspend fun backfillIdentity(id: Int, uniqueKey: String, storagePath: String, storageId: Int)
+    suspend fun backfillIdentity(
+        id: Int,
+        uniqueKey: String,
+        storagePath: String,
+        storageId: Int
+    )
 
     @Query("SELECT * FROM play_history WHERE url != '' ORDER BY play_time DESC")
     suspend fun getAll(): MutableList<PlayHistoryEntity>
@@ -34,12 +39,33 @@ interface PlayHistoryDao {
     @TypeConverters(MediaTypeConverter::class)
     suspend fun gitStorageLastPlay(storageId: Int): PlayHistoryEntity?
 
-    @Query("SELECT * FROM play_history WHERE unique_key = (:uniqueKey) AND media_type = (:mediaType)")
+    @Query("SELECT * FROM play_history WHERE unique_key = (:uniqueKey) AND media_type = (:mediaType) AND storage_id IS NULL")
     @TypeConverters(MediaTypeConverter::class)
-    suspend fun getPlayHistory(
+    suspend fun getUnassignedHistory(
         uniqueKey: String,
         mediaType: MediaType
-    ): PlayHistoryEntity?
+    ): List<PlayHistoryEntity>
+
+    @Query("UPDATE play_history SET storage_id = (:storageId) WHERE id = (:id) AND storage_id IS NULL")
+    suspend fun claimUnassignedHistory(
+        id: Int,
+        storageId: Int
+    ): Int
+
+    @Transaction
+    suspend fun findOrClaimLegacyHistory(
+        uniqueKey: String,
+        storageId: Int,
+        mediaType: MediaType,
+        fileUrl: String
+    ): PlayHistoryEntity? {
+        getPlayHistory(uniqueKey, storageId)?.let { return it }
+        if (uniqueKey.isBlank() || fileUrl.isBlank()) return null
+        val legacy = getUnassignedHistory(uniqueKey, mediaType).singleOrNull() ?: return null
+        if (legacy.url != fileUrl) return null
+        if (claimUnassignedHistory(legacy.id, storageId) != 1) return null
+        return getPlayHistory(uniqueKey, storageId)
+    }
 
     @Query("SELECT * FROM play_history WHERE unique_key = (:uniqueKey) AND storage_id = (:storageId)")
     suspend fun getPlayHistory(

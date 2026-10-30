@@ -51,6 +51,7 @@ abstract class TvVideoController(
 
     private var pendingSeekStartPosition: Long? = null
     private var pendingSeekOffset: Long = 0L
+    private var pendingSeekSource: com.xyoye.common_component.source.base.BaseVideoSource? = null
     private val pendingSeekRunnable = Runnable { commitPendingSeek() }
     private val consumedKeys = mutableSetOf<Int>()
     protected var actionHandler: ((PlayerAction) -> Unit)? = null
@@ -86,6 +87,15 @@ abstract class TvVideoController(
         super.hideController()
         clearFocus()
         requestDefaultFocus()
+    }
+
+    override fun release() {
+        cancelPendingSeek()
+        super.release()
+    }
+
+    override fun destroy() {
+        cancelPendingSeek()
     }
 
     protected fun dispatchAction(action: PlayerAction) {
@@ -141,6 +151,7 @@ abstract class TvVideoController(
         }
 
         if (pendingSeekStartPosition == null) {
+            pendingSeekSource = mControlWrapper.getVideoSource()
             pendingSeekStartPosition = mControlWrapper.getCurrentPosition()
             pendingSeekOffset = 0L
             startSeekSlide()
@@ -159,13 +170,17 @@ abstract class TvVideoController(
         if (pendingSeekStartPosition == null) {
             return
         }
+        if (pendingSeekSource !== mControlWrapper.getVideoSource()) {
+            cancelPendingSeek()
+            return
+        }
         if (!mControlWrapper.isUserSeekAllowed()) {
-            resetPendingSeek()
+            cancelPendingSeek()
             return
         }
         val duration = mControlWrapper.getDuration()
         if (duration <= 0) {
-            resetPendingSeek()
+            cancelPendingSeek()
             return
         }
         val targetPosition = calculateTargetPosition(duration)
@@ -210,7 +225,15 @@ abstract class TvVideoController(
     private fun resetPendingSeek() {
         pendingSeekStartPosition = null
         pendingSeekOffset = 0L
+        pendingSeekSource = null
         removeCallbacks(pendingSeekRunnable)
+    }
+
+    fun cancelPendingSeek() {
+        resetPendingSeek()
+        for (entry in mControlComponents.entries) {
+            (entry.key as? InterGestureView)?.onCancelSlide()
+        }
     }
 
     private fun calculateTargetPosition(duration: Long): Long {

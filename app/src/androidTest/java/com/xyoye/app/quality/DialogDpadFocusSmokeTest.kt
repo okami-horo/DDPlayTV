@@ -62,6 +62,59 @@ class DialogDpadFocusSmokeTest {
         }
     }
 
+    @Test
+    fun nineActionsHaveVisibleItemsAndDefaultFocus() {
+        ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
+            lateinit var dialog: BottomActionDialog
+            scenario.onActivity { activity ->
+                dialog = BottomActionDialog(activity, (1..9).map { SheetActionBean(it, "来源 $it", -1) }) { true }
+                dialog.show()
+            }
+            awaitDialogFocus(scenario, dialog)
+            scenario.onActivity {
+                val list = dialog.findViewById<DpadRecyclerView>(com.xyoye.core_ui_component.R.id.content_rv)!!
+                assertEquals(9, list.adapter!!.itemCount)
+                assertTrue("Nine actions must have a measured viewport", list.height > 0)
+                assertTrue("Nine actions must render actual children", list.childCount > 0)
+                assertEquals(0, list.findContainingViewHolder(dialog.currentFocus!!)!!.bindingAdapterPosition)
+                dialog.dismiss()
+            }
+        }
+    }
+
+    @Test
+    fun longActionListScrollsToLastItemByRemote() {
+        ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
+            lateinit var dialog: BottomActionDialog
+            scenario.onActivity { activity ->
+                dialog = BottomActionDialog(activity, (1..30).map { SheetActionBean(it, "动作 $it", -1) }) { true }
+                dialog.show()
+            }
+            awaitDialogFocus(scenario, dialog)
+            repeat(29) { index ->
+                InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_DOWN)
+                val deadline = SystemClock.uptimeMillis() + 3000
+                var settled = false
+                while (!settled && SystemClock.uptimeMillis() < deadline) {
+                    waitForIdle()
+                    scenario.onActivity {
+                        val list = dialog.findViewById<DpadRecyclerView>(com.xyoye.core_ui_component.R.id.content_rv)!!
+                        settled = list.scrollState == androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE &&
+                            list.findContainingViewHolder(dialog.currentFocus!!)!!.bindingAdapterPosition == index + 1
+                    }
+                    if (!settled) SystemClock.sleep(25)
+                }
+                assertTrue("DPAD must reach and settle on item ${index + 1}", settled)
+            }
+            scenario.onActivity {
+                val list = dialog.findViewById<DpadRecyclerView>(com.xyoye.core_ui_component.R.id.content_rv)!!
+                assertEquals(29, list.findContainingViewHolder(dialog.currentFocus!!)!!.bindingAdapterPosition)
+                assertTrue(dialog.currentFocus!!.isShown)
+                dialog.dismiss()
+            }
+        }
+    }
+
     private fun waitForIdle() {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
     }
@@ -82,7 +135,7 @@ class DialogDpadFocusSmokeTest {
                     focus != null &&
                     list?.findContainingViewHolder(focus) != null
                 diagnostic =
-                    "window=${dialog.window?.decorView?.hasWindowFocus()} focus=${focus?.javaClass?.simpleName}:${focus?.id} listFocus=${list?.hasFocus()} children=${list?.childCount}"
+                    "window=${dialog.window?.decorView?.hasWindowFocus()} focus=${focus?.javaClass?.simpleName}:${focus?.id} list=${list?.javaClass?.simpleName} count=${list?.adapter?.itemCount} measured=${list?.measuredWidth}x${list?.measuredHeight} size=${list?.width}x${list?.height} listFocus=${list?.hasFocus()} children=${list?.childCount}"
             }
             SystemClock.sleep(25)
         }

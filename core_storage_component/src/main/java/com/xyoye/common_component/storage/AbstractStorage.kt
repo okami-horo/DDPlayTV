@@ -11,6 +11,7 @@ import com.xyoye.common_component.utils.subtitle.SubtitleUtils
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.entity.MediaLibraryEntity
+import kotlinx.coroutines.ensureActive
 import java.io.File
 
 /**
@@ -35,8 +36,10 @@ abstract class AbstractStorage(
         file: StorageFile,
         refresh: Boolean
     ): List<StorageFile> {
+        val files = listFiles(file)
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
         this.directory = file
-        this.directoryFiles = listFiles(file)
+        this.directoryFiles = files
         return directoryFiles
     }
 

@@ -22,12 +22,13 @@ class DanmuFinderImpl(
 ) : DanmuFinder {
     override suspend fun getMatched(source: DanmuSource): MatchResult? {
         val hash = source.hash() ?: return null
-        val result = danmuQuery.match(
-            hash = hash,
-            fileName = source.fileName(),
-            fileSize = source.fileSize() ?: 0L,
-            videoDuration = ((source.durationMs() ?: 0L) / 1000).toInt(),
-        )
+        val result =
+            danmuQuery.match(
+                hash = hash,
+                fileName = source.fileName(),
+                fileSize = source.fileSize() ?: 0L,
+                videoDuration = ((source.durationMs() ?: 0L) / 1000).toInt(),
+            )
         return if (result.episodes.isEmpty()) null else result
     }
 
@@ -235,6 +236,8 @@ class DanmuFinderImpl(
     }
 
     override suspend fun search(text: String): List<DanmuAnimeData> = danmuQuery.search(text)
+
+    override suspend fun searchResult(text: String): Result<List<DanmuAnimeData>> = danmuQuery.searchResult(text)
 
     override suspend fun getRelated(episodeId: String): List<DanmuRelatedUrlData> = danmuQuery.source(episodeId)
 

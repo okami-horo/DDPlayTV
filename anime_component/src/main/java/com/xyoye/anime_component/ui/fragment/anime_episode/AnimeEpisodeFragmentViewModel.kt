@@ -19,13 +19,15 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.data.BangumiData
 import com.xyoye.data_component.data.EpisodeData
 import com.xyoye.data_component.entity.EpisodeHistoryEntity
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -33,7 +35,9 @@ import java.util.Date
 import java.util.Locale
 import java.util.regex.Pattern
 
-class AnimeEpisodeFragmentViewModel : BaseViewModel() {
+class AnimeEpisodeFragmentViewModel(
+    private val historyQuery: (List<String>) -> Flow<List<EpisodeHistoryEntity>> = EpisodeHistoryRepository::getEpisodeHistory
+) : BaseViewModel() {
     private val utcTimeFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
 
     val animeTitleField = ObservableField<String>()
@@ -55,10 +59,10 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
     private val episodeListFlow = MutableStateFlow<List<EpisodeData>>(emptyList())
 
     // 剧集相关的本地播放记录数据
-    @OptIn(FlowPreview::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     private val episodeHistoryFlow =
-        episodeListFlow.flatMapConcat { episodes ->
-            EpisodeHistoryRepository.getEpisodeHistory(episodes.map { it.episodeId })
+        episodeListFlow.flatMapLatest { episodes ->
+            historyQuery(episodes.map { it.episodeId })
         }
 
     // 补全数据后的的剧集数据
@@ -86,8 +90,8 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
         )
 
     // 刷新番剧信息
-    private val _refreshBangumiFlow = MutableSharedFlow<Any>()
-    val refreshBangumiFlow = _refreshBangumiFlow.collectable
+    private val refreshRequests = Channel<Unit>(Channel.CONFLATED)
+    val refreshBangumiFlow = refreshRequests.receiveAsFlow()
 
     // 播放视频
     private val requests = PlaybackEntryRequests(viewModelScope, { loading -> if (loading) showLoading() else hideLoading() })
@@ -330,7 +334,7 @@ class AnimeEpisodeFragmentViewModel : BaseViewModel() {
 
             _markModeFlow.emit(false)
             markedEpisodeIdsFlow.emit(emptyList())
-            _refreshBangumiFlow.emit(Any())
+            refreshRequests.trySend(Unit)
         }
     }
 }

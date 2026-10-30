@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.xyoye.anime_component.R
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.repository.AnimeSearchHistoryRepository
-import com.xyoye.common_component.extension.reportAndToastOnFailure
 import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.network.repository.AnimeRepository
 import com.xyoye.common_component.session.UserSessionManager
@@ -16,11 +15,32 @@ import com.xyoye.data_component.data.AnimeData
 import com.xyoye.data_component.data.CommonTypeData
 import com.xyoye.data_component.data.SearchAnimeData
 import com.xyoye.data_component.enums.AnimeSortType
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Collections
 
-class SearchAnimeFragmentViewModel : BaseViewModel() {
+class SearchAnimeFragmentViewModel(
+    private val searchRequest: suspend (String, String?) -> Result<SearchAnimeData> = AnimeRepository::searchAnime,
+    private val recordSearch: suspend (String) -> Unit = AnimeSearchHistoryRepository::insert
+) : BaseViewModel() {
+    data class QueryState(
+        val keyword: String = "",
+        val type: String? = null,
+        val loading: Boolean = false,
+        val loaded: Boolean = false,
+        val items: List<AnimeData> = emptyList(),
+        val error: String? = null
+    )
+
+    private val _queryState = MutableStateFlow(QueryState())
+    val queryState = _queryState.asStateFlow()
+    private var queryVersion = 0L
+    private var queryJob: Job? = null
     private val animeTypeData =
         mutableListOf(
             CommonTypeData("TV动画", "tvseries"),
@@ -56,36 +76,52 @@ class SearchAnimeFragmentViewModel : BaseViewModel() {
 
     val animeTypeLiveData = MutableLiveData<MutableList<CommonTypeData>>()
     val animeSortLiveData = MutableLiveData<MutableList<CommonTypeData>>()
-    val searchHistoryLiveData = AnimeSearchHistoryRepository.getAll()
-
-    val animeLiveData = MutableLiveData<MutableList<AnimeData>>()
+    val searchHistoryLiveData by lazy { AnimeSearchHistoryRepository.getAll() }
 
     fun search() {
         val searchWord = searchText.get() ?: ""
         if (searchWord.length < 2) {
+            clearSearch()
             ToastCenter.showWarning("关键字太短，长度至少为2")
             return
         }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            AnimeSearchHistoryRepository.insert(searchText.get()!!)
-
-            val result = AnimeRepository.searchAnime(searchWord, searchType)
-            if (result.reportAndToastOnFailure(
-                    unknownErrorMessage = "Search anime failed with unknown error",
-                    className = "SearchAnimeFragmentViewModel",
-                    methodName = "search",
-                    reportMessage = "搜索关键字: $searchWord, 搜索类型: $searchType",
-                )
-            ) {
-                return@launch
+        val type = searchType
+        val version = ++queryVersion
+        queryJob?.cancel()
+        val previous = _queryState.value
+        _queryState.value =
+            if (previous.keyword == searchWord && previous.type == type) {
+                previous.copy(loading = true, error = null)
+            } else {
+                QueryState(keyword = searchWord, type = type, loading = true)
             }
-
-            result.getOrNull()?.let {
-                searchAnimeData = it
-                showSearchResult()
+        queryJob =
+            viewModelScope.launch {
+                try {
+                    recordSearch(searchWord)
+                    val data = searchRequest(searchWord, type).getOrThrow()
+                    currentCoroutineContext().ensureActive()
+                    if (version != queryVersion) return@launch
+                    searchAnimeData = data
+                    showSearchResult()
+                    _queryState.value = _queryState.value.copy(loaded = true)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    if (version == queryVersion) {
+                        _queryState.value = _queryState.value.copy(error = failure.message ?: "搜索失败，请重试")
+                    }
+                } finally {
+                    if (version == queryVersion) _queryState.value = _queryState.value.copy(loading = false)
+                }
             }
-        }
+    }
+
+    fun clearSearch() {
+        ++queryVersion
+        queryJob?.cancel()
+        searchText.set("")
+        _queryState.value = QueryState()
     }
 
     fun toggleExpand() {
@@ -148,7 +184,7 @@ class SearchAnimeFragmentViewModel : BaseViewModel() {
     }
 
     fun checkSort(position: Int) {
-        if (!this::searchAnimeData.isInitialized) {
+        if (!_queryState.value.loaded) {
             return
         }
 
@@ -203,11 +239,11 @@ class SearchAnimeFragmentViewModel : BaseViewModel() {
 
     private fun showSearchResult() {
         if (sortType == AnimeSortType.NONE) {
-            animeLiveData.postValue(searchAnimeData.animes)
+            _queryState.value = _queryState.value.copy(items = searchAnimeData.animes.toList())
             return
         }
         if (!UserSessionManager.isLoggedIn() && sortType == AnimeSortType.FOLLOW) {
-            animeLiveData.postValue(searchAnimeData.animes)
+            _queryState.value = _queryState.value.copy(items = searchAnimeData.animes.toList())
             return
         }
         if (this::searchAnimeData.isInitialized) {
@@ -231,7 +267,7 @@ class SearchAnimeFragmentViewModel : BaseViewModel() {
                     }
                 },
             )
-            animeLiveData.postValue(sortedList)
+            _queryState.value = _queryState.value.copy(items = sortedList)
         }
     }
 }
