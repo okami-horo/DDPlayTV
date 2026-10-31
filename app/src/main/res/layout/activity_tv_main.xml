@@ -15,19 +15,33 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#0B1018"
+        android:background="@color/cinema_background"
         tools:context=".ui.tv.TvMainActivity">
+
+        <TextView
+            android:id="@+id/cinema_brand"
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:layout_marginStart="36dp"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:text="DDPlayTV"
+            android:textColor="@color/cinema_text"
+            android:textSize="23sp"
+            android:fontFamily="sans-serif-medium"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.rubensousa.dpadrecyclerview.DpadRecyclerView
             android:id="@+id/tv_nav_rv"
             android:layout_width="0dp"
             android:layout_height="56dp"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="40dp"
             android:layout_marginTop="12dp"
             android:layout_marginEnd="24dp"
             android:overScrollMode="never"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@id/cinema_brand"
             app:layout_constraintTop_toTopOf="parent"
             tools:listitem="@layout/item_tv_main_nav" />
 

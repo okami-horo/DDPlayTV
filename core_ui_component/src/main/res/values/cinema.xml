@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cinema_background">#111114</color>
+    <color name="cinema_surface">#202026</color>
+    <color name="cinema_elevated">#303038</color>
+    <color name="cinema_text">#F5F5F7</color>
+    <color name="cinema_muted">#A3A3AF</color>
+    <color name="cinema_border">#26FFFFFF</color>
+
+    <style name="Cinema.Button" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/cinema_button</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:textColor">@color/cinema_button_text</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:minWidth">80dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:layout_marginEnd">10dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="Cinema.Title" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textColor">@color/cinema_text</item>
+        <item name="android:textSize">30sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="Cinema.Section" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textColor">@color/cinema_text</item>
+        <item name="android:textSize">19sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="Cinema.Body" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textColor">@color/cinema_muted</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+</resources>

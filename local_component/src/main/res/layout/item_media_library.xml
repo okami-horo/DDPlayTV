@@ -7,15 +7,17 @@
         android:id="@+id/item_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/background_item_press"
+        android:background="@drawable/cinema_card"
+        android:padding="16dp"
+        android:minHeight="84dp"
         android:clickable="true"
         android:focusable="true"
         android:tag="@string/focusable_item">
 
         <ImageView
             android:id="@+id/library_cover_iv"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:layout_marginStart="10dp"
             android:contentDescription="@null"
             android:padding="2dp"
@@ -28,14 +30,14 @@
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/library_name_tv"
             android:layout_width="0dp"
-            android:layout_height="25dp"
+            android:layout_height="30dp"
             android:layout_marginStart="10dp"
             android:layout_marginTop="5dp"
             android:layout_marginEnd="10dp"
             android:ellipsize="end"
             android:gravity="start|center_vertical"
             android:maxLines="1"
-            android:textColor="@color/text_black"
+            android:textColor="@color/cinema_text"
             android:textSize="18sp"
             android:textStyle="bold"
             app:autoSizeMaxTextSize="18sp"
@@ -57,7 +59,7 @@
             android:gravity="start"
             android:singleLine="true"
             android:textColor="@color/text_gray"
-            android:textSize="12sp"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="@+id/library_name_tv"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/library_name_tv"
@@ -81,15 +83,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:visibility="visible" />
 
-        <View
-            style="@style/DividerStyle"
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="5dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/library_cover_iv"
-            app:layout_constraintTop_toBottomOf="@id/library_url_tv" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

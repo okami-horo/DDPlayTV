@@ -1,8 +1,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="152dp" android:layout_height="210dp" android:layout_margin="6dp"
-    android:orientation="vertical" android:padding="6dp" android:focusable="true" android:clickable="true"
-    android:tag="@string/focusable_item" android:background="@drawable/metadata_focus">
-    <ImageView android:id="@+id/card_image" android:layout_width="match_parent" android:layout_height="145dp" android:scaleType="centerCrop" android:importantForAccessibility="no"/>
-    <TextView android:id="@+id/card_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textSize="16sp" android:maxLines="1" android:ellipsize="end" android:layout_marginTop="5dp"/>
-    <TextView android:id="@+id/card_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#AAB6C8" android:textSize="12sp" android:maxLines="1" android:ellipsize="end"/>
+    android:layout_width="140dp" android:layout_height="208dp" android:layout_margin="6dp"
+    android:orientation="vertical" android:padding="5dp" android:focusable="true" android:clickable="true"
+    android:tag="@string/focusable_item" android:background="@drawable/cinema_card">
+    <ImageView android:id="@+id/card_image" android:layout_width="match_parent" android:layout_height="148dp" android:scaleType="centerCrop" android:background="@drawable/cinema_image" android:clipToOutline="true" android:importantForAccessibility="no"/>
+    <TextView android:id="@+id/card_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/cinema_text" android:textSize="15sp" android:fontFamily="sans-serif-medium" android:maxLines="1" android:ellipsize="end" android:layout_marginTop="7dp" android:paddingHorizontal="4dp"/>
+    <TextView android:id="@+id/card_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/cinema_muted" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:paddingHorizontal="4dp"/>
 </LinearLayout>

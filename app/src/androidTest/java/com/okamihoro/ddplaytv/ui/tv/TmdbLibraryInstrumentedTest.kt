@@ -1,9 +1,12 @@
 package com.okamihoro.ddplaytv.ui.tv
 
+import android.app.Activity
 import android.content.Intent
+import android.graphics.drawable.BitmapDrawable
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -13,6 +16,7 @@ import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.database.DatabaseProvider
 import com.xyoye.common_component.database.repository.MediaLibraryRepository
 import com.xyoye.common_component.extension.toMd5String
+import com.xyoye.common_component.metadata.MetadataRepository
 import com.xyoye.common_component.utils.ActivityHelper
 import com.xyoye.data_component.entity.CatalogSourceState
 import com.xyoye.data_component.entity.MediaAsset
@@ -113,12 +117,73 @@ class TmdbLibraryInstrumentedTest {
 
     @Test fun mpvPlaysOwnedFileAndRefreshDoesNotResetNinetyFivePercentProgress() = verifyPlayback(PlayerType.TYPE_MPV_PLAYER, 95)
 
+    @Test fun cinemaHeroResumesTheOriginalFileAtItsExactHistoryPosition() = verifyPlayback(PlayerType.TYPE_EXO_PLAYER, 90, true)
+
+    @Test fun liveTmdbArtworkLoadsInCinemaAndDetail() {
+        org.junit.Assume.assumeTrue(InstrumentationRegistry.getArguments().getString("liveTmdb") == "true")
+        val repository = MetadataRepository()
+        val previous = runBlocking { repository.dao.work("movie", 157336) }
+        try {
+            val remote = runBlocking { repository.details("movie", 157336, refresh = true) }
+            assertTrue(remote.title.isNotBlank())
+            assertTrue(remote.poster?.startsWith("https://image.tmdb.org/") == true)
+            runBlocking {
+                repository.dao.putWork(remote.copy(tmdbId = 990011))
+                db.getPlayHistoryDao().insert(
+                    PlayHistoryEntity(
+                        videoName = fixture.name,
+                        url = fixture.path,
+                        mediaType = library.mediaType,
+                        videoPosition = 60_000,
+                        videoDuration = 120_000,
+                        uniqueKey = fixture.path.toMd5String(),
+                        storagePath = fixture.path,
+                        storageId = library.id
+                    )
+                )
+            }
+            ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
+                lateinit var home: TvMainActivity
+                scenario.onActivity { home = it }
+                await("Live backdrop rendered", 40000) {
+                    home.hasWindowFocus() &&
+                        home.findViewById<ImageView>(com.xyoye.local_component.R.id.backdrop)?.drawable is BitmapDrawable
+                }
+                screenshot("home-live")
+            }
+            ActivityScenario.launch<MetadataDetailActivity>(detailIntent()).use { scenario ->
+                lateinit var detail: MetadataDetailActivity
+                scenario.onActivity { detail = it }
+                await("Live poster rendered", 40000) {
+                    detail.hasWindowFocus() &&
+                        detail.findViewById<ImageView>(com.xyoye.local_component.R.id.poster)?.drawable is BitmapDrawable
+                }
+                screenshot("detail-live")
+            }
+        } finally {
+            runBlocking {
+                if (previous != null) {
+                    repository.dao.putWork(previous)
+                } else {
+                    db.openHelper.writableDatabase.execSQL("DELETE FROM metadata_work WHERE mediaKind = 'movie' AND tmdbId = 157336")
+                }
+            }
+        }
+    }
+
     @Test fun cinemaLibraryDetailAndCorrectionAreReachableUsingOnlyDpad() {
         ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
             lateinit var home: TvMainActivity
             scenario.onActivity { home = it }
             await("Cinema owns seeded work") {
-                home.hasWindowFocus() && home.findViewById<TextView>(com.xyoye.local_component.R.id.hero_title)?.text == "TMDB 验收作品"
+                home.hasWindowFocus() &&
+                    (
+                        home
+                            .findViewById<DpadRecyclerView>(
+                                com.xyoye.local_component.R.id.works
+                            )?.adapter as? com.xyoye.local_component.ui.metadata.MetadataCardAdapter
+                    )?.currentList
+                        ?.any { it.key == "movie:990011" } == true
             }
             screenshot("home")
             send(KeyEvent.KEYCODE_DPAD_DOWN)
@@ -179,8 +244,14 @@ class TmdbLibraryInstrumentedTest {
             lateinit var home: TvMainActivity
             scenario.onActivity { home = it }
             await("Cinema ready") { home.hasWindowFocus() }
-            send(KeyEvent.KEYCODE_DPAD_DOWN)
-            repeat(4) { send(KeyEvent.KEYCODE_DPAD_RIGHT) }
+            repeat(4) {
+                if (home.currentFocus?.id != com.xyoye.local_component.R.id.filter_movie) send(KeyEvent.KEYCODE_DPAD_DOWN)
+            }
+            await("Movie filter is reachable with or without history") {
+                home.currentFocus?.id ==
+                    com.xyoye.local_component.R.id.filter_movie
+            }
+            repeat(3) { send(KeyEvent.KEYCODE_DPAD_RIGHT) }
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             await("Task settings") { ActivityHelper.instance.getTopActivity() is MetadataSettingsActivity }
             val settings = ActivityHelper.instance.getTopActivity() as MetadataSettingsActivity
@@ -203,7 +274,8 @@ class TmdbLibraryInstrumentedTest {
 
     private fun verifyPlayback(
         kernel: PlayerType,
-        percent: Int
+        percent: Int,
+        fromHome: Boolean = false
     ) {
         val previous = PlayerConfig.getUsePlayerType()
         val retriever = android.media.MediaMetadataRetriever()
@@ -231,14 +303,24 @@ class TmdbLibraryInstrumentedTest {
             )
         }
         try {
-            ActivityScenario.launch<MetadataDetailActivity>(detailIntent()).use { scenario ->
-                lateinit var activity: MetadataDetailActivity
+            val intent = if (fromHome) Intent(context, TvMainActivity::class.java) else detailIntent()
+            ActivityScenario.launch<Activity>(intent).use { scenario ->
+                lateinit var activity: Activity
                 scenario.onActivity { activity = it }
                 await("File row") {
-                    activity.findViewById<DpadRecyclerView>(com.xyoye.local_component.R.id.files).adapter?.itemCount == 1 &&
-                        activity.hasWindowFocus()
+                    activity.hasWindowFocus() &&
+                        if (fromHome) {
+                            activity.findViewById<TextView>(com.xyoye.local_component.R.id.hero_play)?.text == "继续观看"
+                        } else {
+                            activity.findViewById<DpadRecyclerView>(com.xyoye.local_component.R.id.files).adapter?.itemCount == 1
+                        }
                 }
-                scenario.onActivity { it.findViewById<DpadRecyclerView>(com.xyoye.local_component.R.id.files).requestFocus() }
+                scenario.onActivity {
+                    it
+                        .findViewById<android.view.View>(
+                            if (fromHome) com.xyoye.local_component.R.id.hero_play else com.xyoye.local_component.R.id.files
+                        ).requestFocus()
+                }
                 send(KeyEvent.KEYCODE_DPAD_CENTER)
                 await("Player prepared", 20000) {
                     (ActivityHelper.instance.getTopActivity() as? PlayerActivity)?.let { player(it).isPlaying() } ==
@@ -250,6 +332,16 @@ class TmdbLibraryInstrumentedTest {
                     identity = player(playing).getVideoSource()
                     assertEquals(fixture.path.toMd5String(), player(playing).getVideoSource().getUniqueKey())
                     assertTrue("Exact history progress must survive", player(playing).getCurrentPosition() >= position - 2500)
+                }
+                if (fromHome) {
+                    send(KeyEvent.KEYCODE_DPAD_UP)
+                    screenshot("player-controls")
+                    send(KeyEvent.KEYCODE_MENU)
+                    await("Playback settings are reachable") {
+                        playing.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)?.hasFocus() == true
+                    }
+                    screenshot("player-settings")
+                    send(KeyEvent.KEYCODE_BACK)
                 }
                 runBlocking { db.getMetadataDao().putWork(work().copy(title = "已刷新资料")) }
                 instrumentation.runOnMainSync {

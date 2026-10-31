@@ -9,8 +9,10 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
-        android:background="@color/item_bg_color"
-        app:titleTextColor="@color/text_theme">
+        android:background="@color/layout_bg_color"
+        android:paddingHorizontal="12dp"
+        app:titleTextColor="@color/text_black"
+        app:titleTextAppearance="@style/TextAppearance.AppCompat.Title">
     </androidx.appcompat.widget.Toolbar>
 
 </com.google.android.material.appbar.AppBarLayout>

@@ -185,7 +185,7 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
         val isSection: Boolean
     ) {
         HOME(R.string.navigation_cinema, true),
-        MEDIA(R.string.navigation_media, true),
+        MEDIA(R.string.navigation_sources, true),
         SEARCH(R.string.navigation_search, false),
         PERSONAL(R.string.navigation_personal, true),
         SETTINGS(R.string.navigation_setting, false)

@@ -1,5 +1,6 @@
 package com.xyoye.user_component.ui.activities.setting_player
 
+import android.view.KeyEvent
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
@@ -29,7 +30,7 @@ class SettingPlayerActivity : BaseActivity<SettingPlayerViewModel, ActivitySetti
         title = "播放器设置"
 
         tvPages =
-            TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager).apply {
+            TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager, verticalNavigation = true).apply {
                 submit(
                     listOf(
                         TvCategory("video", "视频") { PlayerSettingFragment.newInstance() },
@@ -46,5 +47,15 @@ class SettingPlayerActivity : BaseActivity<SettingPlayerViewModel, ActivitySetti
         initialFocusPending = false
         val pages = tvPages ?: return
         if (!dataBinding.root.isInTouchMode && !pages.content.hasFocus()) pages.requestNavigationFocus()
+    }
+
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent?
+    ): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK && dataBinding.viewpager.hasFocus()) {
+            return tvPages?.requestNavigationFocus() == true
+        }
+        return super.onKeyDown(keyCode, event)
     }
 }

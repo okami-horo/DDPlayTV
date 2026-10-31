@@ -23,7 +23,7 @@
 
 ## 参考与本地适配
 
-NOVA `aos-MediaLib` 固定为 `0eb2e2108f76cc3533d652c663e91d6f0ea81936`（`SearchPreprocessor.java`），Jellyfin 固定为 `a46fa4559daaea352257d0196b56e392c18dd09c`（`TmdbMovieProvider.cs`）。参考预处理、ID 与搜索分流，落地为纯 Kotlin 解析、Room 事务与本地协程编排；没有复制上游 UI、Service 或数据库实现。TMDB 官方鉴权、图片配置、季详情和 FAQ 在 2026-10-31 复核；真实访问仍未验收。
+NOVA `aos-MediaLib` 固定为 `0eb2e2108f76cc3533d652c663e91d6f0ea81936`（`SearchPreprocessor.java`），Jellyfin 固定为 `a46fa4559daaea352257d0196b56e392c18dd09c`（`TmdbMovieProvider.cs`）。参考预处理、ID 与搜索分流，落地为纯 Kotlin 解析、Room 事务与本地协程编排；没有复制上游 UI、Service 或数据库实现。TMDB 官方鉴权、图片配置、季详情和 FAQ 在 2026-10-31 复核；真实 API/图片访问随后在原生 UI 改造中验证，见下方验收边界。
 
 ## 验证记录
 
@@ -68,6 +68,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-env/gradlew-loca
 
 ## 验收边界
 
-真实 TMDB 凭证/API/图片网络、四类真实服务和物理电视尚未验收；固定响应、代理 Storage 测试与 AVD 不代表服务可用性或识别准确率。未提供人工标注真实样本，不能报告自动精确率/覆盖率。FTP、Alist、PC 和云盘索引保留后续逐协议验收，不开放为已支持；原文件浏览与播放保留。资料语言首期固定，NFO、自选图片、常驻后台和跨作品自动连播不在范围内。
+本阶段的固定响应、代理 Storage 测试与 AVD 不代表真实服务可用性或识别准确率。后续 2026-10-31 的 [原生 UI 改造](2026-10-31-cinema-ui.md) 已使用项目凭证验证主机 TMDB API/图片请求，以及 Android MetadataRepository/Coil 背景与海报加载；四类真实来源和物理电视仍未验收。未提供人工标注真实样本，不能报告自动精确率/覆盖率。FTP、Alist、PC 和云盘索引保留后续逐协议验收，不开放为已支持；原文件浏览与播放保留。资料语言首期固定，NFO、自选图片、常驻后台和跨作品自动连播不在范围内。
 
 本地目录仅读取已有索引，不触发全盘刷新；不可读目录保留旧记录，缺少可靠大小/修改时间时无法保证发现同路径替换。任务重试从当前范围重新读取，逐目录完成标记不代表可复用远程游标。用户原有暂存文档保留；未执行 Git 提交。

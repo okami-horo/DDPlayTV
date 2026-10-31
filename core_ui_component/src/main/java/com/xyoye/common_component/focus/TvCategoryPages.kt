@@ -1,6 +1,8 @@
 package com.xyoye.common_component.focus
 
+import android.view.Gravity
 import android.view.KeyEvent
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
@@ -39,6 +41,7 @@ class TvCategoryPages(
     private val fragmentManager: FragmentManager,
     val navigation: DpadRecyclerView,
     val content: FragmentContainerView,
+    private val verticalNavigation: Boolean = false,
     private val onSelected: (Int) -> Unit = {}
 ) {
     private val state = ViewModelProvider(owner)["tv_categories_${content.id}", TvCategoryState::class.java]
@@ -53,6 +56,20 @@ class TvCategoryPages(
             }
             addItem<TvCategory, ItemTvCategoryBinding>(R.layout.item_tv_category) {
                 initView { category, position, _ ->
+                    if (verticalNavigation) {
+                        itemBinding.root.layoutParams =
+                            RecyclerView
+                                .LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    (52 * navigation.resources.displayMetrics.density).toInt()
+                                ).apply { bottomMargin = (8 * navigation.resources.displayMetrics.density).toInt() }
+                        itemBinding.title.gravity = Gravity.CENTER_VERTICAL
+                        itemBinding.title.setBackgroundResource(R.drawable.cinema_button)
+                        itemBinding.title.setTextColor(
+                            androidx.core.content.ContextCompat
+                                .getColorStateList(navigation.context, R.color.cinema_button_text)
+                        )
+                    }
                     itemBinding.root.isSelected = category.key == state.activeKey
                     itemBinding.title.text = category.title
                     itemBinding.root.setOnClickListener { activate(position) }
@@ -64,13 +81,14 @@ class TvCategoryPages(
     val currentFragment: Fragment? get() = fragmentManager.findFragmentByTag(tagPrefix + state.activeKey)
 
     init {
-        navigation.setOrientation(RecyclerView.HORIZONTAL)
+        navigation.setOrientation(if (verticalNavigation) RecyclerView.VERTICAL else RecyclerView.HORIZONTAL)
         navigation.setFocusOutAllowed(false, false)
         navigation.adapter = adapter
         navigation.setOnKeyInterceptListener(
             object : DpadRecyclerView.OnKeyInterceptListener {
                 override fun onInterceptKeyEvent(event: KeyEvent): Boolean {
-                    if (event.keyCode != KeyEvent.KEYCODE_DPAD_DOWN) return false
+                    val enterKey = if (verticalNavigation) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_DOWN
+                    if (event.keyCode != enterKey) return false
                     if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
                         activate(navigation.getSelectedPosition())
                         currentFragment?.view?.requestFocus()

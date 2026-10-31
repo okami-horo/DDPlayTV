@@ -57,7 +57,7 @@ class PlayerSettingDpadNavigationTest {
     fun categoriesRequireExplicitNavigationAndSurviveRecreation() {
         ActivityScenario.launch(SettingPlayerActivity::class.java).use { scenario ->
             await(scenario) { it.findViewById<DpadRecyclerView>(R.id.tab_layout).hasFocus() && it.hasWindowFocus() }
-            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
             await(scenario) { active(it) is PlayerSettingFragment && (active(it) as PlayerSettingFragment).listView.hasFocus() }
             repeat(100) { send(KeyEvent.KEYCODE_DPAD_DOWN) }
             repeat(100) { send(KeyEvent.KEYCODE_DPAD_UP) }
@@ -66,11 +66,11 @@ class PlayerSettingDpadNavigationTest {
                 assertTrue(it.currentFocus?.isShown == true)
                 it.findViewById<DpadRecyclerView>(R.id.tab_layout).requestFocus()
             }
-            send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
             scenario.onActivity { assertTrue("Browsing a category must not activate it", active(it) is PlayerSettingFragment) }
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             await(scenario) { active(it) is DanmuSettingFragment }
-            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
             await(scenario) { (active(it) as DanmuSettingFragment).listView.hasFocus() }
             send(KeyEvent.KEYCODE_DPAD_RIGHT)
             send(KeyEvent.KEYCODE_DPAD_LEFT)

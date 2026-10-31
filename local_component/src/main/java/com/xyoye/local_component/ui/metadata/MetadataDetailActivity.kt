@@ -92,6 +92,10 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
         dataBinding.title.text = work?.title ?: "作品资料暂不可用"
         dataBinding.overview.text = work?.let { "${it.releaseDate.take(4)} · ${it.genres}\n${it.overview}" }.orEmpty()
         dataBinding.backdrop.load(work?.backdrop)
+        dataBinding.poster.load(work?.poster) {
+            placeholder(R.drawable.ic_local_file)
+            error(R.drawable.ic_local_file)
+        }
         val bound = current.bindings.filter { it.mediaKind == kind && it.tmdbId == tmdbId }
         val assets = current.assets.filter { asset -> bound.any { it.assetId == asset.assetId } }
         val links = current.episodes.filter { link -> assets.any { it.assetId == link.assetId } }

@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -15,12 +16,14 @@ data class MetadataCard(
     val key: String,
     val title: String,
     val subtitle: String = "",
-    val image: String? = null
+    val image: String? = null,
+    val progress: Int? = null
 )
 
 class MetadataCardAdapter(
     private val posters: Boolean = false,
     private val compact: Boolean = false,
+    private val continueWatching: Boolean = false,
     private val click: (MetadataCard) -> Unit,
     private val longClick: ((MetadataCard) -> Unit)? = null
 ) : ListAdapter<MetadataCard, MetadataCardAdapter.Holder>(
@@ -48,12 +51,35 @@ class MetadataCardAdapter(
             LayoutInflater
                 .from(
                     parent.context
-                ).inflate(if (posters) R.layout.item_metadata_poster else R.layout.item_metadata_row, parent, false)
+                ).inflate(
+                    when {
+                        continueWatching -> R.layout.item_metadata_continue
+                        posters -> R.layout.item_metadata_poster
+                        else -> R.layout.item_metadata_row
+                    },
+                    parent,
+                    false
+                )
         if (compact) {
             view.layoutParams.width = (280 * parent.resources.displayMetrics.density).toInt()
-            view.minimumHeight = (76 * parent.resources.displayMetrics.density).toInt()
+            view.minimumHeight = (68 * parent.resources.displayMetrics.density).toInt()
         }
-        return Holder(view).also { if (compact) it.subtitle.maxLines = 1 }
+        if (continueWatching) {
+            view.nextFocusDownId = R.id.filter_movie
+            view.nextFocusUpId = R.id.hero_play
+        }
+        return Holder(view).also {
+            if (compact) {
+                it.subtitle.maxLines = 1
+                val padding = (8 * parent.resources.displayMetrics.density).toInt()
+                view.setPadding(padding, padding, padding, padding)
+                it.image.layoutParams =
+                    it.image.layoutParams.apply {
+                        width = (40 * parent.resources.displayMetrics.density).toInt()
+                        height = width
+                    }
+            }
+        }
     }
 
     override fun onBindViewHolder(
@@ -63,6 +89,7 @@ class MetadataCardAdapter(
         val card = getItem(position)
         holder.title.text = card.title
         holder.subtitle.text = card.subtitle
+        holder.progress?.progress = card.progress?.coerceIn(0, 100) ?: 0
         holder.image.load(card.image) {
             placeholder(R.drawable.ic_local_file)
             error(R.drawable.ic_local_file)
@@ -80,5 +107,6 @@ class MetadataCardAdapter(
         val title: TextView = view.findViewById(R.id.card_title)
         val subtitle: TextView = view.findViewById(R.id.card_subtitle)
         val image: ImageView = view.findViewById(R.id.card_image)
+        val progress: ProgressBar? = view.findViewById(R.id.card_progress)
     }
 }

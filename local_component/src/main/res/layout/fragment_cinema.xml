@@ -1,25 +1,32 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
     <data><variable name="viewModel" type="com.xyoye.local_component.ui.metadata.MetadataLibraryViewModel"/></data>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="#0B1018">
-        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:minHeight="64dp">
-            <ImageView android:id="@+id/backdrop" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:importantForAccessibility="no"/>
-            <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/metadata_scrim"/>
-            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:padding="20dp" android:orientation="vertical">
-                <TextView android:id="@+id/hero_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="28sp" android:textStyle="bold" android:textColor="#FFFFFF" android:maxLines="1" android:ellipsize="end"/>
-                <TextView android:id="@+id/hero_overview" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textSize="14sp" android:textColor="#CBD3DF" android:maxLines="2" android:ellipsize="end"/>
+    <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/cinema_background">
+        <ImageView android:id="@+id/backdrop" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:importantForAccessibility="no"/>
+        <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/metadata_scrim"/>
+        <androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:focusable="false" android:scrollbars="none">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingHorizontal="8dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="190dp" android:gravity="center_vertical" android:paddingHorizontal="14dp" android:orientation="vertical">
+                <TextView android:id="@+id/hero_label" style="@style/Cinema.Body" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="你的私人放映室" android:letterSpacing="0.12" android:textSize="12sp"/>
+                <TextView android:id="@+id/hero_title" style="@style/Cinema.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textSize="36sp" android:maxLines="1" android:ellipsize="end"/>
+                <TextView android:id="@+id/hero_overview" style="@style/Cinema.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginEnd="180dp" android:maxLines="2" android:ellipsize="end"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="16dp">
+                    <Button android:id="@+id/hero_play" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="match_parent" android:text="查看作品" android:nextFocusRight="@id/filter_all"/>
+                    <Button android:id="@+id/filter_all" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="match_parent" android:text="浏览媒体库" android:nextFocusLeft="@id/hero_play" android:nextFocusRight="@id/browse_files"/>
+                    <Button android:id="@+id/browse_files" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="match_parent" android:text="本地文件" android:nextFocusLeft="@id/filter_all"/>
+                </LinearLayout>
             </LinearLayout>
-        </FrameLayout>
-        <TextView android:id="@+id/continue_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="继续观看" android:textColor="#FFFFFF" android:textSize="16sp"/>
-        <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/continue_watching" android:layout_width="match_parent" android:layout_height="82dp"/>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="52dp" android:gravity="center_vertical">
-            <Button android:id="@+id/filter_all" android:layout_width="wrap_content" android:layout_height="48dp" android:text="已入库作品" android:nextFocusRight="@id/filter_movie"/>
-            <Button android:id="@+id/filter_movie" android:layout_width="wrap_content" android:layout_height="48dp" android:text="电影" android:nextFocusLeft="@id/filter_all" android:nextFocusRight="@id/filter_tv"/>
-            <Button android:id="@+id/filter_tv" android:layout_width="wrap_content" android:layout_height="48dp" android:text="剧集 / 番剧" android:nextFocusLeft="@id/filter_movie" android:nextFocusRight="@id/filter_unmatched"/>
-            <Button android:id="@+id/filter_unmatched" android:layout_width="wrap_content" android:layout_height="48dp" android:text="待识别" android:nextFocusLeft="@id/filter_tv" android:nextFocusRight="@id/tasks"/>
-            <Button android:id="@+id/tasks" android:layout_width="wrap_content" android:layout_height="48dp" android:text="资料与任务" android:nextFocusLeft="@id/filter_unmatched" android:nextFocusRight="@id/browse_files"/>
-            <Button android:id="@+id/browse_files" android:layout_width="wrap_content" android:layout_height="48dp" android:text="本地文件" android:nextFocusLeft="@id/tasks"/>
+            <TextView android:id="@+id/continue_title" style="@style/Cinema.Section" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="6dp" android:text="继续观看"/>
+            <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/continue_watching" android:layout_width="match_parent" android:layout_height="116dp" android:clipToPadding="false" android:paddingVertical="4dp"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical" android:paddingHorizontal="6dp">
+                <TextView style="@style/Cinema.Section" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="已入库作品"/>
+                <Button android:id="@+id/filter_movie" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="38dp" android:textSize="14sp" android:text="电影" android:nextFocusRight="@id/filter_tv"/>
+                <Button android:id="@+id/filter_tv" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="38dp" android:textSize="14sp" android:text="剧集 / 番剧" android:nextFocusLeft="@id/filter_movie" android:nextFocusRight="@id/filter_unmatched"/>
+                <Button android:id="@+id/filter_unmatched" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="38dp" android:textSize="14sp" android:text="待识别" android:nextFocusLeft="@id/filter_tv" android:nextFocusRight="@id/tasks"/>
+                <Button android:id="@+id/tasks" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="38dp" android:textSize="14sp" android:text="资料与任务" android:nextFocusLeft="@id/filter_unmatched"/>
+            </LinearLayout>
+            <TextView android:id="@+id/empty" style="@style/Cinema.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="20dp"/>
+            <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/works" android:layout_width="match_parent" android:layout_height="220dp" android:clipToPadding="false" android:paddingBottom="4dp"/>
         </LinearLayout>
-        <TextView android:id="@+id/empty" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp" android:textColor="#CBD3DF" android:textSize="16sp"/>
-        <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/works" android:layout_width="match_parent" android:layout_height="222dp"/>
-    </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
 </layout>

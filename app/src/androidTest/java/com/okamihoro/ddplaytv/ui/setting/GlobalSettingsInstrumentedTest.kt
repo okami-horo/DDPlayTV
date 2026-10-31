@@ -179,7 +179,9 @@ class GlobalSettingsInstrumentedTest {
     }
 
     private fun appSettings(activity: SettingAppActivity): AppSettingFragment =
-        activity.supportFragmentManager.findFragmentByTag("AppSettingFragment") as AppSettingFragment
+        activity.supportFragmentManager.fragments
+            .filterIsInstance<AppSettingFragment>()
+            .single()
 
     private fun assertFocused(
         dialog: StorageEditDialog<*>,

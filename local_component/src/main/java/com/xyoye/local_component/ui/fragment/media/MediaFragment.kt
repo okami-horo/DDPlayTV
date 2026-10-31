@@ -15,6 +15,7 @@ import com.xyoye.common_component.extension.deletable
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.focus.DpadFocusOwner
+import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
@@ -61,6 +62,7 @@ class MediaFragment :
     private fun initRv() {
         dataBinding.mediaLibRv.apply {
             layoutManager = vertical()
+            addItemDecoration(ItemDecorationSpace(0, (5 * resources.displayMetrics.density).toInt()))
 
             adapter =
                 buildAdapter {
@@ -105,7 +107,7 @@ class MediaFragment :
                 }
 
             (this as? DpadRecyclerView)?.apply {
-                setFocusOutAllowed(false, true)
+                setFocusOutAllowed(true, true)
                 setOnKeyInterceptListener(
                     object : DpadRecyclerView.OnKeyInterceptListener {
                         override fun onInterceptKeyEvent(event: KeyEvent): Boolean {

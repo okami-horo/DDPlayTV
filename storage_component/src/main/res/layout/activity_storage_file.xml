@@ -20,16 +20,16 @@
             android:id="@+id/appbar_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/item_bg_color"
+            android:background="@color/layout_bg_color"
             app:elevation="0dp">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?android:attr/actionBarSize"
-                app:layout_scrollFlags="scroll|enterAlways"
+                android:paddingHorizontal="18dp"
                 app:subtitleTextAppearance="@style/Theme.DanDanPlay.Toolbar.Subtitle"
-                app:titleTextColor="@color/text_theme" />
+                app:titleTextColor="@color/text_black" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/path_rv"

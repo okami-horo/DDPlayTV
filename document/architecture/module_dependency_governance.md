@@ -85,7 +85,7 @@
 测试配置继承生产允许目标，并可额外使用：
 
 - :core_network_component → :core_contract_component。
-- :app → :core_storage_component、:core_database_component，用于仪器测试的真实来源、历史与本地媒体夹具。
+- :app → :core_storage_component、:core_database_component、:core_metadata_component，用于仪器测试的来源、历史与本地媒体夹具，以及真实元数据和图片加载验证。
 
 测试例外不授予生产配置同样的依赖权限。
 

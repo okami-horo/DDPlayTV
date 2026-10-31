@@ -98,8 +98,15 @@ class MediaSourcePermissionNavigationTest {
     ) {
         var count = 0
         instrumentation.runOnMainSync { count = list(activity).adapter!!.itemCount }
-        repeat(count) { send(KeyEvent.KEYCODE_DPAD_UP) }
-        repeat(count) {
+
+        fun move(key: Int) {
+            send(key)
+            await("Source list scrolling settles") { list(activity).scrollState == RecyclerView.SCROLL_STATE_IDLE }
+        }
+        // Include the page-header action and shell navigation above the source list.
+        repeat(count + 2) { move(KeyEvent.KEYCODE_DPAD_UP) }
+        val visited = mutableListOf<String>()
+        repeat(count + 2) {
             var found = false
             instrumentation.runOnMainSync {
                 found = list(activity)
@@ -107,11 +114,12 @@ class MediaSourcePermissionNavigationTest {
                     ?.itemView
                     ?.findViewById<TextView>(com.xyoye.local_component.R.id.library_name_tv)
                     ?.text == name
+                visited.add((activity.currentFocus as? TextView)?.text?.toString() ?: activity.currentFocus?.id.toString())
             }
             if (found) return
-            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            move(KeyEvent.KEYCODE_DPAD_DOWN)
         }
-        fail("Library not reachable by DPAD: $name")
+        fail("Library not reachable by DPAD: $name; focus path=$visited")
     }
 
     private fun focused(activity: TvMainActivity): View {

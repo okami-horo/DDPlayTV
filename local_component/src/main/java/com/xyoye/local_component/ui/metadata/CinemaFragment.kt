@@ -27,7 +27,7 @@ class CinemaFragment :
     private var heroWork: com.xyoye.data_component.entity.MetadataWork? = null
     private val works = MetadataCardAdapter(posters = true, click = ::openCard, longClick = ::correctCard)
     private val history =
-        MetadataCardAdapter(compact = true, click = { card ->
+        MetadataCardAdapter(continueWatching = true, click = { card ->
             current.history.find { "history:${it.id}" == card.key }?.let(viewModel::play)
         })
 
@@ -51,16 +51,24 @@ class CinemaFragment :
             adapter = history
         }
         dataBinding.filterAll.setOnClickListener { ARouter.getInstance().build(RouteTable.Local.MetadataLibrary).navigation() }
+        dataBinding.heroPlay.setOnClickListener {
+            val entry = current.history.firstOrNull()
+            if (entry != null) {
+                viewModel.play(entry)
+            } else {
+                heroWork?.let { openCard(MetadataCard("${it.mediaKind}:${it.tmdbId}", it.title)) }
+            }
+        }
         dataBinding.filterMovie.setOnClickListener {
-            filter = "movie"
+            filter = if (filter == "movie") "all" else "movie"
             render()
         }
         dataBinding.filterTv.setOnClickListener {
-            filter = "tv"
+            filter = if (filter == "tv") "all" else "tv"
             render()
         }
         dataBinding.filterUnmatched.setOnClickListener {
-            filter = "unmatched"
+            filter = if (filter == "unmatched") "all" else "unmatched"
             render()
         }
         dataBinding.tasks.setOnClickListener { ARouter.getInstance().build(RouteTable.User.MetadataSettings).navigation() }
@@ -113,18 +121,37 @@ class CinemaFragment :
                 }
             }
         works.submitList(cards)
+        binding.filterMovie.isSelected = filter == "movie"
+        binding.filterTv.isSelected = filter == "tv"
+        binding.filterUnmatched.isSelected = filter == "unmatched"
         binding.empty.text = if (filter == "unmatched") "没有待识别文件。可从来源目录手动扫描入库。" else "还没有已入库作品。先浏览来源文件，再选择“识别 / 更正资料”。"
         binding.empty.isVisible = cards.isEmpty()
         binding.works.isVisible = cards.isNotEmpty()
-        val featured = current.works.firstOrNull { "${it.mediaKind}:${it.tmdbId}" == heroKey } ?: current.works.firstOrNull()
+        val latest = current.history.firstOrNull()
+        val latestAsset =
+            latest?.let { entry ->
+                current.assets.find { it.libraryId == entry.storageId && it.uniqueKey == entry.uniqueKey && it.contentGeneration == 1L }
+            }
+        val latestBinding = current.bindings.find { it.assetId == latestAsset?.assetId }
+        val featured =
+            if (latest != null) {
+                current.works.find { it.mediaKind == latestBinding?.mediaKind && it.tmdbId == latestBinding?.tmdbId }
+            } else {
+                current.works.firstOrNull { "${it.mediaKind}:${it.tmdbId}" == heroKey } ?: current.works.firstOrNull()
+            }
         val key = featured?.let { "${it.mediaKind}:${it.tmdbId}" }
         if (heroWork != featured || binding.heroTitle.text.isEmpty()) {
             heroKey = key
             heroWork = featured
             binding.backdrop.load(featured?.backdrop)
-            binding.heroTitle.text = featured?.title ?: "你的私人放映室"
             binding.heroOverview.text = featured?.overview?.ifBlank { "保留每个文件，发现每部作品。" } ?: "本地与网络来源，汇集于此。资料未配置时仍可浏览和播放文件。"
         }
+        binding.heroTitle.text = featured?.title ?: latest?.videoName ?: "每一部，都值得好好看"
+        binding.heroLabel.text = if (latest != null) "接着上次的故事" else "你的私人放映室"
+        val canPlay = latest != null || featured != null
+        if (!canPlay && binding.heroPlay.hasFocus()) binding.filterAll.requestFocus()
+        binding.heroPlay.isVisible = canPlay
+        binding.heroPlay.text = if (latest != null) "继续观看" else "查看作品"
         // History aggregation is display-only. Unverifiable old generations stay as file history.
         val seen = mutableSetOf<String>()
         val recent =
@@ -152,12 +179,16 @@ class CinemaFragment :
                         "history:${entry.id}",
                         work?.title ?: entry.videoName,
                         "继续观看 · ${if (entry.videoDuration > 0) entry.videoPosition * 100 / entry.videoDuration else 0}%",
-                        work?.poster
+                        work?.backdrop ?: work?.poster,
+                        if (entry.videoDuration > 0) (entry.videoPosition * 100 / entry.videoDuration).toInt() else 0
                     )
                 }
         history.submitList(recent)
         binding.continueWatching.isVisible = recent.isNotEmpty()
         binding.continueTitle.isVisible = recent.isNotEmpty()
+        listOf(binding.heroPlay, binding.filterAll, binding.browseFiles).forEach {
+            it.nextFocusDownId = if (recent.isNotEmpty()) binding.continueWatching.id else binding.filterMovie.id
+        }
     }
 
     private fun openCard(card: MetadataCard) {

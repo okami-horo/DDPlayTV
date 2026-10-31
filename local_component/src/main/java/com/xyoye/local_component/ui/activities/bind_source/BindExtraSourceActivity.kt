@@ -58,7 +58,13 @@ class BindExtraSourceActivity : BaseActivity<BindExtraSourceViewModel, ActivityB
         this.storageFile = storageFile
         viewModel.setStorageFile(storageFile)
 
-        TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager, ::updateSearchHint).apply {
+        TvCategoryPages(
+            this,
+            supportFragmentManager,
+            dataBinding.tabLayout,
+            dataBinding.viewpager,
+            onSelected = ::updateSearchHint
+        ).apply {
             submit(
                 listOf(
                     TvCategory("danmu", "搜弹幕") { BindDanmuSourceFragment.newInstance() },

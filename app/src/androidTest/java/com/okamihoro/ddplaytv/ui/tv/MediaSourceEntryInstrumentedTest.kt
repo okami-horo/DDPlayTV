@@ -35,13 +35,15 @@ class MediaSourceEntryInstrumentedTest {
                 activity.hasWindowFocus() &&
                     (activity.findViewById<RecyclerView>(com.xyoye.local_component.R.id.media_lib_rv).adapter?.itemCount ?: 0) > 0
             }
-            send(KeyEvent.KEYCODE_DPAD_DOWN)
-            var count = 0
-            scenario.onActivity {
-                count =
-                    activity.findViewById<RecyclerView>(com.xyoye.local_component.R.id.media_lib_rv).adapter!!.itemCount
+            await("First source description remains fully visible") {
+                val description =
+                    activity.findViewById<android.widget.TextView>(com.xyoye.local_component.R.id.library_url_tv)
+                        ?: return@await false
+                val bounds = android.graphics.Rect()
+                description.height > 0 && description.getGlobalVisibleRect(bounds) && bounds.height() >= description.height
             }
-            repeat(count) { send(KeyEvent.KEYCODE_DPAD_DOWN) }
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            send(KeyEvent.KEYCODE_DPAD_UP)
             scenario.onActivity {
                 assertEquals(
                     "The add button must be reachable from the list",
@@ -66,7 +68,7 @@ class MediaSourceEntryInstrumentedTest {
             awaitEditor("WebDav")
             send(KeyEvent.KEYCODE_BACK)
             await("Return from WebDAV") { activity.hasWindowFocus() }
-            send(KeyEvent.KEYCODE_DPAD_UP)
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
             lateinit var initiatingView: View
             scenario.onActivity {
                 initiatingView = requireNotNull(activity.currentFocus)

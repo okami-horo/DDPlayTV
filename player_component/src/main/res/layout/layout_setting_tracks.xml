@@ -6,7 +6,8 @@
         android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="end"
-        android:background="@color/player_item_bg_color"
+        android:background="@drawable/cinema_player_panel"
+        android:layout_margin="16dp"
         android:clickable="true"
         android:focusable="true"
         android:translationX="300dp"
@@ -16,10 +17,10 @@
             android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="20dp"
             android:layout_marginTop="20dp"
             android:textColor="@color/text_white_immutable"
-            android:textSize="16sp"
+            android:textSize="20sp"
             tools:text="音轨" />
 
         <androidx.recyclerview.widget.RecyclerView

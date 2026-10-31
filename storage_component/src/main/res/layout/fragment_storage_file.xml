@@ -14,7 +14,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/item_bg_color">
+        android:background="@color/layout_bg_color">
 
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/refresh_layout"
@@ -33,7 +33,9 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="true"
-                android:paddingBottom="@dimen/storage_file_list_bottom_padding" />
+                android:paddingBottom="@dimen/storage_file_list_bottom_padding"
+                android:paddingHorizontal="24dp"
+                android:paddingTop="12dp" />
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <ProgressBar

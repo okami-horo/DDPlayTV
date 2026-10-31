@@ -14,9 +14,9 @@
             android:id="@+id/cl_card"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="@drawable/selector_player_setting_item_bg"
+            android:background="@drawable/cinema_card"
             android:orientation="vertical"
-            android:paddingVertical="12dp"
+            android:paddingVertical="16dp"
             android:focusable="true"
             android:clickable="true"
             android:tag="@string/focusable_item"
@@ -42,7 +42,7 @@
                 android:paddingHorizontal="4dp"
                 android:singleLine="true"
                 android:textColor="@color/text_white_immutable"
-                android:textSize="12sp"
+                android:textSize="14sp"
                 tools:text="测试" />
 
         </LinearLayout>

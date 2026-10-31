@@ -65,6 +65,11 @@
           "configuration": "androidTestImplementation",
           "module": ":core_database_component",
           "scope": "test"
+        },
+        {
+          "configuration": "androidTestImplementation",
+          "module": ":core_metadata_component",
+          "scope": "test"
         }
       ]
     },

@@ -49,7 +49,13 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
         ARouter.getInstance().inject(this)
 
         tvPages =
-            TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager, ::updateSearchHint).apply {
+            TvCategoryPages(
+                this,
+                supportFragmentManager,
+                dataBinding.tabLayout,
+                dataBinding.viewpager,
+                onSelected = ::updateSearchHint
+            ).apply {
                 submit(
                     listOf(
                         TvCategory("anime", "搜番剧") { SearchAnimeFragment.newInstance() },

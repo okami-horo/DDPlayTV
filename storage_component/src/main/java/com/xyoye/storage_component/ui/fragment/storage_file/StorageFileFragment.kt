@@ -115,7 +115,7 @@ class StorageFileFragment :
             }
             lastError = state.error
             val list = dataBinding.storageFileRv as? DpadRecyclerView
-            if (list != null && restoreLayout && !state.loading) {
+            if (list != null && restoreLayout && state.hasDirectory && !state.loading) {
                 restoreLayout = false
                 listState.getScrollState().restore(list, listKey, requireNotNull(list.adapter))
                 val position = it.indexOfFirst { file -> (file as? StorageFile)?.uniqueKey() == savedFileKey }
