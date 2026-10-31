@@ -64,6 +64,7 @@ class LoadingView(
             }
             PlayState.STATE_BUFFERING_PAUSED,
             PlayState.STATE_PREPARING -> {
+                viewBinding.loadingText.text = if (playState == PlayState.STATE_PREPARING) "正在准备播放…" else "正在缓冲…"
                 showLoading()
             }
             else -> {}
@@ -83,16 +84,26 @@ class LoadingView(
     }
 
     private fun showLoading() {
-        if (viewBinding.loadingIv.isGone) {
-            viewBinding.loadingIv.isGone = false
+        if (viewBinding.loadingPanel.isGone) {
+            viewBinding.loadingPanel.isGone = false
             cycleAnimator.start()
         }
     }
 
     private fun hideLoading() {
-        if (viewBinding.loadingIv.isVisible) {
-            viewBinding.loadingIv.isVisible = false
+        if (viewBinding.loadingPanel.isVisible) {
+            viewBinding.loadingPanel.isVisible = false
             cycleAnimator.cancel()
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        cycleAnimator.cancel()
+        super.onDetachedFromWindow()
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (viewBinding.loadingPanel.isVisible) cycleAnimator.start()
     }
 }

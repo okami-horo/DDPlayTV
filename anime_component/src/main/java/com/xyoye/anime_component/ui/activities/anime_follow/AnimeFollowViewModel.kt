@@ -1,50 +1,42 @@
 package com.xyoye.anime_component.ui.activities.anime_follow
 
 import androidx.lifecycle.viewModelScope
+import com.xyoye.anime_component.ui.activities.AnimeCollectionState
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.AnimeRepository
 import com.xyoye.data_component.data.AnimeData
+import com.xyoye.data_component.data.FollowAnimeData
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class AnimeFollowViewModel : BaseViewModel() {
-    private val followedFlow = MutableStateFlow<List<AnimeData>>(emptyList())
-    private val searchWordFlow = MutableStateFlow("")
+class AnimeFollowViewModel(
+    private val load: suspend () -> Result<FollowAnimeData> = { AnimeRepository.getFollowedAnime() }
+) : BaseViewModel() {
+    private val mutableState = MutableStateFlow(AnimeCollectionState())
+    val state = mutableState.asStateFlow()
+    private var initialized = false
 
-    val displayFollowedFlow =
-        combine(followedFlow, searchWordFlow) { followed, searchWord ->
-            combineAnimeFilter(followed, searchWord)
-        }
+    fun initialize(items: List<AnimeData>?) {
+        if (initialized) return
+        initialized = true
+        if (items == null) getUserFollow() else mutableState.update { it.copy(items = items) }
+    }
 
     fun getUserFollow() {
+        if (state.value.loading) return
+        mutableState.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
-            showLoading()
-            val result = AnimeRepository.getFollowedAnime()
-            hideLoading()
-
-            if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
-                return@launch
-            }
-
-            followedFlow.emit(result.getOrNull()?.favorites ?: emptyList())
+            val result = load()
+            result.fold(
+                onSuccess = { response -> mutableState.update { it.copy(items = response.favorites, loading = false, error = null) } },
+                onFailure = { error -> mutableState.update { it.copy(loading = false, error = error.message ?: "请检查连接后重试。") } }
+            )
         }
     }
 
     fun searchAnime(keyword: String) {
-        searchWordFlow.value = keyword
-    }
-
-    private fun combineAnimeFilter(
-        followed: List<AnimeData>,
-        searchWord: String
-    ): List<AnimeData> {
-        if (searchWord.isEmpty()) {
-            return followed
-        }
-
-        return followed.filter { it.animeTitle?.contains(searchWord, ignoreCase = true) == true }
+        mutableState.update { it.copy(keyword = keyword) }
     }
 }

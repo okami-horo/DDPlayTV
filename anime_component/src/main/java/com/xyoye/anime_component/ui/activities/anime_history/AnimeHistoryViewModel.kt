@@ -1,57 +1,49 @@
 package com.xyoye.anime_component.ui.activities.anime_history
 
 import androidx.lifecycle.viewModelScope
+import com.xyoye.anime_component.ui.activities.AnimeCollectionState
 import com.xyoye.common_component.base.BaseViewModel
-import com.xyoye.common_component.extension.toastError
 import com.xyoye.common_component.network.repository.AnimeRepository
 import com.xyoye.data_component.data.AnimeData
+import com.xyoye.data_component.data.CloudHistoryListData
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class AnimeHistoryViewModel : BaseViewModel() {
-    private val historiesFlow = MutableStateFlow<List<AnimeData>>(emptyList())
-    private val searchWordFlow = MutableStateFlow("")
+class AnimeHistoryViewModel(
+    private val load: suspend () -> Result<CloudHistoryListData> = { AnimeRepository.getPlayHistory() }
+) : BaseViewModel() {
+    private val mutableState = MutableStateFlow(AnimeCollectionState())
+    val state = mutableState.asStateFlow()
+    private var initialized = false
 
-    val displayHistoriesFlow =
-        combine(historiesFlow, searchWordFlow) { histories, searchWord ->
-            filterAnimeHistory(histories, searchWord)
-        }
+    fun initialize(items: List<AnimeData>?) {
+        if (initialized) return
+        initialized = true
+        if (items == null) getCloudHistory() else mutableState.update { it.copy(items = items) }
+    }
 
     fun getCloudHistory() {
+        if (state.value.loading) return
+        mutableState.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
-            showLoading()
-            val result = AnimeRepository.getPlayHistory()
-            hideLoading()
-
-            if (result.isFailure) {
-                result.exceptionOrNull()?.message?.toastError()
-                return@launch
-            }
-
-            historiesFlow.emit(result.getOrNull()?.playHistoryAnimes ?: emptyList())
+            val result = load()
+            result.fold(
+                onSuccess = { response ->
+                    mutableState.update { it.copy(items = response.playHistoryAnimes, loading = false, error = null) }
+                },
+                onFailure = { error -> mutableState.update { it.copy(loading = false, error = error.message ?: "请检查连接后重试。") } }
+            )
         }
     }
 
     fun searchAnime(keyword: String) {
-        searchWordFlow.value = keyword
+        mutableState.update { it.copy(keyword = keyword) }
     }
 }
 
-/**
- * Filters [histories] by [searchWord] using case-insensitive title matching.
- * Returns the full list when [searchWord] is empty.
- *
- * Extracted as a package-internal function to allow direct unit testing without
- * requiring a ViewModel instance or Android runtime.
- */
 internal fun filterAnimeHistory(
     histories: List<AnimeData>,
-    searchWord: String,
-): List<AnimeData> {
-    if (searchWord.isEmpty()) {
-        return histories
-    }
-    return histories.filter { it.animeTitle?.contains(searchWord, ignoreCase = true) == true }
-}
-
+    searchWord: String
+): List<AnimeData> = AnimeCollectionState(items = histories, keyword = searchWord).visibleItems

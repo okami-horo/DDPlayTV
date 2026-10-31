@@ -16,6 +16,7 @@ import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
+import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.core_ui_component.R
 import com.xyoye.core_ui_component.databinding.ItemTvCategoryBinding
 
@@ -95,6 +96,10 @@ class TvCategoryPages(
                             navigation.resources.displayMetrics.density
                     ).toInt()
                 )
+            )
+        } else {
+            navigation.addItemDecoration(
+                ItemDecorationSpace(0, 0, (10 * navigation.resources.displayMetrics.density).toInt(), 0)
             )
         }
         navigation.adapter = adapter

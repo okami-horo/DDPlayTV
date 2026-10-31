@@ -18,6 +18,8 @@ class UserCoverDialog(
     private val activity: Activity,
     private val callback: (Int) -> Unit
 ) : BaseBottomDialog<DialogUserCoverBinding>(activity) {
+    override val contentWidthDp = 560
+
     override fun getChildLayoutId() = R.layout.dialog_user_cover
 
     override fun initView(binding: DialogUserCoverBinding) {

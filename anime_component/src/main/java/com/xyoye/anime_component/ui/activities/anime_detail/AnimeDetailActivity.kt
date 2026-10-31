@@ -52,7 +52,7 @@ class AnimeDetailActivity : BaseActivity<AnimeDetailViewModel, ActivityAnimeDeta
     override fun initView() {
         ARouter.getInstance().inject(this)
 
-        title = ""
+        title = "番剧详情"
 
         initViewPager(defaultTabs)
         initListener()

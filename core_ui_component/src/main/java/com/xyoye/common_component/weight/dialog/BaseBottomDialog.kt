@@ -10,6 +10,8 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatDialog
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.databinding.DataBindingUtil
@@ -32,6 +34,11 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
     override fun show() {
         initialFocusPending = true
         super.show()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        window?.let { WindowCompat.getInsetsController(it, it.decorView).hide(WindowInsetsCompat.Type.systemBars()) }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

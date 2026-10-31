@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout
+        android:id="@+id/item_layout"
+        android:layout_width="match_parent"
+        android:layout_height="152dp"
+        android:layout_margin="5dp"
+        android:orientation="vertical"
+        android:background="@drawable/cinema_button"
+        android:clipToOutline="true"
+        android:focusable="true"
+        android:clickable="true"
+        android:tag="@string/focusable_item"
+        android:padding="3dp">
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="96dp">
+            <ImageView
+                android:id="@+id/cover_iv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:contentDescription="@null"
+                android:background="@drawable/background_anime_cover_placeholder" />
+            <TextView
+                android:id="@+id/follow_tag_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|top"
+                android:padding="6dp"
+                android:text="已关注"
+                android:textSize="11sp"
+                android:textColor="@color/cinema_text"
+                android:background="@color/cinema_surface"
+                android:visibility="gone" />
+            <TextView
+                android:id="@+id/status_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:padding="6dp"
+                android:textSize="12sp"
+                android:textColor="@color/cinema_text"
+                android:background="#CC202026"
+                android:visibility="gone" />
+        </FrameLayout>
+        <TextView
+            style="@style/Cinema.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:id="@+id/anime_name_tv"
+            android:textColor="@color/cinema_text"
+            android:textSize="14sp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
+            android:paddingTop="6dp" />
+    </LinearLayout>
+</layout>

@@ -1,13 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
-
-
-    <ImageView
-        android:id="@+id/loading_iv"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout
+        android:id="@+id/loading_panel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:contentDescription="@null"
-        android:src="@drawable/ic_loading"
-        android:visibility="gone" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:background="@drawable/cinema_playback_feedback"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:visibility="gone"
+        android:focusable="false">
+        <ImageView
+            android:id="@+id/loading_iv"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="@null"
+            android:src="@drawable/cinema_loading_ring" />
+        <TextView
+            style="@style/Cinema.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="正在准备播放…"
+            android:id="@+id/loading_text"
+            android:layout_marginStart="12dp"
+            android:textColor="@color/cinema_text"
+            android:textSize="14sp" />
+    </LinearLayout>
 </layout>

@@ -15,6 +15,7 @@ import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.setData
+import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.data_component.data.TagData
 
 class AnimeIntroFragment : BaseFragment<AnimeIntroFragmentViewModel, FragmentAnimeIntroBinding>() {
@@ -31,6 +32,7 @@ class AnimeIntroFragment : BaseFragment<AnimeIntroFragmentViewModel, FragmentAni
     override fun initView() {
         dataBinding.tagRv.apply {
             layoutManager = horizontal()
+            addItemDecoration(ItemDecorationSpace(0, 0, (10 * resources.displayMetrics.density).toInt(), 0))
             adapter =
                 buildAdapter {
                     setupDiffUtil {

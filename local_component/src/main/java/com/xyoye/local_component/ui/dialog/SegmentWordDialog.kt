@@ -4,8 +4,6 @@ import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import androidx.core.widget.addTextChangedListener
-import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.utils.hideKeyboard
 import com.xyoye.common_component.weight.LabelsView.LabelTextProvider
 import com.xyoye.common_component.weight.dialog.BaseBottomDialog
@@ -32,6 +30,7 @@ class SegmentWordDialog(
         setTitle("构建搜索词")
 
         setPositiveText("搜索")
+        binding.emptyTv.isVisible = words.isEmpty()
 
         setLabels(binding)
 
@@ -43,7 +42,7 @@ class SegmentWordDialog(
             if (data === BACKSPACE) {
                 val text = binding.searchEt.text
                 if (text?.isNotEmpty() == true) {
-                    text.delete(text.length - 1, text.length)
+                    text.delete(Character.offsetByCodePoints(text, text.length, -1), text.length)
                 }
                 return@setOnLabelClickListener
             }
@@ -54,19 +53,7 @@ class SegmentWordDialog(
                     label.text
                 }
             binding.searchEt.text?.append(appendText)
-            binding.searchEt.requestFocus()
         }
-
-        binding.searchEt.addTextChangedListener(afterTextChanged = {
-            val textLength = it?.length ?: 0
-            if (textLength > 0) {
-                if (binding.searchEt.isFocused) {
-                    binding.clearTextIv.isVisible = true
-                }
-            } else {
-                binding.clearTextIv.isVisible = false
-            }
-        })
 
         binding.searchEt.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -76,6 +63,7 @@ class SegmentWordDialog(
                         .toString()
                         .trim(),
                 )
+                dismiss()
                 return@setOnEditorActionListener true
             }
             return@setOnEditorActionListener false
@@ -126,13 +114,9 @@ class SegmentWordDialog(
                     data: Any?
                 ): CharSequence {
                     if (data === SPACE) {
-                        label?.setTextColor(R.color.text_white.toResColor(context))
-                        label?.setBackgroundResource(R.drawable.background_segment_labels_theme)
                         return "空格"
                     }
                     if (data === BACKSPACE) {
-                        label?.setTextColor(R.color.text_white.toResColor(context))
-                        label?.setBackgroundResource(R.drawable.background_segment_labels_theme)
                         return "删除"
                     }
                     return data.toString()

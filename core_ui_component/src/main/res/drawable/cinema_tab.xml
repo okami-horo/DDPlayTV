@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:state_focused="true"
+        android:state_selected="true">
+        <shape>
+            <corners
+                android:radius="10dp" />
+            <solid
+                android:color="@color/cinema_text" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/cinema_muted" />
+        </shape>
+    </item>
+    <item
+        android:state_focused="true">
+        <shape>
+            <corners
+                android:radius="10dp" />
+            <solid
+                android:color="@color/cinema_elevated" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/cinema_text" />
+        </shape>
+    </item>
+    <item
+        android:state_selected="true">
+        <shape>
+            <corners
+                android:radius="10dp" />
+            <solid
+                android:color="@color/cinema_text" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <corners
+                android:radius="10dp" />
+            <solid
+                android:color="@color/cinema_elevated" />
+        </shape>
+    </item>
+</selector>

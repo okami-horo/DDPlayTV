@@ -1,9 +1,7 @@
 package com.xyoye.anime_component.ui.fragment.anime_episode
 
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
-import androidx.core.widget.ImageViewCompat
 import androidx.fragment.app.viewModels
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.anime_component.BR
@@ -19,13 +17,13 @@ import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.collectAtStarted
 import com.xyoye.common_component.extension.setData
-import com.xyoye.common_component.extension.setTextColorRes
 import com.xyoye.common_component.extension.toResString
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.playback.handoff.PlaybackNavigation
 import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
 import com.xyoye.common_component.playback.userMessage
 import com.xyoye.common_component.session.UserSessionManager
+import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.common_component.weight.dialog.CommonDialog
@@ -117,6 +115,7 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
 
         dataBinding.episodeRv.apply {
             layoutManager = vertical()
+            addItemDecoration(ItemDecorationSpace(0, 0, 0, (8 * resources.displayMetrics.density).toInt()))
             adapter = episodeAdapter
         }
 
@@ -141,6 +140,9 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
         }
 
         viewModel.displayEpisodesFlow.collectAtStarted(viewLifecycleOwner) {
+            dataBinding.emptyTv.isVisible = it.isEmpty()
+            dataBinding.markModeBt.isEnabled = it.isNotEmpty()
+            dataBinding.episodeRv.isVisible = it.isNotEmpty()
             dataBinding.episodeRv.setData(it)
         }
 
@@ -149,8 +151,12 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
         }
 
         viewModel.markModeFlow.collectAtStarted(viewLifecycleOwner) {
+            val toolbarHadFocus = dataBinding.titleCl.hasFocus() || dataBinding.actionLayout.hasFocus()
             dataBinding.actionLayout.isVisible = it
             dataBinding.titleCl.isVisible = it.not()
+            if (toolbarHadFocus) {
+                if (it) dataBinding.tvSetRead.requestFocus() else dataBinding.markModeBt.requestFocus()
+            }
         }
 
         viewModel.refreshBangumiFlow.collectAtStarted(viewLifecycleOwner) {
@@ -171,6 +177,10 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
     }
 
     private fun initListener() {
+        dataBinding.markModeBt.setOnClickListener {
+            viewModel.toggleMarkMode(true)
+        }
+
         dataBinding.tvMarkAll.setOnClickListener {
             viewModel.markAllEpisode()
         }
@@ -196,12 +206,8 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
      * 根据排序方式改变布局
      */
     private fun updateLayoutBySort(ascending: Boolean) {
-        val color = if (ascending) R.color.text_gray else R.color.text_blue
-        val colorState = AppCompatResources.getColorStateList(mAttachActivity, color)
-        ImageViewCompat.setImageTintList(dataBinding.sortIv, colorState)
-
         dataBinding.sortTv.text = if (ascending) "正序" else "倒序"
-        dataBinding.sortTv.setTextColorRes(color)
+        dataBinding.sortIv.rotation = if (ascending) 0f else 180f
     }
 
     /**

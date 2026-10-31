@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:focusable="true">
-
         <ImageView
             android:id="@+id/player_lock_iv"
             android:layout_width="50dp"
@@ -25,7 +22,6 @@
             android:translationX="-60dp"
             android:visibility="gone"
             tools:visibility="visible" />
-
         <ImageView
             android:id="@+id/player_shot_iv"
             android:layout_width="50dp"
@@ -44,15 +40,14 @@
             android:translationX="60dp"
             android:visibility="gone"
             tools:visibility="visible" />
-
         <com.xyoye.player.controller.video.MessageContainer
             android:id="@+id/message_container"
             android:layout_width="wrap_content"
-            android:layout_height="100dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginTop="75dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_marginStart="26dp"
+            android:layout_marginTop="70dp"
             android:animateLayoutChanges="true"
             android:orientation="vertical" />
-
     </FrameLayout>
 </layout>
