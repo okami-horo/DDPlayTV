@@ -12,7 +12,9 @@
  - `ActivePlaybackSession`, retained by PlayerViewModel, owns active/candidate sources, revisions, controlled/native transitions and recovery. Source owns the transport lease; only that lease retires protocol resources. The sole Bilibili Addon implementation and its settings/risk/recovery contracts have been removed. Activity/kernel adapters borrow sources.
  - The session publishes one immutable `PlaybackStateView`; provider/platform service/UI read the same complete identity/capability revision. Platform commands carry an expected version back to the owner. The process provider only weakly references runtime ownership.
  - Local playback never requires a remote gateway-created session. Download validation retains its local compatibility fallback. `Media3SessionService` is metadata/command adaptation only; pre-existing popup no-ops and missing notification hosting do not imply background/PIP support.
- - Exact migration/verification evidence is in `docs/superpowers/plans/2026-10-27-playback-handoff-session.md`. Task 13 legacy deletion/governance is complete; three Task 14 checks for retained features remain user-owned. The original 62/65 count describes the pre-retirement scope.
+ - Exact migration/verification evidence is in `docs/superpowers/plans/2026-10-27-playback-handoff-session.md`. Retained integrated acceptance remains user-owned; current open work is summarized in `memory-bank/activeContext.md`, with historical implementation stages archived via `memory-bank/progress.md`.
+
+ - Persistence/recovery decisions retained from the 2026-10-28 handoff record: controlled transitions persist before activation, and persistence failure preserves the old source. Native transitions update runtime first; failed snapshot persistence leaves playback active but recovery uses the last committed episode. Candidates are memory-only. Configuration recreation reuses live runtime; snapshot-over-history recovery, fixed TTL and periodic/event saves remain the agreed model.
 
  ## Dependency Rules
  - Dependencies flow from app/features to lower-level core/infra/data/contracts.
@@ -39,8 +41,3 @@
  - Room 16->17 removes Bilibili media libraries and their history before removed enum values can fall back to generic streaming. Other rows and local danmaku bindings remain.
  - Startup removes dedicated Bilibili MMKV stores and legacy credential keys. Handoff decoding drops retired library requests/snapshots separately, preserving the other slot.
  - Source changes and validation are tracked in `docs/superpowers/plans/2026-10-28-remove-bilibili.md`; older Bilibili acceptance is superseded, not passed.
-
- ## Implementation Style
- - Surgical changes only; preserve existing style.
- - Kotlin 4-space indentation, explicit visibility, no speculative abstractions.
- - Shared helpers should live in appropriate core modules rather than duplicated in features.

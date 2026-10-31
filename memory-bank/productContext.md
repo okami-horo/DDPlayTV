@@ -1,7 +1,7 @@
  # Product Context
 
  ## Why This Exists
- DDPlayTV provides a living-room media workflow for TV users who need local playback, storage browsing, casting/streaming, anime resource discovery, and settings in one Android app.
+ DDPlayTV provides a living-room media workflow for TV users who need local playback, storage browsing, casting, anime information discovery, and settings in one Android app.
 
  ## Problems Solved
  - Remote-controlled media navigation where touch is unavailable or secondary.
