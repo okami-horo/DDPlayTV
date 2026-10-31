@@ -1,8 +1,10 @@
 package com.okamihoro.ddplaytv.ui.tv
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.fragment.app.Fragment
+import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.okamihoro.ddplaytv.R
 import com.okamihoro.ddplaytv.databinding.ActivityTvMainBinding
@@ -17,6 +19,7 @@ import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.focus.DpadFocusOwner
 
+@Route(path = RouteTable.App.TvMain)
 class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
     companion object {
         private const val TAG_FRAGMENT_MEDIA = "tag_fragment_tv_media"
@@ -69,6 +72,21 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
         focusCoordinator.requestNavFocus()
 
         initShell()
+        navigateFromIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        navigateFromIntent(intent)
+    }
+
+    private fun navigateFromIntent(intent: Intent) {
+        val page = intent.getStringExtra(RouteTable.App.CinemaNavigation) ?: return
+        intent.removeExtra(RouteTable.App.CinemaNavigation)
+        val target = if (page == "settings") TvNavItem.SETTINGS else TvNavItem.HOME
+        handleNavClick(target, navItems.indexOf(target))
+        focusCoordinator.requestContentFocus()
     }
 
     override fun onKeyDown(

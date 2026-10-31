@@ -1,0 +1,6 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+<TextView android:id="@+id/search_scope" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textColor="@color/cinema_text" android:textSize="13sp" android:layout_marginBottom="12dp"/>
+<EditText android:id="@+id/search_input" android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/cinema_input" android:paddingStart="16dp" android:paddingEnd="16dp" android:textColor="@color/cinema_text" android:textSize="16sp" android:singleLine="true" android:inputType="text" android:imeOptions="actionSearch" android:hint="输入文件名"/>
+</LinearLayout>
+</layout>

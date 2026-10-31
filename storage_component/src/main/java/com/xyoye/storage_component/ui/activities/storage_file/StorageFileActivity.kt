@@ -4,8 +4,8 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.Menu
-import android.view.MenuItem
+import androidx.core.view.isVisible
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.Lifecycle
@@ -134,8 +134,37 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     override fun initView() {
-        title = storageLibrary?.displayName
-        updateToolbarSubtitle(0, 0)
+        dataBinding.sourceTitle.text = storageLibrary?.displayName
+        mMenus = StorageFileMenus(this, ::onSearchTextChanged, ::onSortOptionChanged)
+        dataBinding.browserNav1.isSelected = true
+        dataBinding.browserNav0.setOnClickListener { openShell("home") }
+        dataBinding.browserNav1.setOnClickListener { finish() }
+        dataBinding.browserNav2.setOnClickListener {
+            if (supportFragmentManager.findFragmentByTag("cinema_search") == null) {
+                (ARouter.getInstance().build(RouteTable.Local.MetadataSearch).navigation() as? DialogFragment)
+                    ?.show(supportFragmentManager, "cinema_search")
+            }
+        }
+        dataBinding.browserNav3.setOnClickListener { openShell("settings") }
+        dataBinding.browserBack.setOnClickListener { backDirectory() }
+        dataBinding.browserSearch.setOnClickListener {
+            mMenus?.search(
+                routeStack
+                    .lastOrNull()
+                    ?.fragment
+                    ?.query
+                    .orEmpty(),
+                it
+            )
+        }
+        dataBinding.browserSort.text = mMenus?.sortLabel()
+        dataBinding.browserSort.setOnClickListener { mMenus?.sort(it) }
+        dataBinding.browserRefresh.setOnClickListener { routeStack.lastOrNull()?.fragment?.triggerTvRefresh() }
+        dataBinding.browserTools.isVisible =
+            com.xyoye.common_component.storage.catalog.CatalogSourceReader
+                .supports(storage.library.mediaType)
+        dataBinding.browserTools.contentDescription = "扫描此目录资料"
+        dataBinding.browserTools.setOnClickListener { mMenus?.scan() }
 
         initPathRv()
         initListener()
@@ -220,18 +249,18 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        mMenus =
-            StorageFileMenus.inflater(this, menu).apply {
-                onSearchTextChanged { onSearchTextChanged(it) }
-                onSortTypeChanged { onSortOptionChanged() }
-            }
-        return super.onCreateOptionsMenu(menu)
+    private fun openShell(page: String) {
+        ARouter
+            .getInstance()
+            .build(RouteTable.App.TvMain)
+            .withString(RouteTable.App.CinemaNavigation, page)
+            .withFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .navigation(this)
+        finish()
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        mMenus?.onOptionsItemSelected(item)
-        return super.onOptionsItemSelected(item)
+    fun backDirectory() {
+        if (!popFragment()) finish()
     }
 
     override fun onActivityResult(
@@ -251,7 +280,8 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         if (event.keyCode == KeyEvent.KEYCODE_MENU || event.keyCode == KeyEvent.KEYCODE_SETTINGS) {
             // AppCompat handles MENU before dispatching to the focused list.
             if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-                routeStack.lastOrNull()?.fragment?.triggerTvRefresh()
+                val fragment = routeStack.lastOrNull()?.fragment
+                if (event.keyCode == KeyEvent.KEYCODE_SETTINGS || fragment?.showFocusedActions() != true) fragment?.triggerTvRefresh()
             }
             return true
         }
@@ -262,7 +292,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         keyCode: Int,
         event: KeyEvent?
     ): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && (mMenus?.handleBackPressed() == true || popFragment())) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && popFragment()) {
             return true
         }
         return super.onKeyDown(keyCode, event)
@@ -387,7 +417,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         val pathList = dataBinding.pathRv
         if (pathList is DpadRecyclerView) {
             pathList.setSelectedPosition(newPathData.lastIndex)
-            pathList.requestFocus()
         } else {
             pathList.smoothScrollToPosition(newPathData.lastIndex)
         }
@@ -400,22 +429,22 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         videoCount: Int,
         directoryCount: Int
     ) {
-        supportActionBar?.subtitle =
+        dataBinding.directoryCount.text =
             when {
                 videoCount == 0 && directoryCount == 0 -> {
-                    "0视频"
+                    "0 个项目"
                 }
 
                 directoryCount == 0 -> {
-                    "${videoCount}视频"
+                    "$videoCount 个视频"
                 }
 
                 videoCount == 0 -> {
-                    "${directoryCount}文件夹"
+                    "$directoryCount 个文件夹"
                 }
 
                 else -> {
-                    "${videoCount}视频  ${directoryCount}文件夹"
+                    "$directoryCount 个文件夹 · $videoCount 个视频"
                 }
             }
     }
@@ -431,12 +460,32 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
      * 改变文件排序
      */
     private fun onSortOptionChanged() {
+        dataBinding.browserSort.text = mMenus?.sortLabel()
         routeStack.map { it.fragment }.onEach { it.sort() }
     }
 
     /**
      * 分发焦点到最后一个Fragment
      */
+    fun showBrowserStatus(
+        fragment: StorageFileFragment,
+        text: String,
+        retry: (() -> Unit)?
+    ) {
+        if (!isCurrentDirectory(fragment)) return
+        dataBinding.browserStatus.apply {
+            this.text = text
+            isFocusable = retry != null
+            isClickable = retry != null
+            setBackgroundResource(if (retry != null) R.drawable.cinema_category else android.R.color.transparent)
+            setOnClickListener { retry?.invoke() }
+        }
+    }
+
+    fun showDirectoryLoading(fragment: StorageFileFragment) {
+        if (isCurrentDirectory(fragment)) dataBinding.directoryCount.text = ""
+    }
+
     fun dispatchFocus() {
         routeStack.lastOrNull()?.fragment?.requestFocus()
     }

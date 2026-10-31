@@ -1,0 +1,4 @@
+<resources>
+<style name="FileBrowser.Tool" parent=""><item name="android:layout_height">36dp</item><item name="android:background">@drawable/file_browser_row</item><item name="android:paddingStart">12dp</item><item name="android:paddingEnd">12dp</item><item name="android:gravity">center</item><item name="android:focusable">true</item><item name="android:clickable">true</item><item name="android:textSize">12sp</item><item name="android:layout_marginStart">8dp</item></style>
+<style name="FileBrowser.Nav" parent=""><item name="android:background">@drawable/cinema_navigation</item><item name="android:textColor">@color/cinema_navigation_text</item><item name="android:paddingStart">15dp</item><item name="android:paddingEnd">15dp</item><item name="android:gravity">center</item><item name="android:focusable">true</item><item name="android:clickable">true</item><item name="android:textSize">14sp</item><item name="android:layout_marginEnd">10dp</item></style>
+</resources>

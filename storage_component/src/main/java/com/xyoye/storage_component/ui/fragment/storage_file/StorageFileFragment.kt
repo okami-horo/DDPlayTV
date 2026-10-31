@@ -1,9 +1,14 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
 import android.os.Bundle
+import android.view.View
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.dispose
+import coil.load
 import com.alibaba.android.arouter.launcher.ARouter
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.rubensousa.dpadrecyclerview.state.DpadStateRegistry
@@ -16,8 +21,10 @@ import com.xyoye.common_component.focus.DpadFocusOwner
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.AuthStorage
+import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.baidupan.auth.BaiduPanAuthStore
 import com.xyoye.common_component.storage.file.StorageFile
+import com.xyoye.common_component.utils.formatDuration
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
@@ -36,8 +43,14 @@ class StorageFileFragment :
     private var restoreLayout = true
     private var savedFileKey: String? = null
     private val listKey get() = "${ownerActivity.storage.library.id}|${arguments?.getString("directory_path")}"
-    private var lastPagingHintState: com.xyoye.common_component.storage.PagedStorage.State? = null
-    private var lastError: String? = null
+    private var savedMore = false
+    private var applyingState = false
+    private var previewImage: Pair<String, String?>? = null
+    private lateinit var fileAdapter: StorageFileAdapter
+    val query: String get() =
+        viewModel.state.value
+            ?.query
+            .orEmpty()
 
     companion object {
         private const val TAG = "StorageFileFocus"
@@ -63,6 +76,7 @@ class StorageFileFragment :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         savedFileKey = savedInstanceState?.getString("focused_file")
+        savedMore = savedInstanceState?.getBoolean("focused_more") ?: false
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -71,12 +85,16 @@ class StorageFileFragment :
             listState.getScrollState().save(it, listKey, detachAdapter = false)
         }
         outState.putString("focused_file", savedFileKey)
+        outState.putBoolean("focused_more", savedMore)
         super.onSaveInstanceState(outState)
     }
 
     private fun rememberFile() {
         val list = bindingOrNull?.storageFileRv as? DpadRecyclerView ?: return
-        savedFileKey = ((list.adapter as? BaseAdapter)?.items?.getOrNull(list.getSelectedPosition()) as? StorageFile)?.uniqueKey()
+        ((list.adapter as? BaseAdapter)?.items?.getOrNull(list.getSelectedPosition()) as? StorageFile)?.let {
+            savedFileKey = it.browserKey()
+            if (list.hasFocus()) savedMore = activity?.currentFocus?.id == R.id.more_action_iv
+        }
     }
 
     override fun onDestroyView() {
@@ -84,6 +102,8 @@ class StorageFileFragment :
         (bindingOrNull?.storageFileRv as? DpadRecyclerView)?.let {
             listState.getScrollState().save(it, listKey)
         }
+        bindingOrNull?.previewCover?.dispose()
+        previewImage = null
         super.onDestroyView()
     }
 
@@ -99,48 +119,195 @@ class StorageFileFragment :
             reloadDirectory(refresh = true)
         }
 
-        viewModel.state.observe(viewLifecycleOwner) { state ->
-            val it = state.items
-            dataBinding.loading.isVisible = state.loading && !state.hasDirectory
-            dataBinding.refreshLayout.isVisible = !state.loading || state.hasDirectory
-            dataBinding.refreshLayout.isRefreshing = state.loading && state.hasDirectory
-            if (state.hasDirectory && !state.loading) {
-                ownerActivity.onDirectoryOpened(this, state.directory, state.directoryFiles, it.filterIsInstance<StorageFile>())
-            }
-            dataBinding.storageFileRv.setData(it)
-            // The adapter reuses one empty-item sentinel; its diff cannot observe state-only changes.
-            if (it.isEmpty()) dataBinding.storageFileRv.adapter?.notifyItemChanged(0)
-            if (state.error != null && state.error != lastError && state.items.isNotEmpty() && ownerActivity.isCurrentDirectory(this)) {
-                ToastCenter.showError(state.error)
-            }
-            lastError = state.error
-            val list = dataBinding.storageFileRv as? DpadRecyclerView
-            if (list != null && restoreLayout && state.hasDirectory && !state.loading) {
-                restoreLayout = false
-                listState.getScrollState().restore(list, listKey, requireNotNull(list.adapter))
-                val position = it.indexOfFirst { file -> (file as? StorageFile)?.uniqueKey() == savedFileKey }
-                if (savedFileKey != null && position >= 0) list.setSelectedPosition(position)
-            }
+        dataBinding.emptyBack.setOnClickListener { ownerActivity.backDirectory() }
+        viewModel.state.observe(viewLifecycleOwner, ::renderState)
+    }
 
-            if (!dataBinding.storageFileRv.isInTouchMode) {
-                val pagingItem = it.lastOrNull() as? StoragePagingItem
-                if (pagingItem != null) {
-                    if (pagingItem.state != lastPagingHintState) {
-                        lastPagingHintState = pagingItem.state
-                        if (pagingItem.state == com.xyoye.common_component.storage.PagedStorage.State.ERROR) {
-                            ToastCenter.showError("加载失败，按确认键重试")
-                        }
+    private fun renderState(state: StorageBrowseState) {
+        val binding = bindingOrNull ?: return
+        val list = binding.storageFileRv as DpadRecyclerView
+        val files = state.items.filterIsInstance<StorageFile>()
+        val hasRows = files.isNotEmpty()
+        val pageLoading = (state.items.lastOrNull() as? StoragePagingItem)?.state == PagedStorage.State.LOADING
+        val initial = restoreLayout && state.hasDirectory && !state.loading
+        val oldItems = (list.adapter as BaseAdapter).items
+        val wasPaging = oldItems.getOrNull(list.getSelectedPosition()) is StoragePagingItem
+        val terminalPage =
+            (state.items.lastOrNull() as? StoragePagingItem)?.let {
+                !it.hasMore && it.state != PagedStorage.State.LOADING && it.state != PagedStorage.State.ERROR
+            } == true
+        val previousKey = savedFileKey
+        val previousMore = savedMore
+        val oldFocusInContent =
+            list.hasFocus() ||
+                binding.browserEmpty.hasFocus() ||
+                activity?.currentFocus?.id == R.id.browser_status
+        applyingState = true
+        binding.refreshLayout.isVisible = hasRows
+        binding.refreshLayout.isRefreshing = state.loading && hasRows && !pageLoading
+        binding.browserEmpty.isVisible = !hasRows
+        binding.previewPanel.isVisible = hasRows
+        list.setData(state.items)
+        val selected = files.firstOrNull { it.browserKey() == previousKey } ?: files.firstOrNull()
+        savedFileKey = selected?.browserKey() ?: if (state.loading || !state.hasDirectory) previousKey else null
+        savedMore = previousMore && selected?.browserKey() == previousKey
+        if (initial) {
+            restoreLayout = false
+            listState.getScrollState().restore(list, listKey, requireNotNull(list.adapter))
+        }
+        if (selected != null && (!wasPaging || terminalPage || initial)) {
+            val index = state.items.indexOf(selected)
+            if (initial || list.getSelectedPosition() != index) list.setSelectedPosition(index)
+        }
+        renderPreview(selected)
+        if (state.hasDirectory && !state.loading) {
+            ownerActivity.onDirectoryOpened(this, state.directory, state.directoryFiles, files)
+        } else if (!state.hasDirectory) {
+            ownerActivity.showDirectoryLoading(this)
+        }
+        if (!hasRows && (state.loading || state.error != null)) ownerActivity.showDirectoryLoading(this)
+        val pageError = (state.items.lastOrNull() as? StoragePagingItem)?.state == PagedStorage.State.ERROR
+        val retainedError = state.error != null && hasRows && !pageError
+        val status =
+            when {
+                retainedError && state.loginRequired -> "授权失效 · 已保留当前内容 · 重新授权"
+                retainedError -> "刷新失败 · 已保留当前内容 · 重试"
+                !hasRows && state.loginRequired -> "等待重新授权"
+                !hasRows && state.error != null && !state.loading -> "目录读取失败"
+                pageLoading -> "已加载 " + files.size + " 个项目"
+                state.loading -> "正在读取目录…"
+                state.query.isNotEmpty() -> "搜索：" + state.query
+                (state.items.lastOrNull() as? StoragePagingItem)?.hasMore == true -> "已加载 " + files.size + " 个项目"
+                state.hasDirectory -> "已全部显示"
+                else -> ""
+            }
+        ownerActivity.showBrowserStatus(
+            this,
+            status,
+            if (retainedError) {
+                (
+                    {
+                        if (state.loginRequired) showLoginDialog(ownerActivity.storage.library) else triggerTvRefresh()
                     }
+                )
+            } else {
+                null
+            }
+        )
+        if (!hasRows) renderEmpty(state)
+        applyingState = false
+        if (initial || oldFocusInContent || (restoreLayout && !state.loading && !hasRows)) {
+            list.doOnNextLayout {
+                if (bindingOrNull === binding && ownerActivity.isCurrentDirectory(this)) requestDefaultDpadFocus()
+            }
+            list.requestLayout()
+            if (!hasRows) requestDefaultDpadFocus()
+        }
+    }
+
+    private fun renderEmpty(state: StorageBrowseState) {
+        val binding = dataBinding
+        val paging = state.items.lastOrNull() as? StoragePagingItem
+        val canLoadPage = paging?.hasMore == true && state.query.isEmpty()
+        binding.loading.isVisible = state.loading
+        binding.emptyIcon.isVisible = !state.loading
+        binding.emptyIcon.setImageResource(if (state.error != null) R.drawable.file_browser_warning else R.drawable.file_browser_folder)
+        binding.emptyTv.text =
+            when {
+                state.loading -> "正在读取目录"
+                state.loginRequired -> "登录已失效"
+                state.error != null -> "暂时无法读取目录"
+                state.query.isNotEmpty() -> "没有找到匹配的文件"
+                canLoadPage -> "此页暂无可播放文件"
+                else -> "这个文件夹是空的"
+            }
+        binding.emptyDescription.text =
+            when {
+                state.loading -> "文件较多时，可能需要稍等片刻。"
+                state.loginRequired -> "重新授权后可以继续浏览当前来源。"
+                state.error != null -> "请检查网络连接，然后重试。"
+                state.query.isNotEmpty() -> "试试其他关键词，或清除搜索。"
+                canLoadPage -> "可以继续加载下一页。"
+                else -> "可以返回上一级，继续浏览其他内容。"
+            }
+        binding.emptyActionTv.isVisible = !state.loading
+        binding.emptyActionTv.text =
+            when {
+                state.loginRequired -> "重新授权"
+                state.error != null -> "重试加载"
+                canLoadPage -> "加载更多"
+                state.query.isNotEmpty() -> "清除搜索"
+                else -> "刷新"
+            }
+        binding.emptyActionTv.setOnClickListener {
+            when {
+                state.loginRequired -> showLoginDialog(ownerActivity.storage.library)
+                canLoadPage -> viewModel.loadMore()
+                state.query.isNotEmpty() && state.error == null -> search("")
+                else -> triggerTvRefresh()
+            }
+        }
+    }
+
+    private fun renderPreview(file: StorageFile?) {
+        val binding = bindingOrNull ?: return
+        if (file == null) {
+            binding.previewCover.dispose()
+            binding.previewCover.setImageDrawable(null)
+            binding.previewTitle.text = ""
+            binding.previewDetails.text = ""
+            binding.previewPath.text = ""
+            previewImage = null
+            return
+        }
+        binding.previewTitle.text = file.fileName()
+        val duration = (file.playHistory?.videoDuration ?: 0).takeIf { it > 0 } ?: file.videoDuration()
+        binding.previewDetails.text = fileBrowserDetails(requireContext(), file) +
+            if (file.isFile() && duration > 0) " · " + formatDuration(duration) else ""
+        binding.previewPath.text = ownerActivity.storage.library.displayName + " / " +
+            (
+                viewModel.state.value
+                    ?.directory
+                    ?.storagePath()
+                    ?.trim('/')
+                    ?.takeUnless { it.isBlank() } ?: "根目录"
+            )
+        binding.previewHint.text = if (file.isDirectory()) "按确定打开文件夹" else "按确定播放 · 按菜单查看文件操作"
+        val image = file.browserKey() to file.fileCover()
+        if (image != previewImage) {
+            previewImage = image
+            binding.previewCover.dispose()
+            binding.previewCover.setImageDrawable(null)
+            binding.previewIcon.isVisible = file.isDirectory()
+            if (file.isFile()) {
+                // Coil's ImageView target cancels the old request on replacement/detach.
+                binding.previewCover.load(image.second) {
+                    crossfade(false)
+                    placeholder(R.drawable.file_browser_preview_placeholder)
+                    fallback(R.drawable.file_browser_preview_placeholder)
+                    error(R.drawable.file_browser_preview_placeholder)
                 }
             }
         }
+    }
 
-        viewModel.loginRequiredLiveData.observe(viewLifecycleOwner) { library ->
-            if (library != null && ownerActivity.isCurrentDirectory(this)) {
-                viewModel.consumeLoginRequest()
-                showLoginDialog(library)
-            }
-        }
+    private fun fileFocused(
+        file: StorageFile,
+        more: Boolean
+    ) {
+        if (applyingState || !ownerActivity.isCurrentDirectory(this)) return
+        savedFileKey = file.browserKey()
+        savedMore = more
+        renderPreview(file)
+    }
+
+    fun showFocusedActions(): Boolean {
+        val list = bindingOrNull?.storageFileRv as? DpadRecyclerView ?: return false
+        if (!list.hasFocus()) return false
+        val file = (list.adapter as? BaseAdapter)?.items?.getOrNull(list.getSelectedPosition()) as? StorageFile ?: return false
+        val row = list.findViewHolderForAdapterPosition(list.getSelectedPosition())?.itemView as? ConstraintLayout ?: return false
+        fileAdapter.showMoreAction(file, row)
+        return true
     }
 
     override fun onResume() {
@@ -154,6 +321,7 @@ class StorageFileFragment :
     }
 
     override fun onPause() {
+        rememberFile()
         viewModel.cancelRequests()
         super.onPause()
     }
@@ -163,16 +331,11 @@ class StorageFileFragment :
             layoutManager = vertical()
             addItemDecoration(
                 com.xyoye.common_component.utils.view
-                    .ItemDecorationSpace(0, (4 * resources.displayMetrics.density).toInt())
+                    .ItemDecorationOrientation((6 * resources.displayMetrics.density).toInt(), 0, RecyclerView.VERTICAL)
             )
 
-            adapter =
-                StorageFileAdapter(
-                    activity = ownerActivity,
-                    viewModel = viewModel,
-                    onRefreshRequested = { triggerTvRefresh() },
-                    onLoginRequested = { showLoginDialog(ownerActivity.storage.library) },
-                ).create()
+            fileAdapter = StorageFileAdapter(ownerActivity, viewModel, ::fileFocused)
+            adapter = fileAdapter.create()
 
             addOnScrollListener(
                 object : RecyclerView.OnScrollListener() {
@@ -207,7 +370,15 @@ class StorageFileFragment :
     override fun requestDefaultDpadFocus(): Boolean {
         val binding = bindingOrNull ?: return false
         if (binding.root.isInTouchMode || !ownerActivity.isCurrentDirectory(this)) return false
-        return binding.storageFileRv.requestFocus()
+        if (binding.browserEmpty.isVisible) {
+            return if (binding.emptyActionTv.isVisible) binding.emptyActionTv.requestFocus() else binding.emptyBack.requestFocus()
+        }
+        val list = binding.storageFileRv as DpadRecyclerView
+        val row = list.findViewHolderForAdapterPosition(list.getSelectedPosition())?.itemView
+        if (savedMore && row?.findViewById<View>(R.id.more_action_iv)?.isFocusable == true) {
+            return row.findViewById<View>(R.id.more_action_iv).requestFocus()
+        }
+        return list.requestFocus()
     }
 
     fun triggerTvRefresh() {
@@ -218,7 +389,6 @@ class StorageFileFragment :
             return
         }
 
-        ToastCenter.showInfo("刷新中…")
         reloadDirectory(refresh = true)
     }
 
@@ -265,6 +435,7 @@ class StorageFileFragment :
     }
 
     private fun showLoginDialog(library: MediaLibraryEntity) {
+        viewModel.consumeLoginRequest()
         when (library.mediaType) {
             MediaType.BAIDU_PAN_STORAGE -> showBaiduPanLoginDialog(library)
             MediaType.OPEN_115_STORAGE -> {

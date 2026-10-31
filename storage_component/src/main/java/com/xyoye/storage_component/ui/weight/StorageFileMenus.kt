@@ -1,145 +1,118 @@
 package com.xyoye.storage_component.ui.weight
 
-import android.view.Menu
-import android.view.MenuItem
+import android.view.View
 import android.view.inputmethod.EditorInfo
-import androidx.appcompat.widget.SearchView
-import androidx.appcompat.widget.SearchView.OnQueryTextListener
-import androidx.appcompat.widget.SearchView.SearchAutoComplete
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import com.alibaba.android.arouter.launcher.ARouter
+import com.xyoye.common_component.config.RouteTable
+import com.xyoye.common_component.metadata.MetadataCoordinator
 import com.xyoye.common_component.storage.StorageSortOption
+import com.xyoye.common_component.weight.BottomActionDialog
+import com.xyoye.common_component.weight.dialog.BaseBottomDialog
+import com.xyoye.common_component.weight.dialog.CommonDialog
+import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.enums.StorageSort
 import com.xyoye.storage_component.R
+import com.xyoye.storage_component.databinding.DialogFileBrowserSearchBinding
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
 
-/**
- * Created by xyoye on 2023/3/31.
- */
-
-class StorageFileMenus private constructor(
+class StorageFileMenus(
     private val activity: StorageFileActivity,
-    menu: Menu
+    private val onSearch: (String) -> Unit,
+    private val onSort: () -> Unit
 ) {
-    companion object {
-        fun inflater(
-            activity: StorageFileActivity,
-            menu: Menu
-        ): StorageFileMenus {
-            activity.menuInflater.inflate(R.menu.menu_storage_file, menu)
-            return StorageFileMenus(activity, menu)
-        }
-    }
+    fun search(
+        query: String,
+        caller: View
+    ) {
+        object : BaseBottomDialog<DialogFileBrowserSearchBinding>(activity) {
+            override fun getChildLayoutId() = R.layout.dialog_file_browser_search
 
-    private val searchItem = menu.findItem(R.id.item_search)
-    private val sortNameItem = menu.findItem(R.id.action_sort_by_name)
-    private val sortSizeItem = menu.findItem(R.id.action_sort_by_size)
-    private val sortOrderAsc = menu.findItem(R.id.action_sort_order_asc)
-    private val sortDirectoryFirst = menu.findItem(R.id.action_sort_directory_first)
-
-    private var mSearchView = searchItem.actionView as SearchView
-    private var onTextChanged: ((String) -> Unit)? = null
-    private var onSortChanged: (() -> Unit)? = null
-
-    init {
-        menu.findItem(R.id.action_scan_metadata).isVisible =
-            com.xyoye.common_component.storage.catalog.CatalogSourceReader
-                .supports(activity.storage.library.mediaType)
-        initSearchView()
-        updateSortItem()
-    }
-
-    private fun initSearchView() {
-        mSearchView.apply {
-            isIconified = true
-            imeOptions = EditorInfo.IME_ACTION_SEARCH
-            queryHint = getSearchHintText()
-            findViewById<SearchAutoComplete>(R.id.search_src_text)?.textSize = 16f
-        }
-
-        mSearchView.setOnQueryTextListener(
-            object : OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String): Boolean {
-                    mSearchView.clearFocus()
-                    return false
-                }
-
-                override fun onQueryTextChange(keyword: String): Boolean {
-                    onTextChanged?.invoke(keyword)
-                    return false
-                }
-            },
-        )
-    }
-
-    private fun updateSortItem() {
-        when (StorageSortOption.getSort()) {
-            StorageSort.NAME -> sortNameItem
-            StorageSort.SIZE -> sortSizeItem
-        }.isChecked = true
-
-        sortOrderAsc.isChecked = StorageSortOption.isAsc()
-        sortDirectoryFirst.isChecked = StorageSortOption.isDirectoryFirst()
-    }
-
-    private fun getSearchHintText(): String {
-        if (activity.storage.supportSearch()) {
-            return "搜索当前媒体库"
-        }
-        return "搜索当前目录"
-    }
-
-    fun onOptionsItemSelected(item: MenuItem) {
-        if (item.itemId == R.id.action_scan_metadata) {
-            com.xyoye.common_component.weight.dialog.CommonDialog
-                .Builder(activity)
-                .apply {
-                    content = "扫描当前目录及子目录的作品资料？文件不会被改名或删除。本地来源仅读取已有视频索引。"
-                    positiveText = "开始扫描"
-                    addPositive { dialog ->
-                        dialog.dismiss()
-                        com.xyoye.common_component.metadata.MetadataCoordinator.startScan(
-                            activity.storage.library.id,
-                            activity.storage.directory
-                                ?.storagePath()
-                                .orEmpty()
-                        )
-                        com.alibaba.android.arouter.launcher.ARouter
-                            .getInstance()
-                            .build(
-                                com.xyoye.common_component.config.RouteTable.User.MetadataSettings
-                            ).navigation()
+            override fun onStart() {
+                super.onStart()
+                window?.apply {
+                    WindowCompat.getInsetsController(this, decorView).apply {
+                        systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                        hide(WindowInsetsCompat.Type.systemBars())
                     }
-                    addNegative()
-                }.build()
-                .show()
-            return
-        }
-        val changed =
-            when (item.itemId) {
-                R.id.action_sort_by_name -> StorageSortOption.setSort(StorageSort.NAME)
-                R.id.action_sort_by_size -> StorageSortOption.setSort(StorageSort.SIZE)
-                R.id.action_sort_order_asc -> StorageSortOption.changeAsc()
-                R.id.action_sort_directory_first -> StorageSortOption.changeDirectoryFirst()
-                else -> false
+                }
             }
-        if (changed) {
-            updateSortItem()
-            onSortChanged?.invoke()
-        }
+
+            override fun initView(binding: DialogFileBrowserSearchBinding) {
+                val remote = activity.storage.supportSearch()
+                setTitle(if (remote) "搜索当前媒体库" else "搜索当前目录")
+                binding.searchScope.text = if (remote) "使用当前来源提供的搜索范围" else "筛选当前目录已加载的文件与文件夹"
+                binding.searchInput.setText(query)
+                setPositiveText("搜索")
+                setPositiveListener {
+                    onSearch(
+                        binding.searchInput.text
+                            .toString()
+                            .trim()
+                    )
+                    dismiss()
+                }
+                setNegativeText("取消")
+                setNegativeListener { dismiss() }
+                addNeutralButton("清除搜索") {
+                    onSearch("")
+                    dismiss()
+                }
+                binding.searchInput.setOnEditorActionListener { _, action, _ ->
+                    if (action == EditorInfo.IME_ACTION_SEARCH) {
+                        onSearch(
+                            binding.searchInput.text
+                                .toString()
+                                .trim()
+                        )
+                        dismiss()
+                        true
+                    } else {
+                        false
+                    }
+                }
+                setOnDismissListener { caller.requestFocus() }
+            }
+        }.show()
     }
 
-    fun handleBackPressed(): Boolean {
-        if (mSearchView.isIconified) {
-            return false
-        }
-        mSearchView.onActionViewCollapsed()
-        return true
+    fun sort(caller: View) {
+        val choices =
+            listOf(
+                SheetActionBean(StorageSort.NAME, "按名称排序", describe = if (StorageSortOption.getSort() == StorageSort.NAME) "已选" else null),
+                SheetActionBean(StorageSort.SIZE, "按大小排序", describe = if (StorageSortOption.getSort() == StorageSort.SIZE) "已选" else null),
+                SheetActionBean("order", if (StorageSortOption.isAsc()) "升序 · 切换为降序" else "降序 · 切换为升序"),
+                SheetActionBean("directories", if (StorageSortOption.isDirectoryFirst()) "文件夹优先 · 已开启" else "文件夹优先 · 已关闭")
+            )
+        BottomActionDialog(activity, choices, "文件排序") {
+            when (val action = it.actionId) {
+                is StorageSort -> StorageSortOption.setSort(action)
+                "order" -> StorageSortOption.changeAsc()
+                "directories" -> StorageSortOption.changeDirectoryFirst()
+            }
+            onSort()
+            true
+        }.apply { setOnDismissListener { caller.requestFocus() } }.show()
     }
 
-    fun onSearchTextChanged(block: (String) -> Unit) {
-        onTextChanged = block
+    fun scan() {
+        CommonDialog
+            .Builder(activity)
+            .apply {
+                content = "扫描当前目录及子目录的作品资料？文件不会被改名或删除。本地来源仅读取已有视频索引。"
+                addPositive("开始扫描") { dialog ->
+                    dialog.dismiss()
+                    MetadataCoordinator.startScan(activity.storage.library.id, activity.directory?.storagePath().orEmpty())
+                    ARouter.getInstance().build(RouteTable.User.MetadataSettings).navigation()
+                }
+                addNegative()
+            }.build()
+            .show()
     }
 
-    fun onSortTypeChanged(block: () -> Unit) {
-        onSortChanged = block
-    }
+    fun sortLabel(): String =
+        (if (StorageSortOption.getSort() == StorageSort.NAME) "名称" else "大小") +
+            (if (StorageSortOption.isAsc()) "升序" else "降序")
 }

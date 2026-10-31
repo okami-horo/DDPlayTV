@@ -112,8 +112,12 @@ class TvDpadRewriteInstrumentedTest {
     @Test fun storageRestoresDirectoryItemAndSupportsTheSecondaryAction() {
         val folder = File(context.cacheDir, "dpad-${UUID.randomUUID()}").apply { mkdirs() }
         val files = (1..8).map { File(folder, "video-$it.mp4").apply { writeBytes(byteArrayOf(0)) } }
+        val otherFolder = File(context.cacheDir, "a-dpad-${UUID.randomUUID()}").apply { mkdirs() }
+        val otherFile = File(otherFolder, "other.mp4").apply { writeBytes(byteArrayOf(0)) }
         val dao = DatabaseProvider.instance.getVideoDao()
-        runBlocking { dao.insert(*files.map { VideoEntity(fileId = 1, filePath = it.path, folderPath = folder.path) }.toTypedArray()) }
+        runBlocking {
+            dao.insert(*(files + otherFile).map { VideoEntity(fileId = 1, filePath = it.path, folderPath = it.parent!!) }.toTypedArray())
+        }
         try {
             val intent = Intent(context, StorageFileActivity::class.java).putExtra("storageLibrary", MediaLibraryEntity.LOCAL)
             ActivityScenario.launch<StorageFileActivity>(intent).use { scenario ->
@@ -133,7 +137,6 @@ class TvDpadRewriteInstrumentedTest {
                     }
                     bitmap.recycle()
                 }
-                send(KeyEvent.KEYCODE_DPAD_DOWN)
                 await(scenario) { storageList(it).hasFocus() }
                 send(KeyEvent.KEYCODE_DPAD_DOWN)
                 await(scenario) { focusedStorageFile(it)?.filePath() == files[1].path }
@@ -150,8 +153,10 @@ class TvDpadRewriteInstrumentedTest {
                 await(scenario) { focusedStorageFile(it)?.filePath() == folder.path }
             }
         } finally {
-            runBlocking { dao.deleteByPaths(files.map { it.path }) }
+            runBlocking { dao.deleteByPaths((files + otherFile).map { it.path }) }
             files.forEach { it.delete() }
+            otherFile.delete()
+            otherFolder.delete()
             folder.delete()
         }
     }

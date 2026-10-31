@@ -95,21 +95,21 @@ class StorageBrowseRecoveryInstrumentedTest {
                 }
                 empty.set(false)
                 focusList(activity)
-                send(KeyEvent.KEYCODE_MENU)
+                send(KeyEvent.KEYCODE_SETTINGS)
                 await("Retry recovers the original directory") {
                     viewModel.state.value?.let { it.hasDirectory && !it.loading && it.error == null && it.directoryFiles.size == 1 } == true
                 }
                 focusList(activity)
-                // MENU uses the real browser refresh action and must retain the previous snapshot on failure.
+                // SETTINGS refreshes; MENU now opens the selected file's actions.
                 fail.set(true)
-                send(KeyEvent.KEYCODE_MENU)
+                send(KeyEvent.KEYCODE_SETTINGS)
                 await("Failed refresh retains the visible directory") {
                     viewModel.state.value?.let { !it.loading && it.error != null && it.directoryFiles.size == 1 && it.items.size == 1 } ==
                         true
                 }
                 fail.set(false)
                 focusList(activity)
-                send(KeyEvent.KEYCODE_MENU)
+                send(KeyEvent.KEYCODE_SETTINGS)
                 await("A second retry clears the error") {
                     viewModel.state.value?.let {
                         !it.loading &&
@@ -135,7 +135,8 @@ class StorageBrowseRecoveryInstrumentedTest {
                     activity
                         .findViewById<androidx.recyclerview.widget.RecyclerView>(
                             com.xyoye.storage_component.R.id.storage_file_rv
-                        ).hasFocus()
+                        ).hasFocus() ||
+                    activity.currentFocus?.id == com.xyoye.core_ui_component.R.id.empty_action_tv
             }
             if (focused) return
             send(KeyEvent.KEYCODE_DPAD_DOWN)
