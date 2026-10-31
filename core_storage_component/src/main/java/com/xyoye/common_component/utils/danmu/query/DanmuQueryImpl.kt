@@ -3,7 +3,7 @@ package com.xyoye.common_component.utils.danmu.query
 import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuContentData
-import com.xyoye.data_component.data.DanmuRelatedUrlData
+import com.xyoye.data_component.data.DanmuData
 import com.xyoye.data_component.data.DanmuSearchData
 import com.xyoye.data_component.data.MatchMethod
 import com.xyoye.data_component.data.MatchResult
@@ -14,6 +14,7 @@ import kotlinx.coroutines.CancellationException
  */
 
 class DanmuQueryImpl(
+    private val contentRequest: suspend (String, Boolean) -> Result<DanmuData> = ResourceRepository::getDanmuContent,
     private val searchRequest: suspend (String) -> Result<DanmuSearchData> = ResourceRepository::searchDanmu
 ) : DanmuQuery {
     override suspend fun match(
@@ -55,27 +56,11 @@ class DanmuQueryImpl(
         }
     }
 
-    override suspend fun source(episodeId: String): List<DanmuRelatedUrlData> =
-        ResourceRepository
-            .getRelatedDanmu(episodeId)
-            .getOrNull()
-            ?.relateds
-            ?: emptyList()
-
     override suspend fun getContentByEpisodeId(
         episodeId: String,
         withRelated: Boolean
     ): List<DanmuContentData> =
-        ResourceRepository
-            .getDanmuContent(episodeId, withRelated)
-            .getOrNull()
-            ?.comments
-            ?: emptyList()
-
-    override suspend fun getContentByUrl(url: String): List<DanmuContentData> =
-        ResourceRepository
-            .getRelatedDanmuContent(url)
-            .getOrNull()
-            ?.comments
-            ?: emptyList()
+        contentRequest(episodeId, withRelated)
+            .getOrThrow()
+            .comments
 }

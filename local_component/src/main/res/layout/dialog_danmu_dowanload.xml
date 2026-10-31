@@ -59,29 +59,29 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
+                android:background="@drawable/background_focus_overlay"
                 android:checked="true"
-                android:text="@string/text_all"
+                android:minHeight="48dp"
+                android:nextFocusDown="@id/positive_bt"
+                android:nextFocusRight="@id/rb_official_source"
+                android:paddingEnd="12dp"
+                android:text="@string/danmu_download_all"
                 android:theme="@style/Theme.DanDanPlay.CheckBox" />
 
             <RadioButton
-                android:id="@+id/rb_pick_source"
+                android:id="@+id/rb_official_source"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
-                android:text="@string/text_pick"
+                android:layout_marginStart="20dp"
+                android:background="@drawable/background_focus_overlay"
+                android:minHeight="48dp"
+                android:nextFocusDown="@id/positive_bt"
+                android:nextFocusLeft="@id/rb_all_source"
+                android:paddingEnd="12dp"
+                android:text="@string/danmu_download_official"
                 android:theme="@style/Theme.DanDanPlay.CheckBox" />
 
         </RadioGroup>
-
-        <androidx.recyclerview.widget.RecyclerView
-            app:tvDpadList="true"
-            android:id="@+id/danmu_source_rv"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="5dp"
-            app:layout_constrainedHeight="true"
-            app:layout_constraintHeight_max="500dp"
-            app:layout_constraintTop_toBottomOf="@id/rg_source" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

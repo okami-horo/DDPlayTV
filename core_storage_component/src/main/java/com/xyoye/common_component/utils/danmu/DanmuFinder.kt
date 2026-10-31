@@ -5,7 +5,6 @@ import com.xyoye.common_component.utils.danmu.source.DanmuSource
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuEpisodeData
-import com.xyoye.data_component.data.DanmuRelatedUrlData
 import com.xyoye.data_component.data.MatchResult
 import java.io.InputStream
 
@@ -31,19 +30,11 @@ interface DanmuFinder {
     suspend fun downloadMatched(source: DanmuSource): LocalDanmuBean?
 
     /**
-     * 下载剧集对应的官方弹幕
+     * 下载剧集弹幕，默认包含关联的第三方弹幕
      */
     suspend fun downloadEpisode(
         episode: DanmuEpisodeData,
         withRelated: Boolean = true
-    ): LocalDanmuBean?
-
-    /**
-     * 下载剧集对应的第三方弹幕
-     */
-    suspend fun downloadRelated(
-        episode: DanmuEpisodeData,
-        related: List<DanmuRelatedUrlData>
     ): LocalDanmuBean?
 
     /**
@@ -52,11 +43,6 @@ interface DanmuFinder {
     suspend fun search(text: String): List<DanmuAnimeData>
 
     suspend fun searchResult(text: String): Result<List<DanmuAnimeData>> = Result.success(search(text))
-
-    /**
-     * 获取弹幕的第三方资源
-     */
-    suspend fun getRelated(episodeId: String): List<DanmuRelatedUrlData>
 
     /**
      * 保存剧集对应的字幕流数据

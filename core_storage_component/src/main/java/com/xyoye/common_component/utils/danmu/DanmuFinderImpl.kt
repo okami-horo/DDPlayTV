@@ -8,7 +8,6 @@ import com.xyoye.common_component.utils.danmu.source.DanmuSource
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuEpisodeData
-import com.xyoye.data_component.data.DanmuRelatedUrlData
 import com.xyoye.data_component.data.MatchResult
 import org.apache.commons.io.FileUtils
 import java.io.InputStream
@@ -128,118 +127,9 @@ class DanmuFinderImpl(
         return null
     }
 
-    override suspend fun downloadRelated(
-        episode: DanmuEpisodeData,
-        related: List<DanmuRelatedUrlData>
-    ): LocalDanmuBean? {
-        val contents =
-            related.flatMap {
-                try {
-                    if (it.url == episode.episodeId) {
-                        danmuQuery.getContentByEpisodeId(it.url)
-                    } else {
-                        danmuQuery.getContentByUrl(it.url)
-                    }
-                } catch (e: Exception) {
-                    ErrorReportHelper.postCatchedException(
-                        e,
-                        "DanmuFinderImpl.downloadRelated",
-                        "Failed to query content from URL: ${it.url} for episode: ${episode.episodeTitle}",
-                    )
-                    emptyList()
-                }
-            }
-
-        if (contents.isEmpty()) {
-            val extraInfo =
-                buildString {
-                    append("Anime: ${episode.animeTitle}\n")
-                    append("Episode: ${episode.episodeTitle}\n")
-                    append("Episode ID: ${episode.episodeId}\n")
-                    append("Related Sources: ${related.joinToString(", ") { it.url }}\n")
-                    append("Related Count: ${related.size}\n")
-                    append("Error: No related danmu content found")
-                }
-            ErrorReportHelper.postException(
-                "Related danmu content query returned empty",
-                "DanmuFinderImpl.downloadRelated",
-                RuntimeException("Empty related content for episode: ${episode.episodeTitle}, extra info: $extraInfo"),
-            )
-            return null
-        }
-
-        val xmlContent = DanmuContentGenerator.generate(contents)
-        if (xmlContent == null) {
-            val extraInfo =
-                buildString {
-                    append("Anime: ${episode.animeTitle}\n")
-                    append("Episode: ${episode.episodeTitle}\n")
-                    append("Episode ID: ${episode.episodeId}\n")
-                    append("Related Sources: ${related.joinToString(", ") { it.url }}\n")
-                    append("Content Count: ${contents.size}\n")
-                    append("Error: Related XML content generation failed")
-                }
-            ErrorReportHelper.postException(
-                "Related danmu XML generation failed",
-                "DanmuFinderImpl.downloadRelated",
-                RuntimeException("Related XML generation failed for episode: ${episode.episodeTitle}, extra info: $extraInfo"),
-            )
-            return null
-        }
-
-        val file = DanmuFileCreator.create(episode.animeTitle, episode.episodeTitle)
-        if (file == null) {
-            val extraInfo =
-                buildString {
-                    append("Anime: ${episode.animeTitle}\n")
-                    append("Episode: ${episode.episodeTitle}\n")
-                    append("Episode ID: ${episode.episodeId}\n")
-                    append("Related Sources: ${related.joinToString(", ") { it.url }}\n")
-                    append("XML Content Length: ${xmlContent.length}\n")
-                    append("Error: Failed to create related danmu file")
-                }
-            ErrorReportHelper.postException(
-                "Related danmu file creation failed",
-                "DanmuFinderImpl.downloadRelated",
-                RuntimeException("Related file creation failed for episode: ${episode.episodeTitle}, extra info: $extraInfo"),
-            )
-            return null
-        }
-
-        try {
-            FileUtils.write(file, xmlContent, Charsets.UTF_8)
-            return LocalDanmuBean(file.absolutePath, episode.episodeId)
-        } catch (e: Exception) {
-            val extraInfo =
-                buildString {
-                    append("Anime: ${episode.animeTitle}\n")
-                    append("Episode: ${episode.episodeTitle}\n")
-                    append("Episode ID: ${episode.episodeId}\n")
-                    append("Related Sources: ${related.joinToString(", ") { it.url }}\n")
-                    append("Content Count: ${contents.size}\n")
-                    append("XML Content Length: ${xmlContent.length}\n")
-                    append("Target File: ${file.absolutePath}\n")
-                    append("File Exists: ${file.exists()}\n")
-                    append("File Writable: ${file.canWrite()}\n")
-                    append("Parent Directory: ${file.parent}\n")
-                    append("Free Space: ${FileUtils.byteCountToDisplaySize(FileUtils.sizeOfDirectory(file.parentFile))}\n")
-                    append("Exception: ${e.javaClass.simpleName}: ${e.message}")
-                }
-            ErrorReportHelper.postCatchedException(
-                e,
-                "DanmuFinderImpl.downloadRelated",
-                "下载相关弹幕失败: ${episode.animeTitle} - ${episode.episodeTitle}, extra info: $extraInfo",
-            )
-        }
-
-        return null
-    }
-
     override suspend fun search(text: String): List<DanmuAnimeData> = danmuQuery.search(text)
 
     override suspend fun searchResult(text: String): Result<List<DanmuAnimeData>> = danmuQuery.searchResult(text)
-
-    override suspend fun getRelated(episodeId: String): List<DanmuRelatedUrlData> = danmuQuery.source(episodeId)
 
     override suspend fun saveStream(
         episode: DanmuEpisodeData,

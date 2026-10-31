@@ -10,7 +10,6 @@ import com.xyoye.data_component.data.CloudHistoryListData
 import com.xyoye.data_component.data.CommonJsonData
 import com.xyoye.data_component.data.DanmuData
 import com.xyoye.data_component.data.DanmuMatchData
-import com.xyoye.data_component.data.DanmuRelatedData
 import com.xyoye.data_component.data.DanmuSearchData
 import com.xyoye.data_component.data.FollowAnimeData
 import com.xyoye.data_component.data.LoginData
@@ -99,17 +98,6 @@ interface DanDanService {
         @Path("episodeId") episodeId: String,
         @Body body: RequestBody
     ): SendDanmuData
-
-    @GET("/api/v2/related/{episodeId}")
-    suspend fun getRelatedDanmu(
-        @Path("episodeId") episodeId: String
-    ): DanmuRelatedData
-
-    @GET("/api/v2/extcomment")
-    @Headers("accept-encoding: gzip")
-    suspend fun getRelatedDanmuContent(
-        @QueryMap params: RequestParams
-    ): DanmuData
 
     @POST("api/v2/login")
     suspend fun login(

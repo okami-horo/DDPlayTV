@@ -9,7 +9,6 @@ import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuContentData
 import com.xyoye.data_component.data.DanmuEpisodeData
-import com.xyoye.data_component.data.DanmuRelatedUrlData
 import com.xyoye.data_component.data.MatchMethod
 import com.xyoye.data_component.data.MatchResult
 import com.xyoye.data_component.enums.MediaType
@@ -87,14 +86,7 @@ class DanmuMatchCoordinatorTest {
             return LocalDanmuBean("/tmp/danmu.xml", episode.episodeId)
         }
 
-        override suspend fun downloadRelated(
-            episode: DanmuEpisodeData,
-            related: List<DanmuRelatedUrlData>
-        ): LocalDanmuBean? = null
-
         override suspend fun search(text: String): List<DanmuAnimeData> = emptyList()
-
-        override suspend fun getRelated(episodeId: String): List<DanmuRelatedUrlData> = emptyList()
 
         override suspend fun saveStream(
             episode: DanmuEpisodeData,
@@ -123,14 +115,10 @@ class DanmuMatchCoordinatorTest {
 
         override suspend fun search(text: String): List<DanmuAnimeData> = emptyList()
 
-        override suspend fun source(episodeId: String): List<DanmuRelatedUrlData> = emptyList()
-
         override suspend fun getContentByEpisodeId(
             episodeId: String,
             withRelated: Boolean
         ): List<DanmuContentData> = emptyList()
-
-        override suspend fun getContentByUrl(url: String): List<DanmuContentData> = emptyList()
     }
 
     private class FakeDanmuMatchCache : DanmuMatchCacheStore {

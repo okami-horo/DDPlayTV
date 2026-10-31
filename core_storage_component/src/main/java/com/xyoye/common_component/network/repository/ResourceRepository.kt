@@ -33,6 +33,7 @@ object ResourceRepository : BaseRepository() {
     suspend fun searchDanmu(anime: String) =
         request()
             .param("anime", anime)
+            .param("v2", true)
             .doGet {
                 RetrofitManager.danDanService.searchDanmu(it)
             }
@@ -48,25 +49,6 @@ object ResourceRepository : BaseRepository() {
         .doGet {
             RetrofitManager.danDanService.getDanmuContent(episodeId, it)
         }
-
-    /**
-     * 获取第三方弹幕
-     */
-    suspend fun getRelatedDanmu(episodeId: String) =
-        request()
-            .doGet {
-                RetrofitManager.danDanService.getRelatedDanmu(episodeId)
-            }
-
-    /**
-     * 获取第三方弹幕内容
-     */
-    suspend fun getRelatedDanmuContent(url: String) =
-        request()
-            .param("url", url)
-            .doGet {
-                RetrofitManager.danDanService.getRelatedDanmuContent(it)
-            }
 
     /**
      * 发送一条弹幕

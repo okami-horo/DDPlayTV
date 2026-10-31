@@ -111,7 +111,7 @@ class BindDanmuSourceFragment : BaseFragment<BindDanmuSourceFragmentViewModel, F
                             itemBinding.animeTitleTv.isVisible = data.isRecommend
                             itemBinding.episodeTv.isSelected = data.isBound
                             itemBinding.downloadIv.setOnClickListener {
-                                viewModel.getDanmuThirdSource(data)
+                                viewModel.showDownloadDialog(data)
                             }
                             itemBinding.root.setOnClickListener {
                                 viewModel.downloadDanmu(data)
@@ -135,15 +135,12 @@ class BindDanmuSourceFragment : BaseFragment<BindDanmuSourceFragmentViewModel, F
             dataBinding.contentRv.setData(it)
         }
 
-        viewModel.downloadDialogShowFlow.collectAtStarted(this) { (episode, related) ->
+        viewModel.downloadDialogShowFlow.collectAtStarted(this) { episode ->
             danmuDownloadDialog?.dismiss()
             danmuDownloadDialog =
                 DanmuDownloadDialog(
                     requireActivity(),
-                    episode,
-                    related,
-                    downloadOfficial = { viewModel.downloadDanmu(episode, it) },
-                    downloadRelated = { viewModel.downloadDanmu(episode, it) },
+                    download = { viewModel.downloadDanmu(episode, it) }
                 )
             danmuDownloadDialog!!.show()
         }

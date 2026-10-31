@@ -2,7 +2,6 @@ package com.xyoye.common_component.utils.danmu.query
 
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuContentData
-import com.xyoye.data_component.data.DanmuRelatedUrlData
 import com.xyoye.data_component.data.MatchResult
 
 /**
@@ -34,20 +33,10 @@ interface DanmuQuery {
     suspend fun searchResult(text: String): Result<List<DanmuAnimeData>> = Result.success(search(text))
 
     /**
-     * 获取弹幕源
-     */
-    suspend fun source(episodeId: String): List<DanmuRelatedUrlData>
-
-    /**
      * 获取弹幕内容，根据剧集ID
      */
     suspend fun getContentByEpisodeId(
         episodeId: String,
         withRelated: Boolean = true
     ): List<DanmuContentData>
-
-    /**
-     * 获取弹幕内容，根据资源链接
-     */
-    suspend fun getContentByUrl(url: String): List<DanmuContentData>
 }

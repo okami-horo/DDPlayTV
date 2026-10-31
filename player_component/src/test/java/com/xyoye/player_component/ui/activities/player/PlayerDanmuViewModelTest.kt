@@ -9,7 +9,6 @@ import com.xyoye.data_component.bean.DanmuTrackResource
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.data.DanmuAnimeData
 import com.xyoye.data_component.data.DanmuEpisodeData
-import com.xyoye.data_component.data.DanmuRelatedUrlData
 import com.xyoye.data_component.data.MatchMethod
 import com.xyoye.data_component.data.MatchResult
 import com.xyoye.player.controller.setting.DanmuSearchState
@@ -191,13 +190,6 @@ class PlayerDanmuViewModelTest {
         override suspend fun getMatched(source: DanmuSource): MatchResult? = null
 
         override suspend fun downloadMatched(source: DanmuSource): LocalDanmuBean? = null
-
-        override suspend fun downloadRelated(
-            episode: DanmuEpisodeData,
-            related: List<DanmuRelatedUrlData>
-        ): LocalDanmuBean? = null
-
-        override suspend fun getRelated(episodeId: String): List<DanmuRelatedUrlData> = emptyList()
 
         override suspend fun saveStream(
             episode: DanmuEpisodeData,
