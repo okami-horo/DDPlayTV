@@ -1,0 +1,25 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data><variable name="viewModel" type="com.xyoye.local_component.ui.metadata.MetadataLibraryViewModel"/></data>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="#0B1018">
+        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:minHeight="64dp">
+            <ImageView android:id="@+id/backdrop" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:importantForAccessibility="no"/>
+            <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/metadata_scrim"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:padding="20dp" android:orientation="vertical">
+                <TextView android:id="@+id/hero_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="28sp" android:textStyle="bold" android:textColor="#FFFFFF" android:maxLines="1" android:ellipsize="end"/>
+                <TextView android:id="@+id/hero_overview" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textSize="14sp" android:textColor="#CBD3DF" android:maxLines="2" android:ellipsize="end"/>
+            </LinearLayout>
+        </FrameLayout>
+        <TextView android:id="@+id/continue_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="继续观看" android:textColor="#FFFFFF" android:textSize="16sp"/>
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/continue_watching" android:layout_width="match_parent" android:layout_height="82dp"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="52dp" android:gravity="center_vertical">
+            <Button android:id="@+id/filter_all" android:layout_width="wrap_content" android:layout_height="48dp" android:text="已入库作品" android:nextFocusRight="@id/filter_movie"/>
+            <Button android:id="@+id/filter_movie" android:layout_width="wrap_content" android:layout_height="48dp" android:text="电影" android:nextFocusLeft="@id/filter_all" android:nextFocusRight="@id/filter_tv"/>
+            <Button android:id="@+id/filter_tv" android:layout_width="wrap_content" android:layout_height="48dp" android:text="剧集 / 番剧" android:nextFocusLeft="@id/filter_movie" android:nextFocusRight="@id/filter_unmatched"/>
+            <Button android:id="@+id/filter_unmatched" android:layout_width="wrap_content" android:layout_height="48dp" android:text="待识别" android:nextFocusLeft="@id/filter_tv" android:nextFocusRight="@id/tasks"/>
+            <Button android:id="@+id/tasks" android:layout_width="wrap_content" android:layout_height="48dp" android:text="资料与任务" android:nextFocusLeft="@id/filter_unmatched" android:nextFocusRight="@id/browse_files"/>
+            <Button android:id="@+id/browse_files" android:layout_width="wrap_content" android:layout_height="48dp" android:text="本地文件" android:nextFocusLeft="@id/tasks"/>
+        </LinearLayout>
+        <TextView android:id="@+id/empty" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp" android:textColor="#CBD3DF" android:textSize="16sp"/>
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/works" android:layout_width="match_parent" android:layout_height="222dp"/>
+    </LinearLayout>
+</layout>

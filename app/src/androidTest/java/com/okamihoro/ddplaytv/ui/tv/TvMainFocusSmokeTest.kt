@@ -61,11 +61,10 @@ class TvMainFocusSmokeTest {
                 )
                 assertNavigationItem(activity, 0)
             }
-            sendDpad(KeyEvent.KEYCODE_DPAD_RIGHT)
+            sendDpad(KeyEvent.KEYCODE_DPAD_DOWN)
             waitForIdle()
             scenario.onActivity { activity ->
-                val media = activity.findViewById<RecyclerView>(com.xyoye.local_component.R.id.media_lib_rv)
-                assertNotNull("RIGHT must enter a media item", media.findContainingViewHolder(activity.currentFocus!!))
+                assertEquals(com.xyoye.local_component.R.id.filter_all, activity.currentFocus?.id)
             }
             sendDpad(KeyEvent.KEYCODE_BACK)
             waitForIdle()
@@ -80,14 +79,13 @@ class TvMainFocusSmokeTest {
             scenario.onActivity { activity ->
                 assertNavigationItem(activity, 0)
             }
-            sendDpad(KeyEvent.KEYCODE_DPAD_RIGHT)
+            sendDpad(KeyEvent.KEYCODE_DPAD_DOWN)
             waitForIdle()
             scenario.onActivity { activity ->
                 assertVisibleFocus(activity.currentFocus)
-                val media = activity.findViewById<RecyclerView>(com.xyoye.local_component.R.id.media_lib_rv)
-                assertNotNull("RIGHT must enter a media item", media.findContainingViewHolder(activity.currentFocus!!))
+                assertEquals(com.xyoye.local_component.R.id.filter_all, activity.currentFocus?.id)
             }
-            sendDpad(KeyEvent.KEYCODE_DPAD_LEFT)
+            sendDpad(KeyEvent.KEYCODE_DPAD_UP)
             waitForIdle()
             scenario.onActivity { activity ->
                 assertNavigationItem(activity, 0)
@@ -101,8 +99,7 @@ class TvMainFocusSmokeTest {
         while (!ready && SystemClock.uptimeMillis() < deadline) {
             waitForIdle()
             scenario.onActivity { activity ->
-                val media = activity.findViewById<RecyclerView>(com.xyoye.local_component.R.id.media_lib_rv)
-                ready = activity.hasWindowFocus() && (media?.adapter?.itemCount ?: 0) > 0
+                ready = activity.hasWindowFocus() && activity.findViewById<View>(com.xyoye.local_component.R.id.filter_all)?.isShown == true
             }
             SystemClock.sleep(50)
         }

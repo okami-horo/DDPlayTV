@@ -1,4 +1,5 @@
 <resources>
+    <string name="navigation_cinema">首页</string>
     <string name="app_name">DDPlayTV</string>
 
     <string name="navigation_media">媒体库</string>

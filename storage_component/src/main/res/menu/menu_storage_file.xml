@@ -3,6 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <item android:id="@+id/action_scan_metadata" android:title="扫描此目录资料" app:showAsAction="never" />
+
     <item
         android:id="@+id/item_search"
         android:icon="@drawable/ic_search"

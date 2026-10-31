@@ -1,0 +1,9 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="96dp" android:layout_margin="5dp" android:gravity="center_vertical"
+    android:padding="8dp" android:focusable="true" android:clickable="true" android:tag="@string/focusable_item" android:background="@drawable/metadata_focus">
+    <ImageView android:id="@+id/card_image" android:layout_width="56dp" android:layout_height="56dp" android:scaleType="centerCrop" android:importantForAccessibility="no"/>
+    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginStart="14dp">
+        <TextView android:id="@+id/card_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textSize="18sp" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:id="@+id/card_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#AAB6C8" android:textSize="14sp" android:maxLines="2" android:ellipsize="end"/>
+    </LinearLayout>
+</LinearLayout>

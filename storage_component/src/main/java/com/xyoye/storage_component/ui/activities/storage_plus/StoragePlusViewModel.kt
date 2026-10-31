@@ -98,7 +98,7 @@ class StoragePlusViewModel : BaseViewModel() {
             upsertLibrary.remoteSecret = null
 
             upsertLibrary.id = oldLibraryId ?: upsertLibrary.id
-            MediaLibraryRepository.insert(upsertLibrary)
+            MediaLibraryRepository.insert(upsertLibrary, invalidateRequests = true)
             val savedLibrary =
                 MediaLibraryRepository.getByUrl(upsertLibrary.url, upsertLibrary.mediaType)
                     ?: upsertLibrary
@@ -110,6 +110,7 @@ class StoragePlusViewModel : BaseViewModel() {
             if (savedLibraryId > 0) {
                 val passwordSaved = MediaLibraryCredentialStore.writePassword(savedLibraryId, pendingPassword)
                 val secretSaved = MediaLibraryCredentialStore.writeRemoteSecret(savedLibraryId, pendingRemoteSecret)
+                MediaLibraryRepository.invalidateCatalogRequests(savedLibraryId)
                 if (showToast && (pendingPassword != null && !passwordSaved || pendingRemoteSecret != null && !secretSaved)) {
                     withContext(Dispatchers.Main) {
                         ToastCenter.showWarning("安全存储不可用：凭据不会被保存")

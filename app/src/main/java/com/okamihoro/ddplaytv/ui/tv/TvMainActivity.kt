@@ -13,12 +13,13 @@ import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.config.RouteTable
+import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.setData
-import com.xyoye.common_component.extension.vertical
 
 class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
     companion object {
         private const val TAG_FRAGMENT_MEDIA = "tag_fragment_tv_media"
+        private const val TAG_FRAGMENT_CINEMA = "tag_fragment_tv_cinema"
         private const val TAG_FRAGMENT_PERSONAL = "tag_fragment_tv_personal"
     }
 
@@ -31,7 +32,7 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
     }
 
     private val navItems = TvNavItem.entries.toList()
-    private var selectedSection: TvNavItem = TvNavItem.MEDIA
+    private var selectedSection: TvNavItem = TvNavItem.HOME
 
     private val focusCoordinator by lazy(LazyThreadSafetyMode.NONE) {
         TvShellFocusCoordinator(
@@ -46,7 +47,7 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         selectedSection = TvNavItem.entries.firstOrNull {
             it.name == savedInstanceState?.getString("tv_section") && it.isSection
-        } ?: TvNavItem.MEDIA
+        } ?: TvNavItem.HOME
         super.onCreate(savedInstanceState)
     }
 
@@ -89,7 +90,7 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
 
     private fun initNav() {
         dataBinding.tvNavRv.apply {
-            layoutManager = vertical()
+            layoutManager = horizontal()
             adapter =
                 buildAdapter {
                     addItem<TvNavItem, ItemTvMainNavBinding>(R.layout.item_tv_main_nav) {
@@ -108,7 +109,7 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
             setOnKeyInterceptListener(
                 object : DpadRecyclerView.OnKeyInterceptListener {
                     override fun onInterceptKeyEvent(event: KeyEvent): Boolean {
-                        if (event.keyCode != KeyEvent.KEYCODE_DPAD_RIGHT) return false
+                        if (event.keyCode != KeyEvent.KEYCODE_DPAD_DOWN) return false
                         if (event.action == KeyEvent.ACTION_DOWN) focusCoordinator.requestContentFocus()
                         return true
                     }
@@ -146,6 +147,7 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
 
     private fun switchSection(section: TvNavItem) {
         when (section) {
+            TvNavItem.HOME -> switchFragment(TAG_FRAGMENT_CINEMA, RouteTable.Local.CinemaFragment)
             TvNavItem.MEDIA -> {
                 switchFragment(
                     tag = TAG_FRAGMENT_MEDIA,
@@ -182,6 +184,7 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
         val titleRes: Int,
         val isSection: Boolean
     ) {
+        HOME(R.string.navigation_cinema, true),
         MEDIA(R.string.navigation_media, true),
         SEARCH(R.string.navigation_search, false),
         PERSONAL(R.string.navigation_personal, true),

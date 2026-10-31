@@ -17,7 +17,6 @@ import com.xyoye.anime_component.ui.activities.search.SearchActivity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.local_component.ui.activities.play_history.PlayHistoryActivity
 import com.xyoye.local_component.ui.activities.shooter_subtitle.ShooterSubtitleActivity
-import com.xyoye.local_component.ui.fragment.media.MediaFragment
 import com.xyoye.storage_component.ui.activities.screencast.receiver.ScreencastActivity
 import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivity
 import com.xyoye.user_component.ui.activities.about_us.AboutUsActivity
@@ -62,21 +61,19 @@ class AppFeaturePageSmokeTest {
             assertTrue("Main navigation must receive default focus", focused)
             scenario.onActivity { activity ->
                 activity.supportFragmentManager.executePendingTransactions()
-                assertFragmentTagIs<MediaFragment>(activity, "tag_fragment_tv_media")
+                assertFragmentTagIs<com.xyoye.local_component.ui.metadata.CinemaFragment>(activity, "tag_fragment_tv_cinema")
             }
-            sendDpad(KeyEvent.KEYCODE_DPAD_DOWN)
-            sendDpad(KeyEvent.KEYCODE_DPAD_DOWN)
+            repeat(3) { sendDpad(KeyEvent.KEYCODE_DPAD_RIGHT) }
             sendDpad(KeyEvent.KEYCODE_DPAD_CENTER)
             scenario.onActivity { activity ->
                 activity.supportFragmentManager.executePendingTransactions()
                 assertFragmentTagIs<PersonalFragment>(activity, "tag_fragment_tv_personal")
             }
-            sendDpad(KeyEvent.KEYCODE_DPAD_UP)
-            sendDpad(KeyEvent.KEYCODE_DPAD_UP)
+            repeat(3) { sendDpad(KeyEvent.KEYCODE_DPAD_LEFT) }
             sendDpad(KeyEvent.KEYCODE_DPAD_CENTER)
             scenario.onActivity { activity ->
                 activity.supportFragmentManager.executePendingTransactions()
-                assertFragmentTagIs<MediaFragment>(activity, "tag_fragment_tv_media")
+                assertFragmentTagIs<com.xyoye.local_component.ui.metadata.CinemaFragment>(activity, "tag_fragment_tv_cinema")
             }
         }
     }
@@ -88,10 +85,10 @@ class AppFeaturePageSmokeTest {
             scenario.onActivity { activity ->
                 val navRv = activity.findViewById<RecyclerView>(R.id.tv_nav_rv)
                 assertNotNull("TV nav RecyclerView should be present", navRv)
-                assertEquals("TV nav should contain four items", 4, navRv.adapter?.itemCount)
+                assertEquals("TV nav should contain five items", 5, navRv.adapter?.itemCount)
 
                 activity.supportFragmentManager.executePendingTransactions()
-                assertFragmentTagIs<MediaFragment>(activity, "tag_fragment_tv_media")
+                assertFragmentTagIs<com.xyoye.local_component.ui.metadata.CinemaFragment>(activity, "tag_fragment_tv_cinema")
             }
         }
     }

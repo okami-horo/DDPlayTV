@@ -2,10 +2,11 @@ package com.okamihoro.ddplaytv.ui.tv
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.FocusFinder
 import android.view.View
 import android.widget.FrameLayout
 
-/** Called by a child list only after its layout manager allows focus to leave. */
+/** Preserve navigation within the content before handing its upper edge to the shell. */
 class TvContentContainer
     @JvmOverloads
     constructor(
@@ -18,7 +19,8 @@ class TvContentContainer
             focused: View,
             direction: Int
         ): View? {
-            if (direction == View.FOCUS_LEFT) {
+            if (direction == View.FOCUS_UP) {
+                FocusFinder.getInstance().findNextFocus(this, focused, direction)?.let { return it }
                 navigationTarget?.invoke()?.let { return it }
             }
             return super.focusSearch(focused, direction)

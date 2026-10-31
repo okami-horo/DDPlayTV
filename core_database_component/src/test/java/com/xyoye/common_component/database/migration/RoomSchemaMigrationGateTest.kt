@@ -26,6 +26,29 @@ import java.io.File
 @Config(manifest = Config.NONE)
 class RoomSchemaMigrationGateTest {
     @Test
+    fun migration18To19AddsMetadataWithoutChangingExistingRows() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        deleteDatabaseFiles(context, TEST_DB_NAME)
+        val file = context.getDatabasePath(TEST_DB_NAME).also { it.parentFile?.mkdirs() }
+        createDatabaseFromRoomSchemaJson(file, loadSchemaJson(18), 18)
+        val before: List<List<String?>>
+        openHistoricalDatabase(context, 18).use { helper ->
+            insertCurrentLibrary(helper.writableDatabase)
+            before = rows(helper.writableDatabase.query("SELECT * FROM media_library"))
+        }
+        val database = openCurrentDatabase(context)
+        try {
+            assertEquals(before, rows(database.openHelper.writableDatabase.query("SELECT * FROM media_library")))
+            assertTrue(tableExists(database.openHelper.writableDatabase, "metadata_work"))
+            assertTrue(tableExists(database.openHelper.writableDatabase, "media_binding_episode"))
+            assertEquals(19, database.openHelper.writableDatabase.version)
+        } finally {
+            database.close()
+            deleteDatabaseFiles(context, TEST_DB_NAME)
+        }
+    }
+
+    @Test
     fun migration16To17RemovesRetiredSourcesAndPreservesOtherRows() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         deleteDatabaseFiles(context, TEST_DB_NAME)
@@ -363,7 +386,8 @@ class RoomSchemaMigrationGateTest {
             .addMigrations(
                 DatabaseManager.MIGRATION_15_16,
                 DatabaseManager.MIGRATION_16_17,
-                DatabaseManager.MIGRATION_17_18
+                DatabaseManager.MIGRATION_17_18,
+                com.xyoye.common_component.database.MetadataMigration
             ).build()
 
     private fun assertCurrentLibrarySchema(database: SupportSQLiteDatabase) {
@@ -717,7 +741,7 @@ class RoomSchemaMigrationGateTest {
     private companion object {
         const val OLD_VERSION = 15
         const val NEW_VERSION = 16
-        const val CURRENT_VERSION = 18
+        const val CURRENT_VERSION = 19
         const val TEST_DB_NAME = "room_migration_gate_test.db"
         private const val ROOM_TABLE_NAME_PLACEHOLDER = "${'$'}{TABLE_NAME}"
         private const val ROOM_VIEW_NAME_PLACEHOLDER = "${'$'}{VIEW_NAME}"

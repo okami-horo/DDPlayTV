@@ -4,7 +4,7 @@
  - Modular MVVM Android app.
  - `:app` is composition root and final APK shell.
  - Feature/business modules: `:anime_component`, `:local_component`, `:player_component`, `:storage_component`, `:user_component`.
- - Shared foundations: `:core_contract_component`, `:core_system_component`, `:core_log_component`, `:core_network_component`, `:core_database_component`, `:core_storage_component`, `:core_ui_component`, `:data_component`.
+ - Shared foundations: `:core_contract_component`, `:core_system_component`, `:core_log_component`, `:core_network_component`, `:core_database_component`, `:core_storage_component`, `:core_metadata_component`, `:core_ui_component`, `:data_component`.
  - Bundled AAR wrappers live under `:repository:*`.
 
  ## Playback Ownership (source and ledger reconciliation: 2026-10-28)
@@ -21,6 +21,10 @@
  - Cross-feature contracts/routing belong in `:core_contract_component`.
  - Repository AAR wrappers should be direct deps only where needed.
 
+ ## Metadata Ownership (2026-10-31)
+ - core_metadata orchestrates parsing, matching, source-scoped scanning and manual binding revisions; local/storage/user consume it. core_storage supplies independent read-only catalog snapshots and does not depend on metadata. app/player continue using contract playback descriptors, without metadata implementation dependencies.
+ - File assets, source content generations and TMDB movie/tv/season/episode identities are separate. Complete-directory results alone may mark assets unavailable; manual results and valid cached snapshots survive errors and stale requests. Maintained design/acceptance: `docs/superpowers/designs/2026-10-31-tmdb-media-library-design.md`; implementation and verified limits: `docs/superpowers/plans/2026-10-31-tmdb-media-library.md`.
+
  ## UI Patterns
  - TV is the sole maintained UI target (2026-10-29). Both launcher categories use TvSplashActivity/TvMainActivity; old mobile component names are aliases. Shared feature pages remain in use.
  - TV lists, grids and dynamic menus use DpadRecyclerView 1.4.3. `TvViewInflater` replaces XML lists marked `tvDpadList` regardless of system UI mode. Focus selectors are default resources; the unused `isTelevisionUiMode()` helper is removed. Actual input-mode checks remain where needed. Layout helpers configure the library's layout manager instead of replacing it.
@@ -28,7 +32,7 @@
  - Player controls inherit TvVideoController directly; touch-only gesture/acceleration, orientation sensors and the no-op popup host are removed. Seek feedback, media rotation/aspect and session ownership remain. mpv uses SurfaceView with Plezy's `vo=mediacodec` and `hwdec=mediacodec`; native mpv renders subtitles on a sibling OSD Surface. Media3 retains the app libass pipeline and independent video Surface selection. Current behavior is maintained in `document/mpv_conf_supported_options.md` and `document/player/subtitle-rendering.md`; subtitle migration evidence is in `docs/superpowers/plans/2026-10-29-mpv-native-subtitles.md`.
  - `MpvNativeBridge` owns a serial worker per native session, posts events on the main thread, and filters retired listeners/source revisions. The upstream AAR owns native lifecycle; a Java API boundary isolates its Kotlin metadata. Surface destruction hands off to an owned placeholder; paused seekable positions are restored by exact seek on rebind. Progress/duration/track reads use observed caches. Synchronous Surface/track operations have a bounded wait, not guaranteed native cancellation.
  - mpv subtitle ownership (2026-10-29): `MpvSubtitleRendererBackend` hosts the aligned transparent OSD Surface; native owns parsing, ASS/bitmap rendering, clocks and attachment fonts. Separate video/OSD generations preserve lifecycle ownership. External subtitles still use the existing controller/content-URI cache, then await native `sub-add`; revision and track ownership prevent cancelled work from replacing a newer choice. No `ass-full` parser or second app libass instance for mpv. Native mode hides unsupported global opacity without overwriting Media3 preferences; scale/position/delay use mpv properties.
- - Page-specific stable keys and library state restore lists; storage scopes DpadStateRegistry by directory. The shell only provides sidebar/content handoff. Android window focus retains dialog callers without delayed recursive restoration. Player panel boundaries contain native/library navigation, and RemoteKeyDispatcher owns playback key semantics through one dispatch entry.
+ - Page-specific stable keys and library state restore lists; storage scopes DpadStateRegistry by directory. The shell provides top-navigation/content handoff (cinema implementation, 2026-10-31). Android window focus retains dialog callers without delayed recursive restoration. Player panel boundaries contain native/library navigation, and RemoteKeyDispatcher owns playback key semantics through one dispatch entry.
  - TV-only migration evidence is maintained in `docs/superpowers/plans/2026-10-29-tv-only.md`; the earlier DPAD rewrite evidence remains in `docs/superpowers/plans/2026-10-28-tv-dpad-library-rewrite.md`. Physical-TV acceptance remains distinct from AVD verification.
 
  ## Retired Integration Compatibility (2026-10-28)

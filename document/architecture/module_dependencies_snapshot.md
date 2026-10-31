@@ -8,8 +8,8 @@
 
 ## 汇总
 
-- 模块数：22
-- 依赖条目数：82（生产 78 / 测试 4）
+- 模块数：23
+- 依赖条目数：91（生产 87 / 测试 4）
 
 ## 依赖列表（按模块）
 
@@ -24,7 +24,7 @@
 ### :local_component
 
 **生产依赖**
-- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
+- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_metadata_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
 
 **测试依赖**
 - （无）
@@ -40,7 +40,7 @@
 ### :user_component
 
 **生产依赖**
-- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
+- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_metadata_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
 
 **测试依赖**
 - （无）
@@ -48,7 +48,7 @@
 ### :storage_component
 
 **生产依赖**
-- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
+- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_metadata_component, :core_network_component, :core_storage_component, :core_system_component, :core_ui_component, :data_component
 
 **测试依赖**
 - （无）
@@ -113,6 +113,14 @@
 
 **生产依赖**
 - `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_system_component, :data_component, :repository:seven_zip, :repository:thunder
+
+**测试依赖**
+- （无）
+
+### :core_metadata_component
+
+**生产依赖**
+- `implementation`：:core_contract_component, :core_database_component, :core_network_component, :core_storage_component, :core_system_component, :data_component
 
 **测试依赖**
 - （无）
@@ -199,6 +207,7 @@ graph TD
   core_contract_component[":core_contract_component"]
   core_database_component[":core_database_component"]
   core_log_component[":core_log_component"]
+  core_metadata_component[":core_metadata_component"]
   core_network_component[":core_network_component"]
   core_storage_component[":core_storage_component"]
   core_system_component[":core_system_component"]
@@ -239,6 +248,12 @@ graph TD
   core_database_component --> core_system_component
   core_database_component --> data_component
   core_log_component --> data_component
+  core_metadata_component --> core_contract_component
+  core_metadata_component --> core_database_component
+  core_metadata_component --> core_network_component
+  core_metadata_component --> core_storage_component
+  core_metadata_component --> core_system_component
+  core_metadata_component --> data_component
   core_network_component --> core_log_component
   core_network_component --> core_system_component
   core_network_component --> data_component
@@ -261,6 +276,7 @@ graph TD
   local_component --> core_contract_component
   local_component --> core_database_component
   local_component --> core_log_component
+  local_component --> core_metadata_component
   local_component --> core_network_component
   local_component --> core_storage_component
   local_component --> core_system_component
@@ -281,6 +297,7 @@ graph TD
   storage_component --> core_contract_component
   storage_component --> core_database_component
   storage_component --> core_log_component
+  storage_component --> core_metadata_component
   storage_component --> core_network_component
   storage_component --> core_storage_component
   storage_component --> core_system_component
@@ -289,6 +306,7 @@ graph TD
   user_component --> core_contract_component
   user_component --> core_database_component
   user_component --> core_log_component
+  user_component --> core_metadata_component
   user_component --> core_network_component
   user_component --> core_storage_component
   user_component --> core_system_component

@@ -67,7 +67,7 @@ class TvDpadRewriteInstrumentedTest {
         instrumentation.setInTouchMode(false)
     }
 
-    @Test fun gridKeepsItsItemAcrossUpdatesAndOnlyLeavesAtTheLeftEdge() {
+    @Test fun gridKeepsItsItemAcrossUpdatesAndLeavesAtTheTopEdge() {
         val items = (1..60).map { AnimeData(animeId = it, animeTitle = "Focus $it") }
         ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
             scenario.onActivity {
@@ -99,13 +99,13 @@ class TvDpadRewriteInstrumentedTest {
             await(scenario) { gridPosition(it) >= 0 }
             scenario.onActivity {
                 val list = it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.page_anime_rv)
-                list.setSelectedPosition(4)
+                list.setSelectedPosition(0)
             }
             await(scenario) {
                 val list = it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.page_anime_rv)
-                gridPosition(it) == 4 && list.scrollState == RecyclerView.SCROLL_STATE_IDLE
+                gridPosition(it) == 0 && list.scrollState == RecyclerView.SCROLL_STATE_IDLE
             }
-            send(KeyEvent.KEYCODE_DPAD_LEFT)
+            send(KeyEvent.KEYCODE_DPAD_UP)
             await(scenario) { it.findViewById<DpadRecyclerView>(R.id.tv_nav_rv).hasFocus() }
         }
     }

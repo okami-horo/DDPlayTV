@@ -28,11 +28,14 @@ class MediaSourceEntryInstrumentedTest {
         ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
             lateinit var activity: TvMainActivity
             scenario.onActivity { activity = it }
+            await("Top navigation") { activity.hasWindowFocus() }
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            send(KeyEvent.KEYCODE_DPAD_CENTER)
             await("Home media list") {
                 activity.hasWindowFocus() &&
                     (activity.findViewById<RecyclerView>(com.xyoye.local_component.R.id.media_lib_rv).adapter?.itemCount ?: 0) > 0
             }
-            send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
             var count = 0
             scenario.onActivity {
                 count =
@@ -77,7 +80,15 @@ class MediaSourceEntryInstrumentedTest {
             repeat(2) {
                 send(KeyEvent.KEYCODE_MENU)
                 awaitChooser()
-                repeat(8) { send(KeyEvent.KEYCODE_DPAD_DOWN) }
+                for (position in 1..8) {
+                    send(KeyEvent.KEYCODE_DPAD_DOWN)
+                    await("Chooser scroll to item $position") {
+                        val list = chooser() ?: return@await false
+                        list.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
+                            list.findContainingViewHolder(list.rootView.findFocus() ?: return@await false)?.bindingAdapterPosition ==
+                            position
+                    }
+                }
                 instrumentation.runOnMainSync {
                     val list = chooser()!!
                     assertEquals(8, list.findContainingViewHolder(list.rootView.findFocus()!!)!!.bindingAdapterPosition)
@@ -111,6 +122,7 @@ class MediaSourceEntryInstrumentedTest {
             val list = chooser()
             list?.adapter?.itemCount == 9 &&
                 list.height > 0 &&
+                list.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
                 list.findContainingViewHolder(list.rootView.findFocus() ?: return@await false)?.bindingAdapterPosition == 0
         }
     }

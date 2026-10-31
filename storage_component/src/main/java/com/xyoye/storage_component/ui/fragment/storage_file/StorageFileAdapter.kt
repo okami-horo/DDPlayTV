@@ -64,6 +64,7 @@ class StorageFileAdapter(
     ) {
         // TV端暂时关闭投屏
 //        SCREENCAST("投屏", com.xyoye.core_ui_component.R.drawable.ic_video_cast),
+        METADATA("识别 / 更正资料", com.xyoye.core_ui_component.R.drawable.ic_bind_danmu_manual),
         BIND_DANMU("手动查找弹幕", com.xyoye.core_ui_component.R.drawable.ic_bind_danmu_manual),
         BIND_SUBTITLE("手动查找字幕", com.xyoye.core_ui_component.R.drawable.ic_bind_subtitle),
         BIND_AUDIO("添加音频文件", com.xyoye.core_ui_component.R.drawable.ic_bind_audio),
@@ -366,6 +367,19 @@ class StorageFileAdapter(
     ) {
         BottomActionDialog(activity, getMoreActions(file)) {
             when (it.actionId) {
+                ManageAction.METADATA -> {
+                    val reference =
+                        com.xyoye.common_component.storage.catalog.CatalogSourceReader
+                            .capture(file)
+                    ARouter
+                        .getInstance()
+                        .build(RouteTable.Local.MetadataMatch)
+                        .withInt("libraryId", file.storage.library.id)
+                        .withString("uniqueKey", reference.uniqueKey)
+                        .withString("storagePath", reference.storagePath)
+                        .withString("protocolReference", reference.protocolReference)
+                        .navigation(activity)
+                }
                 ManageAction.BIND_DANMU -> bindExtraSource(file, true, options)
                 ManageAction.BIND_SUBTITLE -> bindExtraSource(file, false, options)
                 ManageAction.BIND_AUDIO -> bindAudioSource(file)
@@ -381,6 +395,12 @@ class StorageFileAdapter(
 
     private fun getMoreActions(file: StorageFile) =
         mutableListOf<SheetActionBean>().apply {
+            if (com.xyoye.common_component.storage.catalog.CatalogSourceReader.supports(
+                    file.storage.library.mediaType
+                )
+            ) {
+                add(ManageAction.METADATA.toAction())
+            }
             // TV端不再提供投屏
 //            add(ManageAction.SCREENCAST.toAction())
             add(ManageAction.BIND_DANMU.toAction())

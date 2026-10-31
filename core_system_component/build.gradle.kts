@@ -41,6 +41,13 @@ android {
                 ?: ""
         buildConfigField("String", "DANDAN_APP_ID", buildConfigString(dandanAppId))
 
+        val tmdbToken =
+            System.getenv("TMDB_READ_ACCESS_TOKEN")
+                ?: project.findProperty("TMDB_READ_ACCESS_TOKEN")?.toString()
+                ?: localProperties.getProperty("TMDB_READ_ACCESS_TOKEN")
+                ?: ""
+        buildConfigField("String", "TMDB_READ_ACCESS_TOKEN", buildConfigString(tmdbToken))
+
         val dandanAppSecret =
             System.getenv("DANDAN_APP_SECRET")
                 ?: project.findProperty("DANDAN_APP_SECRET")?.toString()

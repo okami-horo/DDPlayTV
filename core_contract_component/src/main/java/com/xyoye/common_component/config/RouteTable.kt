@@ -22,6 +22,10 @@ object RouteTable {
     }
 
     object Local {
+        const val CinemaFragment = "/local/cinema_fragment"
+        const val MetadataLibrary = "/local/metadata_library"
+        const val MetadataDetail = "/local/metadata_detail"
+        const val MetadataMatch = "/local/metadata_match"
         const val MediaFragment = "/local/media_fragment"
         const val BindExtraSource = "/local/bind_extra_source"
         const val PlayHistory = "/local/play_history"
@@ -29,6 +33,7 @@ object RouteTable {
     }
 
     object User {
+        const val MetadataSettings = "/user/metadata_settings"
         const val PersonalFragment = "/user/personal_fragment"
         const val DeveloperMenuService = "/user/developer_menu_service"
         const val UserSessionService = "/user/user_session_service"

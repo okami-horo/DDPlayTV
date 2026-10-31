@@ -1,0 +1,6 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="108dp" android:padding="12dp" android:layout_margin="4dp" android:orientation="vertical" android:focusable="true" android:clickable="true" android:tag="@string/focusable_item" android:background="@drawable/metadata_task_focus">
+        <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="18sp" android:textColor="#FFFFFF"/>
+        <TextView android:id="@+id/summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textSize="15sp" android:textColor="#CBD3DF"/>
+    </LinearLayout>
+</layout>

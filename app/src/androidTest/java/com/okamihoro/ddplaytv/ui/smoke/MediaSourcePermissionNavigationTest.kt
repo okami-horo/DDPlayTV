@@ -81,8 +81,11 @@ class MediaSourcePermissionNavigationTest {
         ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
             lateinit var activity: TvMainActivity
             scenario.onActivity { activity = it }
-            await("Home media list") { activity.hasWindowFocus() && (list(activity).adapter?.itemCount ?: 0) >= 4 }
+            await("Top navigation") { activity.hasWindowFocus() }
             send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            send(KeyEvent.KEYCODE_DPAD_CENTER)
+            await("Home media list") { activity.hasWindowFocus() && (list(activity).adapter?.itemCount ?: 0) >= 4 }
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
             block(activity)
         }
     }

@@ -1,13 +1,13 @@
 # 模块依赖治理规范（v2）
 
-核对日期：2026-10-28。本文维护当前依赖规则及其决策依据；直接依赖清单和关系图由 [依赖快照](module_dependencies_snapshot.md) 自动生成，不在本文重复维护。
+核对日期：2026-10-31。本文维护当前依赖规则及其决策依据；直接依赖清单和关系图由 [依赖快照](module_dependencies_snapshot.md) 自动生成，不在本文重复维护。
 
 规则实现位于 [ModuleDependencyGovernance.kt](../../buildSrc/src/main/java/governance/ModuleDependencyGovernance.kt)。规则调整必须同步修改文档与实现。
 
 ## 0. 范围与口径
 
-- [settings.gradle.kts](../../settings.gradle.kts) 显式纳入 20 个模块：1 个 app、5 个业务模块、7 个 core、1 个 data、6 个内置 AAR 包装模块。
-- Gradle 还会创建嵌套模块的父项目 :repository。治理实现认识该容器，但不把它计入 20 个显式模块。
+- [settings.gradle.kts](../../settings.gradle.kts) 显式纳入 23 个模块：1 个 app、5 个业务模块、8 个 core、1 个 data、8 个内置依赖包装模块。
+- Gradle 还会创建嵌套模块的父项目 :repository。治理实现认识该容器，但不把它计入 23 个显式模块。
 - 校验直接声明的 Gradle project 依赖，包括生产与测试配置；不展开传递依赖、不检查外部库版本，也不代替源码边界和行为验证。
 - core_notification_component、core_service_component、remote_component、Han1meViewer 不是当前目录或构建模块。不得根据旧文档为它们添加依赖例外。
 
@@ -19,6 +19,7 @@
 | 业务 | :anime_component、:local_component、:user_component、:storage_component、:player_component | 番剧、本地媒体、用户设置、存储浏览、播放业务与 UI |
 | UI 基础 | :core_ui_component | 页面基类、焦点、通用控件与主题 |
 | 基础设施 | :core_storage_component、:core_network_component、:core_database_component | 协议/来源解析、网络、持久化实现 |
+| 元数据 | :core_metadata_component | 文件名解析、TMDB 匹配、资料关联与目录扫描编排；不持有播放器或页面 |
 | 运行时 | :core_system_component、:core_log_component | 启动与系统整合、日志及异常上报 |
 | 契约与数据 | :core_contract_component、:data_component | 跨模块接口/路由/稳定播放描述、共享模型 |
 | 内置依赖 | :repository:* | AAR 包装；不承担业务规则 |
@@ -65,10 +66,11 @@
 | --- | --- |
 | :app | 5 个业务模块，以及 system、log、ui、contract、data；不直接依赖 network、database、storage 实现 |
 | :anime_component | 普通业务基础依赖 |
-| :local_component、:user_component、:storage_component | 普通业务基础依赖 |
+| :local_component、:user_component、:storage_component | 普通业务基础依赖，以及 :core_metadata_component |
 | :player_component | 普通业务基础依赖，以及 :repository:danmaku、:repository:panel_switch、:repository:video_cache、:repository:mpv |
 | :core_ui_component | contract、system、log、data，以及 :repository:immersion_bar |
 | :core_storage_component | contract、network、database、system、log、data，以及 :repository:seven_zip、:repository:thunder |
+| :core_metadata_component | contract、data、network、database、storage、system、log |
 | :core_network_component | system、log、data |
 | :core_database_component | system、data |
 | :core_system_component | contract、log、data |
@@ -106,6 +108,10 @@
 - 2026-10-28 已有模块/播放检查通过的本地证据；全仓旧 ktlint/Pager 基线仍有已知失败。历史测试结果及范围以 [播放交接计划](../../docs/superpowers/plans/2026-10-27-playback-handoff-session.md) 的记录为准，本次文档整理不产生新的功能验证结果。
 
 ## 6. 决策记录
+
+### DR-0004：元数据编排独立于存储和播放器
+
+新增 core_metadata_component 供 local/storage/user 共用作品识别、人工关联和扫描任务。它向下调用 storage/network/database；core_storage 不反向依赖 metadata，app 和 player 不增加 metadata 实现依赖。资料关联保存独立文件身份，播放仍通过既有 contract 描述符解析；模块通过不代表 TMDB 或协议服务已完成实机验收。详见 [TMDB 实施记录](../../docs/superpowers/plans/2026-10-31-tmdb-media-library.md)。
 
 ### DR-0001：system 是应用运行时，允许 system → log
 

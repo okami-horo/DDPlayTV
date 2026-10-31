@@ -59,6 +59,10 @@ class AppSettingFragment : BasePreferenceFragmentCompat() {
         savedInstanceState: Bundle?
     ) {
         val backupDomainAddress = findPreference<EditTextPreference>(KEY_BACKUP_DOMAIN_ADDRESS)
+        findPreference<Preference>("metadata_settings")?.setOnPreferenceClickListener {
+            ARouter.getInstance().build(RouteTable.User.MetadataSettings).navigation()
+            true
+        }
 
         findPreference<Preference>(KEY_DARK_MODE)?.apply {
             setOnPreferenceClickListener {

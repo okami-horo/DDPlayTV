@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PlayHistoryDao {
+    @Query("SELECT * FROM play_history WHERE url != '' ORDER BY play_time DESC")
+    fun observeAll(): Flow<List<PlayHistoryEntity>>
+
     @Query("SELECT * FROM play_history WHERE id = (:id)")
     suspend fun getById(id: Int): PlayHistoryEntity?
 

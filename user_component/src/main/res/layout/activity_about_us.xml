@@ -80,6 +80,20 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginBottom="10dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/official_address_tv">
+            <ImageView android:layout_width="154dp" android:layout_height="20dp" android:src="@drawable/tmdb_logo" android:contentDescription="TMDB" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:gravity="center" android:textSize="12sp" android:textColor="@color/text_gray" android:text="This product uses the TMDB API but is not endorsed or certified by TMDB." />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/official_address_tv"
             android:layout_width="wrap_content"

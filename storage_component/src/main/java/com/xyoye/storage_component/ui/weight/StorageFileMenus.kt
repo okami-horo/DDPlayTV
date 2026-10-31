@@ -40,6 +40,9 @@ class StorageFileMenus private constructor(
     private var onSortChanged: (() -> Unit)? = null
 
     init {
+        menu.findItem(R.id.action_scan_metadata).isVisible =
+            com.xyoye.common_component.storage.catalog.CatalogSourceReader
+                .supports(activity.storage.library.mediaType)
         initSearchView()
         updateSortItem()
     }
@@ -85,6 +88,31 @@ class StorageFileMenus private constructor(
     }
 
     fun onOptionsItemSelected(item: MenuItem) {
+        if (item.itemId == R.id.action_scan_metadata) {
+            com.xyoye.common_component.weight.dialog.CommonDialog
+                .Builder(activity)
+                .apply {
+                    content = "扫描当前目录及子目录的作品资料？文件不会被改名或删除。本地来源仅读取已有视频索引。"
+                    positiveText = "开始扫描"
+                    addPositive { dialog ->
+                        dialog.dismiss()
+                        com.xyoye.common_component.metadata.MetadataCoordinator.startScan(
+                            activity.storage.library.id,
+                            activity.storage.directory
+                                ?.storagePath()
+                                .orEmpty()
+                        )
+                        com.alibaba.android.arouter.launcher.ARouter
+                            .getInstance()
+                            .build(
+                                com.xyoye.common_component.config.RouteTable.User.MetadataSettings
+                            ).navigation()
+                    }
+                    addNegative()
+                }.build()
+                .show()
+            return
+        }
         val changed =
             when (item.itemId) {
                 R.id.action_sort_by_name -> StorageSortOption.setSort(StorageSort.NAME)

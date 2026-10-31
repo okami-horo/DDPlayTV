@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application android:supportsRtl="true">
+        <activity android:name=".ui.metadata.MetadataMatchActivity" android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity android:name=".ui.metadata.MetadataDetailActivity" />
+        <activity android:name=".ui.metadata.MetadataLibraryActivity" />
         <activity
             android:name=".ui.activities.play_history.PlayHistoryActivity"
             android:configChanges="orientation|screenSize" />

@@ -1,0 +1,15 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data><variable name="viewModel" type="com.xyoye.local_component.ui.metadata.MetadataLibraryViewModel"/></data>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:padding="24dp" android:orientation="vertical" android:background="#0B1018">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="已入库作品" android:textSize="28sp" android:textColor="#FFFFFF"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="56dp">
+            <Button android:id="@+id/all" android:layout_width="wrap_content" android:layout_height="48dp" android:text="全部"/>
+            <Button android:id="@+id/movies" android:layout_width="wrap_content" android:layout_height="48dp" android:text="电影"/>
+            <Button android:id="@+id/series" android:layout_width="wrap_content" android:layout_height="48dp" android:text="剧集 / 番剧"/>
+            <Button android:id="@+id/unmatched" android:layout_width="wrap_content" android:layout_height="48dp" android:text="待识别文件"/>
+            <Button android:id="@+id/back" android:layout_width="wrap_content" android:layout_height="48dp" android:text="返回"/>
+        </LinearLayout>
+        <TextView android:id="@+id/count" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#CBD3DF" android:textSize="14sp"/>
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/items" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+    </LinearLayout>
+</layout>

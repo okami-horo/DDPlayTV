@@ -20,6 +20,7 @@ internal object ModuleDependencyGovernance {
     private const val MODULE_NETWORK = ":core_network_component"
     private const val MODULE_DATABASE = ":core_database_component"
     private const val MODULE_STORAGE_CORE = ":core_storage_component"
+    private const val MODULE_METADATA = ":core_metadata_component"
     private const val MODULE_UI = ":core_ui_component"
     private const val MODULE_REPOSITORY = ":repository"
     private const val MODULE_REPO_DANMAKU = ":repository:danmaku"
@@ -46,6 +47,7 @@ internal object ModuleDependencyGovernance {
             MODULE_NETWORK,
             MODULE_DATABASE,
             MODULE_STORAGE_CORE,
+            MODULE_METADATA,
             MODULE_UI,
             // Gradle "container" project for nested :repository:* modules.
             MODULE_REPOSITORY,
@@ -97,6 +99,7 @@ internal object ModuleDependencyGovernance {
                 ),
             MODULE_LOCAL to
                 setOf(
+                    MODULE_METADATA,
                     MODULE_UI,
                     MODULE_SYSTEM,
                     MODULE_LOG,
@@ -108,6 +111,7 @@ internal object ModuleDependencyGovernance {
                 ),
             MODULE_USER to
                 setOf(
+                    MODULE_METADATA,
                     MODULE_UI,
                     MODULE_SYSTEM,
                     MODULE_LOG,
@@ -119,6 +123,7 @@ internal object ModuleDependencyGovernance {
                 ),
             MODULE_STORAGE to
                 setOf(
+                    MODULE_METADATA,
                     MODULE_UI,
                     MODULE_SYSTEM,
                     MODULE_LOG,
@@ -178,6 +183,7 @@ internal object ModuleDependencyGovernance {
                     MODULE_REPO_SEVEN_ZIP,
                     MODULE_REPO_THUNDER
                 ),
+            MODULE_METADATA to setOf(MODULE_CONTRACT, MODULE_DATA, MODULE_NETWORK, MODULE_DATABASE, MODULE_STORAGE_CORE, MODULE_SYSTEM, MODULE_LOG),
             // ui (must not depend on infra impl layer; repo allowlist is restricted)
             MODULE_UI to
                 setOf(

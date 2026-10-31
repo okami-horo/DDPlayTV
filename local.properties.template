@@ -14,6 +14,9 @@ BUGLY_APP_ID=YOUR_BUGLY_APP_ID_HERE
 DANDAN_APP_ID=YOUR_DANDAN_APP_ID_HERE
 DANDAN_APP_SECRET=YOUR_DANDAN_APP_SECRET_HERE
 
+# TMDB API Read Access Token（可用同名环境变量或 Gradle 属性注入；留空禁用在线资料）
+TMDB_READ_ACCESS_TOKEN=
+
 # 百度网盘开放平台配置
 # 1. 创建百度网盘开放平台应用（设备码模式）
 # 2. 将下列占位符替换为实际的 Client ID / Client Secret

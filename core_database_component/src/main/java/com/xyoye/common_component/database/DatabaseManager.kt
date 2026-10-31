@@ -402,6 +402,7 @@ class DatabaseManager private constructor() {
                 MIGRATION_15_16,
                 MIGRATION_16_17,
                 MIGRATION_17_18,
+                MetadataMigration,
                 MIGRATION_16_15,
             ).build()
 }

@@ -8,7 +8,7 @@
  - Compose feature modules through `:app` while keeping reusable foundations in `core_*` modules.
  - Keep feature modules independent; cross-feature collaboration goes through `:core_contract_component` contracts/routing.
  - Support local media, storage/casting, player UI/capabilities, anime search, and user/settings. Bilibili integration is retired; PiliPlus owns that functionality (user decision, 2026-10-28).
- - Planned media-library metadata uses TMDB for movies, TV series and anime (user decision, 2026-10-30); implementation remains pending. Scope and UI linkage: `document/media-library/tmdb-metadata-followup.md`.
+ - Media-library metadata uses TMDB for movies, TV series and anime (authorized implementation, 2026-10-31). Independent metadata orchestration, Room 19, native cinema pages and manual first-batch source indexing are implemented; verification and external-service/device limits are tracked in `docs/superpowers/plans/2026-10-31-tmdb-media-library.md`. Product scope: `document/media-library/tmdb-metadata-followup.md`.
  - Refactor accumulated feature additions to reduce unclear ownership and maintenance cost while preserving existing functionality and TV behavior (user clarified this priority on 2026-10-27). Judge new layers by the old responsibilities they replace, using comparable source projects as references rather than templates to copy.
 
  ## Scope
