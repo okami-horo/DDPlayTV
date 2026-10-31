@@ -7,6 +7,7 @@
 | 主题 | 设计依据 | 执行状态与证据 |
 | --- | --- | --- |
 | TMDB 元数据、文件关联与新媒体库 | [刮削与模块设计](designs/2026-10-31-tmdb-media-library-design.md) | 已授权实施：关联/纠错、Room 19、原生 UI 与首批来源手动扫描；[实施及验证](plans/2026-10-31-tmdb-media-library.md)、[范围与待办](../../document/media-library/tmdb-metadata-followup.md) |
+| 文件浏览 C：列表与预览 | [已选 C 设计](designs/2026-10-31-file-browser-design.md) | 用户要求暂缓实施；[后续任务与 C01–C11 验收](plans/2026-10-31-file-browser-preview.md)，原生未开始 |
 | 新 UI 前的身份、异步与恢复修复 | [逻辑修复设计](designs/2026-10-30-ui-readiness-repairs-design.md) | [R1–R10 实施与验证](plans/2026-10-30-ui-readiness-repairs.md)已完成本地验证；优先恢复上次位置，已看完分类单独处理；物理电视及真实服务边界保留 |
 | 新 UI 的全局配置收敛 | [全局配置设计](designs/2026-10-30-global-settings-design.md) | 用户已授权实施；单库偏好移除、PC 分组全局化与 Room 17→18 已实现，验证状态及剩余边界见[实施记录](plans/2026-10-30-global-settings.md) |
 | 纯 TV 项目收敛 | 用户确认不再维护手机端，保留共享媒体能力与双内核 | [实施与验证记录](plans/2026-10-29-tv-only.md) |

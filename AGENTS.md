@@ -330,6 +330,16 @@ Sensitive tokens belong in `local.properties` or Gradle properties; never hard-c
 - 不存在“焦点陷阱/焦点丢失/隐藏视图抢焦点”；列表滚动与页面返回后焦点可恢复。
 - 所有可操作控件均有清晰 focused 反馈（视觉高亮一致、可辨识）。
 
+### 7) Visual redesign acceptance
+
+- Before UI redesign work, read `memory-bank/projectBrief.md` and `memory-bank/activeContext.md`, then follow their links to the current task and selected design. Respect deferred work; a design choice or plan document alone does not resume implementation.
+- Identify the exact prototype file, variant and user-confirmed scope. Render and inspect it before editing native UI. Latest user choices override earlier agent recommendations; do not silently substitute another variant.
+- Maintain a page/state coverage matrix linking each affected state to its design, implementation and verification. Missing screens are design gaps, not permission to keep old structure and mark them complete. Resolve material gaps before implementing those states; routine choices within the confirmed design do not need repeated approval.
+- Treat hierarchy, navigation, density, proportions and information placement as design requirements. Recoloring existing widgets does not fulfill a structural redesign. Preserve real data and existing capabilities rather than copying prototype fixtures into production.
+- Validate visuals with actually viewed prototype/native screenshots using comparable data, focus, scroll position and logical viewport/density. Fix unexplained differences; do not assume scaling caused them without measurements. Include ordinary, empty, loading, error and interaction states relevant to the task.
+- Record implementation, build/tests, DPAD behavior, visual comparison and physical-device/user acceptance separately. Passing compilation or tests, installation success, or a historical screenshot cannot establish current visual completion. Keep missing evidence and remaining differences open in the task ledger and reconcile contradictory memory summaries.
+- Prefer local prototypes and task-owned emulators for iteration. Follow the user's current device authorization; past installation or screenshot permission is not ongoing permission to occupy their TV for navigation/playback testing.
+
 ## Active Technologies
 - Kotlin `1.9.25`（JVM target `1.8`）、Android Gradle Plugin `8.7.2`、Gradle `8.9`
 - AndroidX（Lifecycle/ViewModel、Room、Preference、RecyclerView、Startup 等）、Kotlin Coroutines、ARouter

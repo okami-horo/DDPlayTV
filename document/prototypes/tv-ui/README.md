@@ -1,6 +1,6 @@
 # DDPlayTV 深色 UI 网页原型
 
-状态：2026-10-30 用户已选择 **沉浸放映（`cinema`）**，并设为默认预览。它是原生 UI 的视觉基准。2026-10-31 第一轮“整套完成”的结论已撤回，随后按此原型重新整改并完成本地截图/DPAD 验证；以 [原生 UI 记录的整改章节](../../../docs/superpowers/plans/2026-10-31-cinema-ui.md#原型一致性整改2026-10-31本地验收通过) 为准。修正版已在随后获得用户授权后安装到电视，安装包哈希核对一致；物理电视界面与播放验收仍待完成。
+状态：2026-10-30 用户已选择 **沉浸放映（`cinema`）**，并设为默认预览。它是原生 UI 的视觉基准。2026-10-31 第一轮“整套完成”的结论已撤回，随后按此原型重新整改并完成本地截图/DPAD 验证；以 [原生 UI 记录的整改章节](../../../docs/superpowers/plans/2026-10-31-cinema-ui.md#原型一致性整改2026-10-31本地验收通过) 为准。修正版已在随后获得用户授权后安装到电视，安装包哈希核对一致；随后用户根据当前电视截图否定文件浏览页效果；原型原本缺少完整目录页，文件页视觉验收结论已撤回。物理电视界面与播放验收仍待完成。
 
 ## 设计问题
 
@@ -33,3 +33,13 @@ node document/prototypes/tv-ui/server.cjs
 Android UI 以已选的沉浸放映方案为基准，保留暗色、苹果系风格，并复用原有设置、来源与播放行为。网页布局和动效用于表达设计，不能直接替代原生焦点、电视性能、视频 Surface、字幕渲染和真实遥控器验收。
 
 媒体库元数据已决定统一采用 TMDB，接入范围和未完成事项见 [TMDB 媒体库待办](../../media-library/tmdb-metadata-followup.md)。
+
+## 文件浏览页补充设计（2026-10-31）
+
+用户已选择 **C「列表与预览」**，原型默认打开 C；A/B 只保留作历史对照。用户要求先创建任务、当前暂缓原生改造，见 [C 方案实施任务](../../../docs/superpowers/plans/2026-10-31-file-browser-preview.md)。[文件浏览原型](files-prototype.html?variant=preview) 也可从原型首页右上角进入。
+
+- 访问 `http://127.0.0.1:4173/files-prototype.html?variant=preview`，现有命令启动的服务同时支持这张设计。服务可加端口参数，例如 `node document/prototypes/tv-ui/server.cjs 4174`。
+- 场景选择包含六个目录、视频及长名称、混排、空目录、首次加载失败、加载中、分页追加。
+- 方向键、Enter、Esc、菜单键（键盘 M）可操作；视频行向右到更多按钮，向左返回主操作。
+- [设计说明与边界](../../../docs/superpowers/designs/2026-10-31-file-browser-design.md)，[已选 C 截图](previews/files-preview.png)；历史对照：[A 目录](previews/files-grid.png)、[A 视频](previews/files-videos.png)、[B](previews/files-list.png)。
+- 这是示例数据网页设计，未接入真实来源；没有改动 Android、重新打包或操作电视。已加载内容的刷新失败、分页失败、登录过期等细节仍需补交互稿和原生验收。

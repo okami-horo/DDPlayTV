@@ -13,7 +13,7 @@
 </style>
 </head>
 <body>
-<header class="review-header"><div class="review-brand"><strong>DDPlayTV</strong><span>界面设计预览 / 深色</span></div><div class="review-actions"><span>示例内容与插画 · 已选沉浸放映</span><button id="fullscreen">全屏体验 ↗</button></div></header>
+<header class="review-header"><div class="review-brand"><strong>DDPlayTV</strong><span>界面设计预览 / 深色</span></div><div class="review-actions"><a href="files-prototype.html?variant=preview" style="color:#bdbdc8">文件浏览设计 ↗</a><span>示例内容与插画 · 已选沉浸放映</span><button id="fullscreen">全屏体验 ↗</button></div></header>
 <div class="preview-wrap" id="preview"><main class="stage" id="stage" aria-label="DDPlayTV 交互原型"></main></div>
 <footer class="review-footer"><span><kbd>↑ ↓ ← →</kbd> 移动 <kbd>Enter</kbd> 确认 <kbd>Esc</kbd> 返回 · 支持鼠标</span><span id="review-status" class="review-status" aria-live="polite"></span></footer>
 <div class="variant-bar" aria-label="切换设计方案"><button id="previous-variant" aria-label="上一个方案">‹</button><div class="variant-info"><strong id="variant-label"></strong><div class="variant-dots" id="variant-dots"></div></div><button id="next-variant" aria-label="下一个方案">›</button></div>
@@ -22,7 +22,8 @@ const stage = document.getElementById('stage');
 const variants = [{id:'sidebar',name:'侧栏影院',description:'常用入口清晰，内容与来源平衡'},{id:'cinema',name:'沉浸放映',description:'顶部导航，大画面突出继续观看'},{id:'library',name:'媒体工作台',description:'来源与文件优先，右侧呈现内容预览'}];
 const requestedVariant = new URLSearchParams(location.search).get('variant');
 let variant = variants.findIndex(item => item.id === requestedVariant); if (variant < 0) variant = 1;
-let page='home', selectedFilm=0, panel=null, dialog=null, opener=null, historyStack=[], category='播放';
+const requestedPage = new URLSearchParams(location.search).get('page');
+let page=['library','settings'].includes(requestedPage)?requestedPage:'home', selectedFilm=0, panel=null, dialog=requestedPage==='search'?'search':null, opener=null, historyStack=[], category='播放';
 const settings={kernel:'Media3',resume:true,autoplay:false,danmaku:true,subtitles:true,hidden:false};
 let playing=true,position=875,subtitle='简体中文',subtitleSize=100,audioTrack='日语 · 立体声';
 const films=[{title:'深海来信',episode:'第 04 集 · 潮汐之外',detail:'一封来自远方的信，让旅途再次开始。',time:'23:40',duration:1420,progress:62,colors:['#09131e','#2e525e','#152f41','#395762'],source:'客厅 NAS',file:'深海来信 - E04.mkv'}, {title:'山野之间',episode:'第 02 集 · 云的方向',detail:'穿过山谷，听见风与森林的回声。',time:'24:10',duration:1450,progress:28,colors:['#182724','#789382','#35594e','#506d58'],source:'本地媒体',file:'山野之间 - E02.mkv'}, {title:'落日列车',episode:'第 07 集 · 下一站',detail:'在暮色消失之前，寻找最后一班列车。',time:'24:00',duration:1440,progress:10,colors:['#251f2d','#ba8175','#544453','#7f5460'],source:'客厅 NAS',file:'落日列车 - E07.mkv'}, {title:'星际漫游',episode:'第 01 集 · 无声轨道',detail:'越过星海，走向未曾抵达的明天。',time:'25:20',duration:1520,progress:0,colors:['#11162b','#666586','#2c3556','#42496d'],source:'客厅 NAS',file:'星际漫游 - E01.mkv'}];
