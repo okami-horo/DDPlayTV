@@ -59,10 +59,12 @@ fun ImageView.loadStorageFileCover(file: StorageFile) {
             CachePolicy.ENABLED
         }
 
-    load(source ?: R.drawable.ic_dandanplay) {
+    load(source) {
         scale(Scale.FILL)
         crossfade(true)
-        error(R.drawable.ic_dandanplay)
+        placeholder(R.drawable.cinema_media_placeholder)
+        fallback(R.drawable.cinema_media_placeholder)
+        error(R.drawable.cinema_media_placeholder)
         transformations(RoundedCornersTransformation(5f.dp()))
         diskCachePolicy(cachePolicy)
         memoryCachePolicy(cachePolicy)

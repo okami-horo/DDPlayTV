@@ -4,7 +4,11 @@
     <ListPreference
         android:icon="@drawable/ic_player_setting_video"
         android:key="player_type"
-        android:title="播放器类型" />
+        android:title="默认播放器" />
+    <SwitchPreference
+        android:key="auto_play_next"
+        android:title="顺序播放"
+        android:summary="当前视频结束后，播放下一个" />
     <SeekBarPreference
         android:key="exo_proxy_range_interval_ms"
         android:max="2000"

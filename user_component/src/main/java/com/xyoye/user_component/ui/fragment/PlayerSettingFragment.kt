@@ -24,6 +24,7 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
         private const val DEFAULT_MPV_VIDEO_SYNC = "default"
         private const val DEFAULT_LOCAL_PROXY_MODE = "1"
         private const val KEY_PLAYER_TYPE = "player_type"
+        private const val KEY_AUTO_PLAY_NEXT = "auto_play_next"
         private const val KEY_EXO_PROXY_RANGE_INTERVAL_MS = "exo_proxy_range_interval_ms"
         private const val KEY_EXO_LOCAL_PROXY_MODE = "exo_local_proxy_mode"
         private const val KEY_MPV_PROXY_RANGE_INTERVAL_MS = "mpv_proxy_range_interval_ms"
@@ -32,7 +33,11 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
         private const val KEY_MPV_VIDEO_SYNC = "mpv_video_sync"
         private const val KEY_SURFACE_RENDERS = "surface_renders"
 
-        fun newInstance() = PlayerSettingFragment()
+        fun newInstance(compact: Boolean = false) =
+            PlayerSettingFragment().apply {
+                arguments =
+                    androidx.core.os.bundleOf("compact" to compact)
+            }
 
         val playerData =
             mapOf(
@@ -92,6 +97,26 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
         addPreferencesFromResource(R.xml.preference_player_setting)
         setupRangeIntervalPreference(KEY_EXO_PROXY_RANGE_INTERVAL_MS)
         setupRangeIntervalPreference(KEY_MPV_PROXY_RANGE_INTERVAL_MS)
+        if (arguments?.getBoolean("compact") == true) {
+            for (index in 0 until preferenceScreen.preferenceCount) {
+                val preference = preferenceScreen.getPreference(index)
+                preference.isVisible = preference.key == KEY_PLAYER_TYPE || preference.key == KEY_AUTO_PLAY_NEXT
+            }
+            preferenceScreen.addPreference(
+                Preference(requireContext()).apply {
+                    title = "高级播放设置"
+                    summary = "视频输出、音频与网络播放选项"
+                    setOnPreferenceClickListener {
+                        com.alibaba.android.arouter.launcher.ARouter
+                            .getInstance()
+                            .build(
+                                com.xyoye.common_component.config.RouteTable.User.SettingPlayer
+                            ).navigation()
+                        true
+                    }
+                }
+            )
+        }
     }
 
     override fun onViewCreated(
@@ -221,6 +246,10 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
     }
 
     private fun updateVisible(playerType: String) {
+        if (arguments?.getBoolean("compact") == true) {
+            (mpvPreference + exoPreference).forEach { findPreference<Preference>(it)?.isVisible = false }
+            return
+        }
         when (playerType) {
             PlayerType.TYPE_MPV_PLAYER.value.toString() -> {
                 mpvPreference.forEach { findPreference<Preference>(it)?.isVisible = true }
@@ -332,10 +361,12 @@ class PlayerSettingFragment : BasePreferenceFragmentCompat() {
                 ),
             booleanReaders =
                 mapOf(
+                    KEY_AUTO_PLAY_NEXT to { PlayerConfig.isAutoPlayNext() },
                     KEY_SURFACE_RENDERS to { PlayerConfig.isUseSurfaceView() },
                 ),
             booleanWriters =
                 mapOf(
+                    KEY_AUTO_PLAY_NEXT to { value -> PlayerConfig.putAutoPlayNext(value) },
                     KEY_SURFACE_RENDERS to { value -> PlayerConfig.putUseSurfaceView(value) },
                 ),
         )

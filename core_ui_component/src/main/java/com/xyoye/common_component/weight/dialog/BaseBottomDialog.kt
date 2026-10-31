@@ -11,12 +11,11 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.appcompat.app.AppCompatDialog
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.core_ui_component.R
@@ -28,7 +27,7 @@ import com.xyoye.core_ui_component.databinding.DialogBaseBottomDialogBinding
 
 abstract class BaseBottomDialog<T : ViewDataBinding>(
     private val activity: Activity
-) : BottomSheetDialog(activity, R.style.Bottom_Sheet_Dialog) {
+) : AppCompatDialog(activity, R.style.CinemaDialog) {
     protected lateinit var rootViewBinding: DialogBaseBottomDialogBinding
     private var initialFocusPending = false
 
@@ -73,23 +72,22 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
                 (attributes.softInputMode and WindowManager.LayoutParams.SOFT_INPUT_MASK_STATE.inv()) or
                     WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
             )
-            decorView.setPadding(0, decorView.top, 0, decorView.bottom)
+            decorView.setPadding(0, 0, 0, 0)
 
             val layoutParams = attributes
-            layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
+            layoutParams.width = minOf(dp2px(440), context.resources.displayMetrics.widthPixels - dp2px(48))
             layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT
             attributes = layoutParams
 
-            setGravity(Gravity.BOTTOM)
+            setGravity(Gravity.CENTER)
         }
-
-        // 默认展开
-        behavior.state = BottomSheetBehavior.STATE_EXPANDED
-        behavior.isDraggable = false
 
         setContentView(rootViewBinding.root)
 
         initView(childViewBinding)
+        listOf(rootViewBinding.actionLeftContainer, rootViewBinding.actionRightContainer).forEach {
+            if (it.childCount == 0) it.layoutParams = it.layoutParams.apply { width = dp2px(10) }
+        }
     }
 
     protected fun setTitle(text: String) {
@@ -212,14 +210,6 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
     ) {
         setCancelable(backPressedCancel)
         setCanceledOnTouchOutside(touchCancel)
-    }
-
-    /**
-     * 禁止BottomSheetDialog拖动关闭
-     * 避免与RecyclerView滑动产生冲突
-     */
-    protected fun disableSheetDrag() {
-        behavior.isDraggable = false
     }
 
     abstract fun getChildLayoutId(): Int

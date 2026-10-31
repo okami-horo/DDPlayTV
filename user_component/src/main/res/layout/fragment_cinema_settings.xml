@@ -1,0 +1,11 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android"><data><variable name="viewModel" type="com.xyoye.user_component.ui.activities.setting_app.SettingAppViewModel"/></data>
+<LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:paddingTop="80dp" android:paddingHorizontal="@dimen/cinema_gutter" android:paddingBottom="24dp" android:background="@color/cinema_background">
+<TextView style="@style/Cinema.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="设置"/>
+<TextView style="@style/Cinema.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="让每次观看，都合你的习惯。"/>
+<LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="24dp">
+<com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/categories" android:layout_width="166dp" android:layout_height="match_parent" android:padding="4dp" android:clipToPadding="false" android:layout_marginEnd="20dp"/>
+<LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:orientation="vertical">
+<TextView android:id="@+id/section_title" style="@style/Cinema.Section" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp"/>
+<androidx.fragment.app.FragmentContainerView android:id="@+id/settings_content" android:layout_width="match_parent" android:layout_height="234dp" android:background="@drawable/cinema_surface" android:paddingHorizontal="16dp" android:paddingVertical="6dp"/>
+<TextView style="@style/Cinema.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="修改即时生效。你可以随时回到这里调整。" android:textSize="11sp"/>
+</LinearLayout></LinearLayout></LinearLayout></layout>

@@ -1,0 +1,7 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="70dp" android:padding="10dp" android:gravity="center_vertical" android:background="@drawable/cinema_card" android:focusable="true" android:clickable="true" android:tag="@string/focusable_item">
+    <ImageView android:id="@+id/card_image" android:layout_width="64dp" android:layout_height="42dp" android:scaleType="centerCrop" android:background="@drawable/cinema_image" android:clipToOutline="true" android:importantForAccessibility="no"/>
+    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:orientation="vertical">
+        <TextView android:id="@+id/card_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/cinema_text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:id="@+id/card_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="@color/cinema_muted" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
+    </LinearLayout>
+</LinearLayout>

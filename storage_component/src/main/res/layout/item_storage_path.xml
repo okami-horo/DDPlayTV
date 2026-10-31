@@ -6,12 +6,12 @@
         android:id="@+id/tv_path"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:background="@drawable/background_storage_path_selector"
+        android:background="@drawable/cinema_category"
         android:focusable="true"
         android:gravity="center_vertical"
         android:paddingHorizontal="10dp"
         android:tag="@string/focusable_item"
-        android:textColor="@color/text_black"
-        android:textSize="14sp"
+        android:textColor="@color/cinema_muted"
+        android:textSize="12sp"
         tools:text="根目录" />
 </layout>

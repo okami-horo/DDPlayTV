@@ -1,51 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/item_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="4dp"
-        android:clipChildren="false"
-        android:clipToPadding="false">
-
-        <LinearLayout
-            android:id="@+id/cl_card"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="@drawable/cinema_card"
-            android:orientation="vertical"
-            android:paddingVertical="16dp"
-            android:focusable="true"
-            android:clickable="true"
-            android:tag="@string/focusable_item"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageView
-                android:id="@+id/iv_setting"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_gravity="center_horizontal"
-                android:contentDescription="@null"
-                tools:src="@drawable/ic_setting_video_aspect" />
-
-            <com.xyoye.common_component.weight.MarqueeTextView
-                android:id="@+id/tv_setting"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:ellipsize="marquee"
-                android:gravity="center"
-                android:paddingHorizontal="4dp"
-                android:singleLine="true"
-                android:textColor="@color/text_white_immutable"
-                android:textSize="14sp"
-                tools:text="测试" />
-
-        </LinearLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:id="@+id/cl_card" android:layout_width="match_parent" android:layout_height="48dp" android:paddingHorizontal="12dp" android:gravity="center_vertical" android:background="@drawable/cinema_button" android:focusable="true" android:clickable="true" android:tag="@string/focusable_item">
+        <ImageView android:id="@+id/iv_setting" android:layout_width="20dp" android:layout_height="20dp" app:tint="@color/cinema_text" android:importantForAccessibility="no" />
+        <TextView android:id="@+id/tv_setting" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:textColor="@color/cinema_text" android:textSize="14sp" />
+        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/cinema_ic_next" android:importantForAccessibility="no" />
+    </LinearLayout>
 </layout>

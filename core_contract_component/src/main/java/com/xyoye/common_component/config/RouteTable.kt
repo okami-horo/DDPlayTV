@@ -9,6 +9,7 @@ package com.xyoye.common_component.config
 object RouteTable {
     object App {
         const val Media3SessionServiceProvider = "/app/media3_session_service_provider"
+        const val CinemaNavigation = "cinema_navigation"
     }
 
     object Anime {
@@ -24,6 +25,7 @@ object RouteTable {
     object Local {
         const val CinemaFragment = "/local/cinema_fragment"
         const val MetadataLibrary = "/local/metadata_library"
+        const val MetadataSearch = "/local/metadata_search"
         const val MetadataDetail = "/local/metadata_detail"
         const val MetadataMatch = "/local/metadata_match"
         const val MediaFragment = "/local/media_fragment"
@@ -33,6 +35,8 @@ object RouteTable {
     }
 
     object User {
+        const val AccountTools = "/user/account_tools"
+        const val SettingsFragment = "/user/settings_fragment"
         const val MetadataSettings = "/user/metadata_settings"
         const val PersonalFragment = "/user/personal_fragment"
         const val DeveloperMenuService = "/user/developer_menu_service"

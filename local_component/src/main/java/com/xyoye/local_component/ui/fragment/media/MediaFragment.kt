@@ -1,6 +1,8 @@
 package com.xyoye.local_component.ui.fragment.media
 
 import android.view.KeyEvent
+import androidx.core.view.isVisible
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
@@ -11,9 +13,11 @@ import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.application.DanDanPlay
 import com.xyoye.common_component.base.BaseFragment
 import com.xyoye.common_component.config.RouteTable
+import com.xyoye.common_component.extension.collectAtStarted
 import com.xyoye.common_component.extension.deletable
+import com.xyoye.common_component.extension.grid
+import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.setData
-import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.focus.DpadFocusOwner
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.common_component.weight.BottomActionDialog
@@ -26,6 +30,9 @@ import com.xyoye.local_component.BR
 import com.xyoye.local_component.R
 import com.xyoye.local_component.databinding.FragmentMediaBinding
 import com.xyoye.local_component.databinding.ItemMediaLibraryBinding
+import com.xyoye.local_component.ui.metadata.MetadataCard
+import com.xyoye.local_component.ui.metadata.MetadataCardAdapter
+import com.xyoye.local_component.ui.metadata.MetadataLibraryViewModel
 
 /**
  * Created by xyoye on 2020/7/27.
@@ -57,12 +64,64 @@ class MediaFragment :
         viewModel.mediaLibWithStatusLiveData.observe(viewLifecycleOwner) {
             dataBinding.mediaLibRv.setData(it)
         }
+
+        val metadata = ViewModelProvider(this)[MetadataLibraryViewModel::class.java]
+        val cards =
+            MetadataCardAdapter(landscape = true, click = { card ->
+                ARouter
+                    .getInstance()
+                    .build(RouteTable.Local.MetadataDetail)
+                    .withString("kind", card.key.substringBefore(':'))
+                    .withLong("tmdbId", card.key.substringAfter(':').toLong())
+                    .navigation()
+            })
+        dataBinding.libraryCards.apply {
+            layoutManager = grid(3)
+            adapter = cards
+            setFocusOutAllowed(true, true)
+        }
+        metadata.state.collectAtStarted(viewLifecycleOwner) { state ->
+            val bindings = state.bindings.associateBy { it.assetId }
+            val order =
+                state.assets
+                    .sortedByDescending { it.discoveredAt }
+                    .mapNotNull { asset ->
+                        bindings[asset.assetId]?.let { "${it.mediaKind}:${it.tmdbId}" }
+                    }.distinct()
+                    .withIndex()
+                    .associate { it.value to it.index }
+            val historyByFile = state.history.associateBy { "${it.storageId}:${it.uniqueKey}" }
+            val progress =
+                state.assets
+                    .mapNotNull { asset ->
+                        val history = historyByFile["${asset.libraryId}:${asset.uniqueKey}"] ?: return@mapNotNull null
+                        val media = bindings[asset.assetId] ?: return@mapNotNull null
+                        "${media.mediaKind}:${media.tmdbId}" to
+                            if (history.videoDuration > 0) (history.videoPosition * 100 / history.videoDuration).toInt() else 0
+                    }.toMap()
+            cards.submitList(
+                state.works.sortedBy { order["${it.mediaKind}:${it.tmdbId}"] ?: Int.MAX_VALUE }.map {
+                    MetadataCard(
+                        "${it.mediaKind}:${it.tmdbId}",
+                        it.title,
+                        "${it.releaseDate.take(4)} · ${if (it.mediaKind == "tv") "剧集 / 番剧" else "电影"}",
+                        it.backdrop ?: it.poster,
+                        progress["${it.mediaKind}:${it.tmdbId}"]
+                    )
+                }
+            )
+            dataBinding.libraryCount.text = if (state.works.isEmpty()) "还没有已入库作品。打开来源目录，选择识别或扫描目录。" else "${state.works.size} 部作品 · 按入库时间排列"
+            dataBinding.libraryCards.isVisible = state.works.isNotEmpty()
+            dataBinding.libraryCount.isVisible = state.works.isEmpty()
+        }
+        dataBinding.showAll.setOnClickListener { ARouter.getInstance().build(RouteTable.Local.MetadataLibrary).navigation() }
+        dataBinding.metadataTasks.setOnClickListener { ARouter.getInstance().build(RouteTable.User.MetadataSettings).navigation() }
     }
 
     private fun initRv() {
         dataBinding.mediaLibRv.apply {
-            layoutManager = vertical()
-            addItemDecoration(ItemDecorationSpace(0, (5 * resources.displayMetrics.density).toInt()))
+            layoutManager = horizontal()
+            addItemDecoration(ItemDecorationSpace((6 * resources.displayMetrics.density).toInt(), 0))
 
             adapter =
                 buildAdapter {
@@ -78,8 +137,21 @@ class MediaFragment :
                         initView { data, _, _ ->
                             itemBinding.apply {
                                 libraryNameTv.text = data.displayName
-                                libraryUrlTv.text = data.disPlayDescribe
-                                libraryCoverIv.setImageResource(data.mediaType.cover)
+                                libraryUrlTv.text =
+                                    when {
+                                        data.mediaType == MediaType.LOCAL_STORAGE -> "设备媒体"
+                                        !data.mediaType.deletable -> "播放记录"
+                                        else -> data.disPlayDescribe
+                                    }
+                                libraryCoverIv.setImageResource(
+                                    if (data.mediaType ==
+                                        MediaType.LOCAL_STORAGE
+                                    ) {
+                                        R.drawable.cinema_ic_drive
+                                    } else {
+                                        R.drawable.cinema_ic_folder
+                                    }
+                                )
 
                                 itemLayout.setOnClickListener {
                                     if (data.mediaType == MediaType.LOCAL_STORAGE) {
@@ -111,6 +183,10 @@ class MediaFragment :
                 setOnKeyInterceptListener(
                     object : DpadRecyclerView.OnKeyInterceptListener {
                         override fun onInterceptKeyEvent(event: KeyEvent): Boolean {
+                            if (event.keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                                if (event.action == KeyEvent.ACTION_DOWN) dataBinding.metadataTasks.requestFocus()
+                                return true
+                            }
                             if (event.keyCode != KeyEvent.KEYCODE_MENU && event.keyCode != KeyEvent.KEYCODE_SETTINGS) {
                                 return false
                             }
@@ -131,6 +207,11 @@ class MediaFragment :
         } else {
             binding.addMediaStorageBt.requestFocus()
         }
+    }
+
+    override fun onDestroyView() {
+        bindingOrNull?.libraryCards?.adapter = null
+        super.onDestroyView()
     }
 
     private fun launchMediaStorage(data: MediaLibraryEntity) {

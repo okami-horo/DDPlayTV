@@ -7,8 +7,8 @@
     <color name="player_item_bg_color_light">#77000000</color>
 
     <color name="seek_background">#809e9e9e</color>
-    <color name="seek_progress">#2095f4</color>
-    <color name="seek_secondary_progress">#332095f4</color>
+    <color name="seek_progress">#F5F5F7</color>
+    <color name="seek_secondary_progress">#55FFFFFF</color>
     <color name="seek_ball">#ffffffff</color>
 
     <color name="transparent">#00000000</color>

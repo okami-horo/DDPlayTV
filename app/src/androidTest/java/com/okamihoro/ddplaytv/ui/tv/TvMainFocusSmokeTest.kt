@@ -64,7 +64,7 @@ class TvMainFocusSmokeTest {
             sendDpad(KeyEvent.KEYCODE_DPAD_DOWN)
             waitForIdle()
             scenario.onActivity { activity ->
-                assertEquals(com.xyoye.local_component.R.id.filter_all, activity.currentFocus?.id)
+                assertEquals(com.xyoye.local_component.R.id.hero_play, activity.currentFocus?.id)
             }
             sendDpad(KeyEvent.KEYCODE_BACK)
             waitForIdle()
@@ -83,7 +83,7 @@ class TvMainFocusSmokeTest {
             waitForIdle()
             scenario.onActivity { activity ->
                 assertVisibleFocus(activity.currentFocus)
-                assertEquals(com.xyoye.local_component.R.id.filter_all, activity.currentFocus?.id)
+                assertEquals(com.xyoye.local_component.R.id.hero_play, activity.currentFocus?.id)
             }
             sendDpad(KeyEvent.KEYCODE_DPAD_UP)
             waitForIdle()
@@ -99,7 +99,7 @@ class TvMainFocusSmokeTest {
         while (!ready && SystemClock.uptimeMillis() < deadline) {
             waitForIdle()
             scenario.onActivity { activity ->
-                ready = activity.hasWindowFocus() && activity.findViewById<View>(com.xyoye.local_component.R.id.filter_all)?.isShown == true
+                ready = activity.hasWindowFocus() && activity.findViewById<View>(com.xyoye.local_component.R.id.hero_play)?.isShown == true
             }
             SystemClock.sleep(50)
         }

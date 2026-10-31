@@ -306,7 +306,8 @@ class DanDanVideoPlayer(
             }
 
             PlayerConstant.MEDIA_INFO_VIDEO_RENDERING_START -> {
-                setPlayState(PlayState.STATE_PLAYING)
+                // First-frame and seek-redraw callbacks can arrive after the user pauses.
+                setPlayState(if (mVideoPlayer.isPlaying()) PlayState.STATE_PLAYING else PlayState.STATE_PAUSED)
                 if (windowVisibility != View.VISIBLE) {
                     pause()
                 }

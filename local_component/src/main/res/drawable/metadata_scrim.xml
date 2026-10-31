@@ -1,4 +1,4 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item><shape><gradient android:angle="0" android:startColor="#F5111114" android:centerColor="#B3111114" android:endColor="#33111114"/></shape></item>
-    <item><shape><gradient android:angle="90" android:startColor="#FF111114" android:centerColor="#99111114" android:endColor="#00111114"/></shape></item>
+    <item><shape><gradient android:angle="0" android:startColor="#EE101217" android:centerColor="#00101217" android:centerX="0.8" android:endColor="#00101217"/></shape></item>
+    <item><shape><gradient android:angle="90" android:startColor="#FF111114" android:centerColor="#00111114" android:centerY="0.6" android:endColor="#00111114"/></shape></item>
 </layer-list>

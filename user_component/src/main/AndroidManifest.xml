@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application android:supportsRtl="true">
+        <activity android:name=".ui.activities.setting_app.AccountToolsActivity" />
         <activity android:name=".ui.activities.metadata.MetadataSettingsActivity" />
         <activity
             android:name=".ui.activities.login.LoginActivity"

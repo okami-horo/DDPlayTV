@@ -56,8 +56,6 @@ class FileManagerDialog(
     override fun initView(binding: DialogFileManagerBinding) {
         this.binding = binding
 
-        disableSheetDrag()
-
         rootViewBinding.containerFl.apply {
             setPadding(paddingLeft, 0, paddingRight, paddingBottom)
         }

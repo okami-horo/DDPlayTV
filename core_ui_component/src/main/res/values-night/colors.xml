@@ -18,4 +18,7 @@
 
     <!-- 普通layout背景色-浅色 -->
     <color name="layout_bg_color_light">#77111114</color>
+    <color name="text_theme">#F5F5F7</color>
+    <color name="text_blue">#C1C5CE</color>
+    <color name="theme_light">#26FFFFFF</color>
 </resources>

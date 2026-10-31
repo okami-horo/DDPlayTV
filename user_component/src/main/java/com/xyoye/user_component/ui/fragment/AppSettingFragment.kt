@@ -34,7 +34,8 @@ class AppSettingFragment : BasePreferenceFragmentCompat() {
         private const val KEY_LICENSE = "license"
         private const val KEY_ABOUT_US = "about_us"
 
-        fun newInstance() = AppSettingFragment()
+        fun newInstance(section: String? = null) =
+            AppSettingFragment().apply { arguments = androidx.core.os.bundleOf("section" to section) }
     }
 
     override fun onCreatePreferences(
@@ -44,6 +45,73 @@ class AppSettingFragment : BasePreferenceFragmentCompat() {
         try {
             preferenceManager.preferenceDataStore = AppSettingDataStore()
             addPreferencesFromResource(R.xml.preference_app_setting)
+            val section = arguments?.getString("section")
+            if (section != null) {
+                val mediaKeys = setOf("metadata_settings", KEY_HIDE_FILE, KEY_REMOTE_ANIME_GROUPING)
+                val aboutKeys = setOf("app_version", "license", "about_us")
+
+                fun filter(group: androidx.preference.PreferenceGroup) {
+                    for (index in 0 until group.preferenceCount) {
+                        val item = group.getPreference(index)
+                        if (item is androidx.preference.PreferenceGroup) {
+                            filter(item)
+                            item.isVisible = (0 until item.preferenceCount).any { item.getPreference(it).isVisible }
+                        } else {
+                            item.isVisible = item.key in if (section == "media") mediaKeys else aboutKeys
+                        }
+                    }
+                }
+                filter(preferenceScreen)
+                val visible = mutableListOf<Preference>()
+
+                fun collect(group: androidx.preference.PreferenceGroup) {
+                    (0 until group.preferenceCount).map(group::getPreference).forEach { item ->
+                        if (item is androidx.preference.PreferenceGroup) {
+                            collect(item)
+                        } else if (item.isVisible) {
+                            group.removePreference(item)
+                            visible.add(item)
+                        }
+                    }
+                }
+                collect(preferenceScreen)
+                preferenceScreen.removeAll()
+                visible.forEach { preferenceScreen.addPreference(it) }
+                preferenceScreen.addPreference(
+                    Preference(requireContext()).apply {
+                        title = if (section == "media") "管理媒体来源" else "账户与工具"
+                        summary = if (section == "media") "本地文件与网络媒体" else "账户、收藏、字幕搜索与应用工具"
+                        setOnPreferenceClickListener {
+                            if (section == "media") {
+                                requireActivity().supportFragmentManager.setFragmentResult(
+                                    RouteTable.App.CinemaNavigation,
+                                    androidx.core.os.bundleOf(
+                                        "page" to "library"
+                                    )
+                                )
+                            } else {
+                                com.alibaba.android.arouter.launcher.ARouter
+                                    .getInstance()
+                                    .build(RouteTable.User.AccountTools)
+                                    .navigation()
+                            }
+                            true
+                        }
+                    }
+                )
+                if (section == "about") {
+                    preferenceScreen.addPreference(
+                        Preference(requireContext()).apply {
+                            title = "应用高级设置"
+                            summary = "主题、启动页与网络服务"
+                            setOnPreferenceClickListener {
+                                ARouter.getInstance().build(RouteTable.User.SettingApp).navigation()
+                                true
+                            }
+                        }
+                    )
+                }
+            }
         } catch (e: Exception) {
             ErrorReportHelper.postCatchedExceptionWithContext(
                 e,

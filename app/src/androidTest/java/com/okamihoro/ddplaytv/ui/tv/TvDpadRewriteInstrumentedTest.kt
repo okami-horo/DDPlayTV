@@ -127,6 +127,13 @@ class TvDpadRewriteInstrumentedTest {
                 await(scenario) { focusedStorageFile(it)?.filePath() == folder.path && it.hasWindowFocus() }
                 send(KeyEvent.KEYCODE_DPAD_CENTER)
                 await(scenario) { storageItems(it).size == 8 }
+                SystemClock.sleep(350) // Capture the page after its directory transition.
+                instrumentation.uiAutomation.takeScreenshot()?.let { bitmap ->
+                    File(context.getExternalFilesDir("cinema-reference"), "files.png").outputStream().use {
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+                    }
+                    bitmap.recycle()
+                }
                 send(KeyEvent.KEYCODE_DPAD_DOWN)
                 await(scenario) { storageList(it).hasFocus() }
                 send(KeyEvent.KEYCODE_DPAD_DOWN)
@@ -211,6 +218,8 @@ class TvDpadRewriteInstrumentedTest {
             ActivityScenario.launch<PlayerActivity>(intent).use { scenario ->
                 await(scenario, 15000) { player(it).isPlaying() && it.hasWindowFocus() }
                 verifySubtitleLayer(scenario, kernel)
+                lateinit var menuCaller: android.view.View
+                scenario.onActivity { menuCaller = requireNotNull(it.currentFocus) }
                 send(KeyEvent.KEYCODE_MENU)
                 await(scenario) { it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)?.hasFocus() == true }
                 var position = 0L
@@ -255,6 +264,14 @@ class TvDpadRewriteInstrumentedTest {
                             }
                         list.setSelectedPosition(index)
                     }
+                    await(scenario) { activity ->
+                        val list = activity.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
+                        val position = activity.currentFocus?.let { list.findContainingViewHolder(it)?.bindingAdapterPosition }
+                        val item = (list.adapter as BaseAdapter).items.getOrNull(position ?: -1)
+                        list.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
+                            item is SettingItem &&
+                            item.action == SettingAction.SUBTITLE_STYLE
+                    }
                     send(KeyEvent.KEYCODE_DPAD_CENTER)
                     await(scenario) { it.currentFocus?.id == com.xyoye.player_component.R.id.subtitle_vertical_offset_sb }
                     scenario.onActivity {
@@ -272,6 +289,8 @@ class TvDpadRewriteInstrumentedTest {
                     }
                 }
                 send(KeyEvent.KEYCODE_BACK)
+                await(scenario) { it.currentFocus === menuCaller }
+                if (menuCaller !is VideoController) send(KeyEvent.KEYCODE_BACK)
                 await(scenario) { it.currentFocus is VideoController }
                 send(KeyEvent.KEYCODE_DPAD_CENTER)
                 await(scenario) { !player(it).isPlaying() }

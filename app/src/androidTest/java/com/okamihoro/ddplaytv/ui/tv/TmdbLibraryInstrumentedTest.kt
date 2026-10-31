@@ -175,18 +175,20 @@ class TmdbLibraryInstrumentedTest {
         ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
             lateinit var home: TvMainActivity
             scenario.onActivity { home = it }
-            await("Cinema owns seeded work") {
-                home.hasWindowFocus() &&
-                    (
-                        home
-                            .findViewById<DpadRecyclerView>(
-                                com.xyoye.local_component.R.id.works
-                            )?.adapter as? com.xyoye.local_component.ui.metadata.MetadataCardAdapter
-                    )?.currentList
-                        ?.any { it.key == "movie:990011" } == true
+            await("Cinema ready") {
+                home.hasWindowFocus() && home.findViewById<TextView>(com.xyoye.local_component.R.id.hero_play)?.isShown == true
             }
             screenshot("home")
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            send(KeyEvent.KEYCODE_DPAD_CENTER)
+            await("Embedded library") {
+                home.findViewById<DpadRecyclerView>(com.xyoye.local_component.R.id.library_cards)?.adapter?.itemCount ==
+                    1
+            }
             send(KeyEvent.KEYCODE_DPAD_DOWN)
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            repeat(8) { if (home.currentFocus?.id != com.xyoye.local_component.R.id.show_all) send(KeyEvent.KEYCODE_DPAD_RIGHT) }
+            assertEquals(com.xyoye.local_component.R.id.show_all, home.currentFocus?.id)
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             await("Library") { ActivityHelper.instance.getTopActivity() is MetadataLibraryActivity }
             val library = ActivityHelper.instance.getTopActivity() as MetadataLibraryActivity
@@ -225,7 +227,7 @@ class TmdbLibraryInstrumentedTest {
                     library.findViewById<DpadRecyclerView>(com.xyoye.local_component.R.id.items).hasFocus()
             }
             send(KeyEvent.KEYCODE_BACK)
-            await("Return to cinema caller") { home.hasWindowFocus() && home.currentFocus?.id == com.xyoye.local_component.R.id.filter_all }
+            await("Return to cinema caller") { home.hasWindowFocus() && home.currentFocus?.id == com.xyoye.local_component.R.id.show_all }
         }
     }
 
@@ -244,14 +246,15 @@ class TmdbLibraryInstrumentedTest {
             lateinit var home: TvMainActivity
             scenario.onActivity { home = it }
             await("Cinema ready") { home.hasWindowFocus() }
-            repeat(4) {
-                if (home.currentFocus?.id != com.xyoye.local_component.R.id.filter_movie) send(KeyEvent.KEYCODE_DPAD_DOWN)
-            }
-            await("Movie filter is reachable with or without history") {
-                home.currentFocus?.id ==
-                    com.xyoye.local_component.R.id.filter_movie
-            }
-            repeat(3) { send(KeyEvent.KEYCODE_DPAD_RIGHT) }
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            send(KeyEvent.KEYCODE_DPAD_CENTER)
+            await(
+                "Embedded library"
+            ) { home.findViewById<android.view.View>(com.xyoye.local_component.R.id.metadata_tasks)?.isShown == true }
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            repeat(8) { if (home.currentFocus?.id != com.xyoye.local_component.R.id.metadata_tasks) send(KeyEvent.KEYCODE_DPAD_RIGHT) }
+            assertEquals(com.xyoye.local_component.R.id.metadata_tasks, home.currentFocus?.id)
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             await("Task settings") { ActivityHelper.instance.getTopActivity() is MetadataSettingsActivity }
             val settings = ActivityHelper.instance.getTopActivity() as MetadataSettingsActivity
@@ -268,7 +271,9 @@ class TmdbLibraryInstrumentedTest {
             ) { settings.findViewById<TextView>(com.xyoye.user_component.R.id.message).text.startsWith("请求缓存已清理") }
             assertEquals("MATCHED", runBlocking { db.getMetadataDao().binding(assetId)?.state })
             send(KeyEvent.KEYCODE_BACK)
-            await("Return to task entry") { home.hasWindowFocus() && home.currentFocus?.id == com.xyoye.local_component.R.id.tasks }
+            await(
+                "Return to task entry"
+            ) { home.hasWindowFocus() && home.currentFocus?.id == com.xyoye.local_component.R.id.metadata_tasks }
         }
     }
 
@@ -310,7 +315,7 @@ class TmdbLibraryInstrumentedTest {
                 await("File row") {
                     activity.hasWindowFocus() &&
                         if (fromHome) {
-                            activity.findViewById<TextView>(com.xyoye.local_component.R.id.hero_play)?.text == "继续观看"
+                            activity.findViewById<TextView>(com.xyoye.local_component.R.id.hero_play)?.text == "继续播放"
                         } else {
                             activity.findViewById<DpadRecyclerView>(com.xyoye.local_component.R.id.files).adapter?.itemCount == 1
                         }
@@ -335,7 +340,37 @@ class TmdbLibraryInstrumentedTest {
                 }
                 if (fromHome) {
                     send(KeyEvent.KEYCODE_DPAD_UP)
+                    send(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await("Pause for control navigation") { !player(playing).isPlaying() }
+                    await(
+                        "Pause icon reflects the backend"
+                    ) { !playing.findViewById<ImageView>(com.xyoye.player_component.R.id.play_iv).isSelected }
                     screenshot("player-controls")
+                    instrumentation.runOnMainSync {
+                        val playButton = playing.findViewById<ImageView>(com.xyoye.player_component.R.id.play_iv)
+                        assertFalse("Playback stays paused while controls are visible", player(playing).isPlaying())
+                        assertFalse(
+                            "Pause icon stays synchronized; drawable state=${playButton.drawable.state.contentToString()}",
+                            playButton.isSelected
+                        )
+                    }
+                    listOf(
+                        com.xyoye.player_component.R.id.subtitle_control_iv to "subtitles",
+                        com.xyoye.player_component.R.id.audio_control to "audio",
+                        com.xyoye.player_component.R.id.danmu_control_iv to "danmaku"
+                    ).forEach { (id, name) ->
+                        repeat(8) { if (playing.currentFocus?.id != id) send(KeyEvent.KEYCODE_DPAD_RIGHT) }
+                        assertEquals("$name entry is reachable", id, playing.currentFocus?.id)
+                        send(KeyEvent.KEYCODE_DPAD_CENTER)
+                        await("$name panel owns focus") {
+                            playing.findViewById<android.view.View>(com.xyoye.player_component.R.id.rv_track)?.hasFocus() == true ||
+                                playing.currentFocus?.id == com.xyoye.player_component.R.id.track_visible ||
+                                playing.currentFocus?.id == com.xyoye.player_component.R.id.tv_add_track
+                        }
+                        screenshot("player-$name")
+                        send(KeyEvent.KEYCODE_BACK)
+                        await("$name returns to caller") { playing.currentFocus?.id == id }
+                    }
                     send(KeyEvent.KEYCODE_MENU)
                     await("Playback settings are reachable") {
                         playing.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)?.hasFocus() == true

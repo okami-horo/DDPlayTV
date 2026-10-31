@@ -21,11 +21,9 @@ import com.xyoye.local_component.databinding.FragmentCinemaBinding
 class CinemaFragment :
     BaseFragment<MetadataLibraryViewModel, FragmentCinemaBinding>(),
     DpadFocusOwner {
-    private var filter = "all"
     private var current = MetadataLibraryState()
     private var heroKey: String? = null
     private var heroWork: com.xyoye.data_component.entity.MetadataWork? = null
-    private val works = MetadataCardAdapter(posters = true, click = ::openCard, longClick = ::correctCard)
     private val history =
         MetadataCardAdapter(continueWatching = true, click = { card ->
             current.history.find { "history:${it.id}" == card.key }?.let(viewModel::play)
@@ -36,53 +34,33 @@ class CinemaFragment :
     override fun getLayoutId() = R.layout.fragment_cinema
 
     override fun initView() {
+        dataBinding.cinemaScroll.isFocusable = false
         androidx.lifecycle
             .ViewModelProvider(
                 this
             )[com.xyoye.local_component.ui.fragment.media.MediaViewModel::class.java]
             .initLocalStorage()
-        dataBinding.works.apply {
-            layoutManager = horizontal()
-            adapter = works
-            setFocusOutAllowed(true, true)
-        }
         dataBinding.continueWatching.apply {
             layoutManager = horizontal()
+            addItemDecoration(
+                com.xyoye.common_component.utils.view
+                    .ItemDecorationSpace((4 * resources.displayMetrics.density).toInt(), 0)
+            )
             adapter = history
         }
-        dataBinding.filterAll.setOnClickListener { ARouter.getInstance().build(RouteTable.Local.MetadataLibrary).navigation() }
+        dataBinding.filterAll.setOnClickListener {
+            parentFragmentManager.setFragmentResult(RouteTable.App.CinemaNavigation, androidx.core.os.bundleOf("page" to "library"))
+        }
         dataBinding.heroPlay.setOnClickListener {
             val entry = current.history.firstOrNull()
             if (entry != null) {
                 viewModel.play(entry)
             } else {
-                heroWork?.let { openCard(MetadataCard("${it.mediaKind}:${it.tmdbId}", it.title)) }
-            }
-        }
-        dataBinding.filterMovie.setOnClickListener {
-            filter = if (filter == "movie") "all" else "movie"
-            render()
-        }
-        dataBinding.filterTv.setOnClickListener {
-            filter = if (filter == "tv") "all" else "tv"
-            render()
-        }
-        dataBinding.filterUnmatched.setOnClickListener {
-            filter = if (filter == "unmatched") "all" else "unmatched"
-            render()
-        }
-        dataBinding.tasks.setOnClickListener { ARouter.getInstance().build(RouteTable.User.MetadataSettings).navigation() }
-        dataBinding.browseFiles.setOnClickListener {
-            com.xyoye.common_component.application.DanDanPlay.permission.storage.request(this) {
-                onGranted {
-                    ARouter
-                        .getInstance()
-                        .build(
-                            RouteTable.Stream.StorageFile
-                        ).withParcelable("storageLibrary", com.xyoye.data_component.entity.MediaLibraryEntity.LOCAL)
-                        .navigation()
+                if (heroWork != null) {
+                    heroWork?.let { openCard(MetadataCard("${it.mediaKind}:${it.tmdbId}", it.title)) }
+                } else {
+                    parentFragmentManager.setFragmentResult(RouteTable.App.CinemaNavigation, androidx.core.os.bundleOf("page" to "library"))
                 }
-                onDenied { ToastCenter.showError("获取文件读取权限失败") }
             }
         }
         viewModel.state.collectAtStarted(viewLifecycleOwner) {
@@ -105,28 +83,6 @@ class CinemaFragment :
 
     private fun render() {
         val binding = bindingOrNull ?: return
-        val cards =
-            if (filter == "unmatched") {
-                current.assets.filter { asset -> current.bindings.find { it.assetId == asset.assetId }?.state != "MATCHED" }.map {
-                    MetadataCard("asset:${it.assetId}", it.fileName, if (it.available) "识别 / 更正资料" else "文件暂不可用")
-                }
-            } else {
-                current.works.filter { filter == "all" || it.mediaKind == filter }.map {
-                    MetadataCard(
-                        "${it.mediaKind}:${it.tmdbId}",
-                        it.title,
-                        "${it.releaseDate.take(4)} · ${if (it.mediaKind == "tv") "剧集" else "电影"}",
-                        it.poster
-                    )
-                }
-            }
-        works.submitList(cards)
-        binding.filterMovie.isSelected = filter == "movie"
-        binding.filterTv.isSelected = filter == "tv"
-        binding.filterUnmatched.isSelected = filter == "unmatched"
-        binding.empty.text = if (filter == "unmatched") "没有待识别文件。可从来源目录手动扫描入库。" else "还没有已入库作品。先浏览来源文件，再选择“识别 / 更正资料”。"
-        binding.empty.isVisible = cards.isEmpty()
-        binding.works.isVisible = cards.isNotEmpty()
         val latest = current.history.firstOrNull()
         val latestAsset =
             latest?.let { entry ->
@@ -144,14 +100,18 @@ class CinemaFragment :
             heroKey = key
             heroWork = featured
             binding.backdrop.load(featured?.backdrop)
-            binding.heroOverview.text = featured?.overview?.ifBlank { "保留每个文件，发现每部作品。" } ?: "本地与网络来源，汇集于此。资料未配置时仍可浏览和播放文件。"
+            binding.heroOverview.text = featured?.overview?.ifBlank { "保留每个文件，发现每部作品。" } ?: "连接本地与网络来源，开始你的大屏时光。"
         }
         binding.heroTitle.text = featured?.title ?: latest?.videoName ?: "每一部，都值得好好看"
-        binding.heroLabel.text = if (latest != null) "接着上次的故事" else "你的私人放映室"
-        val canPlay = latest != null || featured != null
-        if (!canPlay && binding.heroPlay.hasFocus()) binding.filterAll.requestFocus()
-        binding.heroPlay.isVisible = canPlay
-        binding.heroPlay.text = if (latest != null) "继续观看" else "查看作品"
+        binding.heroLabel.text = if (latest != null) "DDPLAYTV · 继续观看" else "DDPLAYTV · 你的私人放映室"
+        binding.heroMeta.text =
+            featured?.let { "${it.releaseDate.take(4)}  ·  ${if (it.mediaKind == "tv") "剧集 / 番剧" else "电影"}" } ?: "本地与远程媒体"
+        binding.heroPlay.text =
+            when {
+                latest != null -> "继续播放"
+                featured != null -> "查看作品"
+                else -> "浏览媒体库"
+            }
         // History aggregation is display-only. Unverifiable old generations stay as file history.
         val seen = mutableSetOf<String>()
         val recent =
@@ -185,9 +145,10 @@ class CinemaFragment :
                 }
         history.submitList(recent)
         binding.continueWatching.isVisible = recent.isNotEmpty()
-        binding.continueTitle.isVisible = recent.isNotEmpty()
-        listOf(binding.heroPlay, binding.filterAll, binding.browseFiles).forEach {
-            it.nextFocusDownId = if (recent.isNotEmpty()) binding.continueWatching.id else binding.filterMovie.id
+        binding.continueTitle.isVisible = true
+        binding.empty.isVisible = recent.isEmpty()
+        listOf(binding.heroPlay, binding.filterAll).forEach {
+            it.nextFocusDownId = if (recent.isNotEmpty()) binding.continueWatching.id else it.id
         }
     }
 
@@ -214,10 +175,12 @@ class CinemaFragment :
             .navigation()
     }
 
-    override fun requestDefaultDpadFocus(): Boolean = bindingOrNull?.filterAll?.requestFocus() == true
+    override fun requestDefaultDpadFocus(): Boolean {
+        val binding = bindingOrNull ?: return false
+        return (if (binding.heroPlay.isVisible) binding.heroPlay else binding.filterAll).requestFocus()
+    }
 
     override fun onDestroyView() {
-        bindingOrNull?.works?.adapter = null
         bindingOrNull?.continueWatching?.adapter = null
         super.onDestroyView()
     }

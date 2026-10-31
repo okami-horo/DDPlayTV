@@ -1,5 +1,4 @@
 <resources>
-    <string name="storage_file_scroll_behavior">com.xyoye.storage_component.ui.weight.StorageFileBehavior</string>
 
     <string name="app_name">storage_component</string>
     <string name="hint_server_address">服务器地址，如：http://127.0.0.1:80/</string>

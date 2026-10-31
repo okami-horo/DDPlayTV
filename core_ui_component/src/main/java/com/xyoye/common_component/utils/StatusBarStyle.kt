@@ -1,7 +1,9 @@
 package com.xyoye.common_component.utils
 
 import android.app.Activity
+import android.os.Build
 import android.view.View
+import android.view.WindowManager
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import com.gyf.immersionbar.BarHide
@@ -70,6 +72,12 @@ public object StatusBarStyle {
     }
 
     public fun applyFullscreenHideAllBars(activity: Activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activity.window.attributes =
+                activity.window.attributes.apply {
+                    layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                }
+        }
         ImmersionBar
             .with(activity)
             .fitsSystemWindows(false)

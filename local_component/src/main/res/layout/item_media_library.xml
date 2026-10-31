@@ -1,90 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/item_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/cinema_card"
-        android:padding="16dp"
-        android:minHeight="84dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:tag="@string/focusable_item">
-
-        <ImageView
-            android:id="@+id/library_cover_iv"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:layout_marginStart="10dp"
-            android:contentDescription="@null"
-            android:padding="2dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_local_storage"
-            app:layout_constraintBottom_toBottomOf="@id/library_url_tv"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/library_name_tv" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/library_name_tv"
-            android:layout_width="0dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="10dp"
-            android:ellipsize="end"
-            android:gravity="start|center_vertical"
-            android:maxLines="1"
-            android:textColor="@color/cinema_text"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:autoSizeMaxTextSize="18sp"
-            app:autoSizeMinTextSize="12sp"
-            app:autoSizeStepGranularity="1sp"
-            app:autoSizeTextType="uniform"
-            app:layout_constraintEnd_toStartOf="@id/screencast_status_tv"
-            app:layout_constraintHorizontal_bias="0"
-            app:layout_constraintStart_toEndOf="@+id/library_cover_iv"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="测试" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/library_url_tv"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:ellipsize="middle"
-            android:gravity="start"
-            android:singleLine="true"
-            android:textColor="@color/text_gray"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="@+id/library_name_tv"
-            app:layout_constraintHorizontal_bias="0"
-            app:layout_constraintStart_toStartOf="@+id/library_name_tv"
-            app:layout_constraintTop_toBottomOf="@+id/library_name_tv"
-            tools:text="测试" />
-
-        <TextView
-            android:id="@+id/screencast_status_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:background="@drawable/background_text_circle_theme"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="3dp"
-            android:text="@string/tips_screencast_providing"
-            android:textColor="@color/text_theme"
-            android:textSize="12sp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:visibility="visible" />
-
-
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:id="@+id/item_layout" android:layout_width="wrap_content" android:layout_height="36dp" android:paddingHorizontal="14dp" android:gravity="center_vertical" android:background="@drawable/cinema_button" android:focusable="true" android:clickable="true" android:tag="@string/focusable_item">
+        <ImageView android:id="@+id/library_cover_iv" android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/cinema_ic_drive" app:tint="@color/cinema_text" android:importantForAccessibility="no" />
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginStart="8dp">
+            <TextView android:id="@+id/library_name_tv" android:layout_width="wrap_content" android:maxWidth="116dp" android:layout_height="wrap_content" android:textColor="@color/cinema_text" android:textSize="11sp" android:maxLines="1" android:ellipsize="end" />
+            <TextView android:id="@+id/library_url_tv" android:layout_width="wrap_content" android:maxWidth="68dp" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:textColor="@color/cinema_muted" android:textSize="10sp" android:singleLine="true" android:ellipsize="middle" />
+        </LinearLayout>
+        <TextView android:id="@+id/screencast_status_tv" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" />
+    </LinearLayout>
 </layout>

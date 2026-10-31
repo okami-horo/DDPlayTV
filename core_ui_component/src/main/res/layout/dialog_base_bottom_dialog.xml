@@ -26,9 +26,9 @@
                 android:id="@+id/title_tv"
                 android:layout_width="0dp"
                 android:layout_height="60dp"
-                android:gravity="center"
+                android:gravity="center_vertical"
                 android:maxLines="1"
-                android:textColor="@color/text_theme"
+                android:textColor="@color/cinema_text"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 app:autoSizeMaxTextSize="18sp"
@@ -69,35 +69,35 @@
 
                 <Button
                     android:id="@+id/negative_bt"
-                    style="?android:attr/borderlessButtonStyle"
+                    style="@style/Cinema.Button"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:background="@drawable/background_dialog_button"
+                    android:background="@drawable/cinema_button"
                     android:text="@string/cancel_dialog"
                     android:textColor="@color/text_black"
                     android:textSize="14sp" />
 
                 <Button
                     android:id="@+id/neutral_bt"
-                    style="?android:attr/borderlessButtonStyle"
+                    style="@style/Cinema.Button"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:background="@drawable/background_dialog_button"
+                    android:background="@drawable/cinema_button"
                     android:textColor="@color/text_theme"
                     android:textSize="14sp"
                     android:visibility="gone" />
 
                 <Button
                     android:id="@+id/positive_bt"
-                    style="?android:attr/borderlessButtonStyle"
+                    style="@style/Cinema.Button"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:background="@drawable/background_dialog_button"
+                    android:background="@drawable/cinema_button"
                     android:text="@string/confirm_dialog"
                     android:textColor="@color/text_theme"
                     android:textSize="14sp" />

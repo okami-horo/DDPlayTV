@@ -21,8 +21,6 @@ class UserCoverDialog(
     override fun getChildLayoutId() = R.layout.dialog_user_cover
 
     override fun initView(binding: DialogUserCoverBinding) {
-        disableSheetDrag()
-
         setTitle("选择头像")
 
         binding.userCoverRv.apply {

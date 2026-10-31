@@ -36,7 +36,8 @@ class SettingPlayerActivity : BaseActivity<SettingPlayerViewModel, ActivitySetti
                         TvCategory("video", "视频") { PlayerSettingFragment.newInstance() },
                         TvCategory("danmu", "弹幕") { DanmuSettingFragment.newInstance() },
                         TvCategory("subtitle", "字幕") { SubtitleSettingFragment.newInstance() }
-                    )
+                    ),
+                    initialIndex = intent.getIntExtra("initialCategory", 0)
                 )
             }
     }

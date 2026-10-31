@@ -61,13 +61,16 @@ class TvCategoryPages(
                             RecyclerView
                                 .LayoutParams(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
-                                    (52 * navigation.resources.displayMetrics.density).toInt()
-                                ).apply { bottomMargin = (8 * navigation.resources.displayMetrics.density).toInt() }
+                                    (46 * navigation.resources.displayMetrics.density).toInt()
+                                )
                         itemBinding.title.gravity = Gravity.CENTER_VERTICAL
-                        itemBinding.title.setBackgroundResource(R.drawable.cinema_button)
+                        itemBinding.title.textSize = 15f
+                        val inset = (13 * navigation.resources.displayMetrics.density).toInt()
+                        itemBinding.title.setPadding(inset, 0, inset, 0)
+                        itemBinding.title.setBackgroundResource(R.drawable.cinema_category)
                         itemBinding.title.setTextColor(
                             androidx.core.content.ContextCompat
-                                .getColorStateList(navigation.context, R.color.cinema_button_text)
+                                .getColorStateList(navigation.context, R.color.cinema_category_text)
                         )
                     }
                     itemBinding.root.isSelected = category.key == state.activeKey
@@ -82,7 +85,18 @@ class TvCategoryPages(
 
     init {
         navigation.setOrientation(if (verticalNavigation) RecyclerView.VERTICAL else RecyclerView.HORIZONTAL)
-        navigation.setFocusOutAllowed(false, false)
+        navigation.setFocusOutAllowed(verticalNavigation, false)
+        if (verticalNavigation) {
+            navigation.addItemDecoration(
+                com.xyoye.common_component.utils.view.ItemDecorationSpace(
+                    0,
+                    (
+                        4 *
+                            navigation.resources.displayMetrics.density
+                    ).toInt()
+                )
+            )
+        }
         navigation.adapter = adapter
         navigation.setOnKeyInterceptListener(
             object : DpadRecyclerView.OnKeyInterceptListener {

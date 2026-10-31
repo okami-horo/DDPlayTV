@@ -1,12 +1,9 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="280dp" android:layout_height="104dp" android:layout_margin="5dp"
-    android:padding="4dp" android:focusable="true" android:clickable="true"
-    android:tag="@string/focusable_item" android:background="@drawable/cinema_card">
-    <ImageView android:id="@+id/card_image" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:background="@drawable/cinema_image" android:clipToOutline="true" android:importantForAccessibility="no"/>
-    <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/metadata_scrim"/>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="bottom" android:padding="12dp" android:orientation="vertical">
-        <TextView android:id="@+id/card_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/cinema_text" android:textSize="17sp" android:fontFamily="sans-serif-medium" android:maxLines="1" android:ellipsize="end"/>
-        <TextView android:id="@+id/card_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/cinema_muted" android:textSize="12sp" android:maxLines="1" android:ellipsize="end"/>
-        <ProgressBar android:id="@+id/card_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="3dp" android:layout_marginTop="7dp" android:max="100" android:progressTint="@color/cinema_text" android:progressBackgroundTint="#44FFFFFF"/>
-    </LinearLayout>
-</FrameLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="218dp" android:layout_height="160dp" android:padding="3dp" android:orientation="vertical" android:background="@drawable/cinema_card" android:focusable="true" android:clickable="true" android:tag="@string/focusable_item">
+    <FrameLayout android:layout_width="match_parent" android:layout_height="110dp" android:background="@drawable/cinema_image" android:clipToOutline="true">
+        <ImageView android:id="@+id/card_image" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:importantForAccessibility="no" />
+        <TextView android:id="@+id/card_caption" android:textStyle="bold" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="bottom" android:padding="10dp" android:textColor="@color/cinema_text" android:textSize="16sp" android:fontFamily="sans-serif-medium" android:shadowColor="#DD000000" android:shadowRadius="8" android:maxLines="1" android:ellipsize="end" />
+        <ProgressBar android:id="@+id/card_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="2dp" android:layout_gravity="bottom" android:max="100" android:progressTint="@color/cinema_text" android:progressBackgroundTint="#44FFFFFF" />
+    </FrameLayout>
+    <TextView android:id="@+id/card_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/cinema_text" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/card_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/cinema_muted" android:textSize="10sp" android:maxLines="1" android:ellipsize="end" />
+</LinearLayout>

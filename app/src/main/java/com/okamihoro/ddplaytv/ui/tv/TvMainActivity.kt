@@ -15,12 +15,13 @@ import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.horizontal
 import com.xyoye.common_component.extension.setData
+import com.xyoye.common_component.focus.DpadFocusOwner
 
 class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
     companion object {
         private const val TAG_FRAGMENT_MEDIA = "tag_fragment_tv_media"
         private const val TAG_FRAGMENT_CINEMA = "tag_fragment_tv_cinema"
-        private const val TAG_FRAGMENT_PERSONAL = "tag_fragment_tv_personal"
+        private const val TAG_FRAGMENT_SETTINGS = "tag_fragment_tv_settings"
     }
 
     private val fragmentSwitcher by lazy {
@@ -58,6 +59,11 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
 
     override fun initView() {
         initNav()
+        supportFragmentManager.setFragmentResultListener(RouteTable.App.CinemaNavigation, this) { _, result ->
+            val target = if (result.getString("page") == "settings") TvNavItem.SETTINGS else TvNavItem.MEDIA
+            handleNavClick(target, navItems.indexOf(target))
+            focusCoordinator.requestContentFocus()
+        }
         dataBinding.fragmentContainer.navigationTarget = focusCoordinator::navigationTarget
         switchSection(selectedSection)
         focusCoordinator.requestNavFocus()
@@ -72,11 +78,13 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
         when (keyCode) {
             KeyEvent.KEYCODE_MENU,
             KeyEvent.KEYCODE_SETTINGS -> {
-                ARouter.getInstance().build(RouteTable.User.SettingApp).navigation()
+                handleNavClick(TvNavItem.SETTINGS, navItems.indexOf(TvNavItem.SETTINGS))
+                focusCoordinator.requestContentFocus()
                 return true
             }
 
             KeyEvent.KEYCODE_BACK -> {
+                if ((fragmentSwitcher.currentFragment() as? DpadFocusOwner)?.handleDpadBack() == true) return true
                 if (dataBinding.fragmentContainer.hasFocus()) {
                     return focusCoordinator.requestNavFocus()
                 }
@@ -91,6 +99,10 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
     private fun initNav() {
         dataBinding.tvNavRv.apply {
             layoutManager = horizontal()
+            addItemDecoration(
+                com.xyoye.common_component.utils.view
+                    .ItemDecorationSpace((5 * resources.displayMetrics.density).toInt(), 0)
+            )
             adapter =
                 buildAdapter {
                     addItem<TvNavItem, ItemTvMainNavBinding>(R.layout.item_tv_main_nav) {
@@ -133,11 +145,10 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
 
         when (item) {
             TvNavItem.SEARCH -> {
-                ARouter.getInstance().build(RouteTable.Anime.Search).navigation()
-            }
-
-            TvNavItem.SETTINGS -> {
-                ARouter.getInstance().build(RouteTable.User.SettingApp).navigation()
+                if (supportFragmentManager.findFragmentByTag("cinema_search") == null) {
+                    (ARouter.getInstance().build(RouteTable.Local.MetadataSearch).navigation() as? androidx.fragment.app.DialogFragment)
+                        ?.show(supportFragmentManager, "cinema_search")
+                }
             }
 
             else -> {
@@ -155,10 +166,10 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
                 )
             }
 
-            TvNavItem.PERSONAL -> {
+            TvNavItem.SETTINGS -> {
                 switchFragment(
-                    tag = TAG_FRAGMENT_PERSONAL,
-                    fragmentPath = RouteTable.User.PersonalFragment,
+                    tag = TAG_FRAGMENT_SETTINGS,
+                    fragmentPath = RouteTable.User.SettingsFragment,
                 )
             }
 
@@ -187,7 +198,6 @@ class TvMainActivity : BaseShellActivity<ActivityTvMainBinding>() {
         HOME(R.string.navigation_cinema, true),
         MEDIA(R.string.navigation_sources, true),
         SEARCH(R.string.navigation_search, false),
-        PERSONAL(R.string.navigation_personal, true),
-        SETTINGS(R.string.navigation_setting, false)
+        SETTINGS(R.string.navigation_setting, true)
     }
 }

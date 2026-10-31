@@ -85,7 +85,7 @@ class ControlWrapperQualityRegressionTest {
     }
 
     @Test
-    fun showSettingViewAlwaysHidesControllerButRespectsLockState() {
+    fun showSettingViewPreservesTheCallerControlsAndRespectsLockState() {
         val videoController = FakeVideoController()
         val settingController = FakeSettingController()
         val wrapper =
@@ -99,11 +99,12 @@ class ControlWrapperQualityRegressionTest {
 
         videoController.lockedState = false
         wrapper.showSettingView(SettingViewType.PLAYER_SETTING, null)
+        assertEquals("Opening a panel must preserve its calling control", 0, videoController.hideControllerCalls)
 
         videoController.lockedState = true
         wrapper.showSettingView(SettingViewType.PLAYER_SETTING, "payload")
 
-        assertEquals(2, videoController.hideControllerCalls)
+        assertEquals(1, videoController.hideControllerCalls)
         assertEquals(1, settingController.showCalls.size)
         assertEquals(SettingViewType.PLAYER_SETTING, settingController.showCalls.single().first)
         assertEquals(null, settingController.showCalls.single().second)

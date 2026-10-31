@@ -1,61 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <data>
-
-        <import type="com.okamihoro.ddplaytv.ui.shell.ShellViewModel" />
-
-        <variable
-            name="viewModel"
-            type="com.okamihoro.ddplaytv.ui.shell.ShellViewModel" />
-    </data>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/cinema_background"
-        tools:context=".ui.tv.TvMainActivity">
-
-        <TextView
-            android:id="@+id/cinema_brand"
-            android:layout_width="wrap_content"
-            android:layout_height="56dp"
-            android:layout_marginStart="36dp"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical"
-            android:text="DDPlayTV"
-            android:textColor="@color/cinema_text"
-            android:textSize="23sp"
-            android:fontFamily="sans-serif-medium"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
-            android:id="@+id/tv_nav_rv"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="40dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="24dp"
-            android:overScrollMode="never"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/cinema_brand"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:listitem="@layout/item_tv_main_nav" />
-
-        <com.okamihoro.ddplaytv.ui.tv.TvContentContainer
-            android:id="@+id/fragment_container"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="24dp"
-            android:layout_marginBottom="12dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_nav_rv" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</layout>
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+<data><variable name="viewModel" type="com.okamihoro.ddplaytv.ui.shell.ShellViewModel"/></data>
+<FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/cinema_background">
+    <com.okamihoro.ddplaytv.ui.tv.TvContentContainer android:id="@+id/fragment_container" android:layout_width="match_parent" android:layout_height="match_parent"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/cinema_header_height" android:paddingHorizontal="@dimen/cinema_gutter" android:gravity="center_vertical">
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:background="@drawable/cinema_brand" android:padding="4dp" app:tint="@color/cinema_background" android:src="@drawable/cinema_ic_play" android:importantForAccessibility="no"/>
+        <TextView android:id="@+id/cinema_brand" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="DDPlayTV" android:fontFamily="sans-serif-medium" android:textSize="15sp" android:textColor="@color/cinema_text"/>
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/tv_nav_rv" android:layout_width="0dp" android:layout_weight="1" android:layout_height="54dp" android:layout_marginStart="24dp" android:clipToPadding="false" android:padding="6dp" android:overScrollMode="never"/>
+        <TextClock android:layout_width="wrap_content" android:layout_height="wrap_content" android:format12Hour="HH:mm" android:format24Hour="HH:mm" android:textColor="@color/cinema_muted" android:textSize="14sp" android:layout_marginStart="18dp"/>
+    </LinearLayout>
+</FrameLayout></layout>

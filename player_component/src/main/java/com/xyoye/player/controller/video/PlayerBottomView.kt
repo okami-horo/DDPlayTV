@@ -62,35 +62,17 @@ class PlayerBottomView(
             actionHandler?.invoke(PlayerAction.TogglePlay) ?: mControlWrapper.togglePlay()
         }
 
-        viewBinding.danmuControlIv.setOnCheckedChangeListener { _, isChecked ->
-            if (!controlsInputEnabled) return@setOnCheckedChangeListener
-            val isDanmuVisible = mControlWrapper.isUserDanmuVisible()
-            if (isChecked == isDanmuVisible) {
-                return@setOnCheckedChangeListener
-            }
-            if (!isDanmuToggleReady()) {
-                mControlWrapper.showMessage(resolveDanmuToggleUnavailableHint())
-                syncDanmuToggleState()
-                return@setOnCheckedChangeListener
-            }
-            actionHandler?.invoke(PlayerAction.ToggleDanmu) ?: mControlWrapper.toggleDanmuVisible()
-            syncDanmuToggleState()
+        viewBinding.danmuControlIv.setOnClickListener {
+            if (controlsInputEnabled) mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.DANMU)
         }
-
-        viewBinding.subtitleControlIv.setOnCheckedChangeListener { _, isChecked ->
-            if (!controlsInputEnabled) return@setOnCheckedChangeListener
-            val isSubtitleVisible = mControlWrapper.isUserSubtitleVisible()
-            if (isChecked == isSubtitleVisible) {
-                return@setOnCheckedChangeListener
-            }
-            if (!isSubtitleToggleReady()) {
-                mControlWrapper.showMessage(resolveSubtitleToggleUnavailableHint())
-                syncSubtitleToggleState()
-                return@setOnCheckedChangeListener
-            }
-            actionHandler?.invoke(PlayerAction.ToggleSubtitle) ?: mControlWrapper.toggleSubtitleVisible()
-            syncSubtitleToggleState()
+        viewBinding.subtitleControlIv.setOnClickListener {
+            if (controlsInputEnabled) mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.SUBTITLE)
         }
+        viewBinding.audioControl.setOnClickListener {
+            if (controlsInputEnabled) mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.AUDIO)
+        }
+        viewBinding.rewind.setOnClickListener { seekBy(-15_000L) }
+        viewBinding.forward.setOnClickListener { seekBy(15_000L) }
 
         viewBinding.ivNextSource.setOnClickListener {
             if (!controlsInputEnabled) return@setOnClickListener
@@ -123,10 +105,15 @@ class PlayerBottomView(
         updateControlsInteractiveState(false)
     }
 
+    private fun seekBy(offsetMs: Long) {
+        if (!controlsInputEnabled || !mControlWrapper.isUserSeekAllowed()) return
+        actionHandler?.invoke(PlayerAction.SeekBy(offsetMs))
+            ?: mControlWrapper.seekTo((mControlWrapper.getCurrentPosition() + offsetMs).coerceIn(0L, mControlWrapper.getDuration()))
+    }
+
     override fun attach(controlWrapper: ControlWrapper) {
         mControlWrapper = controlWrapper
-        syncDanmuToggleState()
-        syncSubtitleToggleState()
+
         updateDecodeTypeHint()
     }
 
@@ -147,14 +134,12 @@ class PlayerBottomView(
         if (isVisible) {
             if (isControllerVisible) {
                 // Avoid re-focusing play on every DPAD event when controller is already visible.
-                syncDanmuToggleState()
-                syncSubtitleToggleState()
+
                 updateDecodeTypeHint()
                 return
             }
             isControllerVisible = true
-            syncDanmuToggleState()
-            syncSubtitleToggleState()
+
             updateDecodeTypeHint()
             updateControlsInteractiveState(true)
             ViewCompat
@@ -268,11 +253,9 @@ class PlayerBottomView(
 
     override fun onTrackChanged(type: TrackType) {
         if (type == TrackType.DANMU) {
-            syncDanmuToggleState()
             updateControlsInteractiveState(controlsInputEnabled)
         }
         if (type == TrackType.SUBTITLE) {
-            syncSubtitleToggleState()
             updateControlsInteractiveState(controlsInputEnabled)
         }
     }
@@ -360,6 +343,9 @@ class PlayerBottomView(
         val focusables =
             listOf(
                 viewBinding.playIv,
+                viewBinding.rewind,
+                viewBinding.forward,
+                viewBinding.audioControl,
                 viewBinding.ivPreviousSource,
                 viewBinding.ivNextSource,
                 viewBinding.videoListIv,
@@ -372,23 +358,23 @@ class PlayerBottomView(
             )
         }
 
-        val danmuReady = enabled && isDanmuToggleReady()
+        val danmuReady = enabled
         viewBinding.danmuControlIv.applyDpadFocusable(
             enabled = danmuReady,
             inTouchMode = inTouchMode,
             clickable = enabled,
         )
-        viewBinding.danmuControlIv.alpha = if (isDanmuToggleReady()) 1f else 0.5f
+        viewBinding.danmuControlIv.alpha = 1f
         if (!danmuReady && viewBinding.danmuControlIv.hasFocus() && !inTouchMode) {
             viewBinding.playIv.requestDefaultFocus()
         }
-        val subtitleReady = enabled && isSubtitleToggleReady()
+        val subtitleReady = enabled
         viewBinding.subtitleControlIv.applyDpadFocusable(
             enabled = subtitleReady,
             inTouchMode = inTouchMode,
             clickable = enabled,
         )
-        viewBinding.subtitleControlIv.alpha = if (isSubtitleToggleReady()) 1f else 0.5f
+        viewBinding.subtitleControlIv.alpha = 1f
         if (!subtitleReady && viewBinding.subtitleControlIv.hasFocus() && !inTouchMode) {
             viewBinding.playIv.requestDefaultFocus()
         }
@@ -396,20 +382,20 @@ class PlayerBottomView(
     }
 
     private fun updateFocusNavigation() {
-        val focusables = mutableListOf<View>()
-        if (viewBinding.videoListIv.isVisible) {
-            focusables.add(viewBinding.videoListIv)
-        }
+        val focusables = mutableListOf<View>(viewBinding.rewind, viewBinding.playIv, viewBinding.forward)
         if (viewBinding.ivPreviousSource.isVisible) {
             focusables.add(viewBinding.ivPreviousSource)
         }
-        focusables.add(viewBinding.playIv)
         if (viewBinding.ivNextSource.isVisible) {
             focusables.add(viewBinding.ivNextSource)
+        }
+        if (viewBinding.videoListIv.isVisible) {
+            focusables.add(viewBinding.videoListIv)
         }
         if (viewBinding.subtitleControlIv.isFocusable) {
             focusables.add(viewBinding.subtitleControlIv)
         }
+        focusables.add(viewBinding.audioControl)
         if (viewBinding.danmuControlIv.isFocusable) {
             focusables.add(viewBinding.danmuControlIv)
         }
@@ -420,56 +406,6 @@ class PlayerBottomView(
             view.nextFocusLeftId = left.id
             view.nextFocusRightId = right.id
             view.nextFocusUpId = R.id.video_title_tv
-        }
-    }
-
-    private fun syncDanmuToggleState() {
-        if (this::mControlWrapper.isInitialized.not()) return
-        val userVisible = mControlWrapper.isUserDanmuVisible()
-        if (viewBinding.danmuControlIv.isChecked != userVisible) {
-            viewBinding.danmuControlIv.isChecked = userVisible
-        }
-        viewBinding.danmuControlIv.alpha = if (isDanmuToggleReady()) 1f else 0.5f
-    }
-
-    private fun syncSubtitleToggleState() {
-        if (this::mControlWrapper.isInitialized.not()) return
-        val userVisible = mControlWrapper.isUserSubtitleVisible()
-        if (viewBinding.subtitleControlIv.isChecked != userVisible) {
-            viewBinding.subtitleControlIv.isChecked = userVisible
-        }
-        viewBinding.subtitleControlIv.alpha = if (isSubtitleToggleReady()) 1f else 0.5f
-    }
-
-    private fun isDanmuToggleReady(): Boolean {
-        if (this::mControlWrapper.isInitialized.not()) return false
-        return mControlWrapper
-            .getTracks(TrackType.DANMU)
-            .any { it.selected && !it.disable }
-    }
-
-    private fun resolveDanmuToggleUnavailableHint(): String {
-        val tracks = mControlWrapper.getTracks(TrackType.DANMU).filterNot { it.disable }
-        return if (tracks.isEmpty()) {
-            "当前视频暂无弹幕轨道"
-        } else {
-            "请先选择弹幕轨道"
-        }
-    }
-
-    private fun isSubtitleToggleReady(): Boolean {
-        if (this::mControlWrapper.isInitialized.not()) return false
-        return mControlWrapper
-            .getTracks(TrackType.SUBTITLE)
-            .any { it.selected && !it.disable }
-    }
-
-    private fun resolveSubtitleToggleUnavailableHint(): String {
-        val tracks = mControlWrapper.getTracks(TrackType.SUBTITLE).filterNot { it.disable }
-        return if (tracks.isEmpty()) {
-            "当前视频暂无字幕轨道"
-        } else {
-            "请先选择字幕轨道"
         }
     }
 

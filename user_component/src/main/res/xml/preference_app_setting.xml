@@ -7,11 +7,6 @@
             android:key="app_version"
             android:title="当前版本"
             app:icon="@drawable/ic_app_setting_app_version" />
-        
-        <Preference
-            android:key="app_version"
-            android:title="当前版本"
-            app:icon="@drawable/ic_app_setting_app_version" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="设置">

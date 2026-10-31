@@ -48,8 +48,6 @@ object VideoItemLayout {
             durationTv.isVisible = duration.isNotEmpty()
 
             setupVideoTag(tagRv, data)
-
-            dividerView.isVisible = false
         }
     }
 

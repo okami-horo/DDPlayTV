@@ -43,7 +43,13 @@ class MediaSourceEntryInstrumentedTest {
                 description.height > 0 && description.getGlobalVisibleRect(bounds) && bounds.height() >= description.height
             }
             send(KeyEvent.KEYCODE_DPAD_DOWN)
-            send(KeyEvent.KEYCODE_DPAD_UP)
+            repeat(12) {
+                if (activity.currentFocus?.id !=
+                    com.xyoye.local_component.R.id.add_media_storage_bt
+                ) {
+                    send(KeyEvent.KEYCODE_DPAD_RIGHT)
+                }
+            }
             scenario.onActivity {
                 assertEquals(
                     "The add button must be reachable from the list",
@@ -53,9 +59,11 @@ class MediaSourceEntryInstrumentedTest {
             }
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             awaitChooser()
+            screenshot("source-chooser")
             // First two actions are FTP and WebDAV; selection is entirely remote driven.
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             awaitEditor("FTP")
+            screenshot("source-ftp")
             send(KeyEvent.KEYCODE_BACK)
             await("Return to add button") {
                 activity.hasWindowFocus() &&
@@ -66,9 +74,10 @@ class MediaSourceEntryInstrumentedTest {
             send(KeyEvent.KEYCODE_DPAD_DOWN)
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             awaitEditor("WebDav")
+            screenshot("source-webdav")
             send(KeyEvent.KEYCODE_BACK)
             await("Return from WebDAV") { activity.hasWindowFocus() }
-            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            send(KeyEvent.KEYCODE_DPAD_LEFT)
             lateinit var initiatingView: View
             scenario.onActivity {
                 initiatingView = requireNotNull(activity.currentFocus)
@@ -150,6 +159,16 @@ class MediaSourceEntryInstrumentedTest {
     private fun send(key: Int) {
         instrumentation.sendKeyDownUpSync(key)
         instrumentation.waitForIdleSync()
+    }
+
+    private fun screenshot(name: String) {
+        instrumentation.waitForIdleSync()
+        SystemClock.sleep(350)
+        val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
+        java.io.File(instrumentation.targetContext.getExternalFilesDir("cinema-reference"), "$name.png").outputStream().use {
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+        }
+        bitmap.recycle()
     }
 
     private fun await(

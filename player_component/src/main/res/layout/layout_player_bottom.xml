@@ -1,192 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/player_bottom_ll"
-        android:layout_width="match_parent"
-        android:layout_height="160dp"
-        android:layout_gravity="bottom"
-        android:background="@drawable/cinema_controls_bottom"
-        android:translationY="160dp"
-        tools:translationY="0dp">
-
-        <TextView
-            android:id="@+id/current_position_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="18dp"
-            android:focusable="false"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="00:00" />
-
-        <TextView
-            android:id="@+id/duration_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="32dp"
-            android:focusable="false"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="14sp"
-            app:layout_constraintBaseline_toBaselineOf="@id/current_position_tv"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:text="00:00" />
-
-        <TextView
-            android:id="@+id/decode_type_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="12dp"
-            android:background="@drawable/background_player_decode_hint"
-            android:clickable="false"
-            android:focusable="false"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:paddingHorizontal="6dp"
-            android:paddingVertical="1dp"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@id/duration_tv"
-            app:layout_constraintEnd_toStartOf="@id/duration_tv"
-            app:layout_constraintTop_toTopOf="@id/duration_tv"
-            tools:text="HW" />
-
-        <SeekBar
-            android:id="@+id/play_seek_bar"
-            android:layout_width="0dp"
-            android:layout_height="20dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
-            android:focusable="false"
-            android:max="100"
-            android:maxHeight="4dp"
-            android:minHeight="4dp"
-            android:paddingHorizontal="16dp"
-            android:progressDrawable="@drawable/background_seek_progress"
-            android:thumb="@drawable/ic_player_seek_ball"
-
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/current_position_tv" />
-
-        <ImageView
-            android:id="@+id/play_iv"
-            android:layout_width="58dp"
-            android:layout_height="58dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="18dp"
-            android:background="@drawable/cinema_button"
-            android:contentDescription="播放 / 暂停"
-            android:focusable="true"
-            android:nextFocusUp="@id/video_title_tv"
-            android:padding="10dp"
-            app:tint="@color/cinema_button_text"
-            android:src="@drawable/ic_play_bt"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/play_seek_bar" />
-
-        <ImageView
-            android:id="@+id/iv_previous_source"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_marginEnd="24dp"
-            android:background="@drawable/cinema_button"
-            android:contentDescription="@null"
-            android:focusable="true"
-            android:nextFocusUp="@id/video_title_tv"
-            android:padding="10dp"
-            app:tint="@color/cinema_button_text"
-            android:src="@drawable/ic_video_previous"
-            app:layout_constraintBottom_toBottomOf="@id/play_iv"
-            app:layout_constraintEnd_toStartOf="@id/play_iv"
-            app:layout_constraintTop_toTopOf="@id/play_iv" />
-
-        <ImageView
-            android:id="@+id/iv_next_source"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_marginStart="24dp"
-            android:background="@drawable/cinema_button"
-            android:contentDescription="@null"
-            android:focusable="true"
-            android:nextFocusUp="@id/video_title_tv"
-            android:padding="10dp"
-            app:tint="@color/cinema_button_text"
-            android:src="@drawable/ic_video_next"
-            app:layout_constraintBottom_toBottomOf="@id/play_iv"
-            app:layout_constraintStart_toEndOf="@id/play_iv"
-            app:layout_constraintTop_toTopOf="@id/play_iv" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/video_list_iv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:background="@drawable/background_send_danmu_bt"
-            android:drawablePadding="4dp"
-            android:focusable="true"
-            android:gravity="center"
-            android:nextFocusUp="@id/video_title_tv"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp"
-            android:text="@string/select_video_source"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="14sp"
-            app:drawableStartCompat="@drawable/ic_video_list"
-            app:layout_constraintBottom_toBottomOf="@id/play_iv"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/play_iv" />
-
-        <androidx.appcompat.widget.AppCompatCheckBox
-            android:id="@+id/subtitle_control_iv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="12dp"
-            android:background="@drawable/background_send_danmu_bt"
-            android:button="@null"
-            android:drawablePadding="4dp"
-            android:focusable="true"
-            android:gravity="center"
-            android:nextFocusUp="@id/video_title_tv"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp"
-            android:text="@string/subtitle_switch"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="14sp"
-            app:drawableStartCompat="@drawable/selector_subtitle_icon"
-            app:layout_constraintBottom_toBottomOf="@id/play_iv"
-            app:layout_constraintEnd_toStartOf="@id/danmu_control_iv"
-            app:layout_constraintTop_toTopOf="@id/play_iv" />
-
-        <androidx.appcompat.widget.AppCompatCheckBox
-            android:id="@+id/danmu_control_iv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="32dp"
-            android:background="@drawable/background_send_danmu_bt"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp"
-            android:button="@null"
-            android:text="@string/danmu_switch"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="14sp"
-            android:gravity="center"
-            android:drawablePadding="4dp"
-            app:drawableStartCompat="@drawable/selector_danmu_icon"
-            android:focusable="true"
-            android:nextFocusUp="@id/video_title_tv"
-            app:layout_constraintBottom_toBottomOf="@id/play_iv"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/play_iv" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools">
+    <LinearLayout android:id="@+id/player_bottom_ll" android:layout_width="match_parent" android:layout_height="320dp" android:layout_gravity="bottom" android:orientation="vertical" android:paddingHorizontal="40dp" android:paddingTop="200dp" android:paddingBottom="25dp" android:background="@drawable/cinema_controls_bottom" android:translationY="320dp" tools:translationY="0dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+            <TextView android:id="@+id/current_position_tv" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="@color/cinema_text" android:textSize="12sp" />
+            <TextView android:id="@+id/decode_type_tv" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="12dp" android:textColor="@color/cinema_muted" android:textSize="10sp" />
+            <TextView android:id="@+id/duration_tv" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/cinema_text" android:textSize="12sp" />
+        </LinearLayout>
+        <SeekBar android:id="@+id/play_seek_bar" android:layout_width="match_parent" android:layout_height="20dp" android:layout_marginTop="2dp" android:layout_marginBottom="12dp" android:max="100" android:maxHeight="4dp" android:minHeight="4dp" android:paddingHorizontal="0dp" android:focusable="false" android:progressDrawable="@drawable/background_seek_progress" android:thumb="@drawable/ic_player_seek_ball" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="44dp" android:gravity="center_vertical">
+            <ImageButton android:id="@+id/rewind" android:layout_width="36dp" android:layout_height="36dp" android:padding="9dp" android:background="@drawable/cinema_icon_circle" android:src="@drawable/cinema_ic_rewind" android:focusable="true" android:contentDescription="后退15秒" android:layout_marginEnd="12dp" />
+            <ImageView android:id="@+id/play_iv" android:layout_width="42dp" android:layout_height="42dp" android:layout_marginEnd="12dp" android:background="@drawable/cinema_play_circle" android:src="@drawable/ic_play_bt" app:tint="@color/cinema_background" android:padding="10dp" android:focusable="true" android:contentDescription="播放 / 暂停" />
+            <ImageButton android:id="@+id/forward" android:layout_width="36dp" android:layout_height="36dp" android:padding="9dp" android:background="@drawable/cinema_icon_circle" android:src="@drawable/cinema_ic_forward" android:focusable="true" android:contentDescription="前进15秒" android:layout_marginEnd="12dp" />
+            <ImageView android:id="@+id/iv_previous_source" android:layout_width="30dp" android:layout_height="34dp" android:padding="6dp" android:background="@drawable/cinema_icon_circle" android:src="@drawable/ic_video_previous" app:tint="@color/cinema_text" android:focusable="true" android:visibility="gone" android:contentDescription="上一集" />
+            <ImageView android:id="@+id/iv_next_source" android:layout_width="30dp" android:layout_height="34dp" android:padding="6dp" android:background="@drawable/cinema_icon_circle" android:src="@drawable/ic_video_next" app:tint="@color/cinema_text" android:focusable="true" android:visibility="gone" android:contentDescription="下一集" />
+            <androidx.appcompat.widget.AppCompatTextView android:id="@+id/video_list_iv" android:layout_width="wrap_content" android:layout_height="36dp" android:paddingHorizontal="12dp" android:gravity="center" android:background="@drawable/cinema_button" android:text="选集" android:textColor="@color/cinema_muted" android:textSize="12sp" android:focusable="true" />
+            <Space android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
+            <androidx.appcompat.widget.AppCompatTextView android:id="@+id/subtitle_control_iv" android:layout_width="wrap_content" android:layout_height="38dp" android:layout_marginEnd="10dp" android:background="@drawable/cinema_button" android:paddingHorizontal="14dp" android:drawablePadding="7dp" android:text="字幕" android:textColor="@color/cinema_text" android:textSize="12sp" android:gravity="center" app:drawableStartCompat="@drawable/cinema_ic_subtitle" android:focusable="true" />
+            <Button android:id="@+id/audio_control" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="38dp" android:paddingHorizontal="14dp" android:minWidth="0dp" android:text="音轨" android:textSize="12sp" android:drawableStart="@drawable/cinema_ic_audio" android:drawablePadding="7dp" />
+            <androidx.appcompat.widget.AppCompatTextView android:id="@+id/danmu_control_iv" android:layout_width="wrap_content" android:layout_height="38dp" android:background="@drawable/cinema_button" android:paddingHorizontal="14dp" android:drawablePadding="7dp" android:text="弹幕" android:textColor="@color/cinema_text" android:textSize="12sp" android:gravity="center" app:drawableStartCompat="@drawable/cinema_ic_danmaku" android:focusable="true" />
+        </LinearLayout>
+    </LinearLayout>
 </layout>

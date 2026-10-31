@@ -8,11 +8,11 @@
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize"
+        android:layout_height="66dp"
         android:background="@color/layout_bg_color"
-        android:paddingHorizontal="12dp"
+        android:paddingHorizontal="24dp"
         app:titleTextColor="@color/text_black"
-        app:titleTextAppearance="@style/TextAppearance.AppCompat.Title">
+        app:titleTextAppearance="@style/Cinema.Title">
     </androidx.appcompat.widget.Toolbar>
 
 </com.google.android.material.appbar.AppBarLayout>

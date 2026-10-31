@@ -22,6 +22,8 @@ data class MetadataCard(
 
 class MetadataCardAdapter(
     private val posters: Boolean = false,
+    private val landscape: Boolean = false,
+    private val searchResults: Boolean = false,
     private val compact: Boolean = false,
     private val continueWatching: Boolean = false,
     private val click: (MetadataCard) -> Unit,
@@ -53,7 +55,9 @@ class MetadataCardAdapter(
                     parent.context
                 ).inflate(
                     when {
+                        searchResults -> R.layout.item_metadata_search
                         continueWatching -> R.layout.item_metadata_continue
+                        landscape -> R.layout.item_metadata_landscape
                         posters -> R.layout.item_metadata_poster
                         else -> R.layout.item_metadata_row
                     },
@@ -65,7 +69,7 @@ class MetadataCardAdapter(
             view.minimumHeight = (68 * parent.resources.displayMetrics.density).toInt()
         }
         if (continueWatching) {
-            view.nextFocusDownId = R.id.filter_movie
+            view.nextFocusDownId = view.id
             view.nextFocusUpId = R.id.hero_play
         }
         return Holder(view).also {
@@ -88,11 +92,14 @@ class MetadataCardAdapter(
     ) {
         val card = getItem(position)
         holder.title.text = card.title
+        holder.itemView.findViewById<TextView>(R.id.card_caption)?.text = card.title
         holder.subtitle.text = card.subtitle
         holder.progress?.progress = card.progress?.coerceIn(0, 100) ?: 0
+        holder.progress?.visibility = if (card.progress == null) View.GONE else View.VISIBLE
         holder.image.load(card.image) {
-            placeholder(R.drawable.ic_local_file)
-            error(R.drawable.ic_local_file)
+            placeholder(R.drawable.cinema_media_placeholder)
+            fallback(R.drawable.cinema_media_placeholder)
+            error(R.drawable.cinema_media_placeholder)
         }
         holder.itemView.setOnClickListener { click(card) }
         holder.itemView.setOnLongClickListener {

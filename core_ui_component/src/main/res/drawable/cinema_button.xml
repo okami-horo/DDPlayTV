@@ -1,15 +1,27 @@
-<?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
-        <shape><corners android:radius="12dp"/><solid android:color="@color/cinema_text"/><stroke android:width="2dp" android:color="@color/white"/></shape>
+        <shape>
+            <corners android:radius="10dp" />
+            <solid android:color="#303038" />
+            <stroke android:width="2dp" android:color="@color/cinema_text" />
+        </shape>
     </item>
     <item android:state_pressed="true">
-        <shape><corners android:radius="12dp"/><solid android:color="#D8D8E0"/></shape>
+        <shape>
+            <corners android:radius="10dp" />
+            <solid android:color="#40FFFFFF" />
+        </shape>
     </item>
     <item android:state_selected="true">
-        <shape><corners android:radius="12dp"/><solid android:color="@color/cinema_elevated"/><stroke android:width="1dp" android:color="#88FFFFFF"/></shape>
+        <shape>
+            <corners android:radius="10dp" />
+            <solid android:color="#303038" />
+        </shape>
     </item>
     <item>
-        <shape><corners android:radius="12dp"/><solid android:color="@color/cinema_surface"/></shape>
+        <shape>
+            <corners android:radius="10dp" />
+            <solid android:color="#18FFFFFF" />
+        </shape>
     </item>
 </selector>

@@ -44,7 +44,6 @@ import com.xyoye.storage_component.ui.dialog.FontCacheProgressDialog
 import com.xyoye.storage_component.ui.fragment.storage_file.StorageFileFragment
 import com.xyoye.storage_component.ui.weight.StorageFileMenus
 import com.xyoye.storage_component.utils.storage.StorageFilePathAdapter
-import com.xyoye.storage_component.utils.storage.StorageFileStyleHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -88,11 +87,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
 
     // 标题栏菜单管理器
     private var mMenus: StorageFileMenus? = null
-
-    // 标题栏样式工具
-    private val mToolbarStyleHelper: StorageFileStyleHelper by lazy {
-        StorageFileStyleHelper(this, dataBinding)
-    }
 
     companion object {
         private const val TAG = "StorageFileActivity"
@@ -140,7 +134,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     override fun initView() {
-        mToolbarStyleHelper.observerChildScroll()
         title = storageLibrary?.displayName
         updateToolbarSubtitle(0, 0)
 

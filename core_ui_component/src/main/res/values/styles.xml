@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="CinemaDialog" parent="Theme.AppCompat.Dialog">
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimAmount">0.6</item>
+        <item name="colorAccent">@color/cinema_text</item>
+        <item name="viewInflaterClass">com.xyoye.common_component.focus.TvViewInflater</item>
+    </style>
 
     <style name="AppTheme" parent="Theme.AppCompat.DayNight">
         <item name="viewInflaterClass">com.xyoye.common_component.focus.TvViewInflater</item>
@@ -7,8 +14,8 @@
         <item name="windowNoTitle">true</item>
         <item name="colorPrimary">@color/theme</item>
         <item name="colorPrimaryDark">@color/white</item>
-        <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorControlNormal">@color/theme</item>
+        <item name="colorAccent">@color/cinema_text</item>
+        <item name="colorControlNormal">@color/cinema_text</item>
         <item name="controlBackground">@color/theme</item>
         <item name="android:textColorPrimary">@color/text_black</item>
         <item name="android:windowAnimationStyle">@style/ActivityAnimStyle</item>
@@ -34,8 +41,8 @@
         <item name="windowNoTitle">true</item>
         <item name="colorPrimary">@color/theme</item>
         <item name="colorPrimaryDark">@color/white</item>
-        <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorControlNormal">@color/theme</item>
+        <item name="colorAccent">@color/cinema_text</item>
+        <item name="colorControlNormal">@color/cinema_text</item>
         <item name="android:textColorPrimary">@color/text_black</item>
         <item name="android:windowAnimationStyle">@android:style/Animation</item>
         <item name="android:windowBackground">@android:color/transparent</item>
@@ -107,9 +114,9 @@
     <style name="Theme.DanDanPlay.Widget" parent="Theme.Material3.DayNight">
         <item name="colorPrimary">@color/theme</item>
         <item name="colorPrimaryDark">@color/white</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/cinema_text</item>
         <item name="colorControlNormal">@color/gray</item>
-        <item name="colorControlActivated">@color/theme</item>
+        <item name="colorControlActivated">@color/cinema_text</item>
         <item name="colorControlHighlight">@color/theme</item>
     </style>
 

@@ -24,8 +24,6 @@ class SubtitleFileListDialog(
     override fun getChildLayoutId() = R.layout.dialog_subtitle_file_list
 
     override fun initView(binding: DialogSubtitleFileListBinding) {
-        disableSheetDrag()
-
         setTitle("选择字幕文件下载")
 
         setNegativeListener { dismiss() }

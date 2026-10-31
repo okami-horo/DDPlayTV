@@ -161,6 +161,10 @@ class StorageFileFragment :
     private fun initRecyclerView() {
         dataBinding.storageFileRv.apply {
             layoutManager = vertical()
+            addItemDecoration(
+                com.xyoye.common_component.utils.view
+                    .ItemDecorationSpace(0, (4 * resources.displayMetrics.density).toInt())
+            )
 
             adapter =
                 StorageFileAdapter(

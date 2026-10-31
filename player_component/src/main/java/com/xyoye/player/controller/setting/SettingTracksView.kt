@@ -77,12 +77,26 @@ class SettingTracksView
             viewBinding.tvAddTrack.text = actionText
             viewBinding.tvAddTrack.isVisible = mTrackType != TrackType.VIDEO
 
+            viewBinding.trackVisible.isVisible = mTrackType == TrackType.SUBTITLE || mTrackType == TrackType.DANMU
+            viewBinding.trackStyle.isVisible = viewBinding.trackVisible.isVisible
+            viewBinding.trackVisible.text = if (mTrackType == TrackType.SUBTITLE) "显示字幕" else "显示弹幕"
+            viewBinding.trackVisible.isChecked =
+                if (mTrackType == TrackType.SUBTITLE) mControlWrapper.isUserSubtitleVisible() else mControlWrapper.isUserDanmuVisible()
             refreshTracks()
         }
 
         override fun onViewHide() {
             viewBinding.rvTrack.focusedChild?.clearFocus()
             viewBinding.rvTrack.clearFocus()
+        }
+
+        override fun onViewShowed() {
+            if (isInTouchMode) return
+            when {
+                tracks.isNotEmpty() -> viewBinding.rvTrack.requestFocus()
+                viewBinding.trackVisible.isVisible -> viewBinding.trackVisible.requestFocus()
+                else -> viewBinding.tvAddTrack.requestFocus()
+            }
         }
 
         override fun onTrackChanged(type: TrackType) {
@@ -125,6 +139,23 @@ class SettingTracksView
         }
 
         private fun initListener() {
+            viewBinding.panelClose.setOnClickListener { mControlWrapper.hideSettingView() }
+            viewBinding.trackVisible.setOnClickListener {
+                if (mTrackType == TrackType.SUBTITLE) mControlWrapper.toggleSubtitleVisible() else mControlWrapper.toggleDanmuVisible()
+                viewBinding.trackVisible.isChecked =
+                    if (mTrackType == TrackType.SUBTITLE) mControlWrapper.isUserSubtitleVisible() else mControlWrapper.isUserDanmuVisible()
+            }
+            viewBinding.trackStyle.setOnClickListener {
+                mControlWrapper.showSettingView(
+                    if (mTrackType ==
+                        TrackType.SUBTITLE
+                    ) {
+                        SettingViewType.SUBTITLE_STYLE
+                    } else {
+                        SettingViewType.DANMU_STYLE
+                    }
+                )
+            }
             viewBinding.tvAddTrack.apply {
                 setOnClickListener {
                     mControlWrapper.showSettingView(SettingViewType.SWITCH_SOURCE, mTrackType)

@@ -5,14 +5,14 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/player_setting_nsv"
-        android:layout_width="300dp"
+        android:layout_width="264dp"
         android:layout_height="match_parent"
         android:layout_gravity="end"
         android:background="@drawable/cinema_player_panel"
-        android:layout_margin="16dp"
+        android:layout_margin="15dp"
         android:clickable="true"
         android:focusable="true"
-        android:translationX="300dp"
+        android:translationX="264dp"
         tools:translationX="0dp">
 
         <TextView

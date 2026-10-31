@@ -23,7 +23,6 @@ class ControlWrapper(
     InterDanmuController by mDanmuController,
     InterSubtitleController by mSubtitleController,
     InterSettingController by mSettingController {
-
     override fun seekTo(timeMs: Long) {
         // 播放器
         mVideoPlayer.seekTo(timeMs)
@@ -137,10 +136,12 @@ class ControlWrapper(
         viewType: SettingViewType,
         extra: Any?
     ) {
-        hideController()
-        if (!isLocked()) {
-            mSettingController.showSettingView(viewType, extra)
+        if (isLocked()) {
+            hideController()
+            return
         }
+        // Modal panels retain the visible control that opened them so BACK can restore it.
+        mSettingController.showSettingView(viewType, extra)
     }
 
     /**

@@ -6,8 +6,8 @@ import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
 import com.xyoye.common_component.config.PlayerConfig
-import com.xyoye.common_component.extension.grid
 import com.xyoye.common_component.extension.setData
+import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.data_component.enums.PlayerType
@@ -58,10 +58,7 @@ class PlayerSettingView(
 
     private fun initRv() {
         viewBinding.settingRv.apply {
-            layoutManager =
-                grid(4) { position ->
-                    if (settingItems.getOrNull(position) is SettingActionType) 4 else 1
-                }
+            layoutManager = vertical()
 
             adapter =
                 buildAdapter {

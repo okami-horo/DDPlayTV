@@ -93,8 +93,9 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
         dataBinding.overview.text = work?.let { "${it.releaseDate.take(4)} · ${it.genres}\n${it.overview}" }.orEmpty()
         dataBinding.backdrop.load(work?.backdrop)
         dataBinding.poster.load(work?.poster) {
-            placeholder(R.drawable.ic_local_file)
-            error(R.drawable.ic_local_file)
+            placeholder(R.drawable.cinema_media_placeholder)
+            fallback(R.drawable.cinema_media_placeholder)
+            error(R.drawable.cinema_media_placeholder)
         }
         val bound = current.bindings.filter { it.mediaKind == kind && it.tmdbId == tmdbId }
         val assets = current.assets.filter { asset -> bound.any { it.assetId == asset.assetId } }

@@ -1,72 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-
-    <data>
-
-        <import type="com.xyoye.storage_component.ui.activities.storage_file.StorageFileViewModel" />
-
-        <variable
-            name="viewModel"
-            type="com.xyoye.storage_component.ui.activities.storage_file.StorageFileViewModel" />
-    </data>
-
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/coordinator_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <com.google.android.material.appbar.AppBarLayout
-            android:id="@+id/appbar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/layout_bg_color"
-            app:elevation="0dp">
-
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?android:attr/actionBarSize"
-                android:paddingHorizontal="18dp"
-                app:subtitleTextAppearance="@style/Theme.DanDanPlay.Toolbar.Subtitle"
-                app:titleTextColor="@color/text_black" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/path_rv"
-                app:tvDpadList="true"
-                android:layout_width="match_parent"
-                android:layout_height="48dp" />
-
-        </com.google.android.material.appbar.AppBarLayout>
-
-        <FrameLayout
-            android:id="@+id/fragment_container"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_behavior="@string/storage_file_scroll_behavior"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/toolbar_layout" />
-
-        <!--
-          定位上次播放目录按钮暂时下线，如需恢复请还原该 FloatingActionButton
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/quickly_play_bt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end|bottom"
-            android:layout_marginEnd="20dp"
-            android:layout_marginBottom="40dp"
-            android:contentDescription="@string/action_play_last_video"
-            android:src="@drawable/ic_video_play"
-            app:backgroundTint="@color/theme"
-            app:borderWidth="0dp"
-            app:elevation="5dp"
-            app:fabCustomSize="52dp"
-            app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior"
-            app:maxImageSize="26dp"
-            app:pressedTranslationZ="2dp"
-            app:rippleColor="@color/theme_light" />
-        -->
-
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
-</layout>
+<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"><data><variable name="viewModel" type="com.xyoye.storage_component.ui.activities.storage_file.StorageFileViewModel"/></data>
+<LinearLayout android:id="@+id/coordinator_layout" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/cinema_background" android:paddingTop="12dp">
+<LinearLayout android:id="@+id/appbar_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+<androidx.appcompat.widget.Toolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="64dp" android:paddingHorizontal="24dp" app:titleTextColor="@color/cinema_text" app:subtitleTextColor="@color/cinema_muted" app:titleTextAppearance="@style/Cinema.Title" app:subtitleTextAppearance="@style/Cinema.Body"/>
+<androidx.recyclerview.widget.RecyclerView android:id="@+id/path_rv" app:tvDpadList="true" android:layout_width="match_parent" android:layout_height="40dp" android:paddingHorizontal="36dp" android:paddingVertical="4dp" android:clipToPadding="false"/>
+</LinearLayout>
+<FrameLayout android:id="@+id/fragment_container" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+</LinearLayout></layout>

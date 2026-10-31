@@ -32,9 +32,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:nestedScrollingEnabled="true"
+                android:nestedScrollingEnabled="false"
                 android:paddingBottom="@dimen/storage_file_list_bottom_padding"
-                android:paddingHorizontal="24dp"
+                android:paddingHorizontal="36dp"
                 android:paddingTop="12dp" />
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

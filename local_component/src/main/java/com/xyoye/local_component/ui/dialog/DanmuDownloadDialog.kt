@@ -17,7 +17,6 @@ class DanmuDownloadDialog(
     override fun getChildLayoutId() = R.layout.dialog_danmu_dowanload
 
     override fun initView(binding: DialogDanmuDowanloadBinding) {
-        disableSheetDrag()
         setTitle("下载弹幕")
         binding.downloadPathTv.text = PathHelper.getDanmuDirectory().absolutePath
         rootViewBinding.positiveBt.nextFocusUpId = binding.rbAllSource.id
