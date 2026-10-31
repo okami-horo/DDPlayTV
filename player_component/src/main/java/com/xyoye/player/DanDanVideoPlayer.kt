@@ -452,7 +452,8 @@ class DanDanVideoPlayer(
      * 保存播放信息
      */
     fun recordPlayInfo() {
-        if (this::videoSource.isInitialized.not()) {
+        // Activity.onPause can run after exit has detached and released the kernel.
+        if (this::videoSource.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
             return
         }
         // 保存最后一帧
