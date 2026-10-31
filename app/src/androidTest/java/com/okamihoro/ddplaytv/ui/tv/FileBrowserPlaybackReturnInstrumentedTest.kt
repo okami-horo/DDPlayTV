@@ -46,6 +46,7 @@ class FileBrowserPlaybackReturnInstrumentedTest {
         val previousKernel = PlayerConfig.getUsePlayerType()
         PlayerConfig.putUsePlayerType(kernel.value)
         instrumentation.setInTouchMode(false)
+        var describeState: () -> String = { "" }
 
         fun await(
             message: String = "Expected playback/browser state",
@@ -58,7 +59,9 @@ class FileBrowserPlaybackReturnInstrumentedTest {
                 instrumentation.runOnMainSync { ready = condition() }
                 if (!ready) SystemClock.sleep(30)
             }
-            assertTrue(message, ready)
+            var details = ""
+            if (!ready) instrumentation.runOnMainSync { details = describeState() }
+            assertTrue("$message $details", ready)
         }
 
         fun send(key: Int) {
@@ -100,13 +103,19 @@ class FileBrowserPlaybackReturnInstrumentedTest {
                         return player to view
                     }
 
+                    describeState = {
+                        "browserWindow=${activity.hasWindowFocus()}, listFocus=${list().hasFocus()}, " +
+                            "preview=${fragment().requireView().findViewById<TextView>(R.id.preview_title).text}, " +
+                            "player=${activePlayer()?.second?.getPlayState()}, focus=${activity.currentFocus}"
+                    }
+
                     fun exitToBrowser() {
+                        // Keep confirmation presses together; waiting for toast/UI idleness between them can expire the exit window.
                         repeat(3) {
-                            var isPlayer = false
-                            instrumentation.runOnMainSync { isPlayer = activePlayer() != null }
-                            if (isPlayer) send(KeyEvent.KEYCODE_BACK)
+                            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
                         }
-                        await {
+                        instrumentation.waitForIdleSync()
+                        await("BACK must return to the selected file with its preview and focus") {
                             activity.hasWindowFocus() &&
                                 list().hasFocus() &&
                                 fragment()
