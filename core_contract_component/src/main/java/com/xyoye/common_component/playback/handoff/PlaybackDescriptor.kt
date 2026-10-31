@@ -2,7 +2,6 @@ package com.xyoye.common_component.playback.handoff
 
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.StorageSort
-import com.xyoye.data_component.media3.entity.Media3SourceType
 
 /** Stable inputs only. Persist the entire enclosing request encrypted; never log its fields. */
 sealed class PlaybackDescriptor {
@@ -20,21 +19,6 @@ data class PlayHistoryDescriptor(
     val historyId: Int,
     val expectedUniqueKey: String,
     val expectedLibraryId: Int? = null
-) : PlaybackDescriptor()
-
-data class TorrentDescriptor(
-    val magnetOrTorrentIdentity: String,
-    val fileIndex: Int,
-    val downloadId: String,
-    val expectedUniqueKey: String,
-    val displayTitle: String? = null
-) : PlaybackDescriptor()
-
-data class ExternalUriDescriptor(
-    val uri: String,
-    val sourceType: Media3SourceType,
-    val displayTitle: String? = null,
-    val headers: Map<String, String> = emptyMap()
 ) : PlaybackDescriptor()
 
 data class ScreencastDescriptor(

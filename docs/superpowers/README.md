@@ -10,6 +10,7 @@
 | 文件浏览 C：列表与预览 | [已选 C 设计](designs/2026-10-31-file-browser-design.md) | 用户要求暂缓实施；[后续任务与 C01–C11 验收](plans/2026-10-31-file-browser-preview.md)，原生未开始 |
 | 新 UI 前的身份、异步与恢复修复 | [逻辑修复设计](designs/2026-10-30-ui-readiness-repairs-design.md) | [R1–R10 实施与验证](plans/2026-10-30-ui-readiness-repairs.md)已完成本地验证；优先恢复上次位置，已看完分类单独处理；物理电视及真实服务边界保留 |
 | 新 UI 的全局配置收敛 | [全局配置设计](designs/2026-10-30-global-settings-design.md) | 用户已授权实施；单库偏好移除、PC 分组全局化与 Room 17→18 已实现，验证状态及剩余边界见[实施记录](plans/2026-10-30-global-settings.md) |
+| 串流、外部打开与磁力功能退役 | 用户确认 TV 无相关需求，磁力搜索不保留 | [范围、Room 20 升级与验证](plans/2026-10-31-remove-stream-magnet.md) |
 | 纯 TV 项目收敛 | 用户确认不再维护手机端，保留共享媒体能力与双内核 | [实施与验证记录](plans/2026-10-29-tv-only.md) |
 | Bilibili 全部功能退役 | 用户确认由 PiliPlus 接手，包括弹幕来源 | [移除执行记录](plans/2026-10-28-remove-bilibili.md) |
 | Media3 应用 libass 接入完善 | [接入完善设计](designs/2026-10-29-media3-libass-integration-design.md) | 时间/字体/帧请求与几何/资源防线已实现；[实施、验证与设备边界](plans/2026-10-30-media3-libass.md)；精确呈现/atlas/线程拆分仍按测量门槛，mpv 保持[原生字幕](plans/2026-10-29-mpv-native-subtitles.md) |

@@ -7,14 +7,11 @@ import com.xyoye.common_component.playback.handoff.PlaybackFileReference
 import com.xyoye.common_component.playback.handoff.PlaybackQueueContext
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
-import com.xyoye.common_component.playback.handoff.TorrentDescriptor
 import com.xyoye.common_component.storage.StorageSortOption
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
-import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
 import com.xyoye.common_component.utils.comparator.FileNameComparator
 import com.xyoye.common_component.utils.comparator.FileSizeComparator
-import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.data_component.data.screeencast.ScreencastData
 import com.xyoye.data_component.enums.StorageSort
 import java.util.Collections
@@ -27,16 +24,6 @@ object PlaybackReferenceFactory {
         hideHiddenFiles: Boolean = !AppConfig.isShowHiddenFile(),
         sortAscending: Boolean = StorageSortOption.isAsc()
     ): PlaybackDescriptor {
-        if (file is TorrentStorageFile) {
-            val info = file.getFileInfo()
-            return TorrentDescriptor(
-                info.subPath,
-                info.fileIndex,
-                ThunderManager.media3DownloadId(info.subPath, info.fileIndex),
-                file.uniqueKey(),
-                file.fileName()
-            )
-        }
         val selected = reference(file)
         val items =
             orderedVideos(file.storage.directoryFiles, sort, hideHiddenFiles, sortAscending)

@@ -48,7 +48,7 @@ class PlaybackStateProjectionTest {
                     PlaybackRequestInput(
                         f.descriptor("first"),
                         PlaybackLaunchOptions("first", Media3SourceType.STREAM, listOf(Media3Capability.CAST, Media3Capability.PIP)),
-                        PlaybackRequestOrigin.EXTERNAL_INTENT
+                        PlaybackRequestOrigin.STORAGE_FILE
                     )
                 ) as HandoffStoreResult.Success
             session.deliver(request.value.requestId)

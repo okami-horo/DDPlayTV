@@ -1,7 +1,6 @@
 package com.xyoye.common_component.playback
 
 import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
-import com.xyoye.data_component.media3.entity.DownloadRequiredAction
 
 fun PlaybackPreparationFailure.userMessage(): String =
     when (this) {
@@ -17,11 +16,5 @@ fun PlaybackPreparationFailure.userMessage(): String =
         PlaybackPreparationFailure.AuthenticationRequired, PlaybackPreparationFailure.CredentialUnavailable -> "请重新登录媒体库"
         PlaybackPreparationFailure.NetworkUnavailable -> "网络连接失败，请重试"
         PlaybackPreparationFailure.UnsupportedSource, PlaybackPreparationFailure.InvalidDescriptor -> "不支持的播放资源"
-        is PlaybackPreparationFailure.OfflineValidationBlocked ->
-            when (reason) {
-                DownloadRequiredAction.REDOWNLOAD -> "请重新下载当前资源后再播放"
-                DownloadRequiredAction.REVALIDATE -> "当前下载需要重新验证，请联网后重试"
-                else -> "当前下载资源不可播放，请检查下载状态"
-            }
         is PlaybackPreparationFailure.Unknown -> "准备播放失败，请重试"
     }

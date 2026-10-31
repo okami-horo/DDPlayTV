@@ -1,6 +1,5 @@
 package com.xyoye.player_component.playback.handoff
 
-import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackCastVideo
 import com.xyoye.common_component.playback.handoff.PlaybackFileReference
@@ -11,7 +10,6 @@ import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
-import com.xyoye.common_component.playback.handoff.TorrentDescriptor
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.StorageSort
 import com.xyoye.data_component.media3.entity.Media3SourceType
@@ -36,14 +34,54 @@ class PlaybackHandoffStoreTest {
     private val version = PlaybackSessionVersion("session", 1)
     private val input get() =
         PlaybackRequestInput(
-            ExternalUriDescriptor(
-                "https://example.test/private.mkv?token=secret-query",
-                Media3SourceType.STREAM,
-                headers = mapOf("Cookie" to "private-cookie", "Authorization" to "private-header")
+            ScreencastDescriptor(
+                "192.0.2.1",
+                8080,
+                listOf(PlaybackCastVideo("private.mkv?token=secret-query", "private-key")),
+                "private-key",
+                httpHeaders = mapOf("Cookie" to "private-cookie", "Authorization" to "private-header")
             ),
             null,
-            PlaybackRequestOrigin.EXTERNAL_INTENT
+            PlaybackRequestOrigin.SCREENCAST
         )
+
+    @Test fun retiredStreamAndTorrentPendingPreserveTheActiveSnapshot() {
+        for (kind in listOf("external", "torrent")) {
+            val pending =
+                PendingPlaybackRequest(
+                    "retired",
+                    input.copy(descriptor = StoredLibraryFileDescriptor(7, MediaType.SMB_SERVER, PlaybackFileReference("key", "/video"))),
+                    now,
+                    now + 1000
+                )
+            val snapshot = PlaybackSnapshotRecord(target("active"), now, now + 2000)
+            val legacy =
+                codec
+                    .encode(PlaybackHandoffState(pending = pending, snapshot = snapshot))
+                    .replace("\"kind\":\"library\"", "\"kind\":\"$kind\"")
+            val restored = codec.decode(legacy)
+            assertNull(restored.pending)
+            assertEquals(snapshot, restored.snapshot)
+        }
+    }
+
+    @Test fun retiredStreamAndTorrentSnapshotsPreserveTheNextRequest() {
+        for (type in listOf("STREAM_LINK", "MAGNET_LINK")) {
+            val pending = PendingPlaybackRequest("next", input, now, now + 1000)
+            val snapshot =
+                PlaybackSnapshotRecord(
+                    target(
+                        "retired"
+                    ).copy(descriptor = StoredLibraryFileDescriptor(7, MediaType.SMB_SERVER, PlaybackFileReference("key", "/video"))),
+                    now,
+                    now + 2000
+                )
+            val legacy = codec.encode(PlaybackHandoffState(pending = pending, snapshot = snapshot)).replace("SMB_SERVER", type)
+            val restored = codec.decode(legacy)
+            assertEquals(pending, restored.pending)
+            assertNull(restored.snapshot)
+        }
+    }
 
     @Test fun retiredPendingDoesNotDiscardTheActiveSnapshot() {
         val pending =
@@ -228,13 +266,13 @@ class PlaybackHandoffStoreTest {
     @Test fun submissionDetachesInputsAndCiphertextAndDiagnosticsDoNotExposeSecrets() =
         runBlocking {
             val headers = mutableMapOf("Authorization" to "private-header")
-            val mutableInput = input.copy(descriptor = (input.descriptor as ExternalUriDescriptor).copy(headers = headers))
+            val mutableInput = input.copy(descriptor = (input.descriptor as ScreencastDescriptor).copy(httpHeaders = headers))
             val pending = value(store.submit(mutableInput))
             assertFalse(blob.data!!.contains("private-header"))
             assertFalse(blob.data!!.contains("secret-query"))
             headers.clear()
             val read = value(store.readPending(pending.requestId))
-            assertEquals("private-header", (read.input.descriptor as ExternalUriDescriptor).headers["Authorization"])
+            assertEquals("private-header", (read.input.descriptor as ScreencastDescriptor).httpHeaders["Authorization"])
             val diagnostics = listOf(pending, read).joinToString()
             for (secret in listOf("private-header", "private-voucher", "private-register", "secret-query", "private.mkv")) {
                 assertFalse(blob.data!!.contains(secret))
@@ -256,8 +294,6 @@ class PlaybackHandoffStoreTest {
                         PlaybackQueueContext(null, StorageSort.SIZE, true, "stable", listOf(reference), false)
                     ),
                     PlayHistoryDescriptor(4, "stable", 8),
-                    TorrentDescriptor("magnet:?xt=urn:btih:private-magnet", 3, "download", "stable", "episode four.mkv"),
-                    ExternalUriDescriptor("file:///private/local/video.mkv", Media3SourceType.STREAM),
                     ScreencastDescriptor(
                         "192.0.2.2",
                         8080,

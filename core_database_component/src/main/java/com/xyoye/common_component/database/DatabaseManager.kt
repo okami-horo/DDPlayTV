@@ -312,6 +312,50 @@ class DatabaseManager private constructor() {
                 }
             }
 
+        val MIGRATION_19_20 =
+            object : Migration(19, 20) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    val sequence =
+                        database.query("SELECT seq FROM sqlite_sequence WHERE name = 'play_history'").use { cursor ->
+                            if (cursor.moveToFirst()) cursor.getLong(0) else 0L
+                        }
+                    database.execSQL(
+                        "DELETE FROM play_history WHERE media_type IN ('stream_link', 'magnet_link') " +
+                            "OR storage_id IN (SELECT id FROM media_library WHERE media_type IN ('stream_link', 'magnet_link'))"
+                    )
+                    database.execSQL("DELETE FROM media_library WHERE media_type IN ('stream_link', 'magnet_link')")
+                    database.execSQL("DROP TABLE IF EXISTS magnet_search_history")
+                    database.execSQL("DROP TABLE IF EXISTS magnet_screen")
+                    database.execSQL(
+                        "CREATE TABLE play_history_temp(" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                            "video_name TEXT NOT NULL," +
+                            "url TEXT NOT NULL," +
+                            "media_type TEXT NOT NULL," +
+                            "video_position INTEGER NOT NULL," +
+                            "video_duration INTEGER NOT NULL," +
+                            "play_time INTEGER NOT NULL," +
+                            "danmu_path TEXT," +
+                            "episode_id TEXT," +
+                            "subtitle_path TEXT," +
+                            "http_header TEXT," +
+                            "unique_key TEXT NOT NULL," +
+                            "storage_path TEXT," +
+                            "storage_id INTEGER," +
+                            "audio_path TEXT)"
+                    )
+                    val columns =
+                        "id, video_name, url, media_type, video_position, video_duration, play_time, " +
+                            "danmu_path, episode_id, subtitle_path, http_header, unique_key, storage_path, storage_id, audio_path"
+                    database.execSQL("INSERT INTO play_history_temp($columns) SELECT $columns FROM play_history")
+                    database.execSQL("DROP TABLE play_history")
+                    database.execSQL("ALTER TABLE play_history_temp RENAME TO play_history")
+                    database.execSQL("CREATE UNIQUE INDEX index_play_history_unique_key_storage_id ON play_history(unique_key, storage_id)")
+                    database.execSQL("DELETE FROM sqlite_sequence WHERE name = 'play_history'")
+                    database.execSQL("INSERT INTO sqlite_sequence(name, seq) VALUES ('play_history', ?)", arrayOf(sequence))
+                }
+            }
+
         val MIGRATION_16_15 =
             object : Migration(16, 15) {
                 override fun migrate(database: SupportSQLiteDatabase) {
@@ -403,6 +447,7 @@ class DatabaseManager private constructor() {
                 MIGRATION_16_17,
                 MIGRATION_17_18,
                 MetadataMigration,
+                MIGRATION_19_20,
                 MIGRATION_16_15,
             ).build()
 }

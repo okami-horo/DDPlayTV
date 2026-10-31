@@ -26,7 +26,85 @@ import java.io.File
 @Config(manifest = Config.NONE)
 class RoomSchemaMigrationGateTest {
     @Test
-    fun migration18To19AddsMetadataWithoutChangingExistingRows() {
+    fun migration19RetiresStreamsTorrentsAndSearchWithoutChangingOtherData() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        deleteDatabaseFiles(context, TEST_DB_NAME)
+        val file = context.getDatabasePath(TEST_DB_NAME).also { it.parentFile?.mkdirs() }
+        createDatabaseFromRoomSchemaJson(file, loadSchemaJson(19), 19)
+        val historyColumns =
+            "id, video_name, url, media_type, video_position, video_duration, play_time, " +
+                "danmu_path, episode_id, subtitle_path, http_header, unique_key, storage_path, storage_id, audio_path"
+        val expectedLibraries: List<List<String?>>
+        val expectedHistory: List<List<String?>>
+        openHistoricalDatabase(context, 19).use { helper ->
+            val database = helper.writableDatabase
+            for ((id, type) in listOf(
+                1 to "local_storage",
+                2 to "stream_link",
+                3 to "magnet_link",
+                4 to "other_storage",
+                7 to "webdav_server"
+            )) {
+                database.execSQL(
+                    "INSERT INTO media_library(id, display_name, url, media_type, is_anonymous, port, ftp_mode, " +
+                        "ftp_address, ftp_encoding, smb_v2, web_dav_strict, web_dav_allow_insecure_tls, screencast_address) " +
+                        "VALUES (?, 'Source', ?, ?, 1, 443, 0, '', 'UTF-8', 1, 1, 0, '')",
+                    arrayOf(id, "source://$id", type)
+                )
+            }
+            for ((id, type, source) in listOf(
+                Triple(1, "webdav_server", 7),
+                Triple(2, "stream_link", 2),
+                Triple(3, "magnet_link", 3),
+                Triple(4, "other_storage", 3),
+                Triple(5, "stream_link", null),
+                Triple(6, "magnet_link", null),
+                Triple(7, "local_storage", 1),
+                Triple(99, "magnet_link", 3)
+            )) {
+                database.execSQL(
+                    "INSERT INTO play_history(id, video_name, url, media_type, video_position, video_duration, play_time, " +
+                        "danmu_path, episode_id, subtitle_path, torrent_index, http_header, unique_key, storage_path, storage_id, audio_path) " +
+                        "VALUES (?, 'Video', 'play://video', ?, 12345, 90000, 123, '/local/danmu.xml', 'episode', " +
+                        "'/local/subtitle.ass', -1, 'header', ?, '/original/video.mkv', ?, '/local/audio.flac')",
+                    arrayOf(id, type, "key-$id", source)
+                )
+            }
+            database.execSQL("DELETE FROM play_history WHERE id = 99")
+            expectedLibraries = rows(database.query("SELECT * FROM media_library WHERE id NOT IN (2, 3) ORDER BY id"))
+            expectedHistory = rows(database.query("SELECT $historyColumns FROM play_history WHERE id IN (1, 7) ORDER BY id"))
+        }
+        val room = openCurrentDatabase(context)
+        try {
+            val database = room.openHelper.writableDatabase
+            assertEquals(expectedLibraries, rows(database.query("SELECT * FROM media_library ORDER BY id")))
+            assertEquals(expectedHistory, rows(database.query("SELECT $historyColumns FROM play_history ORDER BY id")))
+            assertFalse(tableExists(database, "magnet_search_history"))
+            assertFalse(tableExists(database, "magnet_screen"))
+            assertFalse(queryColumnNames(database, "play_history").contains("torrent_path"))
+            assertFalse(queryColumnNames(database, "play_history").contains("torrent_index"))
+            assertTrue(tableExists(database, "metadata_work"))
+            database.execSQL(
+                "INSERT INTO play_history(video_name, url, media_type, video_position, video_duration, play_time, unique_key, storage_id) " +
+                    "VALUES ('Next', 'next://video', 'webdav_server', 0, 100, 123, 'new-key', 7)"
+            )
+            assertEquals(listOf(listOf("100")), rows(database.query("SELECT MAX(id) FROM play_history")))
+            val duplicate =
+                runCatching {
+                    database.execSQL(
+                        "INSERT INTO play_history(video_name, url, media_type, video_position, video_duration, play_time, unique_key, storage_id) " +
+                            "VALUES ('Duplicate', 'next://video', 'webdav_server', 0, 100, 123, 'new-key', 7)"
+                    )
+                }.exceptionOrNull()
+            assertTrue(duplicate is SQLiteConstraintException)
+        } finally {
+            room.close()
+            deleteDatabaseFiles(context, TEST_DB_NAME)
+        }
+    }
+
+    @Test
+    fun migration18ToCurrentAddsMetadataWithoutChangingExistingRows() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         deleteDatabaseFiles(context, TEST_DB_NAME)
         val file = context.getDatabasePath(TEST_DB_NAME).also { it.parentFile?.mkdirs() }
@@ -41,7 +119,7 @@ class RoomSchemaMigrationGateTest {
             assertEquals(before, rows(database.openHelper.writableDatabase.query("SELECT * FROM media_library")))
             assertTrue(tableExists(database.openHelper.writableDatabase, "metadata_work"))
             assertTrue(tableExists(database.openHelper.writableDatabase, "media_binding_episode"))
-            assertEquals(19, database.openHelper.writableDatabase.version)
+            assertEquals(CURRENT_VERSION, database.openHelper.writableDatabase.version)
         } finally {
             database.close()
             deleteDatabaseFiles(context, TEST_DB_NAME)
@@ -126,7 +204,7 @@ class RoomSchemaMigrationGateTest {
             )
             reserveDeletedLibraryId(database)
             expectedLibraries = rows(database.query("SELECT $RETAINED_COLUMNS FROM media_library ORDER BY id"))
-            expectedHistory = rows(database.query("SELECT * FROM play_history ORDER BY id"))
+            expectedHistory = rows(database.query("SELECT $RETAINED_HISTORY_COLUMNS FROM play_history ORDER BY id"))
         }
 
         val roomDb = openCurrentDatabase(context)
@@ -134,7 +212,7 @@ class RoomSchemaMigrationGateTest {
             val database = roomDb.openHelper.writableDatabase
             assertCurrentLibrarySchema(database)
             assertEquals(expectedLibraries, rows(database.query("SELECT $RETAINED_COLUMNS FROM media_library ORDER BY id")))
-            assertEquals(expectedHistory, rows(database.query("SELECT * FROM play_history ORDER BY id")))
+            assertEquals(expectedHistory, rows(database.query("SELECT $RETAINED_HISTORY_COLUMNS FROM play_history ORDER BY id")))
             insertCurrentLibrary(database)
             assertEquals(100L, lastLibraryId(database))
             val duplicateFailure = runCatching { insertCurrentLibrary(database) }.exceptionOrNull()
@@ -201,14 +279,14 @@ class RoomSchemaMigrationGateTest {
                         RETAINED_COLUMNS
                     }
                 expectedLibraries = rows(database.query("SELECT $projection FROM media_library ORDER BY id"))
-                expectedHistory = rows(database.query("SELECT * FROM play_history ORDER BY id"))
+                expectedHistory = rows(database.query("SELECT $RETAINED_HISTORY_COLUMNS FROM play_history ORDER BY id"))
             }
             val roomDb = openCurrentDatabase(context)
             try {
                 val database = roomDb.openHelper.writableDatabase
                 assertCurrentLibrarySchema(database)
                 assertEquals(expectedLibraries, rows(database.query("SELECT $RETAINED_COLUMNS FROM media_library ORDER BY id")))
-                assertEquals(expectedHistory, rows(database.query("SELECT * FROM play_history ORDER BY id")))
+                assertEquals(expectedHistory, rows(database.query("SELECT $RETAINED_HISTORY_COLUMNS FROM play_history ORDER BY id")))
             } finally {
                 roomDb.close()
                 deleteDatabaseFiles(context, TEST_DB_NAME)
@@ -387,7 +465,8 @@ class RoomSchemaMigrationGateTest {
                 DatabaseManager.MIGRATION_15_16,
                 DatabaseManager.MIGRATION_16_17,
                 DatabaseManager.MIGRATION_17_18,
-                com.xyoye.common_component.database.MetadataMigration
+                com.xyoye.common_component.database.MetadataMigration,
+                DatabaseManager.MIGRATION_19_20
             ).build()
 
     private fun assertCurrentLibrarySchema(database: SupportSQLiteDatabase) {
@@ -741,13 +820,16 @@ class RoomSchemaMigrationGateTest {
     private companion object {
         const val OLD_VERSION = 15
         const val NEW_VERSION = 16
-        const val CURRENT_VERSION = 19
+        const val CURRENT_VERSION = 20
         const val TEST_DB_NAME = "room_migration_gate_test.db"
         private const val ROOM_TABLE_NAME_PLACEHOLDER = "${'$'}{TABLE_NAME}"
         private const val ROOM_VIEW_NAME_PLACEHOLDER = "${'$'}{VIEW_NAME}"
         private const val TABLE_MEDIA_LIBRARY = "media_library"
         private const val TABLE_MEDIA_LIBRARY_SIDECAR = "media_library_v16_ext"
         private const val COLUMN_WEB_DAV_ALLOW_INSECURE_TLS = "web_dav_allow_insecure_tls"
+        private const val RETAINED_HISTORY_COLUMNS =
+            "id, video_name, url, media_type, video_position, video_duration, play_time, " +
+                "danmu_path, episode_id, subtitle_path, http_header, unique_key, storage_path, storage_id, audio_path"
         private const val RETAINED_COLUMNS =
             "id, display_name, url, media_type, account, password, is_anonymous, port, describe, " +
                 "ftp_mode, ftp_address, ftp_encoding, smb_v2, smb_share_path, remote_secret, " +

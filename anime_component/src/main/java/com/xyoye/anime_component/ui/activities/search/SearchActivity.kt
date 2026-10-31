@@ -12,7 +12,6 @@ import com.xyoye.anime_component.R
 import com.xyoye.anime_component.databinding.ActivitySearchBinding
 import com.xyoye.anime_component.listener.SearchListener
 import com.xyoye.anime_component.ui.fragment.search_anime.SearchAnimeFragment
-import com.xyoye.anime_component.ui.fragment.search_magnet.SearchMagnetFragment
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.focus.TvCategory
@@ -26,14 +25,6 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
     @Autowired
     @JvmField
     var animeTitle: String? = null
-
-    @Autowired
-    @JvmField
-    var searchWord: String? = null
-
-    @Autowired
-    @JvmField
-    var isSearchMagnet: Boolean = false
 
     private var tvPages: TvCategoryPages? = null
 
@@ -58,10 +49,8 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
             ).apply {
                 submit(
                     listOf(
-                        TvCategory("anime", "搜番剧") { SearchAnimeFragment.newInstance() },
-                        TvCategory("magnet", "搜资源") { SearchMagnetFragment.newInstance(searchWord) }
-                    ),
-                    if (isSearchMagnet) 1 else 0
+                        TvCategory("anime", "搜番剧") { SearchAnimeFragment.newInstance() }
+                    )
                 )
             }
         dataBinding.searchCl.nextFocusDownId = dataBinding.tabLayout.id
@@ -163,7 +152,6 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
         dataBinding.searchEt.hint =
             when (position) {
                 0 -> getString(R.string.search_anime_hint)
-                1 -> getString(R.string.search_magnet_hint)
                 else -> ""
             }
     }

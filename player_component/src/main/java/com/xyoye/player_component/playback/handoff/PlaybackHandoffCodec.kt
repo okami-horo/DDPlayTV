@@ -6,13 +6,11 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
-import com.xyoye.common_component.playback.handoff.TorrentDescriptor
 import okio.Buffer
 
 /** Direct adapters only: generic JSON helpers log parse failures and must not see this plaintext. */
@@ -54,8 +52,9 @@ internal class PlaybackHandoffCodec {
 
     private fun isRetiredDescriptor(value: Any?): Boolean {
         val descriptor = value as? Map<*, *> ?: return false
+        if (descriptor["kind"] in setOf("external", "torrent")) return true
         val payload = descriptor["value"] as? Map<*, *> ?: return false
-        return descriptor["kind"] == "library" && payload["mediaType"] == "BILIBILI_STORAGE"
+        return descriptor["kind"] == "library" && payload["mediaType"] in setOf("BILIBILI_STORAGE", "STREAM_LINK", "MAGNET_LINK")
     }
 
     fun copy(input: PlaybackRequestInput): PlaybackRequestInput = requireNotNull(inputAdapter.fromJson(inputAdapter.toJson(input)))
@@ -67,8 +66,6 @@ internal class PlaybackHandoffCodec {
             mapOf(
                 "library" to StoredLibraryFileDescriptor::class.java,
                 "history" to PlayHistoryDescriptor::class.java,
-                "torrent" to TorrentDescriptor::class.java,
-                "external" to ExternalUriDescriptor::class.java,
                 "screencast" to ScreencastDescriptor::class.java
             )
 

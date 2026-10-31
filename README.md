@@ -61,11 +61,13 @@
 | 本地 | 本地媒体库、设备存储库、外部媒体库 |
 | 网络 | SMB、FTP、WebDav、Alist、PC 端媒体库 |
 | 云/平台 | 115 Open、百度网盘 |
-| 其他 | 串流视频、磁链视频、远程投屏 |
+| 其他 | 远程投屏 |
 
 > 115 Open：需要配置 `access_token` / `refresh_token`，获取方式参考 [OpenList 官方文档](https://www.oplist.org.cn/ecosystem/official_docs)。
 
 Bilibili 视频、直播、媒体库及 B 站弹幕来源已移除，相关功能由独立的 PiliPlus 项目接手。弹弹play 弹幕及本地弹幕文件仍受支持。
+
+手动串流地址、接收其他 App 的视频打开请求、磁力/种子播放与磁力资源搜索已退役；上述网络存储和投屏继续保留。升级处理见[移除记录](docs/superpowers/plans/2026-10-31-remove-stream-magnet.md)。
 
 ### 动漫
 

@@ -25,7 +25,6 @@ dependencies {
 
     // Keep repository wrappers internal to storage implementation.
     implementation(project(":repository:seven_zip"))
-    implementation(project(":repository:thunder"))
 
     implementation(files("libs/sardine-1.0.2.jar"))
     implementation(files("libs/simple-xml-2.7.1.jar"))

@@ -23,7 +23,7 @@
 - SMBJ / dcerpc、Apache Commons Net：SMB、FTP 访问。
 - jsoup、juniversalchardet：网页与文本解析、编码识别。
 - Room、MMKV：数据库与键值存储。
-- SevenZip（`repository:seven_zip`）、Thunder（`repository:thunder`）：解压与下载封装。
+- SevenZip（`repository:seven_zip`）：解压封装。迅雷下载 SDK 随磁力播放退役；独立的字幕 HTTP 匹配接口仍保留。
 - 华为 Scan Kit：二维码生成/相关组件调用；依赖存在不代表当前声明相机权限。
 
 ## UI、诊断与测试

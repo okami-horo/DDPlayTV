@@ -21,12 +21,6 @@ class PlaybackContractTest {
             listOf(
                 StoredLibraryFileDescriptor(1, MediaType.SMB_SERVER, file, queue),
                 PlayHistoryDescriptor(1, secret),
-                TorrentDescriptor(secret, 0, secret, secret),
-                ExternalUriDescriptor(
-                    "https://example.test/?token=$secret",
-                    Media3SourceType.STREAM,
-                    headers = mapOf("Authorization" to secret)
-                ),
                 ScreencastDescriptor(secret, 1234, listOf(castVideo), secret, mapOf("Cookie" to secret))
             )
         val options = PlaybackLaunchOptions(secret, Media3SourceType.STREAM)
@@ -64,7 +58,7 @@ class PlaybackContractTest {
         val view =
             PlaybackStateView(
                 PlaybackSessionVersion("session", 2),
-                PlaybackSourceView("id", "key", MediaType.STREAM_LINK, "title", null),
+                PlaybackSourceView("id", "key", MediaType.LOCAL_STORAGE, "title", null),
                 Media3PlaybackState.PLAYING,
                 capabilities,
                 emptySet(),

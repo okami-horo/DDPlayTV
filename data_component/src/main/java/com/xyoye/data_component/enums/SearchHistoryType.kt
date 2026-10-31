@@ -7,15 +7,12 @@ package com.xyoye.data_component.enums
 enum class SearchHistoryType(
     val value: Int
 ) {
-    ANIME(1),
-
-    MAGNET(2);
+    ANIME(1);
 
     companion object {
         fun formValue(value: Int): SearchHistoryType =
             when (value) {
                 1 -> ANIME
-                2 -> MAGNET
                 else -> ANIME
             }
     }

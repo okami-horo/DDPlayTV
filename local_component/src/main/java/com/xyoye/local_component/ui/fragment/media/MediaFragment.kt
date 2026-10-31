@@ -216,20 +216,6 @@ class MediaFragment :
 
     private fun launchMediaStorage(data: MediaLibraryEntity) {
         when (data.mediaType) {
-            MediaType.STREAM_LINK -> {
-                ARouter
-                    .getInstance()
-                    .build(RouteTable.Local.PlayHistory)
-                    .withSerializable("typeValue", data.mediaType.value)
-                    .navigation()
-            }
-            MediaType.MAGNET_LINK -> {
-                ARouter
-                    .getInstance()
-                    .build(RouteTable.Local.PlayHistory)
-                    .withSerializable("typeValue", data.mediaType.value)
-                    .navigation()
-            }
             MediaType.OTHER_STORAGE -> {
                 ARouter
                     .getInstance()

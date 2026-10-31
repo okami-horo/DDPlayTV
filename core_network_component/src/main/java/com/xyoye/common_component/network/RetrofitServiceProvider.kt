@@ -17,7 +17,6 @@ import com.xyoye.common_component.network.service.BaiduPanService
 import com.xyoye.common_component.network.service.Cloud115Service
 import com.xyoye.common_component.network.service.DanDanService
 import com.xyoye.common_component.network.service.ExtendedService
-import com.xyoye.common_component.network.service.MagnetService
 import com.xyoye.common_component.network.service.Open115Service
 import com.xyoye.common_component.network.service.RemoteService
 import com.xyoye.common_component.network.service.ScreencastService
@@ -30,7 +29,6 @@ interface RetrofitServiceProvider {
     val danDanService: DanDanService
     val extendedService: ExtendedService
     val remoteService: RemoteService
-    val magnetService: MagnetService
     val screencastService: ScreencastService
     val alistService: AlistService
     val baiduPanService: BaiduPanService
@@ -81,10 +79,6 @@ internal class DefaultRetrofitServiceProvider : RetrofitServiceProvider {
 
     override val danDanService: DanDanService by lazy {
         createService(Api.DAN_DAN_OPEN, danDanClient, DanDanService::class.java)
-    }
-
-    override val magnetService: MagnetService by lazy {
-        createService(Api.DAN_DAN_RES, commonClient, MagnetService::class.java)
     }
 
     override val extendedService: ExtendedService by lazy {

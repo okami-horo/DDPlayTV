@@ -1,24 +1,27 @@
 package com.xyoye.player_component.playback.session
 
-import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
+import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.playback.handoff.PlaybackAction
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
+import com.xyoye.common_component.playback.handoff.PlaybackFileReference
 import com.xyoye.common_component.playback.handoff.PlaybackLaunchOptions
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.playback.handoff.PlaybackSourceView
+import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import com.xyoye.common_component.source.handoff.PlaybackResolutionResult
 import com.xyoye.common_component.source.handoff.ResolvedPlayback
 import com.xyoye.common_component.source.media.StorageVideoSource
-import com.xyoye.common_component.storage.file.impl.LinkStorageFile
-import com.xyoye.common_component.storage.impl.LinkStorage
+import com.xyoye.common_component.storage.file.impl.VideoStorageFile
+import com.xyoye.common_component.storage.impl.VideoStorage
 import com.xyoye.common_component.storage.transport.PlaybackTransportLease
 import com.xyoye.common_component.storage.transport.PlaybackTransportType
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
+import com.xyoye.data_component.entity.VideoEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.media3.entity.Media3Capability
@@ -31,6 +34,7 @@ import com.xyoye.player_component.playback.handoff.PlaybackHandoffCodec
 import com.xyoye.player_component.playback.handoff.PlaybackHandoffStore
 import kotlinx.coroutines.CoroutineDispatcher
 import org.junit.Assert.*
+import java.io.File
 import java.util.Base64
 
 internal class PlaybackSessionTestFixture(
@@ -49,9 +53,12 @@ internal class PlaybackSessionTestFixture(
     var resolve: suspend (PlaybackDescriptor) -> PlaybackResolutionResult = { PlaybackResolutionResult.Success(resolved(it)) }
     val session = ActivePlaybackSession(store, backend, { resolve(it) }, dispatcher, dispatcher)
 
-    fun descriptor(name: String) = ExternalUriDescriptor("https://example.test/$name", Media3SourceType.STREAM)
+    fun descriptor(name: String): StoredLibraryFileDescriptor {
+        val path = File("/media", name).path
+        return StoredLibraryFileDescriptor(1, MediaType.LOCAL_STORAGE, PlaybackFileReference(path.toMd5String(), path))
+    }
 
-    fun name(descriptor: PlaybackDescriptor) = (descriptor as ExternalUriDescriptor).uri.substringAfterLast('/')
+    fun name(descriptor: PlaybackDescriptor) = File((descriptor as StoredLibraryFileDescriptor).file.storagePath).name
 
     suspend fun submit(
         name: String,
@@ -62,7 +69,7 @@ internal class PlaybackSessionTestFixture(
                 PlaybackRequestInput(
                     descriptor(name),
                     PlaybackLaunchOptions(name, Media3SourceType.STREAM, autoplay = autoplay),
-                    PlaybackRequestOrigin.EXTERNAL_INTENT
+                    PlaybackRequestOrigin.STORAGE_FILE
                 )
             ) as HandoffStoreResult.Success
         ).value.requestId
@@ -74,11 +81,21 @@ internal class PlaybackSessionTestFixture(
             .PlaybackHandoffState()
 
     fun resolved(descriptor: PlaybackDescriptor): ResolvedPlayback {
-        val url = (descriptor as ExternalUriDescriptor).uri
-        val storage = LinkStorage(MediaLibraryEntity.STREAM.copy(url = url))
-        val file = LinkStorageFile(storage, url)
+        val url = "https://example.test/${name(descriptor)}"
+        val storage = VideoStorage(MediaLibraryEntity.LOCAL.copy())
+        val file =
+            VideoStorageFile(
+                storage,
+                VideoEntity(
+                    fileId = 0,
+                    filePath = (descriptor as StoredLibraryFileDescriptor).file.storagePath,
+                    folderPath = "/media",
+                    fileLength = 5,
+                    videoDuration = 90000
+                )
+            )
         file.playHistory =
-            PlayHistoryEntity(videoName = name(descriptor), url = url, mediaType = MediaType.STREAM_LINK, videoPosition = 123)
+            PlayHistoryEntity(videoName = name(descriptor), url = url, mediaType = MediaType.LOCAL_STORAGE, videoPosition = 123)
         val lease = SessionTestLease(url).also(leases::add)
         val source =
             StorageVideoSource(
@@ -99,7 +116,7 @@ internal class PlaybackSessionTestFixture(
         return ResolvedPlayback(
             source,
             descriptor,
-            PlaybackSourceView(name(descriptor), file.uniqueKey(), MediaType.STREAM_LINK, name(descriptor), 0),
+            PlaybackSourceView(name(descriptor), file.uniqueKey(), MediaType.LOCAL_STORAGE, name(descriptor), storage.library.id),
             listOf(descriptor)
         )
     }

@@ -13,7 +13,6 @@ import com.xyoye.common_component.storage.credential.MediaLibraryCredentialResol
 import com.xyoye.common_component.storage.credential.MediaLibraryCredentialStore
 import com.xyoye.common_component.storage.open115.auth.Open115AuthStore
 import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.common_component.utils.getFileName
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
@@ -52,20 +51,8 @@ class MediaViewModel : BaseViewModel() {
                         MediaLibraryEntity.HISTORY.url = url
                     }
 
-                // 磁链播放首条记录
-                PlayHistoryRepository.getLastPlay(MediaType.MAGNET_LINK)?.apply {
-                    MediaLibraryEntity.TORRENT.describe = getFileName(torrentPath)
-                }
-
-                // 串流播放首条记录
-                PlayHistoryRepository.getLastPlay(MediaType.STREAM_LINK)?.apply {
-                    MediaLibraryEntity.STREAM.describe = url
-                }
-
                 MediaLibraryRepository.insert(
                     MediaLibraryEntity.LOCAL,
-                    MediaLibraryEntity.STREAM,
-                    MediaLibraryEntity.TORRENT,
                     MediaLibraryEntity.HISTORY,
                 )
             } catch (e: Exception) {

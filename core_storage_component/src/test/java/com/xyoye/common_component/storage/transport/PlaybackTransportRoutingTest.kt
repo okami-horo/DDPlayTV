@@ -30,24 +30,6 @@ class PlaybackTransportRoutingTest {
     private val profile = PlaybackProfile(PlayerType.TYPE_EXO_PLAYER, PlaybackProfileSource.GLOBAL)
 
     @Test
-    fun knownDirectLinkUsesTheDefaultFactoryAndBorrowsMetadata() =
-        runBlocking {
-            val storage =
-                LinkStorage(
-                    MediaLibraryEntity(displayName = "Link", url = "https://example.test/video.mp4", mediaType = MediaType.STREAM_LINK)
-                )
-            val file = storage.getRootFile()
-            val result = PlaybackTransportFactory().acquire(storage, file, profile)
-            assertTrue("Known direct source must have an explicit provider", result is TransportAcquisitionResult.Success)
-            val transport = (result as TransportAcquisitionResult.Success).transport
-            assertSame(file, transport.playbackFile)
-            assertEquals(PlaybackTransportType.DIRECT, transport.lease.transportType)
-            assertEquals(file.fileUrl(), transport.lease.playUrl)
-            transport.lease.release()
-            assertEquals(file.fileUrl(), storage.getRootFile().fileUrl())
-        }
-
-    @Test
     fun localDocumentAndCastProvidersBorrowFilesWithoutClosingThem() =
         runBlocking {
             val cases =

@@ -2,11 +2,9 @@ package com.xyoye.common_component.source.media
 
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
 import com.xyoye.common_component.storage.transport.PlaybackTransportLease
 import com.xyoye.common_component.storage.transport.releaseTransportResources
 import com.xyoye.common_component.utils.getFileName
-import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.enums.MediaType
@@ -103,27 +101,6 @@ class StorageVideoSource(
     override fun getStorageId(): Int = file.storage.library.id
 
     override fun getStoragePath(): String = file.storagePath()
-
-    fun getTorrentPath(): String? {
-        if (file is TorrentStorageFile) {
-            return file.filePath()
-        }
-        return null
-    }
-
-    fun getTorrentIndex(): Int {
-        if (file is TorrentStorageFile) {
-            return file.getFileInfo().fileIndex
-        }
-        return -1
-    }
-
-    fun getPlayTaskId(): Long {
-        if (file is TorrentStorageFile) {
-            return ThunderManager.getInstance().getTaskIdForPlayUrl(playUrl)
-        }
-        return -1L
-    }
 
     fun getStorageFile(): StorageFile = file
 

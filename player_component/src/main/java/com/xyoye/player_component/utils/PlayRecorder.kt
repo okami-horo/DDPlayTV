@@ -45,14 +45,6 @@ object PlayRecorder {
         duration: Long
     ) {
         SupervisorScope.IO.launch {
-            var torrentPath: String? = null
-            var torrentIndex = -1
-
-            if (source is StorageVideoSource) {
-                torrentPath = source.getTorrentPath()
-                torrentIndex = source.getTorrentIndex()
-            }
-
             val history =
                 PlayHistoryEntity(
                     0,
@@ -65,8 +57,6 @@ object PlayRecorder {
                     source.getDanmu()?.danmuPath,
                     source.getDanmu()?.episodeId,
                     source.getSubtitlePath(),
-                    torrentPath,
-                    torrentIndex,
                     JsonHelper.toJson(source.getHttpHeader()),
                     source.getUniqueKey(),
                     source.getStoragePath(),

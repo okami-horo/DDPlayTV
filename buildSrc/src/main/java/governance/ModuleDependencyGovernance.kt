@@ -27,7 +27,6 @@ internal object ModuleDependencyGovernance {
     private const val MODULE_REPO_IMMERSION = ":repository:immersion_bar"
     private const val MODULE_REPO_PANEL = ":repository:panel_switch"
     private const val MODULE_REPO_SEVEN_ZIP = ":repository:seven_zip"
-    private const val MODULE_REPO_THUNDER = ":repository:thunder"
     private const val MODULE_REPO_VIDEO_CACHE = ":repository:video_cache"
     private const val MODULE_REPO_MPV = ":repository:mpv"
     private const val MODULE_REPO_MPV_NATIVE = ":repository:mpv_native"
@@ -55,7 +54,6 @@ internal object ModuleDependencyGovernance {
             MODULE_REPO_IMMERSION,
             MODULE_REPO_PANEL,
             MODULE_REPO_SEVEN_ZIP,
-            MODULE_REPO_THUNDER,
             MODULE_REPO_VIDEO_CACHE,
             MODULE_REPO_MPV,
             MODULE_REPO_MPV_NATIVE
@@ -181,7 +179,6 @@ internal object ModuleDependencyGovernance {
                     MODULE_SYSTEM,
                     MODULE_DATA,
                     MODULE_REPO_SEVEN_ZIP,
-                    MODULE_REPO_THUNDER
                 ),
             MODULE_METADATA to setOf(MODULE_CONTRACT, MODULE_DATA, MODULE_NETWORK, MODULE_DATABASE, MODULE_STORAGE_CORE, MODULE_SYSTEM, MODULE_LOG),
             // ui (must not depend on infra impl layer; repo allowlist is restricted)
@@ -200,7 +197,6 @@ internal object ModuleDependencyGovernance {
             MODULE_REPO_IMMERSION to emptySet(),
             MODULE_REPO_PANEL to emptySet(),
             MODULE_REPO_SEVEN_ZIP to emptySet(),
-            MODULE_REPO_THUNDER to emptySet(),
             MODULE_REPO_VIDEO_CACHE to emptySet(),
             MODULE_REPO_MPV to setOf(MODULE_REPO_MPV_NATIVE),
             MODULE_REPO_MPV_NATIVE to emptySet()

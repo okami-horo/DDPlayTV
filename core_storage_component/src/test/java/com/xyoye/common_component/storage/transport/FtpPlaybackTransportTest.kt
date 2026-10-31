@@ -3,7 +3,6 @@ package com.xyoye.common_component.storage.transport
 import com.xyoye.common_component.storage.file.helper.FtpPlayServer
 import com.xyoye.common_component.storage.file.impl.FtpStorageFile
 import com.xyoye.common_component.storage.impl.FtpStorage
-import com.xyoye.common_component.storage.impl.LinkStorage
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -84,11 +83,9 @@ class FtpPlaybackTransportTest {
     fun borrowedProxyUrlCannotAcquireAnUnownedDirectLease() =
         runBlocking {
             val active = acquire(factory())
-            val link =
-                LinkStorage(MediaLibraryEntity(displayName = "borrowed", url = active.lease.playUrl, mediaType = MediaType.STREAM_LINK))
-            val result = PlaybackTransportFactory().acquire(link, link.getRootFile(), profile)
-            assertTrue("An FTP proxy URL must retain its original owner", result is TransportAcquisitionResult.Failure)
-            assertEquals(TransportAcquisitionFailure.UnsupportedTransport, (result as TransportAcquisitionResult.Failure).reason)
+            val failure = runCatching { directPlaybackTransport(active.lease.playUrl) }.exceptionOrNull()
+            assertTrue("An FTP proxy URL must retain its original owner", failure is TransportAcquisitionException)
+            assertEquals(TransportAcquisitionFailure.UnsupportedTransport, (failure as TransportAcquisitionException).reason)
             assertEquals("first", read(active.lease.playUrl).second)
         }
 

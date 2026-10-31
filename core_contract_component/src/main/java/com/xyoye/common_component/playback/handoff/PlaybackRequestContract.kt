@@ -1,6 +1,5 @@
 package com.xyoye.common_component.playback.handoff
 
-import com.xyoye.data_component.media3.entity.DownloadRequiredAction
 import com.xyoye.data_component.media3.entity.Media3Capability
 import com.xyoye.data_component.media3.entity.Media3SourceType
 
@@ -17,7 +16,6 @@ enum class PlaybackRequestOrigin {
     STORAGE_FILE,
     PLAY_HISTORY,
     ANIME_EPISODE,
-    EXTERNAL_INTENT,
     SCREENCAST
 }
 
@@ -65,10 +63,6 @@ sealed interface PlaybackPreparationFailure {
     object UnsupportedSource : PlaybackPreparationFailure
 
     object InvalidDescriptor : PlaybackPreparationFailure
-
-    data class OfflineValidationBlocked(
-        val reason: DownloadRequiredAction
-    ) : PlaybackPreparationFailure
 
     data class Unknown(
         val causeFingerprint: String

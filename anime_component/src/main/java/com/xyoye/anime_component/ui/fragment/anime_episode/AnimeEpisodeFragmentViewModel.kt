@@ -33,7 +33,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.regex.Pattern
 
 class AnimeEpisodeFragmentViewModel(
     private val historyQuery: (List<String>) -> Flow<List<EpisodeHistoryEntity>> = EpisodeHistoryRepository::getEpisodeHistory
@@ -41,7 +40,6 @@ class AnimeEpisodeFragmentViewModel(
     private val utcTimeFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
 
     val animeTitleField = ObservableField<String>()
-    val animeSearchWordField = ObservableField<String>()
     val episodeCountField = ObservableField<String>()
 
     // 是否升序
@@ -99,7 +97,6 @@ class AnimeEpisodeFragmentViewModel(
 
     fun setBangumiData(bangumiData: BangumiData) {
         animeTitleField.set(bangumiData.animeTitle)
-        animeSearchWordField.set(bangumiData.searchKeyword)
         episodeCountField.set("共${bangumiData.episodes.size}集")
 
         episodeListFlow.value = bangumiData.episodes
@@ -112,8 +109,7 @@ class AnimeEpisodeFragmentViewModel(
         val titles = parseEpisodeTitles(episode.episodeTitle)
         return episode.copy(
             title = titles.first,
-            subtitle = titles.second,
-            searchEpisodeNum = getEpisodeNum(titles.first)
+            subtitle = titles.second
         )
     }
 
@@ -194,29 +190,6 @@ class AnimeEpisodeFragmentViewModel(
             )
             null
         }
-    }
-
-    /**
-     * 提取剧集中的集数，用于搜索
-     *
-     * 例：第5话  ->  5
-     */
-    private fun getEpisodeNum(episodeText: String?): String {
-        if (episodeText == null) {
-            return ""
-        }
-        val pattern = Pattern.compile("第(\\d+)话")
-        val matcher = pattern.matcher(episodeText)
-        if (matcher.find()) {
-            return matcher.group().run {
-                var episode = substring(1, length - 1)
-                if (episode.length == 1) {
-                    episode = "0$episode"
-                }
-                episode
-            }
-        }
-        return ""
     }
 
     /**

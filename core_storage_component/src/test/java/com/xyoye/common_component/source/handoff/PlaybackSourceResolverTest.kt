@@ -1,38 +1,29 @@
 package com.xyoye.common_component.source.handoff
 
 import com.tencent.mmkv.MMKV
-import com.xunlei.downloadlib.parameter.BtTaskParam
 import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.network.request.NetworkException
-import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackFileReference
 import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
 import com.xyoye.common_component.playback.handoff.PlaybackQueueContext
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
-import com.xyoye.common_component.playback.handoff.TorrentDescriptor
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.credential.CredentialUnavailableException
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.SmbPlayServer
-import com.xyoye.common_component.storage.file.helper.TorrentBean
 import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
 import com.xyoye.common_component.storage.file.impl.SmbStorageFile
-import com.xyoye.common_component.storage.impl.LinkStorage
 import com.xyoye.common_component.storage.impl.RemoteStorage
 import com.xyoye.common_component.storage.impl.ScreencastStorage
 import com.xyoye.common_component.storage.impl.SmbConnection
 import com.xyoye.common_component.storage.impl.SmbFileInfo
 import com.xyoye.common_component.storage.impl.SmbStorage
-import com.xyoye.common_component.storage.impl.TorrentStorage
 import com.xyoye.common_component.storage.impl.WebDavStorage
 import com.xyoye.common_component.storage.transport.PlaybackTransportFactory
-import com.xyoye.common_component.utils.thunder.ThunderManager
-import com.xyoye.common_component.utils.thunder.ThunderTaskOperations
-import com.xyoye.common_component.utils.thunder.model.ThunderTorrentFileInfo
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.remote.RemoteVideoData
@@ -43,8 +34,6 @@ import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayerType
 import com.xyoye.data_component.enums.StorageSort
-import com.xyoye.data_component.media3.entity.DownloadRequiredAction
-import com.xyoye.data_component.media3.entity.Media3SourceType
 import fi.iki.elonen.NanoHTTPD
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -84,9 +73,6 @@ class PlaybackSourceResolverTest {
     private val sources = mutableListOf<StorageVideoSource>()
     private var load: suspend (Int) -> MediaLibraryEntity? = { library }
     private var create: (MediaLibraryEntity) -> Storage? = { smb(it) }
-    private var validation: suspend (String, String, Long?) -> DownloadValidator.ValidationOutcome = { _, _, _ ->
-        DownloadValidator.ValidationOutcome.AllowPlayback(false, null)
-    }
     private var extras: suspend (StorageFile) -> StorageVideoSourceFactory.SourceExtras = {
         StorageVideoSourceFactory.SourceExtras(httpHeaders = it.storage.getNetworkHeaders(it))
     }
@@ -104,7 +90,6 @@ class PlaybackSourceResolverTest {
             },
             { create(it) },
             { it },
-            { a, b, c -> validation(a, b, c) },
             { file, _, cleanup ->
                 StorageVideoSourceFactory
                     .createOwned(
@@ -396,18 +381,6 @@ class PlaybackSourceResolverTest {
             assertEquals(listOf(1, 1), connections.map { it.closes })
         }
 
-    @Test fun externalUriRestoresHeadersWithoutSharingInputMap() =
-        runBlocking {
-            create = { LinkStorage(it) }
-            val headers = mutableMapOf("Authorization" to "test-secret")
-            val descriptor = ExternalUriDescriptor("https://example.test/video.mkv", Media3SourceType.STREAM, "Episode", headers)
-            val result = success(descriptor)
-            headers.clear()
-            assertEquals("test-secret", result.source.getHttpHeader()!!["Authorization"])
-            assertEquals(descriptor.uri, result.source.getVideoUrl())
-            assertEquals("Episode", result.identity.displayTitle)
-        }
-
     @Test fun castCapturesSenderHeadersRelatedItemsAndRemoteProgress() =
         runBlocking {
             create = { ScreencastStorage(it, { _, _ -> null }, {}) }
@@ -428,21 +401,23 @@ class PlaybackSourceResolverTest {
 
     @Test fun historyBackfillsLegacyIdentityAndPathWithoutLosingProgress() =
         runBlocking {
-            library = MediaLibraryEntity.STREAM.copy()
-            create = { LinkStorage(it) }
             history =
                 PlayHistoryEntity(
                     id = 4,
                     videoName = "legacy",
-                    url = "https://example.test/video.mkv",
-                    mediaType = MediaType.STREAM_LINK,
+                    url = "smb://fixture/videos/episode1.mkv",
+                    mediaType = library.mediaType,
+                    storageId = library.id,
                     videoPosition = 5432,
-                    httpHeader = "{\"X-Token\":\"history-secret\"}"
+                    danmuPath = "saved.xml",
+                    subtitlePath = "saved.ass"
                 )
             val result = success(PlayHistoryDescriptor(4, ""))
             assertEquals(5432L, result.source.getCurrentPosition())
-            assertEquals("history-secret", result.source.getHttpHeader()!!["X-Token"])
             assertEquals(result.identity.uniqueKey, backfills.single().uniqueKey)
+            assertEquals("videos/episode1.mkv", backfills.single().storagePath)
+            assertEquals("saved.xml", backfills.single().danmuPath)
+            assertEquals("saved.ass", backfills.single().subtitlePath)
             assertEquals(library.id, backfills.single().storageId)
             assertEquals(PlaybackPreparationFailure.FileMissing, failure(PlayHistoryDescriptor(4, "replaced-row")))
             assertEquals(PlaybackPreparationFailure.FileMissing, failure(PlayHistoryDescriptor(5, "")))
@@ -467,35 +442,6 @@ class PlaybackSourceResolverTest {
                 current = current.copy(Hash = "replacement")
                 assertEquals(PlaybackPreparationFailure.FileMissing, failure(descriptor))
             }
-        }
-
-    @Test fun torrentCompatibilityBlocksBeforeNativeAllocationAndAudioOnlyRemainsAdvisory() =
-        runBlocking {
-            val operations = TorrentOperations()
-            val manager = ThunderManager(operations) { temporary.root }
-            val torrent =
-                TorrentBean("fixture.torrent", 1, "hash", false, "", listOf(ThunderTorrentFileInfo(0, "video.mkv", 5, "fixture.torrent")))
-            var storageCreations = 0
-            create = {
-                storageCreations++
-                TorrentStorage(it, manager, { torrent }, {})
-            }
-            val descriptor = TorrentDescriptor("fixture.torrent", 0, "download", "")
-            for (action in listOf(DownloadRequiredAction.REVALIDATE, DownloadRequiredAction.REDOWNLOAD)) {
-                validation = { _, _, _ -> DownloadValidator.ValidationOutcome.Blocked("blocked", action) }
-                assertEquals(PlaybackPreparationFailure.OfflineValidationBlocked(action), failure(descriptor))
-            }
-            assertEquals(0, storageCreations)
-            assertEquals(0, operations.created)
-            for (audioOnly in listOf(false, true)) {
-                validation = { _, _, _ -> DownloadValidator.ValidationOutcome.AllowPlayback(audioOnly, "advice") }
-                val result = success(descriptor)
-                assertEquals(audioOnly, result.downloadAdvice!!.audioOnly)
-                assertEquals(0, result.source.getTorrentIndex())
-                result.source.releasePlaybackResources()
-            }
-            assertEquals(2, operations.created)
-            assertEquals(listOf(1L, 2L), operations.stopped)
         }
 
     @Test fun missingLibraryChangedIdentityAndTypedFailuresNeverAllocatePlayback() =
@@ -650,31 +596,6 @@ class PlaybackSourceResolverTest {
 
         override fun close() {
             closes++
-        }
-    }
-
-    private class TorrentOperations : ThunderTaskOperations {
-        var created = 0
-        val stopped = mutableListOf<Long>()
-
-        override fun ensureReady(): Boolean = true
-
-        override fun create(parameters: BtTaskParam): Long = (++created).toLong()
-
-        override fun select(
-            taskId: Long,
-            selected: IntArray,
-            deselected: IntArray
-        ) = Unit
-
-        override fun start(taskId: Long) = Unit
-
-        override suspend fun awaitStarted(taskId: Long): Boolean = true
-
-        override fun localUrl(path: String): String = "http://127.0.0.1/native/$created"
-
-        override fun stop(taskId: Long) {
-            stopped.add(taskId)
         }
     }
 

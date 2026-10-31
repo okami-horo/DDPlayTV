@@ -2,7 +2,6 @@ package com.xyoye.common_component.storage.transport
 
 import com.xyoye.common_component.storage.file.helper.SmbPlayServer
 import com.xyoye.common_component.storage.file.impl.SmbStorageFile
-import com.xyoye.common_component.storage.impl.LinkStorage
 import com.xyoye.common_component.storage.impl.SmbConnection
 import com.xyoye.common_component.storage.impl.SmbFileInfo
 import com.xyoye.common_component.storage.impl.SmbStorage
@@ -59,11 +58,9 @@ class SmbPlaybackTransportTest {
     fun borrowedProxyUrlCannotAcquireAnUnownedDirectLease() =
         runBlocking {
             val active = acquire(factory())
-            val link =
-                LinkStorage(MediaLibraryEntity(displayName = "borrowed", url = active.lease.playUrl, mediaType = MediaType.STREAM_LINK))
-            val result = PlaybackTransportFactory().acquire(link, link.getRootFile(), profile)
-            assertTrue("An SMB proxy URL must retain its original owner", result is TransportAcquisitionResult.Failure)
-            assertEquals(TransportAcquisitionFailure.UnsupportedTransport, (result as TransportAcquisitionResult.Failure).reason)
+            val failure = runCatching { directPlaybackTransport(active.lease.playUrl) }.exceptionOrNull()
+            assertTrue("An SMB proxy URL must retain its original owner", failure is TransportAcquisitionException)
+            assertEquals(TransportAcquisitionFailure.UnsupportedTransport, (failure as TransportAcquisitionException).reason)
             assertEquals("first", read(active.lease.playUrl))
         }
 

@@ -1,12 +1,10 @@
 package com.xyoye.player_component.playback.session
 
-import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackLaunchOptions
 import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
-import com.xyoye.common_component.playback.handoff.TorrentDescriptor
 import com.xyoye.common_component.source.handoff.ResolvedPlayback
 import com.xyoye.player_component.playback.handoff.PlaybackSnapshotTarget
 import java.util.UUID
@@ -27,8 +25,6 @@ internal class PreparedPlayback(
             val selected = resolved.descriptor
             if (selected is StoredLibraryFileDescriptor && item is StoredLibraryFileDescriptor) {
                 item.libraryId == selected.libraryId && item.file.uniqueKey == selected.file.uniqueKey
-            } else if (selected is TorrentDescriptor && item is TorrentDescriptor) {
-                item.magnetOrTorrentIdentity == selected.magnetOrTorrentIdentity && item.fileIndex == selected.fileIndex
             } else {
                 item == selected
             }
@@ -46,8 +42,6 @@ internal class PreparedPlayback(
                         when (item) {
                             is StoredLibraryFileDescriptor -> item.file.displayTitle ?: item.file.uniqueKey
                             is ScreencastDescriptor -> item.relatedVideos.first { it.uniqueKey == item.playUniqueKey }.title
-                            is ExternalUriDescriptor -> item.displayTitle ?: item.uri.substringBefore('?').substringAfterLast('/')
-                            is TorrentDescriptor -> item.displayTitle ?: "视频 ${index + 1}"
                             is PlayHistoryDescriptor -> item.expectedUniqueKey
                         }
                     }

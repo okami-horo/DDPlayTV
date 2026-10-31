@@ -11,7 +11,6 @@ class RetrofitManager private constructor() {
         val danDanService get() = provider().danDanService
         val extendedService get() = provider().extendedService
         val remoteService get() = provider().remoteService
-        val magnetService get() = provider().magnetService
         val screencastService get() = provider().screencastService
         val alistService get() = provider().alistService
         val baiduPanService get() = provider().baiduPanService

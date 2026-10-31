@@ -7,7 +7,6 @@ import com.xyoye.common_component.playback.PlaybackEntryRequests
 import com.xyoye.common_component.playback.handoff.PlaybackLaunchOptions
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
-import com.xyoye.common_component.playback.handoff.TorrentDescriptor
 import com.xyoye.common_component.source.handoff.PlaybackReferenceFactory
 import com.xyoye.common_component.storage.file.StorageFile
 
@@ -19,7 +18,7 @@ class StorageFileViewModel : BaseViewModel() {
         val descriptor = PlaybackReferenceFactory.fromFile(file)
         val options =
             PlaybackLaunchOptions(
-                mediaId = (descriptor as? TorrentDescriptor)?.downloadId ?: file.uniqueKey(),
+                mediaId = file.uniqueKey(),
                 sourceType =
                     file.storage.library.mediaType
                         .toMedia3SourceType()

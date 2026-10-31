@@ -46,11 +46,6 @@ object PathHelper {
     fun getVideoCoverFile(key: String): File = File(getVideoCoverDirectory(), CacheKeyMapper.toSafeFileName(key))
 
     /**
-     * 获取下载种子目录
-     */
-    fun getTorrentDirectory(): File = getCacheDirectory(CacheType.TORRENT_FILE_CACHE)
-
-    /**
      * 获取播放的临时缓存文件夹
      */
     fun getPlayCacheDirectory(): File = getCacheDirectory(CacheType.PLAY_CACHE)

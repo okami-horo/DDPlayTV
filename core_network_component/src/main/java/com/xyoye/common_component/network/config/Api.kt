@@ -13,9 +13,6 @@ object Api {
     // 弹弹play Open 备用
     const val DAN_DAN_SPARE = "http://139.217.235.62:16001/"
 
-    // 弹弹play Res
-    const val DAN_DAN_RES = "http://res.acplay.net/"
-
     // 百度账号体系（设备码/刷新 token 等）
     const val BAIDU_ACCOUNT_API = "https://openapi.baidu.com/"
 

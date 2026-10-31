@@ -1,7 +1,6 @@
 package com.xyoye.common_component.storage.transport
 
 import com.xyoye.common_component.storage.file.helper.HttpPlayServer
-import com.xyoye.common_component.utils.thunder.ThunderManager
 import java.net.URI
 
 /** Only for resolved sources which own no server, connection, task or session. */
@@ -21,8 +20,7 @@ internal fun requireUnownedPlaybackUrl(url: String) {
                 uri.path.orEmpty().startsWith("/lease/")
         }.getOrDefault(false)
     if (leaseRoute ||
-        HttpPlayServer.getInstance().isLocalServerUrl(url) ||
-        ThunderManager.getInstance().getTaskIdForPlayUrl(url) >= 0
+        HttpPlayServer.getInstance().isLocalServerUrl(url)
     ) {
         throw TransportAcquisitionException(TransportAcquisitionFailure.UnsupportedTransport)
     }

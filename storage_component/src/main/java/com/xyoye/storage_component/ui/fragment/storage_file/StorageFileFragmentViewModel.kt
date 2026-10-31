@@ -14,10 +14,8 @@ import com.xyoye.common_component.storage.baidupan.auth.BaiduPanReAuthRequiredEx
 import com.xyoye.common_component.storage.cloud115.auth.Cloud115ReAuthRequiredException
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.open115.auth.Open115ReAuthRequiredException
-import com.xyoye.common_component.utils.thunder.ThunderManager
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
-import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.TrackType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -96,9 +94,6 @@ class StorageFileFragmentViewModel(
             }
             val result =
                 withContext(ioDispatcher) {
-                    if (requestStorage.library.mediaType == MediaType.MAGNET_LINK) {
-                        ThunderManager.ensureInitializedOrErrorMessage()?.let { throw IllegalStateException(it) }
-                    }
                     val target =
                         directory ?: if (directoryPath != null && directoryPath != "/") {
                             requestStorage.pathFile(directoryPath, isDirectory = true)

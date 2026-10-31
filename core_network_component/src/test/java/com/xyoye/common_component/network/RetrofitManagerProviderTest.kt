@@ -5,7 +5,6 @@ import com.xyoye.common_component.network.service.BaiduPanService
 import com.xyoye.common_component.network.service.Cloud115Service
 import com.xyoye.common_component.network.service.DanDanService
 import com.xyoye.common_component.network.service.ExtendedService
-import com.xyoye.common_component.network.service.MagnetService
 import com.xyoye.common_component.network.service.Open115Service
 import com.xyoye.common_component.network.service.RemoteService
 import com.xyoye.common_component.network.service.ScreencastService
@@ -33,7 +32,6 @@ class RetrofitManagerProviderTest {
         assertSame(provider.danDanService, RetrofitManager.danDanService)
         assertSame(provider.extendedService, RetrofitManager.extendedService)
         assertSame(provider.remoteService, RetrofitManager.remoteService)
-        assertSame(provider.magnetService, RetrofitManager.magnetService)
         assertSame(provider.screencastService, RetrofitManager.screencastService)
         assertSame(provider.alistService, RetrofitManager.alistService)
         assertSame(provider.baiduPanService, RetrofitManager.baiduPanService)
@@ -73,7 +71,6 @@ class RetrofitManagerProviderTest {
         override val danDanService: DanDanService = createServiceProxy(DanDanService::class.java)
         override val extendedService: ExtendedService = createServiceProxy(ExtendedService::class.java)
         override val remoteService: RemoteService = createServiceProxy(RemoteService::class.java)
-        override val magnetService: MagnetService = createServiceProxy(MagnetService::class.java)
         override val screencastService: ScreencastService = createServiceProxy(ScreencastService::class.java)
         override val alistService: AlistService = createServiceProxy(AlistService::class.java)
         override val baiduPanService: BaiduPanService = createServiceProxy(BaiduPanService::class.java)

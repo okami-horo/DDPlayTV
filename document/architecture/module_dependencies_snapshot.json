@@ -1,5 +1,5 @@
 {
-  "module_count": 23,
+  "module_count": 22,
   "modules": [
     {
       "build_file": "app/build.gradle.kts",
@@ -473,11 +473,6 @@
           "configuration": "implementation",
           "module": ":repository:seven_zip",
           "scope": "main"
-        },
-        {
-          "configuration": "implementation",
-          "module": ":repository:thunder",
-          "scope": "main"
         }
       ]
     },
@@ -572,12 +567,6 @@
       "build_file": "repository/seven_zip/build.gradle.kts",
       "dir": "repository/seven_zip",
       "name": ":repository:seven_zip",
-      "project_dependencies": []
-    },
-    {
-      "build_file": "repository/thunder/build.gradle.kts",
-      "dir": "repository/thunder",
-      "name": ":repository:thunder",
       "project_dependencies": []
     },
     {

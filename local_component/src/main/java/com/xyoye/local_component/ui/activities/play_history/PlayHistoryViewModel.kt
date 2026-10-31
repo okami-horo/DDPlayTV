@@ -6,14 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.repository.PlayHistoryRepository
 import com.xyoye.common_component.playback.PlaybackEntryRequests
-import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
-import com.xyoye.data_component.media3.entity.Media3SourceType
 import com.xyoye.local_component.utils.HistorySortOption
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -70,11 +68,7 @@ class PlayHistoryViewModel : BaseViewModel() {
     fun clearHistory() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (mediaType == MediaType.STREAM_LINK || mediaType == MediaType.MAGNET_LINK) {
-                    PlayHistoryRepository.deleteTypeAll(listOf(mediaType))
-                } else {
-                    PlayHistoryRepository.deleteAll()
-                }
+                PlayHistoryRepository.deleteAll()
                 updatePlayHistory()
             } catch (e: Exception) {
                 ErrorReportHelper.postCatchedExceptionWithContext(
@@ -148,14 +142,6 @@ class PlayHistoryViewModel : BaseViewModel() {
 
     fun openHistory(history: PlayHistoryEntity) {
         val descriptor = PlayHistoryDescriptor(history.id, history.uniqueKey, history.storageId)
-        requests.submit { PlaybackRequestInput(descriptor, null, PlaybackRequestOrigin.PLAY_HISTORY) }
-    }
-
-    fun openStreamLink(
-        link: String,
-        headers: Map<String, String>?
-    ) {
-        val descriptor = ExternalUriDescriptor(link, Media3SourceType.STREAM, headers = headers.orEmpty().toMap())
         requests.submit { PlaybackRequestInput(descriptor, null, PlaybackRequestOrigin.PLAY_HISTORY) }
     }
 }

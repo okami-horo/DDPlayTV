@@ -82,7 +82,7 @@ class SequentialPlaybackCoordinatorTest {
 
     private fun queue(
         f: PlaybackSessionTestFixture,
-        type: MediaType = MediaType.STREAM_LINK
+        type: MediaType = MediaType.LOCAL_STORAGE
     ) {
         val descriptors = listOf("one", "two", "three").map(f::descriptor)
         f.resolve = {

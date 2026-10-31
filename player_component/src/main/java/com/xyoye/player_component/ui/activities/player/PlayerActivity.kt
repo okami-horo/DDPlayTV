@@ -26,7 +26,6 @@ import androidx.media3.common.util.UnstableApi
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
-import com.xyoye.common_component.bridge.PlayTaskBridge
 import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.config.PlayerActions
 import com.xyoye.common_component.config.PlayerConfig
@@ -892,16 +891,7 @@ class PlayerActivity :
     }
 
     private fun showPlayErrorDialog() {
-        val source = videoSource
-        val isTorrentSource = source?.getMediaType() == MediaType.MAGNET_LINK
-
-        val tips =
-            if (source is StorageVideoSource && isTorrentSource) {
-                val taskLog = PlayTaskBridge.getTaskLog(source.getPlayTaskId())
-                "播放失败，资源已失效或暂时无法访问，请尝试切换资源$taskLog"
-            } else {
-                "播放失败，请尝试更改播放器设置，或者切换其它播放内核"
-            }
+        val tips = "播放失败，请尝试更改播放器设置，或者切换其它播放内核"
 
         val builder =
             AlertDialog
@@ -933,17 +923,6 @@ class PlayerActivity :
                         hideLoading()
                     }
                 }
-            }
-        }
-
-        if (isTorrentSource) {
-            builder.setNeutralButton("播放器设置") { dialog, _ ->
-                dialog.dismiss()
-                ARouter
-                    .getInstance()
-                    .build(RouteTable.User.SettingPlayer)
-                    .navigation()
-                this@PlayerActivity.finish()
             }
         }
 

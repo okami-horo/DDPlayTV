@@ -94,7 +94,11 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
                                 if (viewModel.markModeFlow.value) {
                                     viewModel.markEpisodeById(data.episodeId)
                                 } else {
-                                    searchEpisodeResource(data)
+                                    if (data.histories.isNotEmpty()) {
+                                        playStorageEpisode(data)
+                                    } else {
+                                        ToastCenter.showWarning("该剧集没有可播放的本地记录")
+                                    }
                                 }
                             }
 
@@ -198,23 +202,6 @@ class AnimeEpisodeFragment : BaseFragment<AnimeEpisodeFragmentViewModel, Fragmen
 
         dataBinding.sortTv.text = if (ascending) "正序" else "倒序"
         dataBinding.sortTv.setTextColorRes(color)
-    }
-
-    /**
-     * 搜索剧集资源
-     */
-    private fun searchEpisodeResource(data: EpisodeData) {
-        ARouter
-            .getInstance()
-            .build(RouteTable.Anime.Search)
-            .withString(
-                "animeTitle",
-                viewModel.animeTitleField.get()
-            ).withString(
-                "searchWord",
-                "${viewModel.animeSearchWordField.get()} ${data.searchEpisodeNum}"
-            ).withBoolean("isSearchMagnet", true)
-            .navigation()
     }
 
     /**

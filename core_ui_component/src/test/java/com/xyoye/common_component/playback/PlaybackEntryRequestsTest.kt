@@ -1,11 +1,12 @@
 package com.xyoye.common_component.playback
 
-import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
+import com.xyoye.common_component.playback.handoff.PlaybackFileReference
 import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
-import com.xyoye.data_component.media3.entity.Media3SourceType
+import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
+import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.NonCancellable
@@ -23,7 +24,7 @@ class PlaybackEntryRequestsTest {
             val gate = CompletableDeferred<Unit>()
             val requests =
                 PlaybackEntryRequests(this) { input ->
-                    val id = (input.descriptor as ExternalUriDescriptor).uri
+                    val id = (input.descriptor as StoredLibraryFileDescriptor).file.storagePath
                     if (id == "old") withContext(NonCancellable) { gate.await() }
                     PlaybackSubmissionResult.Accepted(id)
                 }
@@ -43,7 +44,7 @@ class PlaybackEntryRequestsTest {
         runBlocking {
             val requests =
                 PlaybackEntryRequests(this) { input ->
-                    if ((input.descriptor as ExternalUriDescriptor).uri == "failed") {
+                    if ((input.descriptor as StoredLibraryFileDescriptor).file.storagePath == "failed") {
                         PlaybackSubmissionResult.Rejected(PlaybackPreparationFailure.RecoveryStatePersistenceFailed)
                     } else {
                         PlaybackSubmissionResult.Accepted("accepted")
@@ -100,8 +101,8 @@ class PlaybackEntryRequestsTest {
 
     private fun input(uri: String) =
         PlaybackRequestInput(
-            ExternalUriDescriptor(uri, Media3SourceType.STREAM),
+            StoredLibraryFileDescriptor(1, MediaType.LOCAL_STORAGE, PlaybackFileReference(uri, uri)),
             null,
-            PlaybackRequestOrigin.EXTERNAL_INTENT
+            PlaybackRequestOrigin.STORAGE_FILE
         )
 }

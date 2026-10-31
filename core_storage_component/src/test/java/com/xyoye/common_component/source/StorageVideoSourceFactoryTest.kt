@@ -5,7 +5,7 @@ import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.AbstractStorageFile
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.impl.LinkStorage
+import com.xyoye.common_component.storage.impl.VideoStorage
 import com.xyoye.common_component.storage.transport.AcquiredPlaybackTransport
 import com.xyoye.common_component.storage.transport.ManagedPlaybackTransportLease
 import com.xyoye.common_component.storage.transport.PlaybackTransportType
@@ -129,7 +129,7 @@ class StorageVideoSourceFactoryTest {
     }
 
     private fun storage() =
-        LinkStorage(MediaLibraryEntity(displayName = "fixture", url = "https://example.test", mediaType = MediaType.STREAM_LINK))
+        VideoStorage(MediaLibraryEntity(displayName = "fixture", url = "https://example.test", mediaType = MediaType.LOCAL_STORAGE))
 
     private class File(
         storage: AbstractStorage,

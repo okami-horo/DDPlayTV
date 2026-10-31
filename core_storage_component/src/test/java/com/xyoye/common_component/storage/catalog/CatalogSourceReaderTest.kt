@@ -62,7 +62,7 @@ class CatalogSourceReaderTest {
         assertTrue(CatalogSourceReader.supports(MediaType.SMB_SERVER))
         assertTrue(CatalogSourceReader.supports(MediaType.WEBDAV_SERVER))
         assertFalse(CatalogSourceReader.supports(MediaType.REMOTE_STORAGE))
-        assertFalse(CatalogSourceReader.supports(MediaType.STREAM_LINK))
+        assertFalse(CatalogSourceReader.supports(MediaType.FTP_SERVER))
     }
 
     private val library = MediaLibraryEntity(10, "Fixture", "https://fixture.test", MediaType.WEBDAV_SERVER)

@@ -9,6 +9,7 @@
 | 产品功能与构建入口 | [项目 README](../README.md) |
 | TMDB 统一影视/番剧元数据与 UI 重设计 | [范围与待办](media-library/tmdb-metadata-followup.md)、[刮削与模块设计](../docs/superpowers/designs/2026-10-31-tmdb-media-library-design.md)、[实施与验证](../docs/superpowers/plans/2026-10-31-tmdb-media-library.md)、[网页原型](prototypes/tv-ui/README.md) |
 | 文件浏览 C：列表与预览（已选，实施暂缓） | [设计](../docs/superpowers/designs/2026-10-31-file-browser-design.md)、[后续任务与验收矩阵](../docs/superpowers/plans/2026-10-31-file-browser-preview.md)、[C 原型](prototypes/tv-ui/files-prototype.html?variant=preview) |
+| 串流、外部打开与磁力功能退役 | [范围、升级兼容与验证](../docs/superpowers/plans/2026-10-31-remove-stream-magnet.md) |
 | 纯 TV 收敛范围、执行与验证 | [实施记录](../docs/superpowers/plans/2026-10-29-tv-only.md) |
 | 开发、提交与验证要求 | [贡献指南](Contributing.md)、[本地开发环境](project_local_dev_env.md) |
 | 模块职责与依赖限制 | [模块治理](architecture/module_dependency_governance.md)、[构建门禁](architecture/architecture_governance_guardrails.md) |
@@ -49,7 +50,7 @@
 
 ## 本地 AAR 资料
 
-[弹幕](../repository/danmaku/README.md) · [沉浸栏](../repository/immersion_bar/README.md) · [面板切换](../repository/panel_switch/README.md) · [7-Zip](../repository/seven_zip/README.md) · [迅雷](../repository/thunder/README.md) · [视频缓存](../repository/video_cache/README.md)
+[弹幕](../repository/danmaku/README.md) · [沉浸栏](../repository/immersion_bar/README.md) · [面板切换](../repository/panel_switch/README.md) · [7-Zip](../repository/seven_zip/README.md) · [视频缓存](../repository/video_cache/README.md)
 
 ## 维护约定
 

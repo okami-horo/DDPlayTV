@@ -13,7 +13,7 @@ internal class PlayerUiTestSource(
 
     override fun getCurrentPosition() = historyPosition
 
-    override fun getMediaType() = MediaType.STREAM_LINK
+    override fun getMediaType() = MediaType.LOCAL_STORAGE
 
     override fun getUniqueKey() = key
 

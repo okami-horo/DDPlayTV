@@ -5,7 +5,6 @@ import com.xyoye.common_component.database.DatabaseProvider
 import com.xyoye.common_component.database.repository.MediaLibraryRepository
 import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.network.request.NetworkException
-import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackFileReference
@@ -13,7 +12,6 @@ import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
 import com.xyoye.common_component.playback.handoff.PlaybackSourceView
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
-import com.xyoye.common_component.playback.handoff.TorrentDescriptor
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.AbstractStorage
@@ -23,14 +21,11 @@ import com.xyoye.common_component.storage.credential.CredentialUnavailableExcept
 import com.xyoye.common_component.storage.credential.MediaLibraryCredentialResolver
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
-import com.xyoye.common_component.storage.file.impl.TorrentStorageFile
-import com.xyoye.common_component.storage.impl.LinkStorage
 import com.xyoye.common_component.storage.impl.RemoteStorage
 import com.xyoye.common_component.storage.impl.ScreencastStorage
 import com.xyoye.common_component.storage.transport.TransportAcquisitionException
 import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
 import com.xyoye.common_component.storage.transport.releaseTransportResources
-import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.data.screeencast.ScreencastData
 import com.xyoye.data_component.data.screeencast.ScreencastVideoData
@@ -64,8 +59,7 @@ class ResolvedPlayback(
     val source: StorageVideoSource,
     val descriptor: PlaybackDescriptor,
     val identity: PlaybackSourceView,
-    queue: List<PlaybackDescriptor>,
-    val downloadAdvice: DownloadValidator.ValidationOutcome.AllowPlayback? = null
+    queue: List<PlaybackDescriptor>
 ) {
     val queue: List<PlaybackDescriptor> = Collections.unmodifiableList(queue.toList())
 }
@@ -77,7 +71,6 @@ class PlaybackSourceResolver internal constructor(
     private val backfillHistory: suspend (PlayHistoryEntity) -> Unit,
     private val createStorage: (MediaLibraryEntity) -> Storage?,
     private val resolveCredentials: (MediaLibraryEntity) -> MediaLibraryEntity,
-    private val validateDownload: suspend (String, String, Long?) -> DownloadValidator.ValidationOutcome,
     private val createSource: suspend (StorageFile, PlaybackProfile?, () -> Unit) -> StorageVideoSource?,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
@@ -90,7 +83,6 @@ class PlaybackSourceResolver internal constructor(
         { library ->
             if (library.mediaType in credentialMediaTypes) MediaLibraryCredentialResolver.resolveForPlayback(library) else library
         },
-        { downloadId, mediaId, verified -> DownloadValidator().validate(downloadId, mediaId, verified) },
         { file, profile, cleanup ->
             StorageVideoSourceFactory.create(
                 file,
@@ -133,11 +125,11 @@ class PlaybackSourceResolver internal constructor(
                             file.uniqueKey(),
                             file.uniqueKey(),
                             file.storage.library.mediaType,
-                            (descriptor as? ExternalUriDescriptor)?.displayTitle ?: file.fileName(),
+                            file.fileName(),
                             file.storage.library.id
                         )
                     PlaybackResolutionResult.Success(
-                        ResolvedPlayback(created, resolved.descriptor, identity, resolved.queue, resolved.advice)
+                        ResolvedPlayback(created, resolved.descriptor, identity, resolved.queue)
                     )
                 }
             delivered = true
@@ -165,15 +157,6 @@ class PlaybackSourceResolver internal constructor(
         when (descriptor) {
             is StoredLibraryFileDescriptor -> resolveLibrary(descriptor, owner)
             is PlayHistoryDescriptor -> resolveHistory(descriptor, owner)
-            is TorrentDescriptor -> resolveTorrent(descriptor, owner)
-            is ExternalUriDescriptor -> {
-                if (descriptor.uri.isBlank()) fail(PlaybackPreparationFailure.InvalidDescriptor)
-                val storage =
-                    owner.storage(MediaLibraryEntity.STREAM.copy(url = descriptor.uri)) as? LinkStorage
-                        ?: fail(PlaybackPreparationFailure.UnsupportedSource)
-                storage.setupHttpHeader(descriptor.headers.toMap())
-                FileResolution(owner.file(storage.getRootFile()), descriptor, listOf(descriptor))
-            }
             is ScreencastDescriptor -> {
                 if (descriptor.senderAddress.isBlank() ||
                     descriptor.port !in 1..65535 ||
@@ -302,28 +285,11 @@ class PlaybackSourceResolver internal constructor(
         val libraryId =
             history.storageId ?: when (history.mediaType) {
                 MediaType.LOCAL_STORAGE -> MediaLibraryEntity.LOCAL.id
-                MediaType.STREAM_LINK -> MediaLibraryEntity.STREAM.id
-                MediaType.MAGNET_LINK -> MediaLibraryEntity.TORRENT.id
                 else -> fail(PlaybackPreparationFailure.LibraryMissing)
             }
         val library = loadLibrary(libraryId)?.copy() ?: fail(PlaybackPreparationFailure.LibraryMissing)
         if (library.id != libraryId || library.mediaType != history.mediaType) fail(PlaybackPreparationFailure.FileMissing)
-        if (history.mediaType == MediaType.MAGNET_LINK) {
-            val path = history.torrentPath ?: fail(PlaybackPreparationFailure.FileMissing)
-            val torrent =
-                TorrentDescriptor(
-                    path,
-                    history.torrentIndex,
-                    com.xyoye.common_component.utils.thunder.ThunderManager
-                        .media3DownloadId(path, history.torrentIndex),
-                    history.uniqueKey
-                )
-            val resolved = resolveTorrent(torrent, owner)
-            restoreHistory(resolved.file, history, libraryId)
-            return resolved
-        }
         val storage = owner.storage(library)
-        if (storage is LinkStorage) storage.setupHttpHeader(history.httpHeader?.let(JsonHelper::parseJsonMap))
         val recoveredHistory = history.copy(storageId = libraryId, storagePath = history.storagePath ?: legacyPath(history))
         val file = storage.historyFile(recoveredHistory)?.let(owner::file) ?: fail(PlaybackPreparationFailure.FileMissing)
         if (history.uniqueKey.isNotBlank() || file is RemoteStorageFile) {
@@ -351,38 +317,6 @@ class PlaybackSourceResolver internal constructor(
         if (history.uniqueKey != restored.uniqueKey || history.storagePath != restored.storagePath || history.storageId != libraryId) {
             backfillHistory(restored)
         }
-    }
-
-    private suspend fun resolveTorrent(
-        descriptor: TorrentDescriptor,
-        owner: ResolutionOwnership
-    ): FileResolution {
-        if (descriptor.fileIndex < 0 || descriptor.magnetOrTorrentIdentity.isBlank()) fail(PlaybackPreparationFailure.InvalidDescriptor)
-        val advice =
-            when (val outcome = validateDownload(descriptor.downloadId, descriptor.downloadId, null)) {
-                is DownloadValidator.ValidationOutcome.Blocked ->
-                    fail(
-                        PlaybackPreparationFailure.OfflineValidationBlocked(outcome.requiredAction)
-                    )
-                is DownloadValidator.ValidationOutcome.AllowPlayback -> outcome
-            }
-        val storage = owner.storage(MediaLibraryEntity.TORRENT.copy(url = descriptor.magnetOrTorrentIdentity))
-        val root = storage.getRootFile()?.let(owner::file) ?: fail(PlaybackPreparationFailure.FileMissing)
-        val items = storage.openDirectory(root, false).also(owner::files)
-        val file =
-            items.filterIsInstance<TorrentStorageFile>().firstOrNull { it.getFileInfo().fileIndex == descriptor.fileIndex }
-                ?: fail(PlaybackPreparationFailure.FileMissing)
-        if (descriptor.expectedUniqueKey.isNotBlank()) requireIdentity(file, descriptor.expectedUniqueKey)
-        file.playHistory = findHistory(file.uniqueKey(), storage.library.id)?.copy()
-        val queue =
-            items
-                .filter { it.isVideoFile() }
-                .map {
-                    PlaybackReferenceFactory.fromFile(it, com.xyoye.data_component.enums.StorageSort.NAME, false, true)
-                }.toMutableList()
-        val normalized = descriptor.copy(expectedUniqueKey = file.uniqueKey(), displayTitle = file.fileName())
-        if (queue.none { (it as? TorrentDescriptor)?.expectedUniqueKey == file.uniqueKey() }) queue.add(normalized)
-        return FileResolution(file, normalized, queue, advice)
     }
 
     private fun requireIdentity(
@@ -455,8 +389,7 @@ class PlaybackSourceResolver internal constructor(
     private class FileResolution(
         val file: StorageFile,
         val descriptor: PlaybackDescriptor,
-        val queue: List<PlaybackDescriptor>,
-        val advice: DownloadValidator.ValidationOutcome.AllowPlayback? = null
+        val queue: List<PlaybackDescriptor>
     )
 
     private class ResolutionFailure(

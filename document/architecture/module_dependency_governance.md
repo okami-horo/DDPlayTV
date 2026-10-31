@@ -6,8 +6,8 @@
 
 ## 0. 范围与口径
 
-- [settings.gradle.kts](../../settings.gradle.kts) 显式纳入 23 个模块：1 个 app、5 个业务模块、8 个 core、1 个 data、8 个内置依赖包装模块。
-- Gradle 还会创建嵌套模块的父项目 :repository。治理实现认识该容器，但不把它计入 23 个显式模块。
+- [settings.gradle.kts](../../settings.gradle.kts) 显式纳入 22 个模块：1 个 app、5 个业务模块、8 个 core、1 个 data、7 个内置依赖包装模块。
+- Gradle 还会创建嵌套模块的父项目 :repository。治理实现认识该容器，但不把它计入 22 个显式模块。
 - 校验直接声明的 Gradle project 依赖，包括生产与测试配置；不展开传递依赖、不检查外部库版本，也不代替源码边界和行为验证。
 - core_notification_component、core_service_component、remote_component、Han1meViewer 不是当前目录或构建模块。不得根据旧文档为它们添加依赖例外。
 
@@ -69,7 +69,7 @@
 | :local_component、:user_component、:storage_component | 普通业务基础依赖，以及 :core_metadata_component |
 | :player_component | 普通业务基础依赖，以及 :repository:danmaku、:repository:panel_switch、:repository:video_cache、:repository:mpv |
 | :core_ui_component | contract、system、log、data，以及 :repository:immersion_bar |
-| :core_storage_component | contract、network、database、system、log、data，以及 :repository:seven_zip、:repository:thunder |
+| :core_storage_component | contract、network、database、system、log、data，以及 :repository:seven_zip |
 | :core_metadata_component | contract、data、network、database、storage、system、log |
 | :core_network_component | system、log、data |
 | :core_database_component | system、data |

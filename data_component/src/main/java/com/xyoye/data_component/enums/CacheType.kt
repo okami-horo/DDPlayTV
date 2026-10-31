@@ -34,11 +34,6 @@ enum class CacheType(
         "视频截图",
         "截图缓存为视频截图缓存，确认清除？",
     ),
-    TORRENT_FILE_CACHE(
-        "torrent",
-        "种子文件",
-        "清除种子文件缓存后，播放资源文件将重新下载种子文件，确认清除？",
-    ),
     FONT_CACHE(
         "font",
         "字幕字体",

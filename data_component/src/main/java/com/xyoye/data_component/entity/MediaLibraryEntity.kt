@@ -69,22 +69,6 @@ data class MediaLibraryEntity(
                         .toString(),
                 mediaType = MediaType.LOCAL_STORAGE,
             )
-        val STREAM =
-            MediaLibraryEntity(
-                id = 2,
-                displayName = "串流播放",
-                url = "url://dandanplay_steam_link",
-                mediaType = MediaType.STREAM_LINK,
-                describe = "https://",
-            )
-        val TORRENT =
-            MediaLibraryEntity(
-                id = 3,
-                displayName = "磁链播放",
-                url = "url://dandanplay_magnet_link",
-                mediaType = MediaType.MAGNET_LINK,
-                describe = "magnet:?xt=urn:btih:",
-            )
         val HISTORY =
             MediaLibraryEntity(
                 id = 4,
@@ -144,8 +128,6 @@ data class MediaLibraryEntity(
                     }
                 }
 
-                MediaType.STREAM_LINK,
-                MediaType.MAGNET_LINK,
                 MediaType.REMOTE_STORAGE,
                 MediaType.SMB_SERVER,
                 MediaType.EXTERNAL_STORAGE -> describe

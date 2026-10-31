@@ -17,13 +17,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.alibaba.android.arouter.launcher.ARouter
 import com.okamihoro.ddplaytv.R
+import com.okamihoro.ddplaytv.playback.withIndexedPlaybackFile
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.anime_component.ui.fragment.home_page.HomePageFragment
 import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.database.DatabaseProvider
-import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackNavigation
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
@@ -37,7 +37,6 @@ import com.xyoye.data_component.data.BangumiAnimeData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.VideoEntity
 import com.xyoye.data_component.enums.PlayerType
-import com.xyoye.data_component.media3.entity.Media3SourceType
 import com.xyoye.local_component.ui.activities.shooter_subtitle.ShooterSubtitleActivity
 import com.xyoye.player.DanDanVideoPlayer
 import com.xyoye.player.controller.VideoController
@@ -203,99 +202,103 @@ class TvDpadRewriteInstrumentedTest {
         val previousSubtitleAlpha = SubtitleConfig.getAlpha()
         PlayerConfig.putUsePlayerType(kernel.value)
         try {
-            val provider = ARouter.getInstance().navigation(PlaybackRequestService::class.java)
-            val request =
-                runBlocking {
-                    provider.submit(
-                        PlaybackRequestInput(
-                            ExternalUriDescriptor(fixture.toURI().toString(), Media3SourceType.STREAM),
-                            null,
-                            PlaybackRequestOrigin.EXTERNAL_INTENT
+            withIndexedPlaybackFile(fixture) { descriptor ->
+                val provider = ARouter.getInstance().navigation(PlaybackRequestService::class.java)
+                val request =
+                    runBlocking {
+                        provider.submit(
+                            PlaybackRequestInput(
+                                descriptor,
+                                null,
+                                PlaybackRequestOrigin.STORAGE_FILE
+                            )
                         )
-                    )
-                } as PlaybackSubmissionResult.Accepted
-            val intent = Intent(context, PlayerActivity::class.java).putExtra(PlaybackNavigation.REQUEST_ID, request.requestId)
-            ActivityScenario.launch<PlayerActivity>(intent).use { scenario ->
-                await(scenario, 15000) { player(it).isPlaying() && it.hasWindowFocus() }
-                verifySubtitleLayer(scenario, kernel)
-                lateinit var menuCaller: android.view.View
-                scenario.onActivity { menuCaller = requireNotNull(it.currentFocus) }
-                send(KeyEvent.KEYCODE_MENU)
-                await(scenario) { it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)?.hasFocus() == true }
-                var position = 0L
-                scenario.onActivity { position = player(it).getCurrentPosition() }
-                repeat(5) {
-                    send(KeyEvent.KEYCODE_DPAD_RIGHT)
-                    send(KeyEvent.KEYCODE_DPAD_LEFT)
-                }
-                scenario.onActivity {
-                    assertTrue(player(it).isPlaying())
-                    assertTrue("Panel arrows must not seek", player(it).getCurrentPosition() < position + 8000)
-                    val list = it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
-                    val index =
-                        (list.adapter as BaseAdapter).items.indexOfFirst { item ->
-                            item is SettingItem &&
-                                item.action == SettingAction.VIDEO_ASPECT
-                        }
-                    list.setSelectedPosition(index)
-                }
-                send(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.rv_aspect)?.hasFocus() == true }
-                send(KeyEvent.KEYCODE_DPAD_DOWN)
-                scenario.onActivity { assertEquals(previousScale, PlayerInitializer.screenScale) }
-                send(KeyEvent.KEYCODE_BACK)
-                await(scenario) { activity ->
-                    val list = activity.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
-                    val item = (list.adapter as BaseAdapter).items.getOrNull(list.getSelectedPosition())
-                    list.hasFocus() && item is SettingItem && item.action == SettingAction.VIDEO_ASPECT
-                }
-                if (kernel == PlayerType.TYPE_MPV_PLAYER) {
+                    } as PlaybackSubmissionResult.Accepted
+                val intent = Intent(context, PlayerActivity::class.java).putExtra(PlaybackNavigation.REQUEST_ID, request.requestId)
+                ActivityScenario.launch<PlayerActivity>(intent).use { scenario ->
+                    await(scenario, 15000) { player(it).isPlaying() && it.hasWindowFocus() }
+                    verifySubtitleLayer(scenario, kernel)
+                    lateinit var menuCaller: android.view.View
+                    scenario.onActivity { menuCaller = requireNotNull(it.currentFocus) }
+                    send(KeyEvent.KEYCODE_MENU)
+                    await(scenario) { it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)?.hasFocus() == true }
+                    var position = 0L
+                    scenario.onActivity { position = player(it).getCurrentPosition() }
+                    repeat(5) {
+                        send(KeyEvent.KEYCODE_DPAD_RIGHT)
+                        send(KeyEvent.KEYCODE_DPAD_LEFT)
+                    }
                     scenario.onActivity {
-                        assertEquals(
-                            com.xyoye.common_component.enums.SubtitleRendererBackend.MPV_NATIVE,
-                            com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
-                                .current()
-                                ?.backend
-                        )
+                        assertTrue(player(it).isPlaying())
+                        assertTrue("Panel arrows must not seek", player(it).getCurrentPosition() < position + 8000)
                         val list = it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
                         val index =
                             (list.adapter as BaseAdapter).items.indexOfFirst { item ->
-                                item is SettingItem && item.action == SettingAction.SUBTITLE_STYLE
+                                item is SettingItem &&
+                                    item.action == SettingAction.VIDEO_ASPECT
                             }
                         list.setSelectedPosition(index)
                     }
-                    await(scenario) { activity ->
-                        val list = activity.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
-                        val position = activity.currentFocus?.let { list.findContainingViewHolder(it)?.bindingAdapterPosition }
-                        val item = (list.adapter as BaseAdapter).items.getOrNull(position ?: -1)
-                        list.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
-                            item is SettingItem &&
-                            item.action == SettingAction.SUBTITLE_STYLE
-                    }
                     send(KeyEvent.KEYCODE_DPAD_CENTER)
-                    await(scenario) { it.currentFocus?.id == com.xyoye.player_component.R.id.subtitle_vertical_offset_sb }
-                    scenario.onActivity {
-                        assertFalse(it.findViewById<android.view.View>(com.xyoye.player_component.R.id.subtitle_alpha_sb).isShown)
-                        assertTrue(it.findViewById<android.view.View>(com.xyoye.player_component.R.id.subtitle_native_style_tips).isShown)
-                    }
-                    send(KeyEvent.KEYCODE_DPAD_RIGHT)
-                    assertNotEquals(previousSubtitleOffset, SubtitleConfig.getVerticalOffset())
-                    assertEquals(previousSubtitleAlpha, SubtitleConfig.getAlpha())
+                    await(scenario) { it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.rv_aspect)?.hasFocus() == true }
+                    send(KeyEvent.KEYCODE_DPAD_DOWN)
+                    scenario.onActivity { assertEquals(previousScale, PlayerInitializer.screenScale) }
                     send(KeyEvent.KEYCODE_BACK)
                     await(scenario) { activity ->
                         val list = activity.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
                         val item = (list.adapter as BaseAdapter).items.getOrNull(list.getSelectedPosition())
-                        list.hasFocus() && item is SettingItem && item.action == SettingAction.SUBTITLE_STYLE
+                        list.hasFocus() && item is SettingItem && item.action == SettingAction.VIDEO_ASPECT
                     }
+                    if (kernel == PlayerType.TYPE_MPV_PLAYER) {
+                        scenario.onActivity {
+                            assertEquals(
+                                com.xyoye.common_component.enums.SubtitleRendererBackend.MPV_NATIVE,
+                                com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
+                                    .current()
+                                    ?.backend
+                            )
+                            val list = it.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
+                            val index =
+                                (list.adapter as BaseAdapter).items.indexOfFirst { item ->
+                                    item is SettingItem && item.action == SettingAction.SUBTITLE_STYLE
+                                }
+                            list.setSelectedPosition(index)
+                        }
+                        await(scenario) { activity ->
+                            val list = activity.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
+                            val position = activity.currentFocus?.let { list.findContainingViewHolder(it)?.bindingAdapterPosition }
+                            val item = (list.adapter as BaseAdapter).items.getOrNull(position ?: -1)
+                            list.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
+                                item is SettingItem &&
+                                item.action == SettingAction.SUBTITLE_STYLE
+                        }
+                        send(KeyEvent.KEYCODE_DPAD_CENTER)
+                        await(scenario) { it.currentFocus?.id == com.xyoye.player_component.R.id.subtitle_vertical_offset_sb }
+                        scenario.onActivity {
+                            assertFalse(it.findViewById<android.view.View>(com.xyoye.player_component.R.id.subtitle_alpha_sb).isShown)
+                            assertTrue(
+                                it.findViewById<android.view.View>(com.xyoye.player_component.R.id.subtitle_native_style_tips).isShown
+                            )
+                        }
+                        send(KeyEvent.KEYCODE_DPAD_RIGHT)
+                        assertNotEquals(previousSubtitleOffset, SubtitleConfig.getVerticalOffset())
+                        assertEquals(previousSubtitleAlpha, SubtitleConfig.getAlpha())
+                        send(KeyEvent.KEYCODE_BACK)
+                        await(scenario) { activity ->
+                            val list = activity.findViewById<DpadRecyclerView>(com.xyoye.player_component.R.id.setting_rv)
+                            val item = (list.adapter as BaseAdapter).items.getOrNull(list.getSelectedPosition())
+                            list.hasFocus() && item is SettingItem && item.action == SettingAction.SUBTITLE_STYLE
+                        }
+                    }
+                    send(KeyEvent.KEYCODE_BACK)
+                    await(scenario) { it.currentFocus === menuCaller }
+                    if (menuCaller !is VideoController) send(KeyEvent.KEYCODE_BACK)
+                    await(scenario) { it.currentFocus is VideoController }
+                    send(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) { !player(it).isPlaying() }
+                    send(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) { player(it).isPlaying() }
                 }
-                send(KeyEvent.KEYCODE_BACK)
-                await(scenario) { it.currentFocus === menuCaller }
-                if (menuCaller !is VideoController) send(KeyEvent.KEYCODE_BACK)
-                await(scenario) { it.currentFocus is VideoController }
-                send(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { !player(it).isPlaying() }
-                send(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { player(it).isPlaying() }
             }
         } finally {
             PlayerConfig.putUsePlayerType(previousKernel)

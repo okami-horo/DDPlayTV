@@ -22,7 +22,6 @@ enum class PlaybackTransportType {
     HTTP_PROXY,
     SMB,
     FTP,
-    THUNDER,
 }
 
 internal class ManagedPlaybackTransportLease(

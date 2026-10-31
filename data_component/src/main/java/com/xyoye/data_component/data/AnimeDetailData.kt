@@ -55,8 +55,6 @@ data class EpisodeData(
     @Json(ignore = true)
     val subtitle: String = "",
     @Json(ignore = true)
-    val searchEpisodeNum: String = "",
-    @Json(ignore = true)
     val watchTime: String? = null,
     @Json(ignore = true)
     val histories: List<EpisodeHistoryEntity> = emptyList(),

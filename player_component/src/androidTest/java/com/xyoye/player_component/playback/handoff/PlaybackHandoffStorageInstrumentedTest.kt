@@ -3,11 +3,11 @@ package com.xyoye.player_component.playback.handoff
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.tencent.mmkv.MMKV
-import com.xyoye.common_component.playback.handoff.ExternalUriDescriptor
+import com.xyoye.common_component.playback.handoff.PlaybackCastVideo
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
-import com.xyoye.data_component.media3.entity.Media3SourceType
+import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.*
@@ -21,13 +21,15 @@ class PlaybackHandoffStorageInstrumentedTest {
     private var now = 1000L
     private val input =
         PlaybackRequestInput(
-            ExternalUriDescriptor(
-                "https://example.test/video?token=secret",
-                Media3SourceType.STREAM,
-                headers = mapOf("Authorization" to "private-header")
+            ScreencastDescriptor(
+                "192.0.2.1",
+                8080,
+                listOf(PlaybackCastVideo("video?token=secret", "private-key")),
+                "private-key",
+                httpHeaders = mapOf("Authorization" to "private-header")
             ),
             null,
-            PlaybackRequestOrigin.EXTERNAL_INTENT
+            PlaybackRequestOrigin.SCREENCAST
         )
 
     @Before fun initialize() {

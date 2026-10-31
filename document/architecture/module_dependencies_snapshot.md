@@ -8,8 +8,8 @@
 
 ## 汇总
 
-- 模块数：23
-- 依赖条目数：92（生产 87 / 测试 5）
+- 模块数：22
+- 依赖条目数：91（生产 86 / 测试 5）
 
 ## 依赖列表（按模块）
 
@@ -112,7 +112,7 @@
 ### :core_storage_component
 
 **生产依赖**
-- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_system_component, :data_component, :repository:seven_zip, :repository:thunder
+- `implementation`：:core_contract_component, :core_database_component, :core_log_component, :core_network_component, :core_system_component, :data_component, :repository:seven_zip
 
 **测试依赖**
 - （无）
@@ -158,14 +158,6 @@
 - （无）
 
 ### :repository:seven_zip
-
-**生产依赖**
-- （无）
-
-**测试依赖**
-- （无）
-
-### :repository:thunder
 
 **生产依赖**
 - （无）
@@ -221,7 +213,6 @@ graph TD
   repository_mpv_native[":repository:mpv_native"]
   repository_panel_switch[":repository:panel_switch"]
   repository_seven_zip[":repository:seven_zip"]
-  repository_thunder[":repository:thunder"]
   repository_video_cache[":repository:video_cache"]
   storage_component[":storage_component"]
   user_component[":user_component"]
@@ -264,7 +255,6 @@ graph TD
   core_storage_component --> core_system_component
   core_storage_component --> data_component
   core_storage_component --> repository_seven_zip
-  core_storage_component --> repository_thunder
   core_system_component --> core_contract_component
   core_system_component --> core_log_component
   core_system_component --> data_component

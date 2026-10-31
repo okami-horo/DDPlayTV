@@ -129,7 +129,7 @@ class PlaybackTransportFactoryTest {
     @Test
     fun unsupportedProviderNeverUsesRawUrlOrClosesBorrowedMetadata() =
         runBlocking {
-            val browser = RecordingStorage(library(MediaType.STREAM_LINK))
+            val browser = RecordingStorage(library(MediaType.WEBDAV_SERVER))
             val input = RecordingFile(browser)
             val factory = PlaybackTransportFactory({ error("No connection needed") }, { null }, Dispatchers.Unconfined)
             val result = factory.acquire(browser, input, profile)
@@ -141,7 +141,7 @@ class PlaybackTransportFactoryTest {
     @Test
     fun directProviderBorrowsMetadataAndReceivesTheSelectedProfile() =
         runBlocking {
-            val browser = RecordingStorage(library(MediaType.STREAM_LINK))
+            val browser = RecordingStorage(library(MediaType.WEBDAV_SERVER))
             val input = RecordingFile(browser)
             browser.acquire = { file ->
                 assertSame(input, file)

@@ -15,7 +15,7 @@ class Media3BackgroundCoordinatorTest {
     private fun state(capabilities: Set<Media3Capability>) =
         PlaybackStateView(
             version,
-            PlaybackSourceView("media", "key", MediaType.STREAM_LINK, "title", null),
+            PlaybackSourceView("media", "key", MediaType.LOCAL_STORAGE, "title", null),
             Media3PlaybackState.PLAYING,
             capabilities,
             emptySet(),

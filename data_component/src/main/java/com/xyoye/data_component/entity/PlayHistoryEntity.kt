@@ -43,10 +43,6 @@ data class PlayHistoryEntity(
     var episodeId: String? = null,
     @ColumnInfo(name = "subtitle_path")
     var subtitlePath: String? = null,
-    @ColumnInfo(name = "torrent_path")
-    var torrentPath: String? = null,
-    @ColumnInfo(name = "torrent_index")
-    var torrentIndex: Int = -1,
     @ColumnInfo(name = "http_header")
     var httpHeader: String? = null,
     @ColumnInfo(name = "unique_key")

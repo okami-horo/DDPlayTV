@@ -11,7 +11,6 @@ import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.playback.handoff.PlaybackStateView
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
-import com.xyoye.common_component.playback.handoff.TorrentDescriptor
 import com.xyoye.common_component.source.handoff.PlaybackResolutionResult
 import com.xyoye.common_component.source.handoff.PlaybackSourceResolver
 import com.xyoye.common_component.source.handoff.ResolvedPlayback
@@ -145,7 +144,6 @@ internal class ActivePlaybackSession(
                                     when (it) {
                                         is StoredLibraryFileDescriptor -> it.file.uniqueKey
                                         is PlayHistoryDescriptor -> it.expectedUniqueKey
-                                        is TorrentDescriptor -> it.expectedUniqueKey
                                         is ScreencastDescriptor -> it.playUniqueKey
                                         else ->
                                             if (it ==
@@ -702,7 +700,7 @@ internal class ActivePlaybackSession(
                 } else {
                     selected
                 }
-            val queued = ResolvedPlayback(resolved.source, descriptor, resolved.identity, previous.resolved.queue, resolved.downloadAdvice)
+            val queued = ResolvedPlayback(resolved.source, descriptor, resolved.identity, previous.resolved.queue)
             return PreparedPlayback(queued, previous.launchOptions?.copy(mediaId = resolved.identity.mediaId, autoplay = true))
         } catch (failure: Throwable) {
             withContext(NonCancellable + cleanupDispatcher) { resolved.source.releasePlaybackResources() }
