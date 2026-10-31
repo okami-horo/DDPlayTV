@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DDPlayTV · 播放操作局部设计</title>
+<!-- Throwaway prototype: selected A lower-left control layout on the captured player screen.
+     All state is mocked. The screenshot is a reference, never production media. -->
+<style>
+*{box-sizing:border-box}body{margin:0;background:#09090c;color:#f5f5f7;font:15px "Segoe UI","Microsoft YaHei",sans-serif}button,select{font:inherit;color:inherit}button{cursor:pointer}button:disabled{cursor:default}button:focus-visible,select:focus-visible{outline:3px solid #fff;outline-offset:4px}header{height:86px;padding:16px 26px;display:flex;justify-content:space-between;align-items:center;gap:24px}header h1{font-size:19px;margin:0 0 6px}header p{margin:0;color:#a1a1b0;font-size:13px}.tools{display:flex;gap:12px;align-items:center}.tools select,.tools button{background:#222229;border:1px solid #41414c;border-radius:8px;padding:8px 12px}#viewport{position:relative;margin:0 auto;overflow:hidden;background:#111}#screen{position:absolute;left:0;top:0;width:1440px;height:810px;transform-origin:top left;isolation:isolate}#baseline{position:absolute;inset:0;width:100%;height:100%}.stamp{position:absolute;top:105px;left:60px;font-size:11px;letter-spacing:2px;background:#111d;border:1px solid #ffffff30;border-radius:6px;padding:6px 10px;color:#e6e6ee}.tray{position:absolute;left:50px;top:699px;width:408px;height:86px;padding:10px 14px;display:flex;align-items:center;gap:24px;background:#15161b;border:1px solid #ffffff13;border-radius:22px;box-shadow:0 8px 24px #0005}.transport,.episodes{display:flex;align-items:center;gap:12px}.episodes{gap:10px;position:relative}.episodes:before{content:"";height:26px;width:1px;background:#ffffff24;position:absolute;left:-13px}.control{flex:none;width:44px;height:44px;padding:0;border:1px solid transparent;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;gap:7px;position:relative;color:#e8e8ed}.control svg{width:25px;height:25px}.control.play{width:56px;height:56px;background:#f5f5f7;color:#17171c}.control.play svg{width:27px;height:27px}.control:focus{outline:2px solid #fff;outline-offset:3px;background:#373840;color:#fff}.control.play:focus{background:#fff;color:#17171c}.control:disabled{opacity:.23;outline:0}.control.picker{width:72px;border-radius:12px;background:#ffffff0b;font-size:17px}.control.picker svg{width:19px;height:19px}.control:not(.picker):after{content:attr(aria-label);position:absolute;bottom:calc(100% + 13px);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:13px;line-height:20px;padding:2px 9px;border-radius:7px;background:#15161b;opacity:0;pointer-events:none}.control:focus:after{opacity:1}.single-note{font-size:15px;color:#858593;flex:1;text-align:center}.proxy{position:absolute;background:transparent;border:0;border-radius:16px;color:transparent}.proxy:focus{outline:3px solid #fff;outline-offset:3px}.proxy.title{left:104px;top:39px;width:440px;height:51px}.proxy.subtitle{left:977px;top:710px;width:118px;height:57px}.proxy.audio{left:1111px;top:710px;width:135px;height:57px}.proxy.danmaku{left:1261px;top:710px;width:119px;height:57px}#popup{position:absolute;left:50px;bottom:128px;width:408px;padding:18px;background:#191a20;border:1px solid #ffffff26;border-radius:18px;box-shadow:0 16px 80px #0009}#popup[hidden]{display:none}#popup h2{font-size:19px;margin:0 0 5px}#popup p{font-size:12px;color:#a3a3b1;margin:0 0 16px}#popup button{display:flex;justify-content:space-between;width:100%;text-align:left;padding:12px 14px;margin-top:8px;border:1px solid #ffffff10;border-radius:10px;background:#24252d;font-size:16px}#popup button:focus{outline:2px solid white;outline-offset:2px;background:#363741}#popup button:disabled{opacity:.25}#popup button small{color:#a1a1af}footer{height:74px;display:flex;justify-content:center;align-items:center;gap:25px}.selection{padding:12px 24px;border:1px solid #444453;border-radius:24px;background:#22222a}#description{width:420px;color:#b9b9c7;font-size:13px;line-height:1.6}#state{min-width:200px;color:#8f8fa2;font-size:12px;line-height:1.6}.capture header,.capture footer{display:none}.capture .stamp{display:none}.original .tray,.original .proxy,.original #popup{display:none}
+.control:after{color:#f5f5f7}
+</style>
+</head>
+<body>
+<header><div><h1>播放操作 · 局部设计</h1><p>以当前电视截图合成预览，仅替换左下按钮组。字幕、弹幕与其余界面沿用截图；不是原生效果截图。</p></div><div class="tools"><label>状态 <select id="scene"><option value="middle">中间集 · 暂停</option><option value="playing">中间集 · 播放</option><option value="first">首集</option><option value="last">末集</option><option value="single">单个文件</option><option value="unseekable">不可快进 / 快退</option></select></label><button id="compare">查看当前界面</button></div></header>
+<div id="viewport"><main id="screen" aria-label="播放器局部设计预览">
+<img id="baseline" src="previews/player-controls-baseline.png" alt="当前电视播放器截图，字幕与弹幕位置保持原样">
+<div class="stamp">局部设计合成 · 尚未实现</div><div id="controls"></div>
+<button class="proxy title" data-key="title" aria-label="标题（范围外占位）"></button><button class="proxy subtitle" data-key="subtitle" aria-label="字幕（保留现状）"></button><button class="proxy audio" data-key="audio" aria-label="音轨（保留现状）"></button><button class="proxy danmaku" data-key="danmaku" aria-label="弹幕（保留现状）"></button>
+<section id="popup" role="dialog" aria-label="剧集操作示意" aria-modal="true" hidden></section>
+</main></div>
+<footer><span class="selection">已选 A · 单排分组</span><div id="description">播放与剧集分组，六个入口直接可达。当前仅确认设计，原生改造待后续实施。</div><output id="state" aria-live="polite"></output></footer>
+<script>
+const query=new URLSearchParams(location.search);
+const variant='grouped';
+let scene=['middle','playing','first','last','single','unseekable'].includes(query.get('scene'))?query.get('scene'):'middle';
+let playing=scene==='playing',episode=scene==='first'?1:scene==='last'?3:2,position=582,modal=null,caller='picker',original=false;
+const paths={play:'<path d="m9 5 12 9-12 9Z" fill="currentColor" stroke="none"/>',pause:'<path d="M8 6v16M19 6v16" stroke-width="5"/>',prev:'<path d="M7 6v16m14-15-11 7 11 7Z" fill="currentColor"/>',next:'<path d="M21 6v16M7 7l11 7-11 7Z" fill="currentColor"/>',picker:'<path d="M5 7h18M5 14h18M5 21h18"/>',rewind:'<path d="M7 9a10 10 0 1 1-3 8M7 3v7H1"/><text x="15" y="20" text-anchor="middle" fill="currentColor" stroke="none" font-size="11" font-weight="600">15</text>',forward:'<path d="M21 9a10 10 0 1 0 3 8M21 3v7h6"/><text x="13" y="20" text-anchor="middle" fill="currentColor" stroke="none" font-size="11" font-weight="600">15</text>'};
+const svg=name=>`<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]}</svg>`;
+function control(key,label,icon,{disabled=false,text=false}={}){return `<button class="control ${key==='play'?'play':''} ${key==='picker'?'picker':''}" data-key="${key}" aria-label="${label}" ${disabled?'disabled':''}>${svg(icon)}${text?`<span>${label}</span>`:''}</button>`}
+function focus(key){document.querySelector(`[data-key="${key}"]:not(:disabled)`)?.focus({preventScroll:true})}
+function updateState(action=''){document.getElementById('state').textContent=`模拟：${playing?'播放':'暂停'} · ${scene==='single'?'单文件':`第 ${episode} / 3 项`} · ${Math.floor(position/60)}:${String(position%60).padStart(2,'0')}${action?' · '+action:''}`}
+function render(target='forward'){
+  const transport=`<div class="transport">${control('rewind','后退 15 秒','rewind',{disabled:scene==='unseekable'})}${control('play',playing?'暂停':'播放',playing?'pause':'play')}${control('forward','前进 15 秒','forward',{disabled:scene==='unseekable'})}</div>`;
+  const episodes=scene==='single'?'<span class="single-note">单个视频</span>':`<div class="episodes">${control('prev','上一集','prev',{disabled:episode===1})}${control('next','下一集','next',{disabled:episode===3})}${control('picker','选集','picker',{text:true})}</div>`;
+  document.getElementById('controls').innerHTML=`<div class="tray ${variant}">${transport}${episodes}</div>`;
+  document.getElementById('scene').value=scene;
+  query.set('variant',variant);query.set('scene',scene);history.replaceState(null,'','?'+query);updateState();focus(target);if(!document.activeElement.dataset.key)focus('play');
+}
+function closeModal(){modal=null;document.getElementById('popup').hidden=true;focus(caller);updateState('已返回原入口')}
+function openModal(){
+  modal='select';const popup=document.getElementById('popup');popup.hidden=false;
+  popup.innerHTML=`<h2>选集</h2><p>仅验证入口与返回焦点；列表内容为示例。</p>${[1,2,3].map(n=>`<button data-episode="${n}">视频 ${String(n).padStart(2,'0')}<small>${n===episode?'当前':''}</small></button>`).join('')}`;
+  popup.querySelector(`[data-episode="${episode}"]`).focus();
+}
+function act(key){
+  if(key==='picker'){caller='picker';openModal();return}
+  if(key==='play')playing=!playing;
+  if(key==='rewind')position=Math.max(0,position-15);
+  if(key==='forward')position=Math.min(1440,position+15);
+  if(key==='prev'||key==='next'){episode+=key==='prev'?-1:1;position=0}
+  if(['title','subtitle','audio','danmaku'].includes(key)){updateState('范围外入口，保留现状');return}
+  render((key==='prev'&&episode===1)||(key==='next'&&episode===3)?'picker':key);
+}
+document.getElementById('screen').addEventListener('click',event=>{
+  const button=event.target.closest('button');if(!button||button.disabled)return;
+  if(button.dataset.key)act(button.dataset.key);
+  else if(button.dataset.episode){episode=Number(button.dataset.episode);position=0;render('picker');closeModal()}
+});
+document.addEventListener('keydown',event=>{
+  if(event.target.closest('header'))return;
+  if(original)return;
+  if(event.key==='Escape'){event.preventDefault();if(modal)closeModal();else{focus('title');updateState('返回标题占位；未模拟退出播放')}return}
+  if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;
+  event.preventDefault();
+  if(modal){const items=[...document.querySelectorAll('#popup button:not(:disabled)')],i=items.indexOf(document.activeElement);items[Math.max(0,Math.min(items.length-1,i+(['ArrowUp','ArrowLeft'].includes(event.key)?-1:1)))].focus();return}
+  const key=document.activeElement.dataset.key;
+  const keys=[...document.querySelectorAll('.tray button:not(:disabled)')].map(x=>x.dataset.key).concat(['subtitle','audio','danmaku']);
+  if(event.key==='ArrowUp'){focus('title');return}
+  if(event.key==='ArrowDown'){focus(key==='title'?'play':key);return}
+  const row=keys;
+  const i=row.indexOf(key),next=i+(event.key==='ArrowLeft'?-1:1);focus(row[Math.max(0,Math.min(row.length-1,next))]||'play');
+});
+document.getElementById('scene').onchange=event=>{scene=event.target.value;playing=scene==='playing';episode=scene==='first'?1:scene==='last'?3:2;position=582;closeModal();render(scene==='unseekable'?'play':'forward')};
+document.getElementById('compare').onclick=()=>{original=!original;document.getElementById('screen').classList.toggle('original',original);document.getElementById('compare').textContent=original?'返回设计预览':'查看当前界面'};
+const capture=query.get('capture')==='1';document.body.classList.toggle('capture',capture);
+function resize(){const scale=Math.min(innerWidth/1440,Math.max(100,innerHeight-(capture?0:160))/810);document.getElementById('viewport').style.cssText=`width:${1440*scale}px;height:${810*scale}px`;document.getElementById('screen').style.transform=`scale(${scale})`}
+addEventListener('resize',resize);render(scene==='unseekable'?'play':'forward');resize();
+</script>
+</body>
+</html>

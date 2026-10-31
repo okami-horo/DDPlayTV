@@ -4,6 +4,10 @@
 
 ## 设计问题
 
+完整页面覆盖尚未完成。[设计覆盖审查 U01–U10](../../../docs/superpowers/plans/2026-10-31-ui-design-coverage-audit.md) 记录了完整选集、播放器二级面板、绑定 / 下载、来源授权、深层设置、TMDB 页面等缺口；主原型或共用主题覆盖一部分，不代表这些深层页面已经有完整稿或完成视觉验收。
+
+2026-10-31 新增 [播放器左下操作组设计](../../../docs/superpowers/designs/2026-10-31-player-controls-design.md)：用户仅要求调整播放 / 前后集 / 选集按钮组，明确字幕位置及弹幕覆盖标题不是问题。原播放原型漏了前后集和选集，该局部视觉完成结论撤回。用户已选择 A 单排分组，原生未实施。
+
 在用户偏好的暗色、苹果系风格下，比较三种信息组织方式：
 
 - `?variant=sidebar`：侧栏影院，平衡继续观看、最近观看和媒体来源。
@@ -43,3 +47,11 @@ Android UI 以已选的沉浸放映方案为基准，保留暗色、苹果系风
 - 方向键、Enter、Esc、菜单键（键盘 M）可操作；视频行向右到更多按钮，向左返回主操作。
 - [设计说明与边界](../../../docs/superpowers/designs/2026-10-31-file-browser-design.md)，[已选 C 截图](previews/files-preview.png)；历史对照：[A 目录](previews/files-grid.png)、[A 视频](previews/files-videos.png)、[B](previews/files-list.png)。
 - 这是示例数据网页设计，未接入真实来源；没有改动 Android、重新打包或操作电视。已加载内容的刷新失败、分页失败、登录过期等细节仍需补交互稿和原生验收。
+
+## 播放操作局部设计（2026-10-31）
+
+[交互预览](player-controls-prototype.html?variant=grouped) 用已有电视截图合成，只替换左下按钮组。用户已选择 A 单排分组，交互原型固定为 A；B / C 仅保留历史对照图。文件浏览页继续使用其已选 C。
+
+- 运行 `node document/prototypes/tv-ui/server.cjs 4175`，访问 `http://127.0.0.1:4175/player-controls-prototype.html?variant=grouped`；也支持直接打开 HTML。
+- 页面固定为已选 A，顶部切换播放 / 暂停、首末集、单文件及不可跳转状态；方向键 / Enter / Esc 可操作。可切回当前电视截图对照。
+- [历史方案对照](previews/player-controls-comparison.png)、[边界状态](previews/player-controls-states.png)、[后续任务](../../../docs/superpowers/plans/2026-10-31-player-controls.md)。所有变化为网页模拟，未改 Android，未重新占用电视。

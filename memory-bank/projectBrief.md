@@ -14,6 +14,10 @@
  - Refactor accumulated feature additions to reduce unclear ownership and maintenance cost while preserving existing functionality and TV behavior (user clarified this priority on 2026-10-27). Judge new layers by the old responsibilities they replace, using comparable source projects as references rather than templates to copy.
 
  ## Scope
+ UI design coverage is incomplete. The 2026-10-31 static audit identifies 10 groups beyond selected file-browser C and player-button A; source evidence, reachable/conditional paths and exclusions live in `docs/superpowers/plans/2026-10-31-ui-design-coverage-audit.md`. Theme updates and historical build/DPAD results do not establish visual specifications or acceptance for these groups.
+
+ Player controls scope correction (2026-10-31): only the lower-left playback/previous/next/episode group needs redesign; the user accepts subtitle positioning and danmaku crossing the header. The old prototype omitted episode controls, so this group remains visually unaccepted. The user-selected A single-row grouped design is in `docs/superpowers/designs/2026-10-31-player-controls-design.md`; pending work is `docs/superpowers/plans/2026-10-31-player-controls.md`. A is confirmed and the prototype is fixed to it; native work has not started. This is separate from the deferred file-browser C.
+
  Main build modules are defined in `settings.gradle.kts`: `:app`, feature modules, core modules, data module, and bundled `repository:*` AAR wrappers.
 
  Current maintained documentation starts at `document/README.md`. Workflow design/execution ledgers, historical decisions and agent memory have distinct responsibilities described there. Former OpenSpec records were consolidated by topic; preserved validation gaps live in `document/player/playback-validation-followup.md`.
