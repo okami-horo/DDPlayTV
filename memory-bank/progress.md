@@ -2,6 +2,8 @@
 
 ## Latest Recorded Validation
 
+2026-10-31 Release delivery at user request, source `779ada366` (clean worktree before build): `scripts/dev-env/gradlew-local.bat :app:assembleRelease --offline --console=plain` ended **BUILD SUCCESSFUL in 1m 55s**; log `.tmp/tv-release-build.log`. Installed `app/build/outputs/apk/release/ddplaytv_v4.2.2_arm64-v8a-release.apk` (77,509,705 bytes) using `adb -s 192.168.31.70:5555 install -r`; result **Success**, preserving existing app data. Package readback confirmed `com.okamihoro.ddplaytv`, version `4.2.2`/code `69`, primary ABI `arm64-v8a`, lastUpdateTime `2026-10-31 23:11:12`, and no DEBUGGABLE flag. No application launch, TV navigation/playback, visual acceptance or new test run was performed.
+
 The completed UI work is now committed as `b0985b9b6` (Git checked 2026-10-31). Its implementation-run evidence is in the [R01-R07 ledger](../docs/superpowers/plans/2026-10-31-ui-polish.md): Debug/test APKs, full JVM/lint, 19-file ktlint and dependency governance ended **BUILD SUCCESSFUL in 2m 45s**; 474 JVM passes, two existing external-fixture skips; direct AVD runner **19/19**. Native/prototype screenshots were inspected. Cloud/account data used local fixtures; real Media3/mpv playback preceded injected feedback checks.
 
 This is retained evidence, not a rerun during memory consolidation. Open implementation/acceptance/delivery work has one current summary in [activeContext](activeContext.md).

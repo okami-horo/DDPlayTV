@@ -26,6 +26,7 @@
  ## Metadata Ownership (2026-10-31)
  - core_metadata orchestrates parsing, matching, source-scoped scanning and manual binding revisions; local/storage/user consume it. core_storage supplies independent read-only catalog snapshots and does not depend on metadata. app/player continue using contract playback descriptors, without metadata implementation dependencies.
  - File assets, source content generations and TMDB movie/tv/season/episode identities are separate. Complete-directory results alone may mark assets unavailable; manual results and valid cached snapshots survive errors and stale requests. Maintained design/acceptance: `docs/superpowers/designs/2026-10-31-tmdb-media-library-design.md`; implementation and verified limits: `docs/superpowers/plans/2026-10-31-tmdb-media-library.md`.
+ - Proposed, not implemented (2026-10-31): playback success submits an immutable stable-file snapshot through a narrow contract to metadata; player/storage keep no metadata implementation dependency. Same-series filtered discovery must not drive whole-directory missing-file cleanup. Current interaction design: [playback-triggered metadata](../docs/superpowers/designs/2026-10-31-playback-auto-metadata-design.md); it supersedes manual-first UI while retaining legacy data protections.
 
  ## UI Patterns
  - TV is the sole maintained UI target (2026-10-29). Both launcher categories use TvSplashActivity/TvMainActivity; old mobile component names are aliases. Shared feature pages remain in use.
