@@ -4,9 +4,9 @@
 
 ## 设计问题
 
-完整页面覆盖尚未完成。[设计覆盖审查 U01–U10](../../../docs/superpowers/plans/2026-10-31-ui-design-coverage-audit.md) 记录了完整选集、播放器二级面板、绑定 / 下载、来源授权、深层设置、TMDB 页面等缺口；主原型或共用主题覆盖一部分，不代表这些深层页面已经有完整稿或完成视觉验收。
+A 和 U01–U10 已在后续授权下补稿并调整原生布局，详见 [实施和状态矩阵](../../../docs/superpowers/plans/2026-10-31-ui-polish.md)。条件页面/外部服务/物理电视仍有未覆盖状态。原始审查记录如下：[设计覆盖审查 U01–U10](../../../docs/superpowers/plans/2026-10-31-ui-design-coverage-audit.md) 记录了完整选集、播放器二级面板、绑定 / 下载、来源授权、深层设置、TMDB 页面等缺口；主原型或共用主题覆盖一部分，不代表这些深层页面已经有完整稿或完成视觉验收。
 
-2026-10-31 新增 [播放器左下操作组设计](../../../docs/superpowers/designs/2026-10-31-player-controls-design.md)：用户仅要求调整播放 / 前后集 / 选集按钮组，明确字幕位置及弹幕覆盖标题不是问题。原播放原型漏了前后集和选集，该局部视觉完成结论撤回。用户已选择 A 单排分组，原生未实施。
+2026-10-31 新增 [播放器左下操作组设计](../../../docs/superpowers/designs/2026-10-31-player-controls-design.md)：用户仅要求调整播放 / 前后集 / 选集按钮组，明确字幕位置及弹幕覆盖标题不是问题。原播放原型漏了前后集和选集，该局部视觉完成结论撤回。用户已选择 A 单排分组，后续已实施并完成本地播放/焦点/截图核对，剩余状态见任务矩阵。
 
 在用户偏好的暗色、苹果系风格下，比较三种信息组织方式：
 
@@ -54,4 +54,10 @@ Android UI 以已选的沉浸放映方案为基准，保留暗色、苹果系风
 
 - 运行 `node document/prototypes/tv-ui/server.cjs 4175`，访问 `http://127.0.0.1:4175/player-controls-prototype.html?variant=grouped`；也支持直接打开 HTML。
 - 页面固定为已选 A，顶部切换播放 / 暂停、首末集、单文件及不可跳转状态；方向键 / Enter / Esc 可操作。可切回当前电视截图对照。
-- [历史方案对照](previews/player-controls-comparison.png)、[边界状态](previews/player-controls-states.png)、[后续任务](../../../docs/superpowers/plans/2026-10-31-player-controls.md)。所有变化为网页模拟，未改 Android，未重新占用电视。
+- [历史方案对照](previews/player-controls-comparison.png)、[边界状态](previews/player-controls-states.png)、[后续任务](../../../docs/superpowers/plans/2026-10-31-player-controls.md)。此页操作为网页模拟；后续原生调整另见实施账本，未重新占用电视。
+
+## 深层界面补充稿（2026-10-31）
+
+[deep-pages.html](deep-pages.html) 覆盖选集、偏移/样式、绑定/下载、九类来源、深层工具、元数据、历史、账户、公共弹窗和启动页；参数及原生映射见 [补充设计](../../../docs/superpowers/designs/2026-10-31-ui-polish-design.md)。例如 `?page=source&kind=SMB`、`?page=match&state=loading`、`?page=match&kind=series&step=episodes`。`capture=1` 隐藏评审栏。
+
+普通/空/加载/失败是示例状态，协议字段和条件显隐按现有业务保留；网页不是联网产品。原生实际看图、DPAD、构建及未覆盖项见实施矩阵，不能因存在补充稿就宣称完整视觉验收。

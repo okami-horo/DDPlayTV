@@ -185,15 +185,15 @@ class FTPStorageEditDialog(
     private fun setAnonymous(isAnonymous: Boolean) {
         binding.anonymousTv.isSelected = isAnonymous
         binding.anonymousTv.setTextColorRes(
-            if (isAnonymous) R.color.text_white else R.color.text_black,
+            if (isAnonymous) R.color.cinema_text else R.color.cinema_muted,
         )
 
         binding.accountTv.isSelected = !isAnonymous
         binding.accountTv.setTextColorRes(
-            if (!isAnonymous) R.color.text_white else R.color.text_black,
+            if (!isAnonymous) R.color.cinema_text else R.color.cinema_muted,
         )
 
-        binding.accountEt.isGone = isAnonymous
+        binding.accountField.isGone = isAnonymous
         binding.passwordEt.isGone = isAnonymous
         binding.passwordFl.isGone = isAnonymous
 
@@ -206,12 +206,12 @@ class FTPStorageEditDialog(
     private fun setActive(isActive: Boolean) {
         binding.activeTv.isSelected = isActive
         binding.activeTv.setTextColorRes(
-            if (isActive) R.color.text_white else R.color.text_black,
+            if (isActive) R.color.cinema_text else R.color.cinema_muted,
         )
 
         binding.passiveTv.isSelected = !isActive
         binding.passiveTv.setTextColorRes(
-            if (!isActive) R.color.text_white else R.color.text_black,
+            if (!isActive) R.color.cinema_text else R.color.cinema_muted,
         )
     }
 }

@@ -8,13 +8,9 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
-import androidx.core.graphics.BlendModeColorFilterCompat
-import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
-import com.xyoye.common_component.extension.toResColor
-import com.xyoye.common_component.extension.toResDrawable
 import com.xyoye.common_component.focus.applyDpadFocusable
 import com.xyoye.common_component.focus.requestDefaultFocus
 import com.xyoye.data_component.enums.PlayState
@@ -46,6 +42,7 @@ class PlayerBottomView(
     private var switchVideoSourceBlock: ((Int) -> Unit)? = null
 
     private var isControllerVisible = false
+    private var lastFocusedControlId = R.id.play_iv
 
     private val viewBinding =
         DataBindingUtil.inflate<LayoutPlayerBottomBinding>(
@@ -101,6 +98,28 @@ class PlayerBottomView(
         }
 
         viewBinding.playSeekBar.setOnSeekBarChangeListener(this)
+        listOf(
+            viewBinding.rewind,
+            viewBinding.playIv,
+            viewBinding.forward,
+            viewBinding.ivPreviousSource,
+            viewBinding.ivNextSource,
+            viewBinding.videoListIv
+        ).forEach { control ->
+            control.setOnFocusChangeListener { view, focused ->
+                if (focused) {
+                    lastFocusedControlId = view.id
+                    viewBinding.transportHint.text = view.contentDescription
+                    viewBinding.transportHint.post {
+                        val hint = viewBinding.transportHint
+                        hint.translationX =
+                            (view.x + view.width / 2f - hint.width / 2f)
+                                .coerceIn(0f, (viewBinding.transportTray.width - hint.width).coerceAtLeast(0).toFloat())
+                    }
+                }
+                viewBinding.transportHint.visibility = if (focused) View.VISIBLE else View.INVISIBLE
+            }
+        }
         updateFocusNavigation()
         updateControlsInteractiveState(false)
     }
@@ -148,7 +167,12 @@ class PlayerBottomView(
                 .setDuration(300)
                 .start()
             post {
-                viewBinding.playIv.requestDefaultFocus()
+                val previous = findViewById<View>(lastFocusedControlId)
+                if (previous?.isShown == true && previous.isEnabled && previous.isFocusable) {
+                    previous.requestDefaultFocus()
+                } else {
+                    viewBinding.playIv.requestDefaultFocus()
+                }
             }
         } else {
             if (!isControllerVisible) {
@@ -202,12 +226,16 @@ class PlayerBottomView(
                 viewBinding.playIv.isSelected = mControlWrapper.isPlaying()
             }
         }
+        viewBinding.playIv.contentDescription = if (viewBinding.playIv.isSelected) "暂停" else "播放"
+        if (viewBinding.playIv.hasFocus()) viewBinding.transportHint.text = viewBinding.playIv.contentDescription
+        updateSeekActions()
     }
 
     override fun onProgressChanged(
         duration: Long,
         position: Long
     ) {
+        updateSeekActions()
         if (mControlWrapper.isLive()) {
             mIsDragging = false
             viewBinding.playSeekBar.isEnabled = false
@@ -305,36 +333,34 @@ class PlayerBottomView(
 
     private fun updateSourceAction() {
         val videoSource = mControlWrapper.getVideoSource()
-        viewBinding.ivNextSource.isVisible = videoSource.hasNextSource()
-        viewBinding.ivPreviousSource.isVisible = videoSource.hasPreviousSource()
-        viewBinding.videoListIv.isVisible = videoSource.getGroupSize() > 1
-
-        // 下一个视频资源是否可用
-        val hasNextSource = videoSource.hasNextSource()
-        viewBinding.ivNextSource.isEnabled = hasNextSource
-        val nextIcon = R.drawable.ic_video_next.toResDrawable()
-        if (hasNextSource.not() && nextIcon != null) {
-            nextIcon.colorFilter =
-                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                    R.color.gray_60.toResColor(),
-                    BlendModeCompat.SRC_IN,
-                )
+        val grouped = videoSource.getGroupSize() > 1
+        val focused = findFocus()
+        viewBinding.ivNextSource.isVisible = grouped
+        viewBinding.ivPreviousSource.isVisible = grouped
+        viewBinding.videoListIv.isVisible = grouped
+        viewBinding.episodeDivider.isVisible = grouped
+        viewBinding.singleVideoHint.isVisible = !grouped
+        viewBinding.ivNextSource.isEnabled = grouped && videoSource.hasNextSource()
+        viewBinding.ivPreviousSource.isEnabled = grouped && videoSource.hasPreviousSource()
+        viewBinding.ivNextSource.alpha = if (viewBinding.ivNextSource.isEnabled) 1f else 0.3f
+        viewBinding.ivPreviousSource.alpha = if (viewBinding.ivPreviousSource.isEnabled) 1f else 0.3f
+        updateControlsInteractiveState(controlsInputEnabled)
+        if (focused != null && (!focused.isShown || !focused.isEnabled)) {
+            if (grouped) viewBinding.videoListIv.requestDefaultFocus() else viewBinding.playIv.requestDefaultFocus()
         }
-        viewBinding.ivNextSource.setImageDrawable(nextIcon)
+    }
 
-        // 上一个视频资源是否可用
-        val hasPreviousSource = videoSource.hasPreviousSource()
-        viewBinding.ivPreviousSource.isEnabled = hasPreviousSource
-        val previousIcon = R.drawable.ic_video_previous.toResDrawable()
-        if (hasPreviousSource.not() && previousIcon != null) {
-            previousIcon.colorFilter =
-                BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                    R.color.gray_60.toResColor(),
-                    BlendModeCompat.SRC_IN,
-                )
+    private fun updateSeekActions() {
+        if (!this::mControlWrapper.isInitialized) return
+        val allowed = mControlWrapper.isUserSeekAllowed() && !mControlWrapper.isLive() && mControlWrapper.getDuration() > 0
+        val lostFocus = !allowed && (viewBinding.rewind.hasFocus() || viewBinding.forward.hasFocus())
+        listOf(viewBinding.rewind, viewBinding.forward).forEach {
+            it.isEnabled = allowed
+            it.alpha = if (allowed) 1f else 0.3f
+            it.applyDpadFocusable(controlsInputEnabled && allowed, clickable = controlsInputEnabled && allowed)
         }
-        viewBinding.ivPreviousSource.setImageDrawable(previousIcon)
         updateFocusNavigation()
+        if (lostFocus) viewBinding.playIv.requestDefaultFocus()
     }
 
     private fun updateControlsInteractiveState(enabled: Boolean) {
@@ -352,9 +378,9 @@ class PlayerBottomView(
             )
         focusables.forEach { view ->
             view.applyDpadFocusable(
-                enabled = enabled,
+                enabled = enabled && view.isEnabled && view.isVisible,
                 inTouchMode = inTouchMode,
-                clickable = enabled,
+                clickable = enabled && view.isEnabled && view.isVisible,
             )
         }
 
@@ -378,27 +404,23 @@ class PlayerBottomView(
         if (!subtitleReady && viewBinding.subtitleControlIv.hasFocus() && !inTouchMode) {
             viewBinding.playIv.requestDefaultFocus()
         }
+        updateSeekActions()
         updateFocusNavigation()
     }
 
     private fun updateFocusNavigation() {
-        val focusables = mutableListOf<View>(viewBinding.rewind, viewBinding.playIv, viewBinding.forward)
-        if (viewBinding.ivPreviousSource.isVisible) {
-            focusables.add(viewBinding.ivPreviousSource)
-        }
-        if (viewBinding.ivNextSource.isVisible) {
-            focusables.add(viewBinding.ivNextSource)
-        }
-        if (viewBinding.videoListIv.isVisible) {
-            focusables.add(viewBinding.videoListIv)
-        }
-        if (viewBinding.subtitleControlIv.isFocusable) {
-            focusables.add(viewBinding.subtitleControlIv)
-        }
-        focusables.add(viewBinding.audioControl)
-        if (viewBinding.danmuControlIv.isFocusable) {
-            focusables.add(viewBinding.danmuControlIv)
-        }
+        val focusables =
+            listOf(
+                viewBinding.rewind,
+                viewBinding.playIv,
+                viewBinding.forward,
+                viewBinding.ivPreviousSource,
+                viewBinding.ivNextSource,
+                viewBinding.videoListIv,
+                viewBinding.subtitleControlIv,
+                viewBinding.audioControl,
+                viewBinding.danmuControlIv
+            ).filter { it.isVisible && it.isEnabled && it.isFocusable }
 
         focusables.forEachIndexed { index, view ->
             val left = focusables.getOrNull(index - 1) ?: view

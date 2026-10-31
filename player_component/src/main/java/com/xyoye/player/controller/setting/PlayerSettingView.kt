@@ -2,6 +2,7 @@ package com.xyoye.player.controller.setting
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.View
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
@@ -36,6 +37,7 @@ class PlayerSettingView(
 
     init {
         initRv()
+        viewBinding.panelClose.setOnClickListener { mControlWrapper.hideSettingView() }
     }
 
     override fun getLayoutId() = R.layout.layout_player_setting
@@ -54,6 +56,20 @@ class PlayerSettingView(
     override fun onViewHide() {
         viewBinding.settingRv.focusedChild?.clearFocus()
         viewBinding.settingRv.clearFocus()
+    }
+
+    override fun onViewShowed() {
+        viewBinding.settingRv.requestFocus()
+    }
+
+    override fun focusSearch(
+        focused: View,
+        direction: Int
+    ): View? {
+        if (viewBinding.settingRv.hasFocus() && (direction == View.FOCUS_LEFT || direction == View.FOCUS_RIGHT)) {
+            return focused
+        }
+        return super.focusSearch(focused, direction)
     }
 
     private fun initRv() {

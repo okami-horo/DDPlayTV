@@ -1,152 +1,177 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout
         android:id="@+id/setting_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="80dp"
-        android:layout_gravity="center|bottom"
-        android:layout_marginBottom="20dp"
-        android:background="@drawable/background_video_view"
-        android:clickable="true"
-        android:focusable="true"
-        android:translationY="100dp"
-        tools:translationY="0dp">
-
+        android:layout_width="264dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:layout_margin="15dp"
+        android:padding="18dp"
+        android:orientation="vertical"
+        android:background="@drawable/cinema_player_panel"
+        android:translationX="300dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:gravity="center_vertical">
+            <TextView
+                android:id="@+id/offset_title"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="时间偏移"
+                android:textSize="20sp"
+                android:textColor="@color/cinema_text" />
+            <ImageView
+                android:id="@+id/panel_close"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:padding="6dp"
+                android:background="@drawable/cinema_icon_circle"
+                android:src="@drawable/cinema_ic_close"
+                android:contentDescription="关闭面板"
+                android:focusable="true" />
+        </LinearLayout>
         <TextView
-            android:id="@+id/tv_reduce_ten"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/background_player_setting_text"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/action_offset_reduce_ten"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_reduce_five"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="5dp"
-            android:background="@drawable/background_player_setting_text"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/action_offset_reduce_five"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tv_reduce_ten"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_reduce_half"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="5dp"
-            android:background="@drawable/background_player_setting_text"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/action_offset_reduce_half"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tv_reduce_five"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_status"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/text_white_immutable"
+            android:text="修改即时生效"
+            android:textColor="@color/cinema_muted"
             android:textSize="12sp"
-            app:layout_constraintBottom_toTopOf="@id/tv_display"
-            app:layout_constraintEnd_toEndOf="@id/tv_display"
-            app:layout_constraintStart_toStartOf="@id/tv_display"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="增加" />
-
-        <TextView
-            android:id="@+id/tv_reset"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="@drawable/background_player_setting_text_transparent"
-            android:gravity="center"
-            android:paddingVertical="2dp"
-            android:text="@string/text_reset"
-            android:textColor="@color/text_theme"
-            android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@id/tv_display"
-            app:layout_constraintStart_toStartOf="@id/tv_display"
-            app:layout_constraintTop_toBottomOf="@id/tv_display" />
-
-        <TextView
-            android:id="@+id/tv_display"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:gravity="center"
-            android:paddingHorizontal="10dp"
-            tools:text="0秒"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tv_reduce_half"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_add_half"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/background_player_setting_text"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/action_offset_add_half"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/tv_display"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_add_five"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="5dp"
-            android:background="@drawable/background_player_setting_text"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/action_offset_add_five"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tv_add_half"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_add_ten"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="5dp"
-            android:layout_marginEnd="10dp"
-            android:background="@drawable/background_player_setting_text"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/action_offset_add_ten"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tv_add_five"
-            app:layout_constraintTop_toTopOf="parent" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            android:layout_marginTop="10dp" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tv_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/cinema_muted"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:layout_marginTop="20dp" />
+                <TextView
+                    android:id="@+id/tv_display"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:gravity="center"
+                    android:textSize="36sp"
+                    android:textColor="@color/cinema_text" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="10dp">
+                    <TextView
+                        android:id="@+id/tv_reduce_ten"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="5dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/cinema_button"
+                        android:gravity="center"
+                        android:text="-10"
+                        android:textColor="@color/cinema_text"
+                        android:textSize="14sp"
+                        android:focusable="true" />
+                    <TextView
+                        android:id="@+id/tv_add_ten"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/cinema_button"
+                        android:gravity="center"
+                        android:text="+10"
+                        android:textColor="@color/cinema_text"
+                        android:textSize="14sp"
+                        android:focusable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="10dp">
+                    <TextView
+                        android:id="@+id/tv_reduce_five"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="5dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/cinema_button"
+                        android:gravity="center"
+                        android:text="-5"
+                        android:textColor="@color/cinema_text"
+                        android:textSize="14sp"
+                        android:focusable="true" />
+                    <TextView
+                        android:id="@+id/tv_add_five"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/cinema_button"
+                        android:gravity="center"
+                        android:text="+5"
+                        android:textColor="@color/cinema_text"
+                        android:textSize="14sp"
+                        android:focusable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="10dp">
+                    <TextView
+                        android:id="@+id/tv_reduce_half"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="5dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/cinema_button"
+                        android:gravity="center"
+                        android:text="-0.5"
+                        android:textColor="@color/cinema_text"
+                        android:textSize="14sp"
+                        android:focusable="true" />
+                    <TextView
+                        android:id="@+id/tv_add_half"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/cinema_button"
+                        android:gravity="center"
+                        android:text="+0.5"
+                        android:textColor="@color/cinema_text"
+                        android:textSize="14sp"
+                        android:focusable="true" />
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/tv_reset"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@drawable/cinema_button"
+                    android:gravity="center"
+                    android:text="重置"
+                    android:textColor="@color/cinema_text"
+                    android:textSize="14sp"
+                    android:focusable="true"
+                    android:layout_marginTop="16dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="单位：秒&#10;增加时间提前显示，减少时间延迟显示。"
+                    android:textColor="@color/cinema_muted"
+                    android:textSize="12sp"
+                    android:layout_marginTop="20dp" />
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
 </layout>

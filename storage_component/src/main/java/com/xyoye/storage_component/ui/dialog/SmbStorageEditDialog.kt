@@ -155,15 +155,15 @@ class SmbStorageEditDialog(
     private fun setAnonymous(isAnonymous: Boolean) {
         binding.anonymousTv.isSelected = isAnonymous
         binding.anonymousTv.setTextColorRes(
-            if (isAnonymous) R.color.text_white else R.color.text_black,
+            if (isAnonymous) R.color.cinema_text else R.color.cinema_muted,
         )
 
         binding.accountTv.isSelected = !isAnonymous
         binding.accountTv.setTextColorRes(
-            if (!isAnonymous) R.color.text_white else R.color.text_black,
+            if (!isAnonymous) R.color.cinema_text else R.color.cinema_muted,
         )
 
-        binding.accountEt.isGone = isAnonymous
+        binding.accountField.isGone = isAnonymous
         binding.passwordEt.isGone = isAnonymous
         binding.passwordFl.isGone = isAnonymous
 
@@ -176,17 +176,19 @@ class SmbStorageEditDialog(
     private fun setSmbV2(isSmbV2: Boolean) {
         binding.smbV2Tv.isSelected = isSmbV2
         binding.smbV2Tv.setTextColorRes(
-            if (isSmbV2) R.color.text_white else R.color.text_black,
+            if (isSmbV2) R.color.cinema_text else R.color.cinema_muted,
         )
 
         binding.smbV1Tv.post {
             binding.smbV1Tv.isClickable = false
+            binding.smbV1Tv.isEnabled = false
+            binding.smbV1Tv.isFocusable = false
             binding.smbV1Tv.setTextColorRes(R.color.text_gray)
         }
         // 暂不支持SMB V1
 //        binding.smbV1Tv.isSelected = !isSmbV2
 //        binding.smbV1Tv.setTextColorRes(
-//            if (!isSmbV2) R.color.text_white else R.color.text_black
+//            if (!isSmbV2) R.color.cinema_text else R.color.cinema_muted
 //        )
     }
 }

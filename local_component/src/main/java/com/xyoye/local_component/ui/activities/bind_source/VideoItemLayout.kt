@@ -35,8 +35,6 @@ object VideoItemLayout {
         data: StorageFile
     ) {
         dataBinding.videoLayout.run {
-            itemLayout.setBackgroundColor(R.color.item_bg_color.toResColor())
-
             titleTv.setTextIsSelectable(true)
 
             coverIv.loadStorageFileCover(data)

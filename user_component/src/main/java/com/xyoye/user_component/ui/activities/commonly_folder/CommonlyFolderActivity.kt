@@ -23,6 +23,7 @@ class CommonlyFolderActivity : BaseActivity<CommonlyFolderViewModel, ActivityCom
     override fun getLayoutId() = R.layout.activity_commonly_folder
 
     override fun initView() {
+        title = "常用文件夹"
         var commonFolder1Path = AppConfig.getCommonlyFolder1()
         commonFolder1Path =
             if (commonFolder1Path.isNullOrEmpty()) "路径：未设置" else "路径：$commonFolder1Path"

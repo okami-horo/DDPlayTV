@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/item_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/background_item_press"
-        android:minHeight="46dp"
+        android:background="@drawable/cinema_card"
+        android:minHeight="56dp"
         android:focusable="true"
-        android:tag="@string/focusable_item">
-
+        android:tag="@string/focusable_item"
+        android:paddingHorizontal="10dp"
+        android:layout_marginBottom="6dp">
         <ImageView
             android:id="@+id/file_iv"
             android:layout_width="30dp"
@@ -21,7 +22,6 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
         <TextView
             android:id="@+id/file_name_tv"
             android:layout_width="0dp"
@@ -36,7 +36,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/file_iv"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="测试" />
-
+            tools:text="测试"
+            android:maxLines="2"
+            android:ellipsize="middle" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

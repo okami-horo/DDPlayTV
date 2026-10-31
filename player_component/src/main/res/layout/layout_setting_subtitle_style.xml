@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-
     <androidx.core.widget.NestedScrollView
         android:id="@+id/subtitle_setting_nsv"
         android:layout_width="264dp"
@@ -12,19 +12,16 @@
         android:layout_margin="15dp"
         android:translationX="264dp"
         tools:translationX="0dp">
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="10dp">
-
+            android:padding="18dp">
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:layout_marginTop="5dp"
                 android:orientation="horizontal">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -32,7 +29,6 @@
                     android:text="@string/text_setting_subtitle_style"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="20sp" />
-
                 <TextView
                     android:id="@+id/tv_reset_subtitle_config"
                     android:layout_width="wrap_content"
@@ -48,7 +44,6 @@
                     android:visibility="gone"
                     tools:visibility="visible" />
             </RelativeLayout>
-
             <TextView
                 android:id="@+id/subtitle_native_style_tips"
                 android:layout_width="match_parent"
@@ -58,7 +53,6 @@
                 android:textColor="@color/text_white_immutable"
                 android:textSize="12sp"
                 android:visibility="gone" />
-
             <RelativeLayout
                 android:id="@+id/subtitle_size_row"
                 android:layout_width="match_parent"
@@ -67,14 +61,12 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/text_subtitle_size_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
-
                 <TextView
                     android:id="@+id/subtitle_size_tv"
                     android:layout_width="wrap_content"
@@ -85,19 +77,18 @@
                     tools:ignore="RelativeOverlap"
                     tools:text="50%" />
             </RelativeLayout>
-
             <SeekBar
                 android:id="@+id/subtitle_size_sb"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginEnd="10dp"
                 android:focusable="true"
                 android:max="100"
                 app:theme="@style/Theme.DanDanPlay.SeekBar"
-                tools:progress="50" />
-
+                tools:progress="50"
+                android:background="@drawable/cinema_card" />
             <RelativeLayout
                 android:id="@+id/subtitle_stroke_width_row"
                 android:layout_width="match_parent"
@@ -106,14 +97,12 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/text_subtitle_stroke_size_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
-
                 <TextView
                     android:id="@+id/subtitle_stroke_width_tv"
                     android:layout_width="wrap_content"
@@ -124,19 +113,18 @@
                     tools:ignore="RelativeOverlap"
                     tools:text="50%" />
             </RelativeLayout>
-
             <SeekBar
                 android:id="@+id/subtitle_stroke_width_sb"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginEnd="10dp"
                 android:focusable="true"
                 android:max="100"
                 app:theme="@style/Theme.DanDanPlay.SeekBar"
-                tools:progress="50" />
-
+                tools:progress="50"
+                android:background="@drawable/cinema_card" />
             <RelativeLayout
                 android:id="@+id/subtitle_color_row"
                 android:layout_width="match_parent"
@@ -145,14 +133,12 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/text_subtitle_color_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
-
                 <TextView
                     android:id="@+id/subtitle_color_tv"
                     android:layout_width="wrap_content"
@@ -163,7 +149,6 @@
                     tools:ignore="RelativeOverlap"
                     tools:text="50%" />
             </RelativeLayout>
-
             <com.xyoye.common_component.weight.ColorSeekBar
                 android:id="@+id/subtitle_color_sb"
                 android:layout_width="match_parent"
@@ -178,7 +163,6 @@
                 app:focusedColor="@color/theme"
                 app:maxPosition="100"
                 tools:progress="50" />
-
             <RelativeLayout
                 android:id="@+id/subtitle_stroke_color_row"
                 android:layout_width="match_parent"
@@ -187,14 +171,12 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/text_subtitle_stroke_color_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
-
                 <TextView
                     android:id="@+id/subtitle_stroke_color_tv"
                     android:layout_width="wrap_content"
@@ -205,7 +187,6 @@
                     tools:ignore="RelativeOverlap"
                     tools:text="50%" />
             </RelativeLayout>
-
             <com.xyoye.common_component.weight.ColorSeekBar
                 android:id="@+id/subtitle_stroke_color_sb"
                 android:layout_width="match_parent"
@@ -220,7 +201,6 @@
                 app:focusedColor="@color/theme"
                 app:maxPosition="100"
                 tools:progress="50" />
-
             <RelativeLayout
                 android:id="@+id/subtitle_alpha_row"
                 android:layout_width="match_parent"
@@ -229,14 +209,12 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/text_subtitle_alpha_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
-
                 <TextView
                     android:id="@+id/subtitle_alpha_tv"
                     android:layout_width="wrap_content"
@@ -247,19 +225,18 @@
                     tools:ignore="RelativeOverlap"
                     tools:text="100%" />
             </RelativeLayout>
-
             <SeekBar
                 android:id="@+id/subtitle_alpha_sb"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginEnd="10dp"
                 android:focusable="true"
                 android:max="100"
                 app:theme="@style/Theme.DanDanPlay.SeekBar"
-                tools:progress="100" />
-
+                tools:progress="100"
+                android:background="@drawable/cinema_card" />
             <RelativeLayout
                 android:id="@+id/subtitle_font_scale_offset_row"
                 android:layout_width="match_parent"
@@ -268,14 +245,12 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/text_subtitle_font_scale_offset_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
-
                 <TextView
                     android:id="@+id/subtitle_font_scale_offset_tv"
                     android:layout_width="wrap_content"
@@ -286,19 +261,18 @@
                     tools:ignore="RelativeOverlap"
                     tools:text="+0%" />
             </RelativeLayout>
-
             <SeekBar
                 android:id="@+id/subtitle_font_scale_offset_sb"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginEnd="10dp"
                 android:focusable="true"
                 android:max="450"
                 app:theme="@style/Theme.DanDanPlay.SeekBar"
-                tools:progress="50" />
-
+                tools:progress="50"
+                android:background="@drawable/cinema_card" />
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -306,14 +280,12 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/text_subtitle_vertical_offset_tips"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
-
                 <TextView
                     android:id="@+id/subtitle_vertical_offset_tv"
                     android:layout_width="wrap_content"
@@ -324,19 +296,18 @@
                     tools:ignore="RelativeOverlap"
                     tools:text="+0%" />
             </RelativeLayout>
-
             <SeekBar
                 android:id="@+id/subtitle_vertical_offset_sb"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginEnd="10dp"
                 android:focusable="true"
                 android:max="60"
                 app:theme="@style/Theme.DanDanPlay.SeekBar"
-                tools:progress="30" />
-
+                tools:progress="30"
+                android:background="@drawable/cinema_card" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </layout>

@@ -167,15 +167,15 @@ class WebDavStorageEditDialog(
     private fun setAnonymous(isAnonymous: Boolean) {
         binding.anonymousTv.isSelected = isAnonymous
         binding.anonymousTv.setTextColorRes(
-            if (isAnonymous) R.color.text_white else R.color.text_black,
+            if (isAnonymous) R.color.cinema_text else R.color.cinema_muted,
         )
 
         binding.accountTv.isSelected = !isAnonymous
         binding.accountTv.setTextColorRes(
-            if (!isAnonymous) R.color.text_white else R.color.text_black,
+            if (!isAnonymous) R.color.cinema_text else R.color.cinema_muted,
         )
 
-        binding.accountEt.isGone = isAnonymous
+        binding.accountField.isGone = isAnonymous
         binding.passwordEt.isGone = isAnonymous
         binding.passwordFl.isGone = isAnonymous
 
@@ -188,12 +188,12 @@ class WebDavStorageEditDialog(
     private fun setParseMode(isStrict: Boolean) {
         binding.strictParseTv.isSelected = isStrict
         binding.strictParseTv.setTextColorRes(
-            if (isStrict) R.color.text_white else R.color.text_black,
+            if (isStrict) R.color.cinema_text else R.color.cinema_muted,
         )
 
         binding.normalParseTv.isSelected = isStrict.not()
         binding.normalParseTv.setTextColorRes(
-            if (isStrict.not()) R.color.text_white else R.color.text_black,
+            if (isStrict.not()) R.color.cinema_text else R.color.cinema_muted,
         )
     }
 
@@ -201,12 +201,12 @@ class WebDavStorageEditDialog(
         val strict = !allowInsecure
         binding.strictTlsTv.isSelected = strict
         binding.strictTlsTv.setTextColorRes(
-            if (strict) R.color.text_white else R.color.text_black,
+            if (strict) R.color.cinema_text else R.color.cinema_muted,
         )
 
         binding.insecureTlsTv.isSelected = allowInsecure
         binding.insecureTlsTv.setTextColorRes(
-            if (allowInsecure) R.color.text_white else R.color.text_black,
+            if (allowInsecure) R.color.cinema_text else R.color.cinema_muted,
         )
     }
 }

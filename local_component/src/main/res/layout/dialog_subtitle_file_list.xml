@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
-
+<layout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
     <androidx.recyclerview.widget.RecyclerView
-            app:tvDpadList="true"
+        app:tvDpadList="true"
         android:id="@+id/subtitle_file_rv"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_gravity="center_vertical" />
-
+        android:layout_height="260dp"
+        android:layout_gravity="center_vertical"
+        android:padding="6dp"
+        android:clipToPadding="false"
+        android:background="@drawable/cinema_surface" />
 </layout>

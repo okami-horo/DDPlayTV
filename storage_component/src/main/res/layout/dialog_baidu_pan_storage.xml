@@ -1,54 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
     <data>
-
-        <import type="com.xyoye.data_component.entity.MediaLibraryEntity" />
-
+        <import
+            type="com.xyoye.data_component.entity.MediaLibraryEntity" />
         <variable
             name="library"
             type="MediaLibraryEntity" />
     </data>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:orientation="vertical">
-
-        <androidx.appcompat.widget.AppCompatEditText
-            android:id="@+id/display_name_et"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@drawable/background_dialog_edit"
-            android:gravity="center_vertical"
-            android:hint="@string/hint_display_name"
-            android:maxLines="1"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:singleLine="true"
-            android:text="@={library.displayName}"
-            android:textColor="@color/text_black"
-            android:textColorHint="@color/text_gray"
-            android:textSize="14sp" />
-
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="@string/hint_display_name"
+                android:textColor="@color/cinema_muted"
+                android:textSize="12sp"
+                android:labelFor="@id/display_name_et" />
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/display_name_et"
+                android:background="@drawable/cinema_input"
+                android:gravity="center_vertical"
+                android:hint="@string/hint_display_name"
+                android:maxLines="1"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true"
+                android:text="@={library.displayName}"
+                android:textColor="@color/cinema_text"
+                android:textColorHint="@color/text_gray"
+                android:textSize="14sp"
+                android:layout_width="match_parent"
+                android:layout_height="42dp" />
+        </LinearLayout>
         <FrameLayout
             android:id="@+id/auth_container"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/background_border_gray">
-
+            android:background="@drawable/cinema_surface">
             <TextView
                 android:layout_width="110dp"
                 android:layout_height="match_parent"
-                android:background="@drawable/background_border_gray"
+                android:background="@drawable/cinema_surface"
                 android:gravity="center"
                 android:text="授权状态"
                 android:textColor="@color/text_gray"
                 android:textSize="14sp" />
-
             <TextView
                 android:id="@+id/auth_status_tv"
                 android:layout_width="wrap_content"
@@ -57,36 +64,32 @@
                 android:textColor="@color/text_theme"
                 android:textSize="14sp"
                 tools:text="未授权" />
-
             <TextView
                 android:id="@+id/auth_action_tv"
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="end"
-                android:background="@drawable/background_button_corner_gray"
+                android:background="@drawable/cinema_category"
                 android:focusable="true"
                 android:gravity="center"
                 android:text="扫码授权"
                 android:textColor="@color/text_black"
                 android:textSize="14sp" />
         </FrameLayout>
-
         <FrameLayout
             android:id="@+id/url_container"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/background_border_gray">
-
+            android:background="@drawable/cinema_surface">
             <TextView
                 android:layout_width="110dp"
                 android:layout_height="match_parent"
-                android:background="@drawable/background_border_gray"
+                android:background="@drawable/cinema_surface"
                 android:gravity="center"
                 android:text="账号标识"
                 android:textColor="@color/text_gray"
                 android:textSize="14sp" />
-
             <TextView
                 android:id="@+id/url_value_tv"
                 android:layout_width="wrap_content"
@@ -96,16 +99,14 @@
                 android:textSize="14sp"
                 tools:text="baidupan://uk/123456" />
         </FrameLayout>
-
         <TextView
             android:id="@+id/hint_tv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="提示：百度网盘播放需要在访问直链时携带 User-Agent，若播放失败可尝试切换播放器内核"
+            android:text="授权完成后自动保存。连接失效时，可重新扫码授权。"
             android:textColor="@color/text_gray"
             android:textSize="12sp" />
-
         <TextView
             android:id="@+id/disconnect_tv"
             android:layout_width="match_parent"

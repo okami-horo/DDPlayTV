@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -9,25 +9,22 @@
         android:paddingTop="12dp"
         android:paddingEnd="16dp"
         android:paddingBottom="12dp">
-
         <FrameLayout
             android:id="@+id/login_app_container"
             android:layout_width="0dp"
             android:layout_height="48dp"
-            android:background="@drawable/background_border_gray"
+            android:background="@drawable/cinema_surface"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
-
             <TextView
                 android:layout_width="110dp"
                 android:layout_height="match_parent"
-                android:background="@drawable/background_border_gray"
+                android:background="@drawable/cinema_surface"
                 android:gravity="center"
                 android:text="设备来源"
                 android:textColor="@color/text_gray"
                 android:textSize="14sp" />
-
             <TextView
                 android:id="@+id/login_app_value_tv"
                 android:layout_width="wrap_content"
@@ -35,30 +32,27 @@
                 android:layout_gravity="center"
                 android:textColor="@color/text_theme"
                 android:textSize="14sp" />
-
             <TextView
                 android:id="@+id/login_app_select_tv"
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="end"
-                android:background="@drawable/background_button_corner_gray"
+                android:background="@drawable/cinema_button"
                 android:focusable="true"
                 android:gravity="center"
                 android:text="选择"
                 android:textColor="@color/text_black"
                 android:textSize="14sp" />
         </FrameLayout>
-
         <ImageView
             android:id="@+id/qr_code_iv"
-            android:layout_width="220dp"
-            android:layout_height="220dp"
-            android:layout_marginTop="10dp"
+            android:layout_width="170dp"
+            android:layout_height="170dp"
+            android:layout_marginTop="16dp"
             android:contentDescription="@string/app_name"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/login_app_container" />
-
         <ProgressBar
             android:id="@+id/loading_pb"
             android:layout_width="48dp"
@@ -69,7 +63,6 @@
             app:layout_constraintEnd_toEndOf="@id/qr_code_iv"
             app:layout_constraintStart_toStartOf="@id/qr_code_iv"
             app:layout_constraintTop_toTopOf="@id/qr_code_iv" />
-
         <TextView
             android:id="@+id/status_tv"
             android:layout_width="0dp"
@@ -77,12 +70,12 @@
             android:gravity="center"
             android:paddingTop="12dp"
             android:text=" "
-            android:textColor="@color/text_black"
-            android:textSize="14sp"
+            android:textColor="@color/cinema_text"
+            android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/qr_code_iv" />
-
+            app:layout_constraintTop_toBottomOf="@id/qr_code_iv"
+            android:minHeight="44dp" />
         <TextView
             android:id="@+id/hint_tv"
             android:layout_width="0dp"
@@ -95,6 +88,5 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/status_tv" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

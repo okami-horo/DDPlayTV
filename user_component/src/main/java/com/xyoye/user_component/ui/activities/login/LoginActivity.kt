@@ -1,13 +1,12 @@
 package com.xyoye.user_component.ui.activities.login
 
-import android.view.View
 import androidx.core.widget.addTextChangedListener
 import com.alibaba.android.arouter.facade.annotation.Autowired
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
-import com.xyoye.common_component.utils.showKeyboard
+import com.xyoye.common_component.focus.applyDpadEditTextPolicy
 import com.xyoye.user_component.BR
 import com.xyoye.user_component.R
 import com.xyoye.user_component.databinding.ActivityLoginBinding
@@ -34,11 +33,13 @@ class LoginActivity : BaseActivity<LoginViewModel, ActivityLoginBinding>() {
 
         title = ""
 
+        dataBinding.userAccountEt.applyDpadEditTextPolicy()
+        dataBinding.userPasswordEt.applyDpadEditTextPolicy()
         if (!userAccount.isNullOrEmpty()) {
             viewModel.accountField.set(userAccount)
-            showKeyboardWithView(dataBinding.userPasswordEt)
+            dataBinding.userPasswordEt.requestFocus()
         } else {
-            showKeyboardWithView(dataBinding.userAccountEt)
+            dataBinding.userAccountEt.requestFocus()
         }
 
         dataBinding.apply {
@@ -68,12 +69,6 @@ class LoginActivity : BaseActivity<LoginViewModel, ActivityLoginBinding>() {
         developerAuthenticateDialog?.dismiss()
         developerAuthenticateDialog = null
         super.onDestroy()
-    }
-
-    private fun showKeyboardWithView(view: View) {
-        view.postDelayed({
-            showKeyboard(view)
-        }, 200)
     }
 
     private fun showDeveloperAuthenticateDialog() {

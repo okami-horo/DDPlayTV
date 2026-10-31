@@ -2,7 +2,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const pages = new Set(['index.html', 'files-prototype.html', 'player-controls-prototype.html', 'previews/player-controls-baseline.png']);
+const pages = new Set(['index.html', 'files-prototype.html', 'player-controls-prototype.html', 'deep-pages.html', 'previews/player-controls-baseline.png']);
 const port = Number(process.argv[2] || 4173);
 http.createServer((request, response) => {
   const page = request.url.split('?')[0].slice(1) || 'index.html';

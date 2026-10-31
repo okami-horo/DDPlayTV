@@ -1,43 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
-
+<layout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal">
-
             <TextView
                 android:id="@+id/root_path_tv"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="40dp"
                 android:text="@string/text_root_path"
                 android:textColor="@color/text_gray"
-                android:textSize="14sp" />
-
+                android:textSize="14sp"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="10dp"
+                android:focusable="true"
+                android:background="@drawable/cinema_button" />
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_file_manager_arrow" />
-
             <androidx.recyclerview.widget.RecyclerView
-            app:tvDpadList="true"
+                app:tvDpadList="true"
                 android:id="@+id/path_rv"
                 android:layout_width="match_parent"
-                android:layout_height="30dp" />
+                android:layout_height="40dp" />
         </LinearLayout>
-
-        <androidx.recyclerview.widget.RecyclerView
-            app:tvDpadList="true"
-            android:id="@+id/file_rv"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="350dp" />
+            android:layout_height="272dp">
+            <androidx.recyclerview.widget.RecyclerView
+                app:tvDpadList="true"
+                android:id="@+id/file_rv"
+                android:layout_width="match_parent"
+                android:layout_height="260dp"
+                android:layout_marginTop="12dp"
+                android:padding="6dp"
+                android:clipToPadding="false"
+                android:background="@drawable/cinema_surface" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="此目录没有可选文件"
+                android:textColor="@color/cinema_muted"
+                android:textSize="13sp"
+                android:id="@+id/empty_tv"
+                android:gravity="center"
+                android:visibility="gone" />
+        </FrameLayout>
     </LinearLayout>
-
 </layout>

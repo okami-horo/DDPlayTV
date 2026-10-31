@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/item_layout"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:background="@drawable/background_item_press"
+        android:background="@drawable/cinema_card"
         android:focusable="true"
         android:tag="@string/focusable_item">
-
         <ImageView
             android:id="@+id/tips_add_extend_folder_iv"
             android:layout_width="24dp"
@@ -21,8 +20,8 @@
             app:layout_constraintEnd_toStartOf="@id/tips_add_extend_folder_tv"
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/cinema_text" />
         <TextView
             android:id="@+id/tips_add_extend_folder_tv"
             android:layout_width="wrap_content"
@@ -35,12 +34,10 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/tips_add_extend_folder_iv"
             app:layout_constraintTop_toTopOf="parent" />
-
         <View
             style="@style/DividerStyle"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             app:layout_constraintBottom_toBottomOf="parent" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

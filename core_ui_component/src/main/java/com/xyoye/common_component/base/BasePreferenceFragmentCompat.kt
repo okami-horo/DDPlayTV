@@ -39,6 +39,9 @@ abstract class BasePreferenceFragmentCompat : PreferenceFragmentCompat() {
                 if (preference !is PreferenceCategory && preference !is SeekBarPreference) {
                     preference.layoutResource = com.xyoye.core_ui_component.R.layout.item_cinema_preference
                 }
+                if (preference is SeekBarPreference) {
+                    preference.layoutResource = com.xyoye.core_ui_component.R.layout.item_cinema_preference_seekbar
+                }
                 if (preference is PreferenceCategory) {
                     preference.layoutResource =
                         com.xyoye.core_ui_component.R.layout.item_cinema_preference_category

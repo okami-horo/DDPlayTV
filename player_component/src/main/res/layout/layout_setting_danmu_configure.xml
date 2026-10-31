@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-
     <androidx.core.widget.NestedScrollView
         android:id="@+id/player_setting_nsv"
         android:layout_width="320dp"
@@ -11,14 +11,11 @@
         android:background="#E6111111"
         android:translationX="320dp"
         tools:translationX="0dp">
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
-
-            <!-- Title -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -27,8 +24,6 @@
                 android:textColor="@android:color/white"
                 android:textSize="20sp"
                 android:textStyle="bold" />
-
-            <!-- Language Section -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -36,13 +31,11 @@
                 android:text="@string/text_danmu_language_setting"
                 android:textColor="#DDDDDD"
                 android:textSize="14sp" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="3">
-
                 <TextView
                     android:id="@+id/tv_language_origin"
                     android:layout_width="0dp"
@@ -55,7 +48,6 @@
                     android:text="@string/text_danmu_language_origin"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="13sp" />
-
                 <TextView
                     android:id="@+id/tv_language_sc"
                     android:layout_width="0dp"
@@ -68,7 +60,6 @@
                     android:text="@string/text_danmu_language_sc"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="13sp" />
-
                 <TextView
                     android:id="@+id/tv_language_tc"
                     android:layout_width="0dp"
@@ -81,14 +72,11 @@
                     android:textColor="@color/text_white_immutable"
                     android:textSize="13sp" />
             </LinearLayout>
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginVertical="20dp"
                 android:background="#33FFFFFF" />
-
-            <!-- Block Section -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -96,7 +84,6 @@
                 android:text="@string/text_danmu_block_setting"
                 android:textColor="#DDDDDD"
                 android:textSize="14sp" />
-
             <LinearLayout
                 android:id="@+id/tv_keyword_block"
                 android:layout_width="match_parent"
@@ -107,14 +94,12 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingHorizontal="16dp">
-
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_marginEnd="12dp"
                     android:src="@drawable/ic_setting_danmu_block"
                     app:tint="@color/text_white_immutable" />
-
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -122,21 +107,17 @@
                     android:text="@string/tips_danmu_keyword_block"
                     android:textColor="@color/text_white_immutable"
                     android:textSize="14sp" />
-
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_seek_forward"
                     app:tint="#88FFFFFF" />
             </LinearLayout>
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginVertical="20dp"
                 android:background="#33FFFFFF" />
-
-            <!-- Style Settings -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -144,13 +125,11 @@
                 android:text="@string/text_setting_danmu_style"
                 android:textColor="#DDDDDD"
                 android:textSize="14sp" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="3">
-
                 <LinearLayout
                     android:id="@+id/ll_scroll_danmu"
                     android:layout_width="0dp"
@@ -162,14 +141,12 @@
                     android:focusable="true"
                     android:gravity="center"
                     android:orientation="vertical">
-
                     <ImageView
                         android:id="@+id/mobile_danmu_iv"
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:layout_marginBottom="8dp"
                         android:src="@drawable/ic_danmu_mobile" />
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -177,7 +154,6 @@
                         android:textColor="@color/text_white_immutable"
                         android:textSize="12sp" />
                 </LinearLayout>
-
                 <LinearLayout
                     android:id="@+id/ll_bottom_danmu"
                     android:layout_width="0dp"
@@ -189,14 +165,12 @@
                     android:focusable="true"
                     android:gravity="center"
                     android:orientation="vertical">
-
                     <ImageView
                         android:id="@+id/bottom_danmu_iv"
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:layout_marginBottom="8dp"
                         android:src="@drawable/ic_danmu_bottom" />
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -204,7 +178,6 @@
                         android:textColor="@color/text_white_immutable"
                         android:textSize="12sp" />
                 </LinearLayout>
-
                 <LinearLayout
                     android:id="@+id/ll_top_danmu"
                     android:layout_width="0dp"
@@ -215,14 +188,12 @@
                     android:focusable="true"
                     android:gravity="center"
                     android:orientation="vertical">
-
                     <ImageView
                         android:id="@+id/top_danmu_iv"
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:layout_marginBottom="8dp"
                         android:src="@drawable/ic_danmu_top" />
-
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -231,8 +202,6 @@
                         android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
-
-            <!-- Detailed Settings Container -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -240,13 +209,11 @@
                 android:background="@drawable/background_player_setting_text_normal"
                 android:orientation="vertical"
                 android:padding="16dp">
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
-
                     <TextView
                         android:id="@+id/tv_danmu_enable_tips"
                         android:layout_width="0dp"
@@ -255,20 +222,17 @@
                         android:text="启用弹幕"
                         android:textColor="@color/text_white_immutable"
                         android:textSize="14sp" />
-
                     <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/switch_danmu_enable"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         app:theme="@style/Theme.DanDanPlay.SwitchCompat" />
                 </LinearLayout>
-
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginVertical="12dp"
                     android:background="#33FFFFFF" />
-
                 <TextView
                     android:id="@+id/tv_line_limit_tips"
                     android:layout_width="wrap_content"
@@ -277,7 +241,6 @@
                     android:text="@string/text_danmu_line_limit"
                     android:textColor="#DDDDDD"
                     android:textSize="13sp" />
-
                 <LinearLayout
                     android:id="@+id/group_line_limit_tv"
                     android:layout_width="match_parent"
@@ -288,13 +251,11 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingHorizontal="12dp">
-
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@drawable/ic_seek_back"
                         app:tint="#88FFFFFF" />
-
                     <TextView
                         android:id="@+id/tv_line_limit_value"
                         android:layout_width="0dp"
@@ -304,20 +265,17 @@
                         android:textColor="@color/text_white_immutable"
                         android:textSize="13sp"
                         tools:text="无限制" />
-
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@drawable/ic_seek_forward"
                         app:tint="#88FFFFFF" />
                 </LinearLayout>
-
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/group_screen_limit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp">
-
                     <TextView
                         android:id="@+id/tv_screen_limit_tips"
                         android:layout_width="wrap_content"
@@ -328,14 +286,12 @@
                         android:textSize="13sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:orientation="horizontal"
                         app:layout_constraintTop_toBottomOf="@id/tv_screen_limit_tips">
-
                         <TextView
                             android:id="@+id/tv_screen_no_limit"
                             android:layout_width="wrap_content"
@@ -347,7 +303,6 @@
                             android:text="@string/text_danmu_screen_count_unlimited"
                             android:textColor="@color/text_white_immutable"
                             android:textSize="12sp" />
-
                         <TextView
                             android:id="@+id/tv_screen_auto_limit"
                             android:layout_width="wrap_content"
@@ -360,7 +315,6 @@
                             android:text="@string/text_danmu_screen_count_auto"
                             android:textColor="@color/text_white_immutable"
                             android:textSize="12sp" />
-
                         <EditText
                             android:id="@+id/et_screen_max_num"
                             android:layout_width="60dp"

@@ -2,6 +2,7 @@ package com.xyoye.common_component.weight.dialog
 
 import android.app.Activity
 import android.os.Environment
+import androidx.core.view.isVisible
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
@@ -43,6 +44,7 @@ class FileManagerDialog(
     private val dismissWhenClickPositive: Boolean = true,
     private val listener: (resultPath: String) -> Unit
 ) : BaseBottomDialog<DialogFileManagerBinding>(activity) {
+    override val contentWidthDp = 560
     private lateinit var binding: DialogFileManagerBinding
 
     private val mRootPath = Environment.getExternalStorageDirectory().absolutePath
@@ -359,8 +361,9 @@ class FileManagerDialog(
         }
 
     private fun setFileData(fileList: MutableList<FileManagerBean>) {
-        binding.fileRv.setData(
-            fileList.filterHiddenFile { it.fileName },
-        )
+        val visibleFiles = fileList.filterHiddenFile { it.fileName }
+        binding.fileRv.setData(visibleFiles)
+        binding.emptyTv.isVisible = visibleFiles.isEmpty()
+        if (visibleFiles.isEmpty() && binding.fileRv.hasFocus()) binding.rootPathTv.requestFocus()
     }
 }

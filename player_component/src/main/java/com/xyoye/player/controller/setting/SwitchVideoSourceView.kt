@@ -2,7 +2,7 @@ package com.xyoye.player.controller.setting
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.Gravity
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.adapter.addItem
@@ -34,13 +34,12 @@ class SwitchVideoSourceView
 
         init {
             initRv()
+            viewBinding.panelClose.setOnClickListener { mControlWrapper.hideSettingView() }
         }
 
         override fun getLayoutId() = R.layout.layout_switch_video_source
 
         override fun getSettingViewType() = SettingViewType.SWITCH_VIDEO_SOURCE
-
-        override fun getGravity() = Gravity.START
 
         override fun onViewShow() {
             buildVideoSource()
@@ -66,9 +65,13 @@ class SwitchVideoSourceView
                         }
                         addItem<VideoSourceBean, ItemVideoSourceBinding>(R.layout.item_video_source) {
                             initView { data, _, _ ->
-                                itemBinding.tvSourceName.isSelected = data.isCurrent
+                                itemBinding.sourceItem.isSelected = data.isCurrent
+                                itemBinding.sourceCurrent.isVisible = data.isCurrent
                                 itemBinding.tvSourceName.text = data.title
-                                itemBinding.tvSourceName.setOnClickListener {
+                                itemBinding.sourceItem.setOnFocusChangeListener { _, focused ->
+                                    if (focused) viewBinding.sourceFullTitle.text = data.title
+                                }
+                                itemBinding.sourceItem.setOnClickListener {
                                     if (data.isCurrent.not()) {
                                         mControlWrapper.hideSettingView()
                                         switchVideoSourceBlock?.invoke(data.index)
@@ -92,6 +95,8 @@ class SwitchVideoSourceView
             mVideoSources.clear()
 
             val videoSource = mControlWrapper.getVideoSource()
+            viewBinding.sourceSummary.text = "当前播放 · 第 ${videoSource.getGroupIndex() + 1} / ${videoSource.getGroupSize()} 项"
+            viewBinding.sourceFullTitle.text = videoSource.indexTitle(videoSource.getGroupIndex())
             for (index in 0 until videoSource.getGroupSize()) {
                 mVideoSources.add(
                     VideoSourceBean(
@@ -108,5 +113,9 @@ class SwitchVideoSourceView
             } else {
                 list.scrollToPosition(videoSource.getGroupIndex())
             }
+        }
+
+        override fun onViewShowed() {
+            if (mVideoSources.isEmpty()) viewBinding.panelClose.requestFocus() else viewBinding.sourceRv.requestFocus()
         }
     }

@@ -104,9 +104,11 @@ class TmdbLibraryInstrumentedTest {
             }
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             await("Correction entry") { ActivityHelper.instance.getTopActivity() is MetadataMatchActivity }
+            screenshot("ui-polish-correction")
             send(KeyEvent.KEYCODE_BACK)
             await("Return to detail") { activity.hasWindowFocus() }
             scenario.onActivity { assertTrue(it.currentFocus?.isShown == true) }
+            screenshot("ui-polish-detail")
             scenario.recreate()
             scenario.onActivity { activity = it }
             await("Recreated cached title") { activity.findViewById<TextView>(com.xyoye.local_component.R.id.title).text == "TMDB 验收作品" }
@@ -261,6 +263,7 @@ class TmdbLibraryInstrumentedTest {
             await("Empty task page focuses an actionable button") {
                 settings.hasWindowFocus() && settings.currentFocus?.id == com.xyoye.user_component.R.id.clear_cache
             }
+            screenshot("ui-polish-tasks")
             send(KeyEvent.KEYCODE_DPAD_RIGHT)
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             await("Images cleared") { settings.findViewById<TextView>(com.xyoye.user_component.R.id.message).text.startsWith("图片缓存已清理") }

@@ -1,9 +1,7 @@
 package com.xyoye.common_component.weight.dialog
 
 import android.app.Activity
-import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.RippleDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -16,7 +14,6 @@ import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
-import com.xyoye.common_component.extension.toResColor
 import com.xyoye.common_component.utils.dp2px
 import com.xyoye.core_ui_component.R
 import com.xyoye.core_ui_component.databinding.DialogBaseBottomDialogBinding
@@ -30,6 +27,7 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
 ) : AppCompatDialog(activity, R.style.CinemaDialog) {
     protected lateinit var rootViewBinding: DialogBaseBottomDialogBinding
     private var initialFocusPending = false
+    protected open val contentWidthDp = 440
 
     override fun show() {
         initialFocusPending = true
@@ -75,7 +73,7 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
             decorView.setPadding(0, 0, 0, 0)
 
             val layoutParams = attributes
-            layoutParams.width = minOf(dp2px(440), context.resources.displayMetrics.widthPixels - dp2px(48))
+            layoutParams.width = minOf(dp2px(contentWidthDp), context.resources.displayMetrics.widthPixels - dp2px(48))
             layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT
             attributes = layoutParams
 
@@ -188,11 +186,10 @@ abstract class BaseBottomDialog<T : ViewDataBinding>(
     ): View {
         val padding = dp2px(paddingDp)
         val actionView = ImageView(context)
-        val rippleColor = ColorStateList.valueOf(R.color.gray_40.toResColor())
-        val rippleDrawable = RippleDrawable(rippleColor, null, null)
         actionView.setImageDrawable(drawable)
         actionView.setPadding(padding, padding, padding, padding)
-        actionView.background = rippleDrawable
+        actionView.setBackgroundResource(R.drawable.cinema_icon_circle)
+        actionView.isFocusable = true
         actionView.contentDescription = description
         return actionView
     }

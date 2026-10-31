@@ -1,22 +1,214 @@
-<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools">
-    <LinearLayout android:id="@+id/player_bottom_ll" android:layout_width="match_parent" android:layout_height="320dp" android:layout_gravity="bottom" android:orientation="vertical" android:paddingHorizontal="40dp" android:paddingTop="200dp" android:paddingBottom="25dp" android:background="@drawable/cinema_controls_bottom" android:translationY="320dp" tools:translationY="0dp">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-            <TextView android:id="@+id/current_position_tv" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="@color/cinema_text" android:textSize="12sp" />
-            <TextView android:id="@+id/decode_type_tv" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="12dp" android:textColor="@color/cinema_muted" android:textSize="10sp" />
-            <TextView android:id="@+id/duration_tv" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/cinema_text" android:textSize="12sp" />
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <LinearLayout
+        android:id="@+id/player_bottom_ll"
+        android:layout_width="match_parent"
+        android:layout_height="320dp"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:paddingHorizontal="40dp"
+        android:paddingTop="200dp"
+        android:paddingBottom="25dp"
+        android:background="@drawable/cinema_controls_bottom"
+        android:translationY="320dp"
+        tools:translationY="0dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical">
+            <TextView
+                android:id="@+id/current_position_tv"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:textColor="@color/cinema_text"
+                android:textSize="12sp" />
+            <TextView
+                android:id="@+id/decode_type_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:textColor="@color/cinema_muted"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/duration_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/cinema_text"
+                android:textSize="12sp" />
         </LinearLayout>
-        <SeekBar android:id="@+id/play_seek_bar" android:layout_width="match_parent" android:layout_height="20dp" android:layout_marginTop="2dp" android:layout_marginBottom="12dp" android:max="100" android:maxHeight="4dp" android:minHeight="4dp" android:paddingHorizontal="0dp" android:focusable="false" android:progressDrawable="@drawable/background_seek_progress" android:thumb="@drawable/ic_player_seek_ball" />
-        <LinearLayout android:layout_width="match_parent" android:layout_height="44dp" android:gravity="center_vertical">
-            <ImageButton android:id="@+id/rewind" android:layout_width="36dp" android:layout_height="36dp" android:padding="9dp" android:background="@drawable/cinema_icon_circle" android:src="@drawable/cinema_ic_rewind" android:focusable="true" android:contentDescription="后退15秒" android:layout_marginEnd="12dp" />
-            <ImageView android:id="@+id/play_iv" android:layout_width="42dp" android:layout_height="42dp" android:layout_marginEnd="12dp" android:background="@drawable/cinema_play_circle" android:src="@drawable/ic_play_bt" app:tint="@color/cinema_background" android:padding="10dp" android:focusable="true" android:contentDescription="播放 / 暂停" />
-            <ImageButton android:id="@+id/forward" android:layout_width="36dp" android:layout_height="36dp" android:padding="9dp" android:background="@drawable/cinema_icon_circle" android:src="@drawable/cinema_ic_forward" android:focusable="true" android:contentDescription="前进15秒" android:layout_marginEnd="12dp" />
-            <ImageView android:id="@+id/iv_previous_source" android:layout_width="30dp" android:layout_height="34dp" android:padding="6dp" android:background="@drawable/cinema_icon_circle" android:src="@drawable/ic_video_previous" app:tint="@color/cinema_text" android:focusable="true" android:visibility="gone" android:contentDescription="上一集" />
-            <ImageView android:id="@+id/iv_next_source" android:layout_width="30dp" android:layout_height="34dp" android:padding="6dp" android:background="@drawable/cinema_icon_circle" android:src="@drawable/ic_video_next" app:tint="@color/cinema_text" android:focusable="true" android:visibility="gone" android:contentDescription="下一集" />
-            <androidx.appcompat.widget.AppCompatTextView android:id="@+id/video_list_iv" android:layout_width="wrap_content" android:layout_height="36dp" android:paddingHorizontal="12dp" android:gravity="center" android:background="@drawable/cinema_button" android:text="选集" android:textColor="@color/cinema_muted" android:textSize="12sp" android:focusable="true" />
-            <Space android:layout_width="0dp" android:layout_weight="1" android:layout_height="1dp" />
-            <androidx.appcompat.widget.AppCompatTextView android:id="@+id/subtitle_control_iv" android:layout_width="wrap_content" android:layout_height="38dp" android:layout_marginEnd="10dp" android:background="@drawable/cinema_button" android:paddingHorizontal="14dp" android:drawablePadding="7dp" android:text="字幕" android:textColor="@color/cinema_text" android:textSize="12sp" android:gravity="center" app:drawableStartCompat="@drawable/cinema_ic_subtitle" android:focusable="true" />
-            <Button android:id="@+id/audio_control" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="38dp" android:paddingHorizontal="14dp" android:minWidth="0dp" android:text="音轨" android:textSize="12sp" android:drawableStart="@drawable/cinema_ic_audio" android:drawablePadding="7dp" />
-            <androidx.appcompat.widget.AppCompatTextView android:id="@+id/danmu_control_iv" android:layout_width="wrap_content" android:layout_height="38dp" android:background="@drawable/cinema_button" android:paddingHorizontal="14dp" android:drawablePadding="7dp" android:text="弹幕" android:textColor="@color/cinema_text" android:textSize="12sp" android:gravity="center" app:drawableStartCompat="@drawable/cinema_ic_danmaku" android:focusable="true" />
+        <SeekBar
+            android:id="@+id/play_seek_bar"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="12dp"
+            android:max="100"
+            android:maxHeight="4dp"
+            android:minHeight="4dp"
+            android:paddingHorizontal="0dp"
+            android:focusable="false"
+            android:progressDrawable="@drawable/background_seek_progress"
+            android:thumb="@drawable/ic_player_seek_ball" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="58dp"
+                android:layout_marginStart="-7dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+                <LinearLayout
+                    android:id="@+id/transport_tray"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:paddingHorizontal="10dp"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/cinema_transport_tray">
+                    <ImageButton
+                        android:id="@+id/rewind"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:padding="7dp"
+                        android:background="@drawable/cinema_transport_button"
+                        android:src="@drawable/cinema_ic_rewind"
+                        android:focusable="true"
+                        android:contentDescription="后退15秒"
+                        android:layout_marginEnd="8dp" />
+                    <ImageView
+                        android:id="@+id/play_iv"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/cinema_play_circle"
+                        android:src="@drawable/ic_play_bt"
+                        app:tint="@color/cinema_background"
+                        android:padding="10dp"
+                        android:focusable="true"
+                        android:contentDescription="播放 / 暂停" />
+                    <ImageButton
+                        android:id="@+id/forward"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:padding="7dp"
+                        android:background="@drawable/cinema_transport_button"
+                        android:src="@drawable/cinema_ic_forward"
+                        android:focusable="true"
+                        android:contentDescription="前进15秒" />
+                    <View
+                        android:id="@+id/episode_divider"
+                        android:layout_width="1dp"
+                        android:layout_height="18dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:background="@color/cinema_border" />
+                    <ImageView
+                        android:id="@+id/iv_previous_source"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="7dp"
+                        android:padding="7dp"
+                        android:background="@drawable/cinema_transport_button"
+                        android:src="@drawable/ic_video_previous"
+                        app:tint="@color/cinema_text"
+                        android:focusable="true"
+                        android:visibility="gone"
+                        android:contentDescription="上一集" />
+                    <ImageView
+                        android:id="@+id/iv_next_source"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="7dp"
+                        android:padding="7dp"
+                        android:background="@drawable/cinema_transport_button"
+                        android:src="@drawable/ic_video_next"
+                        app:tint="@color/cinema_text"
+                        android:focusable="true"
+                        android:visibility="gone"
+                        android:contentDescription="下一集" />
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/video_list_iv"
+                        android:layout_width="48dp"
+                        android:layout_height="30dp"
+                        android:gravity="center"
+                        android:background="@drawable/cinema_button"
+                        android:text="☰ 选集"
+                        android:contentDescription="选集"
+                        android:textColor="@color/cinema_text"
+                        android:textSize="10sp"
+                        android:focusable="true" />
+                    <TextView
+                        android:id="@+id/single_video_hint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="单个视频"
+                        android:textSize="10sp"
+                        android:textColor="@color/cinema_muted"
+                        android:visibility="gone" />
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/transport_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|start"
+                    android:translationY="-12dp"
+                    android:paddingHorizontal="5dp"
+                    android:background="@color/cinema_background"
+                    android:textColor="@color/cinema_text"
+                    android:textSize="9sp"
+                    android:visibility="invisible" />
+            </FrameLayout>
+            <Space
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="1dp" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/subtitle_control_iv"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/cinema_button"
+                android:paddingHorizontal="14dp"
+                android:drawablePadding="7dp"
+                android:text="字幕"
+                android:textColor="@color/cinema_text"
+                android:textSize="12sp"
+                android:gravity="center"
+                app:drawableStartCompat="@drawable/cinema_ic_subtitle"
+                android:focusable="true" />
+            <Button
+                android:id="@+id/audio_control"
+                style="@style/Cinema.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:paddingHorizontal="14dp"
+                android:minWidth="0dp"
+                android:text="音轨"
+                android:textSize="12sp"
+                android:drawableStart="@drawable/cinema_ic_audio"
+                android:drawablePadding="7dp" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/danmu_control_iv"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:background="@drawable/cinema_button"
+                android:paddingHorizontal="14dp"
+                android:drawablePadding="7dp"
+                android:text="弹幕"
+                android:textColor="@color/cinema_text"
+                android:textSize="12sp"
+                android:gravity="center"
+                app:drawableStartCompat="@drawable/cinema_ic_danmaku"
+                android:focusable="true" />
         </LinearLayout>
     </LinearLayout>
 </layout>

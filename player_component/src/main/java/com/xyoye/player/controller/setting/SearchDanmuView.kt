@@ -2,7 +2,6 @@ package com.xyoye.player.controller.setting
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.Gravity
 import android.view.inputmethod.EditorInfo
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
@@ -38,8 +37,6 @@ class SearchDanmuView(
 
     override fun getSettingViewType() = SettingViewType.SEARCH_DANMU
 
-    override fun getGravity() = Gravity.START
-
     private fun initRv() {
         viewBinding.danmuRv.apply {
             layoutManager = vertical()
@@ -65,6 +62,7 @@ class SearchDanmuView(
     }
 
     private fun initListener() {
+        viewBinding.panelClose.setOnClickListener { mControlWrapper.hideSettingView() }
         viewBinding.tvSelectLocalDanmu.setOnClickListener {
             mControlWrapper.showSettingView(SettingViewType.SWITCH_SOURCE, TrackType.DANMU)
         }

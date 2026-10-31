@@ -63,6 +63,7 @@ class BindExtraSourceActivity : BaseActivity<BindExtraSourceViewModel, ActivityB
             supportFragmentManager,
             dataBinding.tabLayout,
             dataBinding.viewpager,
+            verticalNavigation = true,
             onSelected = ::updateSearchHint
         ).apply {
             submit(
@@ -73,7 +74,11 @@ class BindExtraSourceActivity : BaseActivity<BindExtraSourceViewModel, ActivityB
                 if (isSearchDanmu) 0 else 1
             )
         }
-        dataBinding.searchCl.nextFocusDownId = dataBinding.tabLayout.id
+        dataBinding.searchCl.nextFocusDownId = dataBinding.videoLayout.itemLayout.id
+        dataBinding.videoLayout.itemLayout.nextFocusUpId = dataBinding.searchCl.id
+        dataBinding.videoLayout.itemLayout.nextFocusDownId = dataBinding.tabLayout.id
+        dataBinding.videoLayout.moreActionIv.nextFocusLeftId = dataBinding.videoLayout.itemLayout.id
+        dataBinding.videoLayout.moreActionIv.nextFocusDownId = dataBinding.tabLayout.id
 
         if (!dataBinding.root.isInTouchMode) {
             dataBinding.searchEt.applyDpadEditTextPolicy()

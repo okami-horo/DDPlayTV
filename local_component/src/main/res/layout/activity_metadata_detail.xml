@@ -1,23 +1,114 @@
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
-    <data><variable name="viewModel" type="com.xyoye.local_component.ui.metadata.MetadataLibraryViewModel"/></data>
-    <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/cinema_background">
-        <ImageView android:id="@+id/backdrop" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:importantForAccessibility="no"/>
-        <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/metadata_scrim"/>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="30dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="184dp" android:gravity="center_vertical">
-                <ImageView android:id="@+id/poster" android:layout_width="120dp" android:layout_height="180dp" android:layout_marginEnd="24dp" android:scaleType="centerCrop" android:background="@drawable/cinema_image" android:clipToOutline="true" android:importantForAccessibility="no"/>
-                <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
-                    <TextView style="@style/Cinema.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="作品详情" android:textSize="12sp" android:letterSpacing="0.1"/>
-                    <TextView android:id="@+id/title" style="@style/Cinema.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:maxLines="2" android:ellipsize="end"/>
-                    <TextView android:id="@+id/overview" style="@style/Cinema.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:maxLines="4" android:ellipsize="end"/>
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="viewModel"
+            type="com.xyoye.local_component.ui.metadata.MetadataLibraryViewModel" />
+    </data>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/cinema_background">
+        <ImageView
+            android:id="@+id/backdrop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:importantForAccessibility="no" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/metadata_scrim" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingHorizontal="36dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="184dp"
+                android:gravity="center_vertical">
+                <ImageView
+                    android:id="@+id/poster"
+                    android:layout_width="120dp"
+                    android:layout_height="180dp"
+                    android:layout_marginEnd="24dp"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/cinema_image"
+                    android:clipToOutline="true"
+                    android:importantForAccessibility="no" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <TextView
+                        style="@style/Cinema.Body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="作品详情"
+                        android:textSize="12sp"
+                        android:letterSpacing="0.1" />
+                    <TextView
+                        android:id="@+id/title"
+                        style="@style/Cinema.Title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:maxLines="2"
+                        android:ellipsize="end" />
+                    <TextView
+                        android:id="@+id/overview"
+                        style="@style/Cinema.Body"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:maxLines="4"
+                        android:ellipsize="end" />
                 </LinearLayout>
             </LinearLayout>
-            <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/seasons" android:layout_width="match_parent" android:layout_height="82dp" android:layout_marginTop="10dp"/>
-            <TextView android:id="@+id/hint" style="@style/Cinema.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="14dp" android:textSize="13sp"/>
-            <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/files" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false"/>
-            <LinearLayout android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="12dp">
-                <Button android:id="@+id/correct" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="match_parent" android:text="管理作品资料" android:nextFocusRight="@id/back"/>
-                <Button android:id="@+id/back" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="match_parent" android:text="返回" android:nextFocusLeft="@id/correct"/>
+            <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+                android:id="@+id/seasons"
+                android:layout_width="match_parent"
+                android:layout_height="82dp"
+                android:layout_marginTop="10dp"
+                android:clipToPadding="false"
+                android:padding="6dp" />
+            <TextView
+                android:id="@+id/hint"
+                style="@style/Cinema.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingVertical="14dp"
+                android:textSize="13sp" />
+            <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+                android:id="@+id/files"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:padding="6dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="12dp">
+                <Button
+                    android:id="@+id/correct"
+                    style="@style/Cinema.Button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="管理作品资料"
+                    android:nextFocusRight="@id/back" />
+                <Button
+                    android:id="@+id/back"
+                    style="@style/Cinema.Button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="返回"
+                    android:nextFocusLeft="@id/correct" />
             </LinearLayout>
         </LinearLayout>
     </FrameLayout>

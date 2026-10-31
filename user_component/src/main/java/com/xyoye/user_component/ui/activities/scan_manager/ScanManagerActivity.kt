@@ -33,7 +33,7 @@ class ScanManagerActivity : BaseActivity<ScanManagerViewModel, ActivityScanManag
         title = "扫描目录管理"
 
         tvPages =
-            TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager) {
+            TvCategoryPages(this, supportFragmentManager, dataBinding.tabLayout, dataBinding.viewpager, verticalNavigation = true) {
                 extensionSettingItem?.isVisible = it == 0
             }.apply {
                 submit(

@@ -3,7 +3,6 @@ package com.xyoye.player.controller.setting
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.TextView
-import androidx.core.view.isVisible
 import com.xyoye.data_component.enums.SettingViewType
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player_component.R
@@ -33,13 +32,13 @@ class SettingOffsetTimeView(
 
     override fun getSettingViewType() = SettingViewType.DANMU_OFFSET_TIME
 
-    override fun getGravity() = android.view.Gravity.CENTER
-
     override fun onViewShow() {
+        viewBinding.offsetTitle.text = if (mSettingType == SettingViewType.SUBTITLE_OFFSET_TIME) "字幕时间偏移" else "弹幕时间偏移"
         changeTime(0f, dispatch = false)
     }
 
     private fun initView() {
+        viewBinding.panelClose.setOnClickListener { mControlWrapper.hideSettingView() }
         actionViews.clear()
         actionViews.add(viewBinding.tvReduceTen)
         actionViews.add(viewBinding.tvReduceFive)
@@ -102,7 +101,11 @@ class SettingOffsetTimeView(
 
         viewBinding.tvDisplay.text = display
         viewBinding.tvStatus.text = status
-        viewBinding.tvReset.isVisible = newOffset != 0f
+        val resetFocused = viewBinding.tvReset.hasFocus()
+        viewBinding.tvReset.isEnabled = newOffset != 0f
+        viewBinding.tvReset.isFocusable = newOffset != 0f
+        viewBinding.tvReset.alpha = if (newOffset != 0f) 1f else 0.3f
+        if (newOffset == 0f && resetFocused) viewBinding.tvAddHalf.requestFocus()
     }
 
     private fun numberFormat(num: Float): String =

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-
     <FrameLayout
         android:id="@+id/keyword_block_ll"
         android:layout_width="match_parent"
@@ -15,45 +15,43 @@
         android:visibility="gone"
         tools:alpha="1"
         tools:visibility="visible">
-
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="500dp"
-            android:layout_height="320dp"
-            android:layout_gravity="center"
-            android:background="@drawable/background_player_setting_dialog"
+            android:layout_width="264dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:layout_margin="15dp"
+            android:background="@drawable/cinema_player_panel"
             android:clickable="true"
-            android:padding="20dp">
-
+            android:padding="18dp">
             <TextView
                 android:id="@+id/keyword_block_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/tips_keyword_block"
                 android:textColor="@color/text_white_immutable"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
             <ImageView
                 android:id="@+id/iv_close"
+                android:contentDescription="关闭面板"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:background="@drawable/cinema_icon_circle"
                 android:clickable="true"
                 android:focusable="true"
                 android:padding="4dp"
-                android:src="@drawable/ic_dialog_close"
+                android:src="@drawable/cinema_ic_close"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
             <EditText
                 android:id="@+id/keyword_block_add_et"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="12dp"
-                android:background="@drawable/background_player_setting_text_normal"
+                android:background="@drawable/cinema_button"
                 android:hint="@string/tips_support_regex"
                 android:imeOptions="actionDone"
                 android:importantForAutofill="no"
@@ -67,12 +65,11 @@
                 app:layout_constraintEnd_toStartOf="@+id/keyword_block_add_tv"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/keyword_block_title" />
-
             <TextView
                 android:id="@+id/keyword_block_add_tv"
                 android:layout_width="60dp"
                 android:layout_height="40dp"
-                android:background="@drawable/background_player_setting_text"
+                android:background="@drawable/cinema_button"
                 android:focusable="true"
                 android:gravity="center"
                 android:text="@string/action_add_block_keyword"
@@ -81,7 +78,6 @@
                 app:layout_constraintBottom_toBottomOf="@id/keyword_block_add_et"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@id/keyword_block_add_et" />
-
             <TextView
                 android:id="@+id/keyword_block_list_title"
                 android:layout_width="wrap_content"
@@ -92,7 +88,6 @@
                 android:textSize="14sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/keyword_block_add_et" />
-
             <TextView
                 android:id="@+id/keyword_block_remove_tips"
                 android:layout_width="wrap_content"
@@ -100,9 +95,9 @@
                 android:text="@string/tips_remove_block_keyword"
                 android:textColor="@color/text_gray"
                 android:textSize="12sp"
-                app:layout_constraintBaseline_toBaselineOf="@id/keyword_block_list_title"
+                app:layout_constraintTop_toBottomOf="@id/keyword_block_list_title"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
-
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/keyword_rv"
                 android:layout_width="0dp"
@@ -112,8 +107,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/keyword_block_list_title" />
-
+                app:layout_constraintTop_toBottomOf="@id/keyword_block_remove_tips" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </FrameLayout>
 </layout>

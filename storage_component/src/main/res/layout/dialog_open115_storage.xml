@@ -1,104 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
     <data>
-
-        <import type="com.xyoye.data_component.entity.MediaLibraryEntity" />
-
+        <import
+            type="com.xyoye.data_component.entity.MediaLibraryEntity" />
         <variable
             name="library"
             type="MediaLibraryEntity" />
     </data>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:orientation="vertical">
-
-        <androidx.appcompat.widget.AppCompatEditText
-            android:id="@+id/display_name_et"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@drawable/background_dialog_edit"
-            android:gravity="center_vertical"
-            android:hint="@string/hint_display_name"
-            android:maxLines="1"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:singleLine="true"
-            android:text="@={library.displayName}"
-            android:textColor="@color/text_black"
-            android:textColorHint="@color/text_gray"
-            android:textSize="14sp" />
-
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="@string/hint_display_name"
+                android:textColor="@color/cinema_muted"
+                android:textSize="12sp"
+                android:labelFor="@id/display_name_et" />
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/display_name_et"
+                android:background="@drawable/cinema_input"
+                android:gravity="center_vertical"
+                android:hint="@string/hint_display_name"
+                android:maxLines="1"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true"
+                android:text="@={library.displayName}"
+                android:textColor="@color/cinema_text"
+                android:textColorHint="@color/text_gray"
+                android:textSize="14sp"
+                android:layout_width="match_parent"
+                android:layout_height="42dp" />
+        </LinearLayout>
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp">
-
-            <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/access_token_et"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="@drawable/background_dialog_edit"
-                android:gravity="center_vertical"
-                android:hint="@string/hint_open115_access_token"
-                android:inputType="textPassword|textNoSuggestions"
-                android:maxLines="1"
-                android:paddingStart="20dp"
-                android:paddingEnd="80dp"
-                android:singleLine="true"
-                android:textColor="@color/text_black"
-                android:textColorHint="@color/text_gray"
-                android:textSize="14sp" />
-
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="@string/hint_open115_access_token"
+                    android:textColor="@color/cinema_muted"
+                    android:textSize="12sp"
+                    android:labelFor="@id/access_token_et" />
+                <androidx.appcompat.widget.AppCompatEditText
+                    android:id="@+id/access_token_et"
+                    android:background="@drawable/cinema_input"
+                    android:gravity="center_vertical"
+                    android:hint="@string/hint_open115_access_token"
+                    android:inputType="textPassword|textNoSuggestions"
+                    android:maxLines="1"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true"
+                    android:textColor="@color/cinema_text"
+                    android:textColorHint="@color/text_gray"
+                    android:textSize="14sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp" />
+            </LinearLayout>
             <ImageView
                 android:id="@+id/access_token_toggle_iv"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_gravity="end"
+                android:layout_gravity="end|bottom"
                 android:layout_marginEnd="10dp"
-                android:contentDescription="@null"
+                android:contentDescription="显示或隐藏密码"
                 android:padding="15dp"
                 android:scaleType="centerInside"
-                android:src="@drawable/ic_input_visible" />
+                android:src="@drawable/ic_input_visible"
+                android:focusable="true"
+                android:background="@drawable/cinema_icon_circle" />
         </FrameLayout>
-
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp">
-
-            <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/refresh_token_et"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="@drawable/background_dialog_edit"
-                android:gravity="center_vertical"
-                android:hint="@string/hint_open115_refresh_token"
-                android:inputType="textPassword|textNoSuggestions"
-                android:maxLines="1"
-                android:paddingStart="20dp"
-                android:paddingEnd="80dp"
-                android:singleLine="true"
-                android:textColor="@color/text_black"
-                android:textColorHint="@color/text_gray"
-                android:textSize="14sp" />
-
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:text="@string/hint_open115_refresh_token"
+                    android:textColor="@color/cinema_muted"
+                    android:textSize="12sp"
+                    android:labelFor="@id/refresh_token_et" />
+                <androidx.appcompat.widget.AppCompatEditText
+                    android:id="@+id/refresh_token_et"
+                    android:background="@drawable/cinema_input"
+                    android:gravity="center_vertical"
+                    android:hint="@string/hint_open115_refresh_token"
+                    android:inputType="textPassword|textNoSuggestions"
+                    android:maxLines="1"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:singleLine="true"
+                    android:textColor="@color/cinema_text"
+                    android:textColorHint="@color/text_gray"
+                    android:textSize="14sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp" />
+            </LinearLayout>
             <ImageView
                 android:id="@+id/refresh_token_toggle_iv"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:layout_gravity="end"
+                android:layout_gravity="end|bottom"
                 android:layout_marginEnd="10dp"
-                android:contentDescription="@null"
+                android:contentDescription="显示或隐藏密码"
                 android:padding="15dp"
                 android:scaleType="centerInside"
-                android:src="@drawable/ic_input_visible" />
+                android:src="@drawable/ic_input_visible"
+                android:focusable="true"
+                android:background="@drawable/cinema_icon_circle" />
         </FrameLayout>
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -106,22 +139,19 @@
             android:text="@string/tips_open115_no_password"
             android:textColor="@color/text_gray"
             android:textSize="12sp" />
-
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/background_border_gray">
-
+            android:background="@drawable/cinema_surface">
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
-                android:background="@drawable/background_border_gray"
+                android:background="@drawable/cinema_surface"
                 android:gravity="center"
                 android:text="@string/tips_test_connect"
                 android:textColor="@color/text_gray"
                 android:textSize="14sp" />
-
             <TextView
                 android:id="@+id/server_status_tv"
                 android:layout_width="wrap_content"
@@ -130,19 +160,18 @@
                 android:textColor="@color/text_theme"
                 android:textSize="14sp"
                 tools:text="连接成功" />
-
             <TextView
                 android:id="@+id/server_test_connect_tv"
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="end"
-                android:background="@drawable/background_button_corner_gray"
+                android:background="@drawable/cinema_category"
                 android:gravity="center"
                 android:text="@string/action_test_server"
                 android:textColor="@color/text_black"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:focusable="true" />
         </FrameLayout>
-
         <TextView
             android:id="@+id/disconnect_tv"
             android:layout_width="match_parent"

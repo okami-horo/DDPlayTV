@@ -1,92 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
     <data>
-
-        <import type="android.view.View" />
-
-        <import type="com.xyoye.user_component.ui.activities.login.LoginViewModel" />
-
+        <import
+            type="android.view.View" />
+        <import
+            type="com.xyoye.user_component.ui.activities.login.LoginViewModel" />
         <variable
             name="viewModel"
             type="com.xyoye.user_component.ui.activities.login.LoginViewModel" />
     </data>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/item_bg_color">
-
+        android:orientation="vertical"
+        android:background="@color/cinema_background">
         <include
             android:id="@+id/toolbar_layout"
             layout="@layout/layout_toolbar" />
-
-        <TextView
-            android:id="@+id/user_login_tips"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="@string/tips_user_login"
-            android:textColor="@color/text_black"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/toolbar_layout" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/user_account_layout"
-            style="@style/InputEditLayoutStyle"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:hint="@string/tips_input_account"
-            app:layout_constraintTop_toBottomOf="@+id/user_login_tips">
-
-            <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/user_account_et"
-                style="@style/InputEditTextStyle"
-                android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:paddingHorizontal="36dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="24dp">
+            <LinearLayout
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginEnd="24dp"
+                android:paddingTop="8dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="登录账户"
+                    android:textColor="@color/cinema_text"
+                    android:textSize="24sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="使用已有账户同步追番和观看记录。"
+                    android:textColor="@color/cinema_muted"
+                    android:textSize="13sp"
+                    android:layout_marginTop="16dp"
+                    android:lineSpacingExtra="5dp" />
+            </LinearLayout>
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:maxEms="20"
-                android:text="@={viewModel.accountField}" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/user_password_layout"
-            style="@style/InputEditLayoutStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/tips_input_password"
-            app:layout_constraintTop_toBottomOf="@+id/user_account_layout"
-            app:passwordToggleDrawable="@drawable/ic_input_visible"
-            app:passwordToggleEnabled="true">
-
-            <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/user_password_et"
-                style="@style/InputEditTextStyle"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:inputType="textPassword"
-                android:maxEms="20"
-                android:text="@={viewModel.passwordField}" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="30dp"
-            android:layout_marginTop="50dp"
-            android:layout_marginEnd="30dp"
-            android:background="@drawable/background_login_button"
-            android:onClick="@{()-> viewModel.login()}"
-            android:text="@string/action_login"
-            android:textColor="@color/text_white_immutable"
-            android:textSize="14sp"
-            app:layout_constraintTop_toBottomOf="@id/user_password_layout" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+                android:layout_weight="1"
+                android:padding="20dp"
+                android:fillViewport="true"
+                android:background="@drawable/cinema_surface">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/user_account_layout"
+                        style="@style/InputEditLayoutStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/tips_input_account"
+                        android:layout_marginBottom="16dp">
+                        <androidx.appcompat.widget.AppCompatEditText
+                            android:id="@+id/user_account_et"
+                            style="@style/InputEditTextStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:maxEms="20"
+                            android:text="@={viewModel.accountField}"
+                            android:textColor="@color/cinema_text"
+                            android:paddingHorizontal="12dp"
+                            android:background="@drawable/cinema_input" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/user_password_layout"
+                        style="@style/InputEditLayoutStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/tips_input_password"
+                        app:passwordToggleDrawable="@drawable/ic_input_visible"
+                        app:passwordToggleEnabled="true"
+                        android:layout_marginBottom="16dp">
+                        <androidx.appcompat.widget.AppCompatEditText
+                            android:id="@+id/user_password_et"
+                            style="@style/InputEditTextStyle"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:inputType="textPassword"
+                            android:maxEms="20"
+                            android:text="@={viewModel.passwordField}"
+                            android:textColor="@color/cinema_text"
+                            android:paddingHorizontal="12dp"
+                            android:background="@drawable/cinema_input" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:background="@drawable/cinema_primary"
+                        android:onClick="@{()-> viewModel.login()}"
+                        android:text="@string/action_login"
+                        android:textColor="@color/cinema_background"
+                        android:textSize="14sp"
+                        android:layout_marginTop="14dp"
+                        style="@style/Cinema.Primary"
+                        android:id="@+id/login_button" />
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+        </LinearLayout>
+    </LinearLayout>
 </layout>

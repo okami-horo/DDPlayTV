@@ -1,41 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
         <ImageView
             android:id="@+id/empty_iv"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
             android:contentDescription="@null"
-            android:src="@mipmap/ic_empty_data"
+            android:src="@drawable/cinema_ic_file"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.382" />
-
+            app:layout_constraintVertical_bias="0.382"
+            android:padding="12dp"
+            android:background="@drawable/cinema_icon_circle" />
         <TextView
             android:id="@+id/empty_tv"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="@string/text_empty_data"
-            android:textColor="@color/text_gray"
+            android:textColor="@color/cinema_muted"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/empty_iv" />
-
+            app:layout_constraintTop_toBottomOf="@+id/empty_iv"
+            android:layout_marginHorizontal="20dp"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp" />
         <TextView
             android:id="@+id/empty_action_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:background="@drawable/background_storage_item_selector"
+            android:background="@drawable/cinema_button"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
@@ -51,6 +53,5 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/empty_tv" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
