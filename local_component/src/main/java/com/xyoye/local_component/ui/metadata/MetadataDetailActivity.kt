@@ -54,7 +54,11 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
     private var playbackFailure: String? = null
     private var overviewTitle = "作品简介"
     private var overviewText = ""
-    private val files = MetadataEpisodeAdapter { chooseFiles(groups[it].orEmpty(), false) }
+    private val files =
+        MetadataEpisodeAdapter { key ->
+            val parts = key.split(':')
+            chooseFiles(groups[key].orEmpty(), false, parts.getOrNull(1)?.toIntOrNull(), parts.getOrNull(2)?.toIntOrNull())
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         selectedSeason = savedInstanceState?.getInt("season", -1)?.takeIf { it >= 0 }
@@ -458,11 +462,13 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
 
     private fun chooseFiles(
         copies: List<MediaAsset>,
-        correct: Boolean
+        correct: Boolean,
+        season: Int? = null,
+        episode: Int? = null
     ) {
         if (copies.isEmpty()) return
         if (copies.size == 1) {
-            open(copies.single(), correct)
+            open(copies.single(), correct, season, episode)
             return
         }
         BottomActionDialog(
@@ -478,14 +484,16 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
             },
             if (correct) "选择要管理的文件" else "选择实际文件版本"
         ) { selected ->
-            copies.find { it.assetId == selected.actionId }?.let { open(it, correct) }
+            copies.find { it.assetId == selected.actionId }?.let { open(it, correct, season, episode) }
             true
         }.show()
     }
 
     private fun open(
         asset: MediaAsset,
-        correct: Boolean
+        correct: Boolean,
+        season: Int? = null,
+        episode: Int? = null
     ) {
         if (correct) {
             ARouter
@@ -499,7 +507,7 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
             ToastCenter.showWarning(dataBinding.hint.text.toString())
         } else {
             playbackFailure = null
-            viewModel.play(asset)
+            viewModel.play(asset, season, episode)
         }
     }
 

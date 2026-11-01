@@ -5,8 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.repository.PlayHistoryRepository
+import com.xyoye.common_component.metadata.MetadataPlaybackRequests
 import com.xyoye.common_component.playback.PlaybackEntryRequests
-import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.utils.ErrorReportHelper
@@ -141,7 +141,12 @@ class PlayHistoryViewModel : BaseViewModel() {
     }
 
     fun openHistory(history: PlayHistoryEntity) {
-        val descriptor = PlayHistoryDescriptor(history.id, history.uniqueKey, history.storageId)
-        requests.submit { PlaybackRequestInput(descriptor, null, PlaybackRequestOrigin.PLAY_HISTORY) }
+        requests.submit {
+            PlaybackRequestInput(
+                MetadataPlaybackRequests().history(history),
+                null,
+                PlaybackRequestOrigin.PLAY_HISTORY
+            )
+        }
     }
 }

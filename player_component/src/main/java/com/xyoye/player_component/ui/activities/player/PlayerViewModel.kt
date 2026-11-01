@@ -8,6 +8,7 @@ import com.xyoye.common_component.playback.handoff.PlaybackCommand
 import com.xyoye.common_component.playback.handoff.PlaybackOperationResult
 import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
 import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
+import com.xyoye.common_component.playback.handoff.SeriesQueueFile
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.VideoTrackBean
@@ -93,10 +94,27 @@ class PlayerViewModel : BaseViewModel() {
     internal fun selectQueueItem(index: Int) {
         val session = retainedPlaybackSession ?: return
         val expected = session.runtime?.version ?: return
+        selectQueueItem(index, expected, null)
+    }
+
+    internal fun chooseQueueVersion(
+        choice: QueueVersionChoice,
+        file: SeriesQueueFile
+    ) {
+        if (_playbackScreen.value.versionChoice != choice || file !in choice.failure.options) return
+        selectQueueItem(choice.index, choice.expected, file)
+    }
+
+    private fun selectQueueItem(
+        index: Int,
+        expected: PlaybackSessionVersion,
+        file: SeriesQueueFile?
+    ) {
+        val session = retainedPlaybackSession ?: return
         pendingRequestId = null
         val sequence = ++requestSequence
         _playbackScreen.value = PlaybackScreenState(preparing = true, hasPlayback = true)
-        viewModelScope.launch { publishResult(sequence, session.selectQueueItem(index, expected)) }
+        viewModelScope.launch { publishResult(sequence, session.selectQueueItem(index, expected, file), expected) }
     }
 
     internal fun nativePlaybackTransition(candidateId: String) {
@@ -106,7 +124,8 @@ class PlayerViewModel : BaseViewModel() {
 
     private fun publishResult(
         sequence: Long,
-        result: SessionRequestResult
+        result: SessionRequestResult,
+        expected: PlaybackSessionVersion? = null
     ) {
         if (sequence != requestSequence) return
         pendingRequestId = null
@@ -117,12 +136,29 @@ class PlayerViewModel : BaseViewModel() {
                 is SessionRequestResult.Activated -> result.replacedRequestFailure
                 SessionRequestResult.Ignored -> null
             }
-        _playbackScreen.value = PlaybackScreenState(hasPlayback = retainedPlaybackSession?.runtime != null, failure = failure)
+        _playbackScreen.value =
+            PlaybackScreenState(
+                hasPlayback = retainedPlaybackSession?.runtime != null,
+                failure = failure,
+                versionChoice = versionChoice(failure, expected)
+            )
+    }
+
+    private fun versionChoice(
+        failure: PlaybackPreparationFailure?,
+        expected: PlaybackSessionVersion?
+    ): QueueVersionChoice? {
+        if (failure !is PlaybackPreparationFailure.VersionSelectionRequired || expected == null) return null
+        val active = retainedPlaybackSession?.runtime?.takeIf { it.version == expected } ?: return null
+        val index =
+            active.playback.resolved.queue
+                .indexOf(failure.descriptor)
+        return if (index >= 0) QueueVersionChoice(failure, expected, index) else null
     }
 
     internal fun acknowledgePlaybackFailure(failure: PlaybackPreparationFailure) {
         val state = _playbackScreen.value
-        if (state.failure == failure) _playbackScreen.value = state.copy(failure = null)
+        if (state.failure == failure) _playbackScreen.value = state.copy(failure = null, versionChoice = null)
     }
 
     internal fun unbindPlayback(backend: PlaybackSessionBackend) {
@@ -145,7 +181,12 @@ class PlayerViewModel : BaseViewModel() {
         viewModelScope.launch {
             val result = requestService.dispatch(PlaybackCommand(expected, action))
             if (result is PlaybackOperationResult.Rejected && playbackVersion == expected) {
-                _playbackScreen.value = PlaybackScreenState(hasPlayback = true, failure = result.failure)
+                _playbackScreen.value =
+                    PlaybackScreenState(
+                        hasPlayback = true,
+                        failure = result.failure,
+                        versionChoice = versionChoice(result.failure, expected)
+                    )
             }
         }
     }

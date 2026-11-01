@@ -431,7 +431,7 @@ class WatchHistoryInstrumentedTest {
                 send(KeyEvent.KEYCODE_DPAD_DOWN)
                 screenshot("home-unidentified")
                 send(KeyEvent.KEYCODE_DPAD_CENTER)
-                checkPlaying(asset, 8400)
+                checkPlaying(asset, 8400, 1)
                 exitPlayer()
                 await("File returns to home") { home.hasWindowFocus() }
                 runBlocking { db.getPlayHistoryDao().deleteByStorageId(library.id) }
@@ -471,6 +471,192 @@ class WatchHistoryInstrumentedTest {
     @Test fun media3HomepageDetailPlaybackAndLayeredBack() = playbackPath(PlayerType.TYPE_EXO_PLAYER)
 
     @Test fun mpvHomepageDetailPlaybackAndLayeredBack() = playbackPath(PlayerType.TYPE_MPV_PLAYER)
+
+    @Test fun media3SeriesQueueCrossesSeasonsWithDpadAndRecreation() = crossSeasonQueue(PlayerType.TYPE_EXO_PLAYER)
+
+    @Test fun mpvSeriesQueueCrossesSeasonsWithDpadAndRecreation() = crossSeasonQueue(PlayerType.TYPE_MPV_PLAYER)
+
+    private fun crossSeasonQueue(kernel: PlayerType) =
+        withQueueSettings(kernel, false) {
+            val next = runBlocking { addEpisode(2, 1) }
+            runBlocking {
+                addEpisode(2, 2)
+                addHistory(assets.getValue(1 to 12), 2000, now)
+            }
+            detail { _, page ->
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                checkPlaying(assets.getValue(1 to 12), 2000, 14)
+                openPlayerQueue()
+                screenshot("queue-cross-season-${kernel.value}")
+                send(KeyEvent.KEYCODE_DPAD_DOWN)
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                checkPlaying(next, 0, 14)
+                val before = ActivityHelper.instance.getTopActivity() as PlayerActivity
+                instrumentation.runOnMainSync { before.recreate() }
+                await("Recreated player") { ActivityHelper.instance.getTopActivity() !== before && before.isDestroyed }
+                checkPlaying(next, 0, 14)
+                instrumentation.runOnMainSync { assertEquals(12, playerView().getVideoSource().getGroupIndex()) }
+                openPlayerQueue()
+                screenshot("queue-recreated-${kernel.value}")
+                send(KeyEvent.KEYCODE_BACK)
+                exitPlayer()
+                await("Queue playback returns to detail") { page.hasWindowFocus() }
+                assertFalse(PlayerConfig.isAutoPlayNext())
+            }
+        }
+
+    @Test fun media3MissingSourceChoiceCanCancelRecreateAndContinueOnTheChosenSource() = versionQueue(PlayerType.TYPE_EXO_PLAYER)
+
+    @Test fun mpvMissingSourceChoiceCanCancelRecreateAndContinueOnTheChosenSource() = versionQueue(PlayerType.TYPE_MPV_PLAYER)
+
+    private fun versionQueue(kernel: PlayerType) =
+        withQueueSettings(kernel, false) {
+            val next = runBlocking { addEpisode(2, 1, alternate.id) }
+            val after = runBlocking { addEpisode(2, 2, alternate.id) }
+            runBlocking { addHistory(assets.getValue(1 to 12), 2000, now) }
+            detail { _, page ->
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                checkPlaying(assets.getValue(1 to 12), 2000, 14)
+                openPlayerQueue()
+                send(KeyEvent.KEYCODE_DPAD_DOWN)
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                await("Alternative version prompt") { hasVersionPrompt() }
+                instrumentation.runOnMainSync {
+                    assertEquals(assets.getValue(1 to 12).uniqueKey, playerView().getVideoSource().getUniqueKey())
+                    assertEquals(11, playerView().getVideoSource().getGroupIndex())
+                    assertEquals(14, playerView().getVideoSource().getGroupSize())
+                }
+                screenshot("queue-choose-version-${kernel.value}")
+                val focus =
+                    instrumentation.uiAutomation.rootInActiveWindow.findFocus(
+                        android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT
+                    )
+                assertTrue("Choice has visible DPAD focus", focus != null && focus.isVisibleToUser)
+                send(KeyEvent.KEYCODE_BACK)
+                await(
+                    "Cancel returns to original playback"
+                ) { (ActivityHelper.instance.getTopActivity() as PlayerActivity).hasWindowFocus() }
+                checkPlaying(assets.getValue(1 to 12), 2000, 14)
+                openPlayerQueue()
+                send(KeyEvent.KEYCODE_DPAD_DOWN)
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                await("Choice reopened") { hasVersionPrompt() }
+                val before = ActivityHelper.instance.getTopActivity() as PlayerActivity
+                instrumentation.runOnMainSync { before.recreate() }
+                await("Choice survives recreation") { ActivityHelper.instance.getTopActivity() !== before && hasVersionPrompt() }
+                screenshot("queue-choice-recreated-${kernel.value}")
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                checkPlaying(next, 0, 14)
+                openPlayerQueue()
+                send(KeyEvent.KEYCODE_DPAD_DOWN)
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                checkPlaying(after, 0, 14)
+                exitPlayer()
+                await("Chosen source returns to detail") { page.hasWindowFocus() }
+                assertFalse(PlayerConfig.isAutoPlayNext())
+            }
+        }
+
+    @Test fun media3AutomaticallyCrossesTheSeasonBoundary() = automaticQueue(PlayerType.TYPE_EXO_PLAYER)
+
+    @Test fun mpvAutomaticallyCrossesTheSeasonBoundary() = automaticQueue(PlayerType.TYPE_MPV_PLAYER)
+
+    private fun automaticQueue(kernel: PlayerType) =
+        withQueueSettings(kernel, true) {
+            val next = runBlocking { addEpisode(2, 1) }
+            val retriever = android.media.MediaMetadataRetriever()
+            val duration =
+                try {
+                    retriever.setDataSource(assets.getValue(1 to 12).storagePath)
+                    requireNotNull(retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)).toLong()
+                } finally {
+                    retriever.release()
+                }
+            val position = (duration - 8000).coerceAtLeast(0)
+            runBlocking { addHistory(assets.getValue(1 to 12), position, now, duration) }
+            detail { _, page ->
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                checkPlaying(assets.getValue(1 to 12), position, 13)
+                checkPlaying(next, 0, 13)
+                instrumentation.runOnMainSync { assertEquals(12, playerView().getVideoSource().getGroupIndex()) }
+                screenshot("queue-auto-next-${kernel.value}")
+                exitPlayer()
+                await("Automatic playback returns") { page.hasWindowFocus() }
+                assertTrue(PlayerConfig.isAutoPlayNext())
+            }
+        }
+
+    @Test fun mergedSpecialsHaveTheirOwnQueueAndPlayTheSharedFileOnce() =
+        withQueueSettings(PlayerType.TYPE_EXO_PLAYER, false) {
+            val merged = runBlocking { addEpisode(0, 1) }
+            val next = runBlocking { addEpisode(0, 3) }
+            runBlocking {
+                dao.putBindingEpisodes(listOf(MediaBindingEpisode(merged.assetId, 0, 1, 0), MediaBindingEpisode(merged.assetId, 0, 2, 1)))
+                addHistory(merged, 2000, now)
+            }
+            detail { _, page ->
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                checkPlaying(merged, 2000, 2)
+                openPlayerQueue()
+                screenshot("queue-specials-merged")
+                instrumentation.runOnMainSync {
+                    assertTrue(playerView().getVideoSource().indexTitle(0).contains("合并集"))
+                    assertTrue(playerView().getVideoSource().indexTitle(1).contains("特别篇"))
+                }
+                send(KeyEvent.KEYCODE_DPAD_DOWN)
+                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                checkPlaying(next, 0, 2)
+                instrumentation.runOnMainSync { assertFalse(playerView().getVideoSource().hasNextSource()) }
+                exitPlayer()
+                await("Special playback returns") { page.hasWindowFocus() }
+            }
+        }
+
+    private fun withQueueSettings(
+        kernel: PlayerType,
+        autoNext: Boolean,
+        block: () -> Unit
+    ) {
+        val oldKernel = PlayerConfig.getUsePlayerType()
+        val oldAutoNext = PlayerConfig.isAutoPlayNext()
+        PlayerConfig.putUsePlayerType(kernel.value)
+        PlayerConfig.putAutoPlayNext(autoNext)
+        try {
+            block()
+        } finally {
+            PlayerConfig.putUsePlayerType(oldKernel)
+            PlayerConfig.putAutoPlayNext(oldAutoNext)
+        }
+    }
+
+    private fun playerView(): DanDanVideoPlayer =
+        (ActivityHelper.instance.getTopActivity() as PlayerActivity)
+            .findViewById<FrameLayout>(com.xyoye.player_component.R.id.player_container)
+            .getChildAt(0) as DanDanVideoPlayer
+
+    private fun openPlayerQueue() {
+        send(KeyEvent.KEYCODE_DPAD_UP)
+        var opened = false
+        instrumentation.runOnMainSync {
+            opened = (ActivityHelper.instance.getTopActivity() as PlayerActivity)
+                .findViewById<View>(com.xyoye.player_component.R.id.source_rv)
+                ?.hasFocus() == true
+        }
+        if (!opened) {
+            send(KeyEvent.KEYCODE_BACK)
+            send(KeyEvent.KEYCODE_DPAD_UP)
+        }
+        await("Queue has DPAD focus") {
+            (ActivityHelper.instance.getTopActivity() as PlayerActivity)
+                .findViewById<View>(com.xyoye.player_component.R.id.source_rv)
+                .hasFocus()
+        }
+    }
+
+    private fun hasVersionPrompt(): Boolean =
+        instrumentation.uiAutomation.rootInActiveWindow
+            ?.findAccessibilityNodeInfosByText("选择本集版本")
+            ?.isNotEmpty() == true
 
     private fun playbackPath(kernel: PlayerType) {
         val old = PlayerConfig.getUsePlayerType()
@@ -525,7 +711,8 @@ class WatchHistoryInstrumentedTest {
 
     private fun checkPlaying(
         asset: MediaAsset,
-        position: Long
+        position: Long,
+        queueSize: Int = 12
     ) {
         await("Player ready at original file position", 25000) {
             val page = ActivityHelper.instance.getTopActivity() as? PlayerActivity ?: return@await false
@@ -534,6 +721,11 @@ class WatchHistoryInstrumentedTest {
                 player.isPlaying() &&
                 player.getVideoSource().getUniqueKey() == asset.uniqueKey &&
                 player.getCurrentPosition() >= position - 2000
+        }
+        instrumentation.runOnMainSync {
+            val page = ActivityHelper.instance.getTopActivity() as PlayerActivity
+            val player = page.findViewById<FrameLayout>(com.xyoye.player_component.R.id.player_container).getChildAt(0) as DanDanVideoPlayer
+            assertEquals("Playback retains its complete queue", queueSize, player.getVideoSource().getGroupSize())
         }
     }
 

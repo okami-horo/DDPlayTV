@@ -16,5 +16,6 @@ fun PlaybackPreparationFailure.userMessage(): String =
         PlaybackPreparationFailure.AuthenticationRequired, PlaybackPreparationFailure.CredentialUnavailable -> "请重新登录媒体库"
         PlaybackPreparationFailure.NetworkUnavailable -> "网络连接失败，请重试"
         PlaybackPreparationFailure.UnsupportedSource, PlaybackPreparationFailure.InvalidDescriptor -> "不支持的播放资源"
+        is PlaybackPreparationFailure.VersionSelectionRequired -> "请选择本集的文件版本"
         is PlaybackPreparationFailure.Unknown -> "准备播放失败，请重试"
     }

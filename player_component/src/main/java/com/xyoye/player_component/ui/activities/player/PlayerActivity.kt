@@ -41,9 +41,11 @@ import com.xyoye.common_component.receiver.ScreenBroadcastReceiver
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.utils.StatusBarStyle
+import com.xyoye.common_component.weight.BottomActionDialog
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
+import com.xyoye.data_component.bean.SheetActionBean
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.MediaType
@@ -134,6 +136,8 @@ class PlayerActivity :
     private var pauseAfterPrepare = false
     private var preparingProgress: PlaybackProgress? = null
     private var playingBeforeLifecyclePause = false
+    private var versionDialog: BottomActionDialog? = null
+    private var shownVersionChoice: QueueVersionChoice? = null
     private val preparationView by lazy {
         TextView(this).apply {
             setTextColor(Color.WHITE)
@@ -462,6 +466,7 @@ class PlayerActivity :
     }
 
     override fun onDestroy() {
+        dismissVersionDialog()
         LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "onDestroy")
         sequentialPlaybackCoordinator.invalidateActiveSession()
         danDanPlayer.removePlayStateListener(sequentialPlayStateListener)
@@ -494,6 +499,7 @@ class PlayerActivity :
     }
 
     private fun renderPlaybackScreen(state: PlaybackScreenState) {
+        if (shownVersionChoice != state.versionChoice) dismissVersionDialog()
         preparationView.visibility = if (state.preparing) View.VISIBLE else View.GONE
         if (state.preparing) {
             preparationView.text = if (state.hasPlayback) "正在准备新视频…" else "正在准备播放…"
@@ -506,12 +512,54 @@ class PlayerActivity :
                 )
         }
         val failure = state.failure ?: return
+        val choice = state.versionChoice
+        if (choice != null) {
+            if (versionDialog == null) showVersionDialog(choice)
+            return
+        }
         viewModel.acknowledgePlaybackFailure(failure)
         ToastCenter.showError(failure.userMessage())
         if (!state.hasPlayback) {
             setResult(RESULT_CANCELED, Intent().putExtra(PlaybackNavigation.FAILURE_MESSAGE, failure.userMessage()))
             finish()
         }
+    }
+
+    private fun showVersionDialog(choice: QueueVersionChoice) {
+        shownVersionChoice = choice
+        val dialog =
+            BottomActionDialog(
+                this,
+                choice.failure.options.mapIndexed { index, file ->
+                    SheetActionBean(
+                        index,
+                        file.sourceName,
+                        describe =
+                            file.file.displayTitle ?: file.file.storagePath.substringAfterLast('/')
+                    )
+                },
+                "选择本集版本 · ${choice.failure.descriptor.displayTitle()}"
+            ) { action ->
+                viewModel.chooseQueueVersion(choice, choice.failure.options[action.actionId as Int])
+                true
+            }
+        versionDialog = dialog
+        dialog.setOnDismissListener {
+            if (versionDialog === dialog) {
+                versionDialog = null
+                shownVersionChoice = null
+                viewModel.acknowledgePlaybackFailure(choice.failure)
+            }
+        }
+        dialog.show()
+    }
+
+    private fun dismissVersionDialog() {
+        val dialog = versionDialog
+        versionDialog = null
+        shownVersionChoice = null
+        dialog?.setOnDismissListener(null)
+        dialog?.dismiss()
     }
 
     override fun onKeyDown(

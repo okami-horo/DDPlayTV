@@ -6,6 +6,9 @@ import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackFileReference
 import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
+import com.xyoye.common_component.playback.handoff.SeriesPlaybackDescriptor
+import com.xyoye.common_component.playback.handoff.SeriesQueueEntry
+import com.xyoye.common_component.playback.handoff.SeriesQueueFile
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media.StorageVideoSource
@@ -24,6 +27,7 @@ import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.screeencast.ScreencastData
 import com.xyoye.data_component.data.screeencast.ScreencastVideoData
+import com.xyoye.data_component.entity.MediaAsset
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
@@ -74,6 +78,7 @@ class PlaybackSourceResolverTest {
     private var afterAssembly: (StorageVideoSource) -> Unit = {}
     private var smbFailure: Exception? = null
     private var catalogSource: suspend (Int) -> com.xyoye.data_component.entity.CatalogSourceState? = { null }
+    private val assets = mutableMapOf<Long, MediaAsset>()
     private val transportFactory = PlaybackTransportFactory({ create(it) }, ioDispatcher = Dispatchers.Unconfined)
     private val resolver get() =
         PlaybackSourceResolver(
@@ -101,7 +106,8 @@ class PlaybackSourceResolverTest {
                     }
             },
             Dispatchers.Unconfined,
-            catalogSource = { catalogSource(it) }
+            catalogSource = { catalogSource(it) },
+            loadAsset = { assets[it] }
         )
 
     @After fun cleanup() {
@@ -391,6 +397,121 @@ class PlaybackSourceResolverTest {
                 }
             )
         }
+
+    @Test fun seriesPrefersTheCurrentSourceAndRestoresProgressFromTheActualFileOnly() =
+        runBlocking {
+            val current = seriesFile(1, "episode1.mkv")
+            val alternate = seriesFile(2, "episode1.mkv", library.id + 1)
+            val next = seriesFile(3, "episode2.mkv")
+            val descriptor =
+                SeriesPlaybackDescriptor(
+                    77,
+                    listOf(
+                        SeriesQueueEntry(1, 1, "S1E1", listOf(current, alternate)),
+                        SeriesQueueEntry(2, 1, "S2E1", listOf(next))
+                    ),
+                    0,
+                    library.id
+                )
+            history =
+                PlayHistoryEntity(
+                    id = 1,
+                    videoName = "first",
+                    url = "private",
+                    mediaType = library.mediaType,
+                    uniqueKey = current.file.uniqueKey,
+                    storageId = current.libraryId,
+                    videoPosition = 8123
+                )
+            val resolved = success(descriptor)
+            assertEquals(current, (resolved.descriptor as SeriesPlaybackDescriptor).selectedFile)
+            assertEquals("S1E1", resolved.identity.displayTitle)
+            assertEquals(8123, resolved.source.getCurrentPosition())
+            assertEquals(2, resolved.queue.size)
+            assertEquals(2, connections.size)
+            val second = success(resolved.queue[1])
+            assertEquals(next, (second.descriptor as SeriesPlaybackDescriptor).selectedFile)
+            assertEquals(0, second.source.getCurrentPosition())
+            assertEquals("S2E1", second.identity.displayTitle)
+        }
+
+    @Test fun absentPreferredSourceAndAmbiguousCurrentVersionsRequireAChoiceBeforeOpeningAnyConnection() =
+        runBlocking {
+            val one = seriesFile(1, "episode1.mkv", library.id + 1)
+            val two = seriesFile(2, "episode2.mkv", library.id + 1)
+            val entry = SeriesQueueEntry(1, 1, "Episode", listOf(one))
+            val descriptor = SeriesPlaybackDescriptor(77, listOf(entry), 0, library.id)
+            val result = failure(descriptor) as PlaybackPreparationFailure.VersionSelectionRequired
+            assertEquals(listOf(one), result.options)
+            val ambiguous = descriptor.copy(entries = listOf(entry.copy(files = listOf(one, two))), preferredLibraryId = one.libraryId)
+            assertEquals(2, (failure(ambiguous) as PlaybackPreparationFailure.VersionSelectionRequired).options.size)
+            assertTrue(connections.isEmpty())
+            assertTrue(sources.isEmpty())
+        }
+
+    @Test fun explicitStaleFilesAreNeverSilentlyReplacedAndChoicesExcludeStaleAlternatives() =
+        runBlocking {
+            val one = seriesFile(1, "episode1.mkv")
+            val two = seriesFile(2, "episode2.mkv", library.id + 1)
+            val descriptor = SeriesPlaybackDescriptor(77, listOf(SeriesQueueEntry(1, 1, "Episode", listOf(one, two))), 0, library.id, one)
+            assets[one.assetId] = assets.getValue(one.assetId).copy(revision = 2)
+            assertEquals(PlaybackPreparationFailure.FileMissing, failure(descriptor))
+            val prompt = failure(descriptor.copy(selectedFile = null)) as PlaybackPreparationFailure.VersionSelectionRequired
+            assertEquals(listOf(two), prompt.options)
+            catalogSource = {
+                com.xyoye.data_component.entity
+                    .CatalogSourceState(it, 2)
+            }
+            assertEquals(PlaybackPreparationFailure.FileMissing, failure(descriptor.copy(selectedFile = null)))
+            assertTrue(connections.isEmpty())
+        }
+
+    @Test fun fileReplacementDuringPreparationReleasesTheLookupAndKeepsTheOldPlaybackUntouched() =
+        runBlocking {
+            val one = seriesFile(1, "episode1.mkv")
+            val descriptor = SeriesPlaybackDescriptor(77, listOf(SeriesQueueEntry(1, 1, "Episode", listOf(one))), 0, library.id, one)
+            create = { smb(it).also { assets[one.assetId] = assets.getValue(one.assetId).copy(available = false) } }
+            assertEquals(PlaybackPreparationFailure.FileMissing, failure(descriptor))
+            assertTrue(sources.isEmpty())
+            assertEquals(listOf(1), connections.map { it.closes })
+        }
+
+    @Test fun catalogReplacementDuringTransportAcquisitionClosesThePreparedSource() =
+        runBlocking {
+            val one = seriesFile(1, "episode1.mkv")
+            val descriptor = SeriesPlaybackDescriptor(77, listOf(SeriesQueueEntry(1, 1, "Episode", listOf(one))), 0, library.id, one)
+            afterAssembly = { assets[one.assetId] = assets.getValue(one.assetId).copy(available = false) }
+            assertEquals(PlaybackPreparationFailure.FileMissing, failure(descriptor))
+            assertEquals(1, sources.size)
+            assertTrue(connections.all { it.closes == 1 })
+        }
+
+    private fun seriesFile(
+        id: Long,
+        name: String,
+        libraryId: Int = library.id
+    ): SeriesQueueFile {
+        load = { library.copy(id = it) }
+        catalogSource = {
+            com.xyoye.data_component.entity
+                .CatalogSourceState(it)
+        }
+        val browser = SmbStorage(library.copy(id = libraryId), Connection())
+        val reference = PlaybackReferenceFactory.reference(SmbStorageFile(browser, "videos", name, 12, false))
+        assets[id] =
+            MediaAsset(
+                id,
+                libraryId,
+                1,
+                reference.storagePath,
+                reference.uniqueKey,
+                reference.storagePath,
+                fileName = name,
+                parentPath = "videos",
+                discoveredAt = 1
+            )
+        return SeriesQueueFile(id, 1, libraryId, 1, library.mediaType, reference, "Source $libraryId")
+    }
 
     private suspend fun success(descriptor: PlaybackDescriptor): ResolvedPlayback {
         val result = resolver.resolve(descriptor, profile)

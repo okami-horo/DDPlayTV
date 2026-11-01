@@ -10,6 +10,7 @@ import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
+import com.xyoye.common_component.playback.handoff.SeriesPlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import okio.Buffer
 
@@ -67,7 +68,8 @@ internal class PlaybackHandoffCodec {
             mapOf(
                 "library" to StoredLibraryFileDescriptor::class.java,
                 "history" to PlayHistoryDescriptor::class.java,
-                "screencast" to ScreencastDescriptor::class.java
+                "screencast" to ScreencastDescriptor::class.java,
+                "series" to SeriesPlaybackDescriptor::class.java
             )
 
         override fun create(

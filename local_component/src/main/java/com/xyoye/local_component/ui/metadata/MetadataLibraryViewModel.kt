@@ -3,11 +3,10 @@ package com.xyoye.local_component.ui.metadata
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.metadata.MetadataCoordinator
+import com.xyoye.common_component.metadata.MetadataPlaybackRequests
 import com.xyoye.common_component.playback.PlaybackEntryRequests
-import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
-import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import com.xyoye.data_component.entity.MediaAsset
 import com.xyoye.data_component.entity.MediaBinding
 import com.xyoye.data_component.entity.MediaBindingEpisode
@@ -42,26 +41,27 @@ class MetadataLibraryViewModel : BaseViewModel() {
             MetadataLibraryState(works, assets, bindings, episodes, history, loaded = true)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MetadataLibraryState())
     private val playback = PlaybackEntryRequests(viewModelScope, { if (it) showLoading() else hideLoading() })
+    private val playbackRequests = MetadataPlaybackRequests(repository)
     val playEvents = playback.outcomes
 
     fun play(history: PlayHistoryEntity) {
         playback.submit {
             PlaybackRequestInput(
-                PlayHistoryDescriptor(history.id, history.uniqueKey, history.storageId),
+                playbackRequests.history(history),
                 null,
                 PlaybackRequestOrigin.PLAY_HISTORY
             )
         }
     }
 
-    fun play(asset: MediaAsset) {
+    fun play(
+        asset: MediaAsset,
+        season: Int? = null,
+        episode: Int? = null
+    ) {
         playback.submit {
-            val source = repository.source(asset.libraryId)
-            require(source.contentGeneration == asset.contentGeneration) { "来源内容已更换，请重新识别文件" }
-            val library = requireNotNull(repository.database.getMediaLibraryDao().getById(asset.libraryId))
-            // Deliberately no inferred directory queue: metadata selection plays one physical file.
             PlaybackRequestInput(
-                StoredLibraryFileDescriptor(asset.libraryId, library.mediaType, MetadataCoordinator.reference(asset)),
+                playbackRequests.asset(asset.assetId, season, episode),
                 null,
                 PlaybackRequestOrigin.STORAGE_FILE
             )

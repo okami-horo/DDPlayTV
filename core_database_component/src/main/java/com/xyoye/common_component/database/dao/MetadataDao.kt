@@ -63,6 +63,42 @@ interface MetadataDao {
     @Query("SELECT * FROM media_binding_episode WHERE assetId = :id ORDER BY ordinal")
     suspend fun bindingEpisodes(id: Long): List<MediaBindingEpisode>
 
+    @Query(
+        """
+        SELECT a.* FROM media_asset a
+        JOIN media_binding b ON b.assetId = a.assetId
+        JOIN catalog_source s ON s.libraryId = a.libraryId AND s.contentGeneration = a.contentGeneration
+        JOIN media_library l ON l.id = a.libraryId
+        WHERE b.mediaKind = :kind AND b.tmdbId = :id AND b.state = 'MATCHED'
+        AND (b.failure IS NULL OR b.failure != 'FILE_CHANGED') AND a.available = 1 AND l.media_type != 'remote_storage'
+        ORDER BY a.assetId
+    """
+    )
+    suspend fun playbackAssets(
+        kind: String,
+        id: Long
+    ): List<MediaAsset>
+
+    @Query(
+        """
+        SELECT e.* FROM media_binding_episode e JOIN media_binding b ON b.assetId = e.assetId
+        WHERE b.mediaKind = 'tv' AND b.tmdbId = :id ORDER BY e.seasonNumber, e.episodeNumber, e.ordinal
+    """
+    )
+    suspend fun playbackEpisodes(id: Long): List<MediaBindingEpisode>
+
+    @Query(
+        """
+        SELECT a.* FROM media_asset a
+        JOIN catalog_source s ON s.libraryId = a.libraryId AND s.contentGeneration = a.contentGeneration
+        WHERE a.libraryId = :libraryId AND a.uniqueKey = :key
+    """
+    )
+    suspend fun historyAssets(
+        libraryId: Int,
+        key: String
+    ): List<MediaAsset>
+
     @Query("SELECT * FROM metadata_work WHERE mediaKind = :kind AND tmdbId = :id")
     suspend fun work(
         kind: String,

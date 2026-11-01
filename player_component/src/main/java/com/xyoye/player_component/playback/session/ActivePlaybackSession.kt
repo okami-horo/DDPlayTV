@@ -10,6 +10,8 @@ import com.xyoye.common_component.playback.handoff.PlaybackQueueContext
 import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.playback.handoff.PlaybackStateView
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
+import com.xyoye.common_component.playback.handoff.SeriesPlaybackDescriptor
+import com.xyoye.common_component.playback.handoff.SeriesQueueFile
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import com.xyoye.common_component.services.PlaybackMetadataFile
 import com.xyoye.common_component.source.handoff.PlaybackResolutionResult
@@ -153,6 +155,13 @@ internal class ActivePlaybackSession(
                                         is StoredLibraryFileDescriptor -> it.file.uniqueKey
                                         is PlayHistoryDescriptor -> it.expectedUniqueKey
                                         is ScreencastDescriptor -> it.playUniqueKey
+                                        is SeriesPlaybackDescriptor ->
+                                            it.entries[it.selectedEpisode]
+                                                .files
+                                                .filter { file -> file.libraryId == it.preferredLibraryId }
+                                                .singleOrNull()
+                                                ?.file
+                                                ?.uniqueKey
                                         else ->
                                             if (it ==
                                                 active.playback.resolved.descriptor
@@ -550,7 +559,8 @@ internal class ActivePlaybackSession(
     /** Controlled internal selection retains the session/request identity and never consumes external pending. */
     suspend fun selectQueueItem(
         index: Int,
-        expected: PlaybackSessionVersion
+        expected: PlaybackSessionVersion,
+        selectedFile: SeriesQueueFile? = null
     ): SessionRequestResult =
         withContext(playbackDispatcher) {
             val retired = mutableListOf<PreparedPlayback>()
@@ -568,7 +578,19 @@ internal class ActivePlaybackSession(
                         preparing = Preparation(null, expected, currentCoroutineContext().job).also { attempt = it }
                         active
                     } ?: return@withContext SessionRequestResult.Rejected(PlaybackPreparationFailure.RequestSuperseded)
-                val resolution = resolve(active.playback.resolved.queue[index])
+                val targetDescriptor = active.playback.resolved.queue[index]
+                val descriptor =
+                    if (selectedFile != null) {
+                        if (targetDescriptor !is SeriesPlaybackDescriptor ||
+                            selectedFile !in targetDescriptor.entries[targetDescriptor.selectedEpisode].files
+                        ) {
+                            return@withContext SessionRequestResult.Rejected(PlaybackPreparationFailure.InvalidDescriptor)
+                        }
+                        targetDescriptor.copy(selectedFile = selectedFile)
+                    } else {
+                        targetDescriptor
+                    }
+                val resolution = resolve(descriptor)
                 when (val result = resolution) {
                     is PlaybackResolutionResult.Failure -> return@withContext SessionRequestResult.Rejected(result.failure)
                     is PlaybackResolutionResult.Success -> {
@@ -708,7 +730,8 @@ internal class ActivePlaybackSession(
                 } else {
                     selected
                 }
-            val queued = ResolvedPlayback(resolved.source, descriptor, resolved.identity, previous.resolved.queue)
+            val queue = if (selected is SeriesPlaybackDescriptor) resolved.queue else previous.resolved.queue
+            val queued = ResolvedPlayback(resolved.source, descriptor, resolved.identity, queue, resolved.metadataFile)
             return PreparedPlayback(queued, previous.launchOptions?.copy(mediaId = resolved.identity.mediaId, autoplay = true))
         } catch (failure: Throwable) {
             withContext(NonCancellable + cleanupDispatcher) { resolved.source.releasePlaybackResources() }

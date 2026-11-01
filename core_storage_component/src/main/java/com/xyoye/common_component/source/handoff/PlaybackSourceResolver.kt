@@ -10,6 +10,8 @@ import com.xyoye.common_component.playback.handoff.PlaybackFileReference
 import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
 import com.xyoye.common_component.playback.handoff.PlaybackSourceView
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
+import com.xyoye.common_component.playback.handoff.SeriesPlaybackDescriptor
+import com.xyoye.common_component.playback.handoff.SeriesQueueFile
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import com.xyoye.common_component.services.PlaybackMetadataFile
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
@@ -29,6 +31,7 @@ import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.data.screeencast.ScreencastData
 import com.xyoye.data_component.data.screeencast.ScreencastVideoData
 import com.xyoye.data_component.entity.CatalogSourceState
+import com.xyoye.data_component.entity.MediaAsset
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
@@ -74,7 +77,8 @@ class PlaybackSourceResolver internal constructor(
     private val resolveCredentials: (MediaLibraryEntity) -> MediaLibraryEntity,
     private val createSource: suspend (StorageFile, PlaybackProfile?, () -> Unit) -> StorageVideoSource?,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val catalogSource: suspend (Int) -> CatalogSourceState? = { null }
+    private val catalogSource: suspend (Int) -> CatalogSourceState? = { null },
+    private val loadAsset: suspend (Long) -> MediaAsset? = { null }
 ) {
     constructor() : this(
         MediaLibraryRepository::getById,
@@ -93,7 +97,8 @@ class PlaybackSourceResolver internal constructor(
                 cleanup
             )
         },
-        catalogSource = MediaLibraryRepository::catalogVersion
+        catalogSource = MediaLibraryRepository::catalogVersion,
+        loadAsset = { DatabaseProvider.instance.getMetadataDao().asset(it) }
     )
 
     suspend fun resolve(
@@ -121,6 +126,8 @@ class PlaybackSourceResolver internal constructor(
                             ?: fail(PlaybackPreparationFailure.FileMissing)
                     source = created
                     ensureActive()
+                    val selectedFile = (resolved.descriptor as? SeriesPlaybackDescriptor)?.selectedFile
+                    if (selectedFile != null && !validSeriesFile(selectedFile)) fail(PlaybackPreparationFailure.FileMissing)
                     // SMB/FTP factories acquire a second connection. Retire this metadata query now.
                     if (file.storage.library.mediaType in isolatedMediaTypes) ownership.close()
                     val identity =
@@ -128,7 +135,7 @@ class PlaybackSourceResolver internal constructor(
                             file.uniqueKey(),
                             file.uniqueKey(),
                             file.storage.library.mediaType,
-                            file.fileName(),
+                            (resolved.descriptor as? SeriesPlaybackDescriptor)?.displayTitle() ?: file.fileName(),
                             file.storage.library.id
                         )
                     PlaybackResolutionResult.Success(
@@ -160,6 +167,7 @@ class PlaybackSourceResolver internal constructor(
         when (descriptor) {
             is StoredLibraryFileDescriptor -> resolveLibrary(descriptor, owner)
             is PlayHistoryDescriptor -> resolveHistory(descriptor, owner)
+            is SeriesPlaybackDescriptor -> resolveSeries(descriptor, owner)
             is ScreencastDescriptor -> {
                 if (descriptor.senderAddress.isBlank() ||
                     descriptor.port !in 1..65535 ||
@@ -198,6 +206,43 @@ class PlaybackSourceResolver internal constructor(
                 FileResolution(owner.file(file), descriptor, descriptor.relatedVideos.map { descriptor.copy(playUniqueKey = it.uniqueKey) })
             }
         }
+
+    private suspend fun resolveSeries(
+        descriptor: SeriesPlaybackDescriptor,
+        owner: ResolutionOwnership
+    ): FileResolution {
+        val options = descriptor.entries[descriptor.selectedEpisode].files.filter { validSeriesFile(it) }
+        val selected = descriptor.selectedFile
+        val file =
+            if (selected != null) {
+                selected.takeIf { it in options } ?: fail(PlaybackPreparationFailure.FileMissing)
+            } else {
+                if (options.isEmpty()) fail(PlaybackPreparationFailure.FileMissing)
+                options.filter { it.libraryId == descriptor.preferredLibraryId }.singleOrNull()
+                    ?: fail(PlaybackPreparationFailure.VersionSelectionRequired(descriptor, options))
+            }
+        val resolved = resolveLibrary(StoredLibraryFileDescriptor(file.libraryId, file.mediaType, file.file), owner)
+        // File/catalog replacement during transport preparation must not commit a stale queue choice.
+        if (!validSeriesFile(file)) fail(PlaybackPreparationFailure.FileMissing)
+        val normalized = descriptor.copy(preferredLibraryId = file.libraryId, selectedFile = file)
+        return FileResolution(resolved.file, normalized, normalized.queue(), resolved.metadataFile)
+    }
+
+    private suspend fun validSeriesFile(file: SeriesQueueFile): Boolean {
+        if (file.mediaType == MediaType.REMOTE_STORAGE) return false
+        val asset = loadAsset(file.assetId) ?: return false
+        val library = loadLibrary(file.libraryId) ?: return false
+        return asset.available &&
+            asset.libraryId == file.libraryId &&
+            asset.revision == file.assetRevision &&
+            asset.contentGeneration == file.contentGeneration &&
+            asset.uniqueKey == file.file.uniqueKey &&
+            asset.storagePath == file.file.storagePath &&
+            asset.protocolReference == file.file.protocolReference &&
+            library.id == file.libraryId &&
+            library.mediaType == file.mediaType &&
+            catalogVersion(file.libraryId)?.contentGeneration == file.contentGeneration
+    }
 
     private suspend fun resolveLibrary(
         descriptor: StoredLibraryFileDescriptor,

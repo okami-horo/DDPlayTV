@@ -4,6 +4,7 @@ import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackLaunchOptions
 import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
+import com.xyoye.common_component.playback.handoff.SeriesPlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import com.xyoye.common_component.source.handoff.ResolvedPlayback
 import com.xyoye.player_component.playback.handoff.PlaybackSnapshotTarget
@@ -25,6 +26,8 @@ internal class PreparedPlayback(
             val selected = resolved.descriptor
             if (selected is StoredLibraryFileDescriptor && item is StoredLibraryFileDescriptor) {
                 item.libraryId == selected.libraryId && item.file.uniqueKey == selected.file.uniqueKey
+            } else if (selected is SeriesPlaybackDescriptor && item is SeriesPlaybackDescriptor) {
+                item.seriesId == selected.seriesId && item.selectedEpisode == selected.selectedEpisode
             } else {
                 item == selected
             }
@@ -43,6 +46,7 @@ internal class PreparedPlayback(
                             is StoredLibraryFileDescriptor -> item.file.displayTitle ?: item.file.uniqueKey
                             is ScreencastDescriptor -> item.relatedVideos.first { it.uniqueKey == item.playUniqueKey }.title
                             is PlayHistoryDescriptor -> item.expectedUniqueKey
+                            is SeriesPlaybackDescriptor -> item.displayTitle()
                         }
                     }
                 }

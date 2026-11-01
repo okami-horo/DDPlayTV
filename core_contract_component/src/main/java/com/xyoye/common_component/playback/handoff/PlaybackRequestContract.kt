@@ -64,6 +64,13 @@ sealed interface PlaybackPreparationFailure {
 
     object InvalidDescriptor : PlaybackPreparationFailure
 
+    data class VersionSelectionRequired(
+        val descriptor: SeriesPlaybackDescriptor,
+        val options: List<SeriesQueueFile>
+    ) : PlaybackPreparationFailure {
+        override fun toString(): String = "VersionSelectionRequired"
+    }
+
     data class Unknown(
         val causeFingerprint: String
     ) : PlaybackPreparationFailure

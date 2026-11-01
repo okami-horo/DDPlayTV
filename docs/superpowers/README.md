@@ -6,6 +6,7 @@
 
 | 主题 | 设计依据 | 执行状态与证据 |
 | --- | --- | --- |
+| 统一剧集播放队列 | [作品、单集、实际文件、版本及队列设计；Jellyfin/Plezy/Kodi 对比](designs/2026-11-01-series-playback-queue-design.md) | [整剧跨季、版本选择、恢复与 SQ01–SQ09 验证](plans/2026-11-01-series-playback-queue.md)：已实施，Debug/test 构建、505 项 JVM、lint/依赖/限定格式及 27 项 AVD 通过；2 项既有 JVM 跳过，真实云账号/物理电视验收另计 |
 | 旧番剧搜索与发现页退役 | 用户要求确认旧“搜番剧”无用即清理；旧首页链路已无正常入口 | [清理范围、保留能力与验证](plans/2026-11-01-legacy-anime-discovery-cleanup.md)；最新 Release 已于 15:58 覆盖安装至电视，安装包哈希一致 |
 | 遥控器返回入口清理 | 用户确认纯 TV 下删除屏幕返回及播放器面板关闭按钮 | [清理、焦点路径与验证](plans/2026-11-01-remote-back-cleanup.md)：本地构建／JVM／lint 与 24 项 AVD 检查通过；已随 2026-11-01 15:58 Release 安装至电视，运行验收另计 |
 | 首页观看足迹与剧集详情重设计 | [已选 B 沉浸剧集、作品入口与原文件续播](designs/2026-11-01-home-watch-history-design.md) | [WH01–WH10 实施与验证](plans/2026-11-01-home-watch-history.md)：初始 B 已提交为 3e53add08；圆角兼容修正通过本地构建／lint／4 项 AVD 检查，并于 18:07:29 以同版本 Release 4.2.4 / 71 覆盖安装到电视、哈希一致；修正未提交，真机效果与用户验收仍待 |
