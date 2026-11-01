@@ -1,5 +1,5 @@
 {
-  "module_count": 22,
+  "module_count": 21,
   "modules": [
     {
       "build_file": "app/build.gradle.kts",
@@ -409,11 +409,6 @@
           "configuration": "implementation",
           "module": ":core_system_component",
           "scope": "main"
-        },
-        {
-          "configuration": "testImplementation",
-          "module": ":core_contract_component",
-          "scope": "test"
         }
       ]
     },
@@ -555,12 +550,6 @@
       "build_file": "repository/immersion_bar/build.gradle.kts",
       "dir": "repository/immersion_bar",
       "name": ":repository:immersion_bar",
-      "project_dependencies": []
-    },
-    {
-      "build_file": "repository/panel_switch/build.gradle.kts",
-      "dir": "repository/panel_switch",
-      "name": ":repository:panel_switch",
       "project_dependencies": []
     },
     {

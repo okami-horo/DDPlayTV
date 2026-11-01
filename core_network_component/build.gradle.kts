@@ -24,7 +24,6 @@ dependencies {
     // Moshi KotlinJsonAdapterFactory uses reflection at runtime.
     implementation(kotlin("reflect"))
 
-    testImplementation(project(":core_contract_component"))
     testImplementation(Dependencies.Kotlin.coroutines_test)
 }
 

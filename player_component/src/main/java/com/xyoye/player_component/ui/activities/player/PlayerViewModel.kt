@@ -3,19 +3,13 @@ package com.xyoye.player_component.ui.activities.player
 import androidx.lifecycle.viewModelScope
 import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.DatabaseProvider
-import com.xyoye.common_component.network.repository.ResourceRepository
 import com.xyoye.common_component.playback.handoff.PlaybackAction
 import com.xyoye.common_component.playback.handoff.PlaybackCommand
 import com.xyoye.common_component.playback.handoff.PlaybackOperationResult
 import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
 import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.source.base.BaseVideoSource
-import com.xyoye.common_component.utils.DanmuUtils
-import com.xyoye.common_component.utils.ErrorReportHelper
-import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.PlaybackProfile
-import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.TrackType
@@ -32,9 +26,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import master.flame.danmaku.danmaku.model.BaseDanmaku
-import java.math.BigDecimal
-import java.math.RoundingMode
 
 class PlayerViewModel : BaseViewModel() {
     private val danmuBindingWrites = Mutex()
@@ -244,100 +235,5 @@ class PlayerViewModel : BaseViewModel() {
         viewModelScope.launch {
             DatabaseProvider.instance.getDanmuBlockDao().delete(id)
         }
-    }
-
-    fun sendDanmu(
-        danmu: LocalDanmuBean?,
-        sendDanmuBean: SendDanmuBean
-    ) {
-        val episodeId = danmu?.episodeId
-        if (episodeId?.isNotEmpty() == true) {
-            sendDanmuToServer(sendDanmuBean, episodeId)
-        }
-
-        val danmuPath = danmu?.danmuPath
-        if (danmuPath?.isNotEmpty() == true) {
-            writeDanmuToFile(sendDanmuBean, danmuPath)
-        }
-    }
-
-    private fun sendDanmuToServer(
-        sendDanmuBean: SendDanmuBean,
-        episodeId: String
-    ) {
-        viewModelScope.launch {
-            try {
-                val time =
-                    BigDecimal(sendDanmuBean.position.toDouble() / 1000)
-                        .setScale(2, RoundingMode.HALF_UP)
-                        .toString()
-
-                val mode =
-                    when {
-                        sendDanmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
-                        sendDanmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
-                        else -> BaseDanmaku.TYPE_FIX_BOTTOM
-                    }
-
-                val color = sendDanmuBean.color and 0x00FFFFFF
-
-                val result =
-                    ResourceRepository.sendOneDanmu(
-                        episodeId,
-                        time,
-                        mode,
-                        color,
-                        sendDanmuBean.text
-                    )
-
-                if (result.isFailure) {
-                    val exception = result.exceptionOrNull()
-                    val message = exception?.message.orEmpty()
-                    ToastCenter.showOriginalToast("发送弹幕失败\n$message")
-
-                    // 上报网络请求失败的异常
-                    if (exception != null) {
-                        ErrorReportHelper.postCatchedExceptionWithContext(
-                            exception,
-                            "PlayerViewModel",
-                            "sendDanmuToServer",
-                            "发送弹幕到服务器失败: $episodeId"
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                ErrorReportHelper.postCatchedExceptionWithContext(
-                    e,
-                    "PlayerViewModel",
-                    "sendDanmuToServer",
-                    "发送弹幕异常: $episodeId"
-                )
-                ToastCenter.showOriginalToast("发送弹幕失败: ${e.message}")
-            }
-        }
-    }
-
-    private fun writeDanmuToFile(
-        sendDanmuBean: SendDanmuBean,
-        danmuPath: String
-    ) {
-        val time =
-            BigDecimal(sendDanmuBean.position.toDouble() / 1000)
-                .setScale(2, RoundingMode.HALF_UP)
-                .toString()
-
-        val mode =
-            when {
-                sendDanmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
-                sendDanmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
-                else -> BaseDanmaku.TYPE_FIX_BOTTOM
-            }
-
-        val unixTime = (System.currentTimeMillis() / 1000f).toInt().toString()
-        val color = sendDanmuBean.color and 0x00FFFFFF
-
-        val danmuText = "<d p=\"$time,$mode,25,$color,$unixTime,0,0,0\">${sendDanmuBean.text}</d>"
-
-        DanmuUtils.appendDanmu(danmuPath, danmuText)
     }
 }

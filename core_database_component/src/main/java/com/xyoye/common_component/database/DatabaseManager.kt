@@ -366,6 +366,14 @@ class DatabaseManager private constructor() {
                 }
             }
 
+        val MIGRATION_21_22 =
+            object : Migration(21, 22) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL("DROP TABLE IF EXISTS media3_rollout_snapshot")
+                    database.execSQL("DROP TABLE IF EXISTS media3_download_asset_check")
+                }
+            }
+
         val MIGRATION_16_15 =
             object : Migration(16, 15) {
                 override fun migrate(database: SupportSQLiteDatabase) {
@@ -459,6 +467,7 @@ class DatabaseManager private constructor() {
                 MetadataMigration,
                 MIGRATION_19_20,
                 MIGRATION_20_21,
+                MIGRATION_21_22,
                 MIGRATION_16_15
             ).build()
 }

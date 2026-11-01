@@ -18,7 +18,6 @@ include(":core_ui_component")
 
 include(":repository:danmaku")
 include(":repository:immersion_bar")
-include(":repository:panel_switch")
 include(":repository:seven_zip")
 include(":repository:video_cache")
 include(":repository:mpv")

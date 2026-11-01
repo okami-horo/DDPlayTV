@@ -1,12 +1,8 @@
 package com.okamihoro.ddplaytv.playback
 
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.media.MediaMetadataRetriever
 import android.net.Uri
-import android.os.IBinder
 import android.os.Looper
 import android.os.SystemClock
 import android.view.KeyEvent
@@ -19,14 +15,12 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.alibaba.android.arouter.launcher.ARouter
-import com.okamihoro.ddplaytv.app.service.Media3SessionService
 import com.okamihoro.ddplaytv.ui.tv.TvMainActivity
 import com.xyoye.anime_component.ui.fragment.anime_episode.AnimeEpisodeFragmentViewModel
 import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.ScreencastConfig
 import com.xyoye.common_component.database.DatabaseProvider
-import com.xyoye.common_component.media3.Media3SessionClient
 import com.xyoye.common_component.playback.handoff.PlaybackAction
 import com.xyoye.common_component.playback.handoff.PlaybackCommand
 import com.xyoye.common_component.playback.handoff.PlaybackLaunchOptions
@@ -74,7 +68,6 @@ import com.xyoye.player_component.utils.PlayerErrorReporter
 import com.xyoye.storage_component.services.ScreencastReceiveService
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileViewModel
 import fi.iki.elonen.NanoHTTPD
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -167,7 +160,7 @@ class PlaybackEntriesInstrumentedTest {
             }
         }
 
-    @Test fun localProjectionAndPlatformCommandsWorkWithoutGatewayResponses() =
+    @Test fun localProjectionAndCommandsFollowTheActiveSession() =
         withFixture { fixture ->
             val firstFile = File(fixture.parentFile, "projection-first.mp4")
             val secondFile = File(fixture.parentFile, "projection-second.mp4")
@@ -191,84 +184,65 @@ class PlaybackEntriesInstrumentedTest {
                                 )
                             ) as PlaybackSubmissionResult.Accepted
                         }
-                    val connected = CompletableDeferred<Media3SessionClient>()
-                    val connection =
-                        object : ServiceConnection {
-                            override fun onServiceConnected(
-                                name: ComponentName?,
-                                service: IBinder?
-                            ) {
-                                connected.complete(service as Media3SessionClient)
+                    ActivityScenario.launch<PlayerActivity>(playerIntent(submit(0).requestId)).use { scenario ->
+                        var activity: PlayerActivity? = null
+                        scenario.onActivity { activity = it }
+                        val firstSource = awaitSource { activity }
+                        val first =
+                            runBlocking {
+                                withTimeout(
+                                    10000
+                                ) { provider.observePlayback().first { it?.state == Media3PlaybackState.PLAYING }!! }
                             }
-
-                            override fun onServiceDisconnected(name: ComponentName?) = Unit
-                        }
-                    assertTrue(context.bindService(Intent(context, Media3SessionService::class.java), connection, Context.BIND_AUTO_CREATE))
-                    try {
-                        val client = runBlocking { withTimeout(10000) { connected.await() } }
-                        ActivityScenario.launch<PlayerActivity>(playerIntent(submit(0).requestId)).use { scenario ->
-                            var activity: PlayerActivity? = null
-                            scenario.onActivity { activity = it }
-                            val firstSource = awaitSource { activity }
-                            val first =
-                                runBlocking {
-                                    withTimeout(
-                                        10000
-                                    ) { provider.observePlayback().first { it?.state == Media3PlaybackState.PLAYING }!! }
-                                }
-                            assertEquals(firstFile.name, first.source.displayTitle)
-                            assertSame(first, client.playback().value)
-                            assertTrue(Media3Capability.PAUSE in first.capabilities)
-                            assertTrue(Media3Capability.SEEK in first.capabilities)
-                            assertFalse(Media3Capability.CAST in first.capabilities)
-                            assertFalse(Media3Capability.PIP in first.capabilities)
-                            assertFalse(Media3Capability.BACKGROUND in first.capabilities)
-                            assertEquals(
-                                PlaybackOperationResult.Success,
-                                runBlocking { client.dispatch(PlaybackCommand(first.version, PlaybackAction.Pause)) }
-                            )
-                            assertEquals(Media3PlaybackState.PAUSED, provider.observePlayback().value!!.state)
-                            assertEquals(
-                                PlaybackOperationResult.Success,
-                                runBlocking { client.dispatch(PlaybackCommand(first.version, PlaybackAction.Seek(5000))) }
-                            )
-                            assertEquals(
-                                PlaybackOperationResult.Success,
-                                runBlocking { client.dispatch(PlaybackCommand(first.version, PlaybackAction.Play)) }
-                            )
-                            awaitSource { activity }
-                            scenario.onActivity { assertTrue(player(it).getCurrentPosition() >= 4000) }
-                            val secondRequest = submit(1)
-                            scenario.onActivity { it.startActivity(playerIntent(secondRequest.requestId)) }
-                            awaitSource(firstSource) { activity }
-                            val second = provider.observePlayback().value!!
-                            assertEquals(secondFile.name, second.source.displayTitle)
-                            assertTrue(second.version.sourceRevision > first.version.sourceRevision)
-                            assertTrue(
-                                runBlocking {
-                                    client.dispatch(
-                                        PlaybackCommand(first.version, PlaybackAction.Pause)
-                                    )
-                                } is PlaybackOperationResult.Rejected
-                            )
-                            scenario.onActivity { assertTrue(player(it).isPlaying()) }
-                            val diagnostics =
-                                PlayerErrorReporter::class.java
-                                    .getDeclaredMethod("enrich", String::class.java)
-                                    .apply { isAccessible = true }
-                                    .invoke(PlayerErrorReporter, "fixture")
-                                    .toString()
-                            assertTrue(diagnostics.contains(second.version.sessionId))
-                            assertTrue(diagnostics.contains("sourceRevision=${second.version.sourceRevision}"))
-                            assertEquals(
-                                PlaybackOperationResult.Success,
-                                runBlocking { client.dispatch(PlaybackCommand(second.version, PlaybackAction.Exit)) }
-                            )
-                            runBlocking { withTimeout(10000) { provider.observePlayback().first { it == null } } }
-                            assertNull(client.playback().value)
-                        }
-                    } finally {
-                        context.unbindService(connection)
+                        assertEquals(firstFile.name, first.source.displayTitle)
+                        assertTrue(Media3Capability.PAUSE in first.capabilities)
+                        assertTrue(Media3Capability.SEEK in first.capabilities)
+                        assertFalse(Media3Capability.CAST in first.capabilities)
+                        assertFalse(Media3Capability.PIP in first.capabilities)
+                        assertFalse(Media3Capability.BACKGROUND in first.capabilities)
+                        assertEquals(
+                            PlaybackOperationResult.Success,
+                            runBlocking { provider.dispatch(PlaybackCommand(first.version, PlaybackAction.Pause)) }
+                        )
+                        assertEquals(Media3PlaybackState.PAUSED, provider.observePlayback().value!!.state)
+                        assertEquals(
+                            PlaybackOperationResult.Success,
+                            runBlocking { provider.dispatch(PlaybackCommand(first.version, PlaybackAction.Seek(5000))) }
+                        )
+                        assertEquals(
+                            PlaybackOperationResult.Success,
+                            runBlocking { provider.dispatch(PlaybackCommand(first.version, PlaybackAction.Play)) }
+                        )
+                        awaitSource { activity }
+                        scenario.onActivity { assertTrue(player(it).getCurrentPosition() >= 4000) }
+                        val secondRequest = submit(1)
+                        scenario.onActivity { it.startActivity(playerIntent(secondRequest.requestId)) }
+                        awaitSource(firstSource) { activity }
+                        val second = provider.observePlayback().value!!
+                        assertEquals(secondFile.name, second.source.displayTitle)
+                        assertTrue(second.version.sourceRevision > first.version.sourceRevision)
+                        assertTrue(
+                            runBlocking {
+                                provider.dispatch(
+                                    PlaybackCommand(first.version, PlaybackAction.Pause)
+                                )
+                            } is PlaybackOperationResult.Rejected
+                        )
+                        scenario.onActivity { assertTrue(player(it).isPlaying()) }
+                        val diagnostics =
+                            PlayerErrorReporter::class.java
+                                .getDeclaredMethod("enrich", String::class.java)
+                                .apply { isAccessible = true }
+                                .invoke(PlayerErrorReporter, "fixture")
+                                .toString()
+                        assertTrue(diagnostics.contains(second.version.sessionId))
+                        assertTrue(diagnostics.contains("sourceRevision=${second.version.sourceRevision}"))
+                        assertEquals(
+                            PlaybackOperationResult.Success,
+                            runBlocking { provider.dispatch(PlaybackCommand(second.version, PlaybackAction.Exit)) }
+                        )
+                        runBlocking { withTimeout(10000) { provider.observePlayback().first { it == null } } }
+                        assertNull(provider.observePlayback().value)
                     }
                 }
             } finally {
@@ -1061,7 +1035,7 @@ class PlaybackEntriesInstrumentedTest {
             var loaded = false
             scenario.onActivity {
                 val danmu = controller(it).getDanmuController()
-                loaded = danmu.allowSendDanmu() &&
+                loaded = danmu.isDanmuLoaded() &&
                     danmu.getTracks(TrackType.DANMU).singleOrNull()?.let { track ->
                         track.type.getDanmu(track.trackResource) == expected
                     } == true

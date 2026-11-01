@@ -7,12 +7,13 @@
  - Shared foundations: `:core_contract_component`, `:core_system_component`, `:core_log_component`, `:core_network_component`, `:core_database_component`, `:core_storage_component`, `:core_metadata_component`, `:core_ui_component`, `:data_component`.
  - Bundled AAR wrappers live under `:repository:*`.
 
- ## Playback Ownership (source and ledger reconciliation: 2026-10-28)
+ ## Playback Ownership (source and ledger reconciliation: 2026-11-01)
  - Contract-only descriptors and request IDs cross feature/navigation boundaries; `PlaybackRequestServiceImpl` owns shared encrypted handoff storage/resolution access in player.
  - `ActivePlaybackSession`, retained by PlayerViewModel, owns active/candidate sources, revisions, controlled/native transitions and recovery. Source owns the transport lease; only that lease retires protocol resources. The sole Bilibili Addon implementation and its settings/risk/recovery contracts have been removed. Activity/kernel adapters borrow sources.
- - The session publishes one immutable `PlaybackStateView`; provider/platform service/UI read the same complete identity/capability revision. Platform commands carry an expected version back to the owner. The process provider only weakly references runtime ownership.
- - Local playback never requires a remote gateway-created session. Download validation retains its local compatibility fallback. `Media3SessionService` is metadata/command adaptation only; pre-existing popup no-ops and missing notification hosting do not imply background/PIP support.
+ - The session publishes one immutable `PlaybackStateView`; `PlaybackRequestService` and UI read the same complete identity/capability revision. Commands carry an expected version back to the owner. The process provider only weakly references runtime ownership.
+ - Local playback never requires a remote gateway-created session. The unused `Media3SessionService` forwarding/binding layer, download-validation fallback and migration telemetry/rollout scaffolding were removed in the authorized A01–A08 cleanup. The actual request service/session, subtitle telemetry and casting receiver remain. Background/PIP support is not provided by this removal.
  - Exact migration/verification evidence is in `docs/superpowers/plans/2026-10-27-playback-handoff-session.md`. Retained integrated acceptance remains user-owned; current open work is summarized in `memory-bank/activeContext.md`, with historical implementation stages archived via `memory-bank/progress.md`.
+ - The 2026-11-01 cleanup and schema 21->22 preservation evidence are in `docs/superpowers/plans/2026-11-01-tv-scope-cleanup.md`. Only `media3_rollout_snapshot` and `media3_download_asset_check` are dropped; legacy PC rows, bindings, history and all retained metadata tables remain.
 
  - Persistence/recovery decisions retained from the 2026-10-28 handoff record: controlled transitions persist before activation, and persistence failure preserves the old source. Native transitions update runtime first; failed snapshot persistence leaves playback active but recovery uses the last committed episode. Candidates are memory-only. Configuration recreation reuses live runtime; snapshot-over-history recovery, fixed TTL and periodic/event saves remain the agreed model.
 

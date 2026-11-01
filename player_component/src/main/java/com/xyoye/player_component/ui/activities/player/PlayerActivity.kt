@@ -1,15 +1,12 @@
 package com.xyoye.player_component.ui.activities.player
 
 import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.ServiceConnection
 import android.graphics.Color
 import android.media.AudioManager
 import android.os.Bundle
-import android.os.IBinder
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
@@ -34,7 +31,6 @@ import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
-import com.xyoye.common_component.media3.Media3SessionClient
 import com.xyoye.common_component.playback.handoff.PlaybackAction
 import com.xyoye.common_component.playback.handoff.PlaybackNavigation
 import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
@@ -42,7 +38,6 @@ import com.xyoye.common_component.playback.userMessage
 import com.xyoye.common_component.receiver.HeadsetBroadcastReceiver
 import com.xyoye.common_component.receiver.PlayerReceiverListener
 import com.xyoye.common_component.receiver.ScreenBroadcastReceiver
-import com.xyoye.common_component.services.Media3SessionServiceProvider
 import com.xyoye.common_component.source.base.BaseVideoSource
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.utils.StatusBarStyle
@@ -310,15 +305,6 @@ class PlayerActivity :
         viewModel.refreshPlaybackState(playbackBackend)
     }
 
-    // 电量管理
-    /*
-    private var batteryHelper = BatteryHelper()
-     */
-    private val media3SessionServiceProvider: Media3SessionServiceProvider? by lazy {
-        ARouter.getInstance().navigation(Media3SessionServiceProvider::class.java)
-    }
-    private var media3ServiceBound = false
-
     private val exitConfirmGuard = BackPressExitConfirmGuard(BACK_EXIT_CONFIRM_WINDOW_MS)
     private val media3SequentialPlaybackAdapter: Media3SequentialPlaybackAdapter by lazy {
         Media3SequentialPlaybackAdapter.create { danDanPlayer.exoPlayerOrNull() }
@@ -363,20 +349,6 @@ class PlayerActivity :
             else -> Unit
         }
     }
-
-    private val media3ServiceConnection =
-        object : ServiceConnection {
-            override fun onServiceConnected(
-                name: ComponentName?,
-                service: IBinder?
-            ) {
-                if (service is Media3SessionClient) media3ServiceBound = true
-            }
-
-            override fun onServiceDisconnected(name: ComponentName?) {
-                media3ServiceBound = false
-            }
-        }
 
     override fun initViewModel() =
         ViewModelInit(
@@ -474,28 +446,6 @@ class PlayerActivity :
         viewModel.refreshPlaybackState(playbackBackend)
     }
 
-    override fun onStart() {
-        super.onStart()
-        val intent = media3SessionServiceProvider?.createBindIntent(this)
-        if (intent == null) {
-            LogFacade.w(LogModule.PLAYER, TAG_ACTIVITY, "Media3SessionServiceProvider not found")
-            return
-        }
-        try {
-            bindService(intent, media3ServiceConnection, Context.BIND_AUTO_CREATE)
-        } catch (e: Exception) {
-            LogFacade.w(LogModule.PLAYER, TAG_ACTIVITY, "bind Media3SessionService failed: ${e.message}")
-        }
-    }
-
-    override fun onStop() {
-        if (media3ServiceBound) {
-            unbindService(media3ServiceConnection)
-            media3ServiceBound = false
-        }
-        super.onStop()
-    }
-
     override fun onPause() {
         exitConfirmGuard.reset()
         playingBeforeLifecyclePause = danDanPlayer.isPlaying()
@@ -521,9 +471,6 @@ class PlayerActivity :
         beforePlayExit()
         unregisterReceiver()
         viewModel.unbindPlayback(playbackBackend)
-        /*
-        batteryHelper.release()
-         */
         super.onDestroy()
     }
 
@@ -622,10 +569,6 @@ class PlayerActivity :
 
     private fun initPlayer() {
         videoController.apply {
-            /*
-            setBatteryHelper(batteryHelper)
-             */
-
             // 播放错误
             observerPlayError {
                 val source = danDanPlayer.getVideoSource()
@@ -787,9 +730,6 @@ class PlayerActivity :
                 ContextCompat.RECEIVER_NOT_EXPORTED
             )
         }
-        /*
-        batteryHelper.registerReceiver(this)
-         */
     }
 
     private fun unregisterReceiver() {
@@ -806,10 +746,6 @@ class PlayerActivity :
             LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister exit player receiver")
         }
         exitPlayerReceiver = null
-        /*
-        batteryHelper.unregisterReceiver(this)
-        LogFacade.d(LogModule.PLAYER, TAG_ACTIVITY, "unregister battery receiver")
-         */
     }
 
     private fun initPlayerConfig(overrideProfile: PlaybackProfile? = null) {

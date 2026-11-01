@@ -5,7 +5,6 @@ import androidx.room.RoomDatabase
 import com.xyoye.common_component.database.dao.AnimeSearchHistoryDao
 import com.xyoye.common_component.database.dao.DanmuBlockDao
 import com.xyoye.common_component.database.dao.ExtendFolderDao
-import com.xyoye.common_component.database.dao.Media3Dao
 import com.xyoye.common_component.database.dao.MediaLibraryDao
 import com.xyoye.common_component.database.dao.MetadataDao
 import com.xyoye.common_component.database.dao.PlayHistoryDao
@@ -25,8 +24,6 @@ import com.xyoye.data_component.entity.MetadataSeason
 import com.xyoye.data_component.entity.MetadataWork
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.entity.VideoEntity
-import com.xyoye.data_component.media3.entity.DownloadAssetCheck
-import com.xyoye.data_component.media3.entity.RolloutToggleSnapshot
 
 /**
  * Created by xyoye on 2020/7/29.
@@ -41,8 +38,6 @@ import com.xyoye.data_component.media3.entity.RolloutToggleSnapshot
             PlayHistoryEntity::class,
             DanmuBlockEntity::class,
             ExtendFolderEntity::class,
-            RolloutToggleSnapshot::class,
-            DownloadAssetCheck::class,
             CatalogSourceState::class,
             MediaAsset::class,
             MediaBinding::class,
@@ -53,7 +48,7 @@ import com.xyoye.data_component.media3.entity.RolloutToggleSnapshot
             MetadataScanRun::class,
             MetadataScanDirectory::class,
         ],
-    version = 21,
+    version = 22,
     exportSchema = true
 )
 abstract class DatabaseInfo : RoomDatabase() {
@@ -70,6 +65,4 @@ abstract class DatabaseInfo : RoomDatabase() {
     abstract fun getDanmuBlockDao(): DanmuBlockDao
 
     abstract fun getExtendFolderDao(): ExtendFolderDao
-
-    abstract fun getMedia3Dao(): Media3Dao
 }

@@ -1,7 +1,6 @@
 package com.xyoye.player.controller.danmu
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.Point
 import android.util.AttributeSet
 import androidx.lifecycle.LifecycleOwner
@@ -14,7 +13,6 @@ import com.xyoye.danmaku.filter.KeywordFilter
 import com.xyoye.danmaku.filter.LanguageConverter
 import com.xyoye.danmaku.filter.RegexFilter
 import com.xyoye.data_component.bean.DanmuTrackResource
-import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.DanmakuLanguage
@@ -46,10 +44,6 @@ class DanmuView(
         private const val DANMU_MAX_TEXT_ALPHA = 1f
         private const val DANMU_MAX_TEXT_SPEED = 2.5f
         private const val DANMU_MAX_TEXT_STOKE = 20f
-
-        private const val DANMU_TEXT_SIZE_MEDIUM = 25f
-        private const val DANMU_TEXT_SIZE_SMALL = 18f
-        private const val DANMU_TEXT_SIZE_DENSITY_OFFSET = 0.6f
 
         private const val INVALID_VALUE = -1L
     }
@@ -417,30 +411,6 @@ class DanmuView(
     }
 
     fun isDanmuLoaded(): Boolean = mDanmuLoaded
-
-    fun addDanmuToView(danmuBean: SendDanmuBean) {
-        val type =
-            when {
-                danmuBean.isScroll -> BaseDanmaku.TYPE_SCROLL_RL
-                danmuBean.isTop -> BaseDanmaku.TYPE_FIX_TOP
-                else -> BaseDanmaku.TYPE_FIX_BOTTOM
-            }
-
-        val danmaku = mDanmakuContext.mDanmakuFactory.createDanmaku(type, mDanmakuContext) ?: return
-        val baseTextSize = if (danmuBean.isSmallSize) DANMU_TEXT_SIZE_SMALL else DANMU_TEXT_SIZE_MEDIUM
-        val densityScale = max(0.1f, mDanmakuContext.displayer.density - DANMU_TEXT_SIZE_DENSITY_OFFSET)
-        danmaku.apply {
-            text = danmuBean.text
-            textSize = baseTextSize * densityScale
-            padding = 5
-            isLive = false
-            priority = 0
-            textColor = danmuBean.color
-            textShadowColor = if (textColor <= Color.BLACK) Color.WHITE else Color.BLACK
-            time = this@DanmuView.currentTime + 500
-        }
-        addDanmaku(danmaku)
-    }
 
     fun setSpeed(speed: Float) {
         mDanmakuContext.setSpeed(speed)

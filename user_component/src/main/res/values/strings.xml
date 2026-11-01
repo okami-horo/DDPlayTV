@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">user_component</string>
     <string name="text_copyright_cover">Author Iconfont-温萱茉</string>
     <string name="tips_user_login">帐号登录</string>
     <string name="tips_input_account">帐号</string>

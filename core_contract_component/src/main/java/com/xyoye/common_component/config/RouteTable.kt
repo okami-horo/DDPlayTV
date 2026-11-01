@@ -13,7 +13,6 @@ object RouteTable {
 
     object App {
         const val TvMain = "/app/tv_main"
-        const val Media3SessionServiceProvider = "/app/media3_session_service_provider"
         const val CinemaNavigation = "cinema_navigation"
     }
 

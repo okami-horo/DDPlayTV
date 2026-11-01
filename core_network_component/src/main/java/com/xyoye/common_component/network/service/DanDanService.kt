@@ -14,7 +14,6 @@ import com.xyoye.data_component.data.DanmuSearchData
 import com.xyoye.data_component.data.FollowAnimeData
 import com.xyoye.data_component.data.LoginData
 import com.xyoye.data_component.data.SearchAnimeData
-import com.xyoye.data_component.data.SendDanmuData
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -92,12 +91,6 @@ interface DanDanService {
         @Path("episodeId") episodeId: String,
         @QueryMap params: RequestParams
     ): DanmuData
-
-    @POST("api/v2/comment/{episodeId}")
-    suspend fun sendOneDanmu(
-        @Path("episodeId") episodeId: String,
-        @Body body: RequestBody
-    ): SendDanmuData
 
     @POST("api/v2/login")
     suspend fun login(

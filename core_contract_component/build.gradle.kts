@@ -15,7 +15,7 @@ dependencies {
     api(Dependencies.AndroidX.appcompat)
     api(Dependencies.AndroidX.lifecycle_livedata)
 
-    // Media3SessionClient/Store expose StateFlow in public API.
+    // PlaybackRequestService exposes StateFlow in its public API.
     api(Dependencies.Kotlin.coroutines_core)
 }
 

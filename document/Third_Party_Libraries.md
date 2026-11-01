@@ -1,12 +1,12 @@
 # 第三方组件清单
 
-核对日期：2026-10-28。本文用于定位主要依赖职责，不作为完整依赖树或许可证清单。版本及使用范围以 [依赖常量](../buildSrc/src/main/java/Dependencies.kt)、各模块构建脚本及 `./gradlew :app:dependencies` 为准；定义常量不代表已经使用。
+核对日期：2026-11-01。本文用于定位主要依赖职责，不作为完整依赖树或许可证清单。版本及使用范围以 [依赖常量](../buildSrc/src/main/java/Dependencies.kt)、各模块构建脚本及 `./gradlew :app:dependencies` 为准；定义常量不代表已经使用。
 
 ## 播放与渲染
 
 | 组件 | 当前用途与位置 |
 | --- | --- |
-| AndroidX Media3 | `player_component` 的 Exo 内核、Session、UI、数据源和扩展；Cast 依赖不代表完整投屏已实现 |
+| AndroidX Media3 | `player_component` 的 Exo 内核、字幕 UI、数据源和流媒体扩展；未使用的下载、Cast 和 session 扩展已移除，播放会话由本地播放器持有 |
 | Plezy mpv AAR / FFmpeg | `repository:mpv_native` 保存原版 AAR，`repository:mpv` 提供 Java 编译边界，见 [原生库记录](mpv-build-notes.md) |
 | libass / 字体依赖 | ASS/SSA 与字体支持，位于播放器原生库目录 |
 | OpenCC | 简繁转换包装、词典与 `libopen_cc.so`，位于 `player_component` |
@@ -21,7 +21,7 @@
 - Kotlin Coroutines：异步与并发。
 - NanoHTTPD：播放代理、日志等本地服务。
 - SMBJ / dcerpc、Apache Commons Net：SMB、FTP 访问。
-- jsoup、juniversalchardet：网页与文本解析、编码识别。
+- juniversalchardet：字幕文本编码识别。
 - Room、MMKV：数据库与键值存储。
 - SevenZip（`repository:seven_zip`）：解压封装。迅雷下载 SDK 随磁力播放退役；独立的字幕 HTTP 匹配接口仍保留。
 - 华为 Scan Kit：二维码生成/相关组件调用；依赖存在不代表当前声明相机权限。
@@ -32,7 +32,7 @@
 - DpadRecyclerView `1.4.3`：`core_ui_component` 提供 TV 列表、网格和动态菜单的方向导航与滚动；移动端共享布局继续使用普通 RecyclerView。
 - Material Components、Coil（含视频帧）、Banner：UI 与封面加载。
 - ARouter：模块路由和服务。
-- ImmersionBar、PanelSwitchHelper：`repository:immersion_bar`、`repository:panel_switch` 封装。
+- ImmersionBar：`repository:immersion_bar` 封装。
 - Bugly：有效 App ID 配置下的诊断上报，见 [数据处理说明](<Privacy policy.md>)。
 - LeakCanary：`app` Debug 依赖。
 - JUnit、AndroidX Test、Robolectric、Coroutines Test：测试。

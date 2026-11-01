@@ -24,10 +24,6 @@ object AppConfigTable {
     @MMKVFiled
     var showHiddenFile = false
 
-    // 是否展示FTP播放视频提示
-    @MMKVFiled
-    var showFTPVideoTips = true
-
     // 最后一次更新云屏蔽信息的时间
     @MMKVFiled
     var cloudBlockUpdateTime: Long = 0
@@ -87,8 +83,4 @@ object AppConfigTable {
     // 支持的视频后缀
     @MMKVFiled
     var supportVideoExtension: String = DEFAULT_SUPPORT_VIDEO_EXTENSION
-
-    // Jsoup的User-Agent
-    @MMKVFiled
-    var jsoupUserAgent: String = DefaultConfig.DEFAULT_JSOUP_USER_AGENT
 }

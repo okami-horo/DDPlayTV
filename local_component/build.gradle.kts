@@ -25,8 +25,6 @@ dependencies {
     implementation(project(":core_contract_component"))
     implementation(project(":data_component"))
 
-    implementation(Dependencies.Github.jsoup)
-
     kapt(Dependencies.Alibaba.arouter_compiler)
 }
 android {

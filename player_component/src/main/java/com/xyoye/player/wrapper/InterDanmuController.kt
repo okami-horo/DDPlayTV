@@ -1,6 +1,5 @@
 package com.xyoye.player.wrapper
 
-import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.enums.DanmakuLanguage
 
 /**
@@ -72,16 +71,6 @@ interface InterDanmuController : InterVideoTrack {
      * 当前用户层面的弹幕显示状态
      */
     fun isUserDanmuVisible(): Boolean
-
-    /**
-     * 是否允许发送弹幕
-     */
-    fun allowSendDanmu(): Boolean
-
-    /**
-     * 添加弹幕到弹幕视图
-     */
-    fun addDanmuToView(danmuBean: SendDanmuBean)
 
     /**
      * 添加弹幕屏蔽

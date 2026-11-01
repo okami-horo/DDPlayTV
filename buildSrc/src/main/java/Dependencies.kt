@@ -35,7 +35,6 @@ object Dependencies {
         const val recyclerview = "androidx.recyclerview:recyclerview:1.2.1"
         const val constraintlayout = "androidx.constraintlayout:constraintlayout:2.1.4"
         const val swiperefreshlayout = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
-        const val multidex = "androidx.multidex:multidex:2.0.1"
         const val palette = "androidx.palette:palette:1.0.0"
         const val startup = "androidx.startup:startup-runtime:1.1.1"
         const val preference = "androidx.preference:preference:1.2.0"
@@ -64,7 +63,6 @@ object Dependencies {
 
         //switch keyboard panel
         const val keyboard_panel = "com.github.albfernandez:juniversalchardet:2.4.0"
-        const val jsoup = "org.jsoup:jsoup:1.15.3"
     }
 
     object Google {

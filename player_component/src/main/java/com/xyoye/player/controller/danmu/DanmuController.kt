@@ -2,7 +2,6 @@ package com.xyoye.player.controller.danmu
 
 import android.content.Context
 import androidx.lifecycle.LiveData
-import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.DanmakuLanguage
@@ -68,11 +67,7 @@ class DanmuController(
 
     override fun isUserDanmuVisible(): Boolean = danmuView.isUserVisible()
 
-    override fun allowSendDanmu(): Boolean = danmuView.isDanmuLoaded()
-
-    override fun addDanmuToView(danmuBean: SendDanmuBean) {
-        danmuView.addDanmuToView(danmuBean)
-    }
+    fun isDanmuLoaded(): Boolean = danmuView.isDanmuLoaded()
 
     override fun addBlackList(
         isRegex: Boolean,

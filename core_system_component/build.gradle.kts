@@ -78,13 +78,6 @@ android {
             "BAIDU_PAN_CLIENT_SECRET",
             buildConfigString(baiduPanClientSecret),
         )
-
-        val media3FallbackFlag =
-            project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
-        buildConfigField("boolean", "MEDIA3_ENABLED_FALLBACK", media3FallbackFlag.toString())
-
-        val media3Version = project.property("media3Version").toString()
-        buildConfigField("String", "MEDIA3_VERSION", buildConfigString(media3Version))
     }
     namespace = "com.xyoye.core_system_component"
 }

@@ -4,7 +4,6 @@ import android.graphics.Point
 import android.graphics.PointF
 import android.view.KeyEvent
 import com.xyoye.common_component.source.base.BaseVideoSource
-import com.xyoye.data_component.bean.SendDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.SettingViewType
@@ -443,12 +442,6 @@ private class FakeDanmuController :
     }
 
     override fun isUserDanmuVisible(): Boolean = true
-
-    override fun allowSendDanmu(): Boolean = false
-
-    override fun addDanmuToView(danmuBean: SendDanmuBean) {
-        // no-op
-    }
 
     override fun addBlackList(
         isRegex: Boolean,

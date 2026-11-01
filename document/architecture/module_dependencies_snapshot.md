@@ -8,8 +8,8 @@
 
 ## 汇总
 
-- 模块数：22
-- 依赖条目数：91（生产 86 / 测试 5）
+- 模块数：21
+- 依赖条目数：90（生产 86 / 测试 4）
 
 ## 依赖列表（按模块）
 
@@ -99,7 +99,7 @@
 - `implementation`：:core_log_component, :core_system_component, :data_component
 
 **测试依赖**
-- `testImplementation`：:core_contract_component
+- （无）
 
 ### :core_database_component
 
@@ -142,14 +142,6 @@
 - （无）
 
 ### :repository:immersion_bar
-
-**生产依赖**
-- （无）
-
-**测试依赖**
-- （无）
-
-### :repository:panel_switch
 
 **生产依赖**
 - （无）
@@ -211,7 +203,6 @@ graph TD
   repository_immersion_bar[":repository:immersion_bar"]
   repository_mpv[":repository:mpv"]
   repository_mpv_native[":repository:mpv_native"]
-  repository_panel_switch[":repository:panel_switch"]
   repository_seven_zip[":repository:seven_zip"]
   repository_video_cache[":repository:video_cache"]
   storage_component[":storage_component"]

@@ -8,9 +8,6 @@ plugins {
 
 applicationSetup()
 
-val media3FallbackFlag =
-    project.findProperty("media3_enabled")?.toString()?.equals("true", true) ?: false
-
 val subtitleGpuFallbackFlag =
     project.findProperty("subtitle_gpu_enabled")?.toString()?.equals("true", true) ?: true
 
@@ -28,11 +25,6 @@ android {
         versionName = Versions.versionName
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField(
-            "boolean",
-            "MEDIA3_ENABLED_FALLBACK",
-            media3FallbackFlag.toString(),
-        )
         buildConfigField(
             "boolean",
             "SUBTITLE_GPU_ENABLED_FALLBACK",
@@ -78,7 +70,6 @@ dependencies {
     implementation(project(":core_ui_component"))
     implementation(project(":core_contract_component"))
     implementation(project(":data_component"))
-    implementation(Dependencies.AndroidX.multidex)
     debugImplementation(Dependencies.Square.leakcanary)
 
     implementation(project(":player_component"))

@@ -25,7 +25,6 @@ internal object ModuleDependencyGovernance {
     private const val MODULE_REPOSITORY = ":repository"
     private const val MODULE_REPO_DANMAKU = ":repository:danmaku"
     private const val MODULE_REPO_IMMERSION = ":repository:immersion_bar"
-    private const val MODULE_REPO_PANEL = ":repository:panel_switch"
     private const val MODULE_REPO_SEVEN_ZIP = ":repository:seven_zip"
     private const val MODULE_REPO_VIDEO_CACHE = ":repository:video_cache"
     private const val MODULE_REPO_MPV = ":repository:mpv"
@@ -52,7 +51,6 @@ internal object ModuleDependencyGovernance {
             MODULE_REPOSITORY,
             MODULE_REPO_DANMAKU,
             MODULE_REPO_IMMERSION,
-            MODULE_REPO_PANEL,
             MODULE_REPO_SEVEN_ZIP,
             MODULE_REPO_VIDEO_CACHE,
             MODULE_REPO_MPV,
@@ -142,7 +140,6 @@ internal object ModuleDependencyGovernance {
                     MODULE_CONTRACT,
                     MODULE_DATA,
                     MODULE_REPO_DANMAKU,
-                    MODULE_REPO_PANEL,
                     MODULE_REPO_VIDEO_CACHE,
                     MODULE_REPO_MPV
                 ),
@@ -195,7 +192,6 @@ internal object ModuleDependencyGovernance {
             MODULE_REPOSITORY to emptySet(),
             MODULE_REPO_DANMAKU to emptySet(),
             MODULE_REPO_IMMERSION to emptySet(),
-            MODULE_REPO_PANEL to emptySet(),
             MODULE_REPO_SEVEN_ZIP to emptySet(),
             MODULE_REPO_VIDEO_CACHE to emptySet(),
             MODULE_REPO_MPV to setOf(MODULE_REPO_MPV_NATIVE),
@@ -209,8 +205,6 @@ internal object ModuleDependencyGovernance {
      */
     private val allowedTestOnlyProjectDependencies: Map<String, Set<String>> =
         mapOf(
-            // core_network_component: tests may depend on core_contract_component.
-            MODULE_NETWORK to setOf(MODULE_CONTRACT),
             // App instrumentation verifies source/history retention and live metadata artwork.
             MODULE_APP to setOf(MODULE_STORAGE_CORE, MODULE_DATABASE, MODULE_METADATA)
         )

@@ -6,6 +6,7 @@
 
 | 需要了解 | 入口 |
 | --- | --- |
+| TV 冗余范围与八类清理结果 | [原始审查](architecture/tv-feature-scope-audit-2026-11-01.md)、[A01–A08 实施与验证](../docs/superpowers/plans/2026-11-01-tv-scope-cleanup.md) |
 | 深层 UI 修复、设计覆盖和剩余验收 | [设计覆盖排查 U01–U10](../docs/superpowers/plans/2026-10-31-ui-design-coverage-audit.md)（历史缺口）、[A/U01–U10 实施与状态](../docs/superpowers/plans/2026-10-31-ui-polish.md)、[补充设计](../docs/superpowers/designs/2026-10-31-ui-polish-design.md) |
 | 播放器左下操作组（已选 A，已实施/部分验收） | [已选 A 设计](../docs/superpowers/designs/2026-10-31-player-controls-design.md)、[后续任务](../docs/superpowers/plans/2026-10-31-player-controls.md)、[交互原型](prototypes/tv-ui/player-controls-prototype.html) |
 | 产品功能与构建入口 | [项目 README](../README.md) |
@@ -53,7 +54,7 @@
 
 ## 本地 AAR 资料
 
-[弹幕](../repository/danmaku/README.md) · [沉浸栏](../repository/immersion_bar/README.md) · [面板切换](../repository/panel_switch/README.md) · [7-Zip](../repository/seven_zip/README.md) · [视频缓存](../repository/video_cache/README.md)
+[弹幕](../repository/danmaku/README.md) · [沉浸栏](../repository/immersion_bar/README.md) · [7-Zip](../repository/seven_zip/README.md) · [视频缓存](../repository/video_cache/README.md)
 
 ## 维护约定
 

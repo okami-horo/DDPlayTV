@@ -21,7 +21,6 @@ dependencies {
 
     implementation(Dependencies.AndroidX.lifecycle_livedata)
     implementation(Dependencies.AndroidX.paging)
-    implementation(Dependencies.Github.jsoup)
 
     // Keep repository wrappers internal to storage implementation.
     implementation(project(":repository:seven_zip"))

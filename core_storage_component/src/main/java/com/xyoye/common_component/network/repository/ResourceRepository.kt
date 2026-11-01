@@ -51,24 +51,6 @@ object ResourceRepository : BaseRepository() {
         }
 
     /**
-     * 发送一条弹幕
-     */
-    suspend fun sendOneDanmu(
-        episodeId: String,
-        time: String,
-        mode: Int,
-        color: Int,
-        comment: String
-    ) = request()
-        .param("time", time)
-        .param("mode", mode)
-        .param("color", color)
-        .param("comment", comment)
-        .doPost {
-            RetrofitManager.danDanService.sendOneDanmu(episodeId, it)
-        }
-
-    /**
      * 匹配字幕，Thunder
      */
     suspend fun matchSubtitleFormThunder(hash: String) =

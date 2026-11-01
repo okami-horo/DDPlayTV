@@ -182,14 +182,6 @@ class VideoController(
 
     internal fun changePlaybackSpeed(speed: Float) = mControlWrapper.setSpeed(speed)
 
-    /*
-     * 设置电量数据
-     *
-     * fun setBatteryHelper(helper: BatteryHelper) {
-     *     playerTopView.setBatteryHelper(helper)
-     * }
-     */
-
     /**
      * 播放错误回调
      */

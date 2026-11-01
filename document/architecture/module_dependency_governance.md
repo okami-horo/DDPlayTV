@@ -1,13 +1,13 @@
 # 模块依赖治理规范（v2）
 
-核对日期：2026-10-31。本文维护当前依赖规则及其决策依据；直接依赖清单和关系图由 [依赖快照](module_dependencies_snapshot.md) 自动生成，不在本文重复维护。
+核对日期：2026-11-01。本文维护当前依赖规则及其决策依据；直接依赖清单和关系图由 [依赖快照](module_dependencies_snapshot.md) 自动生成，不在本文重复维护。
 
 规则实现位于 [ModuleDependencyGovernance.kt](../../buildSrc/src/main/java/governance/ModuleDependencyGovernance.kt)。规则调整必须同步修改文档与实现。
 
 ## 0. 范围与口径
 
-- [settings.gradle.kts](../../settings.gradle.kts) 显式纳入 22 个模块：1 个 app、5 个业务模块、8 个 core、1 个 data、7 个内置依赖包装模块。
-- Gradle 还会创建嵌套模块的父项目 :repository。治理实现认识该容器，但不把它计入 22 个显式模块。
+- [settings.gradle.kts](../../settings.gradle.kts) 显式纳入 21 个模块：1 个 app、5 个业务模块、8 个 core、1 个 data、6 个内置依赖包装模块。
+- Gradle 还会创建嵌套模块的父项目 :repository。治理实现认识该容器，但不把它计入 21 个显式模块。
 - 校验直接声明的 Gradle project 依赖，包括生产与测试配置；不展开传递依赖、不检查外部库版本，也不代替源码边界和行为验证。
 - core_notification_component、core_service_component、remote_component、Han1meViewer 不是当前目录或构建模块。不得根据旧文档为它们添加依赖例外。
 
@@ -67,7 +67,7 @@
 | :app | 5 个业务模块，以及 system、log、ui、contract、data；不直接依赖 network、database、storage 实现 |
 | :anime_component | 普通业务基础依赖 |
 | :local_component、:user_component、:storage_component | 普通业务基础依赖，以及 :core_metadata_component |
-| :player_component | 普通业务基础依赖，以及 :repository:danmaku、:repository:panel_switch、:repository:video_cache、:repository:mpv |
+| :player_component | 普通业务基础依赖，以及 :repository:danmaku、:repository:video_cache、:repository:mpv |
 | :core_ui_component | contract、system、log、data，以及 :repository:immersion_bar |
 | :core_storage_component | contract、network、database、system、log、data，以及 :repository:seven_zip |
 | :core_metadata_component | contract、data、network、database、storage、system、log |
@@ -84,7 +84,6 @@
 
 测试配置继承生产允许目标，并可额外使用：
 
-- :core_network_component → :core_contract_component。
 - :app → :core_storage_component、:core_database_component、:core_metadata_component，用于仪器测试的来源、历史与本地媒体夹具，以及真实元数据和图片加载验证。
 
 测试例外不授予生产配置同样的依赖权限。

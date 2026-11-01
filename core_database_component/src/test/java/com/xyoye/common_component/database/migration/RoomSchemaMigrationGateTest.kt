@@ -26,6 +26,88 @@ import java.io.File
 @Config(manifest = Config.NONE)
 class RoomSchemaMigrationGateTest {
     @Test
+    fun migration21RemovesRetiredMedia3TablesAndPreservesAllRetainedData() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val retiredTables = setOf("media3_rollout_snapshot", "media3_download_asset_check")
+        val retainedTables =
+            buildList {
+                forEachObject(loadSchemaJson(21).getJSONObject("database").getJSONArray("entities")) { entity ->
+                    val name = entity.getString("tableName")
+                    if (name !in retiredTables) add(name)
+                }
+            }
+        for (populated in listOf(false, true)) {
+            deleteDatabaseFiles(context, TEST_DB_NAME)
+            val file = context.getDatabasePath(TEST_DB_NAME).also { it.parentFile?.mkdirs() }
+            createDatabaseFromRoomSchemaJson(file, loadSchemaJson(21), 21)
+            val expectedRows = linkedMapOf<String, List<List<String?>>>()
+            val expectedSchema = linkedMapOf<String, List<List<String?>>>()
+            val expectedSequence: List<List<String?>>
+            openHistoricalDatabase(context, 21).use { helper ->
+                val db = helper.writableDatabase
+                if (populated) {
+                    seedRetainedVersion21Data(db)
+                    db.execSQL("INSERT INTO media3_rollout_snapshot VALUES ('old','media3_enabled',0,'GRADLE_FALLBACK',123,NULL)")
+                    db.execSQL("INSERT INTO media3_download_asset_check VALUES ('old','asset',123,1,'NONE','')")
+                }
+                for (table in retainedTables) {
+                    expectedRows[table] = rows(db.query("SELECT * FROM `$table` ORDER BY rowid"))
+                    expectedSchema[table] =
+                        rows(
+                            db.query("SELECT type,name,sql FROM sqlite_master WHERE tbl_name = '$table' ORDER BY type,name")
+                        )
+                }
+                expectedSequence = rows(db.query("SELECT * FROM sqlite_sequence ORDER BY name"))
+            }
+            val room = openCurrentDatabase(context)
+            try {
+                val db = room.openHelper.writableDatabase
+                assertEquals(CURRENT_VERSION, db.version)
+                for (table in retiredTables) assertFalse(tableExists(db, table))
+                for (table in retainedTables) {
+                    assertEquals("Rows changed in $table", expectedRows[table], rows(db.query("SELECT * FROM `$table` ORDER BY rowid")))
+                    assertEquals(
+                        "Schema changed in $table",
+                        expectedSchema[table],
+                        rows(db.query("SELECT type,name,sql FROM sqlite_master WHERE tbl_name = '$table' ORDER BY type,name"))
+                    )
+                }
+                assertEquals(expectedSequence, rows(db.query("SELECT * FROM sqlite_sequence ORDER BY name")))
+            } finally {
+                room.close()
+                deleteDatabaseFiles(context, TEST_DB_NAME)
+            }
+        }
+    }
+
+    private fun seedRetainedVersion21Data(database: SupportSQLiteDatabase) {
+        insertCurrentLibrary(database)
+        val statements =
+            listOf(
+                "INSERT INTO media_library(id,display_name,url,media_type,account,password,is_anonymous,port,ftp_mode,ftp_address,ftp_encoding,smb_v2,remote_secret,web_dav_strict,web_dav_allow_insecure_tls,screencast_address) " +
+                    "VALUES (2,'Retired PC','http://retired-pc.test','remote_storage','account','password',0,80,0,'','UTF-8',1,'legacy-secret',1,0,'')",
+                "INSERT INTO video VALUES (7,8,9,'/shows/episode.mkv','/shows','/danmu.xml','/subtitle.ass',90000,1234,0,0)",
+                "INSERT INTO anime_search_history VALUES ('Anime',1,123)",
+                "INSERT INTO play_history VALUES (1,'Episode','file://episode','local_storage',8123,90000,123,'/danmu.xml','9','/subtitle.ass',NULL,'stable','/shows/episode.mkv',1,'/audio.flac')",
+                "INSERT INTO play_history VALUES (2,'PC Episode','http://retired-pc.test/video','remote_storage',555,90000,123,NULL,NULL,NULL,NULL,'pc-stable','/video',2,NULL)",
+                "INSERT INTO danmu_block VALUES (1,'blocked',0,123,0)",
+                "INSERT INTO extend_folder VALUES ('/shows',5)",
+                "INSERT INTO catalog_source VALUES (1,2,3,123)",
+                "INSERT INTO media_asset VALUES (7,1,2,'locator','stable','/shows/episode.mkv',NULL,'episode.mkv','/shows',1234,123,123,1,4,'scan')",
+                "INSERT INTO media_binding VALUES (7,'MATCHED','tv',42,'MANUAL',1,4,NULL,'USER_CONFIRMED',1,NULL,123)",
+                "INSERT INTO media_binding VALUES (8,'IGNORED',NULL,NULL,'MANUAL',1,5,NULL,'',1,NULL,0)",
+                "INSERT INTO media_binding_episode VALUES (7,1,2,0)",
+                "INSERT INTO metadata_work VALUES ('tv',42,'Title','Original','Overview','2026-01-01','[]',8.5,NULL,NULL,'zh-CN','[]',123,4)",
+                "INSERT INTO metadata_season VALUES (42,1,'Season',NULL,'2026-01-01',123)",
+                "INSERT INTO metadata_episode VALUES (42,1,2,43,'Episode','Overview','2026-01-02',NULL)",
+                "INSERT INTO metadata_scan VALUES ('scan',1,2,3,'/shows',0,'COMPLETED',12,12,0,0,1,123,NULL,'stable','/shows/episode.mkv','episode.mkv')",
+                "INSERT INTO metadata_scan_directory VALUES ('scan','/shows',1)"
+            )
+        for (sql in statements) database.execSQL(sql)
+        database.execSQL("UPDATE sqlite_sequence SET seq = 99 WHERE name = 'media_library'")
+    }
+
+    @Test
     fun migration20AddsPlaybackTaskIdentityWithoutChangingLegacyBindingsAndHistory() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         deleteDatabaseFiles(context, TEST_DB_NAME)
@@ -43,7 +125,7 @@ class RoomSchemaMigrationGateTest {
         val room = openCurrentDatabase(context)
         try {
             val db = room.openHelper.writableDatabase
-            assertEquals(21, db.version)
+            assertEquals(CURRENT_VERSION, db.version)
             assertEquals(
                 listOf(listOf("MATCHED", "42", "1"), listOf("IGNORED", null, "1")),
                 rows(db.query("SELECT state,tmdbId,locked FROM media_binding ORDER BY assetId"))
@@ -336,6 +418,8 @@ class RoomSchemaMigrationGateTest {
         try {
             val database = roomDb.openHelper.writableDatabase
             assertCurrentLibrarySchema(database)
+            assertFalse(tableExists(database, "media3_rollout_snapshot"))
+            assertFalse(tableExists(database, "media3_download_asset_check"))
             insertCurrentLibrary(database)
             assertEquals(1L, lastLibraryId(database))
         } finally {
@@ -501,7 +585,8 @@ class RoomSchemaMigrationGateTest {
                 DatabaseManager.MIGRATION_17_18,
                 com.xyoye.common_component.database.MetadataMigration,
                 DatabaseManager.MIGRATION_19_20,
-                DatabaseManager.MIGRATION_20_21
+                DatabaseManager.MIGRATION_20_21,
+                DatabaseManager.MIGRATION_21_22
             ).build()
 
     private fun assertCurrentLibrarySchema(database: SupportSQLiteDatabase) {
@@ -855,7 +940,7 @@ class RoomSchemaMigrationGateTest {
     private companion object {
         const val OLD_VERSION = 15
         const val NEW_VERSION = 16
-        const val CURRENT_VERSION = 21
+        const val CURRENT_VERSION = 22
         const val TEST_DB_NAME = "room_migration_gate_test.db"
         private const val ROOM_TABLE_NAME_PLACEHOLDER = "${'$'}{TABLE_NAME}"
         private const val ROOM_VIEW_NAME_PLACEHOLDER = "${'$'}{VIEW_NAME}"

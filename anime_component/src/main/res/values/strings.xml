@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">anime_component</string>
     <string name="text_expandable_open">[展开]</string>
     <string name="text_anime_rate_tips">分</string>
     <string name="anime_episodes_tips">剧集列表</string>

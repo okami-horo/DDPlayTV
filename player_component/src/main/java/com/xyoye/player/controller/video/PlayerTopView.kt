@@ -102,12 +102,6 @@ class PlayerTopView(
     override fun onVideoSizeChanged(videoSize: Point) {
     }
 
-    /*
-    fun setBatteryHelper(helper: BatteryHelper) {
-        helper.bindBatteryView(viewBinding.batteryView)
-    }
-     */
-
     fun setVideoTitle(title: String?) {
         viewBinding.videoTitleTv.text = title
     }

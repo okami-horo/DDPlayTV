@@ -61,10 +61,6 @@
             android:name="com.okamihoro.ddplaytv.ui.main.MainActivity"
             android:targetActivity="com.okamihoro.ddplaytv.ui.tv.TvMainActivity"
             android:exported="false" />
-
-        <service
-            android:name="com.okamihoro.ddplaytv.app.service.Media3SessionService"
-            android:exported="false" />
     </application>
 
 </manifest>

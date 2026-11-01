@@ -6,6 +6,7 @@
 
 | 主题 | 设计依据 | 执行状态与证据 |
 | --- | --- | --- |
+| TV 冗余清理 A01–A08 | 用户授权清理[范围审查的八类候选](../../document/architecture/tv-feature-scope-audit-2026-11-01.md) | [实施、Room 22 升级、构建与回归证据](plans/2026-11-01-tv-scope-cleanup.md)；B01–B03 及产品取舍不在本次范围 |
 | TV 旧布局与设计覆盖排查 | [U01–U10：入口、源码与缺稿范围](plans/2026-10-31-ui-design-coverage-audit.md) | 用户随后授权修复；[补充设计](designs/2026-10-31-ui-polish-design.md)、[原生实施/验证与剩余边界](plans/2026-10-31-ui-polish.md)。文件 C 已完成本地实施与验证，见下行 |
 | 播放器左下操作组 | [已选 A 单排分组；只调整按钮组](designs/2026-10-31-player-controls-design.md) | A 已确认并实施；本地行为/截图与未覆盖状态见 [后续任务与 P01–P10](plans/2026-10-31-player-controls.md)。字幕位置与弹幕覆盖标题不属于问题 |
 | TMDB 元数据、文件关联与新媒体库 | [刮削与模块设计](designs/2026-10-31-tmdb-media-library-design.md) | 已授权实施：关联/纠错、Room 19、原生 UI 与首批来源手动扫描；[实施及验证](plans/2026-10-31-tmdb-media-library.md)、[范围与待办](../../document/media-library/tmdb-metadata-followup.md) |
@@ -23,7 +24,7 @@
 | 播放交接、活动会话与恢复 | [交接设计](designs/2026-07-18-playback-handoff-design.md) | [交接账本](plans/2026-10-27-playback-handoff-session.md)：历史计数 62/65，保留功能的集成验收仍由用户负责 |
 | 传输资源所有权与租约 | [传输租约设计](designs/2026-07-19-playback-transport-leases-design.md) | [租约账本](plans/2026-07-19-playback-transport-leases.md)：历史计数 37/37；当前协议、设备及验证范围以账本为准 |
 
-两份播放设计的早期背景描述的是重构前系统；后续决策和实际源码已经替换部分旧入口。不要重新实施账本中已经完成的迁移，也不要因自动检查通过就将用户验收改为完成。完整后台／画中画能力仍不能由当前元数据服务适配推断。
+两份播放设计的早期背景描述的是重构前系统；后续决策和实际源码已经替换部分旧入口。不要重新实施账本中已经完成的迁移，也不要因自动检查通过就将用户验收改为完成。无消费者的 Media3 绑定／转发服务已随 A01–A08 移除，实际播放请求服务和活动会话保留；本次没有增加后台／画中画能力。
 
 ## 历史决策与保留待办
 
