@@ -18,14 +18,12 @@ object MediaLibraryCredentialStore {
         ensureMigrationScheduled()
     }
 
-    fun readPassword(libraryId: Int, failOnUnavailable: Boolean = false): String? {
+    fun readPassword(
+        libraryId: Int,
+        failOnUnavailable: Boolean = false
+    ): String? {
         ensureMigrationScheduled()
         return readCredential(keyPassword(libraryId), failOnUnavailable)
-    }
-
-    fun readRemoteSecret(libraryId: Int, failOnUnavailable: Boolean = false): String? {
-        ensureMigrationScheduled()
-        return readCredential(keyRemoteSecret(libraryId), failOnUnavailable)
     }
 
     fun writePassword(
@@ -36,12 +34,8 @@ object MediaLibraryCredentialStore {
         return writeCredential(keyPassword(libraryId), password)
     }
 
-    fun writeRemoteSecret(
-        libraryId: Int,
-        remoteSecret: String?
-    ): Boolean {
-        ensureMigrationScheduled()
-        return writeCredential(keyRemoteSecret(libraryId), remoteSecret)
+    internal fun clearRetiredRemoteSecret(libraryId: Int) {
+        kv.removeValueForKey(keyRemoteSecret(libraryId))
     }
 
     fun clear(libraryId: Int) {
@@ -54,7 +48,10 @@ object MediaLibraryCredentialStore {
 
     private fun keyRemoteSecret(libraryId: Int): String = "rs_$libraryId"
 
-    private fun readCredential(key: String, failOnUnavailable: Boolean): String? {
+    private fun readCredential(
+        key: String,
+        failOnUnavailable: Boolean
+    ): String? {
         val stored = kv.decodeString(key)?.takeIf { it.isNotBlank() } ?: return null
         if (crypto.isEncrypted(stored)) {
             val decrypted = crypto.decrypt(stored)

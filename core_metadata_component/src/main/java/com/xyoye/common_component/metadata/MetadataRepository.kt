@@ -219,7 +219,7 @@ class MetadataRepository(
                     locked = manual,
                     revision = ticket.binding.revision + 1,
                     taskId = null,
-                    evidence = if (manual) "USER_CONFIRMED" else "UNIQUE_ID_OR_EXACT_TITLE",
+                    evidence = if (manual) "USER_CONFIRMED" else "UNIQUE_ID_OR_TITLE",
                     ruleVersion = MediaNameParser.RULE_VERSION,
                     failure = null
                 )

@@ -7,7 +7,6 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.impl.AlistStorage
 import com.xyoye.data_component.data.alist.AlistFileData
 import com.xyoye.data_component.enums.ResourceType
-import java.io.File
 
 /**
  * Created by xyoye on 2024/1/20.
@@ -22,7 +21,7 @@ class AlistStorageFile(
 
     override fun filePath(): String {
         val uriBuilder = Uri.Builder().encodedPath(parentPath)
-        if (fileName().startsWith(File.separator)) {
+        if (fileName().startsWith("/")) {
             uriBuilder.encodedPath(fileName())
         } else {
             uriBuilder.appendEncodedPath(fileName())

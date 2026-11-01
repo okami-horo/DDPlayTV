@@ -12,7 +12,7 @@ import com.xyoye.data_component.helper.MediaTypeConverter
 
 @Dao
 interface MediaLibraryDao {
-    @Query("SELECT * FROM media_library ORDER BY id ASC")
+    @Query("SELECT * FROM media_library WHERE media_type != 'remote_storage' ORDER BY id ASC")
     fun getAll(): LiveData<MutableList<MediaLibraryEntity>>
 
     @Query("SELECT * FROM media_library ORDER BY id ASC")

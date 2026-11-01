@@ -7,7 +7,6 @@ import com.xyoye.common_component.storage.impl.Cloud115Storage
 import com.xyoye.common_component.storage.impl.DocumentFileStorage
 import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.storage.impl.Open115Storage
-import com.xyoye.common_component.storage.impl.RemoteStorage
 import com.xyoye.common_component.storage.impl.ScreencastStorage
 import com.xyoye.common_component.storage.impl.SmbStorage
 import com.xyoye.common_component.storage.impl.VideoStorage
@@ -27,7 +26,6 @@ object StorageFactory {
             MediaType.SMB_SERVER -> SmbStorage(MediaLibraryCredentialResolver.resolve(library))
             MediaType.FTP_SERVER -> FtpStorage(MediaLibraryCredentialResolver.resolve(library))
             MediaType.LOCAL_STORAGE -> VideoStorage(library)
-            MediaType.REMOTE_STORAGE -> RemoteStorage(MediaLibraryCredentialResolver.resolve(library))
             MediaType.SCREEN_CAST -> ScreencastStorage(MediaLibraryCredentialResolver.resolve(library))
             MediaType.ALSIT_STORAGE -> AlistStorage(MediaLibraryCredentialResolver.resolve(library))
             MediaType.BAIDU_PAN_STORAGE -> BaiduPanStorage(library)

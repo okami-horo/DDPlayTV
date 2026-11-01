@@ -25,7 +25,6 @@ import com.xyoye.user_component.R
 class AppSettingFragment : BasePreferenceFragmentCompat() {
     companion object {
         private const val KEY_HIDE_FILE = "hide_file"
-        private const val KEY_REMOTE_ANIME_GROUPING = "remote_anime_grouping"
         private const val KEY_SPLASH_PAGE = "splash_page"
         private const val KEY_BACKUP_DOMAIN_ENABLE = "backup_domain_enable"
         private const val KEY_BACKUP_DOMAIN_ADDRESS = "backup_domain_address"
@@ -47,7 +46,7 @@ class AppSettingFragment : BasePreferenceFragmentCompat() {
             addPreferencesFromResource(R.xml.preference_app_setting)
             val section = arguments?.getString("section")
             if (section != null) {
-                val mediaKeys = setOf("metadata_settings", KEY_HIDE_FILE, KEY_REMOTE_ANIME_GROUPING)
+                val mediaKeys = setOf("metadata_settings", KEY_HIDE_FILE)
                 val aboutKeys = setOf("app_version", "license", "about_us")
 
                 fun filter(group: androidx.preference.PreferenceGroup) {
@@ -226,14 +225,12 @@ class AppSettingFragment : BasePreferenceFragmentCompat() {
             booleanReaders =
                 mapOf(
                     KEY_HIDE_FILE to { AppConfig.isShowHiddenFile() },
-                    KEY_REMOTE_ANIME_GROUPING to { AppConfig.isRemoteAnimeGrouping() },
                     KEY_SPLASH_PAGE to { AppConfig.isShowSplashAnimation() },
                     KEY_BACKUP_DOMAIN_ENABLE to { AppConfig.isBackupDomainEnable() },
                 ),
             booleanWriters =
                 mapOf(
                     KEY_HIDE_FILE to { value -> AppConfig.putShowHiddenFile(value) },
-                    KEY_REMOTE_ANIME_GROUPING to { value -> AppConfig.putRemoteAnimeGrouping(value) },
                     KEY_SPLASH_PAGE to { value -> AppConfig.putShowSplashAnimation(value) },
                     KEY_BACKUP_DOMAIN_ENABLE to { value -> AppConfig.putBackupDomainEnable(value) },
                 ),

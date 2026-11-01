@@ -3,7 +3,6 @@ package com.xyoye.common_component.source.handoff
 import android.net.Uri
 import com.xyoye.common_component.database.DatabaseProvider
 import com.xyoye.common_component.database.repository.MediaLibraryRepository
-import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.network.request.NetworkException
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
@@ -18,11 +17,10 @@ import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageFactory
+import com.xyoye.common_component.storage.catalog.CatalogSourceReader
 import com.xyoye.common_component.storage.credential.CredentialUnavailableException
 import com.xyoye.common_component.storage.credential.MediaLibraryCredentialResolver
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
-import com.xyoye.common_component.storage.impl.RemoteStorage
 import com.xyoye.common_component.storage.impl.ScreencastStorage
 import com.xyoye.common_component.storage.transport.TransportAcquisitionException
 import com.xyoye.common_component.storage.transport.TransportAcquisitionFailure
@@ -205,6 +203,7 @@ class PlaybackSourceResolver internal constructor(
         descriptor: StoredLibraryFileDescriptor,
         owner: ResolutionOwnership
     ): FileResolution {
+        if (descriptor.mediaType == MediaType.REMOTE_STORAGE) fail(PlaybackPreparationFailure.UnsupportedSource)
         val metadataSource = catalogVersion(descriptor.libraryId)
         val library = loadLibrary(descriptor.libraryId)?.copy() ?: fail(PlaybackPreparationFailure.LibraryMissing)
         if (library.id != descriptor.libraryId || library.mediaType != descriptor.mediaType) {
@@ -219,29 +218,10 @@ class PlaybackSourceResolver internal constructor(
         val listed = directory?.let { storage.openDirectory(it, false).also(owner::files) }
         val listedFile = listed?.firstOrNull { it.uniqueKey() == descriptor.file.uniqueKey }
         val file =
-            listedFile ?: resolveReference(storage, descriptor.file)?.let(owner::file)
+            listedFile ?: storage.pathFile(descriptor.file.storagePath, false)?.let(owner::file)
                 ?: fail(PlaybackPreparationFailure.FileMissing)
         requireIdentity(file, descriptor.file)
-        val savedHistory =
-            findHistory(file.uniqueKey(), library.id)?.copy()
-                ?: if (file is RemoteStorageFile && file.uniqueKey() != descriptor.file.uniqueKey) {
-                    (
-                        descriptor.file.playHistoryId?.let { loadHistory(it) }
-                            ?: findHistory(descriptor.file.uniqueKey, library.id)
-                    )?.takeIf {
-                        it.storageId == library.id &&
-                            it.mediaType == library.mediaType &&
-                            it.uniqueKey == descriptor.file.uniqueKey &&
-                            remoteHistoryVideoId(it) == file.getRealFile().Id
-                    }
-                } else {
-                    null
-                }
-        if (file is RemoteStorageFile && savedHistory != null && file.uniqueKey() != descriptor.file.uniqueKey) {
-            restoreHistory(file, savedHistory, library.id)
-        } else {
-            file.playHistory = savedHistory
-        }
+        file.playHistory = findHistory(file.uniqueKey(), library.id)?.copy()
         val references =
             if (context != null && listed != null) {
                 PlaybackReferenceFactory
@@ -253,16 +233,7 @@ class PlaybackSourceResolver internal constructor(
         val selected = PlaybackReferenceFactory.reference(file)
         val queue =
             references
-                .map {
-                    if (file is RemoteStorageFile &&
-                        !selected.protocolReference.isNullOrBlank() &&
-                        it.protocolReference == selected.protocolReference
-                    ) {
-                        selected
-                    } else {
-                        it
-                    }
-                }.toMutableList()
+                .toMutableList()
                 .apply {
                     if (none { it.uniqueKey == selected.uniqueKey }) add(selected)
                 }.map {
@@ -291,20 +262,12 @@ class PlaybackSourceResolver internal constructor(
         )
     }
 
-    private suspend fun resolveReference(
-        storage: Storage,
-        reference: PlaybackFileReference
-    ): StorageFile? =
-        when {
-            storage is RemoteStorage -> storage.resolvePlaybackReference(reference.storagePath, reference.protocolReference, false)
-            else -> storage.pathFile(reference.storagePath, false)
-        }
-
     private suspend fun resolveHistory(
         descriptor: PlayHistoryDescriptor,
         owner: ResolutionOwnership
     ): FileResolution {
         val history = loadHistory(descriptor.historyId)?.copy() ?: fail(PlaybackPreparationFailure.FileMissing)
+        if (history.mediaType == MediaType.REMOTE_STORAGE) fail(PlaybackPreparationFailure.UnsupportedSource)
         if (history.uniqueKey != descriptor.expectedUniqueKey ||
             (descriptor.expectedLibraryId != null && history.storageId != descriptor.expectedLibraryId)
         ) {
@@ -321,13 +284,12 @@ class PlaybackSourceResolver internal constructor(
         val storage = owner.storage(library)
         val recoveredHistory = history.copy(storageId = libraryId, storagePath = history.storagePath ?: legacyPath(history))
         val file = storage.historyFile(recoveredHistory)?.let(owner::file) ?: fail(PlaybackPreparationFailure.FileMissing)
-        if (history.uniqueKey.isNotBlank() || file is RemoteStorageFile) {
+        if (history.uniqueKey.isNotBlank()) {
             requireIdentity(
                 file,
                 PlaybackFileReference(
                     history.uniqueKey,
-                    history.storagePath.orEmpty(),
-                    protocolReference = remoteHistoryVideoId(history)
+                    history.storagePath.orEmpty()
                 )
             )
         }
@@ -355,7 +317,7 @@ class PlaybackSourceResolver internal constructor(
             parent ?: if (file.storage.library.mediaType == MediaType.EXTERNAL_STORAGE) {
                 null
             } else {
-                file.storagePath().substringBeforeLast('/', "").takeIf { it.isNotBlank() }
+                CatalogSourceReader.parentPath(file).takeIf { it.isNotBlank() }
             }
         return PlaybackMetadataFile(source, file.storage.library.mediaType, PlaybackReferenceFactory.reference(file), actualParent)
     }
@@ -376,19 +338,6 @@ class PlaybackSourceResolver internal constructor(
         file: StorageFile,
         reference: PlaybackFileReference
     ) {
-        if (file is RemoteStorageFile && file.storage.library.mediaType == MediaType.REMOTE_STORAGE) {
-            val data = file.getRealFile()
-            val videoId = reference.protocolReference
-            if (!videoId.isNullOrBlank() && data.Id != videoId) fail(PlaybackPreparationFailure.FileMissing)
-            if (file.uniqueKey() == reference.uniqueKey) return
-            // Old grouped PC entries had an empty path. A saved video ID is required to disambiguate them.
-            if (!videoId.isNullOrBlank() &&
-                data.Hash.isEmpty() &&
-                (reference.uniqueKey == reference.storagePath.toMd5String() || reference.uniqueKey == "".toMd5String())
-            ) {
-                return
-            }
-        }
         requireIdentity(file, reference.uniqueKey)
     }
 
@@ -456,7 +405,6 @@ class PlaybackSourceResolver internal constructor(
             isolatedMediaTypes +
                 setOf(
                     MediaType.WEBDAV_SERVER,
-                    MediaType.REMOTE_STORAGE,
                     MediaType.SCREEN_CAST,
                     MediaType.ALSIT_STORAGE
                 )
@@ -468,15 +416,6 @@ class PlaybackSourceResolver internal constructor(
                 MediaType.EXTERNAL_STORAGE -> history.url
                 else -> Uri.parse(history.url).path ?: history.url
             }
-
-        fun remoteHistoryVideoId(history: PlayHistoryEntity): String? {
-            if (history.mediaType != MediaType.REMOTE_STORAGE) return null
-            val parts = Uri.parse(history.url).pathSegments
-            return parts
-                .takeIf { it.size == 5 && it.take(4) == listOf("api", "v1", "stream", "id") }
-                ?.last()
-                ?.takeIf { it.isNotBlank() }
-        }
 
         fun throwWrappedCancellation(failure: Throwable) {
             var current: Throwable? = failure

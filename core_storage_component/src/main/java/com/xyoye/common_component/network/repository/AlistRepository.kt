@@ -38,9 +38,13 @@ object AlistRepository : BaseRepository() {
     suspend fun openDirectory(
         url: String,
         token: String,
-        path: String
+        path: String,
+        page: Int = 1,
+        perPage: Int = 200
     ) = request()
         .param("path", path)
+        .param("page", page)
+        .param("per_page", perPage)
         .doPost {
             RetrofitManager.alistService.openDirectory(url, token, it)
         }

@@ -18,7 +18,6 @@ import com.xyoye.storage_component.ui.dialog.Cloud115StorageEditDialog
 import com.xyoye.storage_component.ui.dialog.ExternalStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.FTPStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.Open115StorageEditDialog
-import com.xyoye.storage_component.ui.dialog.RemoteStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.SmbStorageEditDialog
 import com.xyoye.storage_component.ui.dialog.StorageEditDialog
 import com.xyoye.storage_component.ui.dialog.WebDavStorageEditDialog
@@ -85,7 +84,6 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
         val dialog =
             when (mediaType) {
                 MediaType.EXTERNAL_STORAGE -> ExternalStorageEditDialog(this, resolvedEditData)
-                MediaType.REMOTE_STORAGE -> RemoteStorageEditDialog(this, resolvedEditData)
                 MediaType.FTP_SERVER -> FTPStorageEditDialog(this, resolvedEditData)
                 MediaType.WEBDAV_SERVER -> WebDavStorageEditDialog(this, resolvedEditData)
                 MediaType.SMB_SERVER -> SmbStorageEditDialog(this, resolvedEditData)

@@ -18,7 +18,6 @@ import com.xyoye.common_component.network.service.Cloud115Service
 import com.xyoye.common_component.network.service.DanDanService
 import com.xyoye.common_component.network.service.ExtendedService
 import com.xyoye.common_component.network.service.Open115Service
-import com.xyoye.common_component.network.service.RemoteService
 import com.xyoye.common_component.network.service.ScreencastService
 import com.xyoye.common_component.utils.JsonHelper
 import okhttp3.OkHttpClient
@@ -28,7 +27,6 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 interface RetrofitServiceProvider {
     val danDanService: DanDanService
     val extendedService: ExtendedService
-    val remoteService: RemoteService
     val screencastService: ScreencastService
     val alistService: AlistService
     val baiduPanService: BaiduPanService
@@ -83,10 +81,6 @@ internal class DefaultRetrofitServiceProvider : RetrofitServiceProvider {
 
     override val extendedService: ExtendedService by lazy {
         createService(Api.PLACEHOLDER, commonClient, ExtendedService::class.java)
-    }
-
-    override val remoteService: RemoteService by lazy {
-        createService(Api.PLACEHOLDER, commonClient, RemoteService::class.java)
     }
 
     override val screencastService: ScreencastService by lazy {

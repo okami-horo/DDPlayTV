@@ -20,7 +20,8 @@ class BaseInitializer : Initializer<Unit> {
                 "key_allow_orientation_change",
                 "key_press_video_speed",
                 "key_mpv_video_output",
-                "key_mpv_hwdec_priority"
+                "key_mpv_hwdec_priority",
+                "key_remote_anime_grouping"
             )
         )
     }

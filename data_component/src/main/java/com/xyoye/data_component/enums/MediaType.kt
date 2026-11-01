@@ -42,6 +42,7 @@ enum class MediaType(
         cover = R.drawable.ic_smb_storage,
     ),
 
+    // Legacy database/parcel compatibility only; no factory or selectable entry.
     REMOTE_STORAGE(
         "remote_storage",
         "PC端媒体库",

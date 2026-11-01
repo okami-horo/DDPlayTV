@@ -15,5 +15,9 @@ data class AlistDirectoryData(
     @Json(name = "total")
     val fileCount: Int = 0,
     @Json(name = "content")
-    val fileList: List<AlistFileData> = emptyList()
+    val fileList: List<AlistFileData> = emptyList(),
+    @Json(name = "filtered_total")
+    val filteredTotal: Int? = null,
+    @Json(name = "has_more")
+    val hasMore: Boolean? = null
 ) : Parcelable

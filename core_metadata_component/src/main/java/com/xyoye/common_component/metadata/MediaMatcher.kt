@@ -21,7 +21,7 @@ object MediaMatcher {
         candidates: List<MediaCandidate>
     ): MediaCandidate? {
         if (parsed.extra || parsed.absoluteEpisode != null || parsed.title.isBlank()) return null
-        val matching =
+        val eligible =
             candidates.distinctBy { it.kind to it.title.id }.filter {
                 (parsed.kind == null || it.kind == parsed.kind) &&
                     (
@@ -30,17 +30,30 @@ object MediaMatcher {
                                 .date()
                                 .take(4)
                                 .toIntOrNull() == parsed.year
-                    ) &&
-                    if (parsed.explicitId != null) {
-                        it.title.id == parsed.explicitId
-                    } else {
-                        (
-                            normalize(parsed.title) in listOf(normalize(it.title.displayTitle()), normalize(it.title.original()))
-                        )
-                    }
+                    )
             }
-        if (matching.size != 1) return null
-        if (matching.single().kind == "tv" && (parsed.season == null || parsed.episodes.isEmpty())) return null
-        return matching.single()
+        val title = normalize(parsed.title)
+        val matching =
+            eligible.filter {
+                if (parsed.explicitId != null) {
+                    it.title.id == parsed.explicitId
+                } else {
+                    title in listOf(normalize(it.title.displayTitle()), normalize(it.title.original()))
+                }
+            }
+        val match =
+            matching.singleOrNull() ?: eligible.singleOrNull()?.takeIf { candidate ->
+                // Long series names may omit a subtitle; short fragments and numbered sequels stay unresolved.
+                matching.isEmpty() &&
+                    parsed.explicitId == null &&
+                    parsed.kind == "tv" &&
+                    title.length >= 8 &&
+                    listOf(candidate.title.displayTitle(), candidate.title.original()).any {
+                        val full = normalize(it)
+                        full.startsWith(title) && full.length > title.length && full.removePrefix(title).none(Char::isDigit)
+                    }
+            } ?: return null
+        if (match.kind == "tv" && (parsed.season == null || parsed.episodes.isEmpty())) return null
+        return match
     }
 }

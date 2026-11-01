@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.View
+import androidx.lifecycle.Observer
 import androidx.preference.PreferenceGroupAdapter
 import androidx.preference.SwitchPreference
 import androidx.test.core.app.ActivityScenario
@@ -11,18 +12,25 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.config.AppConfig
+import com.xyoye.common_component.database.DatabaseProvider
+import com.xyoye.common_component.database.repository.MediaLibraryRepository
+import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.ui.activities.storage_plus.StoragePlusActivity
 import com.xyoye.storage_component.ui.dialog.StorageEditDialog
 import com.xyoye.user_component.ui.activities.setting_app.SettingAppActivity
 import com.xyoye.user_component.ui.fragment.AppSettingFragment
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class GlobalSettingsInstrumentedTest {
@@ -37,7 +45,6 @@ class GlobalSettingsInstrumentedTest {
     fun sourceEditorsKeepVisibleDefaultFocusAndReturnByRemote() {
         for (mediaType in listOf(
             MediaType.EXTERNAL_STORAGE,
-            MediaType.REMOTE_STORAGE,
             MediaType.FTP_SERVER,
             MediaType.WEBDAV_SERVER,
             MediaType.SMB_SERVER,
@@ -99,31 +106,46 @@ class GlobalSettingsInstrumentedTest {
     }
 
     @Test
-    fun pcConnectionTestRemainsReachableAfterCredentials() {
-        withSourceEditor(MediaType.REMOTE_STORAGE) { scenario, dialog ->
-            scenario.onActivity { assertTrue(dialog.findViewById<View>(R.id.secret_et)!!.requestFocus()) }
-            send(KeyEvent.KEYCODE_DPAD_DOWN)
-            assertFocused(dialog, R.id.server_test_connect_tv)
-            send(KeyEvent.KEYCODE_DPAD_UP)
-            assertFocused(dialog, R.id.secret_et)
-            send(KeyEvent.KEYCODE_DPAD_DOWN)
-            assertFocused(dialog, R.id.server_test_connect_tv)
-            closeByRemote(dialog)
+    fun retiredPcSourceIsHiddenWhileItsSavedRowIsPreserved() {
+        val library =
+            MediaLibraryEntity(
+                displayName = "Retired PC fixture",
+                url = "http://retired-pc-fixture.test",
+                mediaType = MediaType.REMOTE_STORAGE
+            )
+        val dao = DatabaseProvider.instance.getMediaLibraryDao()
+        val live = dao.getAll()
+        val observed = CountDownLatch(1)
+        var displayed = emptyList<MediaLibraryEntity>()
+        val observer =
+            Observer<MutableList<MediaLibraryEntity>> {
+                displayed = it
+                observed.countDown()
+            }
+        try {
+            runBlocking { MediaLibraryRepository.insert(library) }
+            instrumentation.runOnMainSync { live.observeForever(observer) }
+            assertTrue(observed.await(5, TimeUnit.SECONDS))
+            assertTrue(displayed.none { it.mediaType == MediaType.REMOTE_STORAGE })
+            assertTrue(runBlocking { dao.getByUrl(library.url, library.mediaType) } != null)
+        } finally {
+            instrumentation.runOnMainSync { live.removeObserver(observer) }
+            runBlocking { MediaLibraryRepository.delete(library.url, library.mediaType) }
         }
     }
 
     @Test
-    fun globalPcGroupingSwitchPersistsAcrossRecreationAndReentry() {
-        val original = AppConfig.isRemoteAnimeGrouping()
-        AppConfig.putRemoteAnimeGrouping(false)
+    fun retainedSettingsPersistByDpadAndPcGroupingIsAbsent() {
+        val original = AppConfig.isShowHiddenFile()
+        AppConfig.putShowHiddenFile(false)
         try {
             ActivityScenario.launch(SettingAppActivity::class.java).use { scenario ->
                 var position = -1
                 scenario.onActivity {
                     val fragment = appSettings(it)
-                    assertFalse(fragment.findPreference<SwitchPreference>("remote_anime_grouping")!!.isChecked)
+                    assertNull(fragment.findPreference<SwitchPreference>("remote_anime_grouping"))
                     val list = fragment.listView as DpadRecyclerView
-                    position = (list.adapter as PreferenceGroupAdapter).getPreferenceAdapterPosition("remote_anime_grouping")
+                    position = (list.adapter as PreferenceGroupAdapter).getPreferenceAdapterPosition("hide_file")
                     assertTrue(position >= 0)
                     list.setSelectedPosition(position)
                     list.requestFocus()
@@ -134,23 +156,29 @@ class GlobalSettingsInstrumentedTest {
                         it.currentFocus?.let { focus -> list.findContainingViewHolder(focus)?.bindingAdapterPosition == position } == true
                 }
                 send(KeyEvent.KEYCODE_DPAD_CENTER)
-                scenario.onActivity {
-                    assertTrue(appSettings(it).findPreference<SwitchPreference>("remote_anime_grouping")!!.isChecked)
-                    assertTrue(AppConfig.isRemoteAnimeGrouping())
-                }
+                assertTrue(AppConfig.isShowHiddenFile())
                 scenario.recreate()
                 scenario.onActivity {
-                    assertTrue(appSettings(it).findPreference<SwitchPreference>("remote_anime_grouping")!!.isChecked)
+                    assertTrue(appSettings(it).findPreference<SwitchPreference>("hide_file")!!.isChecked)
+                    assertNull(appSettings(it).findPreference<SwitchPreference>("remote_anime_grouping"))
                 }
+                val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
+                java.io
+                    .File(
+                        instrumentation.targetContext.getExternalFilesDir("all-source-verification"),
+                        "settings.png"
+                    ).outputStream()
+                    .use {
+                        bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+                    }
+                bitmap.recycle()
+                send(KeyEvent.KEYCODE_BACK)
             }
             ActivityScenario.launch(SettingAppActivity::class.java).use { scenario ->
-                scenario.onActivity {
-                    assertTrue(appSettings(it).findPreference<SwitchPreference>("remote_anime_grouping")!!.isChecked)
-                    assertTrue(AppConfig.isRemoteAnimeGrouping())
-                }
+                scenario.onActivity { assertTrue(appSettings(it).findPreference<SwitchPreference>("hide_file")!!.isChecked) }
             }
         } finally {
-            AppConfig.putRemoteAnimeGrouping(original)
+            AppConfig.putShowHiddenFile(original)
         }
     }
 

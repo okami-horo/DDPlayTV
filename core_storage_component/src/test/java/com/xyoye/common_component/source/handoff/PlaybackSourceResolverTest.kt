@@ -1,13 +1,11 @@
 package com.xyoye.common_component.source.handoff
 
 import com.tencent.mmkv.MMKV
-import com.xyoye.common_component.extension.toMd5String
 import com.xyoye.common_component.network.request.NetworkException
 import com.xyoye.common_component.playback.handoff.PlayHistoryDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackFileReference
 import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
-import com.xyoye.common_component.playback.handoff.PlaybackQueueContext
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media.StorageVideoSource
@@ -15,9 +13,7 @@ import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.credential.CredentialUnavailableException
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.helper.SmbPlayServer
-import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
 import com.xyoye.common_component.storage.file.impl.SmbStorageFile
-import com.xyoye.common_component.storage.impl.RemoteStorage
 import com.xyoye.common_component.storage.impl.ScreencastStorage
 import com.xyoye.common_component.storage.impl.SmbConnection
 import com.xyoye.common_component.storage.impl.SmbFileInfo
@@ -26,7 +22,6 @@ import com.xyoye.common_component.storage.impl.WebDavStorage
 import com.xyoye.common_component.storage.transport.PlaybackTransportFactory
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
-import com.xyoye.data_component.data.remote.RemoteVideoData
 import com.xyoye.data_component.data.screeencast.ScreencastData
 import com.xyoye.data_component.data.screeencast.ScreencastVideoData
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -111,7 +106,6 @@ class PlaybackSourceResolverTest {
 
     @After fun cleanup() {
         sources.forEach { it.releasePlaybackResources() }
-        DefaultPreferences.groupByAnime = false
         DefaultPreferences.playerType = PlayerType.TYPE_EXO_PLAYER.value
     }
 
@@ -152,162 +146,26 @@ class PlaybackSourceResolverTest {
             assertEquals("episode1.mkv", read(changed.source.getVideoUrl()))
         }
 
-    @Test fun pcGroupingIsGlobalCapturedPerInstanceAndDoesNotChangeVideoIdentity() =
+    @Test fun retiredPcDescriptorsAndHistoryCannotOpenAnyConnection() =
         runBlocking {
-            library = remoteLibrary()
-            val videos = listOf(remoteVideo("42"), remoteVideo("43"), remoteVideo("44").copy(AnimeId = 0))
-            DefaultPreferences.groupByAnime = false
-            val files = RemoteStorage(library) { Result.success(videos.map { it.copy() }) }
-            DefaultPreferences.groupByAnime = true
-            val grouped = RemoteStorage(library.copy(id = 18)) { Result.success(videos.map { it.copy() }) }
-            val secondGrouped = RemoteStorage(library.copy(id = 20)) { Result.success(videos.map { it.copy() }) }
-            val rootFiles = files.openDirectory(files.getRootFile(), true)
-            assertEquals("/videos/", rootFiles.single().filePath())
-            assertEquals(3, files.openDirectory(rootFiles.single(), false).size)
-            for (storage in listOf(grouped, secondGrouped)) {
-                val groups = storage.openDirectory(storage.getRootFile(), true)
-                assertEquals("Series", groups.single().filePath())
-                assertEquals(2, storage.openDirectory(groups.single(), false).size)
-            }
-            val fileKeys = listOf("42", "43").map { files.resolvePlaybackReference("", it, false)!!.uniqueKey() }
-            val groupKeys = listOf("42", "43").map { grouped.resolvePlaybackReference("", it, false)!!.uniqueKey() }
-            assertEquals(fileKeys, groupKeys)
-            assertEquals(2, fileKeys.distinct().size)
-            DefaultPreferences.groupByAnime = false
-            assertEquals("Series", grouped.openDirectory(grouped.getRootFile(), true).single().filePath())
-            assertEquals("/videos/", files.openDirectory(files.getRootFile(), true).single().filePath())
-        }
-
-    @Test fun oldHashlessPcSnapshotsNormalizeBothGroupingModesAndPreserveQueueOrder() =
-        runBlocking {
-            library = remoteLibrary()
-            create = { RemoteStorage(it) { Result.success(listOf(remoteVideo("42"), remoteVideo("43"))) } }
-            for (grouping in listOf(false, true)) {
-                DefaultPreferences.groupByAnime = grouping
-                for (oldPath in listOf("", "/videos/42.mkv")) {
-                    val selected = PlaybackFileReference(oldPath.toMd5String(), oldPath, protocolReference = "42")
-                    val next = PlaybackFileReference("".toMd5String(), "", protocolReference = "43")
-                    val descriptor =
-                        StoredLibraryFileDescriptor(
-                            library.id,
-                            library.mediaType,
-                            selected,
-                            PlaybackQueueContext(null, StorageSort.NAME, false, selected.uniqueKey, listOf(selected, next))
-                        )
-                    val result = success(descriptor)
-                    assertEquals("/videos/42.mkv".toMd5String(), result.identity.uniqueKey)
-                    assertEquals("/videos/42.mkv", (result.descriptor as StoredLibraryFileDescriptor).file.storagePath)
-                    assertEquals(listOf("42", "43"), result.queue.map { (it as StoredLibraryFileDescriptor).file.protocolReference })
-                    assertEquals("/videos/43.mkv".toMd5String(), success(result.queue[1]).identity.uniqueKey)
-                }
-            }
-        }
-
-    @Test fun hashlessPcHistoryAndSnapshotBackfillOnlyTheirOwnVideoAndKeepProgress() =
-        runBlocking {
-            library = remoteLibrary()
-            create = { RemoteStorage(it) { Result.success(listOf(remoteVideo("42"), remoteVideo("43"))) } }
-            for (grouping in listOf(false, true)) {
-                DefaultPreferences.groupByAnime = grouping
-                for (fromHistory in listOf(false, true)) {
-                    history =
-                        PlayHistoryEntity(
-                            id = 5,
-                            videoName = "42.mkv",
-                            url = "http://old.example.test/api/v1/stream/id/42",
-                            mediaType = library.mediaType,
-                            storageId = library.id,
-                            storagePath = "",
-                            uniqueKey = "".toMd5String(),
-                            videoPosition = 5432,
-                            subtitlePath = "saved.ass"
-                        )
-                    val descriptor =
-                        if (fromHistory) {
-                            PlayHistoryDescriptor(5, history!!.uniqueKey, library.id)
-                        } else {
-                            StoredLibraryFileDescriptor(
-                                library.id,
-                                library.mediaType,
-                                PlaybackFileReference(history!!.uniqueKey, "", playHistoryId = 5, protocolReference = "42")
-                            )
-                        }
-                    val result = success(descriptor)
-                    assertEquals(5432L, result.source.getCurrentPosition())
-                    assertEquals("/videos/42.mkv".toMd5String(), backfills.last().uniqueKey)
-                    assertEquals("/videos/42.mkv", backfills.last().storagePath)
-                    assertEquals("saved.ass", backfills.last().subtitlePath)
-                    assertEquals(library.id, backfills.last().storageId)
-                }
-            }
-            history = history!!.copy(uniqueKey = "".toMd5String(), url = "http://example.test/api/v1/stream/id/43")
-            val anotherVideo =
-                StoredLibraryFileDescriptor(
-                    library.id,
-                    library.mediaType,
-                    PlaybackFileReference("".toMd5String(), "", playHistoryId = 5, protocolReference = "42")
-                )
-            val before = backfills.size
-            assertEquals(0L, success(anotherVideo).source.getCurrentPosition())
-            assertEquals(before, backfills.size)
-        }
-
-    @Test fun pcLegacyCompatibilityRejectsUnverifiableIdsKeysLibrariesTypesAndHashes() =
-        runBlocking {
-            library = remoteLibrary()
-            var video = remoteVideo("42")
-            create = { RemoteStorage(it) { Result.success(listOf(video.copy())) } }
-            val valid =
-                StoredLibraryFileDescriptor(
-                    library.id,
-                    library.mediaType,
-                    PlaybackFileReference("".toMd5String(), "", protocolReference = "42")
-                )
-            val invalidDescriptors =
-                listOf(
-                    valid.copy(file = valid.file.copy(protocolReference = null)),
-                    valid.copy(file = valid.file.copy(protocolReference = "")),
-                    valid.copy(file = valid.file.copy(protocolReference = "missing")),
-                    valid.copy(file = valid.file.copy(uniqueKey = "unverifiable")),
-                    valid.copy(libraryId = library.id + 1),
-                    valid.copy(mediaType = MediaType.SMB_SERVER)
-                )
-            for (invalid in invalidDescriptors) {
-                assertEquals(PlaybackPreparationFailure.FileMissing, failure(invalid))
-            }
-            video = video.copy(Hash = "current-hash")
-            assertEquals(PlaybackPreparationFailure.FileMissing, failure(valid))
+            library = library.copy(mediaType = MediaType.REMOTE_STORAGE)
+            create = { error("Retired source must not create a connection") }
+            val descriptor = StoredLibraryFileDescriptor(library.id, library.mediaType, PlaybackFileReference("legacy", "/old.mkv"))
+            assertEquals(PlaybackPreparationFailure.UnsupportedSource, failure(descriptor))
             history =
                 PlayHistoryEntity(
                     id = 5,
-                    videoName = "42.mkv",
-                    url = "http://example.test/not-a-stream/42",
+                    videoName = "old",
+                    url = "http://old.test/video",
                     mediaType = library.mediaType,
+                    uniqueKey = "legacy",
                     storageId = library.id,
-                    uniqueKey = "".toMd5String(),
-                    storagePath = ""
+                    videoPosition = 5432
                 )
-            video = video.copy(Hash = "")
-            assertEquals(PlaybackPreparationFailure.FileMissing, failure(PlayHistoryDescriptor(5, history!!.uniqueKey, library.id)))
-            assertTrue(sources.isEmpty())
+            assertEquals(PlaybackPreparationFailure.UnsupportedSource, failure(PlayHistoryDescriptor(5, "legacy", library.id)))
+            assertEquals(5432L, history!!.videoPosition)
+            assertTrue(backfills.isEmpty())
         }
-
-    private fun remoteLibrary() =
-        MediaLibraryEntity(
-            id = 17,
-            displayName = "PC",
-            url = "http://example.test",
-            mediaType = MediaType.REMOTE_STORAGE
-        )
-
-    private fun remoteVideo(id: String) =
-        RemoteVideoData(
-            Id = id,
-            AnimeId = 1,
-            AnimeTitle = "Series",
-            Path = "C:\\videos\\$id.mkv",
-            Name = "$id.mkv"
-        )
 
     @Test fun capturesBoundedQueueWithSelectedItemAndFrozenSort() {
         val browser = smb(library)
@@ -439,27 +297,6 @@ class PlaybackSourceResolverTest {
             assertEquals(library.id, backfills.single().storageId)
             assertEquals(PlaybackPreparationFailure.FileMissing, failure(PlayHistoryDescriptor(4, "replaced-row")))
             assertEquals(PlaybackPreparationFailure.FileMissing, failure(PlayHistoryDescriptor(5, "")))
-        }
-
-    @Test fun remoteIdentityIsReloadedByIdAndRejectsChangedHash() =
-        runBlocking {
-            library = MediaLibraryEntity(id = 17, displayName = "remote", url = "http://example.test", mediaType = MediaType.REMOTE_STORAGE)
-            val original =
-                RemoteVideoData(Id = "42", Hash = "hash", Path = "C:\\old\\video.mkv", Name = "video.mkv", absolutePath = "/old/video.mkv")
-            val browser = RemoteStorage(library) { Result.success(listOf(original)) }
-            val reference = PlaybackReferenceFactory.reference(RemoteStorageFile(browser, original))
-            var current = original.copy(Path = "D:\\new\\video.mkv", absolutePath = "")
-            create = { RemoteStorage(it) { Result.success(listOf(current)) } }
-            val descriptor = StoredLibraryFileDescriptor(library.id, library.mediaType, reference)
-            for (grouping in listOf(false, true)) {
-                DefaultPreferences.groupByAnime = grouping
-                current = current.copy(Hash = "hash")
-                val result = success(descriptor)
-                assertTrue(result.source.getVideoUrl().endsWith("/api/v1/stream/id/42"))
-                assertEquals("42", reference.protocolReference)
-                current = current.copy(Hash = "replacement")
-                assertEquals(PlaybackPreparationFailure.FileMissing, failure(descriptor))
-            }
         }
 
     @Test fun missingLibraryChangedIdentityAndTypedFailuresNeverAllocatePlayback() =
@@ -623,7 +460,7 @@ class PlaybackSourceResolverTest {
         @Implementation fun getBoolean(
             key: String,
             defaultValue: Boolean
-        ): Boolean = if (key == "key_remote_anime_grouping") groupByAnime else defaultValue
+        ): Boolean = defaultValue
 
         @Implementation fun getInt(
             key: String,
@@ -640,7 +477,7 @@ class PlaybackSourceResolverTest {
         @Implementation fun decodeBool(
             key: String,
             defaultValue: Boolean
-        ): Boolean = if (key == "key_remote_anime_grouping") groupByAnime else defaultValue
+        ): Boolean = defaultValue
 
         @Implementation fun decodeInt(
             key: String,
@@ -648,7 +485,6 @@ class PlaybackSourceResolverTest {
         ): Int = if (key == "key_use_player_type") playerType else defaultValue
 
         companion object {
-            var groupByAnime = false
             var playerType = PlayerType.TYPE_EXO_PLAYER.value
 
             @JvmStatic @Implementation

@@ -50,6 +50,7 @@ data class MediaLibraryEntity(
     var smbV2: Boolean = true,
     @ColumnInfo(name = "smb_share_path")
     var smbSharePath: String? = null,
+    // Retained for Room schema compatibility; PC playback has been retired.
     @ColumnInfo(name = "remote_secret")
     var remoteSecret: String? = null,
     @ColumnInfo(name = "web_dav_strict")

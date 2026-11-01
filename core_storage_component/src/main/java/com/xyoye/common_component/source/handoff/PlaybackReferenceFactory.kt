@@ -9,7 +9,6 @@ import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
 import com.xyoye.common_component.storage.StorageSortOption
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
 import com.xyoye.common_component.utils.comparator.FileNameComparator
 import com.xyoye.common_component.utils.comparator.FileSizeComparator
 import com.xyoye.data_component.data.screeencast.ScreencastData
@@ -54,11 +53,6 @@ object PlaybackReferenceFactory {
             uniqueKey = file.uniqueKey(),
             storagePath = file.storagePath(),
             playHistoryId = file.playHistory?.id?.takeIf { it > 0 },
-            protocolReference =
-                when {
-                    file is RemoteStorageFile && file.isFile() -> file.getRealFile().Id
-                    else -> null
-                },
             displayTitle = file.fileName()
         )
 

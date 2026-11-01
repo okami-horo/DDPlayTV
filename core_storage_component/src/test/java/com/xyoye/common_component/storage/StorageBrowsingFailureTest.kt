@@ -14,7 +14,6 @@ import com.xyoye.common_component.storage.impl.BaiduPanStorage
 import com.xyoye.common_component.storage.impl.Cloud115Storage
 import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.storage.impl.Open115Storage
-import com.xyoye.common_component.storage.impl.RemoteStorage
 import com.xyoye.common_component.storage.impl.SmbConnection
 import com.xyoye.common_component.storage.impl.SmbFileInfo
 import com.xyoye.common_component.storage.impl.SmbStorage
@@ -36,7 +35,6 @@ import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
 import org.junit.After
 import org.junit.Assert.*
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -51,10 +49,6 @@ class StorageBrowsingFailureTest {
     private val storages = mutableListOf<Storage>()
 
     private fun library(type: MediaType) = MediaLibraryEntity(id = 42, displayName = "fixture", url = "http://127.0.0.1", mediaType = type)
-
-    @Before fun resetPreferences() {
-        DefaultPreferences.groupByAnime = false
-    }
 
     @After fun closeFixtures() {
         storages.forEach { it.close() }
@@ -131,22 +125,6 @@ class StorageBrowsingFailureTest {
             assertTrue(runCatching { SubtitleFontCacheHelper.listFontFiles(storage, fonts) }.exceptionOrNull() is CancellationException)
             assertSame(root, storage.directory)
             assertSame(files, storage.directoryFiles)
-        }
-
-    @Test fun pcListPropagatesFailureAndCancellationAndCanRecoverWithEmptyResult() =
-        runBlocking {
-            var failure: Throwable? = IOException("offline")
-            val storage =
-                RemoteStorage(library(MediaType.REMOTE_STORAGE)) {
-                    failure?.let { Result.failure(it) } ?: Result.success(emptyList())
-                }.also { storages.add(it) }
-            val root = storage.getRootFile()
-            assertTrue(runCatching { storage.openDirectory(root, true) }.exceptionOrNull() is IOException)
-            assertNull(storage.directory)
-            failure = CancellationException("cancelled")
-            assertTrue(runCatching { storage.listFiles(root) }.exceptionOrNull() is CancellationException)
-            failure = null
-            assertTrue(storage.openDirectory(root, true).isEmpty())
         }
 
     @Test fun webdavHttpFailureIsDistinctFromSuccessfulEmptyMultistatus() =

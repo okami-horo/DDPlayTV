@@ -1,6 +1,7 @@
 package com.xyoye.common_component.storage.catalog
 
 import com.xyoye.common_component.playback.handoff.PlaybackFileReference
+import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -78,21 +79,60 @@ class CatalogSourceReaderTest {
             }
         }
 
-    @Test fun unverifiedProtocolsCannotClaimFullCatalogCoverage() {
-        assertTrue(CatalogSourceReader.supports(MediaType.LOCAL_STORAGE))
-        assertTrue(CatalogSourceReader.supports(MediaType.EXTERNAL_STORAGE))
-        assertTrue(CatalogSourceReader.supports(MediaType.SMB_SERVER))
-        assertTrue(CatalogSourceReader.supports(MediaType.WEBDAV_SERVER))
-        assertFalse(CatalogSourceReader.supports(MediaType.REMOTE_STORAGE))
-        assertFalse(CatalogSourceReader.supports(MediaType.FTP_SERVER))
-    }
+    @Test fun everyMaintainedLibraryCanReadMetadataWithoutOpeningMedia() =
+        runBlocking {
+            for (type in MediaType.entries.filter {
+                it !in
+                    setOf(
+                        MediaType.REMOTE_STORAGE,
+                        MediaType.OTHER_STORAGE,
+                        MediaType.SCREEN_CAST
+                    )
+            }) {
+                val library = library.copy(mediaType = type)
+                val reader = CatalogSourceReader { source(it, {}) }
+                assertEquals(type.name, "file.mkv", reader.file(library, PlaybackFileReference("history", "/file.mkv")).fileName)
+            }
+            for (type in listOf(MediaType.REMOTE_STORAGE, MediaType.OTHER_STORAGE, MediaType.SCREEN_CAST)) {
+                assertFalse(CatalogSourceReader.supports(type))
+            }
+        }
+
+    @Test fun pagedDirectoryReadsEveryPageAndRootFilesKeepTheirParent() =
+        runBlocking {
+            var moreCalls = 0
+            var closed = false
+            val reader =
+                CatalogSourceReader {
+                    source(it, { closed = true }, page = {
+                        moreCalls++
+                        emptyList()
+                    })
+                }
+            val result = reader.directory(library, "/")
+            assertTrue(result.complete)
+            assertEquals(1, moreCalls)
+            assertTrue(closed)
+            assertEquals("/", reader.file(library, PlaybackFileReference("history", "/file.mkv")).parentPath)
+        }
+
+    @Test fun aLaterPageFailureCannotBecomeACompleteSnapshot() =
+        runBlocking {
+            var closed = false
+            val reader = CatalogSourceReader { source(it, { closed = true }, page = { throw IOException("page failed") }) }
+            val failure = runCatching { reader.directory(library, "/") }.exceptionOrNull()
+            assertNotNull(failure)
+            assertTrue(generateSequence(failure) { it.cause }.any { it.message == "page failed" })
+            assertTrue(closed)
+        }
 
     private val library = MediaLibraryEntity(10, "Fixture", "https://fixture.test", MediaType.WEBDAV_SERVER)
 
     private fun source(
         library: MediaLibraryEntity,
         close: () -> Unit,
-        failure: Exception? = null
+        failure: Exception? = null,
+        page: (() -> List<StorageFile>)? = null
     ): Storage {
         lateinit var storage: Storage
 
@@ -112,9 +152,10 @@ class CatalogSourceReaderTest {
                     else -> throw AssertionError("Unexpected property or media access: ${method.name}")
                 }
             } as StorageFile
+        var hasMore = page != null
         storage =
-            Proxy.newProxyInstance(javaClass.classLoader, arrayOf(Storage::class.java)) { _, method, args ->
-                when (method.name) {
+            Proxy.newProxyInstance(javaClass.classLoader, arrayOf(Storage::class.java, PagedStorage::class.java)) { _, method, args ->
+                when (method.name.substringBefore('-')) {
                     "getLibrary" -> library
                     "pathFile" -> file(args[1] as Boolean)
                     "getRootFile" -> file(true)
@@ -122,6 +163,8 @@ class CatalogSourceReaderTest {
                         if (failure != null) throw failure
                         listOf(file(false))
                     }
+                    "hasMore" -> hasMore
+                    "loadMore" -> page!!.invoke().also { hasMore = false }
                     "close" -> {
                         close()
                         null

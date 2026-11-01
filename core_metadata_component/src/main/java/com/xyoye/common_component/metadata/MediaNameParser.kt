@@ -12,7 +12,7 @@ data class ParsedMediaName(
 )
 
 object MediaNameParser {
-    const val RULE_VERSION = 2
+    const val RULE_VERSION = 3
     private val episode = Regex("(?i)\\bS(\\d{1,2})\\s*E(\\d{1,3})(?:\\s*-?\\s*E(\\d{1,3}))?")
     private val episodeX = Regex("(?i)\\b(\\d{1,2})x(\\d{1,3})(?:-(\\d{1,3}))?")
     private val id = Regex("(?i)[\\[{]tmdb(?:[-:= ](movie|tv))?[-:= ](\\d+)[\\]}]")

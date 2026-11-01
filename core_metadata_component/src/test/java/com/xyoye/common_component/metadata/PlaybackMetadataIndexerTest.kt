@@ -53,6 +53,25 @@ class PlaybackMetadataIndexerTest {
         db.close()
     }
 
+    @Test fun allMaintainedSourcesRecognizeOrdinaryEpisodeNamesAndDiscoverSiblings() =
+        runBlocking {
+            service.titles += "tv" to TmdbTitle(42, name = "乱世千金倪亚·利斯顿", overview = "Synopsis")
+            val types = MediaType.entries.filter { it !in setOf(MediaType.REMOTE_STORAGE, MediaType.OTHER_STORAGE, MediaType.SCREEN_CAST) }
+            for ((offset, type) in types.withIndex()) {
+                val library = library.copy(id = 20 + offset, mediaType = type)
+                db.getMediaLibraryDao().insert(library)
+                files = (1..3).map { file("乱世千金倪亚·利斯顿 - S01E0$it.mp4").copy(libraryId = library.id) }
+                val source = repository.source(library.id)
+                val selected = files.first()
+                val input = PlaybackMetadataFile(source, type, selected.reference, selected.parentPath)
+                indexer.process(input, type.name)
+                val assets = repository.dao.directoryAssets(library.id, source.contentGeneration, "/shows")
+                assertEquals(type.name, 3, assets.size)
+                assertTrue(type.name, assets.all { repository.dao.binding(it.assetId)?.state == "MATCHED" })
+                assertNull(db.getPlayHistoryDao().getPlayHistory(files[1].reference.uniqueKey, library.id))
+            }
+        }
+
     @Test fun ordinaryMovieNamesReachPersistentBindingsWithoutTypeHints() =
         runBlocking {
             for ((name, title, year) in listOf(

@@ -5,6 +5,26 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class MediaNameParserTest {
+    @Test fun uniqueLongSeriesTitleCanOmitTheSubtitleWithoutChangingSeason() {
+        val parsed = MediaNameParser.parse("乱世千金倪亚·利斯顿 - S01E01.mp4")
+        val candidate = MediaCandidate("tv", TmdbTitle(312850, name = "乱世千金倪亚·利斯顿转生为娇弱千金的弑神武人华丽无双录"))
+        assertEquals(1, parsed.season)
+        assertEquals(listOf(1), parsed.episodes)
+        assertEquals(candidate, MediaMatcher.automatic(parsed, listOf(candidate)))
+        assertNull(MediaMatcher.automatic(parsed, listOf(candidate, candidate.copy(title = candidate.title.copy(id = 2)))))
+        assertNull(MediaMatcher.automatic(parsed.copy(season = null), listOf(candidate)))
+        assertNull(MediaMatcher.automatic(parsed.copy(title = "乱世千金"), listOf(candidate)))
+        assertNull(MediaMatcher.automatic(parsed.copy(title = "倪亚利斯顿转生为"), listOf(candidate)))
+        assertNull(MediaMatcher.automatic(parsed.copy(kind = "movie"), listOf(candidate.copy(kind = "movie"))))
+        assertNull(
+            MediaMatcher.automatic(
+                parsed.copy(year = 2025),
+                listOf(candidate.copy(title = candidate.title.copy(firstAirDate = "2026-10-06")))
+            )
+        )
+        assertNull(MediaMatcher.automatic(parsed, listOf(candidate.copy(title = candidate.title.copy(name = parsed.title + "第二部2")))))
+    }
+
     @Test fun preservesNumericTitlesAndSequelNumbers() {
         assertEquals("1917", MediaNameParser.parse("1917 (2019).mkv").title)
         assertEquals("Dune 2", MediaNameParser.parse("Dune.2.2024.1080p.mkv").title)

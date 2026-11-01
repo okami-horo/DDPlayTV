@@ -10,6 +10,7 @@ import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -27,6 +28,20 @@ import java.util.Date
 class PlayHistoryLegacyClaimTest {
     private lateinit var database: DatabaseInfo
     private lateinit var dao: PlayHistoryDao
+
+    @Test fun retiredPcHistoryIsHiddenWithoutDeletingProgressOrBindings() =
+        runBlocking {
+            val pc =
+                history(
+                    storageId = 10
+                ).copy(id = 40, mediaType = MediaType.REMOTE_STORAGE, videoPosition = 5432, danmuPath = "saved.xml")
+            val supported = pc.copy(id = 41, mediaType = MediaType.FTP_SERVER, uniqueKey = "ftp")
+            dao.insert(pc, supported)
+            assertEquals(listOf(41), dao.getAll().map { it.id })
+            assertEquals(listOf(41), dao.observeAll().first().map { it.id })
+            assertEquals(5432L, dao.getById(40)?.videoPosition)
+            assertEquals("saved.xml", dao.getById(40)?.danmuPath)
+        }
 
     @Before
     fun setUp() {
@@ -97,11 +112,11 @@ class PlayHistoryLegacyClaimTest {
     fun blankIdentityAndUrlDoNotClaimUnassignedHistory() =
         runBlocking {
             dao.insert(history(storageId = null).copy(uniqueKey = ""))
-            assertNull(PlayHistoryRepository.findOrClaimLegacyHistory("", 11, MediaType.REMOTE_STORAGE, URL))
+            assertNull(PlayHistoryRepository.findOrClaimLegacyHistory("", 11, MediaType.FTP_SERVER, URL))
             dao.deleteAll()
             dao.insert(history(storageId = null).copy(url = ""))
             assertNull(claim(url = ""))
-            assertNull(dao.getUnassignedHistory(KEY, MediaType.REMOTE_STORAGE).single().storageId)
+            assertNull(dao.getUnassignedHistory(KEY, MediaType.FTP_SERVER).single().storageId)
         }
 
     @Test
@@ -119,13 +134,13 @@ class PlayHistoryLegacyClaimTest {
     private suspend fun claim(
         storageId: Int = 11,
         url: String = URL
-    ) = PlayHistoryRepository.findOrClaimLegacyHistory(KEY, storageId, MediaType.REMOTE_STORAGE, url)
+    ) = PlayHistoryRepository.findOrClaimLegacyHistory(KEY, storageId, MediaType.FTP_SERVER, url)
 
     private fun history(storageId: Int?) =
         PlayHistoryEntity(
             videoName = "Episode 1",
             url = URL,
-            mediaType = MediaType.REMOTE_STORAGE,
+            mediaType = MediaType.FTP_SERVER,
             videoPosition = 91234,
             videoDuration = 100000,
             playTime = Date(1234567),

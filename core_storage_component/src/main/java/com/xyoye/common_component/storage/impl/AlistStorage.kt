@@ -19,6 +19,7 @@ import com.xyoye.data_component.data.alist.AlistFileData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.PlayerType
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.runBlocking
 import java.io.InputStream
 
@@ -37,9 +38,22 @@ class AlistStorage(
     private val rootUrl by lazy { rootUri.toString() }
 
     override suspend fun listFiles(file: StorageFile): List<StorageFile> {
-        val response = AlistRepository.openDirectory(rootUrl, token, file.filePath()).getOrThrow()
-        val data = response.successData ?: throw java.io.IOException(response.message.ifBlank { "Alist directory request failed" })
-        return data.fileList.map { AlistStorageFile(file.filePath(), it, this) }
+        val files = linkedMapOf<String, StorageFile>()
+        var page = 1
+        while (true) {
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
+            val response = AlistRepository.openDirectory(rootUrl, token, file.filePath(), page).getOrThrow()
+            val data = response.successData ?: throw java.io.IOException(response.message.ifBlank { "Alist directory request failed" })
+            val previousSize = files.size
+            data.fileList.forEach { item ->
+                val entry = AlistStorageFile(file.filePath(), item, this)
+                files[entry.uniqueKey()] = entry
+            }
+            val hasMore = data.hasMore ?: (files.size < (data.filteredTotal ?: data.fileCount))
+            if (!hasMore) return files.values.toList()
+            if (files.size == previousSize) throw java.io.IOException("DIRECTORY_INCOMPLETE")
+            page++
+        }
     }
 
     override suspend fun getRootFile(): StorageFile? {
@@ -78,7 +92,11 @@ class AlistStorage(
 
         val pathUri = Uri.parse(path)
         val fileName = pathUri.lastPathSegment
-        val parentPath = pathUri.path?.removeSuffix("/$fileName") ?: "/"
+        val parentPath =
+            pathUri.path
+                ?.removeSuffix("/$fileName")
+                .orEmpty()
+                .ifEmpty { "/" }
         return AlistRepository
             .openFile(rootUrl, token, path)
             .getOrNull()

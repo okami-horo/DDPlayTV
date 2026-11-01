@@ -224,7 +224,7 @@ class AppFeaturePageSmokeTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val storagePlusIntent =
             Intent(context, StoragePlusActivity::class.java).apply {
-                putExtra("mediaType", MediaType.REMOTE_STORAGE)
+                putExtra("mediaType", MediaType.WEBDAV_SERVER)
             }
         ActivityScenario.launch<StoragePlusActivity>(storagePlusIntent).use { scenario ->
             waitForIdle()

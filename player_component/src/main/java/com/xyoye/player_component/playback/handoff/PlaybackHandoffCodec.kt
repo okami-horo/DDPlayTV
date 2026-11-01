@@ -54,7 +54,8 @@ internal class PlaybackHandoffCodec {
         val descriptor = value as? Map<*, *> ?: return false
         if (descriptor["kind"] in setOf("external", "torrent")) return true
         val payload = descriptor["value"] as? Map<*, *> ?: return false
-        return descriptor["kind"] == "library" && payload["mediaType"] in setOf("BILIBILI_STORAGE", "STREAM_LINK", "MAGNET_LINK")
+        return descriptor["kind"] == "library" &&
+            payload["mediaType"] in setOf("BILIBILI_STORAGE", "STREAM_LINK", "MAGNET_LINK", "REMOTE_STORAGE")
     }
 
     fun copy(input: PlaybackRequestInput): PlaybackRequestInput = requireNotNull(inputAdapter.fromJson(inputAdapter.toJson(input)))

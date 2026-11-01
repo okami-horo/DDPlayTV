@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PlayHistoryDao {
-    @Query("SELECT * FROM play_history WHERE url != '' ORDER BY play_time DESC")
+    @Query("SELECT * FROM play_history WHERE url != '' AND media_type != 'remote_storage' ORDER BY play_time DESC")
     fun observeAll(): Flow<List<PlayHistoryEntity>>
 
     @Query("SELECT * FROM play_history WHERE id = (:id)")
@@ -27,7 +27,7 @@ interface PlayHistoryDao {
         storageId: Int
     )
 
-    @Query("SELECT * FROM play_history WHERE url != '' ORDER BY play_time DESC")
+    @Query("SELECT * FROM play_history WHERE url != '' AND media_type != 'remote_storage' ORDER BY play_time DESC")
     suspend fun getAll(): MutableList<PlayHistoryEntity>
 
     @Query("SELECT * FROM play_history WHERE url != '' AND media_type = (:mediaType) ORDER BY play_time DESC")

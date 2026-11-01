@@ -8,12 +8,14 @@ import com.xyoye.common_component.database.DatabaseProvider
 import com.xyoye.common_component.playback.handoff.PlaybackFileReference
 import com.xyoye.common_component.source.handoff.PlaybackReferenceFactory
 import com.xyoye.common_component.storage.AbstractStorage
+import com.xyoye.common_component.storage.PagedStorage
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.DocumentStorageFile
 import com.xyoye.common_component.storage.file.impl.VideoStorageFile
 import com.xyoye.common_component.storage.impl.DocumentFileStorage
+import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.storage.impl.VideoStorage
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.VideoEntity
@@ -35,10 +37,22 @@ class CatalogSourceReader(
                     MediaType.LOCAL_STORAGE,
                     MediaType.EXTERNAL_STORAGE,
                     MediaType.SMB_SERVER,
-                    MediaType.WEBDAV_SERVER
+                    MediaType.WEBDAV_SERVER,
+                    MediaType.FTP_SERVER,
+                    MediaType.ALSIT_STORAGE,
+                    MediaType.BAIDU_PAN_STORAGE,
+                    MediaType.OPEN_115_STORAGE,
+                    MediaType.CLOUD_115_STORAGE
                 )
 
         fun capture(file: StorageFile): PlaybackFileReference = PlaybackReferenceFactory.reference(file)
+
+        // SAF document IDs are opaque. Only a verified listing can establish their parent.
+        internal fun parentPath(file: StorageFile): String {
+            if (file is DocumentStorageFile) return ""
+            val path = file.storagePath()
+            return path.substringBeforeLast('/', "").ifEmpty { if (path.startsWith('/')) "/" else "" }
+        }
     }
 
     suspend fun file(
@@ -46,7 +60,17 @@ class CatalogSourceReader(
         reference: PlaybackFileReference
     ): CatalogFileSnapshot =
         withStorage(library) { storage ->
-            val file = storage.pathFile(reference.storagePath, false) ?: throw IOException("FILE_UNAVAILABLE")
+            val file =
+                (
+                    if (storage is FtpStorage) {
+                        storage.resolvePlaybackFile(
+                            reference.storagePath
+                        )
+                    } else {
+                        storage.pathFile(reference.storagePath, false)
+                    }
+                )
+                    ?: throw IOException("FILE_UNAVAILABLE")
             try {
                 if (!file.isFile() || !file.canRead()) throw IOException("FILE_UNAVAILABLE")
                 val snapshot = snapshot(file, parentPath(file))
@@ -102,15 +126,24 @@ class CatalogSourceReader(
             val directory = if (path.isBlank()) storage.getRootFile() else storage.pathFile(path, true)
             if (directory == null || !directory.isDirectory()) throw IOException("DIRECTORY_UNAVAILABLE")
             try {
-                val files = storage.openDirectory(directory, false)
-                currentCoroutineContext().ensureActive()
+                val files = mutableListOf<StorageFile>()
                 try {
+                    files.addAll(storage.openDirectory(directory, false))
+                    val identities = files.mapTo(mutableSetOf()) { it.uniqueKey() }
+                    while (storage is PagedStorage && storage.hasMore()) {
+                        currentCoroutineContext().ensureActive()
+                        val page = storage.loadMore().getOrThrow()
+                        files.addAll(page)
+                        val advanced = page.count { identities.add(it.uniqueKey()) }
+                        if (advanced == 0 && storage.hasMore()) throw IOException("DIRECTORY_INCOMPLETE")
+                    }
+                    currentCoroutineContext().ensureActive()
                     if (files.any { !it.canRead() }) throw IOException("DIRECTORY_INCOMPLETE")
                     val actualPath = directory.storagePath()
                     CatalogDirectorySnapshot(
                         actualPath,
-                        files.filter { it.isVideoFile() }.map { snapshot(it, actualPath) },
-                        files.filter { it.isDirectory() }.map { it.storagePath() },
+                        files.distinctBy { it.uniqueKey() }.filter { it.isVideoFile() }.map { snapshot(it, actualPath) },
+                        files.filter { it.isDirectory() }.map { it.storagePath() }.distinct(),
                         true
                     )
                 } finally {
@@ -180,10 +213,6 @@ class CatalogSourceReader(
                 storage.close()
             }
         }
-
-    // SAF document IDs are opaque. Only a directory listing can establish their parent.
-    private fun parentPath(file: StorageFile): String =
-        if (file is DocumentStorageFile) "" else file.storagePath().substringBeforeLast('/', "")
 
     private fun snapshot(
         file: StorageFile,

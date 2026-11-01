@@ -66,7 +66,7 @@ class PlaybackHandoffStoreTest {
     }
 
     @Test fun retiredStreamAndTorrentSnapshotsPreserveTheNextRequest() {
-        for (type in listOf("STREAM_LINK", "MAGNET_LINK")) {
+        for (type in listOf("STREAM_LINK", "MAGNET_LINK", "REMOTE_STORAGE")) {
             val pending = PendingPlaybackRequest("next", input, now, now + 1000)
             val snapshot =
                 PlaybackSnapshotRecord(

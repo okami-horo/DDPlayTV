@@ -62,22 +62,7 @@ internal object MediaLibraryCredentialMigration {
             }
         }
 
-        val legacyRemoteSecret = library.remoteSecret?.takeIf { it.isNotBlank() }
-        if (legacyRemoteSecret != null) {
-            val stored = MediaLibraryCredentialStore.readRemoteSecret(libraryId)
-            if (!stored.isNullOrBlank()) {
-                dao.clearRemoteSecret(libraryId)
-            } else {
-                val saved = MediaLibraryCredentialStore.writeRemoteSecret(libraryId, legacyRemoteSecret)
-                dao.clearRemoteSecret(libraryId)
-                if (!saved) {
-                    LogFacade.w(
-                        module = LogModule.STORAGE,
-                        tag = TAG,
-                        message = "encrypt failed, legacy remoteSecret cleared from db libraryId=$libraryId",
-                    )
-                }
-            }
-        }
+        if (library.remoteSecret != null) dao.clearRemoteSecret(libraryId)
+        MediaLibraryCredentialStore.clearRetiredRemoteSecret(libraryId)
     }
 }

@@ -9,11 +9,12 @@
 | TV 旧布局与设计覆盖排查 | [U01–U10：入口、源码与缺稿范围](plans/2026-10-31-ui-design-coverage-audit.md) | 用户随后授权修复；[补充设计](designs/2026-10-31-ui-polish-design.md)、[原生实施/验证与剩余边界](plans/2026-10-31-ui-polish.md)。文件 C 已完成本地实施与验证，见下行 |
 | 播放器左下操作组 | [已选 A 单排分组；只调整按钮组](designs/2026-10-31-player-controls-design.md) | A 已确认并实施；本地行为/截图与未覆盖状态见 [后续任务与 P01–P10](plans/2026-10-31-player-controls.md)。字幕位置与弹幕覆盖标题不属于问题 |
 | TMDB 元数据、文件关联与新媒体库 | [刮削与模块设计](designs/2026-10-31-tmdb-media-library-design.md) | 已授权实施：关联/纠错、Room 19、原生 UI 与首批来源手动扫描；[实施及验证](plans/2026-10-31-tmdb-media-library.md)、[范围与待办](../../document/media-library/tmdb-metadata-followup.md) |
-| 播放触发的自动刮削 | [自动识别、同目录同剧入库与低维护交互](designs/2026-10-31-playback-auto-metadata-design.md) | 实现与本地验证完成；原问题路由承接重新识别/刷新，保留既有绑定与历史。构建、AM01–AM13 证据及真实来源/电视待验边界见[本轮账本](plans/2026-11-01-playback-auto-metadata.md) |
+| 播放触发的自动刮削 | [自动识别、同目录同剧入库与低维护交互](designs/2026-10-31-playback-auto-metadata-design.md) | 已完成并归档；原问题路由承接重新识别/刷新，保留既有绑定与历史。[AM01–AM13 证据](plans/2026-11-01-playback-auto-metadata.md)保留；2026-11-01 用户确认电视实际刮削成功，后续修复和验收见全来源账本 |
+| 全来源自动识别与 PC 来源退役 | 用户要求覆盖全部保留来源，并移除弹弹play PC 端媒体库 | 已验收归档（2026-11-01）：九类来源适配、PC 退役及正式版排障完成，用户确认本次 115 Cloud 电视刮削通过；[全来源账本](plans/2026-11-01-all-source-auto-metadata.md)保留交付证据及其他场景的验证边界 |
 | 文件浏览 C：列表与预览 | [已选 C 设计](designs/2026-10-31-file-browser-design.md) | [原生实施与 C01–C11 本地验收](plans/2026-10-31-file-browser-preview.md)已完成；物理电视、真实云服务和用户验收仍未执行 |
 | 文件浏览菜单精简 | [任务、过渡路径与 FM01–FM10 验收](plans/2026-10-31-file-browser-menu-simplification.md) | 已实施：移除文件菜单与行末更多，统一刷新并承接长名阅读；保留播放器控制与旧绑定。本地验证与真实来源/电视边界见账本；后续自动刮削见上行 |
 | 新 UI 前的身份、异步与恢复修复 | [逻辑修复设计](designs/2026-10-30-ui-readiness-repairs-design.md) | [R1–R10 实施与验证](plans/2026-10-30-ui-readiness-repairs.md)已完成本地验证；优先恢复上次位置，已看完分类单独处理；物理电视及真实服务边界保留 |
-| 新 UI 的全局配置收敛 | [全局配置设计](designs/2026-10-30-global-settings-design.md) | 用户已授权实施；单库偏好移除、PC 分组全局化与 Room 17→18 已实现，验证状态及剩余边界见[实施记录](plans/2026-10-30-global-settings.md) |
+| 新 UI 的全局配置收敛 | [全局配置设计](designs/2026-10-30-global-settings-design.md) | 单库偏好移除与 Room 17→18 已实现，验证状态及剩余边界见[实施记录](plans/2026-10-30-global-settings.md)；PC 分组随后随来源退役，见全来源账本 |
 | 串流、外部打开与磁力功能退役 | 用户确认 TV 无相关需求，磁力搜索不保留 | [范围、Room 20 升级与验证](plans/2026-10-31-remove-stream-magnet.md) |
 | 纯 TV 项目收敛 | 用户确认不再维护手机端，保留共享媒体能力与双内核 | [实施与验证记录](plans/2026-10-29-tv-only.md) |
 | Bilibili 全部功能退役 | 用户确认由 PiliPlus 接手，包括弹幕来源 | [移除执行记录](plans/2026-10-28-remove-bilibili.md) |

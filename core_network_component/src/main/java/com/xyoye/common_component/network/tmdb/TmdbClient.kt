@@ -37,14 +37,14 @@ object TmdbClient {
             .addInterceptor { chain ->
                 if (!configured) throw TmdbFailure("NOT_CONFIGURED")
                 val request = chain.request()
-                if (request.url.host != "api.themoviedb.org" || !request.url.isHttps) throw TmdbFailure("INVALID_HOST")
+                if (request.url.host != "api.tmdb.org" || !request.url.isHttps) throw TmdbFailure("INVALID_HOST")
                 chain.proceed(request.newBuilder().header("Authorization", "Bearer ${BuildConfig.TMDB_READ_ACCESS_TOKEN}").build())
             }.build()
     }
     val service: TmdbService by lazy {
         Retrofit
             .Builder()
-            .baseUrl("https://api.themoviedb.org/3/")
+            .baseUrl("https://api.tmdb.org/3/")
             .client(client)
             .addConverterFactory(MoshiConverterFactory.create(JsonHelper.MO_SHI))
             .build()

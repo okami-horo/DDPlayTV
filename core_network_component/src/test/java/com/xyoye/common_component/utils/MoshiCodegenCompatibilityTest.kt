@@ -1,8 +1,8 @@
 package com.xyoye.common_component.utils
 
+import com.xyoye.data_component.data.alist.AlistDirectoryData
 import com.xyoye.data_component.data.alist.AlistFileData
 import com.xyoye.data_component.data.open115.Open115RefreshTokenResponse
-import com.xyoye.data_component.data.remote.RemoteVideoData
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -23,15 +23,14 @@ class MoshiCodegenCompatibilityTest {
     }
 
     @Test
-    fun generatedAdapterAppliesNumericAndStringNullQualifiers() {
-        val adapter = JsonHelper.MO_SHI.adapter(RemoteVideoData::class.java)
-        val video = checkNotNull(adapter.fromJson("""{"AnimeId":null,"Duration":null,"Size":null,"Name":null}"""))
-
-        assertEquals(0, video.AnimeId)
-        assertEquals(0L, video.Duration)
-        assertEquals(0L, video.Size)
-        assertEquals("", video.Name)
-        assertTrue(video.childData.isEmpty())
+    fun alistPaginationAcceptsLegacyAndCurrentResponseFields() {
+        val adapter = JsonHelper.MO_SHI.adapter(AlistDirectoryData::class.java)
+        val legacy = checkNotNull(adapter.fromJson("""{"total":201,"content":[]}"""))
+        assertEquals(201, legacy.fileCount)
+        assertNull(legacy.hasMore)
+        val current = checkNotNull(adapter.fromJson("""{"total":201,"filtered_total":2,"has_more":false,"content":[]}"""))
+        assertEquals(2, current.filteredTotal)
+        assertEquals(false, current.hasMore)
     }
 
     @Test

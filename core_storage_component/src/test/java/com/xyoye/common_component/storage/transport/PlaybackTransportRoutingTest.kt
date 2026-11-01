@@ -5,12 +5,10 @@ import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.AbstractStorageFile
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.AlistStorageFile
-import com.xyoye.common_component.storage.file.impl.RemoteStorageFile
 import com.xyoye.common_component.storage.impl.*
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.bean.PlaybackProfileSource
 import com.xyoye.data_component.data.alist.AlistFileData
-import com.xyoye.data_component.data.remote.RemoteVideoData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.data_component.enums.PlayerType
@@ -60,22 +58,6 @@ class PlaybackTransportRoutingTest {
             result.transport.lease.release()
             assertEquals(headers, storage.getNetworkHeaders())
             assertTrue(headers!!.values.single().startsWith("Basic "))
-        }
-
-    @Test
-    fun remoteDefaultFactoryRetainsPerLibraryToken() =
-        runBlocking {
-            val first = RemoteStorage(library(MediaType.REMOTE_STORAGE).copy(remoteSecret = "first"))
-            val second = RemoteStorage(library(MediaType.REMOTE_STORAGE).copy(remoteSecret = "second"))
-            val one = RemoteStorageFile(first, RemoteVideoData(Id = "1", absolutePath = "/video.mp4"))
-            val two = RemoteStorageFile(second, RemoteVideoData(Id = "1", absolutePath = "/video.mp4"))
-            val a = (PlaybackTransportFactory().acquire(first, one, profile) as TransportAcquisitionResult.Success).transport.lease
-            val b = (PlaybackTransportFactory().acquire(second, two, profile) as TransportAcquisitionResult.Success).transport.lease
-            assertNotEquals(a.playUrl, b.playUrl)
-            assertTrue(a.playUrl.endsWith("token=first"))
-            a.release()
-            assertTrue(b.playUrl.endsWith("token=second"))
-            b.release()
         }
 
     @Test

@@ -4,6 +4,8 @@ import android.content.Context
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.config.RouteTable
+import com.xyoye.common_component.log.LogFacade
+import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.playback.handoff.PlaybackCommand
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
 import com.xyoye.common_component.playback.handoff.PlaybackOperationResult
@@ -58,7 +60,13 @@ class PlaybackRequestServiceImpl internal constructor(
             onStateChanged = { if (activeRegistration === registration) state.value = it },
             isCurrentOwner = { activeRegistration === registration },
             onPlaybackStarted = { version, file ->
-                ARouter.getInstance().navigation(PlaybackMetadataService::class.java)?.submit(version, file)
+                val metadata = ARouter.getInstance().navigation(PlaybackMetadataService::class.java)
+                if (metadata == null) {
+                    LogFacade.e(LogModule.PLAYER, "PlaybackMetadata", "service unavailable")
+                } else {
+                    metadata.submit(version, file)
+                    LogFacade.i(LogModule.PLAYER, "PlaybackMetadata", "submitted library=${file.source.libraryId} type=${file.mediaType}")
+                }
             }
         ).also { activeSession = WeakReference(it) }
     }

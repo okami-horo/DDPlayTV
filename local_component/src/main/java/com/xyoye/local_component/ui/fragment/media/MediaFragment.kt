@@ -224,6 +224,8 @@ class MediaFragment :
                     .navigation()
             }
 
+            MediaType.REMOTE_STORAGE -> ToastCenter.showWarning("此来源已停用")
+
             MediaType.SCREEN_CAST -> {
                 ToastCenter.showWarning("电视端不支持发起投屏发送")
             }
@@ -232,7 +234,6 @@ class MediaFragment :
             MediaType.FTP_SERVER,
             MediaType.SMB_SERVER,
             MediaType.WEBDAV_SERVER,
-            MediaType.REMOTE_STORAGE,
             MediaType.EXTERNAL_STORAGE,
             MediaType.ALSIT_STORAGE,
             MediaType.BAIDU_PAN_STORAGE,
@@ -251,7 +252,7 @@ class MediaFragment :
         val actionList =
             MediaType
                 .values()
-                .filter { it.deletable && it != MediaType.SCREEN_CAST }
+                .filter { it.deletable && it !in setOf(MediaType.SCREEN_CAST, MediaType.REMOTE_STORAGE) }
                 .map { it.toAction() }
 
         BottomActionDialog(
