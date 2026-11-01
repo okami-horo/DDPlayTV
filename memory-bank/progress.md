@@ -1,6 +1,28 @@
 # Progress
 
+### Recent-addition focus spacing L01 (2026-11-01)
+
+User authorized issue 2 only, leaving source/history classification for a separate, still-undecided redesign. Unified landscape-card content insets to 8dp, removed excess subtitle bottom margin and introduced a scoped 16dp focus radius around 8dp artwork. Existing home repairs remain. The enhanced rendering check first failed with 16px side/8px top; final Debug/test build, affected Debug lint, local JVM (22 passes) and scoped ktlint ended **BUILD SUCCESSFUL in 20s**. Rendering/viewport and actual Cinema DPAD/BACK/search/settings checks each passed at 1.0/1.3 fonts: **OK (2 tests)** in 20.74s / 20.35s. Same-data before/after, native font/viewport and prototype screenshots were viewed. The [L01 ledger and identity](../document/architecture/ui-rounding-audit-2026-11-01.md#最近添加卡片焦点留白修复2026-11-01) own scope, failures, matrix, hashes and screenshots. Task AVD 5574/private ADB 5075 closed after font 1.0 readback. No Release build, TV operation, version increment or commit; physical-TV acceptance remains pending and the currently installed 21:21:47 package lacks this fix.
+
 ## Latest Recorded Validation
+
+### Homepage repairs installed on VIDAA TV (2026-11-01 21:21)
+
+At the user's request, built `1d66ab393` plus verified H01–H03 home changes using `.tmp/watch-history/gradle.ps1 :app:assembleRelease --offline`: **BUILD SUCCESSFUL in 1m 7s**. All 46 relevant source/resource/prototype hashes match the earlier validation; unchanged behavior tests were reused. ARM64 Release remains **4.2.4 / 71**, 68,319,338 bytes, with valid v2 signing matching the prior TV package and no debuggable flag.
+
+Private ADB 5071 `install -r` returned **Success**. Readback confirms **2026-11-01 21:21:47**, unchanged UID 10111/first-install time, and installed/local APK SHA-256 `d30191bbc08752cc6df86932630407fc9e4269ba15bb9606c70b1df00f3adee8`. This replaces the 20:23:29 package. The [home delivery ledger and identity](../document/architecture/ui-rounding-audit-2026-11-01.md#首页修复后的电视安装2026-11-01-2121) own build/signature/install logs and source hashes. No data clear, uninstall, version increment, commit or TV launch/navigation/playback/screenshot. Actual TV visual/runtime acceptance remains open. Disconnected TV and closed private ADB 5071; existing 5037/5053 processes remain unchanged.
+
+### Homepage screenshot repairs H01–H03 (2026-11-01)
+
+On baseline `1d66ab393`, changed only the two home XML layouts: explicit 8dp artwork/progress clipping, a 440dp/34sp/two-line hero with content-measured height and compact fallback-font metrics, and one title below each image. The user's latest instruction authorizes home title deduplication; other pages remain deferred. Added three behavioral instrumentation checks and synchronized/viewed the selected Cinema prototype with the same long title/artwork.
+
+Original red checks failed 3/3 for the three reported defects. Investigation isolated one-color-step hardware comparisons to parent focus-edge antialiasing without relaxing corner assertions; independent Cinema checks retain real focus verification. Native title line advance measured 99px instead of 80px; explicit font metrics now match the prototype's 160px two-line block. The first 1.3-font run exposed an additional 8px subtitle cut, fixed within the same home layout. Final Debug/test build, affected Debug lint/scoped ktlint and 39 local/core UI JVM tests passed. Final AVD runs: **OK (16 tests)** at 1.0 and **OK (5 tests)** at 1.3, 16 distinct cases including DPAD/BACK, settings restoration and real Media3/mpv playback. Six final state/focus/prototype images were viewed. The [home ledger and identity record](../document/architecture/ui-rounding-audit-2026-11-01.md#首页截图问题修复2026-11-01) own the matrix, failures, measurements, screenshots and source/APK hashes.
+
+The initial local implementation stage made no version increment, commit, Release build or physical-TV operation. The subsequent user-authorized 21:21:47 delivery above installs these repairs as same-version Release 4.2.4 / 71; the 20:27 image below describes the pre-repair package. Font restored/read back as 1.0; task emulator/private ADB cleanup is recorded in the ledger.
+
+### Physical-TV homepage screenshot before the home repair (2026-11-01 20:27)
+
+At the user's request, captured and viewed the current VIDAA TV screen and an enlarged card crop without navigation/playback/settings changes. Current page is `TvMainActivity` home, 1920x1080/320dpi. **R01's home-continue branch was physically reproduced in the pre-repair package**: rounded outer focus border surrounds square artwork/progress boundaries; fallback cards show square artwork too. This updates the earlier risk classification for home only. Large single-line truncated hero text and duplicate inner/outer titles were observations at capture; the subsequent user-authorized home repair is recorded above. The [screenshot follow-up](../document/architecture/ui-rounding-audit-2026-11-01.md#用户要求的当前画面截图2026-11-01-2027) owns full/cropped PNGs, screenshot hash, source mapping and limits. F01–F07 pages, other R01 templates, R02, DPAD and playback were not inspected on TV. No source/build/install/version change; private ADB 5067 closed.
 
 ### Shared repairs and series queues installed on VIDAA TV (2026-11-01 20:23)
 

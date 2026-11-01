@@ -1,0 +1,14 @@
+﻿collectedAt=2026-11-01T21:05:42.7927276+08:00
+accessMode=direct-http
+adbUsed=False
+deviceSerial=
+deviceModel=
+deviceDate=
+packageName=com.okamihoro.ddplaytv
+packagePid=
+envFile=E:\Project\DDPlayTV\.codex\skills\ddplaytv-http-logs\.env
+outputDir=E:\Project\DDPlayTV\Temp\media3-seek-diagnosis\20261101-210542
+localPort=17010
+remotePort=17010
+baseUri=http://192.168.31.159:17010
+tokenProvided=True

@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Looper
 import android.os.SystemClock
 import android.view.Gravity
@@ -46,6 +47,34 @@ class SharedCardRenderingInstrumentedTest {
     private val directory = requireNotNull(instrumentation.targetContext.getExternalFilesDir("card-rendering"))
     private lateinit var activity: TvMainActivity
     private lateinit var root: View
+
+    @Test
+    fun homeArtworkAndProgressKeepTheirCornersWithoutSystemOutline() =
+        scene(LocalR.layout.item_metadata_continue, 218, 160) {
+            val image = root.findViewById<ImageView>(LocalR.id.card_image)
+            onMain {
+                root.findViewById<TextView>(LocalR.id.card_title).text = "深海来信"
+                root.findViewById<android.widget.ProgressBar>(LocalR.id.card_progress).progress = 100
+                // Isolate artwork pixels from the focus stroke's antialiasing; Cinema covers focused cards.
+                root.isFocusable = false
+            }
+            for (state in listOf("loaded", "placeholder", "missing", "error")) {
+                onMain {
+                    image.dispose()
+                    when (state) {
+                        "loaded" -> image.setImageDrawable(ColorDrawable(Color.MAGENTA))
+                        "placeholder" -> image.setImageResource(LocalR.drawable.cinema_media_placeholder)
+                        else ->
+                            image.load(if (state == "missing") null else File(directory, "missing.png")) {
+                                fallback(LocalR.drawable.cinema_media_placeholder)
+                                error(LocalR.drawable.cinema_media_placeholder)
+                            }
+                    }
+                }
+                settle()
+                assertArtwork(image, "home-$state")
+            }
+        }
 
     @Test
     fun browserThumbnailClipsLoadedPlaceholderMissingAndErrorArtwork() =
@@ -266,8 +295,22 @@ class SharedCardRenderingInstrumentedTest {
                 assertFocusedItem(list, start + 3)
                 onMain {
                     val card = requireNotNull(list.findContainingItemView(requireNotNull(root.findFocus())))
+                    val artwork = card.findViewById<View>(LocalR.id.card_image).parent as View
+                    val subtitle = card.findViewById<TextView>(LocalR.id.card_subtitle)
+                    val cardBounds = bounds(card)
+                    val artworkBounds = bounds(artwork)
+                    val inset = artworkBounds.left - cardBounds.left
+                    assertTrue("Focus stroke must have space around the content", inset > 0)
+                    assertEquals("Focus inset above artwork must match the sides", inset, artworkBounds.top - cardBounds.top)
+                    assertEquals("Focus inset must match on both sides", inset, cardBounds.right - artworkBounds.right)
+                    assertEquals("Focus inset below metadata must match the artwork", inset, cardBounds.bottom - bounds(subtitle).bottom)
+                    assertEquals("Title must align with artwork", artworkBounds.left, bounds(card.findViewById(LocalR.id.card_title)).left)
+                    assertEquals("Metadata must align with artwork", artworkBounds.left, bounds(subtitle).left)
+                    val outer = card.background.current as GradientDrawable
+                    val inner = artwork.background as GradientDrawable
+                    assertEquals("Focus and artwork corners must share a center", inner.cornerRadius + inset, outer.cornerRadius, 0.01f)
                     assertTextFits(card.findViewById(LocalR.id.card_title))
-                    assertTextFits(card.findViewById(LocalR.id.card_subtitle))
+                    assertTextFits(subtitle)
                     assertTrue(card.height <= list.height - list.paddingTop - list.paddingBottom)
                     assertTrue(card.findViewById<View>(LocalR.id.card_image).height <= dp(160))
                 }
@@ -326,7 +369,7 @@ class SharedCardRenderingInstrumentedTest {
             assertEquals(artwork.width, rect.width())
             for ((x, y) in corners(artwork.width, artwork.height)) {
                 assertEquals(
-                    "Hardware corner must exclude artwork and overlays: $name",
+                    "Hardware corner must exclude artwork and overlays: $name at (${rect.left + x},${rect.top + y})",
                     withoutArtwork.getPixel(rect.left + x, rect.top + y),
                     screenshot.getPixel(
                         rect.left + x,

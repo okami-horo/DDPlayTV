@@ -1,0 +1,225 @@
+{
+  "verified_at": "2026-11-01T21:09:05.167099+08:00",
+  "baseline": "1d66ab3938e0676d1509ce4d27bb10d311dfe7ed",
+  "scope": [
+    "H01 home artwork and progress clipping",
+    "H02 bounded two-line hero",
+    "H03 single card title and text fit"
+  ],
+  "device": {
+    "serial": "emulator-5574",
+    "adb_port": 5069,
+    "api": 34,
+    "pixels": [
+      1920,
+      1080
+    ],
+    "density_dpi": 320
+  },
+  "instrumentation": {
+    "normal": {
+      "passed": 16,
+      "failed": 0
+    },
+    "font130": {
+      "passed": 5,
+      "failed": 0
+    },
+    "distinct_cases": 16
+  },
+  "jvm": {
+    "local": 22,
+    "core_ui": 17,
+    "failed": 0,
+    "skipped": 0
+  },
+  "prototype": {
+    "path": "document/prototypes/tv-ui/index.html?variant=cinema&page=home",
+    "base_viewport": [
+      1440,
+      810
+    ],
+    "physical_viewport": [
+      1920,
+      1080
+    ],
+    "metrics": {
+      ".cinema-copy h1": {
+        "x": 72,
+        "y": 268,
+        "width": 880,
+        "height": 160.45834350585938
+      },
+      ".cinema-copy .meta": {
+        "x": 72,
+        "y": 436.4583435058594,
+        "width": 880,
+        "height": 32.854156494140625
+      },
+      ".cinema-copy p": {
+        "x": 72,
+        "y": 493.3125,
+        "width": 626.6666870117188,
+        "height": 77.3333740234375
+      },
+      "[data-key=\"resume\"]": {
+        "x": 72,
+        "y": 605.3125,
+        "width": 224,
+        "height": 81.3333740234375
+      },
+      ".section-heading": {
+        "x": 72,
+        "y": 715.9791870117188,
+        "width": 1776,
+        "height": 63.33331298828125
+      },
+      ".cards": {
+        "x": 72,
+        "y": 797.9791870117188,
+        "width": 1776,
+        "height": 302.45831298828125
+      }
+    }
+  },
+  "native_hero": {
+    "bounds_px": [
+      72,
+      266,
+      952,
+      426
+    ],
+    "text_px": 68,
+    "line_advance_px": 80,
+    "before_fallback_line_advance_px": 99
+  },
+  "boundaries": {
+    "tv_installed": false,
+    "tv_navigation": false,
+    "tv_visual_acceptance": false,
+    "committed": false,
+    "release_built": false,
+    "version_incremented": false
+  },
+  "sources": {
+    "local_component/src/main/res/layout/fragment_cinema.xml": {
+      "bytes": 4540,
+      "sha256": "097306031471326054250ef1dd054364f1c40aec5e39da1552d55d54c6eb3c5b"
+    },
+    "local_component/src/main/res/layout/item_metadata_continue.xml": {
+      "bytes": 1694,
+      "sha256": "e5b53f6257aa5a0092d1cad06b506fc6c911876c2b55681f34f877335f1abc9b"
+    },
+    "local_component/src/main/java/com/xyoye/local_component/ui/metadata/CinemaFragment.kt": {
+      "bytes": 10254,
+      "sha256": "d792516160f7d33a93b321dc2f849363c37f3c059f01d2b3f8a8f76c4c195686"
+    },
+    "local_component/src/main/java/com/xyoye/local_component/ui/metadata/MetadataCardAdapter.kt": {
+      "bytes": 4510,
+      "sha256": "d536150c799afb52667379a53dbd51b84e927f968b076299851775772f12e82d"
+    },
+    "core_ui_component/src/main/java/com/xyoye/common_component/weight/RoundedArtworkLayout.kt": {
+      "bytes": 1153,
+      "sha256": "f3a651f19acc1b91bdc917de5d8089260d2e744d6d2efa6a6ee4ee921aa8acb3"
+    },
+    "core_ui_component/src/main/res/drawable/cinema_card.xml": {
+      "bytes": 843,
+      "sha256": "a915af27faea3cdbbac5243ed157cb263a0870e47cd073aee5bef7207db6b944"
+    },
+    "core_ui_component/src/main/res/drawable/cinema_image.xml": {
+      "bytes": 203,
+      "sha256": "f4f49f7278b118aeb6ecc57467406910be8cbb90af588fbed6d7180a0a0f294e"
+    },
+    "core_ui_component/src/main/res/drawable/cinema_media_placeholder.xml": {
+      "bytes": 357,
+      "sha256": "4c34f6be6eac1d239b405d0c1f2b65ada9474e7a72c8d0af20e6725493856b79"
+    },
+    "core_ui_component/src/main/res/values/cinema.xml": {
+      "bytes": 2362,
+      "sha256": "582f5c0cdc900955a05fc2a70cb4f6c5f767bb2563a8ac5f002ccb1dfdde822d"
+    },
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/CinemaPrototypeInstrumentedTest.kt": {
+      "bytes": 17553,
+      "sha256": "7c846cc5d5034e49a7a07cd6f2104dba3790915030e334f58ec0d77522f7ee36"
+    },
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/SharedCardRenderingInstrumentedTest.kt": {
+      "bytes": 21649,
+      "sha256": "7fdceb6573bd1de297c83dcb087ca0c28a693b662342d6d7e15705601e9582e8"
+    },
+    "document/prototypes/tv-ui/index.html": {
+      "bytes": 41632,
+      "sha256": "9f93bf8e538622e6227a0a6f0d7d96a524fe57579d490f38672fc54b0d2326a4"
+    }
+  },
+  "artifacts": {
+    "document/architecture/ui-rounding-audit-2026-11-01/home-repair-artwork.png": {
+      "bytes": 30123,
+      "sha256": "37d42c41eb67b93882eed8e60773f8158e9b3883a96ed34309709c83b38e4046"
+    },
+    "document/architecture/ui-rounding-audit-2026-11-01/home-repair-font130.png": {
+      "bytes": 546799,
+      "sha256": "96c2a0648b93e2385cd1108ce219f6e21b508fbbf52199a24a782666d5186df0"
+    },
+    "document/architecture/ui-rounding-audit-2026-11-01/home-repair-hero.png": {
+      "bytes": 519928,
+      "sha256": "5bb53cc8330add11041e755273760883d576a572af19aaade6218445efb4444a"
+    },
+    "document/architecture/ui-rounding-audit-2026-11-01/home-repair-normal.png": {
+      "bytes": 547106,
+      "sha256": "93565a1bd3c5b832207f54c3e6de06eff9e4b4a99c1799e2822ceec1342f646c"
+    },
+    "document/architecture/ui-rounding-audit-2026-11-01/home-repair-prototype.png": {
+      "bytes": 907490,
+      "sha256": "e0c85d5032f56516e049f0334e17dca64b87c6cff0cca075846dc09edd08b91b"
+    },
+    "document/architecture/ui-rounding-audit-2026-11-01/home-repair-states.png": {
+      "bytes": 438078,
+      "sha256": "a305ea568661fb87f7a4f8312a884af9487cf6d52a8d7165b008caa97fc3a00b"
+    }
+  },
+  "apks": {
+    "app/build/outputs/apk/debug/ddplaytv_v4.2.4-debug_arm64-v8a-debug.apk": {
+      "bytes": 74909184,
+      "sha256": "10176bb8e4c3367cc98ece43a1ca0a342b727e4aab663ef3fcf0e091d183dd76"
+    },
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": {
+      "bytes": 1856366,
+      "sha256": "311484e142034650149867324ddbdc505ce256497f65e4b556aadb24dfdc51c7"
+    }
+  },
+  "logs": {
+    "final-build.log": {
+      "bytes": 41877,
+      "sha256": "966730d1f6c8dd331bd1f2d79139fbe65ab7e9f4bc35e8fca2743e06a2a2c598"
+    },
+    "final-gates.log": {
+      "bytes": 64676,
+      "sha256": "f9b5c8e1e02f9c63d78851571b8e8862467ff57eff7372e5373e39fad28e109a"
+    },
+    "final-format.log": {
+      "bytes": 9498,
+      "sha256": "2ef2a756d4bc6e49a87187cb69e1d14acd20fce0a6a145f24eea1e4898f99fdd"
+    },
+    "final-normal.log": {
+      "bytes": 12028,
+      "sha256": "25787f276e6fc96118e8d975d89edb24348982354436bffec8e467eb0839b333"
+    },
+    "final-font130.log": {
+      "bytes": 4070,
+      "sha256": "5509df63d690802bdfda9774c4b7a252e845374775df8e619d42a4951506a7ce"
+    }
+  },
+  "cleanup": {
+    "font_scale_readback_before_shutdown": 1.0,
+    "emulator_closed": true,
+    "private_adb_closed": true,
+    "ports_closed": [
+      5574,
+      5069
+    ],
+    "other_adb_ports_unchanged": [
+      5037,
+      5053
+    ]
+  }
+}

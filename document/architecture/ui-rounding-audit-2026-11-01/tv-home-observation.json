@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-01",
+  "screenTime": "20:27",
+  "device": "192.168.31.70:5555",
+  "model": "VIDAA_TV",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "densityDpi": 320,
+  "page": "TvMainActivity/home",
+  "navigationOrPlaybackPerformed": false,
+  "inspected": [
+    "tv-home-2027.png",
+    "tv-home-cards-2027.png"
+  ],
+  "screenshotSha256": "12c956c46d0c8b9630b1b947cc3459daac0a7dbf6c4470d52a6483d8fe566438",
+  "observedDefect": "R01 home continue artwork/overlays retain square boundaries inside a rounded outer focus border; fallback cards show the same artwork boundary.",
+  "otherR01TemplatesNotCaptured": [
+    "poster",
+    "search"
+  ],
+  "unverified": [
+    "F01-F07 physical-TV pages",
+    "R02 file preview",
+    "DPAD traversal or playback"
+  ]
+}

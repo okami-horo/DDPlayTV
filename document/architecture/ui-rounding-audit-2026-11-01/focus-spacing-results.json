@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-01",
+  "baseline": "1d66ab3938e0676d1509ce4d27bb10d311dfe7ed plus preserved home repairs",
+  "scope": "L01 recent-addition card focus spacing only; history/source redesign deferred",
+  "device": {
+    "serial": "emulator-5574",
+    "api": 34,
+    "pixels": [
+      1920,
+      1080
+    ],
+    "densityDpi": 320
+  },
+  "geometryDp": {
+    "left": 8,
+    "top": 8,
+    "right": 8,
+    "bottom": 8,
+    "artworkRadius": 8,
+    "focusRadius": 16,
+    "focusStroke": 2
+  },
+  "build": {
+    "log": ".tmp/library-focus-fix/final-gates.log",
+    "result": "BUILD SUCCESSFUL in 20s"
+  },
+  "jvm": {
+    "passed": 22,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "instrumentation": {
+    "distinctCases": 2,
+    "normal": "OK (2 tests), 20.74s",
+    "font130": "OK (2 tests), 20.35s"
+  },
+  "red": "red-test.log: expected side inset 16px, actual top inset 8px",
+  "limits": "No Release build/install, version increment, commit or physical-TV operation; user acceptance pending",
+  "sourceSha256": {
+    "local_component/src/main/res/layout/item_metadata_landscape.xml": "9d58f44d4d33b90730d1aafe57bbe8e68b3467b2e053f0cdd60abcbcc59371d8",
+    "local_component/src/main/res/drawable/cinema_landscape_card.xml": "cf224f31537cc6954301e05a1343a73ac67564646dc06fa0b9189811f4afac1a",
+    "local_component/src/main/res/layout/fragment_media.xml": "b7da38077f6ba809809b60eac454035b85340fb9900e3d75fa23d75de8d392bc",
+    "local_component/src/main/java/com/xyoye/local_component/ui/metadata/MetadataLandscapeLayout.kt": "59aec87ecc8aad15ac99fdca3b5999b9f16c21d838c2e9da6b219256fce07c0a",
+    "local_component/src/main/java/com/xyoye/local_component/ui/metadata/MetadataCardAdapter.kt": "d536150c799afb52667379a53dbd51b84e927f968b076299851775772f12e82d",
+    "core_ui_component/src/main/res/drawable/cinema_card.xml": "a915af27faea3cdbbac5243ed157cb263a0870e47cd073aee5bef7207db6b944",
+    "core_ui_component/src/main/res/drawable/cinema_image.xml": "f4f49f7278b118aeb6ecc57467406910be8cbb90af588fbed6d7180a0a0f294e",
+    "core_ui_component/src/main/java/com/xyoye/common_component/weight/RoundedArtworkLayout.kt": "f3a651f19acc1b91bdc917de5d8089260d2e744d6d2efa6a6ee4ee921aa8acb3",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/CinemaPrototypeInstrumentedTest.kt": "9049337b8446f7d2c70e68bbacdd5f32e50ecbedf00b607d3203ee0c9846f6ee",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/SharedCardRenderingInstrumentedTest.kt": "1c70a8ec94725ee3c0ed5f2eb3ca0ab4b664d6aacd08356115087a5edda0fa2a",
+    "document/prototypes/tv-ui/index.html": "2c0e4e65581a213dbe3707e567f38b60d896fdfe9a899567d1b5c2e1e6d0f315"
+  },
+  "artifactSha256": {
+    "document/architecture/ui-rounding-audit-2026-11-01/focus-spacing-before-after.png": "09c602bae905db8ac1378dbe186383e94607f30d5593ad8e556670270c3b6172",
+    "document/architecture/ui-rounding-audit-2026-11-01/focus-spacing-library-font130.png": "a867f3dcb768f855f284eec031fffa7fd3f554ba93281ac4f45d2032b31d9f76",
+    "document/architecture/ui-rounding-audit-2026-11-01/focus-spacing-library-normal.png": "87b439d8a479c1d67e9d4c4d0888114756d1edc1835d6335416714f7615a78a3",
+    "document/architecture/ui-rounding-audit-2026-11-01/focus-spacing-prototype.png": "706921d6a3599dbbb39a02b2fc5d62770fdb3bba6cdcce79e282c64b904bb378",
+    "document/architecture/ui-rounding-audit-2026-11-01/focus-spacing-reduced-font130.png": "d398eead53245c39d4ea0d17df751b1df88800762155360dd7438fa6842f1c91",
+    "app/build/outputs/apk/debug/ddplaytv_v4.2.4-debug_arm64-v8a-debug.apk": "347731de941b6e018f7853e98c0ea1b5080b849378fe0f12d236221db91a6b36",
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "91e783b1994a04cebc456fb692be5141cd31b9a320adcc2f1a14ee85436f9a1b"
+  }
+}
