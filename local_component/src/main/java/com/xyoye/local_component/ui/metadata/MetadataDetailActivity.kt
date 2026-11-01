@@ -93,6 +93,10 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
         (dataBinding.root as android.view.ViewGroup).descendantFocusability = android.view.ViewGroup.FOCUS_BLOCK_DESCENDANTS
         dataBinding.files.apply {
             layoutManager = horizontal()
+            addItemDecoration(
+                com.xyoye.common_component.utils.view
+                    .ItemDecorationSpace(0, 0, (4 * resources.displayMetrics.density).toInt(), 0)
+            )
             setParentAlignment(ParentAlignment(fraction = 0.8f))
             adapter = files
             setFocusOutAllowed(false, false)
@@ -257,7 +261,7 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
                 overviewTitle = work?.title ?: "作品简介"
                 overviewText = work?.overview.orEmpty()
                 dataBinding.title.text = work?.title ?: "作品资料暂不可用"
-                dataBinding.poster.isVisible = work != null
+                dataBinding.posterFrame.isVisible = work != null
                 dataBinding.workMeta.isVisible = work != null
                 dataBinding.workMeta.text =
                     listOf(work?.releaseDate?.take(4).orEmpty(), work?.genres.orEmpty(), if (kind == "tv") "剧集" else "电影")

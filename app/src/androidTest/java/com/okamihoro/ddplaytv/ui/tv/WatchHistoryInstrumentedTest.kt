@@ -2,7 +2,10 @@ package com.okamihoro.ddplaytv.ui.tv
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Rect
+import android.graphics.drawable.ColorDrawable
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.View
@@ -14,6 +17,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import coil.dispose
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.database.DatabaseProvider
@@ -132,6 +136,56 @@ class WatchHistoryInstrumentedTest {
             send(KeyEvent.KEYCODE_BACK)
             await("Picker returns to management") { page.hasWindowFocus() && page.currentFocus?.id == R.id.correct }
             scenario.recreate()
+        }
+    }
+
+    @Test fun episodeArtworkKeepsRoundedCornersWithoutHardwareOutlineClipping() {
+        detail { _, page ->
+            val bounds = mutableListOf<Rect>()
+            instrumentation.runOnMainSync {
+                for (card in list(page).children.take(4)) {
+                    val image = card.findViewById<android.widget.ImageView>(R.id.card_image)
+                    val still = image.parent as FrameLayout
+                    val rect = Rect()
+                    assertTrue(still.getGlobalVisibleRect(rect))
+                    assertEquals(
+                        "Artwork clipped: card=${card.width}/${card.measuredWidth}, still=${still.width}/${still.measuredWidth}, " +
+                            "padding=${card.paddingLeft},${card.paddingRight}, bounds=$rect",
+                        still.width,
+                        rect.width()
+                    )
+                    bounds.add(rect)
+                    val progress = card.findViewById<android.widget.ProgressBar>(R.id.card_progress)
+                    progress.visibility = View.VISIBLE
+                    progress.progress = 100
+                    image.dispose()
+                    image.setImageDrawable(ColorDrawable(Color.MAGENTA))
+                    for (withImage in listOf(true, false)) {
+                        image.visibility = if (withImage) View.VISIBLE else View.INVISIBLE
+                        val bitmap = Bitmap.createBitmap(still.width, still.height, Bitmap.Config.ARGB_8888)
+                        still.draw(Canvas(bitmap))
+                        for (x in listOf(0, bitmap.width - 1)) {
+                            for (y in listOf(0, bitmap.height - 1)) {
+                                assertEquals("Rounded artwork corner ($x,$y), image=$withImage", 0, Color.alpha(bitmap.getPixel(x, y)))
+                            }
+                        }
+                        assertEquals(255, Color.alpha(bitmap.getPixel(bitmap.width / 2, bitmap.height / 2)))
+                        bitmap.recycle()
+                    }
+                    image.visibility = View.VISIBLE
+                }
+            }
+            screenshot("rounding-solid")
+            val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
+            for (rect in bounds) {
+                assertEquals("Solid artwork must be visible", Color.MAGENTA, bitmap.getPixel(rect.centerX(), rect.centerY()))
+                for (x in listOf(rect.left, rect.right - 1)) {
+                    for (y in listOf(rect.top, rect.bottom - 1)) {
+                        assertNotEquals("Hardware artwork corner ($x,$y)", Color.MAGENTA, bitmap.getPixel(x, y))
+                    }
+                }
+            }
+            bitmap.recycle()
         }
     }
 

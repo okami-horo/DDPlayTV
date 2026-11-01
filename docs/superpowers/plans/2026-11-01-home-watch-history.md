@@ -1,6 +1,6 @@
 # 首页足迹与剧集详情 B 实施记录
 
-2026-11-01：用户选择 B 后明确授权“实施”，并要求继续。现已完成本地实现、构建、模拟器 DPAD 与截图验证。随后按用户“安装到 TV”“版本号 +1”的要求，将 Release `4.2.4` / `71` 于 17:31:33 覆盖安装到实体电视。本任务代码未提交；用户与实体电视运行验收单独保留。
+2026-11-01：用户选择 B 后明确授权“实施”，并要求继续。现已完成本地实现、构建、模拟器 DPAD 与截图验证。初始 Release `4.2.4` / `71` 于 17:31:33 安装，初始实现随后提交为 `3e53add08`。用户截图反馈的圆角兼容修正已在本地验证，随后按用户要求于 18:07:29 以同版本覆盖安装到实体电视，详见文末；圆角修正尚未提交，实体电视运行与用户验收单独保留。
 
 权威设计为[设计说明](../designs/2026-11-01-home-watch-history-design.md)与[固定 B 原型](../../../document/prototypes/tv-ui/series-detail-prototype.html?variant=B)。验证时基线为 `8e931f41d` 加本任务工作区改动；并发的旧番剧发现退役已由其他操作提交，本任务未修改其内容。
 
@@ -78,3 +78,35 @@
 - 本地与已安装 APK SHA-256 一致：`61c31c1652be407a2c793a85734e72dcee4101a1b11c5d91102880caace303ae`。
 
 证据保存在 `.tmp/watch-history/release-delivery/`：`build.log`、`signature.txt`、`badging.txt`、`artifact.txt`、`install.log`、`package-before.txt`、`package-after.txt`、`installed-hash.txt`。完成后已断开电视并关闭私有 ADB 5059。未启动、导航或播放电视应用；本次安装不替代实体电视运行与用户验收。
+
+## 真机截图反馈：圆角兼容修正（2026-11-01）
+
+用户要求截取当前电视画面后，指出每集图片未呈现 B 稿的圆角。[17:36 真机截图](../../../.tmp/watch-history/tv-screens/tv-current-20261101-173658.png)确认剧照与海报为直角，外层焦点边框仍为圆角。原布局已设置圆角背景与 `clipToOutline`；本轮重新渲染并查看 B 原型，同时发现两处问题：
+
+1. 图片区域只依赖系统轮廓裁剪，无法独立保证内部图片和进度条遵守圆角。软件 Canvas 回归在旧实现上复现左上角被图片覆盖：透明度预期 0、实际 255。真机具体图形驱动原因未确定，不把此回归视作真实电视渲染环境复现。
+2. 集卡 `layout_marginEnd=4dp` 在 DpadRecyclerView 中导致部分卡片测量宽 412px、实际布局宽 404px，内部图片宽 388px、可见宽仅 380px，右侧圆角被截去。首次兼容处理后的放大截图发现此差异，补强后的宽度断言失败确认；只检查第一张卡片不足以发现问题。
+
+修正：共用 `RoundedArtworkLayout` 根据现有背景圆角直接裁剪整个绘制区域，覆盖图片、占位、标签和进度条；剧照保持 7dp、海报保持 8dp。海报的显隐和旋转由同尺寸外框承载。集卡间距改为现有 `ItemDecorationSpace`，保留 206dp 卡宽和 4dp 间距，避免 margin 参与布局时裁掉右边。
+
+| 状态 | 设计／实现 | 本轮验证 |
+| --- | --- | --- |
+| 普通剧照、占位、100% 进度条 | B 的圆角图区；统一画布裁剪 | 前四张完整卡的可见宽度断言、软件 Canvas 四角透明度、硬件截图纯色中心与四角断言；[纯色证据](../../../.tmp/watch-history/screens-rounding/rounding-solid.png) |
+| 普通／聚焦／横向滚动 | 卡片比例、间距和独立焦点框保持 | DPAD 主动作、简介、管理、集卡滚动与重建通过；[最终普通截图](../../../.tmp/watch-history/screens-rounding/normal.png)已实际查看 |
+| 电影版本／海报 | 同一圆角组件与现有版本弹窗 | 电影首页→详情→选版本→取消→首页通过；[电影截图](../../../.tmp/watch-history/screens-rounding/movie.png)已实际查看 |
+| 空作品／失效作品 | 海报外框同步显隐，保持既定空状态 | 原有空／失效作品可达性与返回测试通过，截图保存在同目录 |
+
+最终命令：`:app:assembleDebug :app:assembleDebugAndroidTest :local_component:lint :core_ui_component:lint :core_ui_component:ktlintCheck :local_component:ktlintCheck :app:ktlintCheck`，沿用前述离线与限定格式脚本；`rounding-final-build.log` 尾部 **BUILD SUCCESSFUL in 16s**。`rounding-final-tests.log` 为 **OK (4 tests)**，14.465 秒：新增圆角回归及三项原有 DPAD／空态／电影回归。未重复全量 JVM 或双内核测试，不将历史通过数量算成本轮新结果。`rounding-red-test.log` 与 `rounding-bounds-test.log` 保留两个失败证据；中间纯色验证补充取消图片加载并检查中心颜色，排除实际图片覆盖测试样本的干扰。
+
+本地修改基于 `3e53add08`，尚未提交。用户随后授权安装，圆角修正已随下述 18:07 Release 覆盖更新到电视；实际圆角效果仍待真机复核。排查时仅只读采集了电视 `gfxinfo`，未导航或启动播放。任务模拟器已关闭，网页预览保留。
+
+## 圆角修复的电视 Release 安装（2026-11-01 18:07）
+
+用户要求“安装到 TV”。安装前核对 `.tmp/watch-history/rounding-source-sha256.json` 的 5 个源码／布局／测试文件，均与已验证版本一致；没有重复不变的行为测试，没有再次修改版本号。
+
+- 构建：`.tmp/watch-history/gradle.ps1 :app:assembleRelease --offline`，输出尾部 **BUILD SUCCESSFUL in 50s**。
+- 产物：`app/build/outputs/apk/release/ddplaytv_v4.2.4_arm64-v8a-release.apk`，68,301,368 字节。`apksigner verify` 成功、v2 签名有效；`aapt` 确认包名、版本 `4.2.4` / `71` 和 ARM64，DEX 中包含 `RoundedArtworkLayout`。
+- 安装：私有 ADB 5059 对 `192.168.31.70:5555` 执行 `install -r`，返回 **Success**；设备读回 `versionName=4.2.4`、`versionCode=71`、`lastUpdateTime=2026-11-01 18:07:29`。
+- 保留数据：没有卸载或清空数据，UID 10111 和首次安装时间 `2026-02-12 10:47:55` 与安装前相同。
+- 本地与已安装 APK 的 SHA-256 一致：`2bbc20c0d4aecd10a5947c042b16b11945691e8f014ef8c6c451e3a6f35128b3`，替代 17:31 的旧哈希。
+
+证据目录 `.tmp/watch-history/rounding-release-delivery/` 包含 `verified-sources.json`、`build.log`、`signature.txt`、`badging.txt`、`artifact.json`、`install.log`、`package-before.txt`、`package-after.txt` 和 `installed-hash.txt`。已断开电视并关闭私有 ADB。此次仅安装与核对身份／哈希，未启动、导航、播放或重新截取详情页；不将安装成功记作真机圆角或整体体验验收。

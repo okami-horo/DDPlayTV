@@ -2,6 +2,16 @@
 
 ## Latest Recorded Validation
 
+### Rounded-artwork Release installed on VIDAA TV (2026-11-01 18:07)
+
+At the user's request, verified all five rounding source/layout/test hashes were unchanged, built ARM64 Release 4.2.4 / 71 (**BUILD SUCCESSFUL in 50s**), checked signature/package identity and presence of `RoundedArtworkLayout` in DEX, then installed with `adb install -r`: **Success**. Readback confirms `lastUpdateTime=2026-11-01 18:07:29`, unchanged UID/first-install time and matching installed/local APK hashes. The [delivery ledger](../docs/superpowers/plans/2026-11-01-home-watch-history.md#圆角修复的电视-release-安装2026-11-01-1807) owns artifact identity and logs. This supersedes the 17:31 package without another version increment, uninstall or data clear. No new behavior-test run, TV navigation/playback or detail screenshot; real-TV visual acceptance remains open. Private ADB 5059 is closed; no commit was performed.
+
+### Detail-artwork rounding follow-up (2026-11-01)
+
+The current TV screenshot confirmed missing artwork rounding. Added shared canvas clipping for stills/poster/overlays, and replaced episode end margins with spacing decoration after a new bounds assertion confirmed 412px measured versus 404px laid-out card width, clipping 8px from the image. The [rounding ledger](../docs/superpowers/plans/2026-11-01-home-watch-history.md#真机截图反馈圆角兼容修正2026-11-01) owns the two regressions, intermediate checks and state coverage.
+
+Final Debug/test build, affected lint and scoped ktlint: **BUILD SUCCESSFUL in 16s**. API 34 AVD: **OK (4 tests)** in 14.465s, including software/hardware pure-color corner checks, DPAD/recreation, movie versions/BACK and empty/invalid states. Final normal/movie/solid screenshots were inspected. No full JVM/kernel rerun or TV navigation/playback; the subsequent 18:07 delivery above includes this correction. Initial B is now committed as `3e53add08`; this follow-up remains uncommitted. Task AVD/private ADB are closed.
+
 ### Release 4.2.4 installed on VIDAA TV (2026-11-01 17:31)
 
 The user requested TV installation and a version increment. `Versions.kt` now declares `4.2.4` / `71`. ARM64 Release built from `8e931f41d` plus watch-history/detail B changes with `:app:assembleRelease --offline`, ending **BUILD SUCCESSFUL in 2m 40s**. Signature and package metadata checks passed; private ADB 5059 `install -r` returned **Success** on VIDAA TV `192.168.31.70:5555`. Readback confirms version `4.2.4` / `71`, `lastUpdateTime=2026-11-01 17:31:33`, unchanged UID/first-install time and matching local/installed APK hashes. No uninstall or data clear was performed.
