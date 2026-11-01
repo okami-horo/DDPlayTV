@@ -6,6 +6,8 @@
 
 | 需要了解 | 入口 |
 | --- | --- |
+| 剧集、文件版本与整剧播放列表 | [统一设计与成熟项目对比](../docs/superpowers/designs/2026-11-01-series-playback-queue-design.md)、[实施与验证](../docs/superpowers/plans/2026-11-01-series-playback-queue.md)（整剧跨季、当前来源优先、缺少时选择版本） |
+| 圆角、图片叠层与卡片/焦点裁切 | [全项目排查、修复与截图证据](architecture/ui-rounding-audit-2026-11-01.md)（F01–F07 已本地验证并于 20:23 安装 TV；实机验收与其余兼容风险仍待处理） |
 | TV 冗余范围与八类清理结果 | [原始审查](architecture/tv-feature-scope-audit-2026-11-01.md)、[A01–A08 实施与验证](../docs/superpowers/plans/2026-11-01-tv-scope-cleanup.md) |
 | 深层 UI 修复、设计覆盖和剩余验收 | [设计覆盖排查 U01–U10](../docs/superpowers/plans/2026-10-31-ui-design-coverage-audit.md)（历史缺口）、[A/U01–U10 实施与状态](../docs/superpowers/plans/2026-10-31-ui-polish.md)、[补充设计](../docs/superpowers/designs/2026-10-31-ui-polish-design.md) |
 | 播放器左下操作组（已选 A，已实施/部分验收） | [已选 A 设计](../docs/superpowers/designs/2026-10-31-player-controls-design.md)、[后续任务](../docs/superpowers/plans/2026-10-31-player-controls.md)、[交互原型](prototypes/tv-ui/player-controls-prototype.html) |
