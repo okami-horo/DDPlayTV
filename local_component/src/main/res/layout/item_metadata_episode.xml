@@ -1,0 +1,12 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<LinearLayout android:layout_width="206dp" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:orientation="vertical" android:padding="6dp" android:background="@drawable/cinema_card" android:focusable="true" android:clickable="true" android:tag="@string/focusable_item" android:defaultFocusHighlightEnabled="false">
+    <FrameLayout android:layout_width="match_parent" android:layout_height="109dp" android:background="@drawable/series_still_placeholder" android:clipToOutline="true">
+        <TextView android:id="@+id/episode_number" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:textSize="32sp" android:fontFamily="sans-serif-light" android:textColor="#ADB9CD" />
+        <ImageView android:id="@+id/card_image" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="centerCrop" android:importantForAccessibility="no" />
+        <TextView android:id="@+id/last_watched" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="6dp" android:paddingHorizontal="6dp" android:paddingVertical="3dp" android:background="@drawable/cinema_surface" android:textColor="#B6C9E7" android:textSize="8sp" android:text="上次观看" android:visibility="gone" />
+        <ProgressBar android:id="@+id/card_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="2dp" android:layout_gravity="bottom" android:max="100" android:progressTint="#B1C7E9" android:progressBackgroundTint="#33000000" />
+    </FrameLayout>
+    <TextView android:id="@+id/card_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:paddingHorizontal="4dp" android:textColor="@color/cinema_text" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/card_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:paddingHorizontal="4dp" android:textColor="#8F95A5" android:textSize="9sp" android:maxLines="2" android:ellipsize="end" />
+</LinearLayout>
+</layout>

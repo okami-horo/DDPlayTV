@@ -200,7 +200,7 @@ class TmdbLibraryInstrumentedTest {
             await("Detail") { ActivityHelper.instance.getTopActivity() is MetadataDetailActivity }
             val detail = ActivityHelper.instance.getTopActivity() as MetadataDetailActivity
             await("Detail title") { detail.findViewById<TextView>(com.xyoye.local_component.R.id.title).text == "TMDB 验收作品" }
-            await("Complete filename remains visible in the owned-file row") {
+            await("File source remains visible in the B shelf card") {
                 val subtitle = detail.findViewById<TextView>(com.xyoye.local_component.R.id.card_subtitle) ?: return@await false
                 val layout = subtitle.layout ?: return@await false
                 val rect = android.graphics.Rect()
@@ -210,7 +210,8 @@ class TmdbLibraryInstrumentedTest {
                     layout.getLineBottom(layout.lineCount - 1) + subtitle.compoundPaddingTop + subtitle.compoundPaddingBottom
             }
             screenshot("detail")
-            send(KeyEvent.KEYCODE_DPAD_LEFT)
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             await("Correction") { ActivityHelper.instance.getTopActivity() is MetadataMatchActivity }
             await("Original filename and recognition status remain visible") {

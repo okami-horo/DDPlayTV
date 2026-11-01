@@ -2,7 +2,19 @@
 
 ## Latest Recorded Validation
 
-### Latest Release installed on VIDAA TV (2026-11-01 15:58)
+### Release 4.2.4 installed on VIDAA TV (2026-11-01 17:31)
+
+The user requested TV installation and a version increment. `Versions.kt` now declares `4.2.4` / `71`. ARM64 Release built from `8e931f41d` plus watch-history/detail B changes with `:app:assembleRelease --offline`, ending **BUILD SUCCESSFUL in 2m 40s**. Signature and package metadata checks passed; private ADB 5059 `install -r` returned **Success** on VIDAA TV `192.168.31.70:5555`. Readback confirms version `4.2.4` / `71`, `lastUpdateTime=2026-11-01 17:31:33`, unchanged UID/first-install time and matching local/installed APK hashes. No uninstall or data clear was performed.
+
+This supersedes the 15:58 delivery and includes B plus home work-card navigation. Previously verified source/layout hashes were unchanged before the version-only rebuild; behavioral tests were not repeated. The [WH delivery record](../docs/superpowers/plans/2026-11-01-home-watch-history.md#用户授权的电视-release-安装2026-11-01-1731) owns artifact identity and logs. Private ADB 5059 is closed. No commit or TV launch/navigation/playback test; physical-TV/user runtime acceptance remains open.
+
+### Home watch history and series-detail B (2026-11-01)
+
+Implemented the selected B and work-card navigation in the current worktree on `8e931f41d`: original-file resume, season/episode browsing, independent versions, visible failure recovery and stable focus after reorder/recognition/BACK/recreation. Scanning, schema, queues and history storage remain unchanged. The [WH01–WH10 ledger](../docs/superpowers/plans/2026-11-01-home-watch-history.md) owns the complete implementation, intermediate failures, final artifact hash and screenshot evidence.
+
+Final full Debug/test/JVM/lint/scoped-format command ended `BUILD SUCCESSFUL in 3m 6s`; the final loading-visual adjustment passed the affected build/local JVM/lint/format checks in 18s. Complete XML count including repository/mpv is 111 suites, 487 passes, two existing external-fixture skips and zero failures/errors. Eighteen distinct task-AVD cases passed, including both kernels' home/detail/play/back path, 90%/95% resume, loading/empty/failure, movies, versions, recreation and settings persistence; three repeated 1.3-font checks passed. Native/prototype screenshots were actually inspected. No commit or TV navigation/playback; the subsequent user-authorized Release installation is recorded above, and user/device runtime acceptance remains open. Task AVD/private ADB are closed; prototype preview is retained.
+
+### Earlier Release installed on VIDAA TV (2026-11-01 15:58)
 
 At the user's request, rebuilt `2e77f4198` plus the current legacy-anime cleanup using `:app:assembleRelease`: `BUILD SUCCESSFUL in 2m 37s`. Signed ARM64 Release `4.2.3` / `70` was installed with `adb install -r` on `192.168.31.70:5555` (`VIDAA_TV`, MT9653, API 30). Package `lastUpdateTime=2026-11-01 15:58:05`; UID 10111 and original first-install time are unchanged. Installed/local APK SHA-256 matches `ff2a118b8820a395da504d13d479cd88b3c80d136d96c87e431b9c131d45e812`. No uninstall/data clear, commit, TV navigation or playback test. Independent ADB 5055 resolved a default-server Windows 10013 connection failure and was closed afterward.
 

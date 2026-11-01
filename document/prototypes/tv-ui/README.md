@@ -2,9 +2,9 @@
 
 ## 剧集详情重设计（2026-11-01，已选 B）
 
-用户已选择 **B「沉浸剧集」**：[详情页原型](series-detail-prototype.html?variant=B)现固定为上方作品信息与续播、下方横向剧集卡片；A/C 渲染器与切换条已移除。详情页完整重设计属于首页观看足迹任务，原生实现尚未开始。[设计与范围](../../../docs/superpowers/designs/2026-11-01-home-watch-history-design.md)记录 Apple 官方参考、真实电视问题和验证边界。
+用户已选择 **B「沉浸剧集」**：[详情页原型](series-detail-prototype.html?variant=B)现固定为上方作品信息与续播、下方横向剧集卡片；A/C 渲染器与切换条已移除。详情页完整重设计与首页观看足迹入口已在用户授权后实施，并完成本地构建、DPAD、状态截图及 1.3 字体验证；[实施记录](../../../docs/superpowers/plans/2026-11-01-home-watch-history.md)区分原生验证与未完成的实体电视／用户验收。[设计与范围](../../../docs/superpowers/designs/2026-11-01-home-watch-history-design.md)记录 Apple 官方参考、真实电视问题和验证边界。
 
-启动：`node document/prototypes/tv-ui/server.cjs 4178`，访问 [详情页预览](http://127.0.0.1:4178/series-detail-prototype.html?variant=B)。无需安装依赖或访问外网。顶部可选常规、多季、多版本、尚未观看、未知时长、文件不可用、空与加载状态。方向键移动、Enter 确认、Esc 返回；“电视现状”可对照改前截图。
+启动：`node document/prototypes/tv-ui/server.cjs 4178`，访问 [详情页预览](http://127.0.0.1:4178/series-detail-prototype.html?variant=B)。无需安装依赖或访问外网。顶部可选常规、多季、多版本、尚未观看、未知时长、文件不可用、空、资料更新、电影、资料失效与首次读取状态。方向键移动、Enter 确认、Esc 返回；“电视现状”可对照改前截图。
 
 这是独立设计原型，不连接真实播放器或写入媒体库。封面与前两集剧照来自用户授权的电视截图；数量、其余集数、进度是示例。B 是当前唯一权威稿，设计选择不代表原生实现或电视验收完成。
 

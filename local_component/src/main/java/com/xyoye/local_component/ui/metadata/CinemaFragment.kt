@@ -1,5 +1,6 @@
 package com.xyoye.local_component.ui.metadata
 
+import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import coil.load
 import com.alibaba.android.arouter.facade.annotation.Route
@@ -24,10 +25,33 @@ class CinemaFragment :
     private var current = MetadataLibraryState()
     private var heroKey: String? = null
     private var heroWork: com.xyoye.data_component.entity.MetadataWork? = null
+    private var displayedHistory = emptyList<MetadataHistory>()
+    private var restoredKey: String? = null
+    private var restoredHistoryId: Int? = null
     private val history =
         MetadataCardAdapter(continueWatching = true, click = { card ->
-            current.history.find { "history:${it.id}" == card.key }?.let(viewModel::play)
+            displayedHistory.find { it.key == card.key }?.let { entry ->
+                restoredKey = entry.key
+                restoredHistoryId = entry.history.id
+                if (entry.tmdbId != null) openCard(card, entry.history.id) else viewModel.play(entry.history)
+            }
         })
+
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        restoredKey = savedInstanceState?.getString("historyKey")
+        restoredHistoryId = savedInstanceState?.getInt("historyId")
+    }
+
+    override fun onSaveInstanceState(outState: android.os.Bundle) {
+        bindingOrNull?.continueWatching?.takeIf { it.hasFocus() }?.let { list ->
+            displayedHistory.getOrNull(list.getSelectedPosition())?.let {
+                outState.putString("historyKey", it.key)
+                outState.putInt("historyId", it.history.id)
+            }
+        }
+        super.onSaveInstanceState(outState)
+    }
 
     override fun initViewModel() = ViewModelInit(BR.viewModel, MetadataLibraryViewModel::class.java)
 
@@ -83,96 +107,96 @@ class CinemaFragment :
 
     private fun render() {
         val binding = bindingOrNull ?: return
-        val latest = current.history.firstOrNull()
-        val latestAsset =
-            latest?.let { entry ->
-                current.assets.find { it.libraryId == entry.storageId && it.uniqueKey == entry.uniqueKey && it.contentGeneration == 1L }
-            }
-        val latestBinding = current.bindings.find { it.assetId == latestAsset?.assetId }
+        if (!current.loaded) {
+            binding.heroTitle.text = "正在读取观看足迹…"
+            binding.heroPlay.isEnabled = false
+            binding.heroPlay.alpha = 0.45f
+            binding.empty.text = "正在读取观看足迹…"
+            binding.empty.isVisible = true
+            return
+        }
+        binding.heroPlay.isEnabled = true
+        binding.heroPlay.alpha = 1f
+        val projected = projectMetadataHistory(current)
+        val latest = projected.firstOrNull()
         val featured =
             if (latest != null) {
-                current.works.find { it.mediaKind == latestBinding?.mediaKind && it.tmdbId == latestBinding?.tmdbId }
+                latest.work
             } else {
                 current.works.firstOrNull { "${it.mediaKind}:${it.tmdbId}" == heroKey } ?: current.works.firstOrNull()
             }
         val key = featured?.let { "${it.mediaKind}:${it.tmdbId}" }
-        if (heroWork != featured || binding.heroTitle.text.isEmpty()) {
+        if (heroWork != featured || binding.heroOverview.text.isEmpty()) {
             heroKey = key
             heroWork = featured
             binding.backdrop.load(featured?.backdrop)
             binding.heroOverview.text = featured?.overview?.ifBlank { "保留每个文件，发现每部作品。" } ?: "连接本地与网络来源，开始你的大屏时光。"
         }
-        binding.heroTitle.text = featured?.title ?: latest?.videoName ?: "每一部，都值得好好看"
+        binding.heroTitle.text = featured?.title ?: latest?.history?.videoName ?: "每一部，都值得好好看"
         binding.heroLabel.text = if (latest != null) "DDPLAYTV · 继续观看" else "DDPLAYTV · 你的私人放映室"
         binding.heroMeta.text =
-            featured?.let { "${it.releaseDate.take(4)}  ·  ${if (it.mediaKind == "tv") "剧集 / 番剧" else "电影"}" } ?: "本地与远程媒体"
+            featured?.let {
+                listOfNotNull(
+                    it.releaseDate.take(4).ifBlank { null },
+                    if (it.mediaKind == "tv") "剧集 / 番剧" else "电影",
+                    latest?.takeIf { entry -> entry.kind == "tv" }?.episodeLabel
+                ).joinToString("  ·  ")
+            } ?: "本地与远程媒体"
         binding.heroPlay.text =
             when {
                 latest != null -> "继续播放"
                 featured != null -> "查看作品"
                 else -> "浏览媒体库"
             }
-        // History aggregation is display-only. Unverifiable old generations stay as file history.
-        val seen = mutableSetOf<String>()
-        val recent =
-            current.history
-                .filter { entry ->
-                    val asset =
-                        current.assets.find {
-                            it.libraryId == entry.storageId &&
-                                it.uniqueKey == entry.uniqueKey &&
-                                it.contentGeneration == 1L
-                        }
-                    val media = current.bindings.find { it.assetId == asset?.assetId }
-                    seen.add(if (media?.tmdbId != null) "${media.mediaKind}:${media.tmdbId}" else "history:${entry.id}")
-                }.take(8)
-                .map { entry ->
-                    val asset =
-                        current.assets.find {
-                            it.libraryId == entry.storageId &&
-                                it.uniqueKey == entry.uniqueKey &&
-                                it.contentGeneration == 1L
-                        }
-                    val media = current.bindings.find { it.assetId == asset?.assetId }
-                    val work = current.works.find { it.mediaKind == media?.mediaKind && it.tmdbId == media?.tmdbId }
-                    MetadataCard(
-                        "history:${entry.id}",
-                        work?.title ?: entry.videoName,
-                        "继续观看 · ${if (entry.videoDuration > 0) entry.videoPosition * 100 / entry.videoDuration else 0}%",
-                        work?.backdrop ?: work?.poster,
-                        if (entry.videoDuration > 0) (entry.videoPosition * 100 / entry.videoDuration).toInt() else 0
-                    )
-                }
+        val recent = projected.distinctBy { it.key }.take(8)
         val hadListFocus = binding.continueWatching.hasFocus()
-        val focusedKey = history.currentList.getOrNull(binding.continueWatching.getSelectedPosition())?.key
-
-        fun groupForHistory(cardKey: String?): String? {
-            val entry = current.history.find { "history:${it.id}" == cardKey } ?: return null
-            val asset =
-                current.assets.find {
-                    it.libraryId == entry.storageId &&
-                        it.uniqueKey == entry.uniqueKey &&
-                        it.contentGeneration == 1L
-                }
-            val media = current.bindings.find { it.assetId == asset?.assetId }
-            return media?.tmdbId?.let { "${media.mediaKind}:$it" } ?: cardKey
+        val oldPosition = binding.continueWatching.getSelectedPosition()
+        val oldKey = history.currentList.getOrNull(oldPosition)?.key
+        val oldEntry = displayedHistory.find { it.key == oldKey }
+        val focusedKey = restoredKey ?: oldEntry?.key
+        val historyId = restoredHistoryId ?: oldEntry?.history?.id
+        val migratedKey = projected.find { it.history.id == historyId }?.key
+        val restore = restoredKey != null
+        if (hadListFocus) {
+            restoredKey = focusedKey
+            restoredHistoryId = historyId
         }
-        val group = groupForHistory(focusedKey)
-        history.submitList(recent) {
-            if (hadListFocus && bindingOrNull === binding) {
-                val position = recent.indexOfFirst { it.key == focusedKey || group != null && groupForHistory(it.key) == group }
-                if (position >= 0) binding.continueWatching.setSelectedPosition(position)
+        history.submitList(recent.map { it.card() }) {
+            displayedHistory = recent
+            if ((hadListFocus || restore) && bindingOrNull === binding) {
+                val position =
+                    recent
+                        .indexOfFirst { it.key == focusedKey || it.key == migratedKey }
+                        .takeIf { it >= 0 } ?: oldPosition.coerceIn(0, (recent.size - 1).coerceAtLeast(0))
+                if (recent.isNotEmpty()) {
+                    // Apply the stable-key position after RecyclerView consumes the move updates.
+                    binding.continueWatching.doOnLayout {
+                        if (bindingOrNull !== binding) return@doOnLayout
+                        binding.continueWatching.setSelectedPosition(position)
+                        if (!binding.continueWatching.hasFocus()) binding.continueWatching.requestFocus()
+                        restoredKey = null
+                        restoredHistoryId = null
+                    }
+                } else {
+                    binding.heroPlay.requestFocus()
+                    restoredKey = null
+                    restoredHistoryId = null
+                }
             }
         }
         binding.continueWatching.isVisible = recent.isNotEmpty()
         binding.continueTitle.isVisible = true
         binding.empty.isVisible = recent.isEmpty()
+        binding.empty.text = "从媒体库添加来源，开始你的大屏时光。"
         listOf(binding.heroPlay, binding.filterAll).forEach {
             it.nextFocusDownId = if (recent.isNotEmpty()) binding.continueWatching.id else it.id
         }
     }
 
-    private fun openCard(card: MetadataCard) {
+    private fun openCard(
+        card: MetadataCard,
+        historyId: Int? = null
+    ) {
         if (card.key.startsWith("asset:")) {
             correctCard(card)
             return
@@ -183,6 +207,7 @@ class CinemaFragment :
                 RouteTable.Local.MetadataDetail
             ).withString("kind", card.key.substringBefore(':'))
             .withLong("tmdbId", card.key.substringAfter(':').toLong())
+            .withInt("historyId", historyId ?: 0)
             .navigation()
     }
 

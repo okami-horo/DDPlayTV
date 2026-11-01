@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | 旧番剧搜索与发现页退役 | 用户要求确认旧“搜番剧”无用即清理；旧首页链路已无正常入口 | [清理范围、保留能力与验证](plans/2026-11-01-legacy-anime-discovery-cleanup.md)；最新 Release 已于 15:58 覆盖安装至电视，安装包哈希一致 |
 | 遥控器返回入口清理 | 用户确认纯 TV 下删除屏幕返回及播放器面板关闭按钮 | [清理、焦点路径与验证](plans/2026-11-01-remote-back-cleanup.md)：本地构建／JVM／lint 与 24 项 AVD 检查通过；已随 2026-11-01 15:58 Release 安装至电视，运行验收另计 |
-| 首页观看足迹与剧集详情重设计 | [已选 B 沉浸剧集、作品入口与原文件续播](designs/2026-11-01-home-watch-history-design.md) | 2026-11-01 用户已选 B，网页固定为 B 并保留八类状态；已查看真实电视截图并参考 Apple TV；WH01–WH10 原生仍待实施验证 |
+| 首页观看足迹与剧集详情重设计 | [已选 B 沉浸剧集、作品入口与原文件续播](designs/2026-11-01-home-watch-history-design.md) | [WH01–WH10 实施与验证](plans/2026-11-01-home-watch-history.md)：B 原生与作品足迹入口已完成；构建／JVM／lint、18 项不同 AVD 用例及 1.3 字体验证通过；Release 4.2.4 / 71 已安装到实体电视，运行与用户验收另计；未提交 |
 | TV 焦点裁切修复 | 用户授权修复排查确认的五处问题，标题重复另轮处理 | [五处修复、回归与截图证据](plans/2026-11-01-focus-clipping.md)：本地构建／测试及常规、放大字体 DPAD 验证通过；已随 2026-11-01 15:58 Release 安装至电视，运行验收另计 |
 | TV 冗余清理 A01–A08 | 用户授权清理[范围审查的八类候选](../../document/architecture/tv-feature-scope-audit-2026-11-01.md) | [实施、Room 22 升级、构建与回归证据](plans/2026-11-01-tv-scope-cleanup.md)；B01–B03 及产品取舍不在本次范围 |
 | TV 旧布局与设计覆盖排查 | [U01–U10：入口、源码与缺稿范围](plans/2026-10-31-ui-design-coverage-audit.md) | 用户随后授权修复；[补充设计](designs/2026-10-31-ui-polish-design.md)、[原生实施/验证与剩余边界](plans/2026-10-31-ui-polish.md)。文件 C 已完成本地实施与验证，见下行 |

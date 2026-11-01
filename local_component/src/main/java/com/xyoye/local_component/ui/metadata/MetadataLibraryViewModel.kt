@@ -24,7 +24,8 @@ data class MetadataLibraryState(
     val assets: List<MediaAsset> = emptyList(),
     val bindings: List<MediaBinding> = emptyList(),
     val episodes: List<MediaBindingEpisode> = emptyList(),
-    val history: List<PlayHistoryEntity> = emptyList()
+    val history: List<PlayHistoryEntity> = emptyList(),
+    val loaded: Boolean = false
 )
 
 class MetadataLibraryViewModel : BaseViewModel() {
@@ -38,7 +39,7 @@ class MetadataLibraryViewModel : BaseViewModel() {
             dao.observeBindingEpisodes(),
             repository.database.getPlayHistoryDao().observeAll()
         ) { works, assets, bindings, episodes, history ->
-            MetadataLibraryState(works, assets, bindings, episodes, history)
+            MetadataLibraryState(works, assets, bindings, episodes, history, loaded = true)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MetadataLibraryState())
     private val playback = PlaybackEntryRequests(viewModelScope, { if (it) showLoading() else hideLoading() })
     val playEvents = playback.outcomes

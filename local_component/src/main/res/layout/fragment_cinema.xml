@@ -20,8 +20,8 @@
                     <TextView android:id="@+id/continue_title" style="@style/Cinema.Section" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="你的观看足迹" />
                     <Button android:id="@+id/filter_all" style="@style/Cinema.Button" android:layout_width="wrap_content" android:layout_height="36dp" android:background="@drawable/cinema_category" android:text="浏览媒体库  ›" android:textColor="@color/cinema_muted" android:layout_marginEnd="0dp" />
                 </LinearLayout>
-                <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/continue_watching" android:layout_width="match_parent" android:layout_height="166dp" android:layout_marginHorizontal="-7dp" android:clipToPadding="false" />
-                <TextView android:id="@+id/empty" style="@style/Cinema.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="24dp" android:text="从媒体库添加来源，开始你的大屏时光。" />
+                <com.rubensousa.dpadrecyclerview.DpadRecyclerView android:id="@+id/continue_watching" android:visibility="gone" android:layout_width="match_parent" android:layout_height="166dp" android:layout_marginHorizontal="-7dp" android:clipToPadding="false" />
+                <TextView android:id="@+id/empty" style="@style/Cinema.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="24dp" android:text="正在读取观看足迹…" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </FrameLayout>

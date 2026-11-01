@@ -508,7 +508,10 @@ class PlayerActivity :
         val failure = state.failure ?: return
         viewModel.acknowledgePlaybackFailure(failure)
         ToastCenter.showError(failure.userMessage())
-        if (!state.hasPlayback) finish()
+        if (!state.hasPlayback) {
+            setResult(RESULT_CANCELED, Intent().putExtra(PlaybackNavigation.FAILURE_MESSAGE, failure.userMessage()))
+            finish()
+        }
     }
 
     override fun onKeyDown(
