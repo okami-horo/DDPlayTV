@@ -74,6 +74,8 @@ class MetadataRepository(
                 old != null &&
                     (
                         old.uniqueKey != snapshot.reference.uniqueKey ||
+                            old.fileName != snapshot.fileName ||
+                            old.storagePath != snapshot.reference.storagePath ||
                             (old.size != null && snapshot.size != null && old.size != snapshot.size) ||
                             (old.modifiedAt != null && snapshot.modifiedAt != null && old.modifiedAt != snapshot.modifiedAt)
                     )
@@ -102,10 +104,11 @@ class MetadataRepository(
             } else if (changed) {
                 dao.putBinding(
                     binding.copy(
-                        state = "NEEDS_CONFIRMATION",
+                        state = if (binding.state == "IGNORED") "IGNORED" else "NEEDS_CONFIRMATION",
                         revision = binding.revision + 1,
                         taskId = null,
-                        failure = "FILE_CHANGED"
+                        failure = "FILE_CHANGED",
+                        evidence = "INPUT_CHANGED"
                     )
                 )
             }
@@ -185,11 +188,15 @@ class MetadataRepository(
         ticket: BindingTicket,
         work: MetadataWork,
         episodes: List<MetadataEpisode>,
-        manual: Boolean
+        manual: Boolean,
+        replaceExisting: Boolean = false
     ) {
         database.withTransaction {
             requireTicket(ticket)
-            if (!manual && (ticket.binding.locked || ticket.binding.state == "IGNORED" || ticket.binding.failure == "FILE_CHANGED")) {
+            if (!manual &&
+                !replaceExisting &&
+                (ticket.binding.locked || ticket.binding.state == "IGNORED" || ticket.binding.failure == "FILE_CHANGED")
+            ) {
                 throw StaleMetadataResult()
             }
             require(work.mediaKind == "movie" && episodes.isEmpty() || work.mediaKind == "tv")
@@ -212,7 +219,8 @@ class MetadataRepository(
                     locked = manual,
                     revision = ticket.binding.revision + 1,
                     taskId = null,
-                    evidence = if (manual) "USER_CONFIRMED" else "EXACT_ID_OR_TITLE_YEAR",
+                    evidence = if (manual) "USER_CONFIRMED" else "UNIQUE_ID_OR_EXACT_TITLE",
+                    ruleVersion = MediaNameParser.RULE_VERSION,
                     failure = null
                 )
             )
@@ -245,6 +253,8 @@ class MetadataRepository(
             ticket.binding.copy(
                 state = if (ticket.binding.tmdbId != null || ticket.binding.state == "IGNORED") ticket.binding.state else state,
                 failure = failure,
+                attemptedAt = System.currentTimeMillis(),
+                ruleVersion = MediaNameParser.RULE_VERSION,
                 revision = ticket.binding.revision + 1,
                 taskId = null
             )

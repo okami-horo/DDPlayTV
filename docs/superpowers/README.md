@@ -9,9 +9,9 @@
 | TV 旧布局与设计覆盖排查 | [U01–U10：入口、源码与缺稿范围](plans/2026-10-31-ui-design-coverage-audit.md) | 用户随后授权修复；[补充设计](designs/2026-10-31-ui-polish-design.md)、[原生实施/验证与剩余边界](plans/2026-10-31-ui-polish.md)。文件 C 已完成本地实施与验证，见下行 |
 | 播放器左下操作组 | [已选 A 单排分组；只调整按钮组](designs/2026-10-31-player-controls-design.md) | A 已确认并实施；本地行为/截图与未覆盖状态见 [后续任务与 P01–P10](plans/2026-10-31-player-controls.md)。字幕位置与弹幕覆盖标题不属于问题 |
 | TMDB 元数据、文件关联与新媒体库 | [刮削与模块设计](designs/2026-10-31-tmdb-media-library-design.md) | 已授权实施：关联/纠错、Room 19、原生 UI 与首批来源手动扫描；[实施及验证](plans/2026-10-31-tmdb-media-library.md)、[范围与待办](../../document/media-library/tmdb-metadata-followup.md) |
-| 播放触发的自动刮削 | [自动识别、同目录同剧入库与低维护交互](designs/2026-10-31-playback-auto-metadata-design.md) | 仅设计，尚未实施；接替上行中的人工纠错优先流程，不要求目录类型，保留既有身份与历史保护 |
+| 播放触发的自动刮削 | [自动识别、同目录同剧入库与低维护交互](designs/2026-10-31-playback-auto-metadata-design.md) | 实现与本地验证完成；原问题路由承接重新识别/刷新，保留既有绑定与历史。构建、AM01–AM13 证据及真实来源/电视待验边界见[本轮账本](plans/2026-11-01-playback-auto-metadata.md) |
 | 文件浏览 C：列表与预览 | [已选 C 设计](designs/2026-10-31-file-browser-design.md) | [原生实施与 C01–C11 本地验收](plans/2026-10-31-file-browser-preview.md)已完成；物理电视、真实云服务和用户验收仍未执行 |
-| 文件浏览菜单精简 | [任务、过渡路径与 FM01–FM10 验收](plans/2026-10-31-file-browser-menu-simplification.md) | 已实施：移除文件菜单与行末更多，统一刷新并承接长名阅读；保留播放器控制、旧绑定及过渡识别入口。本地验证与真实来源/电视边界见账本；自动刮削仍为独立设计 |
+| 文件浏览菜单精简 | [任务、过渡路径与 FM01–FM10 验收](plans/2026-10-31-file-browser-menu-simplification.md) | 已实施：移除文件菜单与行末更多，统一刷新并承接长名阅读；保留播放器控制与旧绑定。本地验证与真实来源/电视边界见账本；后续自动刮削见上行 |
 | 新 UI 前的身份、异步与恢复修复 | [逻辑修复设计](designs/2026-10-30-ui-readiness-repairs-design.md) | [R1–R10 实施与验证](plans/2026-10-30-ui-readiness-repairs.md)已完成本地验证；优先恢复上次位置，已看完分类单独处理；物理电视及真实服务边界保留 |
 | 新 UI 的全局配置收敛 | [全局配置设计](designs/2026-10-30-global-settings-design.md) | 用户已授权实施；单库偏好移除、PC 分组全局化与 Room 17→18 已实现，验证状态及剩余边界见[实施记录](plans/2026-10-30-global-settings.md) |
 | 串流、外部打开与磁力功能退役 | 用户确认 TV 无相关需求，磁力搜索不保留 | [范围、Room 20 升级与验证](plans/2026-10-31-remove-stream-magnet.md) |

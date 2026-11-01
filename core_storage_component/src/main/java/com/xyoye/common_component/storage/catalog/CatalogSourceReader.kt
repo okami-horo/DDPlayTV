@@ -16,6 +16,7 @@ import com.xyoye.common_component.storage.file.impl.VideoStorageFile
 import com.xyoye.common_component.storage.impl.DocumentFileStorage
 import com.xyoye.common_component.storage.impl.VideoStorage
 import com.xyoye.data_component.entity.MediaLibraryEntity
+import com.xyoye.data_component.entity.VideoEntity
 import com.xyoye.data_component.enums.MediaType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -61,18 +62,41 @@ class CatalogSourceReader(
         path: String
     ): CatalogDirectorySnapshot =
         withStorage(library) { storage ->
-            // Read the existing local index; VideoStorage.listFiles can initiate a filesystem scan.
+            // Root discovery uses the known folders; a selected physical directory is read directly, never scanned recursively.
             if (storage is VideoStorage) {
-                val rows = DatabaseProvider.instance.getVideoDao().getAll()
                 val actualPath = path.ifBlank { library.url }
                 if (actualPath == library.url) {
+                    val rows = DatabaseProvider.instance.getVideoDao().getAll()
                     return@withStorage CatalogDirectorySnapshot(actualPath, emptyList(), rows.map { it.folderPath }.distinct(), true)
                 }
-                val files =
-                    rows.filter { it.folderPath.trimEnd('/') == actualPath.trimEnd('/') }.map {
-                        snapshot(VideoStorageFile(storage, it), actualPath)
+                val directory = File(actualPath)
+                if (!directory.isDirectory || !directory.canRead()) throw IOException("DIRECTORY_UNAVAILABLE")
+                val entries = directory.listFiles() ?: throw IOException("DIRECTORY_INCOMPLETE")
+                val videos =
+                    entries.filter {
+                        it.isFile &&
+                            com.xyoye.common_component.utils
+                                .isVideoFile(it.name)
                     }
-                return@withStorage CatalogDirectorySnapshot(actualPath, files, emptyList(), true)
+                val files =
+                    videos.filter { it.canRead() }.map {
+                        snapshot(
+                            VideoStorageFile(
+                                storage,
+                                VideoEntity(fileId = 0, filePath = it.path, folderPath = actualPath, fileLength = it.length())
+                            ),
+                            actualPath
+                        )
+                    }
+                return@withStorage CatalogDirectorySnapshot(
+                    actualPath,
+                    files,
+                    entries
+                        .filter {
+                            it.isDirectory
+                        }.map { it.path },
+                    videos.all { it.canRead() }
+                )
             }
             if (storage is DocumentFileStorage) return@withStorage documentDirectory(storage, path)
             val directory = if (path.isBlank()) storage.getRootFile() else storage.pathFile(path, true)

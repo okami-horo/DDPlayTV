@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
     <data>
-        <variable
-            name="viewModel"
-            type="com.xyoye.local_component.ui.metadata.MetadataMatchViewModel" />
+        <variable name="viewModel" type="com.xyoye.local_component.ui.metadata.MetadataMatchViewModel" />
     </data>
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,12 +9,11 @@
         android:orientation="vertical"
         android:background="@color/cinema_background"
         android:paddingHorizontal="36dp"
-        android:paddingTop="24dp"
-        android:paddingBottom="24dp">
+        android:paddingVertical="24dp">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="识别 / 更正资料"
+            android:text="资料与识别问题"
             android:textColor="@color/cinema_text"
             android:textSize="24sp" />
         <TextView
@@ -29,120 +25,80 @@
             android:textColor="@color/cinema_muted"
             android:textSize="14sp"
             android:layout_marginTop="8dp" />
-        <TextView
-            android:id="@+id/status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="55dp"
-            android:maxLines="3"
-            android:ellipsize="end"
-            android:textColor="@color/cinema_muted"
-            android:textSize="15sp"
-            android:paddingTop="8dp" />
-        <LinearLayout
-            android:id="@+id/search_row"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:gravity="center_vertical">
-            <EditText
-                android:id="@+id/query"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="48dp"
-                android:singleLine="true"
-                android:inputType="text"
-                android:textColor="@color/cinema_text"
-                android:hint="作品名称"
-                android:textColorHint="#AAB6C8"
-                android:nextFocusRight="@id/kind"
-                android:paddingHorizontal="12dp"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/cinema_input" />
-            <Button
-                style="@style/Cinema.Button"
-                android:id="@+id/kind"
-                android:layout_width="150dp"
-                android:layout_height="48dp"
-                android:text="电影"
-                android:nextFocusLeft="@id/query"
-                android:nextFocusRight="@id/search" />
-            <Button
-                style="@style/Cinema.Button"
-                android:id="@+id/search"
-                android:layout_width="120dp"
-                android:layout_height="48dp"
-                android:text="搜索 / 重试"
-                android:nextFocusLeft="@id/kind" />
-        </LinearLayout>
-        <FrameLayout
+        <ScrollView
+            android:id="@+id/status_panel"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:focusable="false"
             android:layout_weight="1"
-            android:layout_marginVertical="12dp"
-            android:background="@drawable/cinema_surface">
-            <com.rubensousa.dpadrecyclerview.DpadRecyclerView
-                android:id="@+id/items"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/cinema_surface"
+            android:fillViewport="true">
+            <LinearLayout
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:id="@+id/status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/cinema_text"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/advice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:lineSpacingExtra="6dp"
+                    android:textColor="@color/cinema_muted"
+                    android:textSize="14sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:lineSpacingExtra="6dp"
+                    android:text="电影：片名 (2024).mkv\n剧集：剧名 S01E03.mkv\n\n重新识别会重新核对文件；刷新资料只更新已关联作品的简介与图片。"
+                    android:textColor="@color/cinema_muted"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </ScrollView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:layout_marginTop="12dp">
+            <Button
+                style="@style/Cinema.Button"
+                android:id="@+id/retry"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:padding="6dp" />
-        </FrameLayout>
-        <LinearLayout
-            android:id="@+id/range_row"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:orientation="vertical"
-            android:visibility="gone">
-            <Button
-                style="@style/Cinema.Button"
-                android:id="@+id/first"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="起始集"
-                android:nextFocusDown="@id/last" />
-            <Button
-                style="@style/Cinema.Button"
-                android:id="@+id/last"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="结束集"
-                android:nextFocusUp="@id/first" />
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="56dp">
-            <Button
-                style="@style/Cinema.Button"
-                android:id="@+id/confirm"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:text="确认关联"
-                android:visibility="gone" />
-            <Button
-                style="@style/Cinema.Button"
-                android:id="@+id/preview_directory"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:text="预览应用到目录"
-                android:visibility="gone" />
+                android:minWidth="56dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="重新识别"
+                android:nextFocusRight="@id/refresh" />
             <Button
                 style="@style/Cinema.Button"
                 android:id="@+id/refresh"
                 android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:text="刷新已绑定资料" />
-            <Button
-                style="@style/Cinema.Button"
-                android:id="@+id/ignore"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:text="解除关联并忽略" />
+                android:layout_height="match_parent"
+                android:minWidth="56dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="刷新资料"
+                android:nextFocusLeft="@id/retry"
+                android:nextFocusRight="@id/back" />
             <Button
                 style="@style/Cinema.Button"
                 android:id="@+id/back"
                 android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:text="返回" />
+                android:layout_height="match_parent"
+                android:minWidth="56dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="返回"
+                android:nextFocusLeft="@id/refresh" />
         </LinearLayout>
     </LinearLayout>
 </layout>

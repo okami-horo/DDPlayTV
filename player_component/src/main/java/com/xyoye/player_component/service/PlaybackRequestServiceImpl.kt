@@ -2,6 +2,7 @@ package com.xyoye.player_component.service
 
 import android.content.Context
 import com.alibaba.android.arouter.facade.annotation.Route
+import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.playback.handoff.PlaybackCommand
 import com.xyoye.common_component.playback.handoff.PlaybackDescriptor
@@ -10,6 +11,7 @@ import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackStateView
 import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
+import com.xyoye.common_component.services.PlaybackMetadataService
 import com.xyoye.common_component.services.PlaybackRequestService
 import com.xyoye.common_component.source.handoff.PlaybackResolutionResult
 import com.xyoye.common_component.source.handoff.PlaybackSourceResolver
@@ -54,7 +56,10 @@ class PlaybackRequestServiceImpl internal constructor(
             playbackDispatcher,
             cleanupDispatcher,
             onStateChanged = { if (activeRegistration === registration) state.value = it },
-            isCurrentOwner = { activeRegistration === registration }
+            isCurrentOwner = { activeRegistration === registration },
+            onPlaybackStarted = { version, file ->
+                ARouter.getInstance().navigation(PlaybackMetadataService::class.java)?.submit(version, file)
+            }
         ).also { activeSession = WeakReference(it) }
     }
 

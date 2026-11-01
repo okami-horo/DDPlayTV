@@ -10,6 +10,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object MediaLibraryRepository {
+    suspend fun catalogVersion(libraryId: Int): CatalogSourceState? {
+        val db = DatabaseProvider.instance
+        return db.withTransaction {
+            if (db.getMediaLibraryDao().getById(libraryId) == null) {
+                null
+            } else {
+                db.getMetadataDao().source(libraryId) ?: CatalogSourceState(libraryId).also { db.getMetadataDao().putSource(it) }
+            }
+        }
+    }
+
     fun getAll(): LiveData<MutableList<MediaLibraryEntity>> =
         DatabaseProvider.instance
             .getMediaLibraryDao()

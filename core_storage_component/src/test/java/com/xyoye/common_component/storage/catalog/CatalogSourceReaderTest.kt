@@ -16,8 +16,30 @@ import java.io.IOException
 import java.lang.reflect.Proxy
 
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
+@Config(manifest = Config.NONE, shadows = [com.xyoye.common_component.source.handoff.PlaybackSourceResolverTest.DefaultPreferences::class])
 class CatalogSourceReaderTest {
+    @get:org.junit.Rule val temporary = org.junit.rules.TemporaryFolder()
+
+    @Test fun localDirectoryFindsUnindexedSiblingFilesWithoutRecursiveTraversal() =
+        runBlocking {
+            val folder = temporary.newFolder("series")
+            java.io.File(folder, "Show S01E03.mkv").writeText("fixture")
+            java.io.File(folder, "Show S01E04.mkv").writeText("fixture")
+            java.io.File(folder, "notes.txt").writeText("not a video")
+            val subfolder = java.io.File(folder, "other").apply { mkdir() }
+            java.io.File(subfolder, "Other S01E01.mkv").writeText("fixture")
+            val local = MediaLibraryEntity.LOCAL.copy()
+            val snapshot =
+                CatalogSourceReader {
+                    com.xyoye.common_component.storage.impl
+                        .VideoStorage(it)
+                }.directory(local, folder.path)
+            assertTrue(snapshot.complete)
+            assertEquals(setOf("Show S01E03.mkv", "Show S01E04.mkv"), snapshot.files.map { it.fileName }.toSet())
+            assertEquals(listOf(subfolder.path), snapshot.directories)
+            assertTrue(snapshot.files.all { it.parentPath == folder.path && it.size == 7L })
+        }
+
     @Test fun metadataReadsOnlyPropertiesAndClosesEveryIndependentConnection() =
         runBlocking {
             var created = 0

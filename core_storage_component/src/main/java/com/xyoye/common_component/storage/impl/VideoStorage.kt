@@ -3,14 +3,13 @@ package com.xyoye.common_component.storage.impl
 import com.xyoye.common_component.database.DatabaseProvider
 import com.xyoye.common_component.extension.toFile
 import com.xyoye.common_component.resolver.MediaResolver
-import com.xyoye.common_component.storage.transport.PlaybackTransportLease
-import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
-import com.xyoye.common_component.storage.transport.directPlaybackTransport
-import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.common_component.storage.AbstractStorage
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.file.impl.VideoStorageFile
 import com.xyoye.common_component.storage.file.payloadAs
+import com.xyoye.common_component.storage.transport.PlaybackTransportLease
+import com.xyoye.common_component.storage.transport.PlaybackTransportProvider
+import com.xyoye.common_component.storage.transport.directPlaybackTransport
 import com.xyoye.common_component.utils.getFileName
 import com.xyoye.common_component.utils.getFileNameNoExtension
 import com.xyoye.common_component.utils.isDanmuFile
@@ -19,6 +18,7 @@ import com.xyoye.common_component.utils.meida.VideoScan
 import com.xyoye.common_component.utils.subtitle.SubtitleFinder
 import com.xyoye.data_component.bean.FolderBean
 import com.xyoye.data_component.bean.LocalDanmuBean
+import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.entity.VideoEntity
@@ -33,7 +33,8 @@ import java.io.InputStream
 
 class VideoStorage(
     library: MediaLibraryEntity
-) : AbstractStorage(library), PlaybackTransportProvider {
+) : AbstractStorage(library),
+    PlaybackTransportProvider {
     override suspend fun openDirectory(
         file: StorageFile,
         refresh: Boolean
@@ -71,7 +72,15 @@ class VideoStorage(
         if (isDirectory.not()) {
             val videoEntity =
                 DatabaseProvider.instance.getVideoDao().getVideo(path)
-                    ?: return null
+                    ?: java.io
+                        .File(path)
+                        .takeIf {
+                            it.isFile &&
+                                com.xyoye.common_component.utils
+                                    .isVideoFile(it.name)
+                        }?.let {
+                            VideoEntity(fileId = 0, filePath = it.path, folderPath = it.parent.orEmpty(), fileLength = it.length())
+                        } ?: return null
             return VideoStorageFile(this, videoEntity)
         }
         return VideoStorageFile(this, FolderBean(path, 0))
@@ -84,8 +93,10 @@ class VideoStorage(
         }
     }
 
-    override suspend fun acquirePlaybackTransport(file: StorageFile, profile: PlaybackProfile): PlaybackTransportLease =
-        directPlaybackTransport(file.filePath())
+    override suspend fun acquirePlaybackTransport(
+        file: StorageFile,
+        profile: PlaybackProfile
+    ): PlaybackTransportLease = directPlaybackTransport(file.filePath())
 
     override suspend fun cacheDanmu(file: StorageFile): LocalDanmuBean? {
         val danmuFileName = getFileNameNoExtension(file.fileName()) + ".xml"

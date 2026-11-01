@@ -312,6 +312,16 @@ class DatabaseManager private constructor() {
                 }
             }
 
+        val MIGRATION_20_21 =
+            object : Migration(20, 21) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL("ALTER TABLE media_binding ADD COLUMN attemptedAt INTEGER NOT NULL DEFAULT 0")
+                    database.execSQL("ALTER TABLE metadata_scan ADD COLUMN triggerKey TEXT")
+                    database.execSQL("ALTER TABLE metadata_scan ADD COLUMN triggerPath TEXT")
+                    database.execSQL("ALTER TABLE metadata_scan ADD COLUMN triggerName TEXT")
+                }
+            }
+
         val MIGRATION_19_20 =
             object : Migration(19, 20) {
                 override fun migrate(database: SupportSQLiteDatabase) {
@@ -448,6 +458,7 @@ class DatabaseManager private constructor() {
                 MIGRATION_17_18,
                 MetadataMigration,
                 MIGRATION_19_20,
-                MIGRATION_16_15,
+                MIGRATION_20_21,
+                MIGRATION_16_15
             ).build()
 }

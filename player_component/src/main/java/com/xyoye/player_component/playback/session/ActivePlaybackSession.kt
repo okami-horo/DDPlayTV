@@ -11,6 +11,7 @@ import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
 import com.xyoye.common_component.playback.handoff.PlaybackStateView
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
+import com.xyoye.common_component.services.PlaybackMetadataFile
 import com.xyoye.common_component.source.handoff.PlaybackResolutionResult
 import com.xyoye.common_component.source.handoff.PlaybackSourceResolver
 import com.xyoye.common_component.source.handoff.ResolvedPlayback
@@ -80,7 +81,8 @@ internal class ActivePlaybackSession(
     private val playbackDispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
     private val cleanupDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val onStateChanged: (PlaybackStateView?) -> Unit = {},
-    private val isCurrentOwner: () -> Boolean = { true }
+    private val isCurrentOwner: () -> Boolean = { true },
+    private val onPlaybackStarted: (PlaybackSessionVersion, PlaybackMetadataFile) -> Unit = { _, _ -> }
 ) {
     private val commands = Mutex()
     private var attachedBackend: PlaybackSessionBackend? = backend
@@ -94,6 +96,7 @@ internal class ActivePlaybackSession(
     private var closed = false
     private var snapshotWriter: PlaybackSnapshotWriter? = null
     private var lastBackendState = BackendPlaybackState()
+    private val submittedMetadata = mutableSetOf<PlaybackMetadataFile>()
 
     private fun publishState() {
         val active = runtime
@@ -103,6 +106,11 @@ internal class ActivePlaybackSession(
         }
         attachedBackend?.takeIf { it.currentSource() === active.playback.source }?.let {
             lastBackendState = it.localState()
+            if (lastBackendState.started) {
+                active.playback.resolved.metadataFile?.let { file ->
+                    if (submittedMetadata.add(file)) runCatching { onPlaybackStarted(active.version, file) }
+                }
+            }
         }
         onStateChanged(
             PlaybackStateView(

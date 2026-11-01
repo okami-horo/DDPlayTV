@@ -26,6 +26,40 @@ import java.io.File
 @Config(manifest = Config.NONE)
 class RoomSchemaMigrationGateTest {
     @Test
+    fun migration20AddsPlaybackTaskIdentityWithoutChangingLegacyBindingsAndHistory() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        deleteDatabaseFiles(context, TEST_DB_NAME)
+        val file = context.getDatabasePath(TEST_DB_NAME).also { it.parentFile?.mkdirs() }
+        createDatabaseFromRoomSchemaJson(file, loadSchemaJson(20), 20)
+        openHistoricalDatabase(context, 20).use { helper ->
+            val db = helper.writableDatabase
+            db.execSQL("INSERT INTO media_binding VALUES (7,'MATCHED','tv',42,'MANUAL',1,4,NULL,'USER_CONFIRMED',1,NULL)")
+            db.execSQL("INSERT INTO media_binding VALUES (8,'IGNORED',NULL,NULL,'MANUAL',1,5,NULL,'',1,NULL)")
+            db.execSQL(
+                "INSERT INTO play_history(video_name,url,media_type,video_position,video_duration,play_time,unique_key) VALUES ('Episode','file://episode','local_storage',8123,90000,123,'stable')"
+            )
+            db.execSQL("INSERT INTO metadata_scan VALUES ('legacy',1,1,1,'/shows',0,'COMPLETED',12,12,0,0,1,123,NULL)")
+        }
+        val room = openCurrentDatabase(context)
+        try {
+            val db = room.openHelper.writableDatabase
+            assertEquals(21, db.version)
+            assertEquals(
+                listOf(listOf("MATCHED", "42", "1"), listOf("IGNORED", null, "1")),
+                rows(db.query("SELECT state,tmdbId,locked FROM media_binding ORDER BY assetId"))
+            )
+            assertEquals(listOf(listOf("8123", "stable")), rows(db.query("SELECT video_position,unique_key FROM play_history")))
+            assertEquals(
+                listOf(listOf("legacy", "12", null, null, null)),
+                rows(db.query("SELECT runId,matched,triggerKey,triggerPath,triggerName FROM metadata_scan"))
+            )
+        } finally {
+            room.close()
+            deleteDatabaseFiles(context, TEST_DB_NAME)
+        }
+    }
+
+    @Test
     fun migration19RetiresStreamsTorrentsAndSearchWithoutChangingOtherData() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         deleteDatabaseFiles(context, TEST_DB_NAME)
@@ -466,7 +500,8 @@ class RoomSchemaMigrationGateTest {
                 DatabaseManager.MIGRATION_16_17,
                 DatabaseManager.MIGRATION_17_18,
                 com.xyoye.common_component.database.MetadataMigration,
-                DatabaseManager.MIGRATION_19_20
+                DatabaseManager.MIGRATION_19_20,
+                DatabaseManager.MIGRATION_20_21
             ).build()
 
     private fun assertCurrentLibrarySchema(database: SupportSQLiteDatabase) {
@@ -820,7 +855,7 @@ class RoomSchemaMigrationGateTest {
     private companion object {
         const val OLD_VERSION = 15
         const val NEW_VERSION = 16
-        const val CURRENT_VERSION = 20
+        const val CURRENT_VERSION = 21
         const val TEST_DB_NAME = "room_migration_gate_test.db"
         private const val ROOM_TABLE_NAME_PLACEHOLDER = "${'$'}{TABLE_NAME}"
         private const val ROOM_VIEW_NAME_PLACEHOLDER = "${'$'}{VIEW_NAME}"

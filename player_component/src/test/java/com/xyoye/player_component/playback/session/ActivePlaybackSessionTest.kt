@@ -34,6 +34,36 @@ import java.util.concurrent.TimeUnit
 @Config(manifest = Config.NONE)
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class ActivePlaybackSessionTest {
+    @Test fun metadataStartsOnlyAfterPlaybackAndNeverRepreparesOnRepeatedEvents() =
+        runTest {
+            val f = PlaybackSessionTestFixture(StandardTestDispatcher(testScheduler))
+            f.backend.backendState = f.backend.backendState.copy(started = false)
+            f.session.deliver(f.submit("episode3"))
+            assertTrue(f.metadataStarts.isEmpty())
+            val version = f.session.runtime!!.version
+            f.backend.backendState = f.backend.backendState.copy(started = true)
+            f.session.refreshState(f.backend, version)
+            repeat(5) {
+                f.backend.backendState = f.backend.backendState.copy(started = false)
+                f.session.refreshState(f.backend, version)
+                f.backend.backendState = f.backend.backendState.copy(started = true)
+                f.session.refreshState(f.backend, version)
+            }
+            assertEquals(1, f.metadataStarts.size)
+            assertEquals(listOf("episode3"), f.backend.applied)
+            f.metadataThrows = true
+            assertTrue(f.session.deliver(f.submit("episode4")) is SessionRequestResult.Activated)
+            assertEquals(2, f.metadataStarts.size)
+            assertEquals(listOf("episode3", "episode4"), f.backend.applied)
+            val next = PreparedPlayback(f.resolved(f.descriptor("episode5")), null)
+            assertTrue(f.session.queueNative(f.session.runtime!!.version, next))
+            assertEquals(2, f.metadataStarts.size)
+            f.backend.transition()
+            f.session.nativeTransition(next.candidateId)
+            assertEquals(3, f.metadataStarts.size)
+            f.session.exit()
+        }
+
     @Test fun queuePositionUsesStableIdentityWhenResolverStripsQueueContextFromItems() =
         runTest {
             val f = PlaybackSessionTestFixture(StandardTestDispatcher(testScheduler))

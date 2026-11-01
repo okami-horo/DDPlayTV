@@ -1,5 +1,6 @@
 package com.xyoye.data_component.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -87,7 +88,8 @@ data class MediaBinding(
     val taskId: String? = null,
     val evidence: String = "",
     val ruleVersion: Int = 1,
-    val failure: String? = null
+    val failure: String? = null,
+    @ColumnInfo(defaultValue = "0") val attemptedAt: Long = 0
 )
 
 @Entity(tableName = "media_binding_episode", primaryKeys = ["assetId", "seasonNumber", "episodeNumber"])
@@ -113,7 +115,10 @@ data class MetadataScanRun(
     val failed: Int = 0,
     val completedDirectories: Int = 0,
     val startedAt: Long,
-    val failure: String? = null
+    val failure: String? = null,
+    val triggerKey: String? = null,
+    val triggerPath: String? = null,
+    val triggerName: String? = null
 )
 
 @Entity(tableName = "metadata_scan_directory", primaryKeys = ["runId", "path"])

@@ -28,7 +28,13 @@ class MetadataSettingsViewModel : BaseViewModel() {
     }
 
     fun retry(scan: MetadataScanRun) {
-        MetadataCoordinator.startScan(scan.libraryId, scan.directory, scan.recursive)
+        MetadataCoordinator.submit({ MetadataCoordinator.retry(scan) }) { result ->
+            result.exceptionOrNull()?.let {
+                message.value =
+                    com.xyoye.common_component.metadata
+                        .metadataFailureText(MetadataCoordinator.failureCategory(it))
+            }
+        }
     }
 
     fun clearHttpCache() {

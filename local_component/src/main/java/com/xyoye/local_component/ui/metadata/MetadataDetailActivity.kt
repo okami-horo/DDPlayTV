@@ -168,7 +168,7 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
                                 ) {
                                     "播放电影"
                                 } else if (key.startsWith("asset:")) {
-                                    "待确认 · ${copies.first().fileName}"
+                                    "识别问题 · ${copies.first().fileName}"
                                 } else {
                                     "第 ${key.substringAfter(':')} 集 · ${episode?.title.orEmpty()}"
                                 }
@@ -186,7 +186,13 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
                         }
                     }
                 val hadListFocus = dataBinding.files.hasFocus()
-                files.submitList(cards)
+                val focusedKey = files.currentList.getOrNull(dataBinding.files.getSelectedPosition())?.key
+                files.submitList(cards) {
+                    if (hadListFocus) {
+                        val position = cards.indexOfFirst { it.key == focusedKey }
+                        if (position >= 0) dataBinding.files.setSelectedPosition(position)
+                    }
+                }
                 dataBinding.files.visibility = if (cards.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
                 if (cards.isEmpty() && hadListFocus) dataBinding.back.requestFocus()
             }

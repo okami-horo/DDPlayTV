@@ -49,7 +49,8 @@ internal interface PlaybackSessionBackend {
 internal data class BackendPlaybackState(
     val state: Media3PlaybackState = Media3PlaybackState.INITIALIZING,
     val capabilities: Set<Media3Capability> = emptySet(),
-    val backgroundModes: Set<Media3BackgroundMode> = emptySet()
+    val backgroundModes: Set<Media3BackgroundMode> = emptySet(),
+    val started: Boolean = state == Media3PlaybackState.PLAYING
 )
 
 internal enum class QueuedPlaybackStatus { DETACHED, CURRENT, STILL_ATTACHED }

@@ -143,7 +143,27 @@ class CinemaFragment :
                         if (entry.videoDuration > 0) (entry.videoPosition * 100 / entry.videoDuration).toInt() else 0
                     )
                 }
-        history.submitList(recent)
+        val hadListFocus = binding.continueWatching.hasFocus()
+        val focusedKey = history.currentList.getOrNull(binding.continueWatching.getSelectedPosition())?.key
+
+        fun groupForHistory(cardKey: String?): String? {
+            val entry = current.history.find { "history:${it.id}" == cardKey } ?: return null
+            val asset =
+                current.assets.find {
+                    it.libraryId == entry.storageId &&
+                        it.uniqueKey == entry.uniqueKey &&
+                        it.contentGeneration == 1L
+                }
+            val media = current.bindings.find { it.assetId == asset?.assetId }
+            return media?.tmdbId?.let { "${media.mediaKind}:$it" } ?: cardKey
+        }
+        val group = groupForHistory(focusedKey)
+        history.submitList(recent) {
+            if (hadListFocus && bindingOrNull === binding) {
+                val position = recent.indexOfFirst { it.key == focusedKey || group != null && groupForHistory(it.key) == group }
+                if (position >= 0) binding.continueWatching.setSelectedPosition(position)
+            }
+        }
         binding.continueWatching.isVisible = recent.isNotEmpty()
         binding.continueTitle.isVisible = true
         binding.empty.isVisible = recent.isEmpty()

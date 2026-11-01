@@ -12,6 +12,7 @@ import com.xyoye.common_component.playback.handoff.PlaybackPreparationFailure
 import com.xyoye.common_component.playback.handoff.PlaybackSourceView
 import com.xyoye.common_component.playback.handoff.ScreencastDescriptor
 import com.xyoye.common_component.playback.handoff.StoredLibraryFileDescriptor
+import com.xyoye.common_component.services.PlaybackMetadataFile
 import com.xyoye.common_component.source.factory.StorageVideoSourceFactory
 import com.xyoye.common_component.source.media.StorageVideoSource
 import com.xyoye.common_component.storage.AbstractStorage
@@ -29,6 +30,7 @@ import com.xyoye.common_component.storage.transport.releaseTransportResources
 import com.xyoye.data_component.bean.PlaybackProfile
 import com.xyoye.data_component.data.screeencast.ScreencastData
 import com.xyoye.data_component.data.screeencast.ScreencastVideoData
+import com.xyoye.data_component.entity.CatalogSourceState
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
 import com.xyoye.data_component.enums.MediaType
@@ -59,7 +61,8 @@ class ResolvedPlayback(
     val source: StorageVideoSource,
     val descriptor: PlaybackDescriptor,
     val identity: PlaybackSourceView,
-    queue: List<PlaybackDescriptor>
+    queue: List<PlaybackDescriptor>,
+    val metadataFile: PlaybackMetadataFile? = null
 ) {
     val queue: List<PlaybackDescriptor> = Collections.unmodifiableList(queue.toList())
 }
@@ -72,7 +75,8 @@ class PlaybackSourceResolver internal constructor(
     private val createStorage: (MediaLibraryEntity) -> Storage?,
     private val resolveCredentials: (MediaLibraryEntity) -> MediaLibraryEntity,
     private val createSource: suspend (StorageFile, PlaybackProfile?, () -> Unit) -> StorageVideoSource?,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val catalogSource: suspend (Int) -> CatalogSourceState? = { null }
 ) {
     constructor() : this(
         MediaLibraryRepository::getById,
@@ -90,7 +94,8 @@ class PlaybackSourceResolver internal constructor(
                 listOf(file),
                 cleanup
             )
-        }
+        },
+        catalogSource = MediaLibraryRepository::catalogVersion
     )
 
     suspend fun resolve(
@@ -129,7 +134,7 @@ class PlaybackSourceResolver internal constructor(
                             file.storage.library.id
                         )
                     PlaybackResolutionResult.Success(
-                        ResolvedPlayback(created, resolved.descriptor, identity, resolved.queue)
+                        ResolvedPlayback(created, resolved.descriptor, identity, resolved.queue, resolved.metadataFile)
                     )
                 }
             delivered = true
@@ -200,6 +205,7 @@ class PlaybackSourceResolver internal constructor(
         descriptor: StoredLibraryFileDescriptor,
         owner: ResolutionOwnership
     ): FileResolution {
+        val metadataSource = catalogVersion(descriptor.libraryId)
         val library = loadLibrary(descriptor.libraryId)?.copy() ?: fail(PlaybackPreparationFailure.LibraryMissing)
         if (library.id != descriptor.libraryId || library.mediaType != descriptor.mediaType) {
             fail(PlaybackPreparationFailure.FileMissing)
@@ -259,8 +265,30 @@ class PlaybackSourceResolver internal constructor(
                 }.toMutableList()
                 .apply {
                     if (none { it.uniqueKey == selected.uniqueKey }) add(selected)
-                }.map { descriptor.copy(file = it, queueContext = null) }
-        return FileResolution(file, descriptor.copy(file = selected), queue)
+                }.map {
+                    descriptor.copy(
+                        file = it,
+                        queueContext =
+                            context
+                                ?.takeIf {
+                                    directory != null && listedFile != null
+                                }?.copy(selectedUniqueKey = it.uniqueKey, fallbackItems = emptyList())
+                    )
+                }
+        return FileResolution(
+            file,
+            descriptor.copy(file = selected),
+            queue,
+            metadataInput(
+                file,
+                metadataSource,
+                directory
+                    ?.takeIf {
+                        listedFile !=
+                            null
+                    }?.storagePath()
+            )
+        )
     }
 
     private suspend fun resolveReference(
@@ -287,6 +315,7 @@ class PlaybackSourceResolver internal constructor(
                 MediaType.LOCAL_STORAGE -> MediaLibraryEntity.LOCAL.id
                 else -> fail(PlaybackPreparationFailure.LibraryMissing)
             }
+        val metadataSource = catalogVersion(libraryId)
         val library = loadLibrary(libraryId)?.copy() ?: fail(PlaybackPreparationFailure.LibraryMissing)
         if (library.id != libraryId || library.mediaType != history.mediaType) fail(PlaybackPreparationFailure.FileMissing)
         val storage = owner.storage(library)
@@ -304,7 +333,31 @@ class PlaybackSourceResolver internal constructor(
         }
         restoreHistory(file, history, libraryId)
         val normalized = descriptor.copy(expectedUniqueKey = file.uniqueKey(), expectedLibraryId = libraryId)
-        return FileResolution(file, normalized, listOf(normalized))
+        return FileResolution(file, normalized, listOf(normalized), metadataInput(file, metadataSource, null))
+    }
+
+    private suspend fun catalogVersion(id: Int): CatalogSourceState? =
+        try {
+            catalogSource(id)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            null
+        }
+
+    private suspend fun metadataInput(
+        file: StorageFile,
+        source: CatalogSourceState?,
+        parent: String?
+    ): PlaybackMetadataFile? {
+        if (source == null || catalogVersion(source.libraryId) != source) return null
+        val actualParent =
+            parent ?: if (file.storage.library.mediaType == MediaType.EXTERNAL_STORAGE) {
+                null
+            } else {
+                file.storagePath().substringBeforeLast('/', "").takeIf { it.isNotBlank() }
+            }
+        return PlaybackMetadataFile(source, file.storage.library.mediaType, PlaybackReferenceFactory.reference(file), actualParent)
     }
 
     private suspend fun restoreHistory(
@@ -389,7 +442,8 @@ class PlaybackSourceResolver internal constructor(
     private class FileResolution(
         val file: StorageFile,
         val descriptor: PlaybackDescriptor,
-        val queue: List<PlaybackDescriptor>
+        val queue: List<PlaybackDescriptor>,
+        val metadataFile: PlaybackMetadataFile? = null
     )
 
     private class ResolutionFailure(

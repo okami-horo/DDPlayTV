@@ -222,7 +222,7 @@ class PlayerActivity :
                         if (danDanPlayer.isSeekable() && !danDanPlayer.isLive()) add(Media3Capability.SEEK)
                         if (danDanPlayer.supportAddTrack(TrackType.AUDIO)) add(Media3Capability.AUDIO_TRACK)
                     }
-                return BackendPlaybackState(state, capabilities, modes)
+                return BackendPlaybackState(state, capabilities, modes, started = danDanPlayer.getPlayState() == PlayState.STATE_PLAYING)
             }
 
             override fun execute(action: PlaybackAction): Boolean {

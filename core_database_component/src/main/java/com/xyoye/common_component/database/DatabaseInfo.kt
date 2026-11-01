@@ -53,8 +53,8 @@ import com.xyoye.data_component.media3.entity.RolloutToggleSnapshot
             MetadataScanRun::class,
             MetadataScanDirectory::class,
         ],
-    version = 20,
-    exportSchema = true,
+    version = 21,
+    exportSchema = true
 )
 abstract class DatabaseInfo : RoomDatabase() {
     abstract fun getMetadataDao(): MetadataDao

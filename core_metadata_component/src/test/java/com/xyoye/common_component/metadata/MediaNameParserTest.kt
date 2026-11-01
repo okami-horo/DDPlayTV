@@ -27,14 +27,32 @@ class MediaNameParserTest {
         assertEquals(listOf(3), MediaNameParser.parse("Title.S02E03.mkv").episodes)
     }
 
-    @Test fun rejectsRemakesUnknownYearsAndWrongType() {
-        val parsed = MediaNameParser.parse("Dune (2021).mkv").copy(kind = "movie")
+    @Test fun infersMoviesWithoutFolderTypingAndAcceptsOnlyUnambiguousTitles() {
+        val parsed = MediaNameParser.parse("Dune (2021).mkv")
         val candidate = MediaCandidate("movie", TmdbTitle(1, title = "Dune", releaseDate = "2021-01-01"))
         assertEquals(candidate, MediaMatcher.automatic(parsed, listOf(candidate)))
-        assertNull(MediaMatcher.automatic(parsed.copy(year = null), listOf(candidate)))
+        assertEquals(candidate, MediaMatcher.automatic(MediaNameParser.parse("Dune.mkv"), listOf(candidate)))
+        assertNull(
+            MediaMatcher.automatic(
+                MediaNameParser.parse("Dune.mkv"),
+                listOf(candidate, candidate.copy(title = candidate.title.copy(id = 2, releaseDate = "1984-01-01")))
+            )
+        )
         assertNull(MediaMatcher.automatic(parsed, listOf(candidate.copy(kind = "tv"))))
         assertNull(MediaMatcher.automatic(parsed, listOf(candidate.copy(title = candidate.title.copy(releaseDate = "1984-01-01")))))
         assertNull(MediaMatcher.automatic(parsed, listOf(candidate, candidate.copy(title = candidate.title.copy(id = 2)))))
+    }
+
+    @Test fun commonSeasonFormatsPreserveTitlesAndMergedEpisodes() {
+        for (name in listOf("剧名.S01.E03.1080p.mkv", "剧名_1x03.mkv", "剧名 S01E03.mkv")) {
+            val parsed = MediaNameParser.parse(name)
+            assertEquals(name, "剧名", parsed.title)
+            assertEquals(name, 1, parsed.season)
+            assertEquals(name, listOf(3), parsed.episodes)
+        }
+        assertEquals(listOf(1, 2), MediaNameParser.parse("剧名 S01E01-E02.mkv").episodes)
+        assertEquals("86", MediaNameParser.parse("86 S01E01.mkv").title)
+        assertEquals("1917", MediaNameParser.parse("1917.mkv").title)
     }
 
     @Test fun explicitIdsStillRequireTypeAndEpisodeValidation() {

@@ -2,12 +2,12 @@ package com.xyoye.common_component.metadata
 
 import com.xyoye.common_component.network.tmdb.TmdbFailure
 import com.xyoye.common_component.playback.handoff.PlaybackFileReference
+import com.xyoye.common_component.playback.handoff.PlaybackSessionVersion
+import com.xyoye.common_component.services.PlaybackMetadataFile
 import com.xyoye.common_component.storage.catalog.CatalogSourceReader
 import com.xyoye.data_component.entity.MediaAsset
-import com.xyoye.data_component.entity.MetadataEpisode
 import com.xyoye.data_component.entity.MetadataScanDirectory
 import com.xyoye.data_component.entity.MetadataScanRun
-import com.xyoye.data_component.entity.MetadataWork
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -42,6 +42,114 @@ object MetadataCoordinator {
     private val scans = mutableMapOf<String, Job>()
     private val scanKeys = mutableMapOf<String, String>()
     private val ready by lazy { scope.launch { repository.dao.interruptScans() } }
+    private val automatic by lazy { AutomaticMetadataRecognizer(repository) }
+    private val playbackIndexer by lazy { PlaybackMetadataIndexer(repository) }
+
+    fun startPlayback(
+        version: PlaybackSessionVersion,
+        input: PlaybackMetadataFile
+    ): String =
+        synchronized(scans) {
+            val name = MediaNameParser.parse(input.file.displayTitle.orEmpty())
+            val group =
+                if (name.kind == "tv" && !input.parentPath.isNullOrBlank()) {
+                    "${input.parentPath}|${MediaMatcher.normalize(name.title)}|${name.year}|${name.explicitId}"
+                } else {
+                    input.file.uniqueKey
+                }
+            val key = "playback|${input.source}|$group"
+            scanKeys[key]?.let { return@synchronized it }
+            val id = "${version.sessionId}:${UUID.randomUUID()}"
+            val job = scope.launch(start = CoroutineStart.LAZY) { runPlayback(input, id, false) }
+            scans[id] = job
+            scanKeys[key] = id
+            job.invokeOnCompletion {
+                synchronized(scans) {
+                    scans.remove(id)
+                    scanKeys.remove(key)
+                }
+            }
+            job.start()
+            id
+        }
+
+    suspend fun recognizeAgain(assetId: Long) {
+        val asset = repository.dao.asset(assetId) ?: throw StaleMetadataResult()
+        val source = repository.source(asset.libraryId)
+        if (source.contentGeneration != asset.contentGeneration) throw StaleMetadataResult()
+        val library = repository.database.getMediaLibraryDao().getById(asset.libraryId) ?: throw StaleMetadataResult()
+        val input = PlaybackMetadataFile(source, library.mediaType, reference(asset), asset.parentPath.takeIf { it.isNotBlank() })
+        runPlayback(input, UUID.randomUUID().toString(), true)
+    }
+
+    suspend fun retry(run: MetadataScanRun) {
+        if (run.triggerKey == null) {
+            startScan(run.libraryId, run.directory, run.recursive)
+            return
+        }
+        val source = repository.source(run.libraryId)
+        if (source.contentGeneration != run.contentGeneration) throw StaleMetadataResult()
+        val library = repository.database.getMediaLibraryDao().getById(run.libraryId) ?: throw StaleMetadataResult()
+        val input =
+            PlaybackMetadataFile(
+                source,
+                library.mediaType,
+                PlaybackFileReference(requireNotNull(run.triggerKey), requireNotNull(run.triggerPath), displayTitle = run.triggerName),
+                run.directory.takeIf {
+                    it.isNotBlank()
+                }
+            )
+        runPlayback(input, UUID.randomUUID().toString(), true)
+    }
+
+    private suspend fun runPlayback(
+        input: PlaybackMetadataFile,
+        id: String,
+        force: Boolean
+    ) {
+        ready.join()
+        val queued =
+            MetadataScanRun(
+                id,
+                input.source.libraryId,
+                input.source.contentGeneration,
+                input.source.revision,
+                input.parentPath.orEmpty(),
+                false,
+                "QUEUED",
+                startedAt = System.currentTimeMillis(),
+                triggerKey = input.file.uniqueKey,
+                triggerPath = input.file.storagePath,
+                triggerName = input.file.displayTitle
+            )
+        repository.dao.putScan(queued)
+        val owner = requireNotNull(currentCoroutineContext()[Job])
+        if (force) synchronized(scans) { scans[id] = owner }
+        val watcher =
+            scope.launch {
+                repository.dao.observeSource(input.source.libraryId).first { it != input.source }
+                owner.cancel(CancellationException("SOURCE_CHANGED"))
+            }
+        try {
+            val lock = scanLock.withLock { sourceLocks.getOrPut(input.source.libraryId) { Mutex() } }
+            lock.withLock {
+                repository.requireSource(input.source)
+                repository.dao.putScan(queued.copy(state = "RUNNING"))
+                playbackIndexer.process(input, id, force)
+            }
+        } catch (cancelled: CancellationException) {
+            withContext(NonCancellable) {
+                repository.dao.putScan((repository.dao.scan(id) ?: queued).copy(state = "CANCELLED", failure = "INTERRUPTED"))
+            }
+            throw cancelled
+        } catch (error: Exception) {
+            repository.dao.putScan((repository.dao.scan(id) ?: queued).copy(state = "FAILED", failure = failureCategory(error)))
+            if (force) throw error
+        } finally {
+            watcher.cancel()
+            if (force) synchronized(scans) { scans.remove(id) }
+        }
+    }
 
     suspend fun prepare(
         libraryId: Int,
@@ -59,49 +167,6 @@ object MetadataCoordinator {
         return prepare(asset.libraryId, reference(asset))
     }
 
-    suspend fun candidates(
-        parsed: ParsedMediaName,
-        kind: String?,
-        query: String,
-        page: Int = 1
-    ): Pair<List<MediaCandidate>, Boolean> {
-        val kinds = kind?.let(::listOf) ?: listOf("movie", "tv")
-        val results = mutableListOf<MediaCandidate>()
-        var more = false
-        for (type in kinds) {
-            if (parsed.explicitId != null && query == parsed.title) {
-                try {
-                    val work = repository.details(type, parsed.explicitId)
-                    results +=
-                        MediaCandidate(
-                            type,
-                            com.xyoye.data_component.data.tmdb.TmdbTitle(
-                                work.tmdbId,
-                                title = work.title,
-                                originalTitle = work.originalTitle,
-                                releaseDate = work.releaseDate,
-                                posterPath = work.poster
-                            )
-                        )
-                } catch (error: TmdbFailure) {
-                    if (error.category != "NOT_FOUND") throw error
-                }
-            } else {
-                var response = repository.search(type, query, parsed.year, page)
-                if (page == 1 && response.results.isEmpty() && parsed.year != null) response = repository.search(type, query, null)
-                results += response.results.map { MediaCandidate(type, it) }
-                more = more || response.page < response.totalPages
-            }
-        }
-        return MediaMatcher.rank(parsed, results) to more
-    }
-
-    suspend fun confirm(
-        ticket: BindingTicket,
-        work: MetadataWork,
-        episodes: List<MetadataEpisode>
-    ) = repository.bind(ticket, work, episodes, manual = true)
-
     fun submit(
         operation: suspend () -> Unit,
         result: (Result<Unit>) -> Unit
@@ -114,11 +179,12 @@ object MetadataCoordinator {
                 } catch (
                     cancelled: CancellationException
                 ) {
-                    throw cancelled
+                    Result.failure(cancelled)
                 } catch (error: Exception) {
                     Result.failure(error)
                 }
-            withContext(Dispatchers.Main) { result(outcome) }
+            withContext(NonCancellable + Dispatchers.Main) { result(outcome) }
+            outcome.exceptionOrNull()?.let { if (it is CancellationException) throw it }
         }
 
     suspend fun refresh(ticket: BindingTicket) {
@@ -245,12 +311,10 @@ object MetadataCoordinator {
                     val asset = repository.index(file, source, runId)
                     val binding = repository.dao.binding(asset.assetId)
                     run = run.copy(discovered = run.discovered + 1)
-                    if (binding?.locked != true &&
-                        binding?.state != "MATCHED" &&
-                        binding?.state != "IGNORED" &&
-                        binding?.failure != "FILE_CHANGED"
+                    if (binding?.state != "IGNORED" &&
+                        (binding?.failure == "FILE_CHANGED" || binding?.locked != true && binding?.state != "MATCHED")
                     ) {
-                        when (recognize(asset)) {
+                        when (automatic.recognize(asset, force = true)) {
                             "MATCHED" -> run = run.copy(matched = run.matched + 1)
                             "FAILED" -> run = run.copy(failed = run.failed + 1)
                             else -> run = run.copy(pending = run.pending + 1)
@@ -278,48 +342,6 @@ object MetadataCoordinator {
         }
     }
 
-    private suspend fun recognize(asset: MediaAsset): String {
-        val ticket = repository.begin(asset.assetId)
-        try {
-            val parsed = MediaNameParser.parse(asset.fileName, asset.parentPath)
-            if (parsed.extra) {
-                repository.recordResult(ticket, "NEEDS_CONFIRMATION")
-                return "NEEDS_CONFIRMATION"
-            }
-            val candidates = candidates(parsed, parsed.kind, parsed.title).first
-            val automatic = MediaMatcher.automatic(parsed, candidates)
-            if (automatic == null) {
-                repository.recordResult(ticket, if (candidates.isEmpty()) "UNMATCHED" else "NEEDS_CONFIRMATION")
-                return "NEEDS_CONFIRMATION"
-            }
-            val work = repository.details(automatic.kind, automatic.title.id)
-            val episodes =
-                if (work.mediaKind == "tv") {
-                    val season = repository.season(work.tmdbId, requireNotNull(parsed.season))
-                    if (!parsed.episodes.all { number -> season.any { it.episodeNumber == number } }) {
-                        repository.recordResult(ticket, "NEEDS_CONFIRMATION")
-                        return "NEEDS_CONFIRMATION"
-                    }
-                    season.filter { it.episodeNumber in parsed.episodes }
-                } else {
-                    emptyList()
-                }
-            repository.bind(ticket, work, episodes, manual = false)
-            return "MATCHED"
-        } catch (
-            cancelled: CancellationException
-        ) {
-            throw cancelled
-        } catch (stale: StaleMetadataResult) {
-            throw stale
-        } catch (error: Exception) {
-            repository.recordResult(ticket, "UNMATCHED", failureCategory(error))
-            // Authentication is shared by every file, so stop the scan instead of retrying each item.
-            if (error is TmdbFailure && error.category in setOf("AUTHENTICATION", "NOT_CONFIGURED", "RATE_LIMIT")) throw error
-            return "FAILED"
-        }
-    }
-
     fun reference(asset: MediaAsset): PlaybackFileReference =
         PlaybackFileReference(
             asset.uniqueKey,
@@ -332,6 +354,7 @@ object MetadataCoordinator {
         when (error) {
             is TmdbFailure -> error.category
             is StaleMetadataResult -> "RESULT_EXPIRED"
+            is CancellationException -> "INTERRUPTED"
             is SecurityException -> "PERMISSION"
             else -> "SOURCE_OR_DATABASE"
         }

@@ -78,6 +78,7 @@ class PlaybackSourceResolverTest {
     }
     private var afterAssembly: (StorageVideoSource) -> Unit = {}
     private var smbFailure: Exception? = null
+    private var catalogSource: suspend (Int) -> com.xyoye.data_component.entity.CatalogSourceState? = { null }
     private val transportFactory = PlaybackTransportFactory({ create(it) }, ioDispatcher = Dispatchers.Unconfined)
     private val resolver get() =
         PlaybackSourceResolver(
@@ -104,7 +105,8 @@ class PlaybackSourceResolverTest {
                         afterAssembly(it)
                     }
             },
-            Dispatchers.Unconfined
+            Dispatchers.Unconfined,
+            catalogSource = { catalogSource(it) }
         )
 
     @After fun cleanup() {
@@ -133,6 +135,22 @@ class PlaybackSourceResolverTest {
         assertEquals(PlayerType.TYPE_MPV_PLAYER, prepared.playerType)
         assertEquals(PlayerType.TYPE_EXO_PLAYER, StorageVideoSourceFactory.resolvePlaybackProfile().playerType)
     }
+
+    @Test fun playbackCapturesCatalogVersionAndDropsMetadataWhenConfigurationChangesDuringResolution() =
+        runBlocking {
+            val source =
+                com.xyoye.data_component.entity
+                    .CatalogSourceState(library.id, 3, 7)
+            catalogSource = { source }
+            val resolved = success(smbDescriptor())
+            assertEquals(source, resolved.metadataFile?.source)
+            assertEquals("videos", resolved.metadataFile?.parentPath)
+            var reads = 0
+            catalogSource = { if (reads++ == 0) source else source.copy(revision = 8) }
+            val changed = success(smbDescriptor())
+            assertNull(changed.metadataFile)
+            assertEquals("episode1.mkv", read(changed.source.getVideoUrl()))
+        }
 
     @Test fun pcGroupingIsGlobalCapturedPerInstanceAndDoesNotChangeVideoIdentity() =
         runBlocking {

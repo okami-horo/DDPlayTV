@@ -213,10 +213,10 @@ class TmdbLibraryInstrumentedTest {
             send(KeyEvent.KEYCODE_DPAD_LEFT)
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             await("Correction") { ActivityHelper.instance.getTopActivity() is MetadataMatchActivity }
-            await("Original filename and parsed search remain visible") {
+            await("Original filename and recognition status remain visible") {
                 val match = ActivityHelper.instance.getTopActivity() as? MetadataMatchActivity ?: return@await false
                 match.findViewById<TextView>(com.xyoye.local_component.R.id.file_name).text == fixture.name &&
-                    match.findViewById<TextView>(com.xyoye.local_component.R.id.query).text.isNotBlank()
+                    match.findViewById<TextView>(com.xyoye.local_component.R.id.status).text.startsWith("已识别")
             }
             screenshot("correction")
             send(KeyEvent.KEYCODE_BACK)
@@ -243,7 +243,7 @@ class TmdbLibraryInstrumentedTest {
         bitmap.recycle()
     }
 
-    @Test fun emptyTaskPageKeepsActionsReachableAndCacheClearingPreservesBindings() {
+    @Test fun taskPageKeepsActionsReachableAndCacheClearingPreservesBindings() {
         ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
             lateinit var home: TvMainActivity
             scenario.onActivity { home = it }
@@ -261,10 +261,32 @@ class TmdbLibraryInstrumentedTest {
             await("Task settings") { ActivityHelper.instance.getTopActivity() is MetadataSettingsActivity }
             val settings = ActivityHelper.instance.getTopActivity() as MetadataSettingsActivity
             await("Empty task page focuses an actionable button") {
-                settings.hasWindowFocus() && settings.currentFocus?.id == com.xyoye.user_component.R.id.clear_cache
+                settings.hasWindowFocus() &&
+                    (
+                        settings.currentFocus?.id == com.xyoye.user_component.R.id.back ||
+                            settings.findViewById<DpadRecyclerView>(com.xyoye.user_component.R.id.tasks).hasFocus()
+                    )
             }
             screenshot("ui-polish-tasks")
+            repeat(
+                52
+            ) {
+                if (settings
+                        .findViewById<DpadRecyclerView>(
+                            com.xyoye.user_component.R.id.tasks
+                        ).hasFocus()
+                ) {
+                    send(KeyEvent.KEYCODE_DPAD_DOWN)
+                    await("Task scroll settles") {
+                        val tasks = settings.findViewById<DpadRecyclerView>(com.xyoye.user_component.R.id.tasks)
+                        tasks.scrollState == androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE && !tasks.isAnimating
+                    }
+                }
+            }
+            repeat(3) { if (settings.currentFocus?.id != com.xyoye.user_component.R.id.clear_cache) send(KeyEvent.KEYCODE_DPAD_LEFT) }
             send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            screenshot("tasks-before-cache")
+            assertEquals("Focused view: ${settings.currentFocus}", com.xyoye.user_component.R.id.clear_images, settings.currentFocus?.id)
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             await("Images cleared") { settings.findViewById<TextView>(com.xyoye.user_component.R.id.message).text.startsWith("图片缓存已清理") }
             send(KeyEvent.KEYCODE_DPAD_LEFT)
@@ -335,6 +357,12 @@ class TmdbLibraryInstrumentedTest {
                         true
                 }
                 val playing = ActivityHelper.instance.getTopActivity() as PlayerActivity
+                await("Asynchronous resume reaches saved position") {
+                    val restored = player(playing).isPlaying() && player(playing).getCurrentPosition() >= position - 2500
+                    // The 20-second fixture has only one second left at 95%; hold the position for the metadata assertions.
+                    if (restored && !fromHome) player(playing).pause()
+                    restored
+                }
                 lateinit var identity: Any
                 instrumentation.runOnMainSync {
                     identity = player(playing).getVideoSource()

@@ -51,7 +51,20 @@ internal class PlaybackSessionTestFixture(
     var resolutionReleases = 0
     val store = PlaybackHandoffStore(blob, cipher, { now }, { "request-${++sequence}" }, storeDispatcher)
     var resolve: suspend (PlaybackDescriptor) -> PlaybackResolutionResult = { PlaybackResolutionResult.Success(resolved(it)) }
-    val session = ActivePlaybackSession(store, backend, { resolve(it) }, dispatcher, dispatcher)
+    val metadataStarts = mutableListOf<com.xyoye.common_component.services.PlaybackMetadataFile>()
+    var metadataThrows = false
+    val session =
+        ActivePlaybackSession(
+            store,
+            backend,
+            { resolve(it) },
+            dispatcher,
+            dispatcher,
+            onPlaybackStarted = { _, file ->
+                metadataStarts += file
+                if (metadataThrows) error("metadata unavailable")
+            }
+        )
 
     fun descriptor(name: String): StoredLibraryFileDescriptor {
         val path = File("/media", name).path
@@ -117,7 +130,14 @@ internal class PlaybackSessionTestFixture(
             source,
             descriptor,
             PlaybackSourceView(name(descriptor), file.uniqueKey(), MediaType.LOCAL_STORAGE, name(descriptor), storage.library.id),
-            listOf(descriptor)
+            listOf(descriptor),
+            com.xyoye.common_component.services.PlaybackMetadataFile(
+                com.xyoye.data_component.entity
+                    .CatalogSourceState(1),
+                MediaType.LOCAL_STORAGE,
+                descriptor.file,
+                "/media"
+            )
         )
     }
 }

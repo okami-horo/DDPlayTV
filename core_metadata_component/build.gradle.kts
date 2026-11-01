@@ -3,11 +3,17 @@ import setup.moduleSetup
 plugins {
     id("com.android.library")
     kotlin("android")
+    kotlin("kapt")
 }
 
 moduleSetup()
 
+kapt {
+    arguments { arg("AROUTER_MODULE_NAME", name) }
+}
+
 dependencies {
+    kapt(Dependencies.Alibaba.arouter_compiler)
     implementation(project(":data_component"))
     implementation(project(":core_contract_component"))
     implementation(project(":core_network_component"))

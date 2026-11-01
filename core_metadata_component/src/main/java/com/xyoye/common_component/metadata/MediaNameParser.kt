@@ -12,7 +12,9 @@ data class ParsedMediaName(
 )
 
 object MediaNameParser {
-    private val episode = Regex("(?i)\\bS(\\d{1,2})E(\\d{1,3})(?:[- ]?E(\\d{1,3}))?")
+    const val RULE_VERSION = 2
+    private val episode = Regex("(?i)\\bS(\\d{1,2})\\s*E(\\d{1,3})(?:\\s*-?\\s*E(\\d{1,3}))?")
+    private val episodeX = Regex("(?i)\\b(\\d{1,2})x(\\d{1,3})(?:-(\\d{1,3}))?")
     private val id = Regex("(?i)[\\[{]tmdb(?:[-:= ](movie|tv))?[-:= ](\\d+)[\\]}]")
     private val year = Regex("(?:[ (\\[])(19\\d{2}|20\\d{2})(?=[ )\\]]|$)")
     private val tags =
@@ -26,13 +28,15 @@ object MediaNameParser {
     ): ParsedMediaName {
         var text = fileName.replace(Regex("(?i)\\.(mkv|mp4|avi|mov|wmv|ts|m2ts|webm)$"), "")
         val idMatch = id.find(text)
-        val seasonMatch = episode.find(text)
+        text = text.replace('.', ' ').replace('_', ' ')
+        val seasonMatch = episode.find(text) ?: episodeX.find(text)
         val absolute = Regex("\\s-\\s(\\d{1,3})(?:v\\d)?(?=\\s|$)").find(text)
         val extra = Regex("(?i)\\b(NCOP|NCED|PV|trailer|sample)\\b").containsMatchIn(text)
         val special = Regex("(?i)\\b(OVA|OAD|SP|special)\\b").containsMatchIn(text)
         if (seasonMatch != null || absolute != null) text = text.replace(Regex("^\\[[^]]+]\\s*"), "")
         text = id.replace(text, " ")
         text = episode.replace(text, " ")
+        text = episodeX.replace(text, " ")
         text = text.replace(Regex("\\s-\\s\\d{1,3}(?:v\\d)?(?=\\s|$)"), " ")
         text = text.replace('.', ' ').replace('_', ' ')
         val yearMatch = year.find(text)

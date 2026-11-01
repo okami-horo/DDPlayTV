@@ -34,6 +34,7 @@ class PlaybackBackendLifecycleTest {
             assertEquals(PlaybackProgress(0, false), rebuilt.progress())
             assertEquals(SessionRequestResult.Ignored, f.session.open(request, PlaybackRecoveryContext(null, request)))
             assertEquals(1, f.leases.size)
+            assertEquals("Activity recreation does not resubmit metadata", 1, f.metadataStarts.size)
 
             // A delayed old Activity teardown must not detach its replacement.
             assertTrue(f.session.unbindBackend(f.backend))

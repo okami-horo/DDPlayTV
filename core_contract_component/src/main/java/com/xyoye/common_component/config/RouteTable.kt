@@ -7,6 +7,10 @@ package com.xyoye.common_component.config
  */
 
 object RouteTable {
+    object Metadata {
+        const val PlaybackService = "/metadata/playback_service"
+    }
+
     object App {
         const val TvMain = "/app/tv_main"
         const val Media3SessionServiceProvider = "/app/media3_session_service_provider"

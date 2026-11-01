@@ -70,13 +70,46 @@ class MetadataLibraryActivity : BaseActivity<MetadataLibraryViewModel, ActivityM
     }
 
     private fun render() {
+        val hadListFocus = dataBinding.items.hasFocus()
+        var focusedKey = cards.currentList.getOrNull(dataBinding.items.getSelectedPosition())?.key
+        if (hadListFocus && filter == "unmatched" && focusedKey?.startsWith("asset:") == true) {
+            val id = focusedKey.substringAfter(':').toLongOrNull()
+            current.bindings
+                .find { binding ->
+                    binding.assetId == id &&
+                        binding.state == "MATCHED" &&
+                        binding.failure == null &&
+                        current.works.any { it.mediaKind == binding.mediaKind && it.tmdbId == binding.tmdbId }
+                }?.let {
+                    filter = "all"
+                    focusedKey = "${it.mediaKind}:${it.tmdbId}"
+                }
+        }
         val list =
             if (filter ==
                 "unmatched"
             ) {
-                current.assets.filter { asset -> current.bindings.find { it.assetId == asset.assetId }?.state != "MATCHED" }.map {
-                    MetadataCard("asset:${it.assetId}", it.fileName, "识别 / 更正资料")
-                }
+                current.assets
+                    .filter { asset ->
+                        current.bindings.find { it.assetId == asset.assetId }.let {
+                            it?.state != "MATCHED" ||
+                                it.failure != null
+                        }
+                    }.map {
+                        val binding = current.bindings.find { binding -> binding.assetId == it.assetId }
+                        MetadataCard(
+                            "asset:${it.assetId}",
+                            it.fileName,
+                            if (binding?.state ==
+                                "IGNORED"
+                            ) {
+                                "已忽略 · 可重新识别"
+                            } else {
+                                com.xyoye.common_component.metadata
+                                    .metadataFailureText(binding?.failure)
+                            }
+                        )
+                    }
             } else {
                 current.works.filter { filter == "all" || it.mediaKind == filter }.map {
                     MetadataCard(
@@ -87,10 +120,14 @@ class MetadataLibraryActivity : BaseActivity<MetadataLibraryViewModel, ActivityM
                     )
                 }
             }
-        val hadListFocus = dataBinding.items.hasFocus()
-        cards.submitList(list)
+        cards.submitList(list) {
+            if (hadListFocus) {
+                val position = list.indexOfFirst { it.key == focusedKey }
+                if (position >= 0) dataBinding.items.setSelectedPosition(position)
+            }
+        }
         dataBinding.items.visibility = if (list.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
         if (list.isEmpty() && hadListFocus) dataBinding.all.requestFocus()
-        dataBinding.count.text = if (list.isEmpty()) "暂无已入库内容，请从来源文件识别或手动扫描目录。" else "${list.size} 项 · 仅显示已入库内容"
+        dataBinding.count.text = if (list.isEmpty()) "暂无内容。播放视频后自动入库，也可从来源主动扫描目录。" else "${list.size} 项 · 仅显示已入库内容"
     }
 }
