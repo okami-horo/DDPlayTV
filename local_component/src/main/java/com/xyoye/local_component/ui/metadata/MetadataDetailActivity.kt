@@ -1,5 +1,6 @@
 package com.xyoye.local_component.ui.metadata
 
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.alibaba.android.arouter.facade.annotation.Route
@@ -127,7 +128,13 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
                 }
         }
         groups = grouped
-        dataBinding.hint.text = if (assets.isEmpty()) "没有当前来源文件。请返回来源确认文件与访问权限。" else "选择文件播放 · 长按确认键更正资料 · 合并集共享同一文件进度"
+        dataBinding.hint.text =
+            when {
+                assets.isEmpty() -> "没有当前来源文件，请检查文件与访问权限。"
+                links.groupBy { it.assetId }.any { it.value.size > 1 } -> "合并集共享同一文件进度"
+                else -> ""
+            }
+        dataBinding.hint.isVisible = dataBinding.hint.text.isNotEmpty()
         rowsJob?.cancel()
         val season = selectedSeason
         rowsJob =

@@ -27,7 +27,6 @@
 <FrameLayout android:id="@+id/fragment_container" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginStart="32dp" android:layout_marginEnd="32dp"/>
 <LinearLayout android:layout_width="match_parent" android:layout_height="47dp" android:paddingStart="36dp" android:paddingEnd="36dp" android:gravity="center_vertical">
 <TextView android:id="@+id/browser_status" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:maxLines="1" android:ellipsize="end" android:textColor="@color/cinema_muted" android:textSize="11sp"/>
-<TextView android:id="@+id/browser_hint" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="方向键 选择    确定 打开    菜单 更多    返回 上一级" android:textColor="#9999A7" android:textSize="11sp"/>
 </LinearLayout>
 </LinearLayout>
 </layout>

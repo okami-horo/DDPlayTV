@@ -56,11 +56,5 @@
             android:layout_height="44dp"
             android:text="恢复默认并保存"
             android:layout_marginTop="12dp" />
-        <TextView
-            style="@style/Cinema.Body"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="恢复默认会立即保存；编辑后选择「保存」。"
-            android:layout_marginTop="8dp" />
     </LinearLayout>
 </layout>

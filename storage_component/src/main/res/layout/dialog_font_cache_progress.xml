@@ -57,12 +57,5 @@
             android:text="@string/text_font_cache_progress_default"
             android:id="@+id/progress_tv"
             android:layout_marginTop="16dp" />
-        <TextView
-            style="@style/Cinema.Body"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="完成后自动关闭，请稍候。"
-            android:id="@+id/notice_tv"
-            android:layout_marginTop="12dp" />
     </LinearLayout>
 </layout>

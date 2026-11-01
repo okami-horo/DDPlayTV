@@ -33,7 +33,7 @@ class MetadataSettingsActivity : BaseActivity<MetadataSettingsViewModel, Activit
                     addItem<MetadataScanRun, ItemMetadataTaskBinding>(R.layout.item_metadata_task) {
                         initView { run, _, _ ->
                             val running = run.state in setOf("RUNNING", "QUEUED", "WAITING_NETWORK")
-                            itemBinding.title.text = "来源 ${run.libraryId} · ${stateText(run.state)} · ${if (running) "确认键取消" else "确认键重试"}"
+                            itemBinding.title.text = "来源 ${run.libraryId} · ${stateText(run.state)} · ${if (running) "取消任务" else "重试"}"
                             itemBinding.summary.text =
                                 "${run.directory.ifBlank { "来源根目录" }}${if (run.recursive) "（含子目录）" else ""}\n" +
                                 "发现 ${run.discovered} · 已匹配 ${run.matched} · 待确认 ${run.pending} · 失败 ${run.failed} · 完整目录 ${run.completedDirectories}" +

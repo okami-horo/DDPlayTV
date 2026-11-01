@@ -1,12 +1,12 @@
 # TV 体验问题与播放验证待办
 
-整理日期：2026-10-28；体验问题更新：2026-10-31。本文集中记录本轮用户反馈的 TV 体验问题与尚未完成的顺序续播验证；有效设计约束归入对应维护／设计文档。
+整理日期：2026-10-28；体验问题更新：2026-11-01。本文集中记录本轮用户反馈的 TV 体验问题与尚未完成的顺序续播验证；有效设计约束归入对应维护／设计文档。
 
 综合验收由用户负责，进度见[交接实施账本](../../docs/superpowers/plans/2026-10-27-playback-handoff-session.md)。关闭以下验证项时需给出对应场景的实际证据，不能以部分构建／设备结果代替完整验收。
 
 ## TV 体验问题记录
 
-本节按用户“先记录”的要求维护，尚未开始修复；后续反馈可继续追加。与已有计划重叠的要求同步修正文档，其他问题不自动扩大文件浏览菜单精简的实施范围。
+本节最初按用户“先记录”的要求维护。用户随后授权排查并删除全应用无意义的指导说明，UX02 已实施；UX01 及文件菜单精简仍分别待办。
 
 ### UX01：点击视频后出现两种加载界面
 
@@ -32,11 +32,11 @@
 
 ### UX02：常规遥控器操作说明过多
 
-- **反馈日期与状态**：2026-10-31，用户明确要求减少界面中的常规 TV 操作说明；仅记录，尚未修改界面。
+- **反馈日期与状态**：2026-10-31 记录；2026-11-01 按用户后续授权完成代码与原型清理，并进行本地构建、模拟器交互及截图检查。未安装到用户电视。
 - **用户观察**：上下左右导航、确认、返回属于常规 TV 操作，界面无需反复解释，常驻说明增加视觉负担。用户随后补充：播放器底部菜单部分元素获得焦点时还出现多余的中文说明，也应纳入精简。
-- **适用范围**：全应用页面与弹窗，不限于播放器或文件浏览；本次仅核对以下样例，不代表完成全量排查。
+- **适用范围**：排查应用模块的 Kotlin 文案、XML 布局和字符串资源，覆盖播放器、文件浏览、元数据、设置、弹窗、番剧列表及搜索。保留错误恢复、权限/登录、输入格式、单位、状态、必要动作名及无障碍描述。
 
-| 已核实样例 | 处理方向 |
+| 清理前已核实样例 | 处理方向 |
 | --- | --- |
 | [文件浏览底栏](../../storage_component/src/main/res/layout/activity_storage_file.xml)：方向键选择、确定打开、菜单更多、返回上一级 | 移除常驻按键教学；保留同区域内有用的真实状态，不因删说明留下空白占位 |
 | [文件预览](../../storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileFragment.kt)：按确定打开文件夹、按确定播放、按菜单查看文件操作 | 删除重复主操作说明；不把移除的文件菜单换成另一段常驻教学 |
@@ -44,17 +44,46 @@
 | [PlayerBottomView.kt](../../player_component/src/main/java/com/xyoye/player/controller/video/PlayerBottomView.kt) 与 [底部布局](../../player_component/src/main/res/layout/layout_player_bottom.xml)：六个播放/选集控件聚焦时，将 `contentDescription` 复制到浮动的 `transport_hint`，包括播放/暂停、前后跳转、上一集/下一集、选集 | 精简重复解释图标或按钮名称的焦点附加文字；保留必要按钮名称、跳转步长等有效信息、焦点高亮及无障碍描述 |
 | [作品详情提示](../../local_component/src/main/java/com/xyoye/local_component/ui/metadata/MetadataDetailActivity.kt)：选择文件播放、长按更正资料、合并集共享进度混在同一段 | 拆分评估：删除常规教学；有实际影响的状态/规则按需呈现，特殊入口随其功能退役安排处理 |
 
-后续整理原则与验收要点：
+实施结果与保留原则：
 
-- [ ] 删除常驻的方向键、确认、常规返回说明，包括底栏、预览区和弹窗中的重复文案；不通过新增首次使用教学或提示开关补回同一负担。
-- [ ] 清理播放器底部菜单随焦点出现的冗余文字，核对 `transport_hint` 及播放状态更新时的写入路径；保留焦点记录/恢复，焦点移动不再反复显示重复说明或引发布局跳动。具体控件逐项核对，必要名称、状态和数值仍清晰可见。
-- [ ] 保留按钮名称、焦点反馈、选中状态与无障碍描述；错误原因、空状态、权限/登录步骤和真实任务进度不按“操作说明”一并删除。
-- [ ] 非直观的特殊操作先考虑提供清晰可见的入口；确需提示时只在相关状态简短呈现，避免全页常驻的按键说明条。
-- [ ] 删除说明后检查布局空隙及纯 DPAD 可达性，不能用说明文字代替合理的焦点与返回行为。
+- [x] 删除方向键、确认、常规返回教学，包括文件浏览底栏/预览、选集、轨道面板的说明；未新增教学开关。
+- [x] 删除 `transport_hint` 及聚焦、播放状态更新时的写入，保留 `lastFocusedControlId`、焦点导航、播放/暂停无障碍描述和 A 单排结构。
+- [x] 保留错误、空状态、权限、真实任务进度及数值。任务行使用“取消任务 / 重试”动作名，重试入口继续可聚焦。
+- [x] 删除头像、分词、外观、扩展名、字体缓存等重复说明及设置页宣传句；移除孤立说明控件及其专用资源，修正相邻约束/间距。
+- [x] 删除文件浏览空目录、加载、搜索无结果和空分页的重复教学；保留对应状态标题、操作按钮与授权/错误恢复说明，空说明不占位。
+- [x] 关键词列表用“移除关键字”标明动作；作品详情仅在实际有合并集时显示共享进度规则，无文件时保留访问检查提示。
+- [x] 在本轮覆盖场景检查布局、焦点与返回；未将所有真实服务/物理电视状态标记为通过。
 
-与[文件浏览菜单精简任务](../../docs/superpowers/plans/2026-10-31-file-browser-menu-simplification.md)重叠部分已同步为“移除常规说明”，替代原先把“菜单 更多”改写成“菜单 刷新”的计划。MENU/SETTINGS 的刷新行为保留，顶部已有可见刷新入口；长名溢出阅读的必要提示仅限溢出状态。其他页面仍属于后续待整理项。本次没有执行应用构建或设备测试。
+与[文件浏览菜单精简任务](../../docs/superpowers/plans/2026-10-31-file-browser-menu-simplification.md)重叠的教学文字已在 UX02 独立清理。**文件操作菜单、行末更多及当前按键语义未改；MENU/SETTINGS 统一刷新与长名阅读承接仍是该计划的未实施目标。** 本轮也未合并 UX01 的两套加载界面，未实施自动刮削。
 
-播放器补充反馈更新了[已选 A 方案](../../docs/superpowers/designs/2026-10-31-player-controls-design.md)中“按钮聚焦显示短操作名”的要求；单排分组、按钮功能及焦点路径继续保留。源码已确认上述附加文字机制，尚未逐项在设备上核对，旧原型/截图通过不代表本轮精简已完成。
+#### 页面与状态覆盖
+
+原型沿用已选 A/C 及 Cinema，已同步五份 HTML；本轮原型/原生截图均为 1440 × 810，模拟器密度 240 dpi。比较说明位置、焦点与内容边界；播放原型背景与原生彩条夹具不同，不据此声称真实字幕/弹幕内容的全量视觉验收。截图根目录为 `.tmp/ui-hints/`。
+
+| 页面/状态 | 设计与实现 | 本轮验证 |
+| --- | --- | --- |
+| 播放单排、首/中/末集、选集 | [A 原型](../prototypes/tv-ui/player-controls-prototype.html)、[选集原型](../prototypes/tv-ui/deep-pages.html)；删除焦点附加文字/页尾教学 | 查看 `after-player-focused.png`、`after-episodes.png` 与 `native/ui-polish-verification/player-*.png`；原有选集返回、禁用控件跳过用例通过 |
+| 字幕空轨道、音轨列表、关键词空/有数据 | [深层面板原型](../prototypes/tv-ui/deep-pages.html)；删除返回说明，关键词列表约束接标题 | 实际播放后 DPAD 打开/返回；查看 `native/tracks.png`、`audio.png`、`keywords-empty.png`、`keywords-list.png`、`subtitle-return.png`；添加测试词、聚焦后确认移除，XML 回读验证移除成功。输入法使用系统现状，未改其行为 |
+| 文件目录/视频、长名、空/加载/错误/分页 | [C 原型](../prototypes/tv-ui/files-prototype.html)；删除底栏、预览及空状态中的重复教学 | `after-files.png`、`after-files-empty.png`、`after-files-loading.png` 与 `native/file-browser-c/`；浏览组 5 项复查通过，首次批量失败保留如下 |
+| 设置、外观、头像、分词、扩展名、字体缓存 | [Cinema](../prototypes/tv-ui/index.html)、[其余页面](../prototypes/tv-ui/remaining-pages.html)；删除宣传与重复说明 | 查看 `native/settings.png`、`ui-polish-verification/SwitchThemesActivity.png`、`ui-remaining-verification/` 中头像、分词、扩展名、字体进度截图；相关焦点、持久化及返回用例通过 |
+| 作品详情/更正、空扫描任务、番剧列表各状态 | 既有原型结构；删除教学并保留数据与动作 | 元数据详情/更正返回及空任务用例通过；查看 `native/tmdb-verification/ui-polish-detail.png` 和列表状态截图。合并集提示、运行中任务文案、搜索错误文案仅完成源码/构建检查，未逐一造现场 |
+
+#### 构建与交互证据
+
+源码基线 `3ade60dfa` 加本轮工作区修改；本轮 24 个生产源码/资源文件与五份原型变更，无测试代码变更。最终命令：
+
+```powershell
+scripts/dev-env/gradlew-local.bat :app:assembleDebug :app:assembleDebugAndroidTest testDebugUnitTest lint verifyModuleDependencies ktlintCheck -I .tmp/ui-repairs-local.gradle -I .tmp/tmdb-validation.gradle -I .tmp/play-history-short-temp.gradle -I .tmp/ui-hints/style.gradle --offline --console=plain
+```
+
+- 最终日志 `.tmp/ui-hints/final-build.log` 尾部为 **BUILD SUCCESSFUL in 1m 23s**；包含完整 JVM、lint、依赖治理及八个受影响 Kotlin 文件的 scoped ktlint。复用本机离线依赖与短临时目录配置，没有改业务逻辑绕过验证。
+- `.tmp/ui-hints/jvm-results.json`：116 个测试套件、482 项，其中 **480 通过、2 项既有跳过、0 失败/错误**。
+- 任务模拟器 `emulator-5564`（API 34）直接运行 Debug runner。`.tmp/ui-hints/device-final.log`：**18 项中 17 通过、1 失败**；涵盖真实 Media3/mpv 播放返回、底部焦点、设置与弹窗、列表错误/恢复、元数据页面。
+- 首次失败为 `FileBrowserPreviewInstrumentedTest.directoriesPreviewAndExactMoreCallerSurviveBackAndRecreation`：关闭菜单并快速反向移动后，BACK 未在等待期内回到父目录。未修改源码/用例，单项复查 `.tmp/ui-hints/browser-repro.log` **OK (1 test)**，同类整组复查 `.tmp/ui-hints/browser-suite.log` **OK (5 tests)**。根因未确认，不能把首次批量结果改写为 18/18，也不能认定已修复偶发时序问题。
+- 最后补充清理文件浏览空状态说明后，运行同一组 init scripts 下的 `:app:assembleDebug :app:assembleDebugAndroidTest :storage_component:testDebugUnitTest :storage_component:lint verifyModuleDependencies ktlintCheck`，日志 `.tmp/ui-hints/final-empty-build.log` 尾部 **BUILD SUCCESSFUL in 31s**；重新安装任务模拟器并运行整个文件浏览组，`.tmp/ui-hints/browser-final-empty.log` **OK (5 tests)**。已更新并查看空/加载/错误截图，其余未变模块复用前述验证。
+- 补查在任务模拟器建立 SAF Movies 夹具并真实播放，用 DPAD 检查轨道面板、关键词添加/移除和逐级返回；夹具建立使用了系统目录授权和触摸，不能将这段补查记成纯 DPAD 来源配置验收。纯 DPAD 播放/返回路径证据来自上述仪器用例。
+- 初次误用不带 `.debug` 的 runner 包名导致未启动用例，之后已修正；不计入应用用例失败。真实服务全矩阵及物理电视验收仍待完成，本任务未操作电视。
+- 收尾检查：16 个变更 XML 解析通过，五份原型脚本语法与 85 处本地文档链接检查通过，`git diff --check` 通过。任务模拟器、独立原型浏览器与本地原型服务已关闭，日志/截图保留。
 
 ## 顺序续播
 

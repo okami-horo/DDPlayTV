@@ -150,7 +150,7 @@
     <string name="developer_bugly_status_summary">检查 Bugly 初始化状态</string>
     <string name="developer_bugly_status_on_debug">✅ 已启用 | ID: 测试模式 | 来源: Debug Mode</string>
     <string name="developer_bugly_status_on">✅ 已启用 | ID: %1$s | 来源: %2$s</string>
-    <string name="developer_bugly_status_runtime_missing">⚠ 已配置 | 运行时未初始化（点击查看详情）</string>
+    <string name="developer_bugly_status_runtime_missing">⚠ 已配置 | 运行时未初始化</string>
     <string name="developer_bugly_status_off">❌ 未配置 Bugly</string>
     <string name="developer_bugly_status_detail_header">Bugly 错误上报状态详情:</string>
     <string name="developer_bugly_status_detail_state">状态: %1$s</string>

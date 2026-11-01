@@ -83,21 +83,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="已添加的关键字"
+                android:text="移除关键字"
                 android:textColor="@color/text_gray"
                 android:textSize="14sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/keyword_block_add_et" />
-            <TextView
-                android:id="@+id/keyword_block_remove_tips"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/tips_remove_block_keyword"
-                android:textColor="@color/text_gray"
-                android:textSize="12sp"
-                app:layout_constraintTop_toBottomOf="@id/keyword_block_list_title"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/keyword_rv"
                 android:layout_width="0dp"
@@ -107,7 +97,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/keyword_block_remove_tips" />
+                app:layout_constraintTop_toBottomOf="@id/keyword_block_list_title" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </FrameLayout>
 </layout>

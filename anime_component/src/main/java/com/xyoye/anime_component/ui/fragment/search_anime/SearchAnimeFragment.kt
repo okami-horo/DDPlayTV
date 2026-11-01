@@ -187,7 +187,7 @@ class SearchAnimeFragment :
                 text =
                     when {
                         state.loading -> "正在搜索…"
-                        retryable -> "${state.error}\n按确定重试"
+                        retryable -> "${state.error}\n重试"
                         state.loaded && state.items.isEmpty() -> "未找到结果"
                         else -> ""
                     }

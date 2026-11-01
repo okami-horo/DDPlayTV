@@ -40,14 +40,6 @@
                     android:text="外观"
                     android:textColor="@color/cinema_text"
                     android:textSize="24sp" />
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="选择主题；设置即时生效。"
-                    android:textColor="@color/cinema_muted"
-                    android:textSize="13sp"
-                    android:layout_marginTop="16dp"
-                    android:lineSpacingExtra="5dp" />
             </LinearLayout>
             <androidx.core.widget.NestedScrollView
                 android:layout_width="0dp"

@@ -186,7 +186,7 @@ class AnimeSeasonActivity : BaseActivity<AnimeSeasonViewModel, ActivityAnimeSeas
                 text =
                     when {
                         state.loading -> "正在加载…"
-                        retryable -> "${state.error}\n按确定重试"
+                        retryable -> "${state.error}\n重试"
                         state.loaded && state.items.isEmpty() -> "暂无番剧"
                         else -> ""
                     }

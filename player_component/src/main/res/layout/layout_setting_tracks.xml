@@ -9,6 +9,5 @@
         <androidx.recyclerview.widget.RecyclerView android:id="@+id/rv_track" app:tvDpadList="true" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:padding="4dp" />
         <Button android:id="@+id/tv_add_track" style="@style/Cinema.Button" android:layout_width="match_parent" android:layout_height="38dp" android:layout_marginEnd="0dp" android:layout_marginTop="8dp" android:text="添加轨道" />
         <Button android:id="@+id/track_style" style="@style/Cinema.Button" android:layout_width="match_parent" android:layout_height="38dp" android:layout_marginEnd="0dp" android:layout_marginTop="8dp" android:text="显示样式" />
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="返回键关闭面板，继续观看。" android:textColor="@color/cinema_muted" android:textSize="11sp" />
     </LinearLayout>
 </layout>

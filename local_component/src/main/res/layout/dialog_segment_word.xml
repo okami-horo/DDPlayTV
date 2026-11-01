@@ -5,18 +5,12 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
         <TextView
-            style="@style/Cinema.Body"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="选择候选词拼接搜索内容，也可直接编辑。" />
-        <TextView
             style="@style/Cinema.Section"
             android:textSize="14sp"
             android:textStyle="normal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="搜索内容"
-            android:layout_marginTop="12dp"
             android:layout_marginBottom="8dp" />
         <LinearLayout
             android:id="@+id/search_cl"
@@ -76,7 +70,7 @@
             style="@style/Cinema.Body"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="没有候选词，可直接输入搜索内容。"
+            android:text="暂无候选词"
             android:id="@+id/empty_tv"
             android:layout_marginTop="12dp"
             android:visibility="gone" />

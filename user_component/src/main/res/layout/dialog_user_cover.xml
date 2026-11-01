@@ -4,17 +4,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-        <TextView
-            style="@style/Cinema.Body"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="选择后立即应用" />
         <androidx.recyclerview.widget.RecyclerView
             app:tvDpadList="true"
             android:id="@+id/user_cover_rv"
             android:layout_width="match_parent"
             android:layout_height="224dp"
-            android:layout_marginTop="12dp"
             android:clipToPadding="false"
             android:padding="4dp" />
         <TextView

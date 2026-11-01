@@ -17,7 +17,7 @@ data class AnimeCollectionState(
                 loading -> "正在加载…"
                 error != null -> if (items.isEmpty()) "加载失败，请选择刷新重试。" else "刷新失败，已有内容已保留。"
                 visibleItems.isEmpty() -> "0 部作品"
-                else -> "${visibleItems.size} 部作品 · 确认查看详情"
+                else -> "${visibleItems.size} 部作品"
             }
 
     val emptyMessage: String

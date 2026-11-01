@@ -223,13 +223,12 @@ class StorageFileFragment :
             }
         binding.emptyDescription.text =
             when {
-                state.loading -> "文件较多时，可能需要稍等片刻。"
+                state.loading -> ""
                 state.loginRequired -> "重新授权后可以继续浏览当前来源。"
                 state.error != null -> "请检查网络连接，然后重试。"
-                state.query.isNotEmpty() -> "试试其他关键词，或清除搜索。"
-                canLoadPage -> "可以继续加载下一页。"
-                else -> "可以返回上一级，继续浏览其他内容。"
+                else -> ""
             }
+        binding.emptyDescription.isVisible = binding.emptyDescription.text.isNotEmpty()
         binding.emptyActionTv.isVisible = !state.loading
         binding.emptyActionTv.text =
             when {
@@ -272,7 +271,6 @@ class StorageFileFragment :
                     ?.trim('/')
                     ?.takeUnless { it.isBlank() } ?: "根目录"
             )
-        binding.previewHint.text = if (file.isDirectory()) "按确定打开文件夹" else "按确定播放 · 按菜单查看文件操作"
         val image = file.browserKey() to file.fileCover()
         if (image != previewImage) {
             previewImage = image

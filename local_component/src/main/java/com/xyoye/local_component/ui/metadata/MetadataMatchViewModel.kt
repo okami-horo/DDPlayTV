@@ -123,7 +123,7 @@ class MetadataMatchViewModel : BaseViewModel() {
                             MetadataCard("episode:${it.episodeNumber}", "第 ${it.episodeNumber} 集 · ${it.title}", it.overview, it.still)
                         }
                     )
-                    status.postValue("${work?.title} · 第 $season 季\n选择单集，或用下方起止集按钮的左右键设置合并集。")
+                    status.postValue("${work?.title} · 第 $season 季")
                 }
                 card.key.startsWith("episode:") -> {
                     firstIndex = episodes.indexOfFirst { it.episodeNumber == card.key.substringAfter(':').toInt() }.coerceAtLeast(0)

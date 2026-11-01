@@ -109,15 +109,7 @@ class PlayerBottomView(
             control.setOnFocusChangeListener { view, focused ->
                 if (focused) {
                     lastFocusedControlId = view.id
-                    viewBinding.transportHint.text = view.contentDescription
-                    viewBinding.transportHint.post {
-                        val hint = viewBinding.transportHint
-                        hint.translationX =
-                            (view.x + view.width / 2f - hint.width / 2f)
-                                .coerceIn(0f, (viewBinding.transportTray.width - hint.width).coerceAtLeast(0).toFloat())
-                    }
                 }
-                viewBinding.transportHint.visibility = if (focused) View.VISIBLE else View.INVISIBLE
             }
         }
         updateFocusNavigation()
@@ -227,7 +219,6 @@ class PlayerBottomView(
             }
         }
         viewBinding.playIv.contentDescription = if (viewBinding.playIv.isSelected) "暂停" else "播放"
-        if (viewBinding.playIv.hasFocus()) viewBinding.transportHint.text = viewBinding.playIv.contentDescription
         updateSeekActions()
     }
 

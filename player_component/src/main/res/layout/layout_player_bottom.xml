@@ -155,17 +155,6 @@
                         android:textColor="@color/cinema_muted"
                         android:visibility="gone" />
                 </LinearLayout>
-                <TextView
-                    android:id="@+id/transport_hint"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="top|start"
-                    android:translationY="-12dp"
-                    android:paddingHorizontal="5dp"
-                    android:background="@color/cinema_background"
-                    android:textColor="@color/cinema_text"
-                    android:textSize="9sp"
-                    android:visibility="invisible" />
             </FrameLayout>
             <Space
                 android:layout_width="0dp"
