@@ -1,0 +1,169 @@
+{
+  "date": "2026-11-01",
+  "baseline": "aa7bfade8eb92eb0ec70a80173b81dc433a59b76",
+  "scope": [
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07"
+  ],
+  "environment": {
+    "sdk": 34,
+    "resolution": [
+      1920,
+      1080
+    ],
+    "densityDpi": 320,
+    "fontScales": [
+      1.0,
+      1.3
+    ],
+    "adbPort": 5063,
+    "device": "emulator-5574"
+  },
+  "physicalTvAcceptance": false,
+  "sourceSha256": {
+    "anime_component/src/main/res/layout/item_anime.xml": "77c6a39332950f3da7cdce3963704c6f1ce19423e2e74c5f8838327ef40c4935",
+    "anime_component/src/main/res/layout/item_anime_cinema.xml": "4d279cc305062369ad4a50927300c117046925e7a68c2b27fb9ba9a87c14fc10",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/SharedCardRenderingInstrumentedTest.kt": "11723d5a72942a1f46212f62dc7af981f7b10279b6d2f4feecdfd2edff24270c",
+    "core_ui_component/src/main/java/com/xyoye/common_component/weight/RoundedArtworkLayout.kt": "f3a651f19acc1b91bdc917de5d8089260d2e744d6d2efa6a6ee4ee921aa8acb3",
+    "core_ui_component/src/main/java/com/xyoye/common_component/weight/dialog/FileManagerDialog.kt": "08c5cf377089478a05d5b6458d99d523ac122517908ea54eb6903dd98226fb1d",
+    "core_ui_component/src/main/res/drawable/background_focus_overlay.xml": "a2f2c7016b7c0d3d2355c68ed6f87be25d720ca67f8dde3caa3202304b8503c6",
+    "core_ui_component/src/main/res/drawable/background_surface_focus_overlay.xml": "aeeaeddf9c7ced7d758f4f4c653ad2ee2bac89d3a08df8b4661b34d752dedf87",
+    "core_ui_component/src/main/res/layout/item_file_manager.xml": "f1ca7520809c67e62f516651155cd57e0f355a6cb8100b5ec47c85421badcacc",
+    "core_ui_component/src/main/res/layout/item_storage_video.xml": "0086b21839e5f6dbc9a4e98f92bf57c6d220ccc22517878641019e1c942ffc11",
+    "local_component/src/main/java/com/xyoye/local_component/ui/metadata/MetadataCardAdapter.kt": "d536150c799afb52667379a53dbd51b84e927f968b076299851775772f12e82d",
+    "local_component/src/main/java/com/xyoye/local_component/ui/metadata/MetadataLandscapeLayout.kt": "59aec87ecc8aad15ac99fdca3b5999b9f16c21d838c2e9da6b219256fce07c0a",
+    "local_component/src/main/res/layout/activity_metadata_match.xml": "61b4109f5200eac2e9a97dc598dfc99130c9665198c589f50041c5932a6c9246",
+    "local_component/src/main/res/layout/item_metadata_landscape.xml": "b07567c5b22859e904d41a2e4d30e3a9a0f24cb9811e47ccc3e03a54ed99a7f3",
+    "storage_component/src/main/java/com/xyoye/storage_component/ui/fragment/storage_file/StorageFileAdapter.kt": "a1b1e4429c29bda9ea168da6de7c9966af054df29405bfbe7843c7f4911d448c",
+    "storage_component/src/main/res/drawable/file_browser_artwork.xml": "4d0d3047e81dff87687b59bb859e91d4c29f44293b631821ef52281fb21c7fd6",
+    "storage_component/src/main/res/layout/item_file_browser.xml": "80d0754cafabe36211be97b8b513e045312bd9ab16086727e2e70a265f69d7a9",
+    "user_component/src/main/res/layout/item_user_cover.xml": "3f04fbc914535e75ec36eb1625124f31729b799d23e877a3521aa853b4c112a8"
+  },
+  "apkSha256": {
+    "app-debug.apk": "cea628262fe8baaf67bd08efacd9e68eb52c85b79b0f9358f92423385366b89c",
+    "app-final-debug.apk": "33174766e3256b98f5952c48fc48d48ee60606277b782af238f5b3e0ce2342d8",
+    "app-final-test.apk": "d3d19240f46c1ce01a51fcb921408ed579123510f510651aef08cb9e69ba013e",
+    "app-test.apk": "6d11143ca58f5a03a9aab974736c2801fdd5fc0e51407182cdf9fdfd5c45bff3"
+  },
+  "unitReports": {
+    "core_ui_component": {
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "local_component": {
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "storage_component": {
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "anime_component": {
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "user_component": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "builds": {
+    "core-verification.log": {
+      "result": "BUILD SUCCESSFUL in 3m 6s",
+      "logSha256": "551f0c6174ab7482c9a6a542178ad2207797046f70e73e9a69fd300d9ec8a2de"
+    },
+    "validation-2.log": {
+      "result": "BUILD SUCCESSFUL in 53s",
+      "logSha256": "87bd29e205e944353261b3d3824148b02abc7840c396dd145a834ca994cec193"
+    },
+    "final-verification.log": {
+      "result": "BUILD SUCCESSFUL in 25s",
+      "logSha256": "fb59766f0774e2ad9e4d134d18d60dcf7134e3a5f68ba3e4ddefa1c8a5c3cbaa"
+    },
+    "placeholder-final-verification.log": {
+      "result": "BUILD SUCCESSFUL in 19s",
+      "logSha256": "8f11d4be0d7b651b62b1e767753b81546af5a94035f1ab32d42bcdcecdba1e15"
+    },
+    "format-final.log": {
+      "result": "BUILD SUCCESSFUL in 8s",
+      "logSha256": "c64e3f230e696a1935727956304235fdf6d7f3d653e48041a32f5b6bbbbacd64"
+    }
+  },
+  "instrumentationRuns": {
+    "test-normal-final.log": {
+      "result": "OK (7 tests)",
+      "fontScale": 1.0,
+      "seconds": 43.929,
+      "logSha256": "f15e3dd9416fe7152825ba1912d0be5322a9aa6169ff5957c8e62ec45728285c"
+    },
+    "test-font130-final.log": {
+      "result": "OK (7 tests)",
+      "fontScale": 1.3,
+      "seconds": 43.254,
+      "logSha256": "48b1ea981cc265d045627b2f467a7be46e4bc57e67a9a2333b842ac64894f6f2"
+    },
+    "regressions-font130.log": {
+      "result": "OK (7 tests)",
+      "fontScale": 1.3,
+      "seconds": 28.6,
+      "logSha256": "5d4477030c03d10c3ba2a3418c6178bc0bc6f82fab6dc533759adb17370f5dd9"
+    },
+    "avatar-first-font130.log": {
+      "result": "OK (1 test)",
+      "fontScale": 1.3,
+      "seconds": 4.593,
+      "logSha256": "fdda0b7a1117f757ff3f4f10e6927af97ea099d2cc20cad7028509b98ea24ef2"
+    },
+    "shell-settings-final.log": {
+      "result": "OK (1 test)",
+      "fontScale": null,
+      "seconds": 7.036,
+      "logSha256": "908c0e57c34695657953d09436521d55e1a411d39021b3a5cce17681c012923e"
+    },
+    "anime-background-normal.log": {
+      "result": "OK (1 test)",
+      "fontScale": 1.0,
+      "seconds": 8.428,
+      "logSha256": "6d797d12eb7dc35ee3673c99f295730299fff7de36a25b94810e48ed8d184111"
+    },
+    "anime-background-font130.log": {
+      "result": "OK (1 test)",
+      "fontScale": 1.3,
+      "seconds": 8.147,
+      "logSha256": "9dcf0bdd2d01da31210665421770f7699479bf3e5de65b2d7730052dff571c79"
+    }
+  },
+  "distinctScenarioCount": {
+    "total": 15,
+    "maintainedRepairs": 7,
+    "existingRegressions": 7,
+    "cinemaSettings": 1,
+    "repetitionsExcluded": true
+  },
+  "artifactUse": {
+    "app-debug.apk": "Seven-case dual-font suite and existing regressions.",
+    "app-final-debug.apk": "Final F02 background-only cleanup, verified in both font scales."
+  },
+  "evidence": {
+    "format": "Native hardware screenshots; collages crop and scale saved originals.",
+    "sourceDirectories": [
+      ".tmp/rounding-fixes/final-normal",
+      ".tmp/rounding-fixes/final-font130"
+    ]
+  }
+}

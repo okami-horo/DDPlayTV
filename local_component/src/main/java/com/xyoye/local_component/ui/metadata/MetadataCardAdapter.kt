@@ -64,6 +64,11 @@ class MetadataCardAdapter(
                     parent,
                     false
                 )
+        if (landscape) {
+            // DpadRecyclerView can measure a card before attaching it to the viewport.
+            val viewport = parent as RecyclerView
+            (view as MetadataLandscapeLayout).viewport = viewport
+        }
         if (compact) {
             view.layoutParams.width = (280 * parent.resources.displayMetrics.density).toInt()
             view.minimumHeight = (68 * parent.resources.displayMetrics.density).toInt()

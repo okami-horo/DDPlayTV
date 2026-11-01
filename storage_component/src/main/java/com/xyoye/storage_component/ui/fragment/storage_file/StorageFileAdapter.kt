@@ -77,7 +77,7 @@ class StorageFileAdapter(
             itemBinding.run {
                 val folder = data.isDirectory()
                 itemLayout.layoutParams = itemLayout.layoutParams.apply { height = (if (folder) 43 else 52).dp() }
-                coverIv.layoutParams = coverIv.layoutParams.apply { width = (if (folder) 34 else 51).dp() }
+                artworkLayout.layoutParams = artworkLayout.layoutParams.apply { width = (if (folder) 34 else 51).dp() }
                 coverIv.dispose()
                 if (folder) {
                     coverIv.scaleType = ImageView.ScaleType.CENTER_INSIDE

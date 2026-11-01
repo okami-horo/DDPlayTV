@@ -24,6 +24,7 @@ import com.xyoye.common_component.utils.isDanmuFile
 import com.xyoye.common_component.utils.isSubtitleFile
 import com.xyoye.common_component.utils.isVideoFile
 import com.xyoye.common_component.utils.view.FilePathItemDecoration
+import com.xyoye.common_component.utils.view.ItemDecorationSpace
 import com.xyoye.core_ui_component.R
 import com.xyoye.core_ui_component.databinding.DialogFileManagerBinding
 import com.xyoye.core_ui_component.databinding.ItemFileManagerBinding
@@ -170,6 +171,7 @@ class FileManagerDialog(
             itemAnimator = null
 
             layoutManager = vertical()
+            addItemDecoration(ItemDecorationSpace(0, 0, 0, dp2px(6)))
 
             adapter =
                 buildAdapter {

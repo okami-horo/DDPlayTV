@@ -12,16 +12,16 @@
         android:clickable="true"
         android:tag="@string/focusable_item"
         android:padding="3dp">
-        <FrameLayout
+        <com.xyoye.common_component.weight.RoundedArtworkLayout
             android:layout_width="match_parent"
-            android:layout_height="96dp">
+            android:layout_height="96dp"
+            android:background="@drawable/background_anime_cover_placeholder">
             <ImageView
                 android:id="@+id/cover_iv"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:contentDescription="@null"
-                android:background="@drawable/background_anime_cover_placeholder" />
+                android:contentDescription="@null" />
             <TextView
                 android:id="@+id/follow_tag_view"
                 android:layout_width="wrap_content"
@@ -43,7 +43,7 @@
                 android:textColor="@color/cinema_text"
                 android:background="#CC202026"
                 android:visibility="gone" />
-        </FrameLayout>
+        </com.xyoye.common_component.weight.RoundedArtworkLayout>
         <TextView
             style="@style/Cinema.Body"
             android:layout_width="match_parent"

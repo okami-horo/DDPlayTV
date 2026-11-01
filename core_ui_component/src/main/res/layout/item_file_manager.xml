@@ -11,8 +11,7 @@
         android:minHeight="56dp"
         android:focusable="true"
         android:tag="@string/focusable_item"
-        android:paddingHorizontal="10dp"
-        android:layout_marginBottom="6dp">
+        android:paddingHorizontal="10dp">
         <ImageView
             android:id="@+id/file_iv"
             android:layout_width="30dp"

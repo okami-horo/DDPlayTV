@@ -9,6 +9,7 @@
         android:layout_height="170dp"
         android:clickable="true"
         android:focusable="true"
+        android:defaultFocusHighlightEnabled="false"
         android:tag="@string/focusable_item">
 
         <ImageView
