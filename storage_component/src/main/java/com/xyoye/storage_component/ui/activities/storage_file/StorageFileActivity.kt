@@ -277,14 +277,15 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (!hasWindowFocus()) return super.dispatchKeyEvent(event)
         if (event.keyCode == KeyEvent.KEYCODE_MENU || event.keyCode == KeyEvent.KEYCODE_SETTINGS) {
             // AppCompat handles MENU before dispatching to the focused list.
             if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-                val fragment = routeStack.lastOrNull()?.fragment
-                if (event.keyCode == KeyEvent.KEYCODE_SETTINGS || fragment?.showFocusedActions() != true) fragment?.triggerTvRefresh()
+                routeStack.lastOrNull()?.fragment?.triggerTvRefresh()
             }
             return true
         }
+        if (routeStack.lastOrNull()?.fragment?.handlePreviewKey(event) == true) return true
         return super.dispatchKeyEvent(event)
     }
 

@@ -1,8 +1,7 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
 import android.os.Bundle
-import android.view.View
-import androidx.constraintlayout.widget.ConstraintLayout
+import android.view.KeyEvent
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +17,7 @@ import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.setData
 import com.xyoye.common_component.extension.vertical
 import com.xyoye.common_component.focus.DpadFocusOwner
+import com.xyoye.common_component.focus.applyDpadFocusable
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.common_component.storage.AuthStorage
@@ -43,10 +43,9 @@ class StorageFileFragment :
     private var restoreLayout = true
     private var savedFileKey: String? = null
     private val listKey get() = "${ownerActivity.storage.library.id}|${arguments?.getString("directory_path")}"
-    private var savedMore = false
+    private var previewFileKey: String? = null
     private var applyingState = false
     private var previewImage: Pair<String, String?>? = null
-    private lateinit var fileAdapter: StorageFileAdapter
     val query: String get() =
         viewModel.state.value
             ?.query
@@ -76,7 +75,7 @@ class StorageFileFragment :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         savedFileKey = savedInstanceState?.getString("focused_file")
-        savedMore = savedInstanceState?.getBoolean("focused_more") ?: false
+        // Legacy focused_more is intentionally ignored: the file identity now restores the main row.
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -85,7 +84,6 @@ class StorageFileFragment :
             listState.getScrollState().save(it, listKey, detachAdapter = false)
         }
         outState.putString("focused_file", savedFileKey)
-        outState.putBoolean("focused_more", savedMore)
         super.onSaveInstanceState(outState)
     }
 
@@ -93,7 +91,6 @@ class StorageFileFragment :
         val list = bindingOrNull?.storageFileRv as? DpadRecyclerView ?: return
         ((list.adapter as? BaseAdapter)?.items?.getOrNull(list.getSelectedPosition()) as? StorageFile)?.let {
             savedFileKey = it.browserKey()
-            if (list.hasFocus()) savedMore = activity?.currentFocus?.id == R.id.more_action_iv
         }
     }
 
@@ -104,12 +101,19 @@ class StorageFileFragment :
         }
         bindingOrNull?.previewCover?.dispose()
         previewImage = null
+        previewFileKey = null
         super.onDestroyView()
     }
 
     override fun initView() {
         restoreLayout = true
         initRecyclerView()
+        dataBinding.previewReading.addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+            view.post { updatePreviewReading() }
+        }
+        dataBinding.previewReading.getChildAt(0).addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+            view.post { updatePreviewReading() }
+        }
 
         viewModel.storage = ownerActivity.storage
         viewModel.operationLock = ownerActivity.storageOperations
@@ -137,9 +141,10 @@ class StorageFileFragment :
                 !it.hasMore && it.state != PagedStorage.State.LOADING && it.state != PagedStorage.State.ERROR
             } == true
         val previousKey = savedFileKey
-        val previousMore = savedMore
+        val previousIndex = list.getSelectedPosition()
         val oldFocusInContent =
             list.hasFocus() ||
+                binding.previewReading.hasFocus() ||
                 binding.browserEmpty.hasFocus() ||
                 activity?.currentFocus?.id == R.id.browser_status
         applyingState = true
@@ -148,9 +153,10 @@ class StorageFileFragment :
         binding.browserEmpty.isVisible = !hasRows
         binding.previewPanel.isVisible = hasRows
         list.setData(state.items)
-        val selected = files.firstOrNull { it.browserKey() == previousKey } ?: files.firstOrNull()
+        val selected =
+            files.firstOrNull { it.browserKey() == previousKey }
+                ?: files.getOrNull(previousIndex.coerceIn(0, (files.size - 1).coerceAtLeast(0)))
         savedFileKey = selected?.browserKey() ?: if (state.loading || !state.hasDirectory) previousKey else null
-        savedMore = previousMore && selected?.browserKey() == previousKey
         if (initial) {
             restoreLayout = false
             listState.getScrollState().restore(list, listKey, requireNotNull(list.adapter))
@@ -250,6 +256,13 @@ class StorageFileFragment :
 
     private fun renderPreview(file: StorageFile?) {
         val binding = bindingOrNull ?: return
+        if (previewFileKey != file?.browserKey() || file == null) {
+            if (binding.previewReading.hasFocus()) binding.storageFileRv.requestFocus()
+            binding.previewReading.scrollTo(0, 0)
+            binding.previewReading.applyDpadFocusable(false)
+            binding.previewReadingHint.isVisible = false
+            previewFileKey = file?.browserKey()
+        }
         if (file == null) {
             binding.previewCover.dispose()
             binding.previewCover.setImageDrawable(null)
@@ -289,23 +302,53 @@ class StorageFileFragment :
         }
     }
 
-    private fun fileFocused(
-        file: StorageFile,
-        more: Boolean
-    ) {
-        if (applyingState || !ownerActivity.isCurrentDirectory(this)) return
-        savedFileKey = file.browserKey()
-        savedMore = more
-        renderPreview(file)
+    private fun updatePreviewReading() {
+        val binding = bindingOrNull ?: return
+        val reading = binding.previewReading
+        val fullHeight = binding.previewPanel.height - binding.previewArt.height
+        val overflow =
+            previewFileKey != null &&
+                binding.previewPanel.isVisible &&
+                fullHeight > 0 &&
+                reading.getChildAt(0).height > fullHeight
+        if (!overflow && reading.hasFocus()) binding.storageFileRv.requestFocus()
+        reading.applyDpadFocusable(overflow, clickable = false)
+        binding.previewReadingHint.isVisible = overflow
     }
 
-    fun showFocusedActions(): Boolean {
-        val list = bindingOrNull?.storageFileRv as? DpadRecyclerView ?: return false
-        if (!list.hasFocus()) return false
-        val file = (list.adapter as? BaseAdapter)?.items?.getOrNull(list.getSelectedPosition()) as? StorageFile ?: return false
-        val row = list.findViewHolderForAdapterPosition(list.getSelectedPosition())?.itemView as? ConstraintLayout ?: return false
-        fileAdapter.showMoreAction(file, row)
-        return true
+    fun handlePreviewKey(event: KeyEvent): Boolean {
+        val binding = bindingOrNull ?: return false
+        val reading = binding.previewReading
+        if (reading.hasFocus()) {
+            when (event.keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_BACK -> {
+                    if (event.action == KeyEvent.ACTION_UP) binding.storageFileRv.requestFocus()
+                }
+                KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    if (event.action == KeyEvent.ACTION_DOWN) {
+                        val step = (reading.height / 3).coerceAtLeast(1)
+                        reading.smoothScrollBy(0, if (event.keyCode == KeyEvent.KEYCODE_DPAD_DOWN) step else -step)
+                    }
+                }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> Unit
+                else -> return false
+            }
+            return true
+        }
+        if (!binding.storageFileRv.hasFocus()) return false
+        if (event.keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+            if (event.action == KeyEvent.ACTION_UP && reading.isFocusable) reading.requestFocus()
+            return true
+        }
+        return event.action == KeyEvent.ACTION_DOWN &&
+            event.repeatCount > 0 &&
+            (event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER)
+    }
+
+    private fun fileFocused(file: StorageFile) {
+        if (applyingState || !ownerActivity.isCurrentDirectory(this)) return
+        savedFileKey = file.browserKey()
+        renderPreview(file)
     }
 
     override fun onResume() {
@@ -332,8 +375,7 @@ class StorageFileFragment :
                     .ItemDecorationOrientation((6 * resources.displayMetrics.density).toInt(), 0, RecyclerView.VERTICAL)
             )
 
-            fileAdapter = StorageFileAdapter(ownerActivity, viewModel, ::fileFocused)
-            adapter = fileAdapter.create()
+            adapter = StorageFileAdapter(ownerActivity, viewModel, ::fileFocused).create()
 
             addOnScrollListener(
                 object : RecyclerView.OnScrollListener() {
@@ -372,10 +414,6 @@ class StorageFileFragment :
             return if (binding.emptyActionTv.isVisible) binding.emptyActionTv.requestFocus() else binding.emptyBack.requestFocus()
         }
         val list = binding.storageFileRv as DpadRecyclerView
-        val row = list.findViewHolderForAdapterPosition(list.getSelectedPosition())?.itemView
-        if (savedMore && row?.findViewById<View>(R.id.more_action_iv)?.isFocusable == true) {
-            return row.findViewById<View>(R.id.more_action_iv).requestFocus()
-        }
         return list.requestFocus()
     }
 

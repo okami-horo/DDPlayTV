@@ -1,32 +1,17 @@
 package com.xyoye.storage_component.ui.fragment.storage_file
 
 import android.widget.ImageView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.app.ActivityOptionsCompat
-import androidx.core.util.Pair
 import androidx.core.view.isVisible
 import coil.dispose
 import coil.load
-import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.adapter.BaseViewHolderCreator
 import com.xyoye.common_component.adapter.addItem
 import com.xyoye.common_component.adapter.buildAdapter
 import com.xyoye.common_component.adapter.setupDiffUtil
-import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.extension.dp
-import com.xyoye.common_component.extension.isInvalid
-import com.xyoye.common_component.extension.toFile
 import com.xyoye.common_component.storage.file.StorageFile
-import com.xyoye.common_component.storage.file.danmu
-import com.xyoye.common_component.storage.file.subtitle
 import com.xyoye.common_component.utils.formatDuration
-import com.xyoye.common_component.weight.BottomActionDialog
-import com.xyoye.common_component.weight.ToastCenter
-import com.xyoye.common_component.weight.dialog.FileManagerDialog
-import com.xyoye.data_component.bean.SheetActionBean
-import com.xyoye.data_component.enums.FileManagerAction
-import com.xyoye.data_component.enums.TrackType
 import com.xyoye.storage_component.R
 import com.xyoye.storage_component.databinding.ItemFileBrowserBinding
 import com.xyoye.storage_component.databinding.ItemStoragePagingBinding
@@ -39,26 +24,8 @@ import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivit
 class StorageFileAdapter(
     private val activity: StorageFileActivity,
     private val viewModel: StorageFileFragmentViewModel,
-    private val onFileFocused: (StorageFile, Boolean) -> Unit
+    private val onFileFocused: (StorageFile) -> Unit
 ) {
-    private enum class ManageAction(
-        val title: String,
-        val icon: Int
-    ) {
-        // TV端暂时关闭投屏
-//        SCREENCAST("投屏", com.xyoye.core_ui_component.R.drawable.ic_video_cast),
-        OPEN("打开", com.xyoye.core_ui_component.R.drawable.cinema_ic_play),
-        METADATA("识别 / 更正资料", com.xyoye.core_ui_component.R.drawable.ic_bind_danmu_manual),
-        BIND_DANMU("手动查找弹幕", com.xyoye.core_ui_component.R.drawable.ic_bind_danmu_manual),
-        BIND_SUBTITLE("手动查找字幕", com.xyoye.core_ui_component.R.drawable.ic_bind_subtitle),
-        BIND_AUDIO("添加音频文件", com.xyoye.core_ui_component.R.drawable.ic_bind_audio),
-        UNBIND_DANMU("移除弹幕绑定", com.xyoye.core_ui_component.R.drawable.ic_unbind_danmu),
-        UNBIND_SUBTITLE("移除字幕绑定", com.xyoye.core_ui_component.R.drawable.ic_unbind_subtitle),
-        UNBIND_AUDIO("移除音频绑定", com.xyoye.core_ui_component.R.drawable.ic_unbind_subtitle);
-
-        fun toAction() = SheetActionBean(this, title, icon)
-    }
-
     fun create(): BaseAdapter =
         buildAdapter {
             setupDiffUtil {
@@ -130,18 +97,9 @@ class StorageFileAdapter(
                 detailsTv.isVisible = !folder && detailsTv.text.isNotEmpty()
                 durationTv.text = getDuration(data)
                 durationTv.isVisible = !folder && durationTv.text.isNotEmpty()
-                moreActionIv.setImageResource(if (folder) R.drawable.cinema_ic_next else R.drawable.file_browser_more)
-                moreActionIv.isFocusable = !folder
-                moreActionIv.isClickable = !folder
-                itemLayout.nextFocusRightId = if (folder) itemLayout.id else moreActionIv.id
-                itemLayout.setOnFocusChangeListener { _, focused -> if (focused) onFileFocused(data, false) }
-                moreActionIv.setOnFocusChangeListener { _, focused -> if (focused) onFileFocused(data, true) }
+                directoryArrow.isVisible = folder
+                itemLayout.setOnFocusChangeListener { _, focused -> if (focused) onFileFocused(data) }
                 itemLayout.setOnClickListener { if (folder) activity.openDirectory(data) else activity.openFile(data) }
-                itemLayout.setOnLongClickListener {
-                    showMoreAction(data, itemLayout)
-                    true
-                }
-                moreActionIv.setOnClickListener { showMoreAction(data, itemLayout) }
             }
         }
 
@@ -179,108 +137,5 @@ class StorageFileAdapter(
         } else {
             ""
         }
-    }
-
-    fun showMoreAction(
-        file: StorageFile,
-        itemLayout: ConstraintLayout
-    ) {
-        val caller = activity.currentFocus
-        val options = createShareOptions(itemLayout)
-        BottomActionDialog(activity, getMoreActions(file), "文件操作") {
-            when (it.actionId) {
-                ManageAction.OPEN -> if (file.isDirectory()) activity.openDirectory(file) else activity.openFile(file)
-                ManageAction.METADATA -> {
-                    val reference =
-                        com.xyoye.common_component.storage.catalog.CatalogSourceReader
-                            .capture(file)
-                    ARouter
-                        .getInstance()
-                        .build(RouteTable.Local.MetadataMatch)
-                        .withInt("libraryId", file.storage.library.id)
-                        .withString("uniqueKey", reference.uniqueKey)
-                        .withString("storagePath", reference.storagePath)
-                        .withString("protocolReference", reference.protocolReference)
-                        .navigation(activity)
-                }
-                ManageAction.BIND_DANMU -> bindExtraSource(file, true, options)
-                ManageAction.BIND_SUBTITLE -> bindExtraSource(file, false, options)
-                ManageAction.BIND_AUDIO -> bindAudioSource(file)
-                ManageAction.UNBIND_DANMU -> viewModel.unbindExtraSource(file, TrackType.DANMU)
-                ManageAction.UNBIND_SUBTITLE -> viewModel.unbindExtraSource(file, TrackType.SUBTITLE)
-                ManageAction.UNBIND_AUDIO -> viewModel.unbindExtraSource(file, TrackType.AUDIO)
-                // TV端不再提供投屏
-//                ManageAction.SCREENCAST -> activity.castFile(file)
-            }
-            return@BottomActionDialog true
-        }.apply {
-            setOnDismissListener { if (caller?.isShown == true) caller.requestFocus() }
-        }.show()
-    }
-
-    private fun getMoreActions(file: StorageFile) =
-        mutableListOf<SheetActionBean>().apply {
-            add(
-                SheetActionBean(
-                    ManageAction.OPEN,
-                    file.fileName(),
-                    if (file.isDirectory()) R.drawable.cinema_ic_folder else R.drawable.cinema_ic_play,
-                    if (file.isDirectory()) "打开文件夹" else "播放视频"
-                )
-            )
-            if (file.isDirectory()) return@apply
-            if (com.xyoye.common_component.storage.catalog.CatalogSourceReader.supports(
-                    file.storage.library.mediaType
-                )
-            ) {
-                add(ManageAction.METADATA.toAction())
-            }
-            // TV端不再提供投屏
-//            add(ManageAction.SCREENCAST.toAction())
-            add(ManageAction.BIND_DANMU.toAction())
-            add(ManageAction.BIND_SUBTITLE.toAction())
-            add(ManageAction.BIND_AUDIO.toAction())
-            if (file.danmu != null) {
-                add(ManageAction.UNBIND_DANMU.toAction())
-            }
-            if (file.subtitle != null) {
-                add(ManageAction.UNBIND_SUBTITLE.toAction())
-            }
-            if (file.playHistory?.audioPath != null) {
-                add(ManageAction.UNBIND_AUDIO.toAction())
-            }
-        }
-
-    private fun bindExtraSource(
-        file: StorageFile,
-        bindDanmu: Boolean,
-        options: ActivityOptionsCompat
-    ) {
-        activity.shareStorageFile = file
-        ARouter
-            .getInstance()
-            .build(RouteTable.Local.BindExtraSource)
-            .withBoolean("isSearchDanmu", bindDanmu)
-            .withOptionsCompat(options)
-            .navigation(activity)
-    }
-
-    private fun createShareOptions(itemLayout: ConstraintLayout) =
-        ActivityOptionsCompat.makeSceneTransitionAnimation(
-            activity,
-            Pair(itemLayout, itemLayout.transitionName),
-        )
-
-    private fun bindAudioSource(file: StorageFile) {
-        FileManagerDialog(
-            activity,
-            FileManagerAction.ACTION_SELECT_AUDIO,
-        ) {
-            if (it.toFile().isInvalid()) {
-                ToastCenter.showError("绑定音频失败，音频不存在或内容为空")
-                return@FileManagerDialog
-            }
-            viewModel.bindAudioSource(file, it)
-        }.show()
     }
 }

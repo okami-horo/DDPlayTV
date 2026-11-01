@@ -3,6 +3,7 @@ package com.okamihoro.ddplaytv.ui.tv
 import android.content.Intent
 import android.os.SystemClock
 import android.view.KeyEvent
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
@@ -137,6 +138,32 @@ class FileBrowserPlaybackReturnInstrumentedTest {
                         val (player, view) = activePlayer() ?: return@await false
                         player.hasWindowFocus() && view.isPlaying() && view.getCurrentPosition() > 100
                     }
+                    send(KeyEvent.KEYCODE_DPAD_UP)
+                    await { activePlayer()?.first?.findViewById<View>(com.xyoye.player_component.R.id.danmu_control_iv)?.isShown == true }
+                    instrumentation.runOnMainSync {
+                        activePlayer()!!.first.findViewById<View>(com.xyoye.player_component.R.id.danmu_control_iv).requestFocus()
+                    }
+                    send(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await { activePlayer()?.first?.findViewById<View>(com.xyoye.player_component.R.id.tv_add_track)?.isShown == true }
+                    instrumentation.runOnMainSync {
+                        activePlayer()!!.first.findViewById<View>(com.xyoye.player_component.R.id.tv_add_track).requestFocus()
+                    }
+                    send(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await {
+                        activePlayer()?.first?.findViewById<View>(com.xyoye.player_component.R.id.tv_search_network_danmu)?.isShown ==
+                            true
+                    }
+                    instrumentation.runOnMainSync {
+                        activePlayer()!!.first.findViewById<View>(com.xyoye.player_component.R.id.tv_search_network_danmu).requestFocus()
+                    }
+                    send(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await { activePlayer()?.first?.findViewById<View>(com.xyoye.player_component.R.id.search_danmu_et)?.isShown == true }
+                    instrumentation.runOnMainSync {
+                        assertTrue(activePlayer()!!.first.findViewById<View>(com.xyoye.player_component.R.id.tv_select_local_danmu).isShown)
+                    }
+                    send(KeyEvent.KEYCODE_BACK)
+                    send(KeyEvent.KEYCODE_BACK)
+                    send(KeyEvent.KEYCODE_BACK)
                     instrumentation.runOnMainSync {
                         val view = activePlayer()!!.second
                         val actualKernel =

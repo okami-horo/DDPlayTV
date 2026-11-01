@@ -4,11 +4,15 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
+import android.os.Bundle
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.View
 import android.widget.ImageView
+import android.widget.ScrollView
 import android.widget.TextView
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -43,6 +47,7 @@ import java.io.InputStream
 import java.net.URLEncoder
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 @RunWith(AndroidJUnit4::class)
 class FileBrowserPreviewInstrumentedTest {
@@ -50,6 +55,33 @@ class FileBrowserPreviewInstrumentedTest {
     private val context = instrumentation.targetContext
     private val longName = "03 [DDPlayTV] 深海来信 - 潮汐之外 [WEB-DL 2160p HEVC 10bit][Dolby Vision HDR10][DTS-HD MA 5.1 AAC][简繁日内封字幕][特别收录版].mkv"
     private val deepName = "Season 02 - The Ocean Beyond the Horizon - Collector Edition 2160p 中文字幕"
+
+    @Test fun menuAndSettingsRefreshOnceWithoutOpeningFileActions() =
+        fixture { scenario, server ->
+            await(scenario) { files(it).size == 6 && list(it).hasFocus() }
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            await(scenario) { focused(it)?.fileName() == "chara card" }
+            for (key in listOf(KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_SETTINGS)) {
+                val before = server.requests.get()
+                val downTime = SystemClock.uptimeMillis()
+                scenario.onActivity {
+                    it.dispatchKeyEvent(KeyEvent(downTime, downTime, KeyEvent.ACTION_DOWN, key, 0))
+                    it.dispatchKeyEvent(KeyEvent(downTime, downTime + 50, KeyEvent.ACTION_DOWN, key, 1))
+                    it.dispatchKeyEvent(KeyEvent(downTime, downTime + 100, KeyEvent.ACTION_UP, key, 0))
+                }
+                await(scenario) { server.requests.get() > before && model(it).state.value?.loading == false }
+                assertEquals(before + 1, server.requests.get())
+                await(scenario) { it.hasWindowFocus() && focused(it)?.fileName() == "chara card" }
+            }
+            scenario.onActivity { it.findViewById<View>(R.id.browser_sort).requestFocus() }
+            send(KeyEvent.KEYCODE_DPAD_CENTER)
+            val beforeDialog = server.requests.get()
+            send(KeyEvent.KEYCODE_MENU)
+            send(KeyEvent.KEYCODE_SETTINGS)
+            assertEquals("A dialog must own its key events", beforeDialog, server.requests.get())
+            send(KeyEvent.KEYCODE_BACK)
+            await(scenario) { it.hasWindowFocus() && it.currentFocus?.id == R.id.browser_sort }
+        }
 
     @Test fun deepPathsKeepTheCurrentDirectoryAndRestoreEachParent() =
         fixture { scenario, server ->
@@ -82,7 +114,7 @@ class FileBrowserPreviewInstrumentedTest {
             await(scenario) { focused(it)?.fileName() == "Movies" }
         }
 
-    @Test fun directoriesPreviewAndExactMoreCallerSurviveBackAndRecreation() =
+    @Test fun directoriesPreviewAndFileFocusSurviveBackAndLegacyRecreation() =
         fixture { scenario, _ ->
             await(scenario) { files(it).size == 6 && list(it).hasFocus() }
             shot("root")
@@ -94,26 +126,30 @@ class FileBrowserPreviewInstrumentedTest {
             send(KeyEvent.KEYCODE_DPAD_DOWN)
             await(scenario) { preview(it) == "02 深海来信.mkv" }
             send(KeyEvent.KEYCODE_DPAD_RIGHT)
-            await(scenario) { it.currentFocus?.id == R.id.more_action_iv && preview(it) == "02 深海来信.mkv" }
-            send(KeyEvent.KEYCODE_DPAD_CENTER)
-            send(KeyEvent.KEYCODE_BACK)
-            await(scenario) { it.currentFocus?.id == R.id.more_action_iv && preview(it) == "02 深海来信.mkv" }
+            await(scenario) { it.currentFocus?.id == R.id.item_layout && preview(it) == "02 深海来信.mkv" }
+            scenario.onActivity {
+                it.supportFragmentManager.registerFragmentLifecycleCallbacks(
+                    object : FragmentManager.FragmentLifecycleCallbacks() {
+                        override fun onFragmentSaveInstanceState(
+                            fm: FragmentManager,
+                            f: Fragment,
+                            outState: Bundle
+                        ) {
+                            if (f is StorageFileFragment) outState.putBoolean("focused_more", true)
+                        }
+                    },
+                    false
+                )
+            }
             scenario.recreate()
             await(scenario) { files(it).size == 8 && focused(it)?.fileName() == "02 深海来信.mkv" }
             assertPreviewMatchesFocus(scenario)
-            send(KeyEvent.KEYCODE_DPAD_LEFT)
+            scenario.onActivity { assertEquals(R.id.item_layout, it.currentFocus?.id) }
             send(KeyEvent.KEYCODE_DPAD_DOWN)
             await(scenario) { preview(it) == longName }
             shot("long-name")
             send(KeyEvent.KEYCODE_MENU)
-            shot("long-name-actions")
-            assertTrue(
-                instrumentation.uiAutomation.rootInActiveWindow
-                    .findAccessibilityNodeInfosByText(longName)
-                    .isNotEmpty()
-            )
-            send(KeyEvent.KEYCODE_BACK)
-            await(scenario) { focused(it)?.fileName() == longName }
+            await(scenario) { model(it).state.value?.loading == false && it.hasWindowFocus() && focused(it)?.fileName() == longName }
             repeat(4) { send(KeyEvent.KEYCODE_DPAD_DOWN) }
             repeat(3) { send(KeyEvent.KEYCODE_DPAD_UP) }
             // Rapid reversal can reach the valid top boundary while scrolling coalesces keys.
@@ -125,6 +161,68 @@ class FileBrowserPreviewInstrumentedTest {
             await(scenario) { focused(it)?.fileName() == "TV" && preview(it) == "TV" }
             send(KeyEvent.KEYCODE_DPAD_UP)
             await(scenario) { preview(it) == "Music" }
+        }
+
+    @Test fun fullNameAndPathCanScrollAndReturnWithoutLeavingTheDirectory() =
+        fixture { scenario, server ->
+            await(scenario) { files(it).size == 6 && list(it).hasFocus() }
+            server.deep = true
+            repeat(3) { send(KeyEvent.KEYCODE_DPAD_DOWN) }
+            send(KeyEvent.KEYCODE_DPAD_CENTER)
+            await(scenario) { files(it).size == 1 && preview(it) == deepName }
+            send(KeyEvent.KEYCODE_DPAD_CENTER)
+            await(scenario) { files(it).size == 8 && list(it).hasFocus() }
+            repeat(2) { send(KeyEvent.KEYCODE_DPAD_DOWN) }
+            await(scenario) {
+                val hint = fragment(it).requireView().findViewById<View>(R.id.preview_reading_hint)
+                preview(it) == longName && reading(it).isFocusable && hint.isShown && hint.height > 0
+            }
+            shot("long-path")
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            await(scenario) { reading(it).hasFocus() }
+            shot("reading")
+            repeat(5) { send(KeyEvent.KEYCODE_DPAD_DOWN) }
+            await(scenario) { reading(it).scrollY > 0 && !reading(it).canScrollVertically(1) }
+            scenario.onActivity {
+                assertEquals(longName, preview(it))
+                assertTrue(
+                    fragment(it)
+                        .requireView()
+                        .findViewById<TextView>(R.id.preview_path)
+                        .text
+                        .contains(deepName)
+                )
+            }
+            shot("reading-end")
+            send(KeyEvent.KEYCODE_DPAD_LEFT)
+            await(scenario) { focused(it)?.fileName() == longName }
+            send(KeyEvent.KEYCODE_DPAD_RIGHT)
+            send(KeyEvent.KEYCODE_BACK)
+            await(scenario) { focused(it)?.fileName() == longName && files(it).size == 8 }
+            send(KeyEvent.KEYCODE_DPAD_DOWN)
+            await(scenario) { preview(it) == "04 深海来信.mkv" && reading(it).scrollY == 0 }
+            scenario.onActivity { model(it).searchByText("no-match") }
+            await(scenario) { !reading(it).isFocusable && preview(it).isEmpty() }
+            send(KeyEvent.KEYCODE_BACK)
+            await(scenario) { preview(it) == deepName }
+        }
+
+    @Test fun heldConfirmOpensOneDirectoryAndRemovedSelectionFallsBackToVisibleRow() =
+        fixture { scenario, server ->
+            await(scenario) { files(it).size == 6 && list(it).hasFocus() }
+            repeat(2) { send(KeyEvent.KEYCODE_DPAD_DOWN) }
+            await(scenario) { focused(it)?.fileName() == "Comic" }
+            val time = SystemClock.uptimeMillis()
+            instrumentation.sendKeySync(KeyEvent(time, time, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_CENTER, 0))
+            instrumentation.sendKeySync(KeyEvent(time, time + 600, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_CENTER, 1))
+            instrumentation.sendKeySync(KeyEvent(time, time + 650, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_CENTER, 0))
+            await(scenario) { files(it).size == 8 && it.hasWindowFocus() && list(it).hasFocus() }
+            send(KeyEvent.KEYCODE_BACK)
+            await(scenario) { focused(it)?.fileName() == "Comic" }
+            server.omit = "Comic"
+            send(KeyEvent.KEYCODE_MENU)
+            await(scenario) { files(it).size == 5 && focused(it)?.fileName() == "Movies" }
+            assertPreviewMatchesFocus(scenario)
         }
 
     @Test fun searchClearsPreviewSortKeepsIdentityAndToolsReturnToCaller() =
@@ -414,6 +512,10 @@ class FileBrowserPreviewInstrumentedTest {
     }
 
     private inner class BrowserServer : NanoHTTPD(0) {
+        val requests = AtomicInteger()
+
+        @Volatile var omit: String? = null
+
         @Volatile var deep = false
 
         @Volatile var fail = false
@@ -433,6 +535,7 @@ class FileBrowserPreviewInstrumentedTest {
                 return newFixedLengthResponse(Response.Status.OK, "image/png", output.toByteArray().inputStream(), output.size().toLong())
             }
             session.parseBody(mutableMapOf())
+            requests.incrementAndGet()
             gate?.await(5, TimeUnit.SECONDS)
             if (fail) return newFixedLengthResponse(Response.Status.SERVICE_UNAVAILABLE, "text/plain", "fixture offline")
             val root = session.uri == "/"
@@ -461,7 +564,7 @@ class FileBrowserPreviewInstrumentedTest {
             }
             val xml =
                 "<d:multistatus xmlns:d=\"DAV:\">" + entry(session.uri, true) +
-                    names.joinToString("") {
+                    names.filterNot { it == omit }.joinToString("") {
                         entry(
                             session.uri.trimEnd('/') + "/" + it +
                                 if (root ||
@@ -496,6 +599,8 @@ class FileBrowserPreviewInstrumentedTest {
             .findViewById<TextView>(R.id.preview_title)
             .text
             .toString()
+
+    private fun reading(activity: StorageFileActivity) = fragment(activity).requireView().findViewById<ScrollView>(R.id.preview_reading)
 
     private fun focused(activity: StorageFileActivity): StorageFile? {
         val list = list(activity)
@@ -534,11 +639,18 @@ class FileBrowserPreviewInstrumentedTest {
     ) {
         val deadline = SystemClock.uptimeMillis() + 8000
         var ready = false
+        var readySince = 0L
         var state = ""
         while (!ready && SystemClock.uptimeMillis() < deadline) {
             instrumentation.waitForIdleSync()
             scenario.onActivity {
-                ready = runCatching { predicate(it) }.getOrDefault(false)
+                val matches = runCatching { predicate(it) }.getOrDefault(false)
+                if (!matches) {
+                    readySince = 0L
+                } else if (readySince == 0L) {
+                    readySince = SystemClock.uptimeMillis()
+                }
+                ready = matches && SystemClock.uptimeMillis() - readySince >= 200
                 state =
                     "focus=${it.currentFocus?.id}, preview=${runCatching {
                         preview(

@@ -10,7 +10,7 @@
 | 播放器左下操作组（已选 A，已实施/部分验收） | [已选 A 设计](../docs/superpowers/designs/2026-10-31-player-controls-design.md)、[后续任务](../docs/superpowers/plans/2026-10-31-player-controls.md)、[交互原型](prototypes/tv-ui/player-controls-prototype.html) |
 | 产品功能与构建入口 | [项目 README](../README.md) |
 | TMDB 统一影视/番剧元数据与 UI 重设计 | [范围与待办](media-library/tmdb-metadata-followup.md)、[刮削与模块设计](../docs/superpowers/designs/2026-10-31-tmdb-media-library-design.md)、[实施与验证](../docs/superpowers/plans/2026-10-31-tmdb-media-library.md)、[网页原型](prototypes/tv-ui/README.md) |
-| 文件浏览 C：列表与预览（已选，实施暂缓） | [设计](../docs/superpowers/designs/2026-10-31-file-browser-design.md)、[后续任务与验收矩阵](../docs/superpowers/plans/2026-10-31-file-browser-preview.md)、[C 原型](prototypes/tv-ui/files-prototype.html?variant=preview) |
+| 文件浏览 C：列表与预览（已实施，含菜单精简） | [设计](../docs/superpowers/designs/2026-10-31-file-browser-design.md)、[C 实施记录](../docs/superpowers/plans/2026-10-31-file-browser-preview.md)、[菜单精简与 FM01–FM10 验收](../docs/superpowers/plans/2026-10-31-file-browser-menu-simplification.md)、[C 原型](prototypes/tv-ui/files-prototype.html?variant=preview) |
 | 串流、外部打开与磁力功能退役 | [范围、升级兼容与验证](../docs/superpowers/plans/2026-10-31-remove-stream-magnet.md) |
 | 纯 TV 收敛范围、执行与验证 | [实施记录](../docs/superpowers/plans/2026-10-29-tv-only.md) |
 | 开发、提交与验证要求 | [贡献指南](Contributing.md)、[本地开发环境](project_local_dev_env.md) |

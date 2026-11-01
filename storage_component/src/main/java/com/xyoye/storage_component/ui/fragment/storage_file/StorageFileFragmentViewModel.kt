@@ -16,7 +16,6 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.open115.auth.Open115ReAuthRequiredException
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.PlayHistoryEntity
-import com.xyoye.data_component.enums.TrackType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -142,63 +141,6 @@ class StorageFileFragmentViewModel(
             ensureRequest()
             searchResults = files
             publish(current)
-        }
-    }
-
-    /**
-     * 绑定音频文件
-     */
-    fun bindAudioSource(
-        file: StorageFile,
-        audioPath: String
-    ) {
-        viewModelScope.launch {
-            val playHistory = getStorageFileHistory(file)
-            playHistory.audioPath = audioPath
-            PlayHistoryRepository.insert(playHistory)
-
-            // 更新文件列表的播放历史
-            updateHistory()
-        }
-    }
-
-    /**
-     * 解绑资源文件
-     */
-    fun unbindExtraSource(
-        file: StorageFile,
-        resource: TrackType
-    ) {
-        viewModelScope.launch {
-            when (resource) {
-                TrackType.DANMU -> {
-                    PlayHistoryRepository.updateDanmu(
-                        file.uniqueKey(),
-                        storage.library.id,
-                        null,
-                        null,
-                    )
-                }
-
-                TrackType.SUBTITLE -> {
-                    PlayHistoryRepository.updateSubtitle(
-                        file.uniqueKey(),
-                        storage.library.id,
-                        null,
-                    )
-                }
-
-                TrackType.AUDIO -> {
-                    PlayHistoryRepository.updateAudio(
-                        file.uniqueKey(),
-                        file.storage.library.id,
-                        null,
-                    )
-                }
-
-                TrackType.VIDEO -> Unit
-            }
-            updateHistory()
         }
     }
 
@@ -354,15 +296,6 @@ class StorageFileFragmentViewModel(
 
     private fun isDisplayFile(file: StorageFile): Boolean =
         !(hidePointFiles() && file.fileName().startsWith(".")) && (file.isDirectory() || file.isVideoFile())
-
-    private suspend fun getStorageFileHistory(file: StorageFile): PlayHistoryEntity =
-        historyLookup(file) ?: PlayHistoryEntity(
-            videoName = "",
-            url = "",
-            mediaType = file.storage.library.mediaType,
-            uniqueKey = file.uniqueKey(),
-            storageId = file.storage.library.id
-        )
 
     private class LoginRequiredException(
         message: String

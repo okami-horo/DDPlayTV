@@ -2,6 +2,16 @@
 
 ## Latest Recorded Validation
 
+### File-browser menu simplification (2026-11-01)
+
+The user authorized implementation on clean baseline `e187285a8`. File-row menus/ellipses and their orphaned write helpers are removed; MENU/SETTINGS refresh once, legacy more focus maps to the file row, and overflowing preview text supports reading/return. Player controls, saved resource history, automatic same-directory lookup and scan/unmatched matching remain. The [FM01–FM10 ledger](../docs/superpowers/plans/2026-10-31-file-browser-menu-simplification.md) owns implementation details, failures, screenshots, commands and acceptance boundaries. No commit or TV deployment was performed.
+
+- Task API 34 AVD: all 12 actual browser/compatibility/Media3/mpv cases passed in `.tmp/file-menu/device-final2.log`; that command also contained an incorrect metadata class name and reports one initialization error, not a clean 13-case batch. Corrected metadata invocation `.tmp/file-menu/metadata-final.log` passed its one detail/correction case. Total verified behavior: 13 actual cases. Scan confirmation synchronization was tightened after an earlier batch failure and unchanged single-case pass.
+- Both kernels exercised actual playback, saved progress/resume and the danmaku search/local-selection entry. Saved-resource tests use Room and real local files through `StorageVideoSourceFactory`; network search results and new-binding persistence were not exercised. Tool/panel entry setup sometimes requests focus programmatically; the browser directory/reading path uses DPAD.
+- Debug/test APK, full JVM/lint, dependency governance and seven-file scoped ktlint ended **BUILD SUCCESSFUL in 4m 29s** (`.tmp/file-menu/validation-final.log`). JVM XML count: 116 suites, 480 passes, two existing skips, zero failures/errors (`.tmp/file-menu/jvm-results.json`). Scoped formatting repaired an earlier ktlint-only failure; local offline dependency/Robolectric and Windows short-temp init scripts were reused.
+- Inspected C prototype/native screenshots at 1440×810, 240 dpi; fixed the discovered reading-hint layout issue and added a visibility/height assertion. `.tmp/file-menu/native-latest/` and `prototype-reading-final.png` preserve current visual evidence. Prototype key assertions passed. Physical TV, real remote sources and user visual acceptance remain open; automatic metadata remains unimplemented.
+- XML, prototype script syntax, 171 local document links and `git diff --check` passed. Task AVD, dedicated preview browser and local server were closed; logs/screenshots remain in `.tmp/file-menu/`.
+
 ### Redundant UI guidance cleanup (2026-11-01)
 
 The user authorized app-wide removal of meaningless UI instructions. On `3ade60dfa` plus worktree changes, 24 production source/resource files and five selected prototypes remove remote tutorials, duplicate player focus captions and repeated settings/dialog guidance. Actions, accessibility descriptions, useful errors/state, A controls and C browser structure remain. UX01 loading consolidation, file-menu removal and automatic metadata remain separate work. The authoritative [UX02 ledger](../document/player/playback-validation-followup.md) records changes, coverage, commands and screenshot locations.
