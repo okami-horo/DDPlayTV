@@ -62,7 +62,6 @@ class SearchDanmuView(
     }
 
     private fun initListener() {
-        viewBinding.panelClose.setOnClickListener { mControlWrapper.hideSettingView() }
         viewBinding.tvSelectLocalDanmu.setOnClickListener {
             mControlWrapper.showSettingView(SettingViewType.SWITCH_SOURCE, TrackType.DANMU)
         }

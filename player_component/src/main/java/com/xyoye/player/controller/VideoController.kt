@@ -194,7 +194,6 @@ class VideoController(
      */
     fun observerExitPlayer(block: () -> Unit) {
         mPlayCompletionBlock = block
-        playerTopView.setExitPlayerObserver(block)
     }
 
     /**

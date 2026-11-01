@@ -205,9 +205,9 @@ class PlaybackAutoMetadataInstrumentedTest {
                         repeat(2) { if (page.currentFocus?.id != com.xyoye.local_component.R.id.retry) send(KeyEvent.KEYCODE_DPAD_LEFT) }
                         assertEquals(com.xyoye.local_component.R.id.retry, page.currentFocus?.id)
                         send(KeyEvent.KEYCODE_DPAD_CENTER)
-                        await("Retry is asynchronous and back stays focused") {
+                        await("Retry is asynchronous and status owns focus") {
                             page.findViewById<TextView>(com.xyoye.local_component.R.id.status).text == "正在重新识别…" &&
-                                page.currentFocus?.id == com.xyoye.local_component.R.id.back
+                                page.currentFocus?.id == com.xyoye.local_component.R.id.status_panel
                         }
                         screenshot("${kernel.name}-loading")
                         service.gate.countDown()

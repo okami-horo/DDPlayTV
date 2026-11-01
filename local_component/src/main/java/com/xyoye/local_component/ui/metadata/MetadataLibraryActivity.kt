@@ -61,7 +61,6 @@ class MetadataLibraryActivity : BaseActivity<MetadataLibraryViewModel, ActivityM
             filter = "unmatched"
             render()
         }
-        dataBinding.back.setOnClickListener { finish() }
         viewModel.state.collectAtStarted(this) {
             current = it
             render()

@@ -12,29 +12,11 @@
         android:translationY="-84dp"
         tools:translationY="0dp">
 
-        <ImageView
-            android:id="@+id/back_iv"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="28dp"
-            android:background="@drawable/cinema_icon_circle"
-            android:contentDescription="@null"
-            android:focusable="true"
-            android:nextFocusDown="@id/play_iv"
-            android:nextFocusLeft="@+id/player_settings_iv"
-            android:nextFocusRight="@+id/video_title_tv"
-            android:padding="8dp"
-            app:tint="@color/cinema_button_text"
-            android:src="@drawable/cinema_ic_back"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
         <com.xyoye.common_component.weight.MarqueeTextView
             android:id="@+id/video_title_tv"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="28dp"
             android:layout_marginEnd="12dp"
             android:layout_weight="1"
             android:ellipsize="marquee"
@@ -42,14 +24,14 @@
             android:focusableInTouchMode="true"
             android:marqueeRepeatLimit="marquee_forever"
             android:nextFocusDown="@id/play_iv"
-            android:nextFocusLeft="@+id/back_iv"
+            android:nextFocusLeft="@+id/player_settings_iv"
             android:nextFocusRight="@+id/player_settings_iv"
             android:singleLine="true"
             android:textColor="@color/text_white_immutable"
             android:textSize="17sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/system_time_tv"
-            app:layout_constraintStart_toEndOf="@id/back_iv"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="标题" />
 
@@ -76,7 +58,7 @@
             android:focusable="true"
             android:nextFocusDown="@id/play_iv"
             android:nextFocusLeft="@+id/video_title_tv"
-            android:nextFocusRight="@+id/back_iv"
+            android:nextFocusRight="@+id/video_title_tv"
             android:padding="8dp"
             app:tint="@color/cinema_button_text"
             android:src="@drawable/cinema_ic_settings"

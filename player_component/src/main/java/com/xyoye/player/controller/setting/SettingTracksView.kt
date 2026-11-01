@@ -95,7 +95,8 @@ class SettingTracksView
             when {
                 tracks.isNotEmpty() -> viewBinding.rvTrack.requestFocus()
                 viewBinding.trackVisible.isVisible -> viewBinding.trackVisible.requestFocus()
-                else -> viewBinding.tvAddTrack.requestFocus()
+                viewBinding.tvAddTrack.isVisible -> viewBinding.tvAddTrack.requestFocus()
+                else -> viewBinding.tvEmptyTrack.requestFocus()
             }
         }
 
@@ -139,7 +140,6 @@ class SettingTracksView
         }
 
         private fun initListener() {
-            viewBinding.panelClose.setOnClickListener { mControlWrapper.hideSettingView() }
             viewBinding.trackVisible.setOnClickListener {
                 if (mTrackType == TrackType.SUBTITLE) mControlWrapper.toggleSubtitleVisible() else mControlWrapper.toggleDanmuVisible()
                 viewBinding.trackVisible.isChecked =
@@ -181,6 +181,10 @@ class SettingTracksView
             viewBinding.rvTrack.setData(tracks)
 
             viewBinding.tvEmptyTrack.isVisible = tracks.isEmpty()
+            viewBinding.tvEmptyTrack.isFocusable =
+                tracks.isEmpty() &&
+                !viewBinding.tvAddTrack.isVisible &&
+                !viewBinding.trackVisible.isVisible
         }
 
         fun setTrackType(trackType: TrackType) {

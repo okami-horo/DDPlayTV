@@ -2,6 +2,18 @@
 
 ## Latest Recorded Validation
 
+### Remote BACK cleanup (2026-11-01)
+
+Removed redundant on-screen back/close controls across shared toolbars, search/binding, files, metadata, history, source forms and player panels. Retained remote return layers and business confirmation actions; repaired directional/default focus and loading/disabled/empty-state fallbacks. [The cleanup ledger](../docs/superpowers/plans/2026-11-01-remote-back-cleanup.md) owns coverage, intermediate failures, screenshots and artifact identity.
+
+Debug/test builds, full JVM, standard lint and scoped Kotlin formatting ended with `BUILD SUCCESSFUL`; 487 JVM passes, two existing external-fixture skips, zero failures/errors. Twenty-four distinct API 34 AVD cases passed across the initial and follow-up runs, including DPAD/BACK, file recovery, search, settings persistence and real Media3/mpv playback. Failures from a residual resource reference, formatting, missing video fixtures, premature lifecycle assertion and a stale pre-retirement search-tab count were repaired and rechecked. Native screenshots were inspected. The read-only AVD/private ADB were closed. No physical-TV deployment or commit; previous staged work and concurrent watch-history design records were preserved.
+
+### TV focus clipping (2026-11-01)
+
+On clean baseline `18b09d5b1`, fixed the five audited clipping/overflow locations using five production XML changes. Added `FocusClippingInstrumentedTest` for ancestor-visible focus bounds, edge columns, long breadcrumbs and filter expansion/DPAD traversal. [The repair ledger](../docs/superpowers/plans/2026-11-01-focus-clipping.md) owns source decisions, exact evidence, intermediate fixture/environment failures and screenshot links.
+
+Debug/test builds, full JVM, standard lint and scoped test formatting passed (`BUILD SUCCESSFUL`); 487 JVM tests passed and two existing FTP/SMB external-fixture tests skipped. On task API 34 AVD `emulator-5570` at 1920x1080/320dpi, all five focus tests passed at normal and 1.3 font scale; actual ten-item search expansion subsequently passed at both scales. Three TV-shell DPAD tests, setting persistence and real Media3/mpv playback/error-feedback/BACK smoke checks passed. Native screenshots were inspected. No physical-TV deployment, staging or commit; duplicate work titles remain deferred.
+
 ### TV scope cleanup A01–A08 (2026-11-01)
 
 The user authorized all eight audit candidates on clean baseline `d0ee40e29`. Removed unused Media3 WorkManager/Cast/session dependencies, the unused bound forwarding service/contracts, migration rollout/telemetry/download scaffolding, inaccessible danmaku sending, isolated panel_switch, retired scan/battery/settings code, standalone feature entries/manifests and Jsoup/legacy MultiDex installation. Real playback ownership, casting reception, nine storage types, subtitle/danmaku playback, ordinary caching and legacy compatibility remain. Schema 22 explicitly drops only two retired Media3 tables; all other 15 entity definitions match schema 21. The [cleanup ledger](../docs/superpowers/plans/2026-11-01-tv-scope-cleanup.md) owns exact commands, intermediate failures, source/artifact identity and limits.

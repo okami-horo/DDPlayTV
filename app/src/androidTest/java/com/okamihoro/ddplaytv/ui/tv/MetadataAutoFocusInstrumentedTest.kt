@@ -95,7 +95,7 @@ class MetadataAutoFocusInstrumentedTest {
                 assertEquals("Retry owns initial focus", R.id.retry, problem.currentFocus?.id)
                 screenshot("unresolved-long")
                 send(KeyEvent.KEYCODE_DPAD_RIGHT)
-                assertEquals("Disabled refresh must not trap focus", R.id.back, problem.currentFocus?.id)
+                assertEquals("Disabled refresh must not take focus", R.id.retry, problem.currentFocus?.id)
                 send(KeyEvent.KEYCODE_DPAD_LEFT)
                 assertEquals(R.id.retry, problem.currentFocus?.id)
                 send(KeyEvent.KEYCODE_BACK)
@@ -122,7 +122,7 @@ class MetadataAutoFocusInstrumentedTest {
         }
     }
 
-    @Test fun missingAssetKeepsBackReachableWithoutStartingRecognition() {
+    @Test fun missingAssetCanReturnWithRemoteWithoutStartingRecognition() {
         instrumentation.setInTouchMode(false)
         ActivityScenario
             .launch<MetadataMatchActivity>(
@@ -131,9 +131,10 @@ class MetadataAutoFocusInstrumentedTest {
                 lateinit var page: MetadataMatchActivity
                 scenario.onActivity { page = it }
                 await("Empty state") { page.hasWindowFocus() && page.findViewById<TextView>(R.id.status).text == "尚无文件资料" }
-                assertEquals(R.id.back, page.currentFocus?.id)
+                assertEquals(R.id.status_panel, page.currentFocus?.id)
                 screenshot("empty")
-                send(KeyEvent.KEYCODE_DPAD_CENTER)
+                send(KeyEvent.KEYCODE_BACK)
+                await("Empty page exits with BACK") { page.isDestroyed }
             }
     }
 

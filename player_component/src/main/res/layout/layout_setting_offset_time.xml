@@ -24,15 +24,6 @@
                 android:text="时间偏移"
                 android:textSize="20sp"
                 android:textColor="@color/cinema_text" />
-            <ImageView
-                android:id="@+id/panel_close"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:padding="6dp"
-                android:background="@drawable/cinema_icon_circle"
-                android:src="@drawable/cinema_ic_close"
-                android:contentDescription="关闭面板"
-                android:focusable="true" />
         </LinearLayout>
         <TextView
             android:layout_width="match_parent"

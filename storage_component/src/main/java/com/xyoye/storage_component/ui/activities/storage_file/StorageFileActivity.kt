@@ -146,7 +146,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
             }
         }
         dataBinding.browserNav3.setOnClickListener { openShell("settings") }
-        dataBinding.browserBack.setOnClickListener { backDirectory() }
         dataBinding.browserSearch.setOnClickListener {
             mMenus?.search(
                 routeStack
@@ -201,12 +200,6 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     private fun initListener() {
-        mToolbar?.setNavigationOnClickListener {
-            if (popFragment().not()) {
-                finish()
-            }
-        }
-
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.playEvents.collect { result ->
@@ -259,9 +252,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         finish()
     }
 
-    fun backDirectory() {
-        if (!popFragment()) finish()
-    }
+    fun requestBrowserActionFocus(): Boolean = dataBinding.browserRefresh.requestFocus()
 
     override fun onActivityResult(
         requestCode: Int,

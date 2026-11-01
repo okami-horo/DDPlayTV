@@ -63,6 +63,7 @@ class UiPolishInstrumentedTest {
     @Test fun deepPagesHaveVisibleFocusAndReturnWithRemote() {
         val pages =
             listOf(
+                com.xyoye.anime_component.ui.activities.search.SearchActivity::class.java,
                 CacheManagerActivity::class.java,
                 CommonlyFolderActivity::class.java,
                 ScanManagerActivity::class.java,
@@ -78,6 +79,9 @@ class UiPolishInstrumentedTest {
                 key(KeyEvent.KEYCODE_DPAD_DOWN)
                 await(scenario) { it.currentFocus?.isShown == true }
                 scenario.onActivity { assertFullyVisible(requireNotNull(it.currentFocus)) }
+                scenario.onActivity {
+                    assertNull(it.findViewById<androidx.appcompat.widget.Toolbar>(com.xyoye.core_ui_component.R.id.toolbar)?.navigationIcon)
+                }
                 screenshot(type.simpleName)
                 key(KeyEvent.KEYCODE_BACK)
             }
@@ -168,7 +172,7 @@ class UiPolishInstrumentedTest {
         }
     }
 
-    @Test fun sourceFormsKeepReturnVisibleAndScrollToConnectionStatus() {
+    @Test fun sourceFormsUseRemoteBackAndScrollToConnectionStatus() {
         val types =
             listOf(
                 MediaType.FTP_SERVER,
@@ -193,7 +197,7 @@ class UiPolishInstrumentedTest {
                 }
                 await(scenario) { dialog.window?.decorView?.hasWindowFocus() == true }
                 instrumentation.runOnMainSync {
-                    assertFullyVisible(dialog.findViewById(com.xyoye.core_ui_component.R.id.negative_bt)!!)
+                    assertFalse(dialog.findViewById<View>(com.xyoye.core_ui_component.R.id.bottom_action_ll)!!.isShown)
                     assertFullyVisible(requireNotNull(dialog.currentFocus))
                 }
                 screenshot("source-$type")
@@ -260,6 +264,13 @@ class UiPolishInstrumentedTest {
                                 assertEquals(it.findViewById<View>(PlayerR.id.iv_next_source).width, previous.width)
                             }
                             screenshot("player-first")
+                            scenario.onActivity { it.findViewById<View>(PlayerR.id.video_title_tv).requestFocus() }
+                            key(KeyEvent.KEYCODE_DPAD_RIGHT)
+                            scenario.onActivity { assertEquals(PlayerR.id.player_settings_iv, it.currentFocus?.id) }
+                            key(KeyEvent.KEYCODE_DPAD_LEFT)
+                            scenario.onActivity { assertEquals(PlayerR.id.video_title_tv, it.currentFocus?.id) }
+                            key(KeyEvent.KEYCODE_DPAD_DOWN)
+                            scenario.onActivity { assertEquals(PlayerR.id.play_iv, it.currentFocus?.id) }
                             key(KeyEvent.KEYCODE_DPAD_RIGHT)
                             key(KeyEvent.KEYCODE_DPAD_RIGHT)
                             scenario.onActivity { assertEquals(PlayerR.id.iv_next_source, it.currentFocus?.id) }

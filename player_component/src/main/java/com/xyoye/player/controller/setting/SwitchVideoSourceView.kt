@@ -34,7 +34,6 @@ class SwitchVideoSourceView
 
         init {
             initRv()
-            viewBinding.panelClose.setOnClickListener { mControlWrapper.hideSettingView() }
         }
 
         override fun getLayoutId() = R.layout.layout_switch_video_source
@@ -116,6 +115,7 @@ class SwitchVideoSourceView
         }
 
         override fun onViewShowed() {
-            if (mVideoSources.isEmpty()) viewBinding.panelClose.requestFocus() else viewBinding.sourceRv.requestFocus()
+            viewBinding.sourceSummary.isFocusable = mVideoSources.isEmpty()
+            if (mVideoSources.isEmpty()) viewBinding.sourceSummary.requestFocus() else viewBinding.sourceRv.requestFocus()
         }
     }

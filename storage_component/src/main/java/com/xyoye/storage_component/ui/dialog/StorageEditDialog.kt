@@ -27,8 +27,7 @@ abstract class StorageEditDialog<T : ViewDataBinding>(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setPositiveVisible(false)
-        setNegativeText("返回")
+        setBottomActionVisible(false)
 
         setOnDismissListener {
             doBeforeDismiss()

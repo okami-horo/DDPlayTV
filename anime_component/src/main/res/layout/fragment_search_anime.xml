@@ -37,8 +37,9 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <!-- Short filter grids need RecyclerView's content measurement for wrap_content. -->
             <androidx.recyclerview.widget.RecyclerView
-            app:tvDpadList="true"
+                app:tvDpadList="false"
                 android:id="@+id/anime_type_rv"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -84,7 +85,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.recyclerview.widget.RecyclerView
-            app:tvDpadList="true"
+                app:tvDpadList="false"
                 android:id="@+id/sort_rv"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

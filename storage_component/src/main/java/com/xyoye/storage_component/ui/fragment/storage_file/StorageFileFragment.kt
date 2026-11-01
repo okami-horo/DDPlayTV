@@ -123,7 +123,6 @@ class StorageFileFragment :
             reloadDirectory(refresh = true)
         }
 
-        dataBinding.emptyBack.setOnClickListener { ownerActivity.backDirectory() }
         viewModel.state.observe(viewLifecycleOwner, ::renderState)
     }
 
@@ -146,6 +145,7 @@ class StorageFileFragment :
             list.hasFocus() ||
                 binding.previewReading.hasFocus() ||
                 binding.browserEmpty.hasFocus() ||
+                (binding.browserEmpty.isVisible && activity?.currentFocus?.id == R.id.browser_refresh) ||
                 activity?.currentFocus?.id == R.id.browser_status
         applyingState = true
         binding.refreshLayout.isVisible = hasRows
@@ -411,7 +411,7 @@ class StorageFileFragment :
         val binding = bindingOrNull ?: return false
         if (binding.root.isInTouchMode || !ownerActivity.isCurrentDirectory(this)) return false
         if (binding.browserEmpty.isVisible) {
-            return if (binding.emptyActionTv.isVisible) binding.emptyActionTv.requestFocus() else binding.emptyBack.requestFocus()
+            return if (binding.emptyActionTv.isVisible) binding.emptyActionTv.requestFocus() else ownerActivity.requestBrowserActionFocus()
         }
         val list = binding.storageFileRv as DpadRecyclerView
         return list.requestFocus()

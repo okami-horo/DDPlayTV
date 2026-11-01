@@ -24,15 +24,6 @@
                 android:text="播放设置"
                 android:textColor="@color/cinema_text"
                 android:textSize="20sp" />
-            <ImageView
-                android:id="@+id/panel_close"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/cinema_ic_close"
-                android:padding="6dp"
-                android:contentDescription="关闭面板"
-                android:focusable="true"
-                android:background="@drawable/cinema_icon_circle" />
         </LinearLayout>
         <androidx.recyclerview.widget.RecyclerView
             app:tvDpadList="true"

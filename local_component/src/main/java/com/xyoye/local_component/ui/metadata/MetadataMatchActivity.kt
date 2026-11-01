@@ -18,8 +18,13 @@ class MetadataMatchActivity : BaseActivity<MetadataMatchViewModel, ActivityMetad
     override fun getLayoutId() = R.layout.activity_metadata_match
 
     override fun initView() {
-        dataBinding.statusPanel.isFocusable = false
-        dataBinding.statusPanel.isFocusableInTouchMode = false
+        fun focusAvailableAction() {
+            when {
+                dataBinding.retry.isEnabled -> dataBinding.retry
+                dataBinding.refresh.isEnabled -> dataBinding.refresh
+                else -> dataBinding.statusPanel
+            }.requestFocus()
+        }
         viewModel.initialize(
             intent.getLongExtra("assetId", 0),
             intent.getIntExtra("libraryId", 0),
@@ -34,7 +39,7 @@ class MetadataMatchActivity : BaseActivity<MetadataMatchViewModel, ActivityMetad
             dataBinding.status.text = it
             if (initialFocus && it != "正在读取文件…") {
                 initialFocus = false
-                if (dataBinding.retry.isEnabled) dataBinding.retry.requestFocus() else dataBinding.back.requestFocus()
+                focusAvailableAction()
             }
         }
         viewModel.advice.observe(this) { dataBinding.advice.text = it }
@@ -46,21 +51,21 @@ class MetadataMatchActivity : BaseActivity<MetadataMatchViewModel, ActivityMetad
             dataBinding.refresh.isEnabled = !busy && viewModel.canRefresh.value == true
             dataBinding.retry.applyDpadFocusable(dataBinding.retry.isEnabled)
             dataBinding.refresh.applyDpadFocusable(dataBinding.refresh.isEnabled)
-            dataBinding.retry.nextFocusRightId = if (dataBinding.refresh.isEnabled) dataBinding.refresh.id else dataBinding.back.id
-            dataBinding.back.nextFocusLeftId =
+            dataBinding.retry.nextFocusRightId = if (dataBinding.refresh.isEnabled) dataBinding.refresh.id else dataBinding.retry.id
+            dataBinding.refresh.nextFocusLeftId = if (dataBinding.retry.isEnabled) dataBinding.retry.id else dataBinding.refresh.id
+            dataBinding.statusPanel.nextFocusDownId =
                 when {
-                    dataBinding.refresh.isEnabled -> dataBinding.refresh.id
                     dataBinding.retry.isEnabled -> dataBinding.retry.id
-                    else -> dataBinding.back.id
+                    dataBinding.refresh.isEnabled -> dataBinding.refresh.id
+                    else -> dataBinding.statusPanel.id
                 }
-            if (focused?.isEnabled == false) dataBinding.back.requestFocus()
+            if (focused?.isEnabled == false) focusAvailableAction()
         }
         viewModel.canRetry.observe(this) { updateActions() }
         viewModel.canRefresh.observe(this) { updateActions() }
         viewModel.busy.observe(this) { updateActions() }
         dataBinding.retry.setOnClickListener { viewModel.recognizeAgain() }
         dataBinding.refresh.setOnClickListener { viewModel.refresh() }
-        dataBinding.back.setOnClickListener { finish() }
-        dataBinding.back.requestFocus()
+        focusAvailableAction()
     }
 }

@@ -263,7 +263,7 @@ class TmdbLibraryInstrumentedTest {
             await("Empty task page focuses an actionable button") {
                 settings.hasWindowFocus() &&
                     (
-                        settings.currentFocus?.id == com.xyoye.user_component.R.id.back ||
+                        settings.currentFocus?.id == com.xyoye.user_component.R.id.clear_cache ||
                             settings.findViewById<DpadRecyclerView>(com.xyoye.user_component.R.id.tasks).hasFocus()
                     )
             }

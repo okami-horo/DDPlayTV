@@ -64,7 +64,6 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
             layoutManager = horizontal()
             adapter = seasons
         }
-        dataBinding.back.setOnClickListener { finish() }
         dataBinding.correct.setOnClickListener {
             val all = groups.values.flatten().distinctBy { it.assetId }
             chooseFiles(all, true)
@@ -85,7 +84,7 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
                 is PlaybackSubmissionResult.Rejected -> ToastCenter.showError(result.failure.userMessage())
             }
         }
-        dataBinding.back.requestFocus()
+        dataBinding.correct.requestFocus()
     }
 
     private fun render() {
@@ -194,7 +193,7 @@ class MetadataDetailActivity : BaseActivity<MetadataLibraryViewModel, ActivityMe
                     }
                 }
                 dataBinding.files.visibility = if (cards.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
-                if (cards.isEmpty() && hadListFocus) dataBinding.back.requestFocus()
+                if (cards.isEmpty() && hadListFocus) dataBinding.correct.requestFocus()
             }
     }
 

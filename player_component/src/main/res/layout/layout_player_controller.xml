@@ -14,7 +14,7 @@
             android:focusable="true"
             android:contentDescription="@null"
             android:nextFocusRight="@+id/player_shot_iv"
-            android:nextFocusUp="@+id/back_iv"
+            android:nextFocusUp="@+id/video_title_tv"
             android:nextFocusLeft="@+id/player_lock_iv"
             android:nextFocusDown="@+id/play_iv"
             android:padding="12dp"

@@ -37,7 +37,6 @@ class PlayerSettingView(
 
     init {
         initRv()
-        viewBinding.panelClose.setOnClickListener { mControlWrapper.hideSettingView() }
     }
 
     override fun getLayoutId() = R.layout.layout_player_setting

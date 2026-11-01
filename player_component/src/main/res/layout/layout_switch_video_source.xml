@@ -24,18 +24,10 @@
                 android:text="选集"
                 android:textSize="20sp"
                 android:textColor="@color/cinema_text" />
-            <ImageView
-                android:id="@+id/panel_close"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:padding="6dp"
-                android:background="@drawable/cinema_icon_circle"
-                android:src="@drawable/cinema_ic_close"
-                android:contentDescription="关闭面板"
-                android:focusable="true" />
         </LinearLayout>
         <TextView
             android:id="@+id/source_summary"
+            android:background="@drawable/cinema_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text=""

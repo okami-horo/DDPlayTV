@@ -60,11 +60,10 @@ class MetadataSearchDialog : DialogFragment() {
         content.searchQuery.setOnKeyListener { _, key, event ->
             if (key != android.view.KeyEvent.KEYCODE_DPAD_DOWN) return@setOnKeyListener false
             if (event.action == android.view.KeyEvent.ACTION_DOWN) {
-                if (content.searchResults.isVisible) content.searchResults.requestFocus() else content.close.requestFocus()
+                if (content.searchResults.isVisible) content.searchResults.requestFocus() else content.searchQuery.requestFocus()
             }
             true
         }
-        content.close.setOnClickListener { dismiss() }
         ViewModelProvider(this)[MetadataLibraryViewModel::class.java].state.collectAtStarted(viewLifecycleOwner) {
             current = it
             render()

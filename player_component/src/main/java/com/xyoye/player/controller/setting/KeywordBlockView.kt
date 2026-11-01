@@ -42,7 +42,7 @@ class KeywordBlockView(
     override fun getGravity() = Gravity.CENTER
 
     override fun onViewShowed() {
-        viewBinding.ivClose.requestFocus()
+        viewBinding.keywordBlockAddEt.requestFocus()
     }
 
     private fun initSettingListener() {
@@ -63,10 +63,6 @@ class KeywordBlockView(
                     }
                 }
         }
-        viewBinding.ivClose.setOnClickListener {
-            closeSettingView()
-        }
-
         viewBinding.keywordBlockLl.setOnClickListener {
             closeSettingView()
         }

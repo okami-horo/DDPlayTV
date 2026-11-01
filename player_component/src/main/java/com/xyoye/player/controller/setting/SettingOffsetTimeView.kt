@@ -38,7 +38,6 @@ class SettingOffsetTimeView(
     }
 
     private fun initView() {
-        viewBinding.panelClose.setOnClickListener { mControlWrapper.hideSettingView() }
         actionViews.clear()
         actionViews.add(viewBinding.tvReduceTen)
         actionViews.add(viewBinding.tvReduceFive)

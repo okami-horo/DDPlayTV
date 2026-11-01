@@ -31,7 +31,7 @@ class CorePathSmokeTest {
         ActivityScenario.launch(SearchActivity::class.java).use { scenario ->
             waitForIdle()
             scenario.onActivity { activity ->
-                assertEquals(2, activity.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.tab_layout).adapter?.itemCount)
+                assertEquals(1, activity.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.tab_layout).adapter?.itemCount)
                 assertEquals(1, activity.supportFragmentManager.fragments.count { it.view?.isShown == true })
             }
         }

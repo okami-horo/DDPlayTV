@@ -77,17 +77,16 @@ class MetadataSettingsActivity : BaseActivity<MetadataSettingsViewModel, Activit
             dataBinding.tasks.setData(it)
             dataBinding.empty.visibility = if (it.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
             dataBinding.tasks.visibility = if (it.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
-            if (it.isEmpty() && hadListFocus) dataBinding.back.requestFocus()
+            if (it.isEmpty() && hadListFocus) dataBinding.clearCache.requestFocus()
             if (initialFocus) {
                 initialFocus = false
-                if (it.isEmpty()) dataBinding.back.requestFocus() else dataBinding.tasks.requestFocus()
+                if (it.isEmpty()) dataBinding.clearCache.requestFocus() else dataBinding.tasks.requestFocus()
             }
         }
         viewModel.message.observe(this) { dataBinding.message.text = it }
         dataBinding.clearCache.setOnClickListener { viewModel.clearHttpCache() }
         dataBinding.clearImages.setOnClickListener { viewModel.clearImages() }
-        dataBinding.back.setOnClickListener { finish() }
-        dataBinding.back.requestFocus()
+        dataBinding.clearCache.requestFocus()
     }
 
     private fun stateText(state: String): String =

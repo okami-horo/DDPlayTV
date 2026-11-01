@@ -34,21 +34,15 @@ class PlayerTopView(
             true,
         )
 
-    private var exitPlayerObserver: (() -> Unit)? = null
-
     private lateinit var mControlWrapper: ControlWrapper
 
     init {
-
-        viewBinding.backIv.setOnClickListener {
-            exitPlayerObserver?.invoke()
-        }
 
         viewBinding.playerSettingsIv.setOnClickListener {
             mControlWrapper.showSettingView(SettingViewType.PLAYER_SETTING)
         }
 
-        // 将初始焦点置于标题，而不是返回按钮
+        // 初始焦点置于标题
         post {
             viewBinding.videoTitleTv.requestDefaultFocus()
         }
@@ -104,9 +98,5 @@ class PlayerTopView(
 
     fun setVideoTitle(title: String?) {
         viewBinding.videoTitleTv.text = title
-    }
-
-    fun setExitPlayerObserver(block: () -> Unit) {
-        exitPlayerObserver = block
     }
 }

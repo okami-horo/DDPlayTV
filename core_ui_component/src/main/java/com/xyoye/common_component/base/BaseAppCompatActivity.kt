@@ -52,12 +52,10 @@ abstract class BaseAppCompatActivity<V : ViewDataBinding> :
         }
 
         supportActionBar?.apply {
-            setDisplayHomeAsUpEnabled(true)
+            setDisplayHomeAsUpEnabled(false)
             setDisplayShowTitleEnabled(false)
             this@BaseAppCompatActivity.setSupportActionBar(mToolbar)
         }
-
-        mToolbar?.setNavigationOnClickListener { finish() }
     }
 
     fun showLoading() {

@@ -63,13 +63,6 @@ class SearchActivity : BaseActivity<SearchViewModel, ActivitySearchBinding>() {
     }
 
     private fun initListener() {
-        dataBinding.backIv.setOnClickListener {
-            hideKeyboard(dataBinding.searchEt)
-            dataBinding.searchEt.applyDpadEditTextPolicy()
-            dataBinding.searchCl.requestFocus()
-            finish()
-        }
-
         dataBinding.searchCl.setOnClickListener {
             showKeyboard(dataBinding.searchEt)
         }

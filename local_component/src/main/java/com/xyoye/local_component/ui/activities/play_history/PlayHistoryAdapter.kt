@@ -62,11 +62,6 @@ class PlayHistoryAdapter(
             addEmptyView(R.layout.layout_empty) {
                 initEmptyView {
                     itemBinding.emptyTv.text = "暂无播放记录"
-                    itemBinding.emptyActionTv.apply {
-                        isVisible = true
-                        text = "返回"
-                        setOnClickListener { activity.finish() }
-                    }
                 }
             }
 
