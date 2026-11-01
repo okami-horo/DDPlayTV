@@ -8,15 +8,6 @@ import com.xyoye.common_component.network.RetrofitManager
 
 object OtherRepository : BaseRepository() {
     /**
-     * 获取首页Banner列表
-     */
-    suspend fun getHomeBanner() =
-        request()
-            .doGet {
-                RetrofitManager.danDanService.getHomeBanner()
-            }
-
-    /**
      * 获取云屏蔽数据
      */
     suspend fun getCloudFilters() =

@@ -63,7 +63,6 @@ class UiPolishInstrumentedTest {
     @Test fun deepPagesHaveVisibleFocusAndReturnWithRemote() {
         val pages =
             listOf(
-                com.xyoye.anime_component.ui.activities.search.SearchActivity::class.java,
                 CacheManagerActivity::class.java,
                 CommonlyFolderActivity::class.java,
                 ScanManagerActivity::class.java,

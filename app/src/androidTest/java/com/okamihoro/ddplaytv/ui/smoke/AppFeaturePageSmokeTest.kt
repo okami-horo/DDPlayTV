@@ -12,8 +12,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.okamihoro.ddplaytv.R
 import com.okamihoro.ddplaytv.ui.tv.TvMainActivity
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
-import com.xyoye.anime_component.ui.activities.anime_season.AnimeSeasonActivity
-import com.xyoye.anime_component.ui.activities.search.SearchActivity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.local_component.ui.activities.play_history.PlayHistoryActivity
 import com.xyoye.local_component.ui.activities.shooter_subtitle.ShooterSubtitleActivity
@@ -169,25 +167,7 @@ class AppFeaturePageSmokeTest {
     }
 
     @Test
-    fun animeAndLocalPagesLoad() {
-        ActivityScenario.launch(SearchActivity::class.java).use { scenario ->
-            waitForIdle()
-            scenario.onActivity { activity ->
-                assertEquals(2, activity.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.tab_layout).adapter?.itemCount)
-                assertEquals(1, activity.supportFragmentManager.fragments.count { it.view?.isShown == true })
-            }
-        }
-
-        ActivityScenario.launch(AnimeSeasonActivity::class.java).use { scenario ->
-            waitForIdle()
-            scenario.onActivity { activity ->
-                assertNotNull(
-                    "Anime season list should exist",
-                    activity.findViewById<RecyclerView>(com.xyoye.anime_component.R.id.anime_rv),
-                )
-            }
-        }
-
+    fun localPagesLoad() {
         ActivityScenario.launch(PlayHistoryActivity::class.java).use { scenario ->
             waitForIdle()
             scenario.onActivity { activity ->

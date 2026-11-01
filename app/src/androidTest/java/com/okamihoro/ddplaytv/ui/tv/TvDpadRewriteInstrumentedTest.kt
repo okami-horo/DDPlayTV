@@ -11,6 +11,7 @@ import android.view.PixelCopy
 import android.view.SurfaceView
 import android.view.View
 import android.widget.FrameLayout
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,11 +20,12 @@ import com.alibaba.android.arouter.launcher.ARouter
 import com.okamihoro.ddplaytv.R
 import com.okamihoro.ddplaytv.playback.withIndexedPlaybackFile
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
-import com.xyoye.anime_component.ui.fragment.home_page.HomePageFragment
+import com.xyoye.anime_component.ui.adapter.AnimeAdapter
 import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.database.DatabaseProvider
+import com.xyoye.common_component.extension.gridEmpty
 import com.xyoye.common_component.playback.handoff.PlaybackNavigation
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
@@ -33,7 +35,6 @@ import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.data.AnimeData
-import com.xyoye.data_component.data.BangumiAnimeData
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.entity.VideoEntity
 import com.xyoye.data_component.enums.PlayerType
@@ -72,9 +73,15 @@ class TvDpadRewriteInstrumentedTest {
             scenario.onActivity {
                 it.supportFragmentManager
                     .beginTransaction()
-                    .replace(R.id.fragment_container, HomePageFragment.newInstance(BangumiAnimeData(items.toMutableList())))
+                    .replace(R.id.fragment_container, Fragment(com.xyoye.anime_component.R.layout.fragment_anime_recommend))
                     .commitNow()
-                it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.page_anime_rv).requestFocus()
+                it.findViewById<View>(com.xyoye.anime_component.R.id.empty_tv).visibility = View.GONE
+                it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.recommend_rv).apply {
+                    visibility = View.VISIBLE
+                    layoutManager = gridEmpty(4)
+                    adapter = AnimeAdapter.getAdapter(it).also { adapter -> adapter.setData(items) }
+                    requestFocus()
+                }
             }
             await(scenario) { gridPosition(it) == 0 && it.hasWindowFocus() }
             send(KeyEvent.KEYCODE_DPAD_RIGHT)
@@ -84,24 +91,24 @@ class TvDpadRewriteInstrumentedTest {
             send(KeyEvent.KEYCODE_DPAD_LEFT)
             await(scenario) { gridPosition(it) == 4 }
             scenario.onActivity {
-                val list = it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.page_anime_rv)
+                val list = it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.recommend_rv)
                 val adapter = list.adapter as BaseAdapter
                 adapter.setData(listOf(AnimeData(animeId = 100, animeTitle = "Inserted")) + items)
             }
             await(scenario) { gridPosition(it) == 5 }
             scenario.onActivity {
-                val list = it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.page_anime_rv)
+                val list = it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.recommend_rv)
                 val adapter = list.adapter as BaseAdapter
                 assertEquals(5, (adapter.items[gridPosition(it)] as AnimeData).animeId)
                 adapter.setData(adapter.items.filterNot { item -> (item as AnimeData).animeId == 5 })
             }
             await(scenario) { gridPosition(it) >= 0 }
             scenario.onActivity {
-                val list = it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.page_anime_rv)
+                val list = it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.recommend_rv)
                 list.setSelectedPosition(0)
             }
             await(scenario) {
-                val list = it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.page_anime_rv)
+                val list = it.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.recommend_rv)
                 gridPosition(it) == 0 && list.scrollState == RecyclerView.SCROLL_STATE_IDLE
             }
             send(KeyEvent.KEYCODE_DPAD_UP)
@@ -314,7 +321,7 @@ class TvDpadRewriteInstrumentedTest {
     }
 
     private fun gridPosition(activity: TvMainActivity): Int {
-        val list = activity.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.page_anime_rv)
+        val list = activity.findViewById<DpadRecyclerView>(com.xyoye.anime_component.R.id.recommend_rv)
         return activity.currentFocus?.let { list?.findContainingViewHolder(it)?.bindingAdapterPosition } ?: -1
     }
 

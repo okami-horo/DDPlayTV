@@ -20,7 +20,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
-import com.xyoye.anime_component.R as AnimeR
 import com.xyoye.core_ui_component.R as UiR
 import com.xyoye.local_component.R as LocalR
 import com.xyoye.player_component.R as PlayerR
@@ -87,56 +86,6 @@ class FocusClippingInstrumentedTest {
             screenshot("player-long-path")
         }
 
-    @Test
-    fun seasonFiltersAndResultsAreVisibleAndDpadReachable() =
-        scene(AnimeR.layout.activity_anime_season) {
-            val years = filter(AnimeR.id.year_rv, 4)
-            val seasons = filter(AnimeR.id.season_rv, 4)
-            val sort = filter(AnimeR.id.sort_rv, 3)
-            val results = results()
-            focus(years, 0)
-            key(KeyEvent.KEYCODE_DPAD_DOWN)
-            assertPosition(seasons, 0)
-            key(KeyEvent.KEYCODE_DPAD_DOWN)
-            assertPosition(sort, 0)
-            key(KeyEvent.KEYCODE_DPAD_DOWN)
-            assertPosition(results, 0)
-            key(KeyEvent.KEYCODE_DPAD_UP)
-            assertPosition(sort, 0)
-            screenshot("season-filters")
-        }
-
-    @Test
-    fun searchFiltersResizeOnExpandAndCollapseWithoutHidingResults() =
-        scene(AnimeR.layout.fragment_search_anime) {
-            onMain { root.findViewById<View>(AnimeR.id.history_cl).visibility = View.GONE }
-            val types = filter(AnimeR.id.anime_type_rv, 4)
-            val sort = filter(AnimeR.id.sort_rv, 4)
-            val results = results()
-            focus(types, 0)
-            val collapsedHeight = types.height
-            onMain { types.adapter = Rows(AnimeR.layout.item_common_screen, 10) }
-            settle()
-            assertTrue("Expanded filters must add a row", types.height > collapsedHeight)
-            focus(types, 0)
-            key(KeyEvent.KEYCODE_DPAD_DOWN)
-            assertPosition(types, 4)
-            key(KeyEvent.KEYCODE_DPAD_DOWN)
-            assertPosition(types, 8)
-            key(KeyEvent.KEYCODE_DPAD_DOWN)
-            assertPosition(sort, 0)
-            key(KeyEvent.KEYCODE_DPAD_DOWN)
-            assertPosition(results, 0)
-            screenshot("search-expanded")
-            onMain { types.adapter = Rows(AnimeR.layout.item_common_screen, 4) }
-            settle()
-            assertEquals("Collapsing restores content height", collapsedHeight, types.height)
-            focus(types, 0)
-            key(KeyEvent.KEYCODE_DPAD_DOWN)
-            assertPosition(sort, 0)
-            screenshot("search-collapsed")
-        }
-
     private fun scene(
         layout: Int,
         widthDp: Int? = null,
@@ -166,25 +115,6 @@ class FocusClippingInstrumentedTest {
             test()
         }
     }
-
-    private fun filter(
-        id: Int,
-        count: Int
-    ): RecyclerView =
-        root.findViewById<RecyclerView>(id).also {
-            onMain {
-                it.layoutManager = it.grid(4)
-                it.adapter = Rows(AnimeR.layout.item_common_screen, count)
-            }
-        }
-
-    private fun results(): RecyclerView =
-        root.findViewById<RecyclerView>(AnimeR.id.anime_rv).also {
-            onMain {
-                it.layoutManager = it.grid(3)
-                it.adapter = Rows(AnimeR.layout.item_anime_cinema, 9)
-            }
-        }
 
     private fun focus(
         list: RecyclerView,

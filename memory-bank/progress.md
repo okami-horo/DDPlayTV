@@ -2,6 +2,18 @@
 
 ## Latest Recorded Validation
 
+### Latest Release installed on VIDAA TV (2026-11-01 15:58)
+
+At the user's request, rebuilt `2e77f4198` plus the current legacy-anime cleanup using `:app:assembleRelease`: `BUILD SUCCESSFUL in 2m 37s`. Signed ARM64 Release `4.2.3` / `70` was installed with `adb install -r` on `192.168.31.70:5555` (`VIDAA_TV`, MT9653, API 30). Package `lastUpdateTime=2026-11-01 15:58:05`; UID 10111 and original first-install time are unchanged. Installed/local APK SHA-256 matches `ff2a118b8820a395da504d13d479cd88b3c80d136d96c87e431b9c131d45e812`. No uninstall/data clear, commit, TV navigation or playback test. Independent ADB 5055 resolved a default-server Windows 10013 connection failure and was closed afterward.
+
+This delivery includes A01–A08, remote BACK/focus corrections and old anime discovery retirement. It supersedes the 12:59:24 installed artifact; installation does not establish physical-TV runtime acceptance or execution of the pending schema migration. Full evidence is in the [cleanup delivery record](../docs/superpowers/plans/2026-11-01-legacy-anime-discovery-cleanup.md#用户授权的电视-release-安装2026-11-01-1558).
+
+### Legacy anime discovery retirement (2026-11-01)
+
+On `2e77f4198`, removed the unreachable old anime homepage, weekly/seasonal discovery, name-search and empty advanced-search pages, plus their dedicated routes, layouts, picker, Banner dependency/license and network models/endpoints. Current media-library search, anime details/collections and danmaku retrieval remain. Room schema/entities/DAOs and existing search/history rows are unchanged. [The cleanup ledger](../docs/superpowers/plans/2026-11-01-legacy-anime-discovery-cleanup.md) owns scope, commands, APK checks and screenshots.
+
+Debug/test builds, full JVM, standard lint, dependency governance and scoped ktlint ended with `BUILD SUCCESSFUL in 10m`. XML results including repository/mpv: 480 passed, two existing external-fixture skips, zero failures/errors, 110 suites. Twelve distinct AVD cases passed across the initial 11-pass/one-failure run and unchanged one-case rerun: an inspected screenshot confirmed an Android system ANR dialog intercepted the first collection test. Current library search and collection screenshots were inspected. Retired classes/routes/license are absent from the APK. The task AVD/private ADB are closed; no commit or physical-TV deployment. Concurrent watch-history prototype/design changes were preserved. Earlier BACK/focus cleanup is now committed as `2e77f4198`; its old search/season evidence is historical, with those pages now retired.
+
 ### Remote BACK cleanup (2026-11-01)
 
 Removed redundant on-screen back/close controls across shared toolbars, search/binding, files, metadata, history, source forms and player panels. Retained remote return layers and business confirmation actions; repaired directional/default focus and loading/disabled/empty-state fallbacks. [The cleanup ledger](../docs/superpowers/plans/2026-11-01-remote-back-cleanup.md) owns coverage, intermediate failures, screenshots and artifact identity.

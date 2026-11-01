@@ -25,7 +25,6 @@ dependencies {
     implementation(project(":data_component"))
 
     implementation(Dependencies.Kotlin.lib)
-    implementation(Dependencies.Github.banner)
 
     kapt(Dependencies.Alibaba.arouter_compiler)
 

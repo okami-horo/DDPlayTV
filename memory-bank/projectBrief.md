@@ -9,6 +9,7 @@ DDPlayTV is a modular Android TV media app using Kotlin, XML views, MVVM, ARoute
 - Retired by user decision: Dandanplay PC media-library integration and inaccessible danmaku sending (2026-11-01), Bilibili integration (standalone PiliPlus owns that workflow), VLC, Anime4K, mobile UI, manual URL/header playback, external video VIEW reception, torrent/magnet playback/search and Thunder. Older repository descriptions do not change this scope. PC legacy rows remain stored for compatibility, with no active source/player entry.
 - Media3 is the default player; mpv is the other maintained kernel. Compatibility and old-setting behavior: [player kernels](../document/player/player-kernels.md).
 - Preserve real source/file/history identities, existing manual metadata bindings, playback progress and settings persistence. Removing manual matching UI must not silently discard legacy data. Reduce unclear ownership while retaining supported behavior.
+- Retired standalone anime discovery (2026-11-01): the unreachable old homepage, weekly/seasonal browsing and anime-name search pages are removed. Current media-library search, anime details/collections and danmaku retrieval remain; existing anime search-history rows are preserved. [Cleanup evidence](../docs/superpowers/plans/2026-11-01-legacy-anime-discovery-cleanup.md).
 
 ## Selected Visual Authority
 
@@ -17,6 +18,7 @@ DDPlayTV is a modular Android TV media app using Kotlin, XML views, MVVM, ARoute
 | Main Cinema experience | [index.html, cinema](../document/prototypes/tv-ui/index.html?variant=cinema) |
 | Playback controls A | [grouped single row](../document/prototypes/tv-ui/player-controls-prototype.html?variant=grouped) |
 | File browser C | [list and preview](../document/prototypes/tv-ui/files-prototype.html?variant=preview) |
+| Series detail B (selected 2026-11-01; native pending) | [cinematic episode shelf](../document/prototypes/tv-ui/series-detail-prototype.html?variant=B), [scope and acceptance](../docs/superpowers/designs/2026-11-01-home-watch-history-design.md); supersedes the old metadata detail layout below |
 | Deep pages and final seven child groups | [deep pages](../document/prototypes/tv-ui/deep-pages.html), [remaining pages](../document/prototypes/tv-ui/remaining-pages.html), [supplemental design](../docs/superpowers/designs/2026-10-31-ui-polish-design.md) |
 
 The user's 2026-11-01 decision removes on-screen back buttons and player-panel close icons in favor of remote BACK navigation. This supersedes those controls in the prototypes; [the cleanup ledger](../docs/superpowers/plans/2026-11-01-remote-back-cleanup.md) records focus replacements and verification. Business confirmation/cancellation actions remain.

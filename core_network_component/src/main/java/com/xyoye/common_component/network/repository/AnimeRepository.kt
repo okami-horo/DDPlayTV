@@ -8,29 +8,6 @@ import com.xyoye.common_component.network.RetrofitManager
 
 object AnimeRepository : BaseRepository() {
     /**
-     * 获取每周番剧
-     */
-    suspend fun getWeeklyAnime() =
-        request()
-            .param("filterAdultContent", true)
-            .doGet {
-                RetrofitManager.danDanService.getWeeklyAnime(it)
-            }
-
-    /**
-     * 搜索番剧
-     */
-    suspend fun searchAnime(
-        keyword: String,
-        type: String?
-    ) = request()
-        .param("keyword", keyword)
-        .param("type", type)
-        .doGet {
-            RetrofitManager.danDanService.searchAnime(it)
-        }
-
-    /**
      * 搜索番剧，根据标签
      */
     suspend fun searchAnimeByTag(tags: List<String>) =
@@ -39,17 +16,6 @@ object AnimeRepository : BaseRepository() {
             .doGet {
                 RetrofitManager.danDanService.searchAnimeByTag(it)
             }
-
-    /**
-     * 获取季度番剧
-     */
-    suspend fun getSeasonAnime(
-        year: String,
-        month: String
-    ) = request()
-        .doGet {
-            RetrofitManager.danDanService.getSeasonAnime(year, month)
-        }
 
     /**
      * 获取番剧详情

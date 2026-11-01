@@ -4,8 +4,6 @@ import com.xyoye.common_component.network.helper.DeveloperCertificateInterceptor
 import com.xyoye.common_component.network.request.RequestParams
 import com.xyoye.data_component.data.AnimeDetailData
 import com.xyoye.data_component.data.AnimeTagData
-import com.xyoye.data_component.data.BangumiAnimeData
-import com.xyoye.data_component.data.BannerData
 import com.xyoye.data_component.data.CloudHistoryListData
 import com.xyoye.data_component.data.CommonJsonData
 import com.xyoye.data_component.data.DanmuData
@@ -13,7 +11,6 @@ import com.xyoye.data_component.data.DanmuMatchData
 import com.xyoye.data_component.data.DanmuSearchData
 import com.xyoye.data_component.data.FollowAnimeData
 import com.xyoye.data_component.data.LoginData
-import com.xyoye.data_component.data.SearchAnimeData
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -31,14 +28,6 @@ import retrofit2.http.QueryMap
  */
 
 interface DanDanService {
-    @GET("api/v2/bangumi/shin")
-    suspend fun getWeeklyAnime(
-        @QueryMap params: RequestParams
-    ): BangumiAnimeData
-
-    @GET("api/v2/homepage/banner")
-    suspend fun getHomeBanner(): BannerData
-
     @GET("api/v2/bangumi/{animeId}")
     suspend fun getAnimeDetail(
         @Path("animeId") animeId: String
@@ -59,21 +48,10 @@ interface DanDanService {
         @QueryMap params: RequestParams
     ): FollowAnimeData
 
-    @GET("/api/v2/search/anime")
-    suspend fun searchAnime(
-        @QueryMap params: RequestParams
-    ): SearchAnimeData
-
     @GET("/api/v2/search/tag")
     suspend fun searchAnimeByTag(
         @QueryMap params: RequestParams
     ): AnimeTagData
-
-    @GET("/api/v2/bangumi/season/anime/{year}/{month}")
-    suspend fun getSeasonAnime(
-        @Path("year") year: String,
-        @Path("month") month: String
-    ): BangumiAnimeData
 
     @POST("/api/v2/match")
     suspend fun matchDanmu(

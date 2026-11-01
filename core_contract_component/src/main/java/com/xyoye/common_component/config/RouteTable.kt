@@ -17,10 +17,7 @@ object RouteTable {
     }
 
     object Anime {
-        const val Search = "/anime/search"
-        const val HomeFragment = "/anime/home_fragment"
         const val AnimeDetail = "/anime/anime_detail"
-        const val AnimeSeason = "/anime/anime_season"
         const val AnimeFollow = "/anime/follow"
         const val AnimeTag = "/anime/tag"
         const val AnimeHistory = "/anime/history"

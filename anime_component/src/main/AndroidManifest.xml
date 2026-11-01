@@ -7,14 +7,6 @@
             android:theme="@style/ShareElementActivityTheme"
             android:configChanges="orientation|screenSize" />
 
-        <activity
-            android:name=".ui.activities.search.SearchActivity"
-            android:configChanges="orientation|screenSize" />
-        <activity
-            android:name=".ui.activities.anime_season.AnimeSeasonActivity"
-            android:configChanges="orientation|screenSize"/>
-        <activity android:name=".ui.activities.search_advanced.SearchAdvancedActivity"
-            android:configChanges="orientation|screenSize"/>
         <activity android:name=".ui.activities.anime_follow.AnimeFollowActivity"
             android:configChanges="orientation|screenSize"/>
         <activity android:name=".ui.activities.anime_history.AnimeHistoryActivity"
