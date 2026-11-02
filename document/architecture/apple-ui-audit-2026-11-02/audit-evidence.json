@@ -1,0 +1,389 @@
+{
+  "reviewDate": "2026-11-02",
+  "timeZone": "Asia/Shanghai",
+  "revision": "c69409f33bf773e206cf383d3b862a935e4620e0",
+  "scope": "Static visual and source audit; recommendations only",
+  "prototypeViewsRendered": 64,
+  "prototypePageErrors": [],
+  "historicalNativeScreensViewed": 20,
+  "finalBoardsViewed": [
+    "01-main.jpg",
+    "02-files.jpg",
+    "03-detail.jpg",
+    "04-player-panels.jpg",
+    "05-sources.jpg",
+    "06-tools.jpg",
+    "07-child-dialogs.jpg",
+    "08-anime-pages.jpg",
+    "09-other-pages.jpg",
+    "10-native-main.jpg",
+    "11-native-player.jpg",
+    "12-native-forms-tools.jpg"
+  ],
+  "tools": {
+    "renderer": "Playwright 1.62.1, headless Microsoft Edge",
+    "python": "3.13.3",
+    "xml": "Python ElementTree; seven modules src/main/res/layout only",
+    "codeSearch": "rg filename/literal navigation and direct source reads; no AST or semantic-index result claimed"
+  },
+  "typographyScan": {
+    "layoutFiles": 152,
+    "directSmallTextAttributes": 39,
+    "smallTextFiles": 19
+  },
+  "boundaries": {
+    "freshNativeExecution": false,
+    "gradleBuildOrTests": false,
+    "physicalTelevisionOperation": false,
+    "animationOrPerformanceMeasurement": false,
+    "implementedFindings": []
+  },
+  "currentSourceSha256": {
+    "app/src/main/res/layout/activity_tv_main.xml": "0b235e49ee43d658783a1cae19e6309bbef3c974b5cbe574568180697f975fef",
+    "core_ui_component/src/main/res/drawable/cinema_brand.xml": "b50312df6204afcf35d9aa523e1ea2a06877d90e9889f5fb0649bd45a6e0a39c",
+    "core_ui_component/src/main/res/drawable/cinema_button.xml": "f7320d7eb84efa00aaa7626d0aabe6727a43a1dc500c86781acb088ef011b8b5",
+    "core_ui_component/src/main/res/drawable/cinema_navigation.xml": "095655bbfd040c7fcd98e4e4acf1d6e02593d0f79c03a92804af0f8a6258f732",
+    "core_ui_component/src/main/res/drawable/cinema_primary.xml": "b34fbca6de35bd5dda91486c86a309c524f4518e502cd64fc11267f9fea2e22a",
+    "core_ui_component/src/main/res/layout/item_cinema_preference.xml": "1716ff9bda2e97bb250fb8f45702315e8cf658e82f1686b7680a8f4c7e5173ee",
+    "core_ui_component/src/main/res/values/cinema.xml": "582f5c0cdc900955a05fc2a70cb4f6c5f767bb2563a8ac5f002ccb1dfdde822d",
+    "document/prototypes/tv-ui/deep-pages.html": "0295a086c370ca140a7472bd3fc535e1678d526bb532c48dea81fe810f83335e",
+    "document/prototypes/tv-ui/files-prototype.html": "7dc2f03b7300358ca6753af642f11e1ea25aec15cf7e6c358333b324994593dd",
+    "document/prototypes/tv-ui/index.html": "2c0e4e65581a213dbe3707e567f38b60d896fdfe9a899567d1b5c2e1e6d0f315",
+    "document/prototypes/tv-ui/player-controls-prototype.html": "f10235b2c65af238fe92e4d76c61deae86a21b9faef70d63fb3f6418aafdf9a0",
+    "document/prototypes/tv-ui/remaining-pages.html": "7b147c043f5d6d1a3669919d5f2c3798297bb087d73e0e05954ec5f55966a46b",
+    "document/prototypes/tv-ui/series-detail-prototype.html": "07f70c82cca5070b8ac202a46cc61130d3f7f5a0ad4cd872c43cc003c0a3dd2e",
+    "local_component/src/main/java/com/xyoye/local_component/ui/metadata/MetadataCardAdapter.kt": "d536150c799afb52667379a53dbd51b84e927f968b076299851775772f12e82d",
+    "local_component/src/main/res/layout/activity_metadata_detail.xml": "c6dffe86eb42e862293ec750394bd6f8935ee5418fd9a6965e4bf529da76959b",
+    "local_component/src/main/res/layout/item_metadata_episode.xml": "c7a85008e6d6119e4077a60b1cc590b820a84965e01c418b00ce912c6e0ef059",
+    "local_component/src/main/res/layout/item_metadata_landscape.xml": "9d58f44d4d33b90730d1aafe57bbe8e68b3467b2e053f0cdd60abcbcc59371d8",
+    "memory-bank/projectBrief.md": "c8cfcea57b4844578a21ab88af3ebac1ed13724060ea38c9363cfd0659564c7f",
+    "player_component/src/main/res/drawable/background_player_setting_text.xml": "56c75c9142480e66a3103c54d1767571b4e79aed02420b4a7e8b6d61e32b4d40",
+    "player_component/src/main/res/drawable/cinema_player_panel.xml": "0f8585132ee4509e2e9edac384c8814fe8c95250b85707b4e3001984f04bf5f2",
+    "storage_component/src/main/res/layout/dialog_ftp_login.xml": "4284ce77689b5615ac90eab28de76ce9c96150b18c3511360a2e4243e8ea1687",
+    "storage_component/src/main/res/layout/dialog_web_dav_login.xml": "4d43022c72e249724152b7062b637fa01fb7ad7ad58584de51ceeb7f42a5d966",
+    "user_component/src/main/java/com/xyoye/user_component/ui/activities/about_us/AboutUsActivity.kt": "7ce1569b3a0d6da846fb5548446c0c73090978eed7952ca40cd02c0c0cfff38c",
+    "user_component/src/main/res/layout/activity_about_us.xml": "ae7e348560e1d846515d9e09f8fcd2e783a606cfce68e3b9fedbe7af208539c7"
+  },
+  "prototypeCaptureSources": [
+    {
+      "name": "main-home",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\main-home.png",
+      "query": "variant=cinema&page=home"
+    },
+    {
+      "name": "main-library",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\main-library.png",
+      "query": "variant=cinema&page=library"
+    },
+    {
+      "name": "main-settings",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\main-settings.png",
+      "query": "variant=cinema&page=settings"
+    },
+    {
+      "name": "main-search",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\main-search.png",
+      "query": "variant=cinema&page=search"
+    },
+    {
+      "name": "player-A",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\player-A.png",
+      "query": "variant=grouped&capture=1"
+    },
+    {
+      "name": "files-root",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\files-root.png",
+      "query": "variant=preview&scene=root&capture=1"
+    },
+    {
+      "name": "files-videos",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\files-videos.png",
+      "query": "variant=preview&scene=videos&capture=1"
+    },
+    {
+      "name": "files-long-path",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\files-long-path.png",
+      "query": "variant=preview&scene=long-path&capture=1"
+    },
+    {
+      "name": "files-empty",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\files-empty.png",
+      "query": "variant=preview&scene=empty&capture=1"
+    },
+    {
+      "name": "files-loading",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\files-loading.png",
+      "query": "variant=preview&scene=loading&capture=1"
+    },
+    {
+      "name": "files-error",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\files-error.png",
+      "query": "variant=preview&scene=error&capture=1"
+    },
+    {
+      "name": "files-refresh-error",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\files-refresh-error.png",
+      "query": "variant=preview&scene=refresh-error&capture=1"
+    },
+    {
+      "name": "files-page-error",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\files-page-error.png",
+      "query": "variant=preview&scene=page-error&capture=1"
+    },
+    {
+      "name": "files-login",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\files-login.png",
+      "query": "variant=preview&scene=login&capture=1"
+    },
+    {
+      "name": "detail-normal",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\detail-normal.png",
+      "query": "variant=B&state=normal"
+    },
+    {
+      "name": "detail-seasons",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\detail-seasons.png",
+      "query": "variant=B&state=seasons"
+    },
+    {
+      "name": "detail-versions",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\detail-versions.png",
+      "query": "variant=B&state=versions"
+    },
+    {
+      "name": "detail-empty",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\detail-empty.png",
+      "query": "variant=B&state=empty"
+    },
+    {
+      "name": "detail-loading",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\detail-loading.png",
+      "query": "variant=B&state=loading"
+    },
+    {
+      "name": "detail-movie",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\detail-movie.png",
+      "query": "variant=B&state=movie"
+    },
+    {
+      "name": "detail-invalid",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\detail-invalid.png",
+      "query": "variant=B&state=invalid"
+    },
+    {
+      "name": "detail-initial",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\detail-initial.png",
+      "query": "variant=B&state=initial"
+    },
+    {
+      "name": "deep-episodes",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-episodes.png",
+      "query": "page=episodes&capture=1"
+    },
+    {
+      "name": "deep-advanced",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-advanced.png",
+      "query": "page=advanced&capture=1"
+    },
+    {
+      "name": "deep-offset",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-offset.png",
+      "query": "page=offset&capture=1"
+    },
+    {
+      "name": "deep-style",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-style.png",
+      "query": "page=style&capture=1"
+    },
+    {
+      "name": "deep-search",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-search.png",
+      "query": "page=search&capture=1"
+    },
+    {
+      "name": "deep-keywords",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-keywords.png",
+      "query": "page=keywords&capture=1"
+    },
+    {
+      "name": "deep-binding",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-binding.png",
+      "query": "page=binding&capture=1"
+    },
+    {
+      "name": "deep-download",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-download.png",
+      "query": "page=download&capture=1"
+    },
+    {
+      "name": "deep-subtitle",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-subtitle.png",
+      "query": "page=subtitle&capture=1"
+    },
+    {
+      "name": "deep-tasks",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-tasks.png",
+      "query": "page=tasks&capture=1"
+    },
+    {
+      "name": "deep-account",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-account.png",
+      "query": "page=account&capture=1"
+    },
+    {
+      "name": "deep-profile",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-profile.png",
+      "query": "page=profile&capture=1"
+    },
+    {
+      "name": "deep-anime",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-anime.png",
+      "query": "page=anime&capture=1"
+    },
+    {
+      "name": "deep-files",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-files.png",
+      "query": "page=files&capture=1"
+    },
+    {
+      "name": "deep-confirm",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-confirm.png",
+      "query": "page=confirm&capture=1"
+    },
+    {
+      "name": "deep-preference",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-preference.png",
+      "query": "page=preference&capture=1"
+    },
+    {
+      "name": "deep-splash",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\deep-splash.png",
+      "query": "page=splash&capture=1"
+    },
+    {
+      "name": "source-FTP",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\source-FTP.png",
+      "query": "page=source&kind=FTP&capture=1"
+    },
+    {
+      "name": "source-SMB",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\source-SMB.png",
+      "query": "page=source&kind=SMB&capture=1"
+    },
+    {
+      "name": "source-WebDAV",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\source-WebDAV.png",
+      "query": "page=source&kind=WebDAV&capture=1"
+    },
+    {
+      "name": "source-Alist",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\source-Alist.png",
+      "query": "page=source&kind=Alist&capture=1"
+    },
+    {
+      "name": "source-SAF",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\source-SAF.png",
+      "query": "page=source&kind=SAF&capture=1"
+    },
+    {
+      "name": "source-Open115",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\source-Open115.png",
+      "query": "page=source&kind=Open115&capture=1"
+    },
+    {
+      "name": "source-Cloud115",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\source-Cloud115.png",
+      "query": "page=source&kind=Cloud115&capture=1"
+    },
+    {
+      "name": "source-Baidu",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\source-Baidu.png",
+      "query": "page=source&kind=Baidu&capture=1"
+    },
+    {
+      "name": "tools-cache",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\tools-cache.png",
+      "query": "page=tools&kind=cache&capture=1"
+    },
+    {
+      "name": "tools-folders",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\tools-folders.png",
+      "query": "page=tools&kind=folders&capture=1"
+    },
+    {
+      "name": "tools-cast",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\tools-cast.png",
+      "query": "page=tools&kind=cast&capture=1"
+    },
+    {
+      "name": "tools-about",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\tools-about.png",
+      "query": "page=tools&kind=about&capture=1"
+    },
+    {
+      "name": "tools-themes",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\tools-themes.png",
+      "query": "page=tools&kind=themes&capture=1"
+    },
+    {
+      "name": "tools-license",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\tools-license.png",
+      "query": "page=tools&kind=license&capture=1"
+    },
+    {
+      "name": "remaining-segment",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-segment.png",
+      "query": "page=segment&capture=1"
+    },
+    {
+      "name": "remaining-extensions",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-extensions.png",
+      "query": "page=extensions&capture=1"
+    },
+    {
+      "name": "remaining-avatar",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-avatar.png",
+      "query": "page=avatar&capture=1"
+    },
+    {
+      "name": "remaining-font",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-font.png",
+      "query": "page=font&capture=1"
+    },
+    {
+      "name": "remaining-follow",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-follow.png",
+      "query": "page=follow&capture=1"
+    },
+    {
+      "name": "remaining-history",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-history.png",
+      "query": "page=history&capture=1"
+    },
+    {
+      "name": "remaining-intro",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-intro.png",
+      "query": "page=intro&capture=1"
+    },
+    {
+      "name": "remaining-episodes",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-episodes.png",
+      "query": "page=episodes&capture=1"
+    },
+    {
+      "name": "remaining-recommend",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-recommend.png",
+      "query": "page=recommend&capture=1"
+    },
+    {
+      "name": "remaining-loading",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-loading.png",
+      "query": "page=loading&capture=1"
+    },
+    {
+      "name": "remaining-message",
+      "file": "E:\\Project\\DDPlayTV\\.tmp\\apple-ui-audit\\prototypes\\remaining-message.png",
+      "query": "page=message&capture=1"
+    }
+  ]
+}

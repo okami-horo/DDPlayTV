@@ -6,6 +6,11 @@
     <color name="cinema_text">#F5F5F7</color>
     <color name="cinema_muted">#A3A3AF</color>
     <color name="cinema_border">#26FFFFFF</color>
+    <color name="cinema_focus_fill">#383842</color>
+    <color name="cinema_focus_edge">#E3E3EB</color>
+    <color name="cinema_focus_pressed_fill">#484854</color>
+    <color name="cinema_focus_light_pressed">#D6D6DC</color>
+    <color name="cinema_play_focus_edge">#7C7C88</color>
 
     <style name="Cinema.Button" parent="Widget.AppCompat.Button">
         <item name="android:background">@drawable/cinema_button</item>

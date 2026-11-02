@@ -1,0 +1,590 @@
+[
+  {
+    "board": "01-main",
+    "title": "main-home",
+    "source": ".tmp/apple-ui-audit/prototypes/main-home.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595559.28514
+  },
+  {
+    "board": "01-main",
+    "title": "main-library",
+    "source": ".tmp/apple-ui-audit/prototypes/main-library.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595559.5880435
+  },
+  {
+    "board": "01-main",
+    "title": "main-settings",
+    "source": ".tmp/apple-ui-audit/prototypes/main-settings.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595559.7699435
+  },
+  {
+    "board": "01-main",
+    "title": "main-search",
+    "source": ".tmp/apple-ui-audit/prototypes/main-search.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595560.0024755
+  },
+  {
+    "board": "01-main",
+    "title": "player-A",
+    "source": ".tmp/apple-ui-audit/prototypes/player-A.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595560.4043646
+  },
+  {
+    "board": "01-main",
+    "title": "files-root",
+    "source": ".tmp/apple-ui-audit/prototypes/files-root.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595560.6353822
+  },
+  {
+    "board": "02-files",
+    "title": "files-videos",
+    "source": ".tmp/apple-ui-audit/prototypes/files-videos.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595560.8175588
+  },
+  {
+    "board": "02-files",
+    "title": "files-long-path",
+    "source": ".tmp/apple-ui-audit/prototypes/files-long-path.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595561.0070486
+  },
+  {
+    "board": "02-files",
+    "title": "files-empty",
+    "source": ".tmp/apple-ui-audit/prototypes/files-empty.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595561.1858914
+  },
+  {
+    "board": "02-files",
+    "title": "files-loading",
+    "source": ".tmp/apple-ui-audit/prototypes/files-loading.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595561.3591578
+  },
+  {
+    "board": "02-files",
+    "title": "files-error",
+    "source": ".tmp/apple-ui-audit/prototypes/files-error.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595561.5348933
+  },
+  {
+    "board": "02-files",
+    "title": "files-refresh-error",
+    "source": ".tmp/apple-ui-audit/prototypes/files-refresh-error.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595561.7074769
+  },
+  {
+    "board": "02-files",
+    "title": "files-page-error",
+    "source": ".tmp/apple-ui-audit/prototypes/files-page-error.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595561.9006026
+  },
+  {
+    "board": "02-files",
+    "title": "files-login",
+    "source": ".tmp/apple-ui-audit/prototypes/files-login.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595562.0727015
+  },
+  {
+    "board": "03-detail",
+    "title": "detail-normal",
+    "source": ".tmp/apple-ui-audit/prototypes/detail-normal.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595562.3589575
+  },
+  {
+    "board": "03-detail",
+    "title": "detail-seasons",
+    "source": ".tmp/apple-ui-audit/prototypes/detail-seasons.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595562.5963197
+  },
+  {
+    "board": "03-detail",
+    "title": "detail-versions",
+    "source": ".tmp/apple-ui-audit/prototypes/detail-versions.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595562.8298006
+  },
+  {
+    "board": "03-detail",
+    "title": "detail-empty",
+    "source": ".tmp/apple-ui-audit/prototypes/detail-empty.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595563.0245917
+  },
+  {
+    "board": "03-detail",
+    "title": "detail-loading",
+    "source": ".tmp/apple-ui-audit/prototypes/detail-loading.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595563.211597
+  },
+  {
+    "board": "03-detail",
+    "title": "detail-movie",
+    "source": ".tmp/apple-ui-audit/prototypes/detail-movie.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595563.4007945
+  },
+  {
+    "board": "03-detail",
+    "title": "detail-invalid",
+    "source": ".tmp/apple-ui-audit/prototypes/detail-invalid.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595563.5630555
+  },
+  {
+    "board": "03-detail",
+    "title": "detail-initial",
+    "source": ".tmp/apple-ui-audit/prototypes/detail-initial.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595563.713412
+  },
+  {
+    "board": "04-player-panels",
+    "title": "deep-episodes",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-episodes.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595564.0509756
+  },
+  {
+    "board": "04-player-panels",
+    "title": "deep-advanced",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-advanced.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595564.3914888
+  },
+  {
+    "board": "04-player-panels",
+    "title": "deep-offset",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-offset.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595564.7392056
+  },
+  {
+    "board": "04-player-panels",
+    "title": "deep-style",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-style.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595565.0811586
+  },
+  {
+    "board": "04-player-panels",
+    "title": "deep-search",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-search.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595565.4092636
+  },
+  {
+    "board": "04-player-panels",
+    "title": "deep-keywords",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-keywords.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595565.7363455
+  },
+  {
+    "board": "04-player-panels",
+    "title": "deep-download",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-download.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595566.0730155
+  },
+  {
+    "board": "04-player-panels",
+    "title": "deep-subtitle",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-subtitle.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595566.2401907
+  },
+  {
+    "board": "05-sources",
+    "title": "source-FTP",
+    "source": ".tmp/apple-ui-audit/prototypes/source-FTP.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595567.838239
+  },
+  {
+    "board": "05-sources",
+    "title": "source-SMB",
+    "source": ".tmp/apple-ui-audit/prototypes/source-SMB.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595568.0072055
+  },
+  {
+    "board": "05-sources",
+    "title": "source-WebDAV",
+    "source": ".tmp/apple-ui-audit/prototypes/source-WebDAV.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595568.1795018
+  },
+  {
+    "board": "05-sources",
+    "title": "source-Alist",
+    "source": ".tmp/apple-ui-audit/prototypes/source-Alist.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595568.34796
+  },
+  {
+    "board": "05-sources",
+    "title": "source-SAF",
+    "source": ".tmp/apple-ui-audit/prototypes/source-SAF.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595568.5202358
+  },
+  {
+    "board": "05-sources",
+    "title": "source-Open115",
+    "source": ".tmp/apple-ui-audit/prototypes/source-Open115.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595568.6936789
+  },
+  {
+    "board": "05-sources",
+    "title": "source-Cloud115",
+    "source": ".tmp/apple-ui-audit/prototypes/source-Cloud115.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595568.8739088
+  },
+  {
+    "board": "05-sources",
+    "title": "source-Baidu",
+    "source": ".tmp/apple-ui-audit/prototypes/source-Baidu.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595569.0526216
+  },
+  {
+    "board": "06-tools",
+    "title": "tools-cache",
+    "source": ".tmp/apple-ui-audit/prototypes/tools-cache.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595569.2401178
+  },
+  {
+    "board": "06-tools",
+    "title": "tools-folders",
+    "source": ".tmp/apple-ui-audit/prototypes/tools-folders.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595569.4256077
+  },
+  {
+    "board": "06-tools",
+    "title": "tools-cast",
+    "source": ".tmp/apple-ui-audit/prototypes/tools-cast.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595569.604434
+  },
+  {
+    "board": "06-tools",
+    "title": "tools-about",
+    "source": ".tmp/apple-ui-audit/prototypes/tools-about.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595569.7725077
+  },
+  {
+    "board": "06-tools",
+    "title": "tools-themes",
+    "source": ".tmp/apple-ui-audit/prototypes/tools-themes.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595569.9403002
+  },
+  {
+    "board": "06-tools",
+    "title": "tools-license",
+    "source": ".tmp/apple-ui-audit/prototypes/tools-license.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595570.115489
+  },
+  {
+    "board": "07-child-dialogs",
+    "title": "remaining-segment",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-segment.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595570.2835133
+  },
+  {
+    "board": "07-child-dialogs",
+    "title": "remaining-extensions",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-extensions.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595570.456404
+  },
+  {
+    "board": "07-child-dialogs",
+    "title": "remaining-avatar",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-avatar.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595570.6251576
+  },
+  {
+    "board": "07-child-dialogs",
+    "title": "remaining-font",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-font.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595570.7955153
+  },
+  {
+    "board": "07-child-dialogs",
+    "title": "remaining-loading",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-loading.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595572.2443619
+  },
+  {
+    "board": "07-child-dialogs",
+    "title": "remaining-message",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-message.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595572.6627498
+  },
+  {
+    "board": "08-anime-pages",
+    "title": "remaining-follow",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-follow.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595571.0138414
+  },
+  {
+    "board": "08-anime-pages",
+    "title": "remaining-history",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-history.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595571.2325978
+  },
+  {
+    "board": "08-anime-pages",
+    "title": "remaining-intro",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-intro.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595571.4204056
+  },
+  {
+    "board": "08-anime-pages",
+    "title": "remaining-episodes",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-episodes.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595571.6027348
+  },
+  {
+    "board": "08-anime-pages",
+    "title": "remaining-recommend",
+    "source": ".tmp/apple-ui-audit/prototypes/remaining-recommend.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595571.8272514
+  },
+  {
+    "board": "08-anime-pages",
+    "title": "deep-anime",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-anime.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595566.971228
+  },
+  {
+    "board": "09-other-pages",
+    "title": "deep-binding",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-binding.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595565.9033425
+  },
+  {
+    "board": "09-other-pages",
+    "title": "deep-tasks",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-tasks.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595566.4240403
+  },
+  {
+    "board": "09-other-pages",
+    "title": "deep-account",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-account.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595566.609938
+  },
+  {
+    "board": "09-other-pages",
+    "title": "deep-profile",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-profile.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595566.7895052
+  },
+  {
+    "board": "09-other-pages",
+    "title": "deep-files",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-files.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595567.1523256
+  },
+  {
+    "board": "09-other-pages",
+    "title": "deep-confirm",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-confirm.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595567.3173935
+  },
+  {
+    "board": "09-other-pages",
+    "title": "deep-preference",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-preference.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595567.489334
+  },
+  {
+    "board": "09-other-pages",
+    "title": "deep-splash",
+    "source": ".tmp/apple-ui-audit/prototypes/deep-splash.png",
+    "historicalNative": false,
+    "sourceModifiedAt": 1793595567.6616788
+  },
+  {
+    "board": "10-native-main",
+    "title": "首页：2026-11-01 本地修复证据",
+    "source": "document/architecture/ui-rounding-audit-2026-11-01/home-repair-normal.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793538500.409134
+  },
+  {
+    "board": "10-native-main",
+    "title": "媒体库：历史/投屏入口清理后",
+    "source": ".tmp/source-cleanup/library.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793543562.0916207
+  },
+  {
+    "board": "10-native-main",
+    "title": "来源选择：历史/投屏入口清理后",
+    "source": ".tmp/source-cleanup/source-chooser.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793543562.1276693
+  },
+  {
+    "board": "10-native-main",
+    "title": "作品详情 B：圆角修正后",
+    "source": ".tmp/watch-history/screens-rounding/normal.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793526925.9940274
+  },
+  {
+    "board": "10-native-main",
+    "title": "文件浏览 C：菜单简化后证据",
+    "source": ".tmp/file-menu/native-latest/videos.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793499587.872159
+  },
+  {
+    "board": "10-native-main",
+    "title": "设置：既有本地验证截图",
+    "source": ".tmp/ui-hints/native/settings.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793463692.8721237
+  },
+  {
+    "board": "11-native-player",
+    "title": "字幕轨道：既有本地验证截图",
+    "source": ".tmp/ui-hints/native/tracks.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793464096.4514997
+  },
+  {
+    "board": "11-native-player",
+    "title": "音轨选择",
+    "source": ".tmp/ui-hints/native/audio.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793464113.5075407
+  },
+  {
+    "board": "11-native-player",
+    "title": "关键词屏蔽",
+    "source": ".tmp/ui-hints/native/keywords-list.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793464257.5284064
+  },
+  {
+    "board": "11-native-player",
+    "title": "时间偏移",
+    "source": ".tmp/back-button-cleanup/screens-ui/player-offset.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.4517338
+  },
+  {
+    "board": "11-native-player",
+    "title": "字幕样式",
+    "source": ".tmp/back-button-cleanup/screens-ui/player-subtitle-style.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.4567323
+  },
+  {
+    "board": "11-native-player",
+    "title": "选集",
+    "source": ".tmp/back-button-cleanup/screens-ui/player-episodes.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.4421115
+  },
+  {
+    "board": "12-native-forms-tools",
+    "title": "FTP 来源表单",
+    "source": ".tmp/back-button-cleanup/screens-ui/source-FTP_SERVER.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.4729354
+  },
+  {
+    "board": "12-native-forms-tools",
+    "title": "WebDAV 来源表单",
+    "source": ".tmp/back-button-cleanup/screens-ui/source-WEBDAV_SERVER.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.4825616
+  },
+  {
+    "board": "12-native-forms-tools",
+    "title": "SMB 来源表单",
+    "source": ".tmp/back-button-cleanup/screens-ui/source-SMB_SERVER.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.4924805
+  },
+  {
+    "board": "12-native-forms-tools",
+    "title": "115 授权",
+    "source": ".tmp/back-button-cleanup/screens-ui/source-CLOUD_115_STORAGE.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.527524
+  },
+  {
+    "board": "12-native-forms-tools",
+    "title": "缓存管理",
+    "source": ".tmp/back-button-cleanup/screens-ui/CacheManagerActivity.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.5352745
+  },
+  {
+    "board": "12-native-forms-tools",
+    "title": "关于",
+    "source": ".tmp/back-button-cleanup/screens-ui/AboutUsActivity.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.544404
+  },
+  {
+    "board": "12-native-forms-tools",
+    "title": "主题",
+    "source": ".tmp/back-button-cleanup/screens-ui/SwitchThemesActivity.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.549446
+  },
+  {
+    "board": "12-native-forms-tools",
+    "title": "许可证",
+    "source": ".tmp/back-button-cleanup/screens-ui/LicenseActivity.png",
+    "historicalNative": true,
+    "sourceModifiedAt": 1793516056.5464084
+  }
+]

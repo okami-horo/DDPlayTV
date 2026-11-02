@@ -21,6 +21,7 @@ DDPlayTV is a modular Android TV media app using Kotlin, XML views, MVVM, ARoute
 | File browser C | [list and preview](../document/prototypes/tv-ui/files-prototype.html?variant=preview) |
 | Series detail B (implemented and locally verified 2026-11-01; TV acceptance pending) | [cinematic episode shelf](../document/prototypes/tv-ui/series-detail-prototype.html?variant=B), [scope and acceptance](../docs/superpowers/designs/2026-11-01-home-watch-history-design.md); supersedes the old metadata detail layout below |
 | Deep pages and final seven child groups | [deep pages](../document/prototypes/tv-ui/deep-pages.html), [remaining pages](../document/prototypes/tv-ui/remaining-pages.html), [supplemental design](../docs/superpowers/designs/2026-10-31-ui-polish-design.md) |
+| A02 focus-state refinement (confirmed and locally verified 2026-11-02; TV/user acceptance pending) | [continuous primary fill, single focus edge and independent selection](../document/prototypes/tv-ui/focus-feedback-prototype.html), [implementation and F01–F12 evidence](../docs/superpowers/plans/2026-11-02-a02-focus-feedback.md); refines the states above while preserving their page structures, dimensions and typography |
 
 The user's 2026-11-01 decision removes on-screen back buttons and player-panel close icons in favor of remote BACK navigation. This supersedes those controls in the prototypes; [the cleanup ledger](../docs/superpowers/plans/2026-11-01-remote-back-cleanup.md) records focus replacements and verification. Business confirmation/cancellation actions remain.
 

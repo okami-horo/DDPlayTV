@@ -8,6 +8,7 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.SeekBar
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -15,6 +16,7 @@ import com.alibaba.android.arouter.launcher.ARouter
 import com.okamihoro.ddplaytv.playback.withIndexedPlaybackFile
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
 import com.xyoye.common_component.adapter.BaseAdapter
+import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.playback.handoff.PlaybackNavigation
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
@@ -231,6 +233,8 @@ class UiPolishInstrumentedTest {
         listOf(first, second, last).forEach { fixture.copyTo(it, overwrite = true) }
         val oldKernel = PlayerConfig.getUsePlayerType()
         val oldOffset = PlayerInitializer.Subtitle.offsetPosition
+        val oldDanmuSize = DanmuConfig.getDanmuSize()
+        val oldRuntimeDanmuSize = PlayerInitializer.Danmu.size
         PlayerConfig.putUsePlayerType(PlayerType.TYPE_EXO_PLAYER.value)
         try {
             withIndexedPlaybackFile(last) { lastDescriptor ->
@@ -305,6 +309,14 @@ class UiPolishInstrumentedTest {
                             key(KeyEvent.KEYCODE_DPAD_CENTER)
                             assertEquals(oldOffset + 500, PlayerInitializer.Subtitle.offsetPosition)
                             screenshot("player-offset")
+                            key(KeyEvent.KEYCODE_DPAD_DOWN)
+                            await(scenario) { it.currentFocus?.id == PlayerR.id.tv_reset }
+                            key(KeyEvent.KEYCODE_DPAD_CENTER)
+                            scenario.onActivity {
+                                assertEquals(0L, PlayerInitializer.Subtitle.offsetPosition)
+                                assertFalse(it.findViewById<View>(PlayerR.id.tv_reset).isEnabled)
+                                assertEquals(PlayerR.id.tv_add_half, it.currentFocus?.id)
+                            }
                             key(KeyEvent.KEYCODE_BACK)
                             await(scenario) { it.findViewById<DpadRecyclerView>(PlayerR.id.setting_rv).hasFocus() }
                             scenario.onActivity {
@@ -318,6 +330,38 @@ class UiPolishInstrumentedTest {
                             key(KeyEvent.KEYCODE_DPAD_CENTER)
                             await(scenario) { it.findViewById<View>(PlayerR.id.subtitle_setting_nsv).hasFocus() }
                             screenshot("player-subtitle-style")
+                            key(KeyEvent.KEYCODE_BACK)
+                            await(scenario) { it.findViewById<DpadRecyclerView>(PlayerR.id.setting_rv).hasFocus() }
+                            var danmuStylePosition = -1
+                            scenario.onActivity {
+                                val list = it.findViewById<DpadRecyclerView>(PlayerR.id.setting_rv)
+                                danmuStylePosition =
+                                    (list.adapter as BaseAdapter).items.indexOfFirst { item ->
+                                        item is SettingItem && item.action == SettingAction.DANMU_STYLE
+                                    }
+                                assertTrue(danmuStylePosition >= 0)
+                                list.setSelectedPosition(danmuStylePosition)
+                            }
+                            await(scenario) {
+                                val list = it.findViewById<DpadRecyclerView>(PlayerR.id.setting_rv)
+                                list.scrollState == androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE &&
+                                    list.findViewHolderForAdapterPosition(danmuStylePosition)?.itemView?.hasFocus() == true
+                            }
+                            key(KeyEvent.KEYCODE_DPAD_CENTER)
+                            await(scenario) { it.findViewById<View>(PlayerR.id.player_setting_nsv)?.hasFocus() == true }
+                            screenshot("player-danmu-style")
+                            val sizeBefore = DanmuConfig.getDanmuSize()
+                            key(if (sizeBefore < 100) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT)
+                            val sizeAfter = DanmuConfig.getDanmuSize()
+                            assertNotEquals("Remote slider adjustment must persist", sizeBefore, sizeAfter)
+                            assertEquals(sizeAfter, PlayerInitializer.Danmu.size)
+                            key(KeyEvent.KEYCODE_BACK)
+                            await(scenario) { it.findViewById<DpadRecyclerView>(PlayerR.id.setting_rv).hasFocus() }
+                            key(KeyEvent.KEYCODE_DPAD_CENTER)
+                            await(scenario) { it.currentFocus?.id == PlayerR.id.danmu_size_sb }
+                            scenario.onActivity {
+                                assertEquals(sizeAfter, it.findViewById<SeekBar>(PlayerR.id.danmu_size_sb).progress)
+                            }
                             key(KeyEvent.KEYCODE_BACK)
                             await(scenario) { it.findViewById<DpadRecyclerView>(PlayerR.id.setting_rv).hasFocus() }
                             key(KeyEvent.KEYCODE_BACK)
@@ -347,6 +391,8 @@ class UiPolishInstrumentedTest {
         } finally {
             PlayerConfig.putUsePlayerType(oldKernel)
             PlayerInitializer.Subtitle.offsetPosition = oldOffset
+            DanmuConfig.putDanmuSize(oldDanmuSize)
+            PlayerInitializer.Danmu.size = oldRuntimeDanmuSize
             listOf(first, second, last).forEach { it.delete() }
         }
     }

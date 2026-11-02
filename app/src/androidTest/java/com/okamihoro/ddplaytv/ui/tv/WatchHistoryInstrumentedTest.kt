@@ -212,7 +212,9 @@ class WatchHistoryInstrumentedTest {
             await("Version cancel restores episode") { page.hasWindowFocus() && list(page).hasFocus() }
             send(KeyEvent.KEYCODE_DPAD_UP)
             assertEquals(2, page.currentFocus?.tag)
+            screenshot("season-focused-selected")
             send(KeyEvent.KEYCODE_DPAD_LEFT)
+            screenshot("season-selection-away")
             send(KeyEvent.KEYCODE_DPAD_CENTER)
             await("Browse season one without changing resume") { list(page).adapter?.itemCount == 12 }
             assertTrue(page.findViewById<TextView>(R.id.resume_note).text.startsWith("第 2 季 · 第 3 集"))

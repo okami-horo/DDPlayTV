@@ -1,0 +1,521 @@
+{
+  "date": "2026-11-02",
+  "revision": "c69409f33bf773e206cf383d3b862a935e4620e0",
+  "device": {
+    "serial": "emulator-5584",
+    "adbPort": 5083,
+    "api": 34,
+    "viewport": [
+      1440,
+      810
+    ],
+    "densityDpi": 240,
+    "fontScales": [
+      1.0,
+      1.3
+    ]
+  },
+  "jvm": {
+    "tests": 516,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2,
+    "passed": 514
+  },
+  "nativeDistinctNormal": 28,
+  "nativeDistinctFont130": 10,
+  "runs": [
+    {
+      "log": "regression-normal.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.RemainingUiInstrumentedTest#wordBuilderKeepsChipFocusDeletesCodePointAndSearchesOnce",
+        "com.okamihoro.ddplaytv.ui.tv.RemainingUiInstrumentedTest#feedbackFitsBothRealPlayersAndBackReturnsFromControls",
+        "com.okamihoro.ddplaytv.ui.tv.UiPolishInstrumentedTest#bindingPageKeepsVideoContextAndLocalSelectionReachable",
+        "com.okamihoro.ddplaytv.ui.tv.UiPolishInstrumentedTest#firstEpisodeSkipsDisabledPreviousAndPanelBackRestoresCaller",
+        "com.okamihoro.ddplaytv.ui.tv.UiPolishInstrumentedTest#sourceFormsUseRemoteBackAndScrollToConnectionStatus",
+        "com.okamihoro.ddplaytv.ui.tv.SharedCardRenderingInstrumentedTest#tagFocusAndProblemReadingPanelUseTheirOwnCornerRadii",
+        "com.okamihoro.ddplaytv.ui.tv.SharedCardRenderingInstrumentedTest#fileChooserFirstRowKeepsItsHeightSpacingAndDpadSelection",
+        "com.okamihoro.ddplaytv.ui.tv.CinemaPrototypeInstrumentedTest#longHeroTitleStaysInItsColumnAndLeavesActionsReadable",
+        "com.okamihoro.ddplaytv.ui.tv.CinemaPrototypeInstrumentedTest#referencePagesSearchAndSettingsAreReachableWithRemote",
+        "com.okamihoro.ddplaytv.ui.tv.CinemaPrototypeInstrumentedTest#homeCardsShowOneTitleAndKeepRemoteFocusVisible",
+        "com.okamihoro.ddplaytv.ui.tv.FileBrowserPreviewInstrumentedTest#loadingEmptyFailureAndRefreshRecoveryUseVisibleRemoteActions",
+        "com.okamihoro.ddplaytv.ui.tv.FileBrowserPreviewInstrumentedTest#fullNameAndPathCanScrollAndReturnWithoutLeavingTheDirectory",
+        "com.okamihoro.ddplaytv.ui.tv.FileBrowserPreviewInstrumentedTest#searchClearsPreviewSortKeepsIdentityAndToolsReturnToCaller",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#missingLatestFileKeepsReasonAndMovesFocusToAvailableEpisode",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#selectedBShowsFourFullCardsAndAllPrimaryActionsAreReachable",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#freshSpecialsUnknownDurationAndMergedFilesHaveHonestStates",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#movieCardOpensFileVersionsAndReturnsToTheSameWork",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#emptyAndInvalidWorkRemainReachableWithoutFakeEpisodes",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#failedPlaybackRetainsProgressAndTriggerFocus",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#seasonsVersionsAndRecreationPreserveBrowseSelectionAndOriginalResume",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#pendingDataShowsLoadingWithoutEmptyActionsOrPrematureFocus",
+        "com.okamihoro.ddplaytv.ui.setting.GlobalSettingsInstrumentedTest#retainedSettingsPersistByDpadAndPcGroupingIsAbsent"
+      ],
+      "failures": [],
+      "sha256": "f52cb77d6874763ade3832f7c636e5632e4d605b9f05208dde2eb7d1edc0e28c"
+    },
+    {
+      "log": "final-normal.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.UiPolishInstrumentedTest#firstEpisodeSkipsDisabledPreviousAndPanelBackRestoresCaller",
+        "com.okamihoro.ddplaytv.ui.tv.TmdbLibraryInstrumentedTest#cinemaHeroResumesTheOriginalFileAtItsExactHistoryPosition",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#primaryAndListSelectorsKeepContinuousFillAndPressedFocus",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#trackCheckKeepsItsDrawingSpaceWhenInflatedUnselected",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#subtitleSelectionSurvivesFocusAndDisableRemainsAnAction",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#navigationFocusMovesWithoutChangingTheSelectedPage",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#inflatedSeasonTabsKeepContrastAndContentPositionAcrossFocus",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#seasonsVersionsAndRecreationPreserveBrowseSelectionAndOriginalResume"
+      ],
+      "failures": [],
+      "sha256": "add4646b10f4db9a8fb3a247b671be86510a7a61d742eb7ae2c0f40475eb2336"
+    },
+    {
+      "log": "panel-final-normal.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.UiPolishInstrumentedTest#firstEpisodeSkipsDisabledPreviousAndPanelBackRestoresCaller"
+      ],
+      "failures": [],
+      "sha256": "0f7f2bfcd7f591f884955990b6af59dc158d84a7a72c066cdf3d3eefb2645f18"
+    },
+    {
+      "log": "final-font130.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.UiPolishInstrumentedTest#sourceFormsUseRemoteBackAndScrollToConnectionStatus",
+        "com.okamihoro.ddplaytv.ui.tv.CinemaPrototypeInstrumentedTest#referencePagesSearchAndSettingsAreReachableWithRemote",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#primaryAndListSelectorsKeepContinuousFillAndPressedFocus",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#trackCheckKeepsItsDrawingSpaceWhenInflatedUnselected",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#subtitleSelectionSurvivesFocusAndDisableRemainsAnAction",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#navigationFocusMovesWithoutChangingTheSelectedPage",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#inflatedSeasonTabsKeepContrastAndContentPositionAcrossFocus",
+        "com.okamihoro.ddplaytv.ui.tv.FileBrowserPreviewInstrumentedTest#fullNameAndPathCanScrollAndReturnWithoutLeavingTheDirectory",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#seasonsVersionsAndRecreationPreserveBrowseSelectionAndOriginalResume"
+      ],
+      "failures": [
+        {
+          "case": "com.okamihoro.ddplaytv.ui.tv.UiPolishInstrumentedTest#firstEpisodeSkipsDisabledPreviousAndPanelBackRestoresCaller",
+          "message": "java.lang.NullPointerException: Attempt to invoke virtual method 'boolean android.view.View.hasFocus()' on a null object reference"
+        }
+      ],
+      "sha256": "01ddfa8fd24b1a105cea9d7fd8d1e74f0a79166474baa500c05fe38e0c8645c0"
+    },
+    {
+      "log": "panel-final-font130.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.UiPolishInstrumentedTest#firstEpisodeSkipsDisabledPreviousAndPanelBackRestoresCaller"
+      ],
+      "failures": [],
+      "sha256": "536eb4692c2fd02fbf6cc3b888b3614281e6bd0f0f6cfd0f063225a74abbe76b"
+    }
+  ],
+  "builds": [
+    {
+      "log": "gates-verified.log",
+      "sha256": "aa00c028eebc05b446fb01ed0a4890ff7cd62a52c07bcf0b0df4683da853dc6a",
+      "successful": true
+    },
+    {
+      "log": "gates-final-tests.log",
+      "sha256": "2e1060191159e3ffe8186a11837560a936da0b54710f32c2fc0676bbd58551bd",
+      "successful": true
+    },
+    {
+      "log": "gates-final-sync.log",
+      "sha256": "7a6e9d845fbe22030ba32c49e03fb0ac703d1ed18e00c99bdc4d7b7d39c5ff83",
+      "successful": true
+    },
+    {
+      "log": "gates-final-behavior.log",
+      "sha256": "41d141ac6e50a3acb5ff80aef668011ec4a905edb4a707ed8eee95be8940775d",
+      "successful": true
+    }
+  ],
+  "earlierFailures": {
+    "unit": "Initial full runs failed on existing random empty M115Crypto payload (size=16); unchanged isolated class and final full run passed.",
+    "trackCheck": "check-red-device.log reproduced zero drawing bounds before constantSize=true; final native check passed.",
+    "font130": "First batch had 9 passes and a test-only null lookup. A null-safe predicate alone exposed that confirm ran before the intended settings row was focused; captured focus was subtitle_vertical_offset_sb. The test now waits for the target row and idle scroll before confirm; updated panel case passed at both scales."
+  },
+  "sourceSha256": {
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/FocusFeedbackInstrumentedTest.kt": "e26be184c8482f6fc4b78d69a3c0b7529efed5fdf578793ba86a9b3a7a7f3490",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/UiPolishInstrumentedTest.kt": "70e7c021574982495124fb9bea4a9426a6dd777a297d8c36dd32ef5061772e82",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/WatchHistoryInstrumentedTest.kt": "22e08dd62fe9de039865d74d65c9f435bd90333ee8b1682f37f421693ec20510",
+    "core_ui_component/src/main/res/color/cinema_navigation_fill.xml": "a98ad39e736548a4fd30db1f516c4b80445f24482dc90cb3336802fa2f276cc7",
+    "core_ui_component/src/main/res/color/cinema_navigation_text.xml": "a995eb66ca53e8627f1ebdb54eff8a1f6e0b3f4a95180752503027542decf824",
+    "core_ui_component/src/main/res/color/cinema_selection_marker.xml": "04793fbd1088e5bceb66edb2cd80ee8fec3305e0beb7783069b4e2a714fd7695",
+    "core_ui_component/src/main/res/color/cinema_tab_text.xml": "5244085a6dbffebfe898997bfe7ec43382af29ac45d5f28b5c2918a7cadbc6e7",
+    "core_ui_component/src/main/res/drawable/cinema_button.xml": "fcac1e7d3d4e176ec0bfc16bc63e46d95f8567c6fcc05ca3e43a790fa75a7341",
+    "core_ui_component/src/main/res/drawable/cinema_category.xml": "742087ecd00f893c7b4a12c6c8c18b48cd5ee785a04bb7c7725e7ff6614de1a5",
+    "core_ui_component/src/main/res/drawable/cinema_navigation.xml": "d0f80b871a3056ba26b04f9d91430182756feb51d8dd620b3ffd8550f28152ed",
+    "core_ui_component/src/main/res/drawable/cinema_play_circle.xml": "923fb99b365846d22ea3bdd98247a001c3a84416fec09e328d65a08b16b87bd8",
+    "core_ui_component/src/main/res/drawable/cinema_primary.xml": "54f9c08812a6f6b4bf2081015708582c1bf1f16ec2b74ad57863ca6352070b35",
+    "core_ui_component/src/main/res/drawable/cinema_tab.xml": "5d0dc6ddf3ce3d76e73bb77d0cac024eb2ee199b9f6329b2f975623946ccfe1a",
+    "core_ui_component/src/main/res/values/cinema.xml": "f70d89e928c7e7740f841324d3c1ebde4abe219d13b8b37394d61b8598eca8d6",
+    "local_component/src/main/res/layout/item_metadata_season.xml": "b5e640279a1c7f3d2daa315fa157f907d93397562bd08b5afddf8122a700711b",
+    "player_component/src/main/res/drawable/background_player_setting_text.xml": "2ca1006f49e130abe9e44a1bce42ee077479cd8c2e0d260711008cf29e9a5359",
+    "player_component/src/main/res/drawable/background_player_setting_text_focused.xml": "836f923373e41064032c5656d536a2608115b6a04c1e30d9c2fb6b05a7a03471",
+    "player_component/src/main/res/drawable/background_player_setting_text_selected_focused.xml": "062adcee764528af638b723bab40a61fb4cdc0dde730e178615789114e1a8bf0",
+    "player_component/src/main/res/drawable/background_player_setting_text_transparent.xml": "d8e9d98a59aa911c95781c56b8badafacaf028bae0a23b607eb1aa3984e4490c",
+    "player_component/src/main/res/drawable/cinema_track_check.xml": "c24eaeffbdec29def1ccbbb4ea49907114712021dc76fefeae7eb45ad4a3ce89",
+    "player_component/src/main/res/drawable/cinema_transport_button.xml": "52d959e3319d02f18fdb9f783d4c522cfa25cff3b1aaed7aaa8b81a7843227ae"
+  },
+  "apkSha256": {
+    "app/build/outputs/apk/debug/ddplaytv_v4.2.4-debug_arm64-v8a-debug.apk": "04fdff3ec7103450003df7c3f7a4196c759e53a6895df325927438f3dcc18560",
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "ed75c92c102951d2d895150f3bab0aa7e6e7285504755f6cc04fc206d891b84b"
+  },
+  "images": [
+    {
+      "id": "N01",
+      "group": "F01",
+      "title": "首页：主按钮聚焦",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/cinema-reference/native-home.png",
+      "path": "images/N01.png",
+      "sha256": "68f2bb93c0d938dd62949da8080b47b289ef53e72ee11677f54d6cac8719ba71"
+    },
+    {
+      "id": "N02",
+      "group": "F01",
+      "title": "详情：主按钮聚焦",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/watch-history/normal.png",
+      "path": "images/N02.png",
+      "sha256": "e328726c0427bebe0d31160e1ab833a8b8e66dd79f456e9c297c11eb38c7d904"
+    },
+    {
+      "id": "N03",
+      "group": "F01",
+      "title": "详情：读取中",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/watch-history/initial-detail.png",
+      "path": "images/N03.png",
+      "sha256": "2ffa4eed303d11d57a1185ec8a1e8baa5143b25af5156da4be5c09e0fa1b3c22"
+    },
+    {
+      "id": "N04",
+      "group": "F01",
+      "title": "详情：文件不可用与可达焦点",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/watch-history/missing.png",
+      "path": "images/N04.png",
+      "sha256": "a064c2dad746fa5af275c744886175fff613e64e17adcc8e7770fdfe08d358eb"
+    },
+    {
+      "id": "N05",
+      "group": "F02",
+      "title": "导航：焦点与选中重合",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/a02-focus/navigation-focused-selected.png",
+      "path": "images/N05.png",
+      "sha256": "1d63092ae48f49ecde9f7ef2804fa6198dcca037622df7993fbaf600779f4373"
+    },
+    {
+      "id": "N06",
+      "group": "F02",
+      "title": "导航：焦点离开当前页面",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/a02-focus/navigation-selection-away.png",
+      "path": "images/N06.png",
+      "sha256": "5e34a567f00479edc219ba2180e7b8270ec4ceaf84d729114bb4993c7932ee99"
+    },
+    {
+      "id": "N07",
+      "group": "F03",
+      "title": "季页签：焦点与选中重合",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/watch-history/season-focused-selected.png",
+      "path": "images/N07.png",
+      "sha256": "f986c3ac52d50d351d2deb1ad20f2c7932dab6307b46fdd3fc88eace53b21726"
+    },
+    {
+      "id": "N08",
+      "group": "F03",
+      "title": "季页签：选中第二季，聚焦第一季",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/watch-history/season-selection-away.png",
+      "path": "images/N08.png",
+      "sha256": "c34a44251a7811fd02b8b0f83b97ab764f785d444611ab5b0db1bb9b49ec80d6"
+    },
+    {
+      "id": "N09",
+      "group": "F03",
+      "title": "版本选择弹窗",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/watch-history/versions.png",
+      "path": "images/N09.png",
+      "sha256": "57eb010f4ed8a88be9c6a459b660eaafadd17d6d172a3c2bd8bb5a10b36acb72"
+    },
+    {
+      "id": "N10",
+      "group": "F04",
+      "title": "设置：分类与设置行",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/cinema-reference/native-settings-playback.png",
+      "path": "images/N10.png",
+      "sha256": "377ea723ce2ce8454dd3da0d1150d11d00627a0f0d426223960e21aaac1f5f08"
+    },
+    {
+      "id": "N11",
+      "group": "F04",
+      "title": "设置：字幕分类",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/cinema-reference/native-settings-captions.png",
+      "path": "images/N11.png",
+      "sha256": "7f51fb3efab8daad598ab23cc89bd28d69a255afeef600d1803d5e50ecf144f4"
+    },
+    {
+      "id": "N12",
+      "group": "F05",
+      "title": "媒体库：作品卡聚焦",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/cinema-reference/native-library-first-card.png",
+      "path": "images/N12.png",
+      "sha256": "01bc79aa3890962a5571cfe187daeb09c8e304526dc26ad8f07d9697f357bb64"
+    },
+    {
+      "id": "N13",
+      "group": "F06",
+      "title": "文件浏览：长路径",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/file-browser-c/long-path.png",
+      "path": "images/N13.png",
+      "sha256": "b932fbeb2c5149cf022f674d109258a93869049100984d091f9a2815e0b89535"
+    },
+    {
+      "id": "N14",
+      "group": "F06",
+      "title": "文件浏览：完整路径阅读",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/file-browser-c/reading.png",
+      "path": "images/N14.png",
+      "sha256": "47c179282c7b0dd41b8b7ebbb511595f98fd854b1782b601b24a623848428468"
+    },
+    {
+      "id": "N15",
+      "group": "F07",
+      "title": "来源：FTP 输入与操作",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-polish-verification/source-FTP_SERVER.png",
+      "path": "images/N15.png",
+      "sha256": "a050e7ccfb5e5f131cf31e8dc1ec4b14ef02d48abb52ccac51df882348fc335a"
+    },
+    {
+      "id": "N16",
+      "group": "F07",
+      "title": "来源：WebDAV 连接错误",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-polish-verification/source-WEBDAV_SERVER-error.png",
+      "path": "images/N16.png",
+      "sha256": "146721f3688e3bc07bf5fb583b36bda5fe8353ae24e8ce0a4e2214ef1f0ce378"
+    },
+    {
+      "id": "N17",
+      "group": "F08",
+      "title": "字幕：空轨道",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/a02-focus/subtitle-empty.png",
+      "path": "images/N17.png",
+      "sha256": "5fb014f7e7b7760e720f2821f7fbc24daafe9fff5b1801808d035306d90a9702"
+    },
+    {
+      "id": "N18",
+      "group": "F08",
+      "title": "字幕：已选项失焦，另一项聚焦",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/a02-focus/subtitle-selected-away.png",
+      "path": "images/N18.png",
+      "sha256": "afe0f84cc0a2fe2a3b86317f1446e6d3cc8319a1924a4e21321c4f593a3d8ddc"
+    },
+    {
+      "id": "N19",
+      "group": "F08",
+      "title": "字幕：选中与焦点重合",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/a02-focus/subtitle-focused-selected.png",
+      "path": "images/N19.png",
+      "sha256": "0076e2099a145535540680be5cd1d7857be2662ac4a377d9bec7825cc2e99ece"
+    },
+    {
+      "id": "N20",
+      "group": "F08",
+      "title": "字幕：确认关闭轨道",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/a02-focus/subtitle-disabled-selected.png",
+      "path": "images/N20.png",
+      "sha256": "7e44f35c8d76ea938c54a3c867285a10b33a2cd603d2321597461eca7d5bc7fd"
+    },
+    {
+      "id": "N21",
+      "group": "F08",
+      "title": "音轨列表",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/tmdb-verification/player-audio.png",
+      "path": "images/N21.png",
+      "sha256": "4007a1b127af8fc8b4b1f5bff45a306fc17fcfa051e625a3e6b69aa9f5f98673"
+    },
+    {
+      "id": "N22",
+      "group": "F08",
+      "title": "弹幕轨空态",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/tmdb-verification/player-danmaku.png",
+      "path": "images/N22.png",
+      "sha256": "05984f34b2e72d3a1c799ec7b4a6808e10e76987c82c85875d0b50059f9dff3f"
+    },
+    {
+      "id": "N23",
+      "group": "F09",
+      "title": "选集：当前集与焦点",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-polish-verification/player-episodes.png",
+      "path": "images/N23.png",
+      "sha256": "ea925771c0193b4c3967b67619957292db028a7a905e3a35b1ab68ed41be1a02"
+    },
+    {
+      "id": "N24",
+      "group": "F09",
+      "title": "选集：长名称",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-polish-verification/player-long-title.png",
+      "path": "images/N24.png",
+      "sha256": "bb48f1e309245b27fb8fc25edc4d3246097114d204018fab04458d28d8d2dc72"
+    },
+    {
+      "id": "N25",
+      "group": "F10",
+      "title": "字幕时间偏移",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-polish-verification/player-offset.png",
+      "path": "images/N25.png",
+      "sha256": "23dc6973958becc1554b650708d01b0f62e6e61ecc7acfd6277cbdb11372464f"
+    },
+    {
+      "id": "N26",
+      "group": "F10",
+      "title": "字幕样式",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-polish-verification/player-subtitle-style.png",
+      "path": "images/N26.png",
+      "sha256": "3008042c79242f6136e19992eeb175673d325f6d7ecfaaf9cd5b57c06231fdb6"
+    },
+    {
+      "id": "N27",
+      "group": "F10",
+      "title": "弹幕样式",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-polish-verification/player-danmu-style.png",
+      "path": "images/N27.png",
+      "sha256": "a5458291f210f15170259f865265459fc1d20b64d47b7cf9ef254b688b5c1637"
+    },
+    {
+      "id": "N28",
+      "group": "F11",
+      "title": "播放 A：首集与不可用上一集",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-polish-verification/player-first.png",
+      "path": "images/N28.png",
+      "sha256": "709483642c84c309c6ea1803e46139c75511867b537ab8ebc8f80f375d4076d6"
+    },
+    {
+      "id": "N29",
+      "group": "F11",
+      "title": "播放 A：末集与不可用下一集",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-polish-verification/player-last.png",
+      "path": "images/N29.png",
+      "sha256": "a036e22281d50ab7f482a72602a7dd5886ff026813b0697a8c808f18c97ea42a"
+    },
+    {
+      "id": "N30",
+      "group": "F11",
+      "title": "播放 A：单个视频",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/tmdb-verification/player-controls.png",
+      "path": "images/N30.png",
+      "sha256": "74f44054c80b7d83fd2a5a74cfcdd4b4445668bcf74febdaf900f5e06898d504"
+    },
+    {
+      "id": "N31",
+      "group": "F12",
+      "title": "本地文件选择",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-polish-verification/binding-file-picker.png",
+      "path": "images/N31.png",
+      "sha256": "8d70ce4e33d1c1e0e2ea84080b2a58e9ce2ed47ed207cc20019fae5c213fa46e"
+    },
+    {
+      "id": "N32",
+      "group": "F12",
+      "title": "关键词选择与长内容",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/ui-remaining-verification/segment-long.png",
+      "path": "images/N32.png",
+      "sha256": "8670cf480bdde0df617d7266e192a51017642068cd7df8a4de17e3ede3e27c71"
+    },
+    {
+      "id": "N33",
+      "group": "F12",
+      "title": "搜索与空态",
+      "fontScale": 1.0,
+      "source": ".tmp/a02-focus/normal/file-browser-c/search-empty.png",
+      "path": "images/N33.png",
+      "sha256": "7c2297ff595b244e1f757c93cf53148fe6c52f343a5dfaa9748efc623f5ab943"
+    },
+    {
+      "id": "N34",
+      "group": "F01",
+      "title": "1.3 字体：首页主按钮",
+      "fontScale": 1.3,
+      "source": ".tmp/a02-focus/font130/cinema-reference/native-home.png",
+      "path": "images/N34.png",
+      "sha256": "128b77f82caa251e4788230ea0f2950794b2ee7ae96171c83c3f1eaadd486d52"
+    },
+    {
+      "id": "N35",
+      "group": "F03",
+      "title": "1.3 字体：季选择与焦点",
+      "fontScale": 1.3,
+      "source": ".tmp/a02-focus/font130/watch-history/season-selection-away.png",
+      "path": "images/N35.png",
+      "sha256": "b00d3f70a2cbbd7beb8976c5c6a6ebf6d29506c83e3c9f8ed76394e6371f70ff"
+    },
+    {
+      "id": "N36",
+      "group": "F07",
+      "title": "1.3 字体：连接错误",
+      "fontScale": 1.3,
+      "source": ".tmp/a02-focus/font130/ui-polish-verification/source-WEBDAV_SERVER-error.png",
+      "path": "images/N36.png",
+      "sha256": "146721f3688e3bc07bf5fb583b36bda5fe8353ae24e8ce0a4e2214ef1f0ce378"
+    },
+    {
+      "id": "N37",
+      "group": "F08",
+      "title": "1.3 字体：轨道焦点与选中",
+      "fontScale": 1.3,
+      "source": ".tmp/a02-focus/font130/a02-focus/subtitle-selected-away.png",
+      "path": "images/N37.png",
+      "sha256": "b137eb35731ddfbe1c5ba4537139421738e77ad5b33ce2ca13276508464d4fcf"
+    },
+    {
+      "id": "N38",
+      "group": "F10",
+      "title": "1.3 字体：弹幕样式",
+      "fontScale": 1.3,
+      "source": ".tmp/a02-focus/font130/ui-polish-verification/player-danmu-style.png",
+      "path": "images/N38.png",
+      "sha256": "1c58a0d5ab54aabac0989b18d62dc975e4695cd2d889c7437dd9a427beb6f907"
+    },
+    {
+      "id": "N39",
+      "group": "F11",
+      "title": "1.3 字体：播放 A",
+      "fontScale": 1.3,
+      "source": ".tmp/a02-focus/font130/ui-polish-verification/player-first.png",
+      "path": "images/N39.png",
+      "sha256": "29fbbf5440f80f88670a74417796ec5a238068ef18caba827079aac3d21c7db5"
+    }
+  ],
+  "prototypeSha256": "d621a3e361b689ccccb5a990e0932606ac5bbe60ad824a429026267baafe2ee6",
+  "finalPanelAssertions": "At both font scales: subtitle offset reset disables reset and restores +0.5 focus; DPAD changes danmaku size, writes config, and reopening the panel retains the changed value. Original runtime/config values restored in finally.",
+  "visualLimits": "Original native dimensions and typography retained: home primary 50dp, detail primary 47dp. Existing dense source-form layout (including 1.3-font TLS label wrapping) remains outside A02.",
+  "physicalTv": "Not operated; physical device/user visual acceptance remains pending."
+}

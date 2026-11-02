@@ -1,0 +1,41 @@
+{
+  "screenshotCount": 40,
+  "native": 20,
+  "prototype": 20,
+  "filters": [
+    {
+      "issue": "A01",
+      "count": 8
+    },
+    {
+      "issue": "A02",
+      "count": 11
+    },
+    {
+      "issue": "A03",
+      "count": 17
+    },
+    {
+      "issue": "A04",
+      "count": 1
+    },
+    {
+      "issue": "A05",
+      "count": 5
+    },
+    {
+      "issue": "A06",
+      "count": 12
+    },
+    {
+      "issue": "A07",
+      "count": 1
+    }
+  ],
+  "verifiedAssets": 50,
+  "matchingSourceHashes": 40,
+  "pageErrors": [],
+  "desktopAndNarrowOverflow": false,
+  "modalKeyboardToggleAndFileURL": "passed",
+  "limitations": "Artifact verification only; no native app, DPAD or television verification."
+}

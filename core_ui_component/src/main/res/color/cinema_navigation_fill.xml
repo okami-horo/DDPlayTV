@@ -1,0 +1,8 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="@android:color/transparent" />
+    <item android:state_focused="true" android:state_pressed="true" android:color="@color/cinema_focus_light_pressed" />
+    <item android:state_focused="true" android:color="@color/cinema_text" />
+    <item android:state_pressed="true" android:color="@color/cinema_focus_pressed_fill" />
+    <item android:state_selected="true" android:color="@color/cinema_elevated" />
+    <item android:color="@android:color/transparent" />
+</selector>

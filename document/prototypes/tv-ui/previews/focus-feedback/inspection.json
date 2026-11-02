@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-02",
+  "status": "Design proposal; user confirmation pending; native implementation not started",
+  "source": "document/prototypes/tv-ui/focus-feedback-prototype.html",
+  "sha256": "d621a3e361b689ccccb5a990e0932606ac5bbe60ad824a429026267baafe2ee6",
+  "canvas": {
+    "width": 1440,
+    "height": 810,
+    "deviceScaleFactor": 1,
+    "pixelsPerDp": 1.5
+  },
+  "observations": [
+    "current: 8 control types / 5 semantic columns; all samples and note fit 1440x810",
+    "proposed: 8 control types / 5 semantic columns; all samples and note fit 1440x810",
+    "Navigation: focus alone preserves selection; Enter updates selection",
+    "Unavailable next episode keeps its space and is skipped by arrow navigation",
+    "Track focus preserves selection; close-subtitles action remains focusable and selectable",
+    "Current/proposed switch and Escape focus recovery passed"
+  ],
+  "pageErrors": [],
+  "previewURL": "http://127.0.0.1:51968/document/prototypes/tv-ui/focus-feedback-prototype.html",
+  "limitations": "Browser design artifact only; no Android build, native visual validation, DPAD or physical-TV operation."
+}

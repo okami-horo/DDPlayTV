@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-02",
+  "url": "http://127.0.0.1:51968/document/prototypes/tv-ui/previews/focus-feedback/native-2026-11-02/index.html",
+  "images": 39,
+  "fullSize": [
+    1440,
+    810
+  ],
+  "groupF12": 3,
+  "enlargedFont": 6,
+  "successfulLinks": 41,
+  "pageErrors": [],
+  "fullSizePopup": true,
+  "sourceAndApkHashesMatch": true,
+  "indexSha256": "b78fc0607a731f3ec48e7c4e84889bb7eab95b9c134c3ce0b7f7145e427d770d",
+  "verificationSha256": "ee4fa7dcb67ba58ac33976188d81f66ce5149744bd90d45570722487098d0690",
+  "overviewSha256": "fa0c327b882f6ad477078674069e01a84a2ed316894bb1c86a41327700a2653a",
+  "viewedOverview": true,
+  "viewedEnlargedScreenshots": [
+    "N34",
+    "N35",
+    "N36",
+    "N37",
+    "N38",
+    "N39"
+  ],
+  "visualBoundary": "Focus states inspected against confirmed prototype. Existing page structure, text sizes and form density remain; physical TV/user acceptance is pending."
+}
