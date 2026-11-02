@@ -1,34 +1,67 @@
 # TV 体验问题与播放验证待办
 
-整理日期：2026-10-28；体验问题更新：2026-11-01。本文集中记录本轮用户反馈的 TV 体验问题与尚未完成的顺序续播验证；有效设计约束归入对应维护／设计文档。
+整理日期：2026-10-28；体验问题更新：2026-11-02。本文集中记录本轮用户反馈的 TV 体验问题与尚未完成的顺序续播验证；有效设计约束归入对应维护／设计文档。
 
 综合验收由用户负责，进度见[交接实施账本](../../docs/superpowers/plans/2026-10-27-playback-handoff-session.md)。关闭以下验证项时需给出对应场景的实际证据，不能以部分构建／设备结果代替完整验收。
 
 ## TV 体验问题记录
 
-本节最初按用户“先记录”的要求维护。用户随后授权排查并删除全应用无意义的指导说明，UX02 已实施；文件菜单精简随后也已独立实施，证据见其任务账本。UX01 仍待办。
+本节最初按用户“先记录”的要求维护。UX02 和文件菜单精简已独立实施；用户于 2026-11-02 授权处理 UX01，双加载界面已在任务模拟器复现，当前修复与证据见下文。
 
 ### UX01：点击视频后出现两种加载界面
 
-- **反馈日期与状态**：2026-10-31，用户报告；已核对相关源码，尚未在设备上复现或修复。
-- **用户观察**：点击视频开始播放时，会出现两种“正在加载”的界面，用户质疑这种重复是否必要。具体来源、内核及两种界面的实际切换时序尚未确认。
-- **初步判断**：内部可以有播放源准备、播放器初始化和缓冲等多个阶段，但没有必要仅因阶段切换而展示两套不同的加载界面。建议让首次打开视频呈现连续、一致的等待反馈，减少闪切和重复提示；保留必要的错误提示与退出能力。
+- **反馈日期与状态**：2026-10-31 记录；2026-11-02 获用户授权后，在 API 34 AVD 的 Media3、mpv 真实播放中复现并修复，本地构建、状态回归、遥控器交互及截图检查通过。尚未交付或操作物理电视。
+- **复现方式**：[PlaybackLoadingInstrumentedTest](../../app/src/androidTest/java/com/okamihoro/ddplaytv/playback/PlaybackLoadingInstrumentedTest.kt) 使用真实 WebDAV 来源，分别阻塞 PROPFIND 和视频响应；两个阶段稳定呈现“全屏文字 → 居中转圈”。原生产代码上两项双内核测试均因来源阶段没有使用同一加载面板而失败，随后均已实际播放真实视频。
+- **根因**：来源解析属于会话准备，内核准备属于播放状态；两个独立视图分别消费这两套状态。仅统一文字不能消除视图替换、位置变化及重复叠层风险。
 
-2026-10-31 源码核对发现两套相关反馈，作为后续定位线索，不据此宣称已经复现用户所见的完整过程：
+修复前的两条显示链路：
 
-| 位置 | 当前行为 |
+| 位置 | 修复前行为 |
 | --- | --- |
 | [PlayerActivity.kt](../../player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt) 的 `preparationView` / `renderPlaybackScreen` | `state.preparing` 时显示文本；首次播放为全屏黑底“正在准备播放…”，已有播放时为顶部“正在准备新视频…” |
 | [LoadingView.kt](../../player_component/src/main/java/com/xyoye/player/controller/video/LoadingView.kt) 与 [layout_loading.xml](../../player_component/src/main/res/layout/layout_loading.xml) | 内核进入准备或暂停缓冲状态时，显示转圈与“正在准备播放…”或“正在缓冲…”的居中面板 |
 
-后续处理方向与验收要点（待实施任务确定，不在本次修改代码）：
+#### 实现与状态覆盖
 
-- [ ] 复现并确认两种界面的出现顺序、持续时间与触发来源；区分首次播放、播放中换集和卡顿缓冲。
-- [ ] 首次播放各准备阶段使用一致的加载反馈，同一时刻只显示一套提示，不因切换界面产生闪白、闪黑或短暂重复。
-- [ ] 快速完成时避免无意义的加载闪现；慢网络时仍有持续反馈，失败能说明原因并返回，不能简单隐藏提示留下无反馈黑屏。
-- [ ] 保留播放中缓冲、换集失败恢复及返回/取消行为；覆盖 Media3 与 mpv，不改变播放源、历史、字幕和弹幕的既有准备流程。
+`PlayerActivity.renderPlaybackScreen` 将来源准备状态交给 `VideoController`，与内核状态共同驱动原有 `LoadingView`。移除 Activity 的独立文字覆盖层；沿用 [layout_loading.xml](../../player_component/src/main/res/layout/layout_loading.xml) 的居中转圈与卡片样式。来源准备和内核准备统一显示“正在准备播放…”，播放中缓冲显示“正在缓冲…”。
 
-目前只有用户反馈与源码线索；没有新增截图、设备验证或构建结果。
+等待超过 200ms 才显示面板；已显示后跨来源／内核交接保持连续，不重新计时。内核 READY／初始 seek 的缓冲结束不等于首帧，准备反馈保留到播放／暂停画面到达。失败、完成、释放和退出取消待显示回调；来源准备失败时复用现有错误与旧播放恢复逻辑。
+
+| 场景 | 设计／实现与检查 | 验证边界 |
+| --- | --- | --- |
+| 首次慢来源 → 慢内核，Media3 / mpv | 同一个居中面板；真实 WebDAV / 视频；交接绘制帧连续性断言；查看两个阶段截图 | 最终三项加载／取消 AVD 用例通过，播放后面板隐藏 |
+| 快速准备、初始 seek、暂停首帧 | 200ms 延迟、取消延迟回调、READY／缓冲结束保留反馈 | [LoadingViewTest](../../player_component/src/test/java/com/xyoye/player/controller/video/LoadingViewTest.kt) 九项通过 |
+| 播放中缓冲与恢复 | 同一面板显示缓冲文字，恢复后消失 | JVM 状态回归；真实网盘卡顿矩阵仍单列 |
+| 准备中 BACK、失败、换集与返回 | 实际遥控器取消阻塞中的来源，确保不迟到启动；复用错误、双内核文件返回、跨季 DPAD 和设置持久化用例 | 最终十项兼容 AVD 用例通过；完整文件级轨道绑定仍见顺序续播待办 |
+| 物理电视及其他真实来源 | 未操作用户电视 | 待 Release 交付及用户／物理电视验收 |
+
+#### 复现、构建与验证记录
+
+基线为 `513d37928` 加本轮三个生产 Kotlin 文件及两份测试。原失败证据：`.tmp/ux01/red-build.log` 为 **BUILD SUCCESSFUL in 3m 17s**；`red-device.log` 两项真实双内核用例均按预期失败。`red-unit.log` 为 **BUILD FAILED in 36s**，五项中两项正确暴露快速闪现和 READY 过早隐藏；首轮修复后同组五项 **BUILD SUCCESSFUL in 26s**。补查首帧前 seek 的准备状态用例在 `red-first-frame.log` 中正确失败（**BUILD FAILED in 17s**），补齐准备状态保持逻辑后，最终九项全部通过。
+
+最终构建命令：
+
+```powershell
+& .tmp/watch-history/gradle.ps1 :app:assembleDebug :app:assembleDebugAndroidTest testDebugUnitTest :app:lint :player_component:lint verifyModuleDependencies verifyPlaybackBoundaries ktlintCheck -I .tmp/ui-repairs-local.gradle -I .tmp/tmdb-validation.gradle -I .tmp/play-history-short-temp.gradle -I .tmp/ux01/scoped-format.gradle --offline --console=plain
+```
+
+设备用例前置夹具为 `.tmp/lease-fixtures/share/playback-long.mp4`（120 秒真实视频），需推送至 `/sdcard/Download/ddplaytv-lease-playback-long.mp4` 并授予 Debug 包 `READ_MEDIA_VIDEO`。测试自行建立／清理本地 WebDAV 来源并恢复原内核设置；运行类为 `com.okamihoro.ddplaytv.playback.PlaybackLoadingInstrumentedTest`，runner 为 `com.okamihoro.ddplaytv.debug.test/androidx.test.runner.AndroidJUnitRunner`。本轮使用任务实例 `127.0.0.1:5583`、私有 ADB `-P 5081`，未接入用户电视。
+
+- `.tmp/ux01/full-gates.log`：本轮完整 JVM、全仓标准 lint、构建与治理检查，尾部 **BUILD SUCCESSFUL in 7m 57s**。补齐初始 seek 边界后，上述最终命令的 `final-gates.log` 为 **BUILD SUCCESSFUL in 47s**；复用未变模块的 lint 结果，重跑受影响 app／player lint。ktlint 仅检查本轮五个 Kotlin 文件。
+- 最终 included 模块的 JVM XML 共 115 套件、518 项：**516 通过、2 项既有跳过、0 失败／错误**，包含新增九项加载状态回归；未统计已退役模块的遗留报告。
+- 最终版本首次三项设备复查有一项 Media3 失败，记录于 `device-final-attempt1.log`。日志显示受控视频请求持续等待到 35 秒网络超时；检查本地 AndroidX Test Core 1.7.0 字节码，确认 `ActivityScenario.onActivity` 先调用 `waitForIdleSync`，不适合持续动画期间的及时采样。测试改为直接主线程读取状态，截图在测试线程采集；仍保留同一面板、交接帧连续性及真实内核播放断言。测试修改后的首次构建因换行格式失败（`final-test-harness-format-failed.log`，**BUILD FAILED in 15s**），限定格式化后，AndroidTest 构建、app lint、scoped ktlint 在 `final-test-harness.log` 中 **BUILD SUCCESSFUL in 14s**。
+- 最终安装的 Debug／测试 APK 哈希均与本地一致。API 34、1920 × 1080、320dpi、默认字体的任务 AVD 上，`device-final.log` 为 **OK (3 tests)**／11.088s，`smoke-final.log` 为 **OK (10 tests)**／74.171s，共 **13 个不同场景**。包含真实 Media3／mpv、DPAD／BACK、重建／会话重入、手动／原生下一集、历史恢复、错误返回及设置持久化；用例全名、源码／APK／截图哈希见[结果与身份记录](ux01-loading-2026-11-02/results.json)。
+
+实际查看的同场景截图如下。两内核修复前均为“纯文字 → 卡片”，修复后来源与内核阶段使用相同位置、大小及文字的卡片；转圈角度随采集时间变化。
+
+| 内核／阶段 | 修复前 | 最终修复后 |
+| --- | --- | --- |
+| Media3 来源准备 | [截图](ux01-loading-2026-11-02/before-media3-source.png) | [截图](ux01-loading-2026-11-02/after-media3-source.png) |
+| Media3 内核准备 | [截图](ux01-loading-2026-11-02/before-media3-kernel.png) | [截图](ux01-loading-2026-11-02/after-media3-kernel.png) |
+| mpv 来源准备 | [截图](ux01-loading-2026-11-02/before-mpv-source.png) | [截图](ux01-loading-2026-11-02/after-mpv-source.png) |
+| mpv 内核准备 | [截图](ux01-loading-2026-11-02/before-mpv-kernel.png) | [截图](ux01-loading-2026-11-02/after-mpv-kernel.png) |
+
+本轮没有运行物理电视验收、全部真实云账号／卡顿矩阵或覆盖率测量；没有 Release 构建、版本变更或提交。任务 AVD 5582／私有 ADB 5081 在验证后关闭，默认 ADB 5037 未操作。UX01 的本地修复已完成，电视交付与用户验收继续保留。
 
 ### UX02：常规遥控器操作说明过多
 

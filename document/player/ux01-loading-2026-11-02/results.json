@@ -1,0 +1,74 @@
+{
+  "verified_on": "2026-11-02",
+  "baseline_commit": "513d3792859bb4a54f15697a0d2b33488bc9a16c",
+  "jvm": {
+    "tests": 518,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2,
+    "suites": 115,
+    "passed": 516
+  },
+  "gradle": {
+    "full-gates.log": "BUILD SUCCESSFUL in 7m 57s",
+    "final-gates.log": "BUILD SUCCESSFUL in 47s",
+    "final-test-harness.log": "BUILD SUCCESSFUL in 14s"
+  },
+  "device_loading": {
+    "log": ".tmp/ux01/device-final.log",
+    "passed": 3,
+    "seconds": 11.088,
+    "cases": [
+      "com.okamihoro.ddplaytv.playback.PlaybackLoadingInstrumentedTest#media3UsesOneLoadingPanelAcrossSourceAndKernelPreparation",
+      "com.okamihoro.ddplaytv.playback.PlaybackLoadingInstrumentedTest#mpvUsesOneLoadingPanelAcrossSourceAndKernelPreparation",
+      "com.okamihoro.ddplaytv.playback.PlaybackLoadingInstrumentedTest#remoteBackCancelsSourcePreparationWithoutStartingTheKernel"
+    ]
+  },
+  "device_compatibility": {
+    "log": ".tmp/ux01/smoke-final.log",
+    "passed": 10,
+    "seconds": 74.171,
+    "cases": [
+      "com.okamihoro.ddplaytv.playback.PlaybackEntriesInstrumentedTest#manualAndNativeNextKeepTheStableQueueAfterBrowserStateIsGone",
+      "com.okamihoro.ddplaytv.playback.PlaybackHandoffInstrumentedTest#encryptedRequestReentryAndRecreationKeepOneActivityAndOwnedSources",
+      "com.okamihoro.ddplaytv.ui.setting.PlayerSettingDpadNavigationTest#switchExecutesOnceAndPersistsAcrossRecreation",
+      "com.okamihoro.ddplaytv.ui.tv.FileBrowserPlaybackReturnInstrumentedTest#actualPlaybackReturnsToTheSameFileAndPreview",
+      "com.okamihoro.ddplaytv.ui.tv.FileBrowserPlaybackReturnInstrumentedTest#mpvPlaybackReturnsAndResumesTheSameFile",
+      "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#failedPlaybackRetainsProgressAndTriggerFocus",
+      "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#media3HomepageDetailPlaybackAndLayeredBack",
+      "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#media3SeriesQueueCrossesSeasonsWithDpadAndRecreation",
+      "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#mpvHomepageDetailPlaybackAndLayeredBack",
+      "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#mpvSeriesQueueCrossesSeasonsWithDpadAndRecreation"
+    ]
+  },
+  "device_environment": {
+    "api": 34,
+    "serial": "127.0.0.1:5583",
+    "private_adb_port": 5081,
+    "avd": "Pixel_5_API_34 (task-owned read-only instance)",
+    "viewport": "1920x1080",
+    "density_dpi": 320,
+    "font_scale": "default (1.0)"
+  },
+  "sources": {
+    "player_component/src/main/java/com/xyoye/player/controller/VideoController.kt": "07664a445bd456668e3ebcc47ac4e3cf6e3f3bb7ffaf73671ca70a8cf9b86879",
+    "player_component/src/main/java/com/xyoye/player/controller/video/LoadingView.kt": "92bd14df4bad8c2b9f63dd495bb6eba8a17b6453ed3417e8be11e7f66bc890e9",
+    "player_component/src/main/java/com/xyoye/player_component/ui/activities/player/PlayerActivity.kt": "2e40cf3dc339bdaf119d750ba49e3571144b3495a05b555060fa4c8864939647",
+    "player_component/src/test/java/com/xyoye/player/controller/video/LoadingViewTest.kt": "f9ff22c96436e14a7a76f306f853b522043c2bfff58739b073ab44bd0bf3ea72",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/playback/PlaybackLoadingInstrumentedTest.kt": "0c5b113a1ffc1278ce0424e68973ae46d625862d518468324d095d87b9b19453"
+  },
+  "screenshots": {
+    "after-media3-kernel.png": "3b89ee104ded4585950757fd00a74cbe3cd3bdc92b63fa42a1d1415288ce435c",
+    "after-media3-source.png": "3199627c8f89ba29f73553a342fe36c4c13aa6f9620f565b8ff9b5833e49f87d",
+    "after-mpv-kernel.png": "10d61ca1925198cbe9a82ff119704c2ff9742bdca098a861cd34589a8e677f6c",
+    "after-mpv-source.png": "b71f3748901439d5002125768267cc885070371459fc2b052e3420c116ac2175",
+    "before-media3-kernel.png": "cdefeca66928796941697608c72d3e802ba213a081986203206708f22216e6d3",
+    "before-media3-source.png": "59fadc67e77609d60b1710abad44e1bd2c154108576427a93458168da3ddbb09",
+    "before-mpv-kernel.png": "1cdd706b4d51a4441b59d732d3c103abd89d33f3c7b78ad59f89c10ed882f9c3",
+    "before-mpv-source.png": "59fadc67e77609d60b1710abad44e1bd2c154108576427a93458168da3ddbb09"
+  },
+  "apks": {
+    "app/build/outputs/apk/debug/ddplaytv_v4.2.4-debug_arm64-v8a-debug.apk": "5f1035fa43d05e8879874a4ae75baac2b7d6c558e23f76183e90be6fc531a7e5",
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "0e1d281161e486bf18a1ad268bd0d16a7a4e38c812472ff59793099a6ad89e58"
+  }
+}

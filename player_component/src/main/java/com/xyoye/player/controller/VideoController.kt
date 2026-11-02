@@ -166,6 +166,10 @@ class VideoController(
         playerTopView.setVideoTitle(title)
     }
 
+    internal fun setSourcePreparing(preparing: Boolean) {
+        loadingView.setSourcePreparing(preparing)
+    }
+
     /**
      * 添加扩展轨道
      */

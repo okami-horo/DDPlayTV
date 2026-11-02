@@ -43,6 +43,17 @@ class LoadingView(
                 repeatCount = ValueAnimator.INFINITE
             }
 
+    private var sourcePreparing = false
+    private var kernelPreparing = false
+    private var playState = PlayState.STATE_IDLE
+    private var showPending = false
+    private val showLoading =
+        Runnable {
+            showPending = false
+            viewBinding.loadingPanel.isVisible = true
+            cycleAnimator.start()
+        }
+
     override fun attach(controlWrapper: ControlWrapper) {
     }
 
@@ -52,23 +63,21 @@ class LoadingView(
     }
 
     override fun onPlayStateChanged(playState: PlayState) {
-        when (playState) {
-            PlayState.STATE_COMPLETED,
-            PlayState.STATE_ERROR,
-            PlayState.STATE_START_ABORT,
-            PlayState.STATE_PLAYING,
-            PlayState.STATE_IDLE,
-            PlayState.STATE_BUFFERING_PLAYING,
-            PlayState.STATE_PREPARED -> {
-                hideLoading()
+        this.playState = playState
+        kernelPreparing =
+            when (playState) {
+                PlayState.STATE_PREPARING -> true
+                PlayState.STATE_PREPARED,
+                PlayState.STATE_BUFFERING_PAUSED,
+                PlayState.STATE_BUFFERING_PLAYING -> kernelPreparing
+                else -> false
             }
-            PlayState.STATE_BUFFERING_PAUSED,
-            PlayState.STATE_PREPARING -> {
-                viewBinding.loadingText.text = if (playState == PlayState.STATE_PREPARING) "正在准备播放…" else "正在缓冲…"
-                showLoading()
-            }
-            else -> {}
-        }
+        updateLoading()
+    }
+
+    internal fun setSourcePreparing(preparing: Boolean) {
+        sourcePreparing = preparing
+        updateLoading()
     }
 
     override fun onProgressChanged(
@@ -83,14 +92,22 @@ class LoadingView(
     override fun onVideoSizeChanged(videoSize: Point) {
     }
 
-    private fun showLoading() {
-        if (viewBinding.loadingPanel.isGone) {
-            viewBinding.loadingPanel.isGone = false
-            cycleAnimator.start()
+    private fun updateLoading() {
+        val preparing = sourcePreparing || kernelPreparing
+        if (preparing || playState == PlayState.STATE_BUFFERING_PAUSED) {
+            viewBinding.loadingText.text = if (preparing) "正在准备播放…" else "正在缓冲…"
+            if (viewBinding.loadingPanel.isGone && !showPending) {
+                showPending = true
+                postDelayed(showLoading, 200)
+            }
+        } else {
+            hideLoading()
         }
     }
 
     private fun hideLoading() {
+        removeCallbacks(showLoading)
+        showPending = false
         if (viewBinding.loadingPanel.isVisible) {
             viewBinding.loadingPanel.isVisible = false
             cycleAnimator.cancel()
@@ -98,12 +115,15 @@ class LoadingView(
     }
 
     override fun onDetachedFromWindow() {
+        removeCallbacks(showLoading)
+        showPending = false
         cycleAnimator.cancel()
         super.onDetachedFromWindow()
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        updateLoading()
         if (viewBinding.loadingPanel.isVisible) cycleAnimator.start()
     }
 }

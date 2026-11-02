@@ -4,14 +4,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Color
 import android.media.AudioManager
 import android.os.Bundle
-import android.view.Gravity
 import android.view.KeyEvent
-import android.view.View
-import android.widget.FrameLayout
-import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -138,17 +133,6 @@ class PlayerActivity :
     private var playingBeforeLifecyclePause = false
     private var versionDialog: BottomActionDialog? = null
     private var shownVersionChoice: QueueVersionChoice? = null
-    private val preparationView by lazy {
-        TextView(this).apply {
-            setTextColor(Color.WHITE)
-            textSize = 18f
-            gravity = Gravity.CENTER
-            setPadding(24, 24, 24, 24)
-            isFocusable = false
-            isClickable = false
-            visibility = View.GONE
-        }
-    }
 
     /** Borrows the session's source. No source/Addon/lease is released by this adapter. */
     private val playbackBackend: PlaybackSessionBackend by lazy {
@@ -432,7 +416,6 @@ class PlayerActivity :
         dataBinding.playerContainer.addView(danDanPlayer)
 
         dataBinding.playerContainer.isSaveFromParentEnabled = false
-        dataBinding.playerContainer.addView(preparationView)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.playbackScreen.collect { renderPlaybackScreen(it) } }
@@ -500,17 +483,7 @@ class PlayerActivity :
 
     private fun renderPlaybackScreen(state: PlaybackScreenState) {
         if (shownVersionChoice != state.versionChoice) dismissVersionDialog()
-        preparationView.visibility = if (state.preparing) View.VISIBLE else View.GONE
-        if (state.preparing) {
-            preparationView.text = if (state.hasPlayback) "正在准备新视频…" else "正在准备播放…"
-            preparationView.setBackgroundColor(if (state.hasPlayback) 0xCC000000.toInt() else Color.BLACK)
-            preparationView.layoutParams =
-                FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    if (state.hasPlayback) FrameLayout.LayoutParams.WRAP_CONTENT else FrameLayout.LayoutParams.MATCH_PARENT,
-                    Gravity.TOP
-                )
-        }
+        videoController.setSourcePreparing(state.preparing)
         val failure = state.failure ?: return
         val choice = state.versionChoice
         if (choice != null) {
