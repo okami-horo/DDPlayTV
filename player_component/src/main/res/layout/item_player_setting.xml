@@ -1,5 +1,5 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
-    <LinearLayout android:id="@+id/cl_card" android:layout_width="match_parent" android:layout_height="48dp" android:paddingHorizontal="12dp" android:gravity="center_vertical" android:background="@drawable/cinema_button" android:focusable="true" android:clickable="true" android:tag="@string/focusable_item">
+    <LinearLayout android:id="@+id/cl_card" android:layout_width="match_parent" android:layout_height="48dp" android:paddingHorizontal="12dp" android:gravity="center_vertical" android:background="@drawable/cinema_player_setting_row" android:focusable="true" android:clickable="true" android:tag="@string/focusable_item">
         <ImageView android:id="@+id/iv_setting" android:layout_width="20dp" android:layout_height="20dp" app:tint="@color/cinema_text" android:importantForAccessibility="no" />
         <TextView android:id="@+id/tv_setting" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:textColor="@color/cinema_text" android:textSize="14sp" />
         <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/cinema_ic_next" android:importantForAccessibility="no" />

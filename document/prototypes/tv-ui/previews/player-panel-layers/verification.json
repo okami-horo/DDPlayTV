@@ -1,0 +1,487 @@
+{
+  "date": "2026-11-02",
+  "revision": "c047019c3",
+  "scope": "Design-only HTML material reconstruction; no native implementation, Gradle, AVD or television activity",
+  "canvas": {
+    "width": 1440,
+    "height": 810,
+    "referenceDensityDpi": 240,
+    "pixelsPerDp": 1.5
+  },
+  "renders": [
+    {
+      "panel": "episodes",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-episodes-cinema-normal-font-1.png"
+    },
+    {
+      "panel": "tracks",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-tracks-cinema-normal-font-1.png"
+    },
+    {
+      "panel": "style",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-style-cinema-normal-font-1.png"
+    },
+    {
+      "panel": "settings",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-settings-cinema-normal-font-1.png"
+    },
+    {
+      "panel": "tracks",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-tracks-bright-normal-font-1.png"
+    },
+    {
+      "panel": "style",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-style-dark-normal-font-1.png"
+    },
+    {
+      "panel": "episodes",
+      "scene": "cinema",
+      "state": "long",
+      "font": "1.3",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-episodes-cinema-long-font-1.3.png"
+    },
+    {
+      "panel": "tracks",
+      "scene": "bright",
+      "state": "empty",
+      "font": "1.3",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-tracks-bright-empty-font-1.3.png"
+    },
+    {
+      "panel": "search",
+      "scene": "cinema",
+      "state": "loading",
+      "font": "1",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-search-cinema-loading-font-1.png"
+    },
+    {
+      "panel": "search",
+      "scene": "cinema",
+      "state": "error",
+      "font": "1",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-search-cinema-error-font-1.png"
+    },
+    {
+      "panel": "style",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1.3",
+      "bounds": {
+        "x": 1022,
+        "y": 23,
+        "width": 396,
+        "height": 765,
+        "padding": "27px",
+        "font": "15px"
+      },
+      "screenshot": "compare-style-cinema-normal-font-1.3.png"
+    },
+    {
+      "panel": "episodes",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "episodes",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "episodes",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "tracks",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "tracks",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "tracks",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "audio",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "audio",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "audio",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "danmaku",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "danmaku",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "danmaku",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "style",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "style",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "style",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "danmaku-style",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "danmaku-style",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "danmaku-style",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "settings",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "settings",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "settings",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "offset",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "offset",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "offset",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "speed",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "speed",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "speed",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "aspect",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "aspect",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "aspect",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "search",
+      "scene": "cinema",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "search",
+      "scene": "bright",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    },
+    {
+      "panel": "search",
+      "scene": "dark",
+      "state": "normal",
+      "font": "1",
+      "checked": true
+    }
+  ],
+  "scriptErrors": [],
+  "checks": [
+    "Equal before/after panel geometry and text",
+    "11 surface variants x 3 backgrounds",
+    "11 comparison screenshots and 8 single-screen screenshots",
+    "Panel/scene/state/font/mode controls and URL reload",
+    "Unsupported content states disabled",
+    "Speed uses a slider; aspect remains a list",
+    "760px responsive viewport",
+    "Existing A02 native reference files present"
+  ],
+  "background": {
+    "source": "document/prototypes/tv-ui/previews/player-controls-baseline.png",
+    "sourceSha256": "06ef9dcbc0ddb3a18b409ed61c33d8efb26c4a70a418526c216eba2486ed3ae7",
+    "crop": [
+      240,
+      130,
+      1582,
+      885
+    ],
+    "output": "cinema-frame.jpg",
+    "sha256": "374a323d81b90e98de4a27c4182eae0015d09fbc5307d8a260b5eb15759befc8"
+  },
+  "sha256": {
+    "document/prototypes/tv-ui/player-panel-layers-prototype.html": "da686022682ca709f1690642e6c93588501cbcfa4669dfa391b4cccbe4164e88",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-episodes-cinema-normal-font-1.png": "65a5a50f67978d382d087574da81f56623f3d2ae26011c9daf8a609e7ffc16d9",
+    "document/prototypes/tv-ui/previews/player-panel-layers/episodes-before.png": "06ea6719fa30375aca44f6aee2c92494bfa0c54d82a8538dafcd6bd7cc3bdc70",
+    "document/prototypes/tv-ui/previews/player-panel-layers/episodes-after.png": "31a850f7abd3984b6d77bedc9034fe3b25e41205fc0d0f40fb8b166b3955c208",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-tracks-cinema-normal-font-1.png": "711c188d81771d4401ff9b47dcd6cadbccb609af94b964fc3c6af588790ea09c",
+    "document/prototypes/tv-ui/previews/player-panel-layers/tracks-before.png": "8ab1fa210f3016cb192aedf0b9cc7b4707df66662c770d1568a572a2f9ab6bc6",
+    "document/prototypes/tv-ui/previews/player-panel-layers/tracks-after.png": "564ae0066aa8ae1f8bf784df9eeeef0670b2a5193c7a9fc183b29be9358c10d4",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-style-cinema-normal-font-1.png": "ce5f42fbe147cdabab4b82fb066608d4bf6217782e49d922f1b68c16fb54c81e",
+    "document/prototypes/tv-ui/previews/player-panel-layers/style-before.png": "3877fb29ad63506cfcdbf9348fb658104823dc5bbc626dd2041444e962bbbaf2",
+    "document/prototypes/tv-ui/previews/player-panel-layers/style-after.png": "81e323b9ee1bbdde9bb59ef1e0a25c8164f5e5525aa2f9390f53c009e9f348c6",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-settings-cinema-normal-font-1.png": "fd309195c4de21c0c2f9c1496836d052bb914432a6e2e0493f914610b84fbe76",
+    "document/prototypes/tv-ui/previews/player-panel-layers/settings-before.png": "c518a8b9c2956a7ae7f3e49a9c1cac07c0a179bdae589b594b94ea5d743cd37a",
+    "document/prototypes/tv-ui/previews/player-panel-layers/settings-after.png": "282a813773bbb9de39062d963efcb993e54726bdfaed461241a104e2ddbf5521",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-tracks-bright-normal-font-1.png": "6364af3ef5f866d628508094a36a8df6124a7ea2343449b4bd9a6d3729cf74c1",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-style-dark-normal-font-1.png": "10b8d41a20527c3ca689f91c63aff1665b788f9a822dab762c4ccddf99fdd841",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-episodes-cinema-long-font-1.3.png": "5e9f13f393b55c37e6dfe579f56e8d50800040f3036ef673df49e07e77904443",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-tracks-bright-empty-font-1.3.png": "98d5c6d79f1ef6363cbd15c334d754569a2515ac58afee554876584d85fc8091",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-search-cinema-loading-font-1.png": "52bea9e0e59c1ea3c455824a4a92c11643ad9388a224e82277e615bcb3abcb62",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-search-cinema-error-font-1.png": "52506fba380350acb3afd23327d8e1036a3ed3081a105c8c992245c3da9caa54",
+    "document/prototypes/tv-ui/previews/player-panel-layers/compare-style-cinema-normal-font-1.3.png": "1a6d50ba0dbd1fdf1e61311e5f0ac25144b928ad9c97ac90362a4192a019acc0"
+  },
+  "nativeSourceSha256": {
+    "player_component/src/main/res/drawable/cinema_player_panel.xml": "0f8585132ee4509e2e9edac384c8814fe8c95250b85707b4e3001984f04bf5f2",
+    "player_component/src/main/java/com/xyoye/player/controller/VideoController.kt": "07664a445bd456668e3ebcc47ac4e3cf6e3f3bb7ffaf73671ca70a8cf9b86879",
+    "player_component/src/main/java/com/xyoye/player/controller/setting/SettingController.kt": "bd4190ece8b77594e6aaf8aac0f6a27189207975713c3ef334fd8d0c491db73d",
+    "player_component/src/main/java/com/xyoye/player/controller/setting/BaseSettingView.kt": "c34ebe34ebd680c75a9374c05b5baacaec6511516875d9b81ef39b75e39ea33c",
+    "player_component/src/main/res/layout/layout_keyword_block.xml": "2ebafbb4773c50f218aa96f316c26dd4de6813c45f6b37c08b0dd35a854b21a9",
+    "player_component/src/main/res/layout/layout_player_setting.xml": "67a2928f5d9a3226a04e1f4bee47663760250acf579d9cdc81609e6805bd6d40",
+    "player_component/src/main/res/layout/layout_search_danmu.xml": "c8910cc5792892e9b5b448bd487d035b4f4bf74df68e5b50fbc106133a959c57",
+    "player_component/src/main/res/layout/layout_setting_danmu_style.xml": "9f7c8aeddb7b0d46c9c5a494bbbcaed1633f6cdc38af2a334dfb61033afe69e1",
+    "player_component/src/main/res/layout/layout_setting_offset_time.xml": "3c29e4ad9cc2c4b8b12711c3c1292ccd5280d3b16e659efbeb61f4cbfdddfd1d",
+    "player_component/src/main/res/layout/layout_setting_subtitle_style.xml": "997b1f94ceae26bcd176a5c6449531acb9803c99c3c551bfc79222f0b9dea2b5",
+    "player_component/src/main/res/layout/layout_setting_tracks.xml": "89f183880607a764cd5d0cb45dfba16027a824372cd169a6bf936d6d026a3aaa",
+    "player_component/src/main/res/layout/layout_setting_video_aspect.xml": "a36828ba0fc793cc6d0a94f82732955e2666454a9a5ea93d48fbca6b52bc10f3",
+    "player_component/src/main/res/layout/layout_setting_video_speed.xml": "a3a475dffb68cb7c53f9caba0380a35f1c76f4d711cf12611c3d05ee0d6a600e",
+    "player_component/src/main/res/layout/layout_switch_source.xml": "1862815e5e010d4a17a8e9281e8a7785a0b627b514006151676f1c948201f26b",
+    "player_component/src/main/res/layout/layout_switch_video_source.xml": "db4a00528372551c4b78d07978bf042f09c0afdcc5b0f24a284395e760f476a3"
+  },
+  "visualInspection": {
+    "method": "Viewed source native images N23/N18 and original playback background; viewed comparison contact sheet and full-size representative designs",
+    "fullSizeComparisons": [
+      "compare-episodes-cinema-normal-font-1.png",
+      "compare-tracks-bright-normal-font-1.png",
+      "compare-episodes-cinema-long-font-1.3.png",
+      "compare-settings-cinema-normal-font-1.png"
+    ],
+    "contactSheet": "coverage-overview.jpg",
+    "nativeAcceptance": false
+  },
+  "reviewServer": {
+    "url": "http://127.0.0.1:18106/document/prototypes/tv-ui/player-panel-layers-prototype.html",
+    "binding": "127.0.0.1",
+    "purpose": "Design review; no TV operation"
+  }
+}

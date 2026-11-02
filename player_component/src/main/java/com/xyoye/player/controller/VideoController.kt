@@ -14,6 +14,7 @@ import com.xyoye.player.controller.action.PlayerAction
 import com.xyoye.player.controller.base.TvVideoController
 import com.xyoye.player.controller.danmu.DanmuController
 import com.xyoye.player.controller.setting.DanmuPanelState
+import com.xyoye.player.controller.setting.PlayerPanelScrimView
 import com.xyoye.player.controller.setting.SettingController
 import com.xyoye.player.controller.subtitle.SubtitleController
 import com.xyoye.player.controller.video.LoadingView
@@ -41,6 +42,8 @@ class VideoController(
     // 字幕视图控制器
     private val mSubtitleController = SubtitleController(context)
 
+    private val playerPanelScrim = PlayerPanelScrimView(context)
+
     // 设置视图控制器
     private val mSettingController =
         SettingController(
@@ -50,6 +53,23 @@ class VideoController(
             onSettingShown = {
                 settingCallerId = findFocus()?.id ?: View.NO_ID
                 stopFadeOut()
+            },
+            onSettingViewChanged = { type ->
+                playerPanelScrim.setPanelVisible(
+                    when (type) {
+                        SettingViewType.PLAYER_SETTING,
+                        SettingViewType.SWITCH_VIDEO_SOURCE,
+                        SettingViewType.TRACKS,
+                        SettingViewType.SUBTITLE_STYLE,
+                        SettingViewType.DANMU_STYLE,
+                        SettingViewType.SUBTITLE_OFFSET_TIME,
+                        SettingViewType.DANMU_OFFSET_TIME,
+                        SettingViewType.VIDEO_SPEED,
+                        SettingViewType.VIDEO_ASPECT,
+                        SettingViewType.SEARCH_DANMU -> true
+                        else -> false
+                    }
+                )
             }
         )
 
@@ -77,6 +97,7 @@ class VideoController(
         addControlComponent(playerBotView)
         addControlComponent(loadingView)
         addControlComponent(playerControlView)
+        addView(playerPanelScrim, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
 
         actionHandler = { action -> handleAction(action) }
         playerBotView.setActionHandler { action -> dispatchAction(action) }
@@ -146,6 +167,8 @@ class VideoController(
 
     override fun destroy() {
         cancelPendingSeek()
+        mSettingController.settingRelease()
+        playerPanelScrim.reset()
     }
 
     private fun onSettingHidden() {
@@ -228,7 +251,8 @@ class VideoController(
         cancelPendingSeek()
         mDanmuController.danmuRelease()
         mSubtitleController.clearExternalTrack()
-        mSettingController.hideSettingView()
+        mSettingController.settingRelease()
+        playerPanelScrim.reset()
         playerControlView.clearMessage()
     }
 

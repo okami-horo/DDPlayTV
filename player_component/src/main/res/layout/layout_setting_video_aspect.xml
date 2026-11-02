@@ -9,7 +9,7 @@
         android:layout_width="264dp"
         android:layout_height="match_parent"
         android:layout_gravity="end"
-        android:background="@drawable/cinema_player_panel"
+        android:background="@drawable/cinema_player_side_panel" android:elevation="12dp"
         android:layout_margin="15dp"
         android:clickable="true"
         android:clipToPadding="false"

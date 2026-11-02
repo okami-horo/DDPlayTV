@@ -10,11 +10,12 @@
         android:layout_margin="15dp"
         android:padding="18dp"
         android:orientation="vertical"
-        android:background="@drawable/cinema_player_panel"
+        android:background="@drawable/cinema_player_side_panel" android:elevation="12dp"
         android:translationX="300dp">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
+            android:background="@drawable/cinema_player_panel_heading"
             android:gravity="center_vertical">
             <TextView
                 android:id="@+id/tips_search_danmu_tv"

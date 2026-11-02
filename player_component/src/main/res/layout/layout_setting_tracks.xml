@@ -1,6 +1,6 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools">
-    <LinearLayout android:layout_width="264dp" android:layout_height="match_parent" android:layout_gravity="end" android:layout_margin="15dp" android:padding="18dp" android:orientation="vertical" android:background="@drawable/cinema_player_panel" android:translationX="300dp" tools:translationX="0dp">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="36dp" android:gravity="center_vertical">
+    <LinearLayout android:layout_width="264dp" android:layout_height="match_parent" android:layout_gravity="end" android:layout_margin="15dp" android:padding="18dp" android:orientation="vertical" android:background="@drawable/cinema_player_side_panel" android:elevation="12dp" android:translationX="300dp" tools:translationX="0dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="36dp" android:gravity="center_vertical" android:background="@drawable/cinema_player_panel_heading">
             <TextView android:id="@+id/tv_title" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textSize="20sp" android:textColor="@color/cinema_text" />
         </LinearLayout>
         <androidx.appcompat.widget.SwitchCompat android:id="@+id/track_visible" android:layout_width="match_parent" android:layout_height="48dp" android:text="显示" android:textColor="@color/cinema_text" android:textSize="14sp" android:background="@drawable/cinema_card" android:thumb="@drawable/cinema_switch_thumb" app:track="@drawable/cinema_switch_background" app:splitTrack="false" />

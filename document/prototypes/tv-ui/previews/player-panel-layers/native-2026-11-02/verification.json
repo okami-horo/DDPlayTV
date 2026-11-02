@@ -1,0 +1,936 @@
+{
+  "date": "2026-11-02",
+  "revision": "c047019c3113428766bb942eaca9e82c6c5fea14",
+  "device": {
+    "serial": "emulator-5586",
+    "adbPort": 5085,
+    "api": 34,
+    "viewport": [
+      1440,
+      810
+    ],
+    "densityDpi": 240,
+    "fontScales": [
+      1.0,
+      1.3
+    ]
+  },
+  "jvm": {
+    "tests": 516,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2,
+    "passed": 514
+  },
+  "nativeDistinctNormal": 11,
+  "nativeDistinctFont130": 7,
+  "runs": [
+    {
+      "log": "evidence/regression-normal.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.RemainingUiInstrumentedTest#feedbackFitsBothRealPlayersAndBackReturnsFromControls",
+        "com.okamihoro.ddplaytv.playback.PlaybackEntriesInstrumentedTest#mpvPendingSeekAndDanmuStayWithTheirSourceAcrossSwitchAndRecreation",
+        "com.okamihoro.ddplaytv.playback.PlaybackEntriesInstrumentedTest#media3PendingSeekAndDanmuStayWithTheirSourceAcrossSwitchAndRecreation",
+        "com.okamihoro.ddplaytv.ui.tv.UiPolishInstrumentedTest#firstEpisodeSkipsDisabledPreviousAndPanelBackRestoresCaller",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#subtitleSelectionSurvivesFocusAndDisableRemainsAnAction",
+        "com.okamihoro.ddplaytv.ui.setting.GlobalSettingsInstrumentedTest#retainedSettingsPersistByDpadAndPcGroupingIsAbsent"
+      ],
+      "failures": [],
+      "sha256": "6bd6b6314f0742e113e6f528c222a8ac6b0a6b6bca403c4793cbc2d76ee98ae5"
+    },
+    {
+      "log": "evidence/native-final-normal.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#recordNinePanelsAndApplicableContentStates",
+        "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#busyBackgroundCannotChangeThePanelReadingSurface",
+        "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#rightPanelKeepsBothRealKernelsPlayingAndReturnsByRemote"
+      ],
+      "failures": [
+        {
+          "case": "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#stackChangesKeepOneDimLayerAndClearItForOtherPanelFormsAndRelease",
+          "message": "java.lang.AssertionError: Keyword form retains its original presentation expected:<39> but was:<147>"
+        }
+      ],
+      "sha256": "5ed448eb81091e1df7e20414eef5751adb0b3e2012068c808b0a0516373c3bda"
+    },
+    {
+      "log": "evidence/stack-final-normal.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#stackChangesKeepOneDimLayerAndClearItForOtherPanelFormsAndRelease"
+      ],
+      "failures": [],
+      "sha256": "c5751720dc4edf2a69b1c6cc89caa905c53d76bc71a147b34c5f8e3745e9f5d6"
+    },
+    {
+      "log": "evidence/native-final-font130.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#stackChangesKeepOneDimLayerAndClearItForOtherPanelFormsAndRelease",
+        "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#recordNinePanelsAndApplicableContentStates",
+        "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#busyBackgroundCannotChangeThePanelReadingSurface",
+        "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#rightPanelKeepsBothRealKernelsPlayingAndReturnsByRemote",
+        "com.okamihoro.ddplaytv.ui.tv.UiPolishInstrumentedTest#firstEpisodeSkipsDisabledPreviousAndPanelBackRestoresCaller",
+        "com.okamihoro.ddplaytv.ui.tv.FocusFeedbackInstrumentedTest#subtitleSelectionSurvivesFocusAndDisableRemainsAnAction"
+      ],
+      "failures": [],
+      "sha256": "7c85f9e0dbdea39ae89c946294ddcd5e4904e58c19d2821e77f9986613e5d5dd"
+    },
+    {
+      "log": "evidence/speed-normal.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#speedChangesPersistAcrossPanelReopeningAndResetByRemote"
+      ],
+      "failures": [],
+      "sha256": "8be8b94a88f921b2bac701700bdb8f14b16e8e44e12ffced10749a6085bf9bf0"
+    },
+    {
+      "log": "evidence/speed-font130.log",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#speedChangesPersistAcrossPanelReopeningAndResetByRemote"
+      ],
+      "failures": [],
+      "sha256": "206d521eb6380235bac22f4ab581a07fd25ed5f48b9e74c273de01e4cef56295"
+    }
+  ],
+  "baselineFailure": {
+    "log": "evidence/baseline-no-launcher-anr.log",
+    "passed": [
+      "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#recordNinePanelsAndApplicableContentStates"
+    ],
+    "failures": [
+      {
+        "case": "com.okamihoro.ddplaytv.ui.tv.PlayerPanelLayersInstrumentedTest#busyBackgroundCannotChangeThePanelReadingSurface",
+        "message": "java.lang.AssertionError: SWITCH_VIDEO_SOURCE must isolate its reading surface from bright video and controls expected:<-15066592> but was:<-14408662>"
+      }
+    ],
+    "sha256": "72acef309374cb1feed274d6a74d5145b2d16dfb0ae2a3c461389e583c402bf1"
+  },
+  "builds": [
+    {
+      "log": "evidence/debug-build.log",
+      "sha256": "f99c7d174e9121ccfd33124847360d5938dbc6bd848a29dd18878b9398cb5eb1",
+      "successful": true
+    },
+    {
+      "log": "evidence/gates-online.log",
+      "sha256": "db1fb5bcbbee57b738189866bf6aecccb07a31b3444ba44283676dfdc045003b",
+      "successful": true
+    },
+    {
+      "log": "evidence/test-stack-build.log",
+      "sha256": "f86cc9078079889305d0f3f5b2b2fbc20f47bd1c7fad0466c1e86f09f74da023",
+      "successful": true
+    },
+    {
+      "log": "evidence/gates-final.log",
+      "sha256": "6395b51bb49b30b49f41e1bf2aa81ab1471390cdd91fd5fdacf9a14213e00cab",
+      "successful": true
+    },
+    {
+      "log": "evidence/lint-final-stack-test.log",
+      "sha256": "d7738c2502f784b94b678b42750c93b9f380de3533cf25b19a2d7edf4a5adbfd",
+      "successful": true
+    },
+    {
+      "log": "evidence/test-speed-build.log",
+      "sha256": "6a3fa894f9280e1d4385aed2e2ff99b9c7f087b467b6c9190fd1c34f88cc9334",
+      "successful": true
+    },
+    {
+      "log": "evidence/lint-final-speed-test.log",
+      "sha256": "d72b41d2602a130732b92617ababa834005369ab2aea2396da8d2b6b717f6171",
+      "successful": true
+    }
+  ],
+  "sourceSha256": {
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/PlayerPanelLayersInstrumentedTest.kt": "9f487a5d9d711d4e1628c34ceb948a38cb41a39132834d59c76395d1ca5a2671",
+    "player_component/src/main/java/com/xyoye/player/controller/VideoController.kt": "96d96390fb839fa402d4c11bc298f5d814e68228b709d97b4e4b7f5abe0d3d4a",
+    "player_component/src/main/java/com/xyoye/player/controller/setting/PlayerPanelScrimView.kt": "d08bf6ecba304008a09703e8db64b8afaef53697499124421730d60243ef90ad",
+    "player_component/src/main/java/com/xyoye/player/controller/setting/SettingController.kt": "129afe9067bb037c7fb281d5c33f1d3a461d15e9c078bc3968ad3baac7f31cae",
+    "player_component/src/main/res/drawable/cinema_player_panel_heading.xml": "db3f621fc6b1a316ce9322bc80bf471a378f263001a7e5d33da6e68bffc3d223",
+    "player_component/src/main/res/drawable/cinema_player_setting_row.xml": "fe8bece544b1b366fda91298f80fce62f80ecfa69dd50c984b226a341690c27b",
+    "player_component/src/main/res/drawable/cinema_player_side_panel.xml": "d28ade56ba7c9d24630ebee23081547bdb5c01a5b0c1d6da196d5313d6166167",
+    "player_component/src/main/res/layout/item_player_setting.xml": "739fa2ac69293f923fd6180f0dbb337dfa31c0d27230b11d09936ee4ad2574c8",
+    "player_component/src/main/res/layout/layout_player_setting.xml": "58b0409214e8196e5e92244bc13433891eb9bd6ff8e902fad09865fdbee119bd",
+    "player_component/src/main/res/layout/layout_search_danmu.xml": "33e4d9b93a8b1b76e2dbd578332d1b6ed3901a04385c54ea8b59a4c605c61098",
+    "player_component/src/main/res/layout/layout_setting_danmu_style.xml": "75cc6db02268e63d567c2e50333a41d920f19e6a493b6f82e8dfade5284ce095",
+    "player_component/src/main/res/layout/layout_setting_offset_time.xml": "668df7e487bdd7492569ce4505ca4618b1508fdf6ca4b66db76c18abc047af03",
+    "player_component/src/main/res/layout/layout_setting_subtitle_style.xml": "772bf633705dfe22b62698d3db2ea8bf6f2e9e06b909691d94b6e05d108755a9",
+    "player_component/src/main/res/layout/layout_setting_tracks.xml": "cff4222576475922a64bb7a4cffc7867f5a4d73929a123d2b74c8efb82169371",
+    "player_component/src/main/res/layout/layout_setting_video_aspect.xml": "e29bfc5ac554dcaf643c20d4fa048104de6018bd79eaf807acb39a7e756f83a5",
+    "player_component/src/main/res/layout/layout_setting_video_speed.xml": "64c3581ce838abf66562fc430dfa3a60fcffc7b0cdab633f7f6d8eaa85c28c00",
+    "player_component/src/main/res/layout/layout_switch_video_source.xml": "7af66a18dad8f960950f73a1500fe0cca28d013813939d246ee5d498110b3338"
+  },
+  "apkSha256": {
+    "app/build/outputs/apk/debug/ddplaytv_v4.2.4-debug_arm64-v8a-debug.apk": "b4d098b3d95d11ec5cda556a203b77a08e6ba0c6987cd8aef2083ba3dc3b9797",
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "dbd4a54dbc48e642939c8b097fc7cbec8ff066cf206d0f46f66aec5d4c58afaa"
+  },
+  "baselineIdentity": "evidence/baseline-identity.json",
+  "prototypeSha256": "da686022682ca709f1690642e6c93588501cbcfa4669dfa391b4cccbe4164e88",
+  "images": [
+    {
+      "group": "M05",
+      "title": "播放设置",
+      "name": "player_setting",
+      "fontScale": 1.0,
+      "phase": "a06-before",
+      "source": ".tmp/a06-panel-implementation/a06-before/player_setting.png",
+      "path": "images/a06-before-player_setting.webp",
+      "sourcePngSha256": "8e91e2de683a27a90b605140e175ef2d2c38616ef83a1b751a3489df628d3035",
+      "sha256": "c2811757518ae9ae11988c04cdaa20c285663034a29db2326bab1fcbbb0824cc"
+    },
+    {
+      "group": "M01",
+      "title": "选集",
+      "name": "switch_video_source",
+      "fontScale": 1.0,
+      "phase": "a06-before",
+      "source": ".tmp/a06-panel-implementation/a06-before/switch_video_source.png",
+      "path": "images/a06-before-switch_video_source.webp",
+      "sourcePngSha256": "5715dfb959224a414b9945b301b190a7f059fc0d59713799a1d1b1a248ec79d6",
+      "sha256": "d7e1849c44f5699294ba4b5a2294de6aea3d4ad565d578876aebea5ae1b097b8"
+    },
+    {
+      "group": "M02",
+      "title": "字幕轨空态",
+      "name": "tracks",
+      "fontScale": 1.0,
+      "phase": "a06-before",
+      "source": ".tmp/a06-panel-implementation/a06-before/tracks.png",
+      "path": "images/a06-before-tracks.webp",
+      "sourcePngSha256": "7b01ecbb317cd1f5dc773319a7fe6ff811dcb47251b5fb77b4d92c771703aec3",
+      "sha256": "65861bee3364e0b6be7aeb13d0a6342af3863adeed641b15f08be6a6f0a54c1a"
+    },
+    {
+      "group": "M03",
+      "title": "字幕样式",
+      "name": "subtitle_style",
+      "fontScale": 1.0,
+      "phase": "a06-before",
+      "source": ".tmp/a06-panel-implementation/a06-before/subtitle_style.png",
+      "path": "images/a06-before-subtitle_style.webp",
+      "sourcePngSha256": "67a023c5b162de08a3e5a684638e21e54f1f33377d0a43e468eef96912917592",
+      "sha256": "316e465e04a6d95912967f0690ccdf0773ac1889a8332d0ed69247cfadff248d"
+    },
+    {
+      "group": "M04",
+      "title": "弹幕样式",
+      "name": "danmu_style",
+      "fontScale": 1.0,
+      "phase": "a06-before",
+      "source": ".tmp/a06-panel-implementation/a06-before/danmu_style.png",
+      "path": "images/a06-before-danmu_style.webp",
+      "sourcePngSha256": "1247b7f84196c7e08bbc5c1efce15adb8e3ca4bb3d6c12d786f8dfd63e654fa1",
+      "sha256": "9cd4f96377afb13ab0682862a7d3923449940ad392e793476d77e934b1fba4d9"
+    },
+    {
+      "group": "M06",
+      "title": "字幕时间偏移",
+      "name": "subtitle_offset_time",
+      "fontScale": 1.0,
+      "phase": "a06-before",
+      "source": ".tmp/a06-panel-implementation/a06-before/subtitle_offset_time.png",
+      "path": "images/a06-before-subtitle_offset_time.webp",
+      "sourcePngSha256": "bfb0285f938288a9f65211f815d7c3bf6cde70b019a5f62781957733ea6d18d1",
+      "sha256": "16ba6758a169a508c84e45e1c7715c454700fd7e31d3da1b86643d12d379ace7"
+    },
+    {
+      "group": "M07",
+      "title": "播放速度",
+      "name": "video_speed",
+      "fontScale": 1.0,
+      "phase": "a06-before",
+      "source": ".tmp/a06-panel-implementation/a06-before/video_speed.png",
+      "path": "images/a06-before-video_speed.webp",
+      "sourcePngSha256": "08d70afc2921d2db07cc2304c418ca09ee10d1047d25d8eac24c98c6003a850e",
+      "sha256": "f234445c3e11b76b471bfa950e2d7be13f152d650e50830a5e7983b86799dd61"
+    },
+    {
+      "group": "M08",
+      "title": "画面比例",
+      "name": "video_aspect",
+      "fontScale": 1.0,
+      "phase": "a06-before",
+      "source": ".tmp/a06-panel-implementation/a06-before/video_aspect.png",
+      "path": "images/a06-before-video_aspect.webp",
+      "sourcePngSha256": "b925316f00ac3442eff36724a85824c450dc3673f25b83b15f3468ee284ef8a0",
+      "sha256": "8e5cdd746da7a3d803af87df6de5060f572d5ebdbd62bacc2bf701cfda3a57f4"
+    },
+    {
+      "group": "M09",
+      "title": "弹幕搜索",
+      "name": "search_danmu",
+      "fontScale": 1.0,
+      "phase": "a06-before",
+      "source": ".tmp/a06-panel-implementation/a06-before/search_danmu.png",
+      "path": "images/a06-before-search_danmu.webp",
+      "sourcePngSha256": "e5feeb8dd6f0d8a979a20d825dad8345f4798a6b8ea828a53b12bffc417d3348",
+      "sha256": "262060573b7b20bce9b0177e14695fff6827c7cb4a1c11f78c3872712a6d7a30"
+    },
+    {
+      "group": "M05",
+      "title": "播放设置",
+      "name": "player_setting",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/player_setting.png",
+      "path": "images/a06-after-player_setting.webp",
+      "sourcePngSha256": "ea211c8885d5c90cbf96b10f2d3a2f4313401c721cf027a5bc9bcfe11c1199cf",
+      "sha256": "2e79c585e613859d02ccfb540063b2819f8ad9a7886cde17899d87f8bed874a4"
+    },
+    {
+      "group": "M01",
+      "title": "选集",
+      "name": "switch_video_source",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/switch_video_source.png",
+      "path": "images/a06-after-switch_video_source.webp",
+      "sourcePngSha256": "a5630415c4e0dc568c00f4acd367d1a6869717154d92239a1d065321418fc132",
+      "sha256": "b41c1daf3d8103a6ba7b7255003aa2daaabf88afd0621e0c1b6ddc0ac75a79b1"
+    },
+    {
+      "group": "M02",
+      "title": "字幕轨空态",
+      "name": "tracks",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/tracks.png",
+      "path": "images/a06-after-tracks.webp",
+      "sourcePngSha256": "1d3261c3499f4af889b2883ec0677ea6cbf329f1a8c7606953ca83b8810793b2",
+      "sha256": "4777604ddfe2f56db15ec13514afec33997272461a4b867100e34478fa059479"
+    },
+    {
+      "group": "M03",
+      "title": "字幕样式",
+      "name": "subtitle_style",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/subtitle_style.png",
+      "path": "images/a06-after-subtitle_style.webp",
+      "sourcePngSha256": "1b7264f8a967e70390c51ee1cd171d338d106096f7312488cf4115bac46147d7",
+      "sha256": "46a565ef11ad15ead71156b8e4858149e0e2f23980704ae5718b667e58b90f6d"
+    },
+    {
+      "group": "M04",
+      "title": "弹幕样式",
+      "name": "danmu_style",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/danmu_style.png",
+      "path": "images/a06-after-danmu_style.webp",
+      "sourcePngSha256": "ecfee8b88b4bc9c1401632255d72c56c2b9d2b69d59cc4c49429650b66df9f4e",
+      "sha256": "7c3b5f04c2ed554766a5dcd31639a14c5dd6be966a49d1f0e3ddc03654d5a670"
+    },
+    {
+      "group": "M06",
+      "title": "字幕时间偏移",
+      "name": "subtitle_offset_time",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/subtitle_offset_time.png",
+      "path": "images/a06-after-subtitle_offset_time.webp",
+      "sourcePngSha256": "d69c05404667ecfb1b0a2de9b27a96b2ce93a5e08d2be070e021e864cf0d118e",
+      "sha256": "432b885591291bab3030e8973edc4e68768ff2fd490df0fbe5deae69838edd83"
+    },
+    {
+      "group": "M07",
+      "title": "播放速度",
+      "name": "video_speed",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/video_speed.png",
+      "path": "images/a06-after-video_speed.webp",
+      "sourcePngSha256": "101d80cdc50013cccff2156cb073978ec644aa5d91e2f747930b31ddcfe4f9c9",
+      "sha256": "1dc59d408b05af292602dd39bfba716d37d16ea8107a8971537cdbd1619e6a1a"
+    },
+    {
+      "group": "M08",
+      "title": "画面比例",
+      "name": "video_aspect",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/video_aspect.png",
+      "path": "images/a06-after-video_aspect.webp",
+      "sourcePngSha256": "b15b2ccf2656eb97013902dd1d29b7a3db8203b576afdedc4d0f51749792c0d3",
+      "sha256": "90ece1155e15dd0fec11635d43923daa333cb64d640a588d0760bc0d49f3cb27"
+    },
+    {
+      "group": "M09",
+      "title": "弹幕搜索",
+      "name": "search_danmu",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/search_danmu.png",
+      "path": "images/a06-after-search_danmu.webp",
+      "sourcePngSha256": "33c094386a26febf81b7b2b869758e7df950c8270bac370f6e6274b477190dbf",
+      "sha256": "aff0ff7bbc242896272a29539ec3c19e68891b39011a44a5886050dac6ba0d1b"
+    },
+    {
+      "group": "M02",
+      "title": "音轨",
+      "name": "tracks-audio",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/tracks-audio.png",
+      "path": "images/a06-after-tracks-audio.webp",
+      "sourcePngSha256": "393d7bd915114f8df951b6fd0b9f3ab0f76df23f97c57e90dbc12c020511b1a8",
+      "sha256": "9d91865987f2971d7c0ac1bcb9142c8c83603e295e4526bde7e499f2cb828f26"
+    },
+    {
+      "group": "M02",
+      "title": "弹幕轨空态",
+      "name": "tracks-danmu",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/tracks-danmu.png",
+      "path": "images/a06-after-tracks-danmu.webp",
+      "sourcePngSha256": "c3f49eae5768119b507097391d18d39e66bf28657f466ce032787e3279b973d6",
+      "sha256": "87f7ec9cf15ed967803f83bead3f3a8cab37c19f0fe58a081feb7443c26468a7"
+    },
+    {
+      "group": "M02",
+      "title": "视频轨面板（直接打开共用壳）",
+      "name": "tracks-video",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/tracks-video.png",
+      "path": "images/a06-after-tracks-video.webp",
+      "sourcePngSha256": "02f242e877d856049d0517cd581bfad7f8bbe17e8583485a097a0b3c6b229bf5",
+      "sha256": "a78f4c074796a2bdd233f92f4e0d6eabe5484f2408b1c7cb23a4a5094ea8031e"
+    },
+    {
+      "group": "M06",
+      "title": "弹幕时间偏移",
+      "name": "danmu-offset",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/danmu-offset.png",
+      "path": "images/a06-after-danmu-offset.webp",
+      "sourcePngSha256": "ca02435eef109ed5b4572b752a38051436c481e0a84097bb36fa34188c63681a",
+      "sha256": "bb6c38af2cd9d799e45751f25f5f2b2be07b097d83b396b5d37e13baa344a301"
+    },
+    {
+      "group": "M02",
+      "title": "字幕空态复开",
+      "name": "subtitle-empty",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/subtitle-empty.png",
+      "path": "images/a06-after-subtitle-empty.webp",
+      "sourcePngSha256": "1d3261c3499f4af889b2883ec0677ea6cbf329f1a8c7606953ca83b8810793b2",
+      "sha256": "4777604ddfe2f56db15ec13514afec33997272461a4b867100e34478fa059479"
+    },
+    {
+      "group": "M02",
+      "title": "已选字幕失焦",
+      "name": "subtitle-selected-away",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/subtitle-selected-away.png",
+      "path": "images/a06-after-subtitle-selected-away.webp",
+      "sourcePngSha256": "36a65fc0c8295784f810be5dc7da53c807ebe087b974c25cb7df7971c2eb4d8f",
+      "sha256": "28dcb3a7597fdb6a80fb67ffcdb1e2b646d3fa2487a5f284070360458e274d0b"
+    },
+    {
+      "group": "M02",
+      "title": "已选字幕聚焦",
+      "name": "subtitle-selected-focused",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/subtitle-selected-focused.png",
+      "path": "images/a06-after-subtitle-selected-focused.webp",
+      "sourcePngSha256": "b27f1b228ce3a1dd13503f654b1480d667404833d4e4606a67d72682f1861696",
+      "sha256": "55345f64ad9de56a327726111781d6e700d05fc9006b1bb12d236b5a2368ea08"
+    },
+    {
+      "group": "M09",
+      "title": "搜索加载",
+      "name": "search-loading",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/search-loading.png",
+      "path": "images/a06-after-search-loading.webp",
+      "sourcePngSha256": "f4aac6d55bf9c6135f1bdea56e549ce312238ab98d1c28abdf5113540698e4a7",
+      "sha256": "c3feff216bdb41b2148de589a5b2aacc197d4142086c9680727abf46dbb96ba0"
+    },
+    {
+      "group": "M09",
+      "title": "搜索无结果",
+      "name": "search-empty",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/search-empty.png",
+      "path": "images/a06-after-search-empty.webp",
+      "sourcePngSha256": "f92a2d046ea78210b75db70cea378bc2b05b8d116b18e351c95ba46f68848501",
+      "sha256": "b9267e191bd750cc2b886e5dfdd794b6183ed14aa3fde95b6b1fb4812ac61694"
+    },
+    {
+      "group": "M09",
+      "title": "搜索失败",
+      "name": "search-error",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/search-error.png",
+      "path": "images/a06-after-search-error.webp",
+      "sourcePngSha256": "279b9e48ff10e2b8fcf8f3da18a29618aea0415a8aa2000993ae62b10e7f967c",
+      "sha256": "0f0da6abf5de0b0e72b8f9b6fa6447b947f9db4c9e6bed803782b9b0863d69c6"
+    },
+    {
+      "group": "M09",
+      "title": "搜索恢复与长结果",
+      "name": "search-content",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/search-content.png",
+      "path": "images/a06-after-search-content.webp",
+      "sourcePngSha256": "107b6a83d97e770f6bc6918e9716e84e8353e1cc67182dbbd1b89ab8b5f9f8ff",
+      "sha256": "0fa6dd6fb4de0a1b4f643f2bdb75803dcd29fa5b7ace1c3a3cc5e795fd15b037"
+    },
+    {
+      "group": "M09",
+      "title": "搜索长列表滚动",
+      "name": "search-content-scrolled",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/search-content-scrolled.png",
+      "path": "images/a06-after-search-content-scrolled.webp",
+      "sourcePngSha256": "f42c9a53f10c41e5c84e2381dad89ff8b9b20000b2d36f2b320fe7ca4622e832",
+      "sha256": "77ad29d8abcbb5001a6b7e6233dada280c8dd1eac26808b44452250585d50bf5"
+    },
+    {
+      "group": "M11",
+      "title": "亮场背景",
+      "name": "subtitle-bright",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/subtitle-bright.png",
+      "path": "images/a06-after-subtitle-bright.webp",
+      "sourcePngSha256": "de1ccab88956498cc41157aa8b042c51b97cdaf02497bdabbb4bfc8bafa755cf",
+      "sha256": "bb80e73e8ad83bdd4eac9af2d9e010200c5a7969abe312e52e0e4efc5968f1a4"
+    },
+    {
+      "group": "M11",
+      "title": "暗场背景",
+      "name": "subtitle-dark",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/subtitle-dark.png",
+      "path": "images/a06-after-subtitle-dark.webp",
+      "sourcePngSha256": "6d728c7d46cfd709b888ebbb7ae3ade3d0ab89a46f483de3571de388747e85aa",
+      "sha256": "afa977f638bfb904d83a687e71ae0f24ef5dbe4228f15d398183ce801b7cca7d"
+    },
+    {
+      "group": "M10",
+      "title": "排除左侧文件选择器",
+      "name": "left-picker",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/left-picker.png",
+      "path": "images/a06-after-left-picker.webp",
+      "sourcePngSha256": "96c6247cc4198e605f904778bf8d5f25cfd15774e870f3fd019c4467284772ec",
+      "sha256": "015c2e519dc58e11c3abae7fddad561cf747991937bef685e11e20712d87af75"
+    },
+    {
+      "group": "M10",
+      "title": "保留关键词视图原有全屏遮罩",
+      "name": "keyword-form",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/keyword-form.png",
+      "path": "images/a06-after-keyword-form.webp",
+      "sourcePngSha256": "f661ed1e6a3b88f1390fbef309f435c21b2d1174ba0accd14a2c62c3406ac27e",
+      "sha256": "18b22ac81ccb162cf3eb1f7d34540df19f2eb29dd848206042c7bf129e898eda"
+    },
+    {
+      "group": "M11",
+      "title": "Media3 实际播放中的侧栏",
+      "name": "real-type_exo_player-panel",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/real-type_exo_player-panel.png",
+      "path": "images/a06-after-real-type_exo_player-panel.webp",
+      "sourcePngSha256": "d274a5f8d62c45dba1ebe431b9cef60df324ea0741b0597f68711d0662c59b66",
+      "sha256": "5de45018b18cfcee0b27986cca4d2af3acd9cf9e3c37470a225229e74c9fec86"
+    },
+    {
+      "group": "M11",
+      "title": "mpv 实际播放中的侧栏",
+      "name": "real-type_mpv_player-panel",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/real-type_mpv_player-panel.png",
+      "path": "images/a06-after-real-type_mpv_player-panel.webp",
+      "sourcePngSha256": "15a1f23939a3e2845c1e4dd8f292b7ee12169387592367c58d64bc0a3323653b",
+      "sha256": "cb43c6b07b5b79091de68e509b2e8771c0659a82ba0e3e6659e9c0fad6da7499"
+    },
+    {
+      "group": "M07",
+      "title": "倍速调节后重新打开",
+      "name": "speed-adjusted",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/speed-adjusted.png",
+      "path": "images/a06-after-speed-adjusted.webp",
+      "sourcePngSha256": "c34434d9cc1df911fc7e5e45cbdd8be7d810388ff82356ad6a05187e787ce1d2",
+      "sha256": "f37376f9c03f2dcd155d17eb0056924ea8542018695147d9024dd8fae9ef430d"
+    },
+    {
+      "group": "M07",
+      "title": "倍速重置与焦点恢复",
+      "name": "speed-reset",
+      "fontScale": 1.0,
+      "phase": "a06-after",
+      "source": ".tmp/a06-panel-implementation/a06-after/speed-reset.png",
+      "path": "images/a06-after-speed-reset.webp",
+      "sourcePngSha256": "64fd70d8c2cb3c8a0e40d7e7af34dc7a6e087f199104347048e2ff80d39a1c46",
+      "sha256": "b62b90f32e8b461b064f33dcd664ba754b24ea9b3e43425d642667c177c5dc47"
+    },
+    {
+      "group": "M05",
+      "title": "播放设置",
+      "name": "player_setting",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/player_setting.png",
+      "path": "images/a06-font130-player_setting.webp",
+      "sourcePngSha256": "27f610f2c223708221f066359478eb2131811e07b8fc627c3828f1c5914c82cd",
+      "sha256": "93d3372ffdeb9a66e351629ea3ba29b375e456737068b5e70cbb843a0a60508d"
+    },
+    {
+      "group": "M01",
+      "title": "选集",
+      "name": "switch_video_source",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/switch_video_source.png",
+      "path": "images/a06-font130-switch_video_source.webp",
+      "sourcePngSha256": "78874d5abe1ca93f4f189809da1339a1d9b65aafbe8843cec161226dfda361d2",
+      "sha256": "49bcb017f01edcd9f32a2c1223b82f6d864c27ad1dfad6484882b3956abb2bde"
+    },
+    {
+      "group": "M02",
+      "title": "字幕轨空态",
+      "name": "tracks",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/tracks.png",
+      "path": "images/a06-font130-tracks.webp",
+      "sourcePngSha256": "3ee3968c742dd6e38dae197a6cf717bb4ebb6e00fcb38c63dbc3c34b58f867ff",
+      "sha256": "7de427ab5c7b6936a7278c963bbe00dd9b17e0e046ef7659c5fa7a8e883abb9a"
+    },
+    {
+      "group": "M03",
+      "title": "字幕样式",
+      "name": "subtitle_style",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/subtitle_style.png",
+      "path": "images/a06-font130-subtitle_style.webp",
+      "sourcePngSha256": "47714f9c9c771856e85ce4e2c9ff1b844b6f4da6860388165100c708577db9b7",
+      "sha256": "f627a3462b589a9cc1ba64d219e8b8004a173bc0caf4b8d6e8e0070b85ec8aea"
+    },
+    {
+      "group": "M04",
+      "title": "弹幕样式",
+      "name": "danmu_style",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/danmu_style.png",
+      "path": "images/a06-font130-danmu_style.webp",
+      "sourcePngSha256": "ca126747047f6d12051b6f6b5982c2c519c6494a57d29a3aa0f7621e42e7871d",
+      "sha256": "9b5a2c37962e34d21a4c07192fa3374b3c6657e7408bbde7bf9bf7d78e4abd74"
+    },
+    {
+      "group": "M06",
+      "title": "字幕时间偏移",
+      "name": "subtitle_offset_time",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/subtitle_offset_time.png",
+      "path": "images/a06-font130-subtitle_offset_time.webp",
+      "sourcePngSha256": "111b01ecbf768d10955bcfc130cc82a98bd7c3a211328162cfcc75035dee16d7",
+      "sha256": "62832b3344a2d7a4fae190652b9b72db03ba74754a0c27b771fde2242ffaedaf"
+    },
+    {
+      "group": "M07",
+      "title": "播放速度",
+      "name": "video_speed",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/video_speed.png",
+      "path": "images/a06-font130-video_speed.webp",
+      "sourcePngSha256": "aa69cdeed6cd081a6ca3c0395207eaf00496ed1eb45c2afddb4ffadec878ed4f",
+      "sha256": "8f1d5d0655855db2938eec057b47d693e2e747930acc74978e6394588c58bf4e"
+    },
+    {
+      "group": "M08",
+      "title": "画面比例",
+      "name": "video_aspect",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/video_aspect.png",
+      "path": "images/a06-font130-video_aspect.webp",
+      "sourcePngSha256": "7e31871319925da90d068e99601afb538f2d245e6f0e99e6d5e95d0594629ff7",
+      "sha256": "151a5ddb3214a85668d0aa9f7d29d5c436760c79701213d6e19fef6df0ddea38"
+    },
+    {
+      "group": "M09",
+      "title": "弹幕搜索",
+      "name": "search_danmu",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/search_danmu.png",
+      "path": "images/a06-font130-search_danmu.webp",
+      "sourcePngSha256": "d43fbb90546b032943196d389cf288295f1287226d1afe742fb8dbabcd547dda",
+      "sha256": "fd00e59b499afc15ddf7c85c31e79105d0a4726e07e49db7e9ce4277930cae70"
+    },
+    {
+      "group": "M02",
+      "title": "音轨",
+      "name": "tracks-audio",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/tracks-audio.png",
+      "path": "images/a06-font130-tracks-audio.webp",
+      "sourcePngSha256": "b70354876a37cc5d97b0f1e73384b463d36cc82dc0b73d5b716fe529ab9d7370",
+      "sha256": "10da4feca4d982ea3556e4b1957dde23bf645138f26b37cbf59ce900c3ccf2c7"
+    },
+    {
+      "group": "M02",
+      "title": "弹幕轨空态",
+      "name": "tracks-danmu",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/tracks-danmu.png",
+      "path": "images/a06-font130-tracks-danmu.webp",
+      "sourcePngSha256": "a5723b18282dd1c90da23ed5016652423ce73545f122d12130bbc1b7001cdc0f",
+      "sha256": "3e3996274e6539247aaacc4157ca71fa766e5582dffab8d9d4cb47ae6a561386"
+    },
+    {
+      "group": "M02",
+      "title": "视频轨面板（直接打开共用壳）",
+      "name": "tracks-video",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/tracks-video.png",
+      "path": "images/a06-font130-tracks-video.webp",
+      "sourcePngSha256": "3fc696627ec5741e957a912dc64a8e836485ad0f660e53e3319f67e8b72d01bb",
+      "sha256": "4b7ad70a965e9af3c00c6f582b2d089ee3cda6a5c5ba709c1bcca01532cc89c6"
+    },
+    {
+      "group": "M06",
+      "title": "弹幕时间偏移",
+      "name": "danmu-offset",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/danmu-offset.png",
+      "path": "images/a06-font130-danmu-offset.webp",
+      "sourcePngSha256": "050bac4e61b86ae6a97736edf2e0d62fd818c4921a3d80cb56fea56f8250ba01",
+      "sha256": "6b3d6f4e2ed403cdd0b8a5c5be375b24ccdbabb7a76e7539ba7c5117980777a7"
+    },
+    {
+      "group": "M02",
+      "title": "字幕空态复开",
+      "name": "subtitle-empty",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/subtitle-empty.png",
+      "path": "images/a06-font130-subtitle-empty.webp",
+      "sourcePngSha256": "3ee3968c742dd6e38dae197a6cf717bb4ebb6e00fcb38c63dbc3c34b58f867ff",
+      "sha256": "7de427ab5c7b6936a7278c963bbe00dd9b17e0e046ef7659c5fa7a8e883abb9a"
+    },
+    {
+      "group": "M02",
+      "title": "已选字幕失焦",
+      "name": "subtitle-selected-away",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/subtitle-selected-away.png",
+      "path": "images/a06-font130-subtitle-selected-away.webp",
+      "sourcePngSha256": "e038c27a61f165f2eac1a69a7fa939e5028481609daa045f038ce3e22549c4da",
+      "sha256": "c0b03c658acca99870d8b11e84abf1fc92a731f83dc26b3eb1c062650f458b90"
+    },
+    {
+      "group": "M02",
+      "title": "已选字幕聚焦",
+      "name": "subtitle-selected-focused",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/subtitle-selected-focused.png",
+      "path": "images/a06-font130-subtitle-selected-focused.webp",
+      "sourcePngSha256": "4a266a47a50bc44e644abe30da1caa6964ce574854984da23f8426c953a4e0d4",
+      "sha256": "b774632f00f3322ace0f95d9fddf2e687c320732e159a77218e55f7cceacf435"
+    },
+    {
+      "group": "M09",
+      "title": "搜索加载",
+      "name": "search-loading",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/search-loading.png",
+      "path": "images/a06-font130-search-loading.webp",
+      "sourcePngSha256": "abad7ce4e45ace13afe60c498aea77c7bfd9f18958c7f676f184ad4a79254d28",
+      "sha256": "55da6b4b26defdb45c1e4b7e18d557831ab4f7f3a3ea6407e9d90534b01fa27a"
+    },
+    {
+      "group": "M09",
+      "title": "搜索无结果",
+      "name": "search-empty",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/search-empty.png",
+      "path": "images/a06-font130-search-empty.webp",
+      "sourcePngSha256": "1fbcdf549eb63014b4a74f9418c3d68aa0d52601f02db05a2a8191fc4e3af90f",
+      "sha256": "737b6acfce9ab6e5e3203a8751eb37f6a70f976ca28f65b3a76a817ce7e52bbe"
+    },
+    {
+      "group": "M09",
+      "title": "搜索失败",
+      "name": "search-error",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/search-error.png",
+      "path": "images/a06-font130-search-error.webp",
+      "sourcePngSha256": "b1720fe1027375e8da8fc2adc4e375e76ce9324c587779f3ebbedff6d7513c4e",
+      "sha256": "4807403fb16d42cbe8e30f6220362a6d50cc36b5bf6ecbb8045cd69c0f49cc5c"
+    },
+    {
+      "group": "M09",
+      "title": "搜索恢复与长结果",
+      "name": "search-content",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/search-content.png",
+      "path": "images/a06-font130-search-content.webp",
+      "sourcePngSha256": "0c80fcc7e6b2d90118fb9f5b23ef8a8b787cc39e6cb0f8a109950f33fd69adb0",
+      "sha256": "e67a1b97f68348e31834528ffc17b8d076b80a041827743842f03d3abf602132"
+    },
+    {
+      "group": "M09",
+      "title": "搜索长列表滚动",
+      "name": "search-content-scrolled",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/search-content-scrolled.png",
+      "path": "images/a06-font130-search-content-scrolled.webp",
+      "sourcePngSha256": "98a2247deb65f904e4a52a93a0adff1fe18f8e2f4312eeba25a3818702d02231",
+      "sha256": "1d088285f85c7286ec8477786fde28ed7fdc742d300077d974800653c3ce5c6b"
+    },
+    {
+      "group": "M11",
+      "title": "亮场背景",
+      "name": "subtitle-bright",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/subtitle-bright.png",
+      "path": "images/a06-font130-subtitle-bright.webp",
+      "sourcePngSha256": "440d03d2d3de5de0d092a4f8aac7a5e47db28a32ec1b9ff04800498ea961633a",
+      "sha256": "05db9e1468ef26bd45449019da64a2aba83950a8a9d316228522f01edbed29ac"
+    },
+    {
+      "group": "M11",
+      "title": "暗场背景",
+      "name": "subtitle-dark",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/subtitle-dark.png",
+      "path": "images/a06-font130-subtitle-dark.webp",
+      "sourcePngSha256": "389183172323d112603b4a2b899cb409c1eed3b3d3a145b051cc9b66d274894a",
+      "sha256": "5940645e263f525d0fd835a328a8032ac3a52bea398dbd212da7071000ce55d1"
+    },
+    {
+      "group": "M10",
+      "title": "排除左侧文件选择器",
+      "name": "left-picker",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/left-picker.png",
+      "path": "images/a06-font130-left-picker.webp",
+      "sourcePngSha256": "6b109292e783b454130c9092194fa5e7c3c79b9c7f1e6040beb4895ba4dcc348",
+      "sha256": "abea7ceae4d2081babab744dfc09a824bf9d3d73192d43b9172c6577dcfaea6e"
+    },
+    {
+      "group": "M10",
+      "title": "保留关键词视图原有全屏遮罩",
+      "name": "keyword-form",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/keyword-form.png",
+      "path": "images/a06-font130-keyword-form.webp",
+      "sourcePngSha256": "c8a348a691d6daf70aadede281ae3a2612eac8669f3d4c4d04638772bfbab5f9",
+      "sha256": "fcbac4e258e32b9381b8917710a4032ed7694ea7f47f27de5e3f892fc5e4a0c7"
+    },
+    {
+      "group": "M11",
+      "title": "Media3 实际播放中的侧栏",
+      "name": "real-type_exo_player-panel",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/real-type_exo_player-panel.png",
+      "path": "images/a06-font130-real-type_exo_player-panel.webp",
+      "sourcePngSha256": "bb314e0c36a8c1c3b5f293e1f575bd4fe826490967aeb2f3a2d6875041c48cf8",
+      "sha256": "af38c9046c5407ff159a1a6b1bd259b5fae3c67fcfa198b52971a97b1644c4b5"
+    },
+    {
+      "group": "M11",
+      "title": "mpv 实际播放中的侧栏",
+      "name": "real-type_mpv_player-panel",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/real-type_mpv_player-panel.png",
+      "path": "images/a06-font130-real-type_mpv_player-panel.webp",
+      "sourcePngSha256": "62a5790346dd719eecf2119b57a4f71bbb0bf1ac53c289fee116ab8ef95e8ca1",
+      "sha256": "d402eb90c8ebcfa6f28ad664613502e50a4e7d2b94bb9cd4c1da488652511ef6"
+    },
+    {
+      "group": "M07",
+      "title": "倍速调节后重新打开",
+      "name": "speed-adjusted",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/speed-adjusted.png",
+      "path": "images/a06-font130-speed-adjusted.webp",
+      "sourcePngSha256": "577dbe9a626b25d5247a3b05e0493b5c14c581e40be6bc242e2b1025f9567b14",
+      "sha256": "740086119150074e87b90989b708f6a746ae74a1a48235fdb63eceba4aff620c"
+    },
+    {
+      "group": "M07",
+      "title": "倍速重置与焦点恢复",
+      "name": "speed-reset",
+      "fontScale": 1.3,
+      "phase": "a06-font130",
+      "source": ".tmp/a06-panel-implementation/a06-font130/speed-reset.png",
+      "path": "images/a06-font130-speed-reset.webp",
+      "sourcePngSha256": "860f035aed62d0b206a343a6135b0d3f404f96ab0a00671200449ce4cd69e99a",
+      "sha256": "993ce51424ce6dbfb9f6e78d184d20730fde4a6b9aa44fd81d63c93f8f431093"
+    }
+  ],
+  "leftHalfPixelComparison": {
+    "region": [
+      0,
+      110,
+      720,
+      600
+    ],
+    "meanAbsoluteRgb": [
+      0.0001870748299319728,
+      0.00018990929705215418,
+      0.00017857142857142857
+    ],
+    "maxChannelDelta": 1,
+    "changedPixels": 74,
+    "totalPixels": 352800
+  },
+  "supersededFailures": "Initial fixture permission failures and launcher ANR occurred before material assertions. A private test API caused the first test build failure. Incorrect ktlint task name and uncached offline dependency caused two preparation failures. Stack tests initially sampled the existing controller and keyword dimming as extra A06 dimming; corrected relative/uniform sampling passes. Native production code did not change for these test corrections.",
+  "limits": "Controlled visual screenshots use a historical frame as a test-only background. Both real-kernel cases have no background overlay and assert ongoing playback. Video-track shell is opened directly without a multiple-video-track fixture. Live danmaku service, IME, platform frame timing and physical TV/user acceptance are not established.",
+  "installedApkHashesMatch": true,
+  "installedIdentity": "evidence/installed-identity.log",
+  "jvmReportSummary": "evidence/jvm-report-summary.json",
+  "cleanup": {
+    "fontScaleRestored": 1.0,
+    "emulatorClosed": true,
+    "privateAdbClosed": true,
+    "log": "evidence/device-cleanup.log",
+    "previewServerRetained": 18106
+  }
+}

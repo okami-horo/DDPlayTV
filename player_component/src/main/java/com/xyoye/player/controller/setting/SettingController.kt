@@ -19,7 +19,8 @@ class SettingController(
     private val context: Context,
     private val addView: (InterSettingView) -> Unit,
     private val onSettingHidden: (() -> Unit)? = null,
-    private val onSettingShown: (() -> Unit)? = null
+    private val onSettingShown: (() -> Unit)? = null,
+    private val onSettingViewChanged: ((SettingViewType?) -> Unit)? = null
 ) : InterSettingController {
     private lateinit var playerSettingView: PlayerSettingView
     private lateinit var switchVideoSourceView: SwitchVideoSourceView
@@ -55,6 +56,7 @@ class SettingController(
         showingSettingViews.lastOrNull()?.onSettingVisibilityChanged(false)
         showingSettingViews.remove(settingView)
         showingSettingViews.add(settingView)
+        onSettingViewChanged?.invoke(viewType)
         settingView.onSettingVisibilityChanged(true)
     }
 
@@ -63,6 +65,7 @@ class SettingController(
         view.onSettingVisibilityChanged(false)
         view.getView().clearFocus()
         val previous = showingSettingViews.lastOrNull()
+        onSettingViewChanged?.invoke(previous?.getSettingViewType())
         if (previous != null) {
             previous.onSettingVisibilityChanged(true)
         } else {
@@ -87,6 +90,14 @@ class SettingController(
     }
 
     override fun settingRelease() {
+        if (showingSettingViews.isEmpty()) return
+        showingSettingViews.asReversed().forEach {
+            it.onSettingVisibilityChanged(false)
+            it.getView().clearFocus()
+        }
+        showingSettingViews.clear()
+        onSettingViewChanged?.invoke(null)
+        onSettingHidden?.invoke()
     }
 
     fun setDatabaseBlock(
