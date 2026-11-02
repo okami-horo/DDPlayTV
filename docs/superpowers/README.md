@@ -6,6 +6,7 @@
 
 | 主题 | 设计依据 | 执行状态与证据 |
 | --- | --- | --- |
+| 观看记录与媒体来源分离 | [复用首页、清理虚拟来源与兼容边界及执行记录](designs/2026-11-01-watch-history-source-separation-design.md) | 已按用户授权清理历史来源创建/导航与投屏入口残留，保留记录和投屏接收；Debug/test、505 项 JVM、Debug lint/依赖/限定格式与 11 项不同 AVD 场景通过。未安装 TV；首页展开和旧管理动作新入口未实施 |
 | 统一剧集播放队列 | [作品、单集、实际文件、版本及队列设计；Jellyfin/Plezy/Kodi 对比](designs/2026-11-01-series-playback-queue-design.md) | [整剧跨季、版本选择、恢复与 SQ01–SQ09 验证](plans/2026-11-01-series-playback-queue.md)：已实施，Debug/test 构建、505 项 JVM、lint/依赖/限定格式及 27 项 AVD 通过；2 项既有 JVM 跳过，真实云账号/物理电视验收另计 |
 | 旧番剧搜索与发现页退役 | 用户要求确认旧“搜番剧”无用即清理；旧首页链路已无正常入口 | [清理范围、保留能力与验证](plans/2026-11-01-legacy-anime-discovery-cleanup.md)；最新 Release 已于 15:58 覆盖安装至电视，安装包哈希一致 |
 | 遥控器返回入口清理 | 用户确认纯 TV 下删除屏幕返回及播放器面板关闭按钮 | [清理、焦点路径与验证](plans/2026-11-01-remote-back-cleanup.md)：本地构建／JVM／lint 与 24 项 AVD 检查通过；已随 2026-11-01 15:58 Release 安装至电视，运行验收另计 |

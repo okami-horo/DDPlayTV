@@ -1,0 +1,166 @@
+{
+  "recorded_at": "2026-11-01T22:37:23.820579+08:00",
+  "baseline": "f6a2783c227b2a5ece8e5250232df7e6d7555ce8",
+  "source_sha256": {
+    "data_component/src/main/java/com/xyoye/data_component/entity/MediaLibraryEntity.kt": "697463d1f8815a0f5bd9bd673730bfbfe91427fa41f0e88062ddf7a43752c479",
+    "local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaViewModel.kt": "a38c60f108c903516349f9b36552e9cb27312d98780a8f7a3b5a4c23afd37320",
+    "local_component/src/main/java/com/xyoye/local_component/ui/fragment/media/MediaFragment.kt": "4571637fb13549e3656d64aec4805bfc6e3cac04a6d64276f9d12e4d45a3af78",
+    "storage_component/src/main/java/com/xyoye/storage_component/ui/activities/storage_plus/StoragePlusActivity.kt": "9593224fee8d69d1c3ecfb8eb28cf18fc327dbeaf3f2515c9c5af6d90ca448b2",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/MediaSourceCleanupInstrumentedTest.kt": "d609e24cd65666c971f375f0d7ec594aacf5a34f9fa19d252afe22aacf202f07",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/MediaSourceEntryInstrumentedTest.kt": "eb2717c43904937c08eb4b05703b249e44d03b203bc0f66241da37f627ce0c3c",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/smoke/MediaSourcePermissionNavigationTest.kt": "2befdc56830119344cdfac4a2bd8f9cdfe5cf5b2e53351e135ae1890bff27416",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/playback/PlaybackEntriesInstrumentedTest.kt": "d81524f69fa6a24fb0dd71d21467343a760e43c6987e5ffbc07b36f5419cc258",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/WatchHistoryInstrumentedTest.kt": "29915817188c46ac02eb29e5083dd0a6dada00a556bd01c9d383c49aa3f854a5",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/CinemaPrototypeInstrumentedTest.kt": "9049337b8446f7d2c70e68bbacdd5f32e50ecbedf00b607d3203ee0c9846f6ee",
+    "data_component/src/main/java/com/xyoye/data_component/enums/MediaType.kt": "b054febba190e526ebc12849c73c63a7ef41b3cc76f34641000a6ba056b89f05",
+    "core_database_component/src/main/java/com/xyoye/common_component/database/dao/MediaLibraryDao.kt": "1ccae7b76a8a0e195a824089a2c0a597f6137a578348c7a446a5d98f877c7d3e",
+    "core_database_component/src/main/java/com/xyoye/common_component/database/dao/PlayHistoryDao.kt": "e92c17dc79d172d60857531744c994dddc750c988da2b6eff3b3c118e5c320cf",
+    "core_storage_component/src/main/java/com/xyoye/common_component/source/handoff/PlaybackSourceResolver.kt": "f87a4831ca6353a7eab883b76ff1837ce5e0609d52b2cf392f20440617911c73",
+    "core_storage_component/src/main/java/com/xyoye/common_component/storage/StorageFactory.kt": "70709bce3e3404f24c202b605f2dc19a2d892f7a8148041cc748f9eab6b1c1c8",
+    "local_component/src/main/java/com/xyoye/local_component/ui/metadata/MetadataHistory.kt": "707be5943d72da98954daacbd520a2837138d37a1ea31625a93e2e79d0ad0bd5"
+  },
+  "apks": {
+    "app/build/outputs/apk/debug/ddplaytv_v4.2.4-debug_arm64-v8a-debug.apk": "5b77c744d26d10f9dd28faf1d6a682153464a3276e56c62aaa876978ca3af0f3",
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "59eb24223f34166a0bb5b30b6779de8084c9ab3497f4ce72ea94e6c0810fe4e7"
+  },
+  "jvm": {
+    "tests": 507,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2,
+    "passed": 505
+  },
+  "builds": {
+    "red-build.log": {
+      "sha256": "30d5b81182991a5ca3172d769a15e6834f12e2e47d8f53619746ae0061333264",
+      "result": [
+        "BUILD SUCCESSFUL in 41s"
+      ]
+    },
+    "green-gates.log": {
+      "sha256": "fa69c2cd449802bcc8eb85ad0c5f55c2d4165f240c7981882089e30283e7ba33",
+      "result": [
+        "BUILD FAILED in 4m 12s"
+      ]
+    },
+    "final-gates.log": {
+      "sha256": "e288ce9b17abf7c852a245ce95178fdfe8cccc2915f454f385f14db6ebca26a3",
+      "result": [
+        "BUILD SUCCESSFUL in 4m 45s"
+      ]
+    },
+    "harness-gates.log": {
+      "sha256": "636c09fbb5eb55ac97659fe9a72d7cc91f1f165ccd3e36b49f54fe651fc0f0eb",
+      "result": [
+        "BUILD FAILED in 16s"
+      ]
+    },
+    "final-harness-gates.log": {
+      "sha256": "c5dbd98a81f6728032578998e56288cd524fc40d8f27d5177362117d3241de3b",
+      "result": [
+        "BUILD SUCCESSFUL in 13s"
+      ]
+    }
+  },
+  "instrumentation_runs": {
+    "red-tests.log": {
+      "log": ".tmp/source-cleanup/red-tests.log",
+      "sha256": "4826e833b9b329c5e2bf52747f7fc0a78d3563320ef12aad8817252b89ef509e",
+      "passed": [],
+      "failed": [
+        "com.okamihoro.ddplaytv.ui.tv.MediaSourceCleanupInstrumentedTest#repeatedInitializationCreatesOnlyTheRealLocalLibrary",
+        "com.okamihoro.ddplaytv.ui.tv.MediaSourceCleanupInstrumentedTest#legacyVirtualSourcesAreHiddenWithoutChangingStoredSourcesOrHistory"
+      ],
+      "summary": [
+        "Time: 0.113",
+        "Tests run: 2,  Failures: 2"
+      ]
+    },
+    "normal-tests.log": {
+      "log": ".tmp/source-cleanup/normal-tests.log",
+      "sha256": "8eae9706fd5c626c9e2e9a86c16ef1e5b24df13cb504a98c8de274194828e2ea",
+      "passed": [
+        "com.okamihoro.ddplaytv.playback.PlaybackEntriesInstrumentedTest#castReceiverUsesSameRequestRouteWhenIdleAndAlreadyPlaying",
+        "com.okamihoro.ddplaytv.ui.tv.CinemaPrototypeInstrumentedTest#referencePagesSearchAndSettingsAreReachableWithRemote",
+        "com.okamihoro.ddplaytv.ui.tv.MediaSourceEntryInstrumentedTest#addButtonAndMenuOpenEightSourcesAndReturnFromFtpAndWebDavByRemote",
+        "com.okamihoro.ddplaytv.ui.tv.MediaSourceCleanupInstrumentedTest#repeatedInitializationCreatesOnlyTheRealLocalLibrary",
+        "com.okamihoro.ddplaytv.ui.tv.MediaSourceCleanupInstrumentedTest#legacyVirtualSourcesAreHiddenWithoutChangingStoredSourcesOrHistory",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#media3HomepageDetailPlaybackAndLayeredBack",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#mpvHomepageDetailPlaybackAndLayeredBack",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#failedPlaybackRetainsProgressAndTriggerFocus"
+      ],
+      "failed": [
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#unidentifiedHistoryStillPlaysItsOwnFileAndEmptyHomeHasALibraryAction",
+        "com.okamihoro.ddplaytv.ui.smoke.MediaSourcePermissionNavigationTest#grantingLocalPermissionRestoresLocalLibraryAccess"
+      ],
+      "summary": [
+        "Time: 67.365",
+        "Tests run: 10,  Failures: 2"
+      ]
+    },
+    "retest.log": {
+      "log": ".tmp/source-cleanup/retest.log",
+      "sha256": "fcc98075f88f05b7179d078a71604cff69e816e98ec08c858b101eef3d19db57",
+      "passed": [
+        "com.okamihoro.ddplaytv.playback.PlaybackEntriesInstrumentedTest#castReceiverUsesSameRequestRouteWhenIdleAndAlreadyPlaying",
+        "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#unidentifiedHistoryStillPlaysItsOwnFileAndEmptyHomeHasALibraryAction",
+        "com.okamihoro.ddplaytv.ui.smoke.MediaSourcePermissionNavigationTest#grantingLocalPermissionRestoresLocalLibraryAccess"
+      ],
+      "failed": [],
+      "summary": [
+        "Time: 11.751",
+        "OK (3 tests)"
+      ]
+    },
+    "denied-permission.log": {
+      "log": ".tmp/source-cleanup/denied-permission.log",
+      "sha256": "5694a0f9635738049dc322e9908a5958edd875771cf53142514ce0b17b263174",
+      "passed": [
+        "com.okamihoro.ddplaytv.ui.smoke.MediaSourcePermissionNavigationTest#deniedLocalPermissionStillAllowsRemoteAndReturnsFocus"
+      ],
+      "failed": [],
+      "summary": [
+        "Time: 1.572",
+        "OK (1 test)"
+      ]
+    }
+  },
+  "distinct_passing_scenarios": [
+    "com.okamihoro.ddplaytv.playback.PlaybackEntriesInstrumentedTest#castReceiverUsesSameRequestRouteWhenIdleAndAlreadyPlaying",
+    "com.okamihoro.ddplaytv.ui.smoke.MediaSourcePermissionNavigationTest#deniedLocalPermissionStillAllowsRemoteAndReturnsFocus",
+    "com.okamihoro.ddplaytv.ui.smoke.MediaSourcePermissionNavigationTest#grantingLocalPermissionRestoresLocalLibraryAccess",
+    "com.okamihoro.ddplaytv.ui.tv.CinemaPrototypeInstrumentedTest#referencePagesSearchAndSettingsAreReachableWithRemote",
+    "com.okamihoro.ddplaytv.ui.tv.MediaSourceCleanupInstrumentedTest#legacyVirtualSourcesAreHiddenWithoutChangingStoredSourcesOrHistory",
+    "com.okamihoro.ddplaytv.ui.tv.MediaSourceCleanupInstrumentedTest#repeatedInitializationCreatesOnlyTheRealLocalLibrary",
+    "com.okamihoro.ddplaytv.ui.tv.MediaSourceEntryInstrumentedTest#addButtonAndMenuOpenEightSourcesAndReturnFromFtpAndWebDavByRemote",
+    "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#failedPlaybackRetainsProgressAndTriggerFocus",
+    "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#media3HomepageDetailPlaybackAndLayeredBack",
+    "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#mpvHomepageDetailPlaybackAndLayeredBack",
+    "com.okamihoro.ddplaytv.ui.tv.WatchHistoryInstrumentedTest#unidentifiedHistoryStillPlaysItsOwnFileAndEmptyHomeHasALibraryAction"
+  ],
+  "distinct_count": 11,
+  "device": {
+    "serial": "emulator-5576",
+    "adb_port": 5077,
+    "read_only_avd": true,
+    "api": 34,
+    "pixels": [
+      1920,
+      1080
+    ],
+    "density_dpi": 320,
+    "font_scale": 1.0,
+    "shutdown_confirmed": true,
+    "font_scale_readback_before_shutdown": 1.0
+  },
+  "viewed_screenshots": {
+    "library.png": "39f93d431b29c7e8c636e4a88332ef8daced12f902bbf8063804a8e2742fca75",
+    "source-chooser.png": "ebc8ffaa6ac6ab75f546d5ebec92467ce0efe221b2b7678decbb5fbb93d9f67b"
+  },
+  "limits": [
+    "11 distinct passing scenarios across runs; no single 11-test batch",
+    "No new layout or prototype changes",
+    "No Release build, TV operation, version change or commit",
+    "Legacy source rows and old history management code retained; no new management entry or homepage expansion"
+  ]
+}

@@ -23,7 +23,7 @@ class MediaSourceEntryInstrumentedTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
 
     @Test
-    fun addButtonAndMenuOpenNineSourcesAndReturnFromFtpAndWebDavByRemote() {
+    fun addButtonAndMenuOpenEightSourcesAndReturnFromFtpAndWebDavByRemote() {
         instrumentation.setInTouchMode(false)
         ActivityScenario.launch(TvMainActivity::class.java).use { scenario ->
             lateinit var activity: TvMainActivity
@@ -91,7 +91,7 @@ class MediaSourceEntryInstrumentedTest {
             repeat(2) {
                 send(KeyEvent.KEYCODE_MENU)
                 awaitChooser()
-                for (position in 1..8) {
+                for (position in 1..7) {
                     send(KeyEvent.KEYCODE_DPAD_DOWN)
                     await("Chooser scroll to item $position") {
                         val list = chooser() ?: return@await false
@@ -102,7 +102,7 @@ class MediaSourceEntryInstrumentedTest {
                 }
                 instrumentation.runOnMainSync {
                     val list = chooser()!!
-                    assertEquals(8, list.findContainingViewHolder(list.rootView.findFocus()!!)!!.bindingAdapterPosition)
+                    assertEquals(7, list.findContainingViewHolder(list.rootView.findFocus()!!)!!.bindingAdapterPosition)
                 }
                 send(KeyEvent.KEYCODE_DPAD_DOWN)
                 instrumentation.runOnMainSync {
@@ -129,9 +129,9 @@ class MediaSourceEntryInstrumentedTest {
             ?.findViewById(com.xyoye.core_ui_component.R.id.content_rv)
 
     private fun awaitChooser() {
-        await("Nine source actions and default item focus") {
+        await("Eight source actions and default item focus") {
             val list = chooser()
-            list?.adapter?.itemCount == 9 &&
+            list?.adapter?.itemCount == 8 &&
                 list.height > 0 &&
                 list.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
                 list.findContainingViewHolder(list.rootView.findFocus() ?: return@await false)?.bindingAdapterPosition == 0

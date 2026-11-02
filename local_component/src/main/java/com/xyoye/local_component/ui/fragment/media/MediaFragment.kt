@@ -138,11 +138,7 @@ class MediaFragment :
                             itemBinding.apply {
                                 libraryNameTv.text = data.displayName
                                 libraryUrlTv.text =
-                                    when {
-                                        data.mediaType == MediaType.LOCAL_STORAGE -> "设备媒体"
-                                        !data.mediaType.deletable -> "播放记录"
-                                        else -> data.disPlayDescribe
-                                    }
+                                    if (data.mediaType == MediaType.LOCAL_STORAGE) "设备媒体" else data.disPlayDescribe
                                 libraryCoverIv.setImageResource(
                                     if (data.mediaType ==
                                         MediaType.LOCAL_STORAGE
@@ -216,19 +212,9 @@ class MediaFragment :
 
     private fun launchMediaStorage(data: MediaLibraryEntity) {
         when (data.mediaType) {
-            MediaType.OTHER_STORAGE -> {
-                ARouter
-                    .getInstance()
-                    .build(RouteTable.Local.PlayHistory)
-                    .withSerializable("typeValue", data.mediaType.value)
-                    .navigation()
-            }
-
-            MediaType.REMOTE_STORAGE -> ToastCenter.showWarning("此来源已停用")
-
-            MediaType.SCREEN_CAST -> {
-                ToastCenter.showWarning("电视端不支持发起投屏发送")
-            }
+            MediaType.OTHER_STORAGE,
+            MediaType.REMOTE_STORAGE,
+            MediaType.SCREEN_CAST -> ToastCenter.showWarning("此来源不支持目录浏览")
 
             MediaType.LOCAL_STORAGE,
             MediaType.FTP_SERVER,

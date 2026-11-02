@@ -6,7 +6,6 @@ import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
 import com.xyoye.common_component.storage.credential.MediaLibraryCredentialResolver
-import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.BR
@@ -87,11 +86,6 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
                 MediaType.FTP_SERVER -> FTPStorageEditDialog(this, resolvedEditData)
                 MediaType.WEBDAV_SERVER -> WebDavStorageEditDialog(this, resolvedEditData)
                 MediaType.SMB_SERVER -> SmbStorageEditDialog(this, resolvedEditData)
-                MediaType.SCREEN_CAST -> {
-                    ToastCenter.showWarning("电视端不支持发起投屏发送")
-                    finish()
-                    null
-                }
                 MediaType.ALSIT_STORAGE -> AlistStorageEditDialog(this, resolvedEditData)
                 MediaType.BAIDU_PAN_STORAGE -> BaiduPanStorageEditDialog(this, resolvedEditData)
                 MediaType.OPEN_115_STORAGE -> Open115StorageEditDialog(this, resolvedEditData)

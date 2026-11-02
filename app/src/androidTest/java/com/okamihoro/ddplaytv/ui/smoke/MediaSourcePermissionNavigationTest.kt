@@ -16,7 +16,6 @@ import com.xyoye.common_component.database.DatabaseProvider
 import com.xyoye.common_component.utils.ActivityHelper
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
-import com.xyoye.local_component.ui.activities.play_history.PlayHistoryActivity
 import com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivity
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -31,7 +30,7 @@ class MediaSourcePermissionNavigationTest {
 
     // The host revokes permissions before starting this runner, avoiding killing our own process.
     @Test
-    fun deniedLocalPermissionStillAllowsRemoteAndHistoryAndReturnsFocus() {
+    fun deniedLocalPermissionStillAllowsRemoteAndReturnsFocus() {
         assertEquals(PackageManager.PERMISSION_DENIED, context.checkSelfPermission(Manifest.permission.READ_MEDIA_VIDEO))
         val library =
             MediaLibraryEntity(
@@ -50,12 +49,6 @@ class MediaSourcePermissionNavigationTest {
                 await("Remote browser without local permission") { ActivityHelper.instance.getTopActivity() is StorageFileActivity }
                 send(KeyEvent.KEYCODE_BACK)
                 await("Remote BACK restores entry") { activity.hasWindowFocus() && activity.currentFocus === host }
-                selectLibrary(activity, MediaLibraryEntity.HISTORY.displayName)
-                val historyHost = focused(activity)
-                send(KeyEvent.KEYCODE_DPAD_CENTER)
-                await("History without local permission") { ActivityHelper.instance.getTopActivity() is PlayHistoryActivity }
-                send(KeyEvent.KEYCODE_BACK)
-                await("History BACK restores entry") { activity.hasWindowFocus() && activity.currentFocus === historyHost }
                 assertEquals(PackageManager.PERMISSION_DENIED, context.checkSelfPermission(Manifest.permission.READ_MEDIA_VIDEO))
             }
         } finally {
@@ -66,6 +59,7 @@ class MediaSourcePermissionNavigationTest {
     @Test
     fun grantingLocalPermissionRestoresLocalLibraryAccess() {
         assertEquals(PackageManager.PERMISSION_GRANTED, context.checkSelfPermission(Manifest.permission.READ_MEDIA_VIDEO))
+        assertEquals(PackageManager.PERMISSION_GRANTED, context.checkSelfPermission(Manifest.permission.READ_MEDIA_AUDIO))
         withHome { activity ->
             selectLibrary(activity, MediaLibraryEntity.LOCAL.displayName)
             val host = focused(activity)
@@ -84,7 +78,7 @@ class MediaSourcePermissionNavigationTest {
             await("Top navigation") { activity.hasWindowFocus() }
             send(KeyEvent.KEYCODE_DPAD_RIGHT)
             send(KeyEvent.KEYCODE_DPAD_CENTER)
-            await("Home media list") { activity.hasWindowFocus() && (list(activity).adapter?.itemCount ?: 0) >= 4 }
+            await("Home media list") { activity.hasWindowFocus() && (list(activity).adapter?.itemCount ?: 0) > 0 }
             send(KeyEvent.KEYCODE_DPAD_DOWN)
             block(activity)
         }
@@ -103,10 +97,10 @@ class MediaSourcePermissionNavigationTest {
             send(key)
             await("Source list scrolling settles") { list(activity).scrollState == RecyclerView.SCROLL_STATE_IDLE }
         }
-        // Include the page-header action and shell navigation above the source list.
-        repeat(count + 2) { move(KeyEvent.KEYCODE_DPAD_UP) }
+        await("Sources receive focus") { list(activity).hasFocus() }
+        repeat(count) { move(KeyEvent.KEYCODE_DPAD_LEFT) }
         val visited = mutableListOf<String>()
-        repeat(count + 2) {
+        repeat(count) {
             var found = false
             instrumentation.runOnMainSync {
                 found = list(activity)
@@ -117,7 +111,7 @@ class MediaSourcePermissionNavigationTest {
                 visited.add((activity.currentFocus as? TextView)?.text?.toString() ?: activity.currentFocus?.id.toString())
             }
             if (found) return
-            move(KeyEvent.KEYCODE_DPAD_DOWN)
+            move(KeyEvent.KEYCODE_DPAD_RIGHT)
         }
         fail("Library not reachable by DPAD: $name; focus path=$visited")
     }

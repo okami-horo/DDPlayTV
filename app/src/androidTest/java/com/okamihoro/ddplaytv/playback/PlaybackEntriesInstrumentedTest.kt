@@ -567,6 +567,15 @@ class PlaybackEntriesInstrumentedTest {
                 }
                 ScreencastConfig.putReceiveNeedConfirm(originalConfirm)
                 sender.stop()
+                instrumentation.waitForIdleSync()
+                runBlocking {
+                    val history = DatabaseProvider.instance.getPlayHistoryDao()
+                    history
+                        .getAll()
+                        .filter {
+                            it.mediaType == MediaType.SCREEN_CAST && it.uniqueKey in setOf("idle-cast", "foreground-cast")
+                        }.forEach { history.delete(it.id) }
+                }
             }
         }
 

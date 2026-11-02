@@ -70,13 +70,6 @@ data class MediaLibraryEntity(
                         .toString(),
                 mediaType = MediaType.LOCAL_STORAGE,
             )
-        val HISTORY =
-            MediaLibraryEntity(
-                id = 4,
-                displayName = "播放历史",
-                url = "",
-                mediaType = MediaType.OTHER_STORAGE,
-            )
     }
 
     @Ignore
