@@ -33,6 +33,16 @@
 | 模块归属、辅助工具与工作流待办 | [目录维护待办](architecture/directory-hygiene-followup.md) |
 | 旧计划保留下来的行为决策和未完成修复 | [播放器与焦点决策整理](../docs/superpowers/archive/2026-06-player-focus-decisions.md) |
 
+## 截图与预览产物
+
+自 2026-11-03 起，UI 验证截图、审查标注图和原型渲染结果保留在本地，按目录加入 `.gitignore`，不再随 Git 分发。范围包括 `prototypes/tv-ui/previews/`、`architecture/*-audit-*/`、`media-library/source-entry-cleanup-*/`、`player/series-queue-*/` 和 `player/ux01-loading-*/` 下的 PNG、JPG、WebP。HTML 原型、图库、生成脚本、图片哈希和文字验证记录继续维护。
+
+交互原型直接依赖的六张输入素材继续追踪：播放器基线 `player-controls-baseline.png`、侧栏背景 `player-panel-layers/cinema-frame.jpg`，以及 `series-detail/` 的海报、两张剧照和 `tv-before.png`。应用资源和其他文档配图不受这组忽略规则影响。
+
+文档中的「本地截图」链接和图库需从本地归档恢复图片到原路径后查看。原型渲染结果可用对应 HTML 重新生成；原生／电视截图应恢复原始文件，并按既有清单核对 SHA-256。图库缺图时会显示本地归档提示，不能把缺少原图的历史记录当作本次视觉验证。
+
+本次清理保留本机文件，只取消当前版本的追踪；旧提交仍包含这些图片。清理历史和强制推送属于另外的操作。
+
 ## 目录职责
 
 | 位置 | 保存什么 | 使用边界 |

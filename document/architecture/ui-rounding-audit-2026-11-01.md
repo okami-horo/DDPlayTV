@@ -27,9 +27,9 @@
 
 “已确认弱点”和“电视上已发生同样症状”分别记录。关闭系统轮廓是诊断对照，不能证明电视驱动具体发生了什么。
 
-![圆角和叠层证据](ui-rounding-audit-2026-11-01/rounding-examples.png)
+本地截图：[圆角和叠层证据](ui-rounding-audit-2026-11-01/rounding-examples.png)
 
-![卡片与焦点裁切证据](ui-rounding-audit-2026-11-01/clipping-examples.png)
+本地截图：[卡片与焦点裁切证据](ui-rounding-audit-2026-11-01/clipping-examples.png)
 
 ## 排查覆盖
 
@@ -217,9 +217,9 @@
 
 下图裁自最终原生截图。纯色输入用于检验四角，不是生产图片。F02 图已换成最后去重背景后的两种字体截图；拼图与完整图均实际查看。头像首行截图下方的相邻项处于滚动区边缘，第二行取得焦点并滚动后完整可见，不属于内部名称裁切。
 
-![修复后的图片与叠层](ui-rounding-audit-2026-11-01/repair-artwork.png)
+本地截图：[修复后的图片与叠层](ui-rounding-audit-2026-11-01/repair-artwork.png)
 
-![修复后的布局与焦点](ui-rounding-audit-2026-11-01/repair-layouts.png)
+本地截图：[修复后的布局与焦点](ui-rounding-audit-2026-11-01/repair-layouts.png)
 
 [1.3 字体头像首行完整截图](ui-rounding-audit-2026-11-01/repair-avatar-font130.png)、[最近添加完整截图](ui-rounding-audit-2026-11-01/repair-library-font130.png)和[源码/依赖、APK 哈希及验证摘要](ui-rounding-audit-2026-11-01/repair-results.json)随报告保存。完整日志与原生图片在 `.tmp/rounding-fixes/`；目录里保留早期失败图，不能把所有文件都视为最终通过截图。
 
@@ -247,9 +247,9 @@
 - **视觉观察，未新增实施决定**：当前长片名以单行大字号横跨主视觉并省略；足迹卡片图片内外重复片名，长文件名让信息较拥挤。重复标题此前仍属暂缓设计项，本次截图不自动授权结构重设计。
 - 本次没有进入文件浏览、推荐、视频摘要、选择弹窗、最近添加或详情 B，因此不据此宣布 F01–F07 的真机页面验收通过；其他 R01 模板、R02 和 DPAD/播放仍保留原验证边界。
 
-![当前 TV 首页](ui-rounding-audit-2026-11-01/tv-home-2027.png)
+本地截图：[当前 TV 首页](ui-rounding-audit-2026-11-01/tv-home-2027.png)
 
-![观看足迹圆角放大图](ui-rounding-audit-2026-11-01/tv-home-cards-2027.png)
+本地截图：[观看足迹圆角放大图](ui-rounding-audit-2026-11-01/tv-home-cards-2027.png)
 
 [截图元信息与哈希](ui-rounding-audit-2026-11-01/tv-home-observation.json)随报告保存。截图后已断开电视并关闭私有 ADB 5067；没有生产代码、构建、安装或版本变更。
 
@@ -295,7 +295,7 @@ JVM XML 合计 **39 项，0 失败、0 错误、0 跳过**：local 22、core UI 
 
 实际查看了最终普通/1.3 字体焦点图、主视觉长标题图、短标题/未识别/空/加载状态拼图及四种图片状态。原型与原生都使用 1920×1080 物理视口：原型基准 1440×810 按 4/3 渲染，原生为 960×540dp、320dpi。长片名与图片一致，主视觉对照都聚焦“继续播放”并回到顶部；标题栏原型实测宽 880px、高 160.46px，原生宽 880px、高 160px。下方卡片获取焦点时的纵向滚动单独记录，未拿不同滚动位置解释排版差异。
 
-![首页修复后，普通字体与卡片焦点](ui-rounding-audit-2026-11-01/home-repair-normal.png)
+本地截图：[首页修复后，普通字体与卡片焦点](ui-rounding-audit-2026-11-01/home-repair-normal.png)
 
 [1.3 字体完整截图](ui-rounding-audit-2026-11-01/home-repair-font130.png)、[主视觉原生图](ui-rounding-audit-2026-11-01/home-repair-hero.png)、[相同内容的网页原型](ui-rounding-audit-2026-11-01/home-repair-prototype.png)、[短标题/文件/空/加载状态](ui-rounding-audit-2026-11-01/home-repair-states.png)、[四种图片状态](ui-rounding-audit-2026-11-01/home-repair-artwork.png)随报告保存。空状态采样保留了播放器退出时的短暂提示，不影响动作/布局断言；纯色图片仅为角点测试输入。
 
@@ -341,7 +341,7 @@ JVM XML 合计 **39 项，0 失败、0 错误、0 跳过**：local 22、core UI 
 
 已实际查看同一占位数据的修复前/后截图、普通与放大字体真实页面、缩小视口和最终原型。原型与原生均为 1920×1080，分别采用 1440×810 基准放大 4/3 与 960×540dp / 320dpi；对照范围是本轮卡片轮廓，历史入口及任务按钮等既有结构不据此宣布重新设计完成。最终数据、源码/依赖与 APK 哈希见 [L01 验证身份](ui-rounding-audit-2026-11-01/focus-spacing-results.json)。
 
-![相同数据下焦点框留白修复前后](ui-rounding-audit-2026-11-01/focus-spacing-before-after.png)
+本地截图：[相同数据下焦点框留白修复前后](ui-rounding-audit-2026-11-01/focus-spacing-before-after.png)
 
 [普通字体媒体库](ui-rounding-audit-2026-11-01/focus-spacing-library-normal.png)、[1.3 字体媒体库](ui-rounding-audit-2026-11-01/focus-spacing-library-font130.png)、[放大字体与缩小视口](ui-rounding-audit-2026-11-01/focus-spacing-reduced-font130.png)、[同步后的原型](ui-rounding-audit-2026-11-01/focus-spacing-prototype.png)随记录保存。
 

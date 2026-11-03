@@ -20,7 +20,7 @@
 
 ## 已选 A 与历史方案对照
 
-![当前界面与三种布局的局部对照](../../../document/prototypes/tv-ui/previews/player-controls-comparison.png)
+本地截图：[当前界面与三种布局的局部对照](../../../document/prototypes/tv-ui/previews/player-controls-comparison.png)
 
 | 方案 | 结构 | 取舍 |
 | --- | --- | --- |
@@ -42,7 +42,7 @@
 - 不可快进 / 快退时，两键禁用且不可聚焦；播放键保持可达。不能仅改变透明度而仍允许操作。
 - 原型 `scene=playing` / `middle` 分别展示播放中 / 暂停；`first` / `last` / `single` / `unseekable` 展示边界。片名、字幕、进度条是静态截图，底部评审栏显示模拟状态；不代表真实切集或播放成功。
 
-![边界状态](../../../document/prototypes/tv-ui/previews/player-controls-states.png)
+本地截图：[边界状态](../../../document/prototypes/tv-ui/previews/player-controls-states.png)
 
 ## 方向键与返回
 

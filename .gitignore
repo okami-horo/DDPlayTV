@@ -69,3 +69,26 @@ nul
 artifacts/ddplaytv-http-logs/
 # CocoIndex Code (ccc)
 /.cocoindex_code/
+
+# Generated UI screenshots and previews stay local; keep prototype input assets.
+/document/prototypes/tv-ui/previews/**/*.png
+/document/prototypes/tv-ui/previews/**/*.jpg
+/document/prototypes/tv-ui/previews/**/*.webp
+!/document/prototypes/tv-ui/previews/player-controls-baseline.png
+!/document/prototypes/tv-ui/previews/player-panel-layers/cinema-frame.jpg
+!/document/prototypes/tv-ui/previews/series-detail/poster.png
+!/document/prototypes/tv-ui/previews/series-detail/episode-1.png
+!/document/prototypes/tv-ui/previews/series-detail/episode-2.png
+!/document/prototypes/tv-ui/previews/series-detail/tv-before.png
+/document/architecture/*-audit-*/**/*.png
+/document/architecture/*-audit-*/**/*.jpg
+/document/architecture/*-audit-*/**/*.webp
+/document/media-library/source-entry-cleanup-*/**/*.png
+/document/media-library/source-entry-cleanup-*/**/*.jpg
+/document/media-library/source-entry-cleanup-*/**/*.webp
+/document/player/series-queue-*/**/*.png
+/document/player/series-queue-*/**/*.jpg
+/document/player/series-queue-*/**/*.webp
+/document/player/ux01-loading-*/**/*.png
+/document/player/ux01-loading-*/**/*.jpg
+/document/player/ux01-loading-*/**/*.webp

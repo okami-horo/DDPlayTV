@@ -28,7 +28,7 @@ node document/prototypes/tv-ui/server.cjs
 
 用户已选择 C，取代 agent 先前对 A 的推荐。文件浏览主体固定为左列表、右预览；A/B 仅保留为历史对照，不改变首页、媒体库、播放器或设置的已选方向。原型默认及后续实施均以 `variant=preview` 为准。
 
-![已选 C：列表与预览](../../../document/prototypes/tv-ui/previews/files-preview.png)
+本地截图：[已选 C：列表与预览](../../../document/prototypes/tv-ui/previews/files-preview.png)
 
 ## C 方案视觉规则
 
