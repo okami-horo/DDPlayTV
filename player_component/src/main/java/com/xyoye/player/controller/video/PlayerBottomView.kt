@@ -62,7 +62,8 @@ class PlayerBottomView(
         }
 
         viewBinding.danmuControlIv.setOnClickListener {
-            if (controlsInputEnabled) mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.DANMU)
+            if (!controlsInputEnabled) return@setOnClickListener
+            actionHandler?.invoke(PlayerAction.ToggleDanmu) ?: mControlWrapper.toggleDanmuVisible()
         }
         viewBinding.subtitleControlIv.setOnClickListener {
             if (controlsInputEnabled) mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.SUBTITLE)
@@ -132,6 +133,7 @@ class PlayerBottomView(
         mControlWrapper = controlWrapper
 
         updateDecodeTypeHint()
+        updateDanmuState()
     }
 
     override fun getView() = this
@@ -149,6 +151,7 @@ class PlayerBottomView(
 
     override fun onVisibilityChanged(isVisible: Boolean) {
         if (isVisible) {
+            updateDanmuState()
             if (isControllerVisible) {
                 // Avoid re-focusing play on every DPAD event when controller is already visible.
 
@@ -279,6 +282,7 @@ class PlayerBottomView(
 
     override fun onTrackChanged(type: TrackType) {
         if (type == TrackType.DANMU) {
+            updateDanmuState()
             updateControlsInteractiveState(controlsInputEnabled)
         }
         if (type == TrackType.SUBTITLE) {
@@ -437,6 +441,14 @@ class PlayerBottomView(
                 DecodeType.HW
             }
         viewBinding.decodeTypeTv.text = decodeType.label
+    }
+
+    private fun updateDanmuState() {
+        val visible = mControlWrapper.isUserDanmuVisible()
+        viewBinding.danmuControlIv.isSelected = visible
+        viewBinding.danmuControlLabel.setText(if (visible) R.string.player_danmaku_on else R.string.player_danmaku_off)
+        viewBinding.danmuControlIv.contentDescription =
+            context.getString(if (visible) R.string.player_danmaku_disable_action else R.string.player_danmaku_enable_action)
     }
 
     private fun updateTransportFocusCaption(control: View?) {

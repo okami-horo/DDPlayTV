@@ -242,10 +242,11 @@
                         android:src="@drawable/cinema_bottom_danmaku"
                         app:tint="@color/cinema_bottom_icon"
                         android:focusable="true"
-                        android:contentDescription="弹幕" />
+                        android:contentDescription="@string/player_danmaku_disable_action" />
                     <TextView
+                        android:id="@+id/danmu_control_label"
                         style="@style/Cinema.BottomControlLabel"
-                        android:text="弹幕" />
+                        android:text="@string/player_danmaku_on" />
                 </FrameLayout>
             </LinearLayout>
         </FrameLayout>

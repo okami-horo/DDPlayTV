@@ -1,0 +1,3091 @@
+{
+  "date": "2026-11-03",
+  "kind": "HTML button-state design preview only; no native implementation",
+  "review": "danmaku",
+  "variant": "open",
+  "errors": [],
+  "observations": [
+    {
+      "name": "confirmed-layout-baseline",
+      "state": {
+        "variant": "open",
+        "danmaku": "on",
+        "scene": "middle",
+        "focus": "play",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 190,
+            "bottom": 760,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "on-idle",
+      "state": {
+        "variant": "open",
+        "danmaku": "on",
+        "scene": "middle",
+        "focus": "play",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 190,
+            "bottom": 760,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕开",
+          "pressed": "true",
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "off-idle",
+      "state": {
+        "variant": "open",
+        "danmaku": "off",
+        "scene": "middle",
+        "focus": "play",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 190,
+            "bottom": 760,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕关",
+          "pressed": "false",
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "on-focused",
+      "state": {
+        "variant": "open",
+        "danmaku": "on",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕开",
+          "pressed": "true",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "off-focused",
+      "state": {
+        "variant": "open",
+        "danmaku": "off",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕关",
+          "pressed": "false",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "confirm-off-to-on",
+      "state": {
+        "variant": "open",
+        "danmaku": "on",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕开",
+          "pressed": "true",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "confirm-on-to-off",
+      "state": {
+        "variant": "open",
+        "danmaku": "off",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕关",
+          "pressed": "false",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "leave-off-button",
+      "state": {
+        "variant": "open",
+        "danmaku": "off",
+        "scene": "middle",
+        "focus": "audio",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1298,
+            "bottom": 757,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕关",
+          "pressed": "false",
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "return-to-off-button",
+      "state": {
+        "variant": "open",
+        "danmaku": "off",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕关",
+          "pressed": "false",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "hide-controls",
+      "state": {
+        "variant": "open",
+        "danmaku": "off",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "controlsVisible": false,
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": []
+    },
+    {
+      "name": "restore-controls",
+      "state": {
+        "variant": "open",
+        "danmaku": "off",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕关",
+          "pressed": "false",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "pointer-toggle",
+      "state": {
+        "variant": "open",
+        "danmaku": "on",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕开",
+          "pressed": "true",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "off-focused-bright",
+      "state": {
+        "variant": "open",
+        "danmaku": "off",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "bright"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕关",
+          "pressed": "false",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "off-focused-dark",
+      "state": {
+        "variant": "open",
+        "danmaku": "off",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "dark"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "subtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕关",
+          "pressed": "false",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ]
+    },
+    {
+      "name": "preview-switcher",
+      "state": {
+        "variant": "open",
+        "danmaku": "off",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 92,
+        "y": 932.6875,
+        "width": 1320,
+        "height": 5,
+        "top": 932.6875,
+        "right": 1412,
+        "bottom": 937.6875,
+        "left": 92
+      },
+      "subtitle": {
+        "x": 520,
+        "y": 983.6875,
+        "width": 403,
+        "height": 37.1875,
+        "top": 983.6875,
+        "right": 923,
+        "bottom": 1020.875,
+        "left": 520
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 92,
+            "y": 966.6875,
+            "width": 54,
+            "height": 54,
+            "top": 966.6875,
+            "right": 146,
+            "bottom": 1020.6875,
+            "left": 92
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 158,
+            "y": 961.6875,
+            "width": 64,
+            "height": 64,
+            "top": 961.6875,
+            "right": 222,
+            "bottom": 1025.6875,
+            "left": 158
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 234,
+            "y": 966.6875,
+            "width": 54,
+            "height": 54,
+            "top": 966.6875,
+            "right": 288,
+            "bottom": 1020.6875,
+            "left": 234
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 306,
+            "y": 966.6875,
+            "width": 46,
+            "height": 54,
+            "top": 966.6875,
+            "right": 352,
+            "bottom": 1020.6875,
+            "left": 306
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 362,
+            "y": 966.6875,
+            "width": 46,
+            "height": 54,
+            "top": 966.6875,
+            "right": 408,
+            "bottom": 1020.6875,
+            "left": 362
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 418,
+            "y": 968.6875,
+            "width": 90,
+            "height": 50,
+            "top": 968.6875,
+            "right": 508,
+            "bottom": 1018.6875,
+            "left": 418
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1190,
+            "y": 964.6875,
+            "width": 58,
+            "height": 58,
+            "top": 964.6875,
+            "right": 1248,
+            "bottom": 1022.6875,
+            "left": 1190
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1272,
+            "y": 964.6875,
+            "width": 58,
+            "height": 58,
+            "top": 964.6875,
+            "right": 1330,
+            "bottom": 1022.6875,
+            "left": 1272
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕关",
+          "pressed": "false",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1354,
+            "y": 962.6875,
+            "width": 58,
+            "height": 58,
+            "top": 962.6875,
+            "right": 1412,
+            "bottom": 1020.6875,
+            "left": 1354
+          }
+        }
+      ]
+    },
+    {
+      "name": "state-selector",
+      "state": {
+        "variant": "open",
+        "danmaku": "on",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "controlsVisible": true,
+      "seek": {
+        "x": 92,
+        "y": 932.6875,
+        "width": 1320,
+        "height": 5,
+        "top": 932.6875,
+        "right": 1412,
+        "bottom": 937.6875,
+        "left": 92
+      },
+      "subtitle": {
+        "x": 520,
+        "y": 983.6875,
+        "width": 403,
+        "height": 37.1875,
+        "top": 983.6875,
+        "right": 923,
+        "bottom": 1020.875,
+        "left": 520
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "label": "15后退15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 92,
+            "y": 966.6875,
+            "width": 54,
+            "height": 54,
+            "top": 966.6875,
+            "right": 146,
+            "bottom": 1020.6875,
+            "left": 92
+          }
+        },
+        {
+          "key": "play",
+          "label": "播放",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 158,
+            "y": 961.6875,
+            "width": 64,
+            "height": 64,
+            "top": 961.6875,
+            "right": 222,
+            "bottom": 1025.6875,
+            "left": 158
+          }
+        },
+        {
+          "key": "forward",
+          "label": "15前进15秒",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 234,
+            "y": 966.6875,
+            "width": 54,
+            "height": 54,
+            "top": 966.6875,
+            "right": 288,
+            "bottom": 1020.6875,
+            "left": 234
+          }
+        },
+        {
+          "key": "previous",
+          "label": "上一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 306,
+            "y": 966.6875,
+            "width": 46,
+            "height": 54,
+            "top": 966.6875,
+            "right": 352,
+            "bottom": 1020.6875,
+            "left": 306
+          }
+        },
+        {
+          "key": "next",
+          "label": "下一集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 362,
+            "y": 966.6875,
+            "width": 46,
+            "height": 54,
+            "top": 966.6875,
+            "right": 408,
+            "bottom": 1020.6875,
+            "left": 362
+          }
+        },
+        {
+          "key": "picker",
+          "label": "选集",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 418,
+            "y": 968.6875,
+            "width": 90,
+            "height": 50,
+            "top": 968.6875,
+            "right": 508,
+            "bottom": 1018.6875,
+            "left": 418
+          }
+        },
+        {
+          "key": "subtitle",
+          "label": "字幕",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1190,
+            "y": 964.6875,
+            "width": 58,
+            "height": 58,
+            "top": 964.6875,
+            "right": 1248,
+            "bottom": 1022.6875,
+            "left": 1190
+          }
+        },
+        {
+          "key": "audio",
+          "label": "音轨",
+          "pressed": null,
+          "disabled": false,
+          "focused": false,
+          "color": "rgb(245, 245, 247)",
+          "opacity": "1",
+          "rect": {
+            "x": 1272,
+            "y": 964.6875,
+            "width": 58,
+            "height": 58,
+            "top": 964.6875,
+            "right": 1330,
+            "bottom": 1022.6875,
+            "left": 1272
+          }
+        },
+        {
+          "key": "danmaku",
+          "label": "弹幕开",
+          "pressed": "true",
+          "disabled": false,
+          "focused": true,
+          "color": "rgb(23, 24, 29)",
+          "opacity": "1",
+          "rect": {
+            "x": 1354,
+            "y": 962.6875,
+            "width": 58,
+            "height": 58,
+            "top": 962.6875,
+            "right": 1412,
+            "bottom": 1020.6875,
+            "left": 1354
+          }
+        }
+      ]
+    }
+  ]
+}

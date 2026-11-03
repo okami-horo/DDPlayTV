@@ -1,6 +1,6 @@
 # 播放底栏：开放式设计（进度条在上）
 
-日期：2026-11-03。状态：**用户已确认本设计；原生调整与本机验证完成，实体电视/用户最终验收待进行，见[实施记录](../plans/2026-11-03-player-bottom-open.md)。**
+日期：2026-11-03。状态：**用户已确认基础布局与追加的弹幕开关四态样式；两项原生调整与本机验证均已完成，实体电视/用户最终验收待进行，见[实施记录](../plans/2026-11-03-player-bottom-open.md)。**
 
 本次修订替代此前“操作在上、进度条在下”的排列。保留独立圆形轨道按钮和选集小胶囊，收紧下方左侧操作的间距以避开原字幕区域；不恢复整组大托盘。
 
@@ -26,7 +26,31 @@
 
 1440×810 设计画布中，两端时间位于 y=633、进度条 y=669、按钮行 y=697。左侧按钮组收紧至 x=476 结束，字幕仍为 x=488、y=720；这些是网页设计像素，不是已确定的 Android dp/sp。三版使用同一静帧、进度、焦点与字幕内容。
 
-## 页面与状态覆盖
+## 弹幕开关补充设计（用户已确认）
+
+用户后续决定底部弹幕按钮只提供开关，详细配置放到右侧设置栏；不需要弹幕来源切换。用户要求先确认开启、关闭的视觉样式，再实施原生交互。本提案保持已确认的进度条、九项操作与字幕位置，只补充弹幕按钮状态。
+
+2026-11-03 用户回复“确认，可以实施”，确认下述四态样式并授权原生调整。开关通过既有弹幕显示能力生效，并自动保存偏好；没有选中轨道时也可先关闭，后续加载轨道不应覆盖用户开关。
+
+- 开启：现有弹幕图标，名称为“弹幕开”。
+- 关闭：弹幕图标加斜线，名称为“弹幕关”；保留与开启相同的圆形底和可见度，仍可聚焦操作。
+- 聚焦：两种状态都使用现有浅底深图标和轻微上浮，避免把焦点误认为开关状态。
+- 操作：确认键或点击直接切换，焦点留在弹幕按钮；开关状态不随焦点移入、移出而改变。
+
+[可点击预览](../../../document/prototypes/tv-ui/player-bottom-refinement-prototype.html?variant=open&review=danmaku&danmaku=on&focus=danmaku)沿用同一原型路由；工具条或底部切换器可以切换开关。所有行为只修改网页内存。背景静帧已包含弹幕文字，本预览不模拟消除这部分文字。
+
+| 编号 | 状态 | 原型参数与本地图片 | 原生状态 |
+| --- | --- | --- | --- |
+| D01 | 开启、未聚焦 | `review=danmaku&danmaku=on&focus=play`；`on-idle-full.png` | 已实施；原生 `on-idle.png`，1.0/1.3 字体通过 |
+| D02 | 关闭、未聚焦 | `review=danmaku&danmaku=off&focus=play`；`off-idle-full.png` | 已实施；原生 `off-idle.png`，可见、可达、可返回 |
+| D03 | 开启、聚焦 | `review=danmaku&danmaku=on&focus=danmaku`；`on-focused-full.png` | 已实施；原生 `on-focused.png`，确认直接关闭且保留焦点 |
+| D04 | 关闭、聚焦 | `review=danmaku&danmaku=off&focus=danmaku`；`off-focused-full.png` | 已实施；原生 `off-focused.png`，确认直接开启且保留焦点 |
+
+图片与 [verification.json](../../../document/prototypes/tv-ui/previews/player-danmaku-toggle-2026-11-03/verification.json)位于本地 `previews/player-danmaku-toggle-2026-11-03/`。[四态对比图](../../../document/prototypes/tv-ui/previews/player-danmaku-toggle-2026-11-03/four-states.png)已实际查看，同时查看了关闭聚焦全屏和交互预览页。2026-11-03 执行 `node document/prototypes/tv-ui/render-player-danmaku-toggle.cjs` 得到 16 项 HTML 观察、浏览器运行异常 0；核对了四态文字与无障碍状态、九项操作、时间轴/字幕坐标、确认切换与焦点保留、离开/返回、隐藏/恢复、鼠标切换及工具条操作。预览服务返回 HTTP 200。
+
+上述 16 项是设计阶段的 HTML 证据。确认后的原生开关、状态同步与自动保存已完成；[原生四态图](../../../document/prototypes/tv-ui/previews/player-danmaku-native-2026-11-03/four-states.png)、[逐态设计对照](../../../document/prototypes/tv-ui/previews/player-danmaku-native-2026-11-03/comparison-four-states.png)及 [verification.json](../../../document/prototypes/tv-ui/previews/player-danmaku-native-2026-11-03/verification.json)另行记录实际查看与源码哈希，结果由[实施记录](../plans/2026-11-03-player-bottom-open.md#弹幕开关原生实施与验证2026-11-03)维护。此前 B01–B06 不替代本次新开关验证。
+
+## 基础布局页面与状态覆盖
 
 本次图片和验证 JSON 位于本地目录 [player-bottom-open-top-2026-11-03](../../../document/prototypes/tv-ui/previews/player-bottom-open-top-2026-11-03/)。此前进度条在下的图片仍在 `player-bottom-open-2026-11-03/`，仅作修订历史。生成图片按仓库规则不追踪；原型、渲染脚本和 JSON 可复现与核对。
 

@@ -17,6 +17,7 @@ import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.entity.DanmuBlockEntity
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.PlayState
+import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.controller.video.InterControllerView
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.wrapper.ControlWrapper
@@ -65,7 +66,7 @@ class DanmuView(
     private var mTrackSelected = false
 
     // 用户层面的显示状态（与 UI 开关绑定）
-    private var userVisible = true
+    private var userVisible = DanmuConfig.isShowDanmu()
 
     // 弹幕是否加载完成
     private var mDanmuLoaded = false
@@ -205,17 +206,14 @@ class DanmuView(
     }
 
     fun toggleVisible() {
-        if (mTrackSelected.not()) {
-            return
-        }
-
-        userVisible = userVisible.not()
-        syncVisibility()
+        setUserVisible(!userVisible)
     }
 
     fun setUserVisible(visible: Boolean) {
         userVisible = visible
+        DanmuConfig.putShowDanmu(visible)
         syncVisibility()
+        mControlWrapper.setTrackUpdated(TrackType.DANMU)
     }
 
     fun isUserVisible(): Boolean = userVisible

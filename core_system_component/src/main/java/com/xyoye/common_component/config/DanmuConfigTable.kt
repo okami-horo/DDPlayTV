@@ -10,6 +10,10 @@ import com.xyoye.mmkv_annotation.MMKVKotlinClass
 
 @MMKVKotlinClass(className = "DanmuConfig")
 object DanmuConfigTable {
+    // 用户弹幕显示开关，独立于轨道是否已加载
+    @MMKVFiled
+    const val showDanmu = true
+
     // 弹幕文字大小百分比
     @MMKVFiled
     const val danmuSize = 40

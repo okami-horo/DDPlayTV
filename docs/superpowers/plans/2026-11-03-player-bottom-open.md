@@ -2,6 +2,14 @@
 
 日期：2026-11-03。用户已明确确认实施[进度条在上的设计](../designs/2026-11-03-player-bottom-open-design.md)。**原生调整及本机验证已完成；实体电视与用户最终验收待进行。**本轮仅调整底栏及其焦点反馈，不授权占用实体电视测试。
 
+后续弹幕开关跟进：用户决定底部直接切换开关，详细配置保留在右侧设置栏。[补充设计与 D01–D04 矩阵](../designs/2026-11-03-player-bottom-open-design.md#弹幕开关补充设计用户已确认)于 2026-11-03 获“确认，可以实施”，**原生与本机验证已完成，实体电视/用户最终验收待进行**。新开关证据见本文末尾；下述 B05/B06 描述追加前的行为。
+
+本次顺序：
+
+1. 补充底栏开关与侧栏同步回归 → 先在旧实现验证直接开关断言失败。
+2. 接入既有开关与已确认图标/文字 → 核对空轨道、后续加载、状态通知和自动保存。
+3. 构建/JVM/lint、任务模拟器 DPAD 与四态截图对照 → 单列结果；实体电视验收仍待用户进行。
+
 ## 范围与顺序
 
 1. 对齐 `player-bottom-refinement-prototype.html?variant=open` → 核对最新 `player-bottom-open-top-2026-11-03/open-full.png`；保留进度条在上、九个操作、原字幕区域和既有面板。
@@ -50,3 +58,23 @@
 - 中间集将相同字幕文本送入现有 SubtitleController。原生继续按既有字幕位置、尺寸、透明度渲染，HTML 使用固定 x=488/y=720 的展示文字；这部分已知差异沿用原生设置，本轮未修改。左右操作都不侵入字幕中间区域。
 - 原生 SeekBar 沿用 `max=100`，40.42% 取整为 40%，竖标比 HTML 靠左约 6px；这是保留的进度精度，非横向内边距问题。时间及名称的字形栅格化存在 Android/浏览器差异。
 - 本轮只在只读、无快照的任务模拟器 `emulator-5572` 安装 Debug 主包与仪器包；没有实体电视安装或导航。模拟器已结束；用户/实体电视最终验收仍待进行。此前历史批次的验收不包含本次新底栏。
+
+## 弹幕开关原生实施与验证（2026-11-03）
+
+用户确认后，底栏弹幕按钮改为派发既有 `PlayerAction.ToggleDanmu`。图标使用开/关 selector、关闭斜线和“弹幕开 / 弹幕关”文字，焦点仍沿用现有圆形背景与上浮，不改变进度条和按钮几何、字幕或其他操作。详细配置仍可经右侧设置栏进入。
+
+显示偏好仍由 `DanmuView` 统一持有，通过既有轨道更新通知同步底栏与侧栏；新增 `DanmuConfig.showDanmu` 自动保存，默认开启，旧安装无需迁移。移除“未选中轨道则不能切换”的限制；无弹幕、晚到的轨道和重新创建播放器都保持用户开关。实际渲染仍同时要求轨道选中及用户开启，不因选择/加载轨道而覆盖偏好。
+
+| 验证 | 结果与证据 |
+| --- | --- |
+| 原行为复现 | 新仪器用例在旧实现失败于 `Bottom danmaku must toggle directly`；`instrumentation-red.log`。早先一次测试编译受 app 无法访问弹幕 AAR 父类影响，改用现有 View 边界后编译成功；编译错误不计为行为复现 |
+| 构建、全量 Debug JVM、lint、依赖治理 | `.tmp/danmaku-toggle/validation.log`：**BUILD SUCCESSFUL**（3m 11s）；命令 `:app:assembleDebug :app:assembleDebugAndroidTest testDebugUnitTest lint verifyModuleDependencies --continue` |
+| 四个受影响 Kotlin 文件的定域格式检查 | `format-check.log`：**BUILD SUCCESSFUL**；未全仓格式化 |
+| DPAD 与行为回归 | `instrumentation-final.log`：**OK (7 tests)**；新增直接开关/侧栏同步和重新创建播放器的两项回归，并重跑三项底栏、双内核面板、倍速保存用例 |
+| 1.3 倍字体 | `instrumentation-font130.log`：**OK (1 test)**；四态截图已生成并实际查看关闭聚焦全屏，文字完整；已恢复 1.0 |
+| 视觉核对 | 实际查看了[四态原生图](../../../document/prototypes/tv-ui/previews/player-danmaku-native-2026-11-03/four-states.png)、[同静帧逐态比较](../../../document/prototypes/tv-ui/previews/player-danmaku-native-2026-11-03/comparison-four-states.png)和关闭聚焦全屏；1440×810 / 240dpi，普通态用播放键聚焦，聚焦态用弹幕按钮 |
+| 实体电视 / 用户最终验收 | **待进行**；本次仅使用任务模拟器，未安装或操作用户电视；任务模拟器已关闭 |
+
+新增用例是 `PlayerPanelLayersInstrumentedTest#bottomDanmakuToggleKeepsFocusAndSynchronizesWithRightPanel` 与 `#bottomDanmakuPreferenceSurvivesARecreatedPlayer`。覆盖纯 DPAD 到达/切换、关闭时可聚焦、隐藏/恢复、MENU 进入右侧详细设置、开关双向同步、BACK 原焦点、空轨道与晚到轨道、实际渲染 View 显隐及跨播放器保存。原底栏回归已更新为字幕/音轨打开轨道面板，弹幕由新用例验证直接开关。
+
+本地图片、10 项图片哈希/尺寸与源码哈希见 [player-danmaku-native-2026-11-03/verification.json](../../../document/prototypes/tv-ui/previews/player-danmaku-native-2026-11-03/verification.json)。背景静帧内已有弹幕，不把静帧文字当作开关渲染证据，实际载入 XML 轨道的显隐另有断言。字幕设置、SeekBar 百分比量化与 Android/浏览器字形差异沿用基础布局。焦点材质保留原生内描边：中心 x=1351 的浅色实心像素 y=700–755，原型 y=699–756；这是既有内描边/原型外光圈差异，未更改 58px 控件框或独立焦点语义。

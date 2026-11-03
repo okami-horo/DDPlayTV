@@ -1,0 +1,153 @@
+{
+  "date": "2026-11-03",
+  "kind": "Native Android danmaku toggle; physical-TV/user final acceptance pending",
+  "design": "player-bottom-refinement-prototype.html?variant=open&review=danmaku",
+  "device": {
+    "serial": "emulator-5572",
+    "avd": "Pixel_5_API_34",
+    "viewport": [
+      1440,
+      810
+    ],
+    "densityDpi": 240,
+    "fontScales": [
+      1.0,
+      1.3
+    ],
+    "shutdownAfterVerification": true
+  },
+  "states": [
+    {
+      "name": "on-idle",
+      "label": "开启 · 未聚焦",
+      "design": "on-idle-full.png",
+      "native": "on-idle.png"
+    },
+    {
+      "name": "off-idle",
+      "label": "关闭 · 未聚焦",
+      "design": "off-idle-full.png",
+      "native": "off-idle.png"
+    },
+    {
+      "name": "on-focused",
+      "label": "开启 · 聚焦",
+      "design": "on-focused-full.png",
+      "native": "on-focused.png"
+    },
+    {
+      "name": "off-focused",
+      "label": "关闭 · 聚焦",
+      "design": "off-focused-full.png",
+      "native": "off-focused.png"
+    }
+  ],
+  "verification": {
+    "red": "instrumentation-red.log: assertion Bottom danmaku must toggle directly failed on prior implementation",
+    "green": "instrumentation-green.log: OK (1 test), initial behavioral implementation",
+    "final": "instrumentation-final.log: OK (7 tests), including two new toggle regressions and five existing bottom-bar/panel/persistence checks",
+    "font130": "instrumentation-font130.log: OK (1 test); all four states captured, focused-off full screen actually inspected",
+    "build": "validation.log: BUILD SUCCESSFUL; main/instrumentation APKs, all Debug JVM tests, lint and module-dependency governance",
+    "format": "format-check.log: BUILD SUCCESSFUL; scoped ktlint over all four affected Kotlin files",
+    "logsDirectory": ".tmp/danmaku-toggle/"
+  },
+  "limits": [
+    "The background frame contains burned-in danmaku; images demonstrate button states. Loaded-track visibility is separately asserted.",
+    "Native subtitle placement/opacity and SeekBar max=100 quantization are inherited and unchanged.",
+    "Existing native inset focus stroke leaves bright vertical fill at y=700..755 versus prototype y=699..756 at x=1351; the 58px button box is retained. Prototype outer glow is not part of the inherited native focus drawable.",
+    "Android/browser font rasterization differs; no new structural or placement difference was introduced."
+  ],
+  "sourceSha256": {
+    "core_system_component/src/main/java/com/xyoye/common_component/config/DanmuConfigTable.kt": "22ce20364ea6b82f7612bf2f9de09ba01500c88d9e7c15f576d91bd4edcaaf75",
+    "player_component/src/main/java/com/xyoye/player/controller/danmu/DanmuView.kt": "e00795227f8b068cbbbecaa6f20118eac2f18bdf24da3d83a774688621680bdd",
+    "player_component/src/main/java/com/xyoye/player/controller/video/PlayerBottomView.kt": "a9c1240d75de42c430873a5400603de141282e8857cfce1a11f63fcdb6b9b1f5",
+    "player_component/src/main/res/layout/layout_player_bottom.xml": "82fb0d3fb897e8f0f8e5e6c0cfa9cd80f0dfc35e906db98d4d9ff49228b8f117",
+    "player_component/src/main/res/values/strings.xml": "c37db62eebbc53940f1c6a0e6cada379196eaf0d43a33f58a4e7b7f28d1dfec7",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/PlayerPanelLayersInstrumentedTest.kt": "59dee42dbccfa2c6fc02e0cd4d48dada4c4cce1e3e6adccf01319f2141a779a8",
+    "player_component/src/main/res/drawable/cinema_bottom_danmaku.xml": "903ff66a2931c06e004bae4db0b35bb305412ab4c914c556fc85ea7abbf03cd2",
+    "player_component/src/main/res/drawable/cinema_bottom_danmaku_off.xml": "d7da05d42da12b96245c196c5bd3c49b9f102ac6e10b2614a368439e44e383d9",
+    "player_component/src/main/res/drawable/cinema_bottom_danmaku_on.xml": "b887b47bd7b95c6e8414fdf802245984a3d55b5a36533b42a48aef20aad573c3"
+  },
+  "screenshots": [
+    {
+      "file": "comparison-four-states.png",
+      "sha256": "db361bf51aa58dbc408b4c221f74e049b98e72b4f8a876eea41f9d4696339466",
+      "size": [
+        1120,
+        1240
+      ]
+    },
+    {
+      "file": "four-states.png",
+      "sha256": "cdfc03c021e2b7bffab7e01a6ad63046858bbfd094737ee561f88d7316d46595",
+      "size": [
+        1120,
+        800
+      ]
+    },
+    {
+      "file": "off-focused-font130.png",
+      "sha256": "8490a8bac300c0d72c898368beddb83f0b25dd165c4df12917b3ba20cf2421b8",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "off-focused.png",
+      "sha256": "525139f8b9966006e047a7953d8660037835f6c6d7fa4eb85ec5fe60a56053b6",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "off-idle-font130.png",
+      "sha256": "9dd2b6b74dbaa799c73b98e2ccc42faabef11a3175df2212729ca5042ec1fa16",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "off-idle.png",
+      "sha256": "f697c2e79b4df1f0ae3ba367c749f9cf9c110623cc2241fda6f119bbc4e928a2",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "on-focused-font130.png",
+      "sha256": "451b9e69bb84a8689a78ed912f5d7f2563f3e49a34377d25e41c0a7412cebd51",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "on-focused.png",
+      "sha256": "d73c23bcfe1c56f12f3ab4e37db98245d4708b9338c3c1c1a8e21b6a5387ae61",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "on-idle-font130.png",
+      "sha256": "1a8d19cdd40ab90c8b12577c7eff5daff248ffaadfe0b0f4ddbbadb50ef7ea0e",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "on-idle.png",
+      "sha256": "17388165ff2fdd29da0142f627920462cae078e693df9a45cc55a45306284e9c",
+      "size": [
+        1440,
+        810
+      ]
+    }
+  ]
+}

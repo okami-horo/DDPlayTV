@@ -22,12 +22,14 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.alibaba.android.arouter.launcher.ARouter
 import com.google.android.material.slider.Slider
 import com.okamihoro.ddplaytv.playback.withIndexedPlaybackFile
+import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.playback.handoff.PlaybackNavigation
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
 import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
 import com.xyoye.common_component.services.PlaybackRequestService
+import com.xyoye.data_component.bean.LocalDanmuBean
 import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.data.DanmuEpisodeData
 import com.xyoye.data_component.enums.PlayerType
@@ -76,6 +78,156 @@ class PlayerPanelLayersInstrumentedTest {
         instrumentation.setInTouchMode(false)
     }
 
+    @Test fun bottomDanmakuToggleKeepsFocusAndSynchronizesWithRightPanel() =
+        withPlayback { scenario, controller, _ ->
+            val danmu = controller.getDanmuController()
+            val original = danmu.isUserDanmuVisible()
+            try {
+                scenario.onActivity { danmu.setUserDanmuVisible(true) }
+                key(KeyEvent.KEYCODE_DPAD_DOWN)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.play_iv }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                scenario.onActivity {
+                    controller.stopFadeOut()
+                    bottom(it).onProgressChanged(1_440_000, 582_000)
+                    controller.getSubtitleController().setUserSubtitleVisible(true)
+                    controller.onSubtitleTextOutput(MixedSubtitle.fromText("为什么那次衣服没被撞破啊？"))
+                }
+                repeat(6) { key(KeyEvent.KEYCODE_DPAD_RIGHT) }
+                await(scenario) { it.currentFocus?.id == PlayerR.id.danmu_control_iv }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                scenario.onActivity {
+                    assertFalse("Bottom danmaku must toggle directly", controller.getSettingController().isSettingViewShowing())
+                    assertFalse("An empty track must still allow turning danmaku off", danmu.isUserDanmuVisible())
+                    assertDanmakuButton(it, false, true)
+                }
+                screenshot("off-focused", "player-danmaku-toggle")
+                repeat(6) { key(KeyEvent.KEYCODE_DPAD_LEFT) }
+                scenario.onActivity { assertDanmakuButton(it, false, false) }
+                screenshot("off-idle", "player-danmaku-toggle")
+                repeat(6) { key(KeyEvent.KEYCODE_DPAD_RIGHT) }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                scenario.onActivity { assertDanmakuButton(it, true, true) }
+                screenshot("on-focused", "player-danmaku-toggle")
+                repeat(6) { key(KeyEvent.KEYCODE_DPAD_LEFT) }
+                scenario.onActivity { assertDanmakuButton(it, true, false) }
+                screenshot("on-idle", "player-danmaku-toggle")
+                repeat(6) { key(KeyEvent.KEYCODE_DPAD_RIGHT) }
+                key(KeyEvent.KEYCODE_BACK)
+                scenario.onActivity { assertFalse(it.findViewById<View>(PlayerR.id.danmu_control_iv).isFocusable) }
+                key(KeyEvent.KEYCODE_DPAD_DOWN)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.danmu_control_iv }
+                key(KeyEvent.KEYCODE_MENU)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                        panel(controller).hasFocus()
+                }
+                var trackEntry = false
+                repeat(12) {
+                    scenario.onActivity {
+                        trackEntry =
+                            it.currentFocus
+                                ?.findViewById<TextView>(PlayerR.id.tv_setting)
+                                ?.text
+                                ?.toString() == "弹幕轨"
+                    }
+                    if (!trackEntry) key(KeyEvent.KEYCODE_DPAD_DOWN)
+                }
+                assertTrue("Danmaku details must remain reachable from the settings sidebar", trackEntry)
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS && panel(controller).hasFocus() }
+                scenario.onActivity {
+                    assertTrue(
+                        panel(controller).findViewById<android.widget.CompoundButton>(PlayerR.id.track_visible).isChecked
+                    )
+                }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                scenario.onActivity {
+                    assertFalse(panel(controller).findViewById<android.widget.CompoundButton>(PlayerR.id.track_visible).isChecked)
+                    assertDanmakuButton(it, false, false)
+                }
+                key(KeyEvent.KEYCODE_BACK)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                        panel(controller).hasFocus()
+                }
+                key(KeyEvent.KEYCODE_BACK)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.danmu_control_iv }
+                scenario.onActivity { assertDanmakuButton(it, false, true) }
+                val fixture = File(context.getExternalFilesDir("a06-fixtures"), "toggle-danmaku.xml")
+                fixture.writeText("<i><d p=\"1,1,25,16777215,0,0,0,0\">toggle fixture</d></i>")
+                try {
+                    scenario.onActivity {
+                        val track = VideoTrackBean.danmu(LocalDanmuBean(fixture.path))
+                        assertTrue(danmu.addTrack(track))
+                        danmu.selectTrack(track)
+                        assertFalse("Loading a late track must preserve the off preference", danmu.isUserDanmuVisible())
+                        assertDanmakuButton(it, false, true)
+                    }
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    scenario.onActivity {
+                        assertTrue(danmu.isUserDanmuVisible())
+                        assertTrue("An enabled selected track must be shown", controller.getChildAt(0).isShown)
+                        assertDanmakuButton(it, true, true)
+                    }
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    scenario.onActivity {
+                        assertFalse("Turning off a loaded track must hide its rendering view", controller.getChildAt(0).isShown)
+                        assertDanmakuButton(it, false, true)
+                    }
+                } finally {
+                    fixture.delete()
+                }
+                key(KeyEvent.KEYCODE_BACK)
+            } finally {
+                scenario.onActivity { danmu.setUserDanmuVisible(original) }
+            }
+        }
+
+    @Test fun bottomDanmakuPreferenceSurvivesARecreatedPlayer() {
+        val original = DanmuConfig.isShowDanmu()
+        try {
+            withPlayback { scenario, controller, _ ->
+                scenario.onActivity {
+                    controller.getDanmuController().setUserDanmuVisible(false)
+                    assertFalse(DanmuConfig.isShowDanmu())
+                }
+            }
+            withPlayback { scenario, controller, _ ->
+                key(KeyEvent.KEYCODE_DPAD_DOWN)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.play_iv }
+                scenario.onActivity {
+                    controller.stopFadeOut()
+                    assertFalse(controller.getDanmuController().isUserDanmuVisible())
+                    assertDanmakuButton(it, false, false)
+                }
+                repeat(6) { key(KeyEvent.KEYCODE_DPAD_RIGHT) }
+                await(scenario) { it.currentFocus?.id == PlayerR.id.danmu_control_iv }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                scenario.onActivity {
+                    assertTrue(DanmuConfig.isShowDanmu())
+                    assertDanmakuButton(it, true, true)
+                }
+            }
+        } finally {
+            DanmuConfig.putShowDanmu(original)
+        }
+    }
+
+    private fun assertDanmakuButton(
+        activity: PlayerActivity,
+        visible: Boolean,
+        focused: Boolean
+    ) {
+        val button = activity.findViewById<View>(PlayerR.id.danmu_control_iv)
+        val label = (button.parent as ViewGroup).getChildAt(1) as TextView
+        assertEquals(visible, button.isSelected)
+        assertEquals(if (visible) "弹幕开" else "弹幕关", label.text.toString())
+        assertEquals(focused, button.hasFocus())
+        assertTrue(button.isEnabled && button.isFocusable)
+        assertEquals(1f, button.alpha, 0f)
+    }
+
     @Test fun openBottomBarRetainsEveryActionAndRemotePanelReturn() =
         withPlayback { scenario, controller, background ->
             val allActions =
@@ -108,7 +260,7 @@ class PlayerPanelLayersInstrumentedTest {
             for (id in allActions.drop(1).filter { it != PlayerR.id.iv_previous_source }) {
                 key(KeyEvent.KEYCODE_DPAD_RIGHT)
                 await(scenario) { it.currentFocus?.id == id }
-                if (id in listOf(PlayerR.id.subtitle_control_iv, PlayerR.id.audio_control, PlayerR.id.danmu_control_iv)) {
+                if (id in listOf(PlayerR.id.subtitle_control_iv, PlayerR.id.audio_control)) {
                     key(KeyEvent.KEYCODE_DPAD_CENTER)
                     await(scenario) {
                         activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS &&
