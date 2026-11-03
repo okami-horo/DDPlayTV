@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Rect
 import android.graphics.drawable.BitmapDrawable
 import android.os.SystemClock
@@ -37,9 +38,15 @@ import com.xyoye.player.controller.VideoController
 import com.xyoye.player.controller.setting.BaseSettingView
 import com.xyoye.player.controller.setting.DanmuPanelState
 import com.xyoye.player.controller.setting.DanmuSearchState
+import com.xyoye.player.controller.video.PlayerBottomView
 import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.wrapper.ControlWrapper
+import com.xyoye.player.wrapper.InterVideoPlayer
 import com.xyoye.player_component.ui.activities.player.PlayerActivity
+import com.xyoye.subtitle.MixedSubtitle
 import kotlinx.coroutines.runBlocking
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -67,6 +74,305 @@ class PlayerPanelLayersInstrumentedTest {
 
     @Before fun remote() {
         instrumentation.setInTouchMode(false)
+    }
+
+    @Test fun openBottomBarRetainsEveryActionAndRemotePanelReturn() =
+        withPlayback { scenario, controller, background ->
+            val allActions =
+                listOf(
+                    PlayerR.id.rewind,
+                    PlayerR.id.play_iv,
+                    PlayerR.id.forward,
+                    PlayerR.id.iv_previous_source,
+                    PlayerR.id.iv_next_source,
+                    PlayerR.id.video_list_iv,
+                    PlayerR.id.subtitle_control_iv,
+                    PlayerR.id.audio_control,
+                    PlayerR.id.danmu_control_iv
+                )
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            await(scenario) { it.currentFocus?.id == PlayerR.id.play_iv }
+            key(KeyEvent.KEYCODE_DPAD_CENTER)
+            await(scenario) { !player(it).isPlaying() }
+            scenario.onActivity {
+                controller.stopFadeOut()
+                val previous = it.findViewById<View>(PlayerR.id.iv_previous_source)
+                assertTrue(previous.isShown)
+                assertFalse(previous.isEnabled)
+                assertFalse(previous.isFocusable)
+                assertEquals(it.findViewById<View>(PlayerR.id.iv_next_source).width, previous.width)
+            }
+            captureBottom(scenario, "first")
+            key(KeyEvent.KEYCODE_DPAD_LEFT)
+            await(scenario) { it.currentFocus?.id == PlayerR.id.rewind }
+            for (id in allActions.drop(1).filter { it != PlayerR.id.iv_previous_source }) {
+                key(KeyEvent.KEYCODE_DPAD_RIGHT)
+                await(scenario) { it.currentFocus?.id == id }
+                if (id in listOf(PlayerR.id.subtitle_control_iv, PlayerR.id.audio_control, PlayerR.id.danmu_control_iv)) {
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) {
+                        activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS &&
+                            panel(controller).hasFocus()
+                    }
+                    screenshot("bottom-panel-$id", "player-bottom-open")
+                    key(KeyEvent.KEYCODE_BACK)
+                    await(scenario) { it.currentFocus?.id == id }
+                    scenario.onActivity { controller.stopFadeOut() }
+                }
+            }
+            repeat(3) { key(KeyEvent.KEYCODE_DPAD_LEFT) }
+            await(scenario) { it.currentFocus?.id == PlayerR.id.video_list_iv }
+            key(KeyEvent.KEYCODE_DPAD_CENTER)
+            await(scenario) {
+                activePanel(controller)?.getSettingViewType() == SettingViewType.SWITCH_VIDEO_SOURCE &&
+                    panel(controller).hasFocus()
+            }
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            key(KeyEvent.KEYCODE_DPAD_CENTER)
+            await(scenario, 20000) { player(it).getVideoSource().getGroupIndex() == 1 && player(it).isPlaying() }
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            scenario.onActivity {
+                player(it).pause()
+                controller.stopFadeOut()
+                controller.setVideoTitle("药屋少女的呢喃第三季 - S01E50.mkv")
+                placeReferenceBackground(it, controller, background)
+                controller.getSubtitleController().setUserSubtitleVisible(true)
+                controller.onSubtitleTextOutput(MixedSubtitle.fromText("为什么那次衣服没被撞破啊？"))
+                bottom(it).onProgressChanged(1_440_000, 582_000)
+            }
+            repeat(10) { key(KeyEvent.KEYCODE_DPAD_LEFT) }
+            await(scenario) { it.currentFocus?.id == PlayerR.id.rewind }
+            for (id in allActions) {
+                await(scenario) { it.currentFocus?.id == id }
+                scenario.onActivity { activity ->
+                    val seek = bounds(activity.findViewById(PlayerR.id.play_seek_bar))
+                    val reservedSubtitle = Rect(dp(325), dp(480), dp(600), dp(510))
+                    assertNull(activity.findViewById<View>(PlayerR.id.transport_tray).background)
+                    for (action in allActions) {
+                        val view = activity.findViewById<View>(action)
+                        val rect = bounds(view)
+                        assertTrue(view.isShown && view.isEnabled && view.isFocusable)
+                        assertTrue("Timeline must remain above all actions", seek.bottom < rect.top)
+                        assertFalse("Actions must preserve the accepted subtitle area", Rect.intersects(rect, reservedSubtitle))
+                        val visible = Rect()
+                        assertTrue(view.getGlobalVisibleRect(visible))
+                        assertTrue("Actions must not be clipped", visible.width() >= rect.width() && visible.height() >= rect.height())
+                    }
+                    val caption = activity.findViewById<TextView>(PlayerR.id.transport_focus_label)
+                    if (id in allActions.take(5)) {
+                        assertTrue(caption.isShown)
+                        assertEquals(activity.currentFocus?.contentDescription, caption.text.toString())
+                        assertTrue(bounds(caption).bottom <= controller.height)
+                    } else {
+                        assertFalse(caption.isShown)
+                    }
+                }
+                if (id in listOf(PlayerR.id.play_iv, PlayerR.id.forward, PlayerR.id.video_list_iv, PlayerR.id.subtitle_control_iv)) {
+                    captureBottom(scenario, "middle-${context.resources.getResourceEntryName(id)}")
+                }
+                if (id != allActions.last()) key(KeyEvent.KEYCODE_DPAD_RIGHT)
+            }
+            repeat(4) { key(KeyEvent.KEYCODE_DPAD_LEFT) }
+            await(scenario) { it.currentFocus?.id == PlayerR.id.iv_next_source }
+            key(KeyEvent.KEYCODE_DPAD_CENTER)
+            await(scenario, 20000) { player(it).getVideoSource().getGroupIndex() == 2 && player(it).isPlaying() }
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            scenario.onActivity {
+                player(it).pause()
+                controller.stopFadeOut()
+                placeReferenceBackground(it, controller, background)
+                val next = it.findViewById<View>(PlayerR.id.iv_next_source)
+                assertTrue(next.isShown)
+                assertFalse(next.isEnabled)
+                assertFalse(next.isFocusable)
+            }
+            captureBottom(scenario, "last")
+            key(KeyEvent.KEYCODE_BACK)
+            key(KeyEvent.KEYCODE_BACK)
+            key(KeyEvent.KEYCODE_BACK)
+        }
+
+    @Test fun openBottomBarSingleAndUnseekableKeepAUsableFocus() =
+        withPlayback(grouped = false) { scenario, controller, _ ->
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            await(scenario) { it.currentFocus?.id == PlayerR.id.play_iv }
+            scenario.onActivity {
+                player(it).pause()
+                controller.stopFadeOut()
+                for (id in listOf(PlayerR.id.iv_previous_source, PlayerR.id.iv_next_source, PlayerR.id.video_list_iv)) {
+                    assertFalse(it.findViewById<View>(id).isShown)
+                }
+                assertTrue(it.findViewById<View>(PlayerR.id.single_video_hint).isShown)
+            }
+            captureBottom(scenario, "single")
+            key(KeyEvent.KEYCODE_DPAD_RIGHT)
+            await(scenario) { it.currentFocus?.id == PlayerR.id.forward }
+            lateinit var original: ControlWrapper
+            scenario.onActivity {
+                val bottom = bottom(it)
+                original =
+                    PlayerBottomView::class.java
+                        .getDeclaredField(
+                            "mControlWrapper"
+                        ).apply { isAccessible = true }
+                        .get(bottom) as ControlWrapper
+                val unseekable =
+                    object : InterVideoPlayer by original {
+                        override fun isSeekable() = false
+                    }
+                bottom.attach(ControlWrapper(unseekable, original, original, original, original))
+                bottom.onProgressChanged(120_000, 10_000)
+            }
+            try {
+                await(scenario) { it.currentFocus?.id == PlayerR.id.play_iv }
+                scenario.onActivity {
+                    for (id in listOf(PlayerR.id.rewind, PlayerR.id.forward)) {
+                        assertFalse(it.findViewById<View>(id).isEnabled)
+                        assertFalse(it.findViewById<View>(id).isFocusable)
+                    }
+                }
+                key(KeyEvent.KEYCODE_DPAD_RIGHT)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                captureBottom(scenario, "unseekable")
+            } finally {
+                scenario.onActivity {
+                    bottom(it).attach(original)
+                    bottom(it).onProgressChanged(player(it).getDuration(), player(it).getCurrentPosition())
+                }
+            }
+        }
+
+    @Test fun openBottomBarKeepsLabelsAndFocusOnBrightAndDarkFrames() =
+        withPlayback { scenario, controller, background ->
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            await(scenario) { it.currentFocus?.id == PlayerR.id.play_iv }
+            key(KeyEvent.KEYCODE_DPAD_CENTER)
+            scenario.onActivity {
+                controller.stopFadeOut()
+                bottom(it).onProgressChanged(1_440_000, 582_000)
+            }
+            val fontTag = if (context.resources.configuration.fontScale > 1f) "large" else "normal"
+            for ((name, brightness) in listOf("cinema" to 1f, "bright" to 1.45f, "dark" to .3f)) {
+                scenario.onActivity {
+                    background.background.colorFilter =
+                        ColorMatrixColorFilter(
+                            floatArrayOf(
+                                brightness,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                brightness,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                brightness,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                0f,
+                                1f,
+                                0f
+                            )
+                        )
+                }
+                captureBottom(scenario, "$name-$fontTag")
+            }
+            repeat(3) { key(KeyEvent.KEYCODE_DPAD_RIGHT) }
+            await(scenario) { it.currentFocus?.id == PlayerR.id.video_list_iv }
+            captureBottom(scenario, "picker-$fontTag")
+            key(KeyEvent.KEYCODE_DPAD_RIGHT)
+            await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+            captureBottom(scenario, "subtitle-$fontTag")
+            scenario.onActivity { activity ->
+                val actions = activity.findViewById<ViewGroup>(PlayerR.id.player_bottom_actions)
+
+                fun checkLabels(view: View) {
+                    if (view is TextView && view.isShown) {
+                        val label = bounds(view)
+                        assertTrue(
+                            "Labels must fit below the timeline and inside the viewport",
+                            label.top > bounds(activity.findViewById(PlayerR.id.play_seek_bar)).bottom && label.bottom <= controller.height
+                        )
+                        assertTrue(
+                            "Labels must retain every character",
+                            view.layout.getEllipsisCount(0) == 0 &&
+                                view.paint.measureText(view.text.toString()) <=
+                                view.width - view.paddingLeft - view.paddingRight - view.compoundDrawablePadding -
+                                (view.compoundDrawables[0]?.intrinsicWidth ?: 0)
+                        )
+                    }
+                    if (view is ViewGroup) for (index in 0 until view.childCount) checkLabels(view.getChildAt(index))
+                }
+                checkLabels(actions)
+            }
+            key(KeyEvent.KEYCODE_BACK)
+            scenario.onActivity {
+                assertFalse(it.findViewById<View>(PlayerR.id.subtitle_control_iv).isFocusable)
+            }
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+            key(KeyEvent.KEYCODE_DPAD_CENTER)
+            await(scenario) { activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS && panel(controller).hasFocus() }
+            key(KeyEvent.KEYCODE_BACK)
+            await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+        }
+
+    private fun bottom(activity: PlayerActivity) = activity.findViewById<View>(PlayerR.id.player_bottom_ll).parent as PlayerBottomView
+
+    private fun bounds(view: View): Rect {
+        val location = IntArray(2)
+        view.getLocationOnScreen(location)
+        return Rect(location[0], location[1], location[0] + view.width, location[1] + view.height)
+    }
+
+    private fun captureBottom(
+        scenario: ActivityScenario<PlayerActivity>,
+        name: String
+    ) {
+        instrumentation.waitForIdleSync()
+        SystemClock.sleep(200)
+        scenario.onActivity { activity ->
+            val geometry = JSONArray()
+            for (id in listOf(
+                PlayerR.id.current_position_tv,
+                PlayerR.id.play_seek_bar,
+                PlayerR.id.transport_tray,
+                PlayerR.id.play_iv,
+                PlayerR.id.video_list_iv,
+                PlayerR.id.subtitle_control_iv,
+                PlayerR.id.audio_control,
+                PlayerR.id.danmu_control_iv
+            )) {
+                val view = activity.findViewById<View>(id)
+                val rect = bounds(view)
+                geometry.put(
+                    JSONObject()
+                        .put(
+                            "id",
+                            context.resources.getResourceEntryName(id)
+                        ).put(
+                            "bounds",
+                            JSONArray(listOf(rect.left, rect.top, rect.right, rect.bottom))
+                        ).put("focused", view.hasFocus())
+                        .put("visible", view.isShown)
+                )
+            }
+            File(context.getExternalFilesDir("player-bottom-open"), "$name.json").writeText(
+                JSONObject()
+                    .put(
+                        "density",
+                        activity.resources.displayMetrics.density
+                    ).put("fontScale", activity.resources.configuration.fontScale)
+                    .put("geometry", geometry)
+                    .toString(2)
+            )
+        }
+        screenshot(name, "player-bottom-open")
     }
 
     @Test fun recordNinePanelsAndApplicableContentStates() =
@@ -381,6 +687,7 @@ class PlayerPanelLayersInstrumentedTest {
     private fun withPlayback(
         kernel: PlayerType = PlayerType.TYPE_EXO_PLAYER,
         useReferenceBackground: Boolean = true,
+        grouped: Boolean = true,
         block: (ActivityScenario<PlayerActivity>, VideoController, View) -> Unit
     ) {
         val directory = requireNotNull(context.getExternalFilesDir("a06-fixtures"))
@@ -399,7 +706,16 @@ class PlayerPanelLayersInstrumentedTest {
                             descriptor.copy(
                                 queueContext =
                                     requireNotNull(descriptor.queueContext).copy(
-                                        fallbackItems = listOf(descriptor.file, secondDescriptor.file, lastDescriptor.file)
+                                        fallbackItems =
+                                            if (grouped) {
+                                                listOf(
+                                                    descriptor.file,
+                                                    secondDescriptor.file,
+                                                    lastDescriptor.file
+                                                )
+                                            } else {
+                                                listOf(descriptor.file)
+                                            }
                                     )
                             )
                         val provider = ARouter.getInstance().navigation(PlaybackRequestService::class.java)
@@ -423,16 +739,7 @@ class PlayerPanelLayersInstrumentedTest {
                                             val image = File(directory, "cinema-frame.jpg")
                                             setBackground(BitmapDrawable(resources, requireNotNull(BitmapFactory.decodeFile(image.path))))
                                         }
-                                    if (useReferenceBackground) {
-                                        host.addView(
-                                            background,
-                                            host.indexOfChild(controller),
-                                            FrameLayout.LayoutParams(
-                                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                                ViewGroup.LayoutParams.MATCH_PARENT
-                                            )
-                                        )
-                                    }
+                                    if (useReferenceBackground) placeReferenceBackground(activity, controller, background)
                                     controller.setVideoTitle("药屋少女的呢喃第三季 - S01E50.mkv")
                                 }
                                 block(scenario, controller, background)
@@ -446,6 +753,20 @@ class PlayerPanelLayersInstrumentedTest {
         }
     }
 
+    private fun placeReferenceBackground(
+        activity: PlayerActivity,
+        controller: VideoController,
+        background: View
+    ) {
+        (background.parent as? ViewGroup)?.removeView(background)
+        val host = player(activity)
+        host.addView(
+            background,
+            host.indexOfChild(controller),
+            FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        )
+    }
+
     private fun player(activity: PlayerActivity) =
         activity.findViewById<FrameLayout>(PlayerR.id.player_container).getChildAt(0) as DanDanVideoPlayer
 
@@ -456,11 +777,14 @@ class PlayerPanelLayersInstrumentedTest {
         instrumentation.waitForIdleSync()
     }
 
-    private fun screenshot(name: String) {
+    private fun screenshot(
+        name: String,
+        directoryName: String = "a06-$phase"
+    ) {
         instrumentation.waitForIdleSync()
         SystemClock.sleep(600)
         val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
-        val directory = requireNotNull(context.getExternalFilesDir("a06-$phase"))
+        val directory = requireNotNull(context.getExternalFilesDir(directoryName))
         File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()
     }

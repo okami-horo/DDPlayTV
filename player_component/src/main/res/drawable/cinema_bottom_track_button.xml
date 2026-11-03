@@ -1,0 +1,11 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="true" android:state_focused="true" android:state_pressed="true">
+        <shape android:shape="oval"><solid android:color="@color/cinema_focus_light_pressed" /><stroke android:width="1.333dp" android:color="#65FFFFFF" /></shape>
+    </item>
+    <item android:state_enabled="true" android:state_focused="true">
+        <shape android:shape="oval"><solid android:color="@color/cinema_text" /><stroke android:width="1.333dp" android:color="#65FFFFFF" /></shape>
+    </item>
+    <item>
+        <shape android:shape="oval"><gradient android:angle="315" android:startColor="#32CAD0DF" android:endColor="#248A92A7" /><stroke android:width="0.667dp" android:color="#35FFFFFF" /></shape>
+    </item>
+</selector>

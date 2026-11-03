@@ -17,7 +17,7 @@ DDPlayTV is a modular Android TV media app using Kotlin, XML views, MVVM, ARoute
 | Surface | Authoritative reference |
 | --- | --- |
 | Main Cinema experience | [index.html, cinema](../document/prototypes/tv-ui/index.html?variant=cinema) |
-| Playback controls A | [grouped single row](../document/prototypes/tv-ui/player-controls-prototype.html?variant=grouped) |
+| Playback controls (implemented and locally verified 2026-11-03; user/TV acceptance pending) | [open controls with timeline above](../document/prototypes/tv-ui/player-bottom-refinement-prototype.html?variant=open), [design](../docs/superpowers/designs/2026-11-03-player-bottom-open-design.md), [implementation](../docs/superpowers/plans/2026-11-03-player-bottom-open.md); supersedes the A bottom tray, preserving nine actions, native subtitle settings/placement and A06 panels |
 | File browser C | [list and preview](../document/prototypes/tv-ui/files-prototype.html?variant=preview) |
 | Series detail B (implemented 2026-11-01; user/TV accepted 2026-11-03) | [cinematic episode shelf](../document/prototypes/tv-ui/series-detail-prototype.html?variant=B), [scope and acceptance](../docs/superpowers/designs/2026-11-01-home-watch-history-design.md); supersedes the old metadata detail layout below |
 | Deep pages and final seven child groups | [deep pages](../document/prototypes/tv-ui/deep-pages.html), [remaining pages](../document/prototypes/tv-ui/remaining-pages.html), [supplemental design](../docs/superpowers/designs/2026-10-31-ui-polish-design.md) |

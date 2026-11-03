@@ -8,6 +8,12 @@ Latest recorded delivery: ARM64 Release **4.2.5 / 72**, installed on VIDAA TV on
 
 Generated screenshots and preview renders are local artifacts; six direct prototype input images remain versioned. [Document policy](../document/README.md#截图与预览产物) owns the rule; the [archive](archive/2026-11-completed-work.md#screenshot-tracking-2026-11-03) retains the cleanup checks and its Gradle startup failure.
 
+## Current Bottom-bar Delivery
+
+On **2026-11-03**, after reviewing the open draft, the user explicitly preferred the progress bar above the controls. The [revised open bottom-bar design](../docs/superpowers/designs/2026-11-03-player-bottom-open-design.md) is the current review at `variant=open`, or `variant=compare-open` beside the current-source reconstruction. It now places the timeline above all nine actions, retaining individual circular track controls and the small episode-picker pill; the left controls are tightened to preserve the subtitle area. The previous paired-tray draft remains at `variant=new` for comparison. The linked record owns current screenshots in `player-bottom-open-top-2026-11-03`, 25 fresh HTML observations with no browser runtime errors, and the reconstruction's subtitle-layer correction. Earlier progress-at-bottom images are historical and no longer the user's requested arrangement.
+
+The user **confirmed this exact timeline-on-top design and authorized native implementation**. Native bottom-bar work and local verification are complete on **2026-11-03**. The [B01–B06 ledger](../docs/superpowers/plans/2026-11-03-player-bottom-open.md) owns build/JVM/lint/governance success, scoped Kotlin checks, seven instrumented regressions, three final screenshot-fixture reruns and the 1.3-font check. Same-frame native screenshots were actually inspected at 1440×810 / 240dpi; small inherited subtitle-setting and progress-quantization differences are recorded there. A06 and production subtitle code/settings remain unchanged. **Physical-TV/user final acceptance is pending**; no TV navigation or installation is authorized by this request. The task emulator was shut down, and this delivery remains separate from the earlier accepted batch.
+
 ## Deferred Implementation and Known Engineering Issues
 
 These are unimplemented work or existing engineering issues, separate from the accepted verification batch. On 2026-11-03, the user requested removal of all low- and limited-value legacy tasks after a source-based assessment; the [pruning record](archive/2026-11-completed-work.md#backlog-pruning-2026-11-03) owns the withdrawn scope and reasons. Withdrawn work must not be restored from historical suggestions. Retained proposals still require actual demand or measurements; none are scheduled by this cleanup.
@@ -27,6 +33,7 @@ Retired capabilities are superseded, not marked passed. Selected Cinema/A/B/C st
 
 | Topic | Repository-relative entry | Read condition |
 | --- | --- | --- |
+| Player bottom-bar implementation | `docs/superpowers/plans/2026-11-03-player-bottom-open.md`; `docs/superpowers/designs/2026-11-03-player-bottom-open-design.md` | User confirmed `variant=open` with timeline above controls; use the current native coverage and evidence ledger, preserving A06 and subtitle placement |
 | Acceptance, delivery history and original failures/results | `memory-bank/archive/2026-11-completed-work.md`; `memory-bank/progress.md` | When an exact accepted scope, old build/device result or package identity matters; distinguish user confirmation from automated evidence |
 | A02 focus and selection | `docs/superpowers/plans/2026-11-02-a02-focus-feedback.md` | Before shared focus/selection changes; preserve original dimensions, independent selection and the 1.5dp compact-key exception |
 | A06 player-panel materials | `docs/superpowers/plans/2026-11-02-a06-player-panel-layers.md` | Before panel backgrounds, scrim/stack cleanup or screenshots; preserve nine-template geometry, A02 and left/keyword/320dp exclusions |

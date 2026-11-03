@@ -1,0 +1,4941 @@
+{
+  "date": "2026-11-03",
+  "kind": "HTML design preview only; no Android or physical-device changes",
+  "variant": "open",
+  "layout": "timeline-above-controls",
+  "errors": [],
+  "observations": [
+    {
+      "name": "current-full",
+      "state": {
+        "variant": "current",
+        "scene": "middle",
+        "focus": "play",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "current",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 84,
+            "y": 669,
+            "width": 1272,
+            "height": 6,
+            "top": 669,
+            "right": 1356,
+            "bottom": 675,
+            "left": 84
+          },
+          "focused": [
+            "play"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 65.5,
+                "y": 718.5,
+                "width": 45,
+                "height": 45,
+                "top": 718.5,
+                "right": 110.5,
+                "bottom": 763.5,
+                "left": 65.5
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 122.5,
+                "y": 712.5,
+                "width": 57,
+                "height": 57,
+                "top": 712.5,
+                "right": 179.5,
+                "bottom": 769.5,
+                "left": 122.5
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 191.5,
+                "y": 718.5,
+                "width": 45,
+                "height": 45,
+                "top": 718.5,
+                "right": 236.5,
+                "bottom": 763.5,
+                "left": 191.5
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 262,
+                "y": 718.5,
+                "width": 45,
+                "height": 45,
+                "top": 718.5,
+                "right": 307,
+                "bottom": 763.5,
+                "left": 262
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 317.5,
+                "y": 718.5,
+                "width": 45,
+                "height": 45,
+                "top": 718.5,
+                "right": 362.5,
+                "bottom": 763.5,
+                "left": 317.5
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 373,
+                "y": 718.5,
+                "width": 72,
+                "height": 45,
+                "top": 718.5,
+                "right": 445,
+                "bottom": 763.5,
+                "left": 373
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 982.5,
+                "y": 709.5,
+                "width": 118.5,
+                "height": 57,
+                "top": 709.5,
+                "right": 1101,
+                "bottom": 766.5,
+                "left": 982.5
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1116,
+                "y": 709.5,
+                "width": 130.5,
+                "height": 57,
+                "top": 709.5,
+                "right": 1246.5,
+                "bottom": 766.5,
+                "left": 1116
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1261.5,
+                "y": 709.5,
+                "width": 118.5,
+                "height": 57,
+                "top": 709.5,
+                "right": 1380,
+                "bottom": 766.5,
+                "left": 1261.5
+              }
+            }
+          ],
+          "trayCount": 1
+        }
+      ]
+    },
+    {
+      "name": "new-full",
+      "state": {
+        "variant": "new",
+        "scene": "middle",
+        "focus": "play",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "new",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 84,
+            "y": 669,
+            "width": 1272,
+            "height": 6,
+            "top": 669,
+            "right": 1356,
+            "bottom": 675,
+            "left": 84
+          },
+          "focused": [
+            "play"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 63,
+                "y": 719,
+                "width": 44,
+                "height": 48,
+                "top": 719,
+                "right": 107,
+                "bottom": 767,
+                "left": 63
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 117,
+                "y": 714,
+                "width": 56,
+                "height": 56,
+                "top": 714,
+                "right": 173,
+                "bottom": 770,
+                "left": 117
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 183,
+                "y": 719,
+                "width": 44,
+                "height": 48,
+                "top": 719,
+                "right": 227,
+                "bottom": 767,
+                "left": 183
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 256,
+                "y": 719,
+                "width": 44,
+                "height": 48,
+                "top": 719,
+                "right": 300,
+                "bottom": 767,
+                "left": 256
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 308,
+                "y": 719,
+                "width": 44,
+                "height": 48,
+                "top": 719,
+                "right": 352,
+                "bottom": 767,
+                "left": 308
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 360,
+                "y": 719,
+                "width": 88,
+                "height": 48,
+                "top": 719,
+                "right": 448,
+                "bottom": 767,
+                "left": 360
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 989,
+                "y": 717,
+                "width": 124,
+                "height": 52,
+                "top": 717,
+                "right": 1113,
+                "bottom": 769,
+                "left": 989
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1117,
+                "y": 717,
+                "width": 124,
+                "height": 52,
+                "top": 717,
+                "right": 1241,
+                "bottom": 769,
+                "left": 1117
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1245,
+                "y": 717,
+                "width": 124,
+                "height": 52,
+                "top": 717,
+                "right": 1369,
+                "bottom": 769,
+                "left": 1245
+              }
+            }
+          ],
+          "trayCount": 1
+        }
+      ]
+    },
+    {
+      "name": "open-full",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "play",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "play"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 696,
+                "width": 64,
+                "height": 64,
+                "top": 696,
+                "right": 190,
+                "bottom": 760,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "comparison-middle",
+      "state": {
+        "variant": "compare-open",
+        "scene": "middle",
+        "focus": "forward",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "current",
+          "subtitle": {
+            "x": 244,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 445.5,
+            "bottom": 378.59375,
+            "left": 244
+          },
+          "seek": {
+            "x": 42,
+            "y": 334.5,
+            "width": 636,
+            "height": 3,
+            "top": 334.5,
+            "right": 678,
+            "bottom": 337.5,
+            "left": 42
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 32.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 55.25,
+                "bottom": 381.75,
+                "left": 32.75
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 61.25,
+                "y": 356.25,
+                "width": 28.5,
+                "height": 28.5,
+                "top": 356.25,
+                "right": 89.75,
+                "bottom": 384.75,
+                "left": 61.25
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 95.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 118.25,
+                "bottom": 381.75,
+                "left": 95.75
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 131,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 153.5,
+                "bottom": 381.75,
+                "left": 131
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 158.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 181.25,
+                "bottom": 381.75,
+                "left": 158.75
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 186.5,
+                "y": 359.25,
+                "width": 36,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 222.5,
+                "bottom": 381.75,
+                "left": 186.5
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 491.25,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 550.5,
+                "bottom": 383.25,
+                "left": 491.25
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 558,
+                "y": 354.75,
+                "width": 65.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 623.25,
+                "bottom": 383.25,
+                "left": 558
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 630.75,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 690,
+                "bottom": 383.25,
+                "left": 630.75
+              }
+            }
+          ],
+          "trayCount": 1
+        },
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 964,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 1165.5,
+            "bottom": 378.59375,
+            "left": 964
+          },
+          "seek": {
+            "x": 750,
+            "y": 334.5,
+            "width": 660,
+            "height": 2.5,
+            "top": 334.5,
+            "right": 1410,
+            "bottom": 337,
+            "left": 750
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 750,
+                "y": 351.5,
+                "width": 27,
+                "height": 27,
+                "top": 351.5,
+                "right": 777,
+                "bottom": 378.5,
+                "left": 750
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 783,
+                "y": 349,
+                "width": 32,
+                "height": 32,
+                "top": 349,
+                "right": 815,
+                "bottom": 381,
+                "left": 783
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 821,
+                "y": 350.5,
+                "width": 27,
+                "height": 27,
+                "top": 350.5,
+                "right": 848,
+                "bottom": 377.5,
+                "left": 821
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 857,
+                "y": 351.5,
+                "width": 23,
+                "height": 27,
+                "top": 351.5,
+                "right": 880,
+                "bottom": 378.5,
+                "left": 857
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 885,
+                "y": 351.5,
+                "width": 23,
+                "height": 27,
+                "top": 351.5,
+                "right": 908,
+                "bottom": 378.5,
+                "left": 885
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 913,
+                "y": 352.5,
+                "width": 45,
+                "height": 25,
+                "top": 352.5,
+                "right": 958,
+                "bottom": 377.5,
+                "left": 913
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1299,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1328,
+                "bottom": 379.5,
+                "left": 1299
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1340,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1369,
+                "bottom": 379.5,
+                "left": 1340
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1381,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1410,
+                "bottom": 379.5,
+                "left": 1381
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "comparison-playing",
+      "state": {
+        "variant": "compare-open",
+        "scene": "playing",
+        "focus": "forward",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": true,
+      "canvases": [
+        {
+          "variant": "current",
+          "subtitle": {
+            "x": 244,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 445.5,
+            "bottom": 378.59375,
+            "left": 244
+          },
+          "seek": {
+            "x": 42,
+            "y": 334.5,
+            "width": 636,
+            "height": 3,
+            "top": 334.5,
+            "right": 678,
+            "bottom": 337.5,
+            "left": 42
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 32.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 55.25,
+                "bottom": 381.75,
+                "left": 32.75
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 61.25,
+                "y": 356.25,
+                "width": 28.5,
+                "height": 28.5,
+                "top": 356.25,
+                "right": 89.75,
+                "bottom": 384.75,
+                "left": 61.25
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 95.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 118.25,
+                "bottom": 381.75,
+                "left": 95.75
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 131,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 153.5,
+                "bottom": 381.75,
+                "left": 131
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 158.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 181.25,
+                "bottom": 381.75,
+                "left": 158.75
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 186.5,
+                "y": 359.25,
+                "width": 36,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 222.5,
+                "bottom": 381.75,
+                "left": 186.5
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 491.25,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 550.5,
+                "bottom": 383.25,
+                "left": 491.25
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 558,
+                "y": 354.75,
+                "width": 65.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 623.25,
+                "bottom": 383.25,
+                "left": 558
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 630.75,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 690,
+                "bottom": 383.25,
+                "left": 630.75
+              }
+            }
+          ],
+          "trayCount": 1
+        },
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 964,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 1165.5,
+            "bottom": 378.59375,
+            "left": 964
+          },
+          "seek": {
+            "x": 750,
+            "y": 334.5,
+            "width": 660,
+            "height": 2.5,
+            "top": 334.5,
+            "right": 1410,
+            "bottom": 337,
+            "left": 750
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 750,
+                "y": 351.5,
+                "width": 27,
+                "height": 27,
+                "top": 351.5,
+                "right": 777,
+                "bottom": 378.5,
+                "left": 750
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 783,
+                "y": 349,
+                "width": 32,
+                "height": 32,
+                "top": 349,
+                "right": 815,
+                "bottom": 381,
+                "left": 783
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 821,
+                "y": 350.5,
+                "width": 27,
+                "height": 27,
+                "top": 350.5,
+                "right": 848,
+                "bottom": 377.5,
+                "left": 821
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 857,
+                "y": 351.5,
+                "width": 23,
+                "height": 27,
+                "top": 351.5,
+                "right": 880,
+                "bottom": 378.5,
+                "left": 857
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 885,
+                "y": 351.5,
+                "width": 23,
+                "height": 27,
+                "top": 351.5,
+                "right": 908,
+                "bottom": 378.5,
+                "left": 885
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 913,
+                "y": 352.5,
+                "width": 45,
+                "height": 25,
+                "top": 352.5,
+                "right": 958,
+                "bottom": 377.5,
+                "left": 913
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1299,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1328,
+                "bottom": 379.5,
+                "left": 1299
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1340,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1369,
+                "bottom": 379.5,
+                "left": 1340
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1381,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1410,
+                "bottom": 379.5,
+                "left": 1381
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "comparison-first",
+      "state": {
+        "variant": "compare-open",
+        "scene": "first",
+        "focus": "forward",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "current",
+          "subtitle": {
+            "x": 244,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 445.5,
+            "bottom": 378.59375,
+            "left": 244
+          },
+          "seek": {
+            "x": 42,
+            "y": 334.5,
+            "width": 636,
+            "height": 3,
+            "top": 334.5,
+            "right": 678,
+            "bottom": 337.5,
+            "left": 42
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 32.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 55.25,
+                "bottom": 381.75,
+                "left": 32.75
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 61.25,
+                "y": 356.25,
+                "width": 28.5,
+                "height": 28.5,
+                "top": 356.25,
+                "right": 89.75,
+                "bottom": 384.75,
+                "left": 61.25
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 95.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 118.25,
+                "bottom": 381.75,
+                "left": 95.75
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": true,
+              "rect": {
+                "x": 131,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 153.5,
+                "bottom": 381.75,
+                "left": 131
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 158.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 181.25,
+                "bottom": 381.75,
+                "left": 158.75
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 186.5,
+                "y": 359.25,
+                "width": 36,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 222.5,
+                "bottom": 381.75,
+                "left": 186.5
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 491.25,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 550.5,
+                "bottom": 383.25,
+                "left": 491.25
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 558,
+                "y": 354.75,
+                "width": 65.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 623.25,
+                "bottom": 383.25,
+                "left": 558
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 630.75,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 690,
+                "bottom": 383.25,
+                "left": 630.75
+              }
+            }
+          ],
+          "trayCount": 1
+        },
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 964,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 1165.5,
+            "bottom": 378.59375,
+            "left": 964
+          },
+          "seek": {
+            "x": 750,
+            "y": 334.5,
+            "width": 660,
+            "height": 2.5,
+            "top": 334.5,
+            "right": 1410,
+            "bottom": 337,
+            "left": 750
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 750,
+                "y": 351.5,
+                "width": 27,
+                "height": 27,
+                "top": 351.5,
+                "right": 777,
+                "bottom": 378.5,
+                "left": 750
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 783,
+                "y": 349,
+                "width": 32,
+                "height": 32,
+                "top": 349,
+                "right": 815,
+                "bottom": 381,
+                "left": 783
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 821,
+                "y": 350.5,
+                "width": 27,
+                "height": 27,
+                "top": 350.5,
+                "right": 848,
+                "bottom": 377.5,
+                "left": 821
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": true,
+              "rect": {
+                "x": 857,
+                "y": 351.5,
+                "width": 23,
+                "height": 27,
+                "top": 351.5,
+                "right": 880,
+                "bottom": 378.5,
+                "left": 857
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 885,
+                "y": 351.5,
+                "width": 23,
+                "height": 27,
+                "top": 351.5,
+                "right": 908,
+                "bottom": 378.5,
+                "left": 885
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 913,
+                "y": 352.5,
+                "width": 45,
+                "height": 25,
+                "top": 352.5,
+                "right": 958,
+                "bottom": 377.5,
+                "left": 913
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1299,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1328,
+                "bottom": 379.5,
+                "left": 1299
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1340,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1369,
+                "bottom": 379.5,
+                "left": 1340
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1381,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1410,
+                "bottom": 379.5,
+                "left": 1381
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "comparison-last",
+      "state": {
+        "variant": "compare-open",
+        "scene": "last",
+        "focus": "forward",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "current",
+          "subtitle": {
+            "x": 244,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 445.5,
+            "bottom": 378.59375,
+            "left": 244
+          },
+          "seek": {
+            "x": 42,
+            "y": 334.5,
+            "width": 636,
+            "height": 3,
+            "top": 334.5,
+            "right": 678,
+            "bottom": 337.5,
+            "left": 42
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 32.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 55.25,
+                "bottom": 381.75,
+                "left": 32.75
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 61.25,
+                "y": 356.25,
+                "width": 28.5,
+                "height": 28.5,
+                "top": 356.25,
+                "right": 89.75,
+                "bottom": 384.75,
+                "left": 61.25
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 95.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 118.25,
+                "bottom": 381.75,
+                "left": 95.75
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 131,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 153.5,
+                "bottom": 381.75,
+                "left": 131
+              }
+            },
+            {
+              "key": "next",
+              "disabled": true,
+              "rect": {
+                "x": 158.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 181.25,
+                "bottom": 381.75,
+                "left": 158.75
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 186.5,
+                "y": 359.25,
+                "width": 36,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 222.5,
+                "bottom": 381.75,
+                "left": 186.5
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 491.25,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 550.5,
+                "bottom": 383.25,
+                "left": 491.25
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 558,
+                "y": 354.75,
+                "width": 65.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 623.25,
+                "bottom": 383.25,
+                "left": 558
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 630.75,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 690,
+                "bottom": 383.25,
+                "left": 630.75
+              }
+            }
+          ],
+          "trayCount": 1
+        },
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 964,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 1165.5,
+            "bottom": 378.59375,
+            "left": 964
+          },
+          "seek": {
+            "x": 750,
+            "y": 334.5,
+            "width": 660,
+            "height": 2.5,
+            "top": 334.5,
+            "right": 1410,
+            "bottom": 337,
+            "left": 750
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 750,
+                "y": 351.5,
+                "width": 27,
+                "height": 27,
+                "top": 351.5,
+                "right": 777,
+                "bottom": 378.5,
+                "left": 750
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 783,
+                "y": 349,
+                "width": 32,
+                "height": 32,
+                "top": 349,
+                "right": 815,
+                "bottom": 381,
+                "left": 783
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 821,
+                "y": 350.5,
+                "width": 27,
+                "height": 27,
+                "top": 350.5,
+                "right": 848,
+                "bottom": 377.5,
+                "left": 821
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 857,
+                "y": 351.5,
+                "width": 23,
+                "height": 27,
+                "top": 351.5,
+                "right": 880,
+                "bottom": 378.5,
+                "left": 857
+              }
+            },
+            {
+              "key": "next",
+              "disabled": true,
+              "rect": {
+                "x": 885,
+                "y": 351.5,
+                "width": 23,
+                "height": 27,
+                "top": 351.5,
+                "right": 908,
+                "bottom": 378.5,
+                "left": 885
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 913,
+                "y": 352.5,
+                "width": 45,
+                "height": 25,
+                "top": 352.5,
+                "right": 958,
+                "bottom": 377.5,
+                "left": 913
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1299,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1328,
+                "bottom": 379.5,
+                "left": 1299
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1340,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1369,
+                "bottom": 379.5,
+                "left": 1340
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1381,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1410,
+                "bottom": 379.5,
+                "left": 1381
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "comparison-single",
+      "state": {
+        "variant": "compare-open",
+        "scene": "single",
+        "focus": "forward",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "current",
+          "subtitle": {
+            "x": 244,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 445.5,
+            "bottom": 378.59375,
+            "left": 244
+          },
+          "seek": {
+            "x": 42,
+            "y": 334.5,
+            "width": 636,
+            "height": 3,
+            "top": 334.5,
+            "right": 678,
+            "bottom": 337.5,
+            "left": 42
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 32.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 55.25,
+                "bottom": 381.75,
+                "left": 32.75
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 61.25,
+                "y": 356.25,
+                "width": 28.5,
+                "height": 28.5,
+                "top": 356.25,
+                "right": 89.75,
+                "bottom": 384.75,
+                "left": 61.25
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 95.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 118.25,
+                "bottom": 381.75,
+                "left": 95.75
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 491.25,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 550.5,
+                "bottom": 383.25,
+                "left": 491.25
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 558,
+                "y": 354.75,
+                "width": 65.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 623.25,
+                "bottom": 383.25,
+                "left": 558
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 630.75,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 690,
+                "bottom": 383.25,
+                "left": 630.75
+              }
+            }
+          ],
+          "trayCount": 1
+        },
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 964,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 1165.5,
+            "bottom": 378.59375,
+            "left": 964
+          },
+          "seek": {
+            "x": 750,
+            "y": 334.5,
+            "width": 660,
+            "height": 2.5,
+            "top": 334.5,
+            "right": 1410,
+            "bottom": 337,
+            "left": 750
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 750,
+                "y": 351.5,
+                "width": 27,
+                "height": 27,
+                "top": 351.5,
+                "right": 777,
+                "bottom": 378.5,
+                "left": 750
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 783,
+                "y": 349,
+                "width": 32,
+                "height": 32,
+                "top": 349,
+                "right": 815,
+                "bottom": 381,
+                "left": 783
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 821,
+                "y": 350.5,
+                "width": 27,
+                "height": 27,
+                "top": 350.5,
+                "right": 848,
+                "bottom": 377.5,
+                "left": 821
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1299,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1328,
+                "bottom": 379.5,
+                "left": 1299
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1340,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1369,
+                "bottom": 379.5,
+                "left": 1340
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1381,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1410,
+                "bottom": 379.5,
+                "left": 1381
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "comparison-unseekable",
+      "state": {
+        "variant": "compare-open",
+        "scene": "unseekable",
+        "focus": "play",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "current",
+          "subtitle": {
+            "x": 244,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 445.5,
+            "bottom": 378.59375,
+            "left": 244
+          },
+          "seek": {
+            "x": 42,
+            "y": 334.5,
+            "width": 636,
+            "height": 3,
+            "top": 334.5,
+            "right": 678,
+            "bottom": 337.5,
+            "left": 42
+          },
+          "focused": [
+            "play"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": true,
+              "rect": {
+                "x": 32.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 55.25,
+                "bottom": 381.75,
+                "left": 32.75
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 61.25,
+                "y": 356.25,
+                "width": 28.5,
+                "height": 28.5,
+                "top": 356.25,
+                "right": 89.75,
+                "bottom": 384.75,
+                "left": 61.25
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": true,
+              "rect": {
+                "x": 95.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 118.25,
+                "bottom": 381.75,
+                "left": 95.75
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 131,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 153.5,
+                "bottom": 381.75,
+                "left": 131
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 158.75,
+                "y": 359.25,
+                "width": 22.5,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 181.25,
+                "bottom": 381.75,
+                "left": 158.75
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 186.5,
+                "y": 359.25,
+                "width": 36,
+                "height": 22.5,
+                "top": 359.25,
+                "right": 222.5,
+                "bottom": 381.75,
+                "left": 186.5
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 491.25,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 550.5,
+                "bottom": 383.25,
+                "left": 491.25
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 558,
+                "y": 354.75,
+                "width": 65.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 623.25,
+                "bottom": 383.25,
+                "left": 558
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 630.75,
+                "y": 354.75,
+                "width": 59.25,
+                "height": 28.5,
+                "top": 354.75,
+                "right": 690,
+                "bottom": 383.25,
+                "left": 630.75
+              }
+            }
+          ],
+          "trayCount": 1
+        },
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 964,
+            "y": 360,
+            "width": 201.5,
+            "height": 18.59375,
+            "top": 360,
+            "right": 1165.5,
+            "bottom": 378.59375,
+            "left": 964
+          },
+          "seek": {
+            "x": 750,
+            "y": 334.5,
+            "width": 660,
+            "height": 2.5,
+            "top": 334.5,
+            "right": 1410,
+            "bottom": 337,
+            "left": 750
+          },
+          "focused": [
+            "play"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": true,
+              "rect": {
+                "x": 750,
+                "y": 351.5,
+                "width": 27,
+                "height": 27,
+                "top": 351.5,
+                "right": 777,
+                "bottom": 378.5,
+                "left": 750
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 783,
+                "y": 348,
+                "width": 32,
+                "height": 32,
+                "top": 348,
+                "right": 815,
+                "bottom": 380,
+                "left": 783
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": true,
+              "rect": {
+                "x": 821,
+                "y": 351.5,
+                "width": 27,
+                "height": 27,
+                "top": 351.5,
+                "right": 848,
+                "bottom": 378.5,
+                "left": 821
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 857,
+                "y": 351.5,
+                "width": 23,
+                "height": 27,
+                "top": 351.5,
+                "right": 880,
+                "bottom": 378.5,
+                "left": 857
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 885,
+                "y": 351.5,
+                "width": 23,
+                "height": 27,
+                "top": 351.5,
+                "right": 908,
+                "bottom": 378.5,
+                "left": 885
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 913,
+                "y": 352.5,
+                "width": 45,
+                "height": 25,
+                "top": 352.5,
+                "right": 958,
+                "bottom": 377.5,
+                "left": 913
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1299,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1328,
+                "bottom": 379.5,
+                "left": 1299
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1340,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1369,
+                "bottom": 379.5,
+                "left": 1340
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1381,
+                "y": 350.5,
+                "width": 29,
+                "height": 29,
+                "top": 350.5,
+                "right": 1410,
+                "bottom": 379.5,
+                "left": 1381
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "focus-rewind",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "rewind",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "rewind"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 701,
+                "width": 54,
+                "height": 54,
+                "top": 701,
+                "right": 114,
+                "bottom": 755,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "focus-play",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "play",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "play"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 696,
+                "width": 64,
+                "height": 64,
+                "top": 696,
+                "right": 190,
+                "bottom": 760,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "focus-forward",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "forward",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 701,
+                "width": 54,
+                "height": 54,
+                "top": 701,
+                "right": 256,
+                "bottom": 755,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "focus-previous",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "previous",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "previous"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 701,
+                "width": 46,
+                "height": 54,
+                "top": 701,
+                "right": 320,
+                "bottom": 755,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "focus-next",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "next",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "next"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 701,
+                "width": 46,
+                "height": 54,
+                "top": 701,
+                "right": 376,
+                "bottom": 755,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "focus-picker",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "picker",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "picker"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 703,
+                "width": 90,
+                "height": 50,
+                "top": 703,
+                "right": 476,
+                "bottom": 753,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "focus-subtitle",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "subtitle",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "subtitle"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 699,
+                "width": 58,
+                "height": 58,
+                "top": 699,
+                "right": 1216,
+                "bottom": 757,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "focus-audio",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "audio",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "audio"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 699,
+                "width": 58,
+                "height": 58,
+                "top": 699,
+                "right": 1298,
+                "bottom": 757,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "focus-danmaku",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "danmaku",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "danmaku"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 699,
+                "width": 58,
+                "height": 58,
+                "top": 699,
+                "right": 1380,
+                "bottom": 757,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "background-bright",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "subtitle",
+        "background": "bright"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "subtitle"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 699,
+                "width": 58,
+                "height": 58,
+                "top": 699,
+                "right": 1216,
+                "bottom": 757,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "background-dark",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "subtitle",
+        "background": "dark"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "subtitle"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 699,
+                "width": 58,
+                "height": 58,
+                "top": 699,
+                "right": 1216,
+                "bottom": 757,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "dpad-right",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "forward",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 701,
+                "width": 54,
+                "height": 54,
+                "top": 701,
+                "right": 256,
+                "bottom": 755,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "seek-forward",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "forward",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 597,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 701,
+                "width": 54,
+                "height": 54,
+                "top": 701,
+                "right": 256,
+                "bottom": 755,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "hide-controls",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "forward",
+        "background": "cinema"
+      },
+      "visible": false,
+      "position": 597,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "focused": [],
+          "controls": [],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "restore-controls",
+      "state": {
+        "variant": "open",
+        "scene": "middle",
+        "focus": "forward",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 597,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "forward"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": false,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": false,
+              "rect": {
+                "x": 202,
+                "y": 701,
+                "width": 54,
+                "height": 54,
+                "top": 701,
+                "right": 256,
+                "bottom": 755,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 320,
+                "bottom": 757,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    },
+    {
+      "name": "disabled-skip",
+      "state": {
+        "variant": "open",
+        "scene": "unseekable",
+        "focus": "previous",
+        "background": "cinema"
+      },
+      "visible": true,
+      "position": 582,
+      "playing": false,
+      "canvases": [
+        {
+          "variant": "open",
+          "subtitle": {
+            "x": 488,
+            "y": 720,
+            "width": 403,
+            "height": 37.1875,
+            "top": 720,
+            "right": 891,
+            "bottom": 757.1875,
+            "left": 488
+          },
+          "seek": {
+            "x": 60,
+            "y": 669,
+            "width": 1320,
+            "height": 5,
+            "top": 669,
+            "right": 1380,
+            "bottom": 674,
+            "left": 60
+          },
+          "focused": [
+            "previous"
+          ],
+          "controls": [
+            {
+              "key": "rewind",
+              "disabled": true,
+              "rect": {
+                "x": 60,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 114,
+                "bottom": 757,
+                "left": 60
+              }
+            },
+            {
+              "key": "play",
+              "disabled": false,
+              "rect": {
+                "x": 126,
+                "y": 698,
+                "width": 64,
+                "height": 64,
+                "top": 698,
+                "right": 190,
+                "bottom": 762,
+                "left": 126
+              }
+            },
+            {
+              "key": "forward",
+              "disabled": true,
+              "rect": {
+                "x": 202,
+                "y": 703,
+                "width": 54,
+                "height": 54,
+                "top": 703,
+                "right": 256,
+                "bottom": 757,
+                "left": 202
+              }
+            },
+            {
+              "key": "previous",
+              "disabled": false,
+              "rect": {
+                "x": 274,
+                "y": 701,
+                "width": 46,
+                "height": 54,
+                "top": 701,
+                "right": 320,
+                "bottom": 755,
+                "left": 274
+              }
+            },
+            {
+              "key": "next",
+              "disabled": false,
+              "rect": {
+                "x": 330,
+                "y": 703,
+                "width": 46,
+                "height": 54,
+                "top": 703,
+                "right": 376,
+                "bottom": 757,
+                "left": 330
+              }
+            },
+            {
+              "key": "picker",
+              "disabled": false,
+              "rect": {
+                "x": 386,
+                "y": 705,
+                "width": 90,
+                "height": 50,
+                "top": 705,
+                "right": 476,
+                "bottom": 755,
+                "left": 386
+              }
+            },
+            {
+              "key": "subtitle",
+              "disabled": false,
+              "rect": {
+                "x": 1158,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1216,
+                "bottom": 759,
+                "left": 1158
+              }
+            },
+            {
+              "key": "audio",
+              "disabled": false,
+              "rect": {
+                "x": 1240,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1298,
+                "bottom": 759,
+                "left": 1240
+              }
+            },
+            {
+              "key": "danmaku",
+              "disabled": false,
+              "rect": {
+                "x": 1322,
+                "y": 701,
+                "width": 58,
+                "height": 58,
+                "top": 701,
+                "right": 1380,
+                "bottom": 759,
+                "left": 1322
+              }
+            }
+          ],
+          "trayCount": 0
+        }
+      ]
+    }
+  ]
+}

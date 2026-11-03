@@ -2,6 +2,7 @@ package com.xyoye.player.controller.video
 
 import android.content.Context
 import android.graphics.Point
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.core.view.ViewCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.xyoye.common_component.focus.applyDpadFocusable
@@ -104,12 +106,16 @@ class PlayerBottomView(
             viewBinding.forward,
             viewBinding.ivPreviousSource,
             viewBinding.ivNextSource,
-            viewBinding.videoListIv
+            viewBinding.videoListIv,
+            viewBinding.subtitleControlIv,
+            viewBinding.audioControl,
+            viewBinding.danmuControlIv
         ).forEach { control ->
             control.setOnFocusChangeListener { view, focused ->
                 if (focused) {
                     lastFocusedControlId = view.id
                 }
+                updateTransportFocusCaption(if (focused) view else null)
             }
         }
         updateFocusNavigation()
@@ -219,6 +225,7 @@ class PlayerBottomView(
             }
         }
         viewBinding.playIv.contentDescription = if (viewBinding.playIv.isSelected) "暂停" else "播放"
+        if (viewBinding.playIv.hasFocus()) updateTransportFocusCaption(viewBinding.playIv)
         updateSeekActions()
     }
 
@@ -430,5 +437,19 @@ class PlayerBottomView(
                 DecodeType.HW
             }
         viewBinding.decodeTypeTv.text = decodeType.label
+    }
+
+    private fun updateTransportFocusCaption(control: View?) {
+        val show =
+            control != null && control.id in listOf(R.id.rewind, R.id.play_iv, R.id.forward, R.id.iv_previous_source, R.id.iv_next_source)
+        viewBinding.transportFocusLabel.isVisible = show
+        if (!show || control == null) return
+        viewBinding.transportFocusLabel.text = control.contentDescription
+        viewBinding.transportFocusLabel.doOnLayout { label ->
+            val bounds = Rect()
+            control.getDrawingRect(bounds)
+            viewBinding.playerBottomLl.offsetDescendantRectToMyCoords(control, bounds)
+            label.x = bounds.exactCenterX() - label.width / 2f
+        }
     }
 }

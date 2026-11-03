@@ -1,5 +1,9 @@
 # Progress
 
+## Open Player Bottom Bar (2026-11-03)
+
+Implemented the user-confirmed `variant=open` layout with the timeline above nine actions, independent circular track buttons and an episode pill. The [B01–B06 implementation ledger](../docs/superpowers/plans/2026-11-03-player-bottom-open.md) owns successful builds, all Debug JVM/lint/governance checks, scoped Kotlin checks, instrumented DPAD/kernel/persistence regressions, final native screenshot comparison and 1.3-font evidence. Production subtitle settings/placement and A06 are retained. Local verification is complete; physical-TV/user final acceptance remains pending, with no new TV operation authorized.
+
 ## User Acceptance and Archival (2026-11-03)
 
 The user confirmed that all pending activeContext verification items passed and physical-TV testing found no problems. The batch is **accepted and archived**; its [single acceptance record](archive/2026-11-completed-work.md#user-confirmed-acceptance-2026-11-03) records scope and evidence attribution. Latest recorded delivery is ARM64 Release **4.2.5 / 72**, installed on **2026-11-02 at 21:49:17**; original build/install identities remain in the linked execution ledger. This documentation closeout adds no automated test, device operation or build result.

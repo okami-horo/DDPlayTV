@@ -1,0 +1,1988 @@
+{
+  "date": "2026-11-03",
+  "kind": "Native Android bottom-bar visual and DPAD verification; physical-TV acceptance pending",
+  "design": "player-bottom-refinement-prototype.html?variant=open",
+  "layout": "timeline-above-controls",
+  "device": {
+    "serial": "emulator-5572",
+    "avd": "Pixel_5_API_34",
+    "viewport": [
+      1440,
+      810
+    ],
+    "density": 1.5,
+    "fontScales": [
+      1.0,
+      1.3
+    ]
+  },
+  "fixtures": {
+    "background": "cinema-frame.jpg inserted below controller for visual comparison; bright/dark use RGB multipliers 1.45/0.3",
+    "position": "09:42 / 24:00 is a controlled bottom-view display fixture, not the real short-video playback position",
+    "subtitle": "middle captures feed the same text through the existing SubtitleController; retain native subtitle settings and placement",
+    "unseekable": "controlled InterVideoPlayer capability override, restored after test",
+    "realPlayback": "Media3/mpv were separately checked with the actual video visible, including position advancement behind panels"
+  },
+  "checks": [
+    {
+      "log": ".tmp/player-bottom-open/validation.log",
+      "result": "BUILD SUCCESSFUL",
+      "scope": "all Debug JVM tests, lint, verifyModuleDependencies and instrumentation APK"
+    },
+    {
+      "log": ".tmp/player-bottom-open/build-visual-final.log",
+      "result": "BUILD SUCCESSFUL",
+      "scope": "final main APK, instrumentation APK, player lint and scoped Kotlin checks"
+    },
+    {
+      "log": ".tmp/player-bottom-open/test-fixture-final.log",
+      "result": "BUILD SUCCESSFUL",
+      "scope": "final screenshot fixture and scoped test-source Kotlin checks"
+    },
+    {
+      "log": ".tmp/player-bottom-open/instrumentation-accepted.log",
+      "result": "OK (7 tests)"
+    },
+    {
+      "log": ".tmp/player-bottom-open/instrumentation-visual.log",
+      "result": "OK (3 tests)",
+      "scope": "rechecked after screenshot-background insertion repair"
+    },
+    {
+      "log": ".tmp/player-bottom-open/instrumentation-font130-visual.log",
+      "result": "OK (1 test)",
+      "scope": "final fixture, 1.3 font scale; restored to 1.0"
+    }
+  ],
+  "knownInheritedDifferences": [
+    "Native subtitle alignment, opacity and size follow existing player settings; HTML uses a fixed subtitle fixture. Production subtitle code was not changed.",
+    "Existing SeekBar max=100 rounds display progress to 40%, about 6px left of the HTML 40.42% position; seek business behavior is retained.",
+    "Android and browser font rasterization differ slightly; the native button labels were raised 6px after visual comparison."
+  ],
+  "sourceSha256": {
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/PlayerPanelLayersInstrumentedTest.kt": "c2fa83d8e37d13f51cd46d2cd231e68b1e4e3184bc3a446f90dd6f8058e0b481",
+    "player_component/src/main/java/com/xyoye/player/controller/video/PlayerBottomView.kt": "904d718bac91d9313e3b9fa5289836e78fc467d3cdd455178c3840f3f33329da",
+    "player_component/src/main/res/animator/cinema_bottom_control.xml": "76d090b821734104d4ea7ca70e996bd7a3d4d029742314d48916b5ab5dbbac72",
+    "player_component/src/main/res/color/cinema_bottom_icon.xml": "162f3c976a4b7bc3783d8d63a76fdc0da32ebb37be64f393c91b59ca07518894",
+    "player_component/src/main/res/drawable/cinema_bottom_audio.xml": "faa0d11884949654e6b896f3856e0c17121c0659e349df254005c3d5b858fdef",
+    "player_component/src/main/res/drawable/cinema_bottom_danmaku.xml": "b887b47bd7b95c6e8414fdf802245984a3d55b5a36533b42a48aef20aad573c3",
+    "player_component/src/main/res/drawable/cinema_bottom_episodes.xml": "8d96ab1cf046e26a7e5a56690834f7398a656e61292c5997d2e1741991ad5d01",
+    "player_component/src/main/res/drawable/cinema_bottom_next.xml": "59677ea06e5c7c8e62098da4d2a34af9ca8e05461003a903fbf5b7990330a666",
+    "player_component/src/main/res/drawable/cinema_bottom_pill.xml": "06a68134eb7f35dec60179a62717213bedf5d1d4fe1bbab3385a83c69e896af2",
+    "player_component/src/main/res/drawable/cinema_bottom_previous.xml": "e1a371d91341dddd8e6df1e5f3e3bcd3911a15c821e1e6c8eccea7056f6abf8f",
+    "player_component/src/main/res/drawable/cinema_bottom_seek_progress.xml": "4b89b6c6a23c6dfb1bdc3216aa31085297b476df039949882f48c40a5a086876",
+    "player_component/src/main/res/drawable/cinema_bottom_seek_thumb.xml": "b7839542fccf9677ea56ccf8ac2c685f3006c1698eac53e6d76aa08e418f9ba9",
+    "player_component/src/main/res/drawable/cinema_bottom_subtitle.xml": "79bea1094978f082587eb682fc814af4874d3960c48763687314b129774959b4",
+    "player_component/src/main/res/drawable/cinema_bottom_track_button.xml": "3181155cfeb238f2bc36e10df4b7655b06903ec2348efc077407fb565f9a9dff",
+    "player_component/src/main/res/drawable/cinema_controls_bottom.xml": "f2c1a9257f3adeb574bc558d7577f7f08526d8cbbabada3aaa2fbfe2edad8e5c",
+    "player_component/src/main/res/drawable/cinema_transport_button.xml": "c880798565f2400ef3d722e2dd9a199503adcbb23d08a3e33cb0a98e0dec93bb",
+    "player_component/src/main/res/layout/layout_player_bottom.xml": "cc607e458be443d4d885ecdf4446883f0976271b68c788c237a9469a0d34e633",
+    "player_component/src/main/res/values/cinema_bottom_styles.xml": "2839418cf6a6aca3d33fcc14550aec4d0415cb6c14385a17a31e11f203f4a3f0"
+  },
+  "screenshots": [
+    {
+      "file": "bottom-panel-2131361921.png",
+      "sha256": "02f765d6ff0e6613819e7299e3f6a48c42a7006733f4c5a1baf02d80d7836448",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "bottom-panel-2131362048.png",
+      "sha256": "7edf5590615ac1564163452ef2d2de2a3ce1db3fe77dc44b46351954c497677c",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "bottom-panel-2131362813.png",
+      "sha256": "e07bfa8058013895cc47ef2e77a4c755ffd9e31c00a772aaee798b1437d4673d",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "bright-large.png",
+      "sha256": "e1537f836d3317494d538ef7f11622a7833c5cb5b143aae49eef93505eb482c0",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "bright-normal.png",
+      "sha256": "36d807167ff99f3f3358cc6edd86f6bc312549ea43c9b562f1e5d6cdfbbbb83d",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "cinema-large.png",
+      "sha256": "064f5e89241f401c2e396ef5adebff8df60eff96c963ce92a2a0b4f9ad2eb408",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "cinema-normal.png",
+      "sha256": "fb95c00ba5931b93c3d332873fca3af60600cfe7e21d32643ca249f21e74a627",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "comparison-bottom.png",
+      "sha256": "262148a90e7251302dc5b1c655080685d85e5f043c1d985c777ef9f97948a54b",
+      "size": [
+        1440,
+        492
+      ]
+    },
+    {
+      "file": "dark-large.png",
+      "sha256": "019e8e4b50556a57e0a3c82e45ff1dfd8a87b19f19a63111a56c20bc509df7f7",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "dark-normal.png",
+      "sha256": "f8dbac6f425df18a6a462c311a0efe5578c76b0f84e695848d04457cfb17b5f0",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "first.png",
+      "sha256": "d9d9e62930898f3d3c7f21a92ff0cae04b39c8fb519ab9939f5fcc2b3ed42f40",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "last.png",
+      "sha256": "def423716347dc92df81901d05f5625492b6222858f3571e6c6ae64f635df2ae",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "middle-forward.png",
+      "sha256": "965ee142dd960ba078b51c5b1c7a3b6b8ec410e06ca7fb849f9eec4b7862bebf",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "middle-play_iv.png",
+      "sha256": "2e52dce59bfbcc35abc52e53b99ed4c607adedd72076a4c6cfbf3022f6fb8035",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "middle-subtitle_control_iv.png",
+      "sha256": "d48813d42bd10872e15b11b7fefb3614c8c4e45c2c20df4d29f7352dddff6f21",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "middle-video_list_iv.png",
+      "sha256": "60cc799027be7bc1e0f8f563fb56b965abec9e2d3f04ae5cfd79f09640eaad69",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "native-bottom.png",
+      "sha256": "f10101d5c7efe13618101efeb24d846717f1657b84c72b9602ab61be387bc822",
+      "size": [
+        1440,
+        210
+      ]
+    },
+    {
+      "file": "picker-large.png",
+      "sha256": "2778fabec1b194d112410fc43a52eb7224b459c03c6bd841b0b8610d23f7684a",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "picker-normal.png",
+      "sha256": "10c4c2f1f059c8d41997662abd6d4b6ccdc70af84cbadc801f8b9d32bba18985",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "single.png",
+      "sha256": "0ee4c1a9b7af209b155433d0432e2957629577759066d5445ef2056b219b4f86",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "states.png",
+      "sha256": "5130ac0155e9e2e62d7e40f36186defbd358a37dfba7e028fc716eac485dfef2",
+      "size": [
+        1440,
+        552
+      ]
+    },
+    {
+      "file": "subtitle-large.png",
+      "sha256": "9bd8ec9545e608f6c56da4d172fee4069aa2ebc7e8958941689509078815cde5",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "subtitle-normal.png",
+      "sha256": "8f6d8b1802f36afb6ebb6695aae09f297b22f5e41771ff42f67baae8e9a91d8f",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "unseekable.png",
+      "sha256": "2190808babd62708404ff6d2bfd2df942e30b69d6a078bf27be6398b80bdbdbe",
+      "size": [
+        1440,
+        810
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "name": "bright-large",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            633,
+            1263,
+            665
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            696,
+            190,
+            760
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "bright-normal",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            696,
+            190,
+            760
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "cinema-large",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            633,
+            1263,
+            665
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            696,
+            190,
+            760
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "cinema-normal",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            696,
+            190,
+            760
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "dark-large",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            633,
+            1263,
+            665
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            696,
+            190,
+            760
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "dark-normal",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            696,
+            190,
+            760
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "first",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            643,
+            1289,
+            667
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            666,
+            1380,
+            696
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            706,
+            476,
+            772
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            705,
+            190,
+            769
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            714,
+            476,
+            764
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            710,
+            1216,
+            768
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            710,
+            1298,
+            768
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            710,
+            1380,
+            768
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "last",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            698,
+            190,
+            762
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            703,
+            476,
+            753
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "middle-forward",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            698,
+            190,
+            762
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "middle-play_iv",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            696,
+            190,
+            760
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "middle-subtitle_control_iv",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            698,
+            190,
+            762
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            699,
+            1216,
+            757
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "middle-video_list_iv",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            698,
+            190,
+            762
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            703,
+            476,
+            753
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "picker-large",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            633,
+            1263,
+            665
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            698,
+            190,
+            762
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            703,
+            476,
+            753
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "picker-normal",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            698,
+            190,
+            762
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            703,
+            476,
+            753
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "single",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            346,
+            763
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            696,
+            190,
+            760
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            274,
+            705,
+            364,
+            755
+          ],
+          "focused": false,
+          "visible": false
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            701,
+            1216,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "subtitle-large",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            633,
+            1263,
+            665
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            698,
+            190,
+            762
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            699,
+            1216,
+            757
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "subtitle-normal",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            476,
+            763
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            698,
+            190,
+            762
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            386,
+            705,
+            476,
+            755
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            699,
+            1216,
+            757
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "unseekable",
+      "density": 1.5,
+      "fontScale": 1,
+      "geometry": [
+        {
+          "id": "current_position_tv",
+          "bounds": [
+            60,
+            634,
+            1289,
+            658
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_seek_bar",
+          "bounds": [
+            60,
+            657,
+            1380,
+            687
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "transport_tray",
+          "bounds": [
+            60,
+            697,
+            346,
+            763
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "play_iv",
+          "bounds": [
+            126,
+            698,
+            190,
+            762
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "video_list_iv",
+          "bounds": [
+            274,
+            705,
+            364,
+            755
+          ],
+          "focused": false,
+          "visible": false
+        },
+        {
+          "id": "subtitle_control_iv",
+          "bounds": [
+            1158,
+            699,
+            1216,
+            757
+          ],
+          "focused": true,
+          "visible": true
+        },
+        {
+          "id": "audio_control",
+          "bounds": [
+            1240,
+            701,
+            1298,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        },
+        {
+          "id": "danmu_control_iv",
+          "bounds": [
+            1322,
+            701,
+            1380,
+            759
+          ],
+          "focused": false,
+          "visible": true
+        }
+      ]
+    }
+  ]
+}
