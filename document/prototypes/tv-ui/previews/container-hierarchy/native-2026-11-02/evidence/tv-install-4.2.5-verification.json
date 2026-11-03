@@ -1,0 +1,70 @@
+{
+  "verifiedAt": "2026-11-02T21:50:18.7977811+08:00",
+  "authorization": "User requested installation on TV.",
+  "device": {
+    "serial": "192.168.31.70:5555",
+    "manufacturer": "Hisense",
+    "model": "VIDAA_TV",
+    "device": "MT9653",
+    "android": "11",
+    "sdk": 30,
+    "abi": "arm64-v8a"
+  },
+  "privateAdbPort": 5089,
+  "applicationId": "com.okamihoro.ddplaytv",
+  "apkPath": "app/build/outputs/apk/release/ddplaytv_v4.2.5_arm64-v8a-release.apk",
+  "apkBytes": 68326338,
+  "localApkSha256": "356a00281cde0e0d7defed663b905aa978c43c2e0e44464f90460eb7e0517472",
+  "installedApkPath": "/data/app/~~5HQylaOeWsQ23w7IUGIpNA==/com.okamihoro.ddplaytv-qvn0SlX6ZKomukNxt0nQaA==/base.apk",
+  "installedApkSha256": "356a00281cde0e0d7defed663b905aa978c43c2e0e44464f90460eb7e0517472",
+  "installation": {
+    "command": "adb -P 5089 -s 192.168.31.70:5555 install -r <ARM64 Release APK>",
+    "result": "Success",
+    "startedAt": "2026-11-02T21:49:17.3828945+08:00",
+    "finishedAt": "2026-11-02T21:49:29.1755162+08:00"
+  },
+  "before": {
+    "versionName": "4.2.4",
+    "versionCode": 71,
+    "uid": 10111,
+    "firstInstallTime": "2026-02-12 10:47:55",
+    "lastUpdateTime": "2026-11-01 21:21:47"
+  },
+  "after": {
+    "versionName": "4.2.5",
+    "versionCode": 72,
+    "uid": 10111,
+    "firstInstallTime": "2026-02-12 10:47:55",
+    "lastUpdateTime": "2026-11-02 21:49:17"
+  },
+  "packageIdentityPreserved": true,
+  "dataHandling": "Replace installation; no uninstall or app-data clearing.",
+  "runtimeAcceptance": "Not exercised; no app launch, navigation, playback or screenshot.",
+  "cleanup": {
+    "checkedAt": "2026-11-02T21:50:44.2958444+08:00",
+    "privateAdbPort": 5089,
+    "tvDisconnected": true,
+    "privateAdbClosed": true,
+    "originalAdbProcessesPreserved": true,
+    "adbProcessesAfter": [
+      {
+        "ProcessId": 57396,
+        "CommandLine": "adb -L tcp:5037 fork-server server --reply-fd 700"
+      }
+    ],
+    "stagedBlobIdentitiesUnchanged": true
+  },
+  "evidenceLogSha256": {
+    "tv-install-4.2.5-tv-identity.log": "f1756b003a834e47930b5d8ee86278e805e13e9eeb0079c48467394018e7e9d2",
+    "tv-install-4.2.5-adb-connect.log": "cecd0d9eb5fbeece5806222b051fbdb0bd587853540d4aa18007e4cb31590021",
+    "tv-install-4.2.5-adb-devices.log": "fa4a11ea622a89ac757671fe4bcd6669622b6dbfa11e2b1aced1b0b83d7ebf09",
+    "tv-install-4.2.5-install.log": "c4aa470acafcf8576c15b0f0b5ae7e852d1ec5413372d0e6a9272e788e1306d3",
+    "tv-install-4.2.5-package-before.log": "a7865e1d4d82b783789f416c043cbdd627a7a13d570fda74f3da5eb71091e0a0",
+    "tv-install-4.2.5-package-after.log": "019b578d8557cc22a8f8c6fa7b69e05a76aa1d8f1f9327e57bb868a45e60db7a",
+    "tv-install-4.2.5-package-path-before.log": "800aacb3f3d813bdcc5f064b329b383b4c9a1169cf863997b87b35c705d0a024",
+    "tv-install-4.2.5-package-path-after.log": "551e4153d28ab77f3a0327444e357fe1382d27936e54b2b411c3c79212274215",
+    "tv-install-4.2.5-installed-apk-sha256.log": "efe2e3131798a2f54470156e2715678b81b2a11c61af6755510a5a443f7e47c9",
+    "tv-install-4.2.5-cleanup.log": "88016ee7f1619687387c0be50564dd8839328fff3763210ced6f61393b03e95a",
+    "tv-install-4.2.5-cleanup.json": "6d9e4ed3b5da1bf992a749ed829e7caff0d79c611e011bd5817af6e78ff07fa7"
+  }
+}

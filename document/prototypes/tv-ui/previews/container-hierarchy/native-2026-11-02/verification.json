@@ -1,0 +1,1107 @@
+{
+  "date": "2026-11-02",
+  "base": "5324dd7f3",
+  "viewport": [
+    1440,
+    810
+  ],
+  "densityDpi": 240,
+  "device": "task-owned read-only Pixel_5_API_34 / emulator-5588 / private ADB 5087",
+  "images": [
+    {
+      "stage": "before",
+      "font": "1",
+      "group": "C01",
+      "title": "缓存管理",
+      "path": "images/before-font1-CacheManagerActivity.png",
+      "source": ".tmp/a03-containers/before-normal/ui-polish-verification/CacheManagerActivity.png",
+      "sha256": "413896c84dee9a574d36676757a70339da137e5abdfb2596fe6156d7c3b82167"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C01",
+      "title": "缓存管理",
+      "path": "images/after-font1-CacheManagerActivity.png",
+      "source": ".tmp/a03-containers/after-normal/ui-polish-verification/CacheManagerActivity.png",
+      "sha256": "735c7985a135083213cedbd492c414190876dfb9c3bd0e6bba72ab96dc3337fd"
+    },
+    {
+      "stage": "before",
+      "font": "1",
+      "group": "C02",
+      "title": "常用目录",
+      "path": "images/before-font1-CommonlyFolderActivity.png",
+      "source": ".tmp/a03-containers/before-normal/ui-polish-verification/CommonlyFolderActivity.png",
+      "sha256": "c6e71e8739fa18625454cfe68b4cfdfe129b4dfc908c227e6a14d13b09886b6e"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C02",
+      "title": "常用目录",
+      "path": "images/after-font1-CommonlyFolderActivity.png",
+      "source": ".tmp/a03-containers/after-normal/ui-polish-verification/CommonlyFolderActivity.png",
+      "sha256": "eb79f76641aa17e6d3df8786a82ce024757659f0e8a2b551173d6fe8b6b233db"
+    },
+    {
+      "stage": "before",
+      "font": "1",
+      "group": "C03",
+      "title": "深色模式",
+      "path": "images/before-font1-SwitchThemesActivity.png",
+      "source": ".tmp/a03-containers/before-normal/ui-polish-verification/SwitchThemesActivity.png",
+      "sha256": "08afe9a7d44badca03e9b9b66fd08e6b18532427330dd1f6a6e865e1a6ffc172"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C03",
+      "title": "深色模式",
+      "path": "images/after-font1-SwitchThemesActivity.png",
+      "source": ".tmp/a03-containers/after-normal/ui-polish-verification/SwitchThemesActivity.png",
+      "sha256": "dd12de868988e041d496c0fa7e3ad5e29dcb80e44d77ddce201a86ddc8eff4ae"
+    },
+    {
+      "stage": "before",
+      "font": "1",
+      "group": "C04",
+      "title": "开源许可",
+      "path": "images/before-font1-LicenseActivity.png",
+      "source": ".tmp/a03-containers/before-normal/ui-polish-verification/LicenseActivity.png",
+      "sha256": "e5b21c3e6c9b39de7355f6fa7f175990b2f01a0f7fb3e65e174a4180833a7b3a"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C04",
+      "title": "开源许可",
+      "path": "images/after-font1-LicenseActivity.png",
+      "source": ".tmp/a03-containers/after-normal/ui-polish-verification/LicenseActivity.png",
+      "sha256": "5f32f2354b516ecc32234eaa8d194c3c31431e4973f0441f57144c4c68e68957"
+    },
+    {
+      "stage": "before",
+      "font": "1",
+      "group": "C05",
+      "title": "关于与归属",
+      "path": "images/before-font1-AboutUsActivity.png",
+      "source": ".tmp/a03-containers/before-normal/ui-polish-verification/AboutUsActivity.png",
+      "sha256": "cde87cc242a23aa0403b7f73f9da4d1401191cfc9f1aac5507b960c1caedc714"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C05",
+      "title": "关于与归属",
+      "path": "images/after-font1-AboutUsActivity.png",
+      "source": ".tmp/a03-containers/after-normal/ui-polish-verification/AboutUsActivity.png",
+      "sha256": "a508c0a6f0eb77c8df25ce14e88c9c9ec6c84d5df704a0ad1ec0a6087ece9d44"
+    },
+    {
+      "stage": "before",
+      "font": "1",
+      "group": "C06",
+      "title": "番剧简介",
+      "path": "images/before-font1-detail-intro.png",
+      "source": ".tmp/a03-containers/before-normal/ui-remaining-verification/detail-intro.png",
+      "sha256": "190b6335da4056d941c45a7ad83fe01abfc1d43634a0f56fc21450a641ae2998"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C06",
+      "title": "番剧简介",
+      "path": "images/after-font1-detail-intro.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-intro.png",
+      "sha256": "932efd2abd236be7da75fa1c7ae060bf25802c90dda02d14963f10ed574cc3e7"
+    },
+    {
+      "stage": "before",
+      "font": "1",
+      "group": "C07",
+      "title": "番剧分集",
+      "path": "images/before-font1-detail-episodes.png",
+      "source": ".tmp/a03-containers/before-normal/ui-remaining-verification/detail-episodes.png",
+      "sha256": "a0a7991faa4857d9588a82ba1e923cd50fa5e811d7a6a0b51546578274905a75"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C07",
+      "title": "番剧分集",
+      "path": "images/after-font1-detail-episodes.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-episodes.png",
+      "sha256": "b3045f36b8fd1a896cc9e88b6efbe283a77b8384c6c09ebd72658ec63b40e1bf"
+    },
+    {
+      "stage": "before",
+      "font": "1",
+      "group": "C08",
+      "title": "相关作品",
+      "path": "images/before-font1-detail-recommend.png",
+      "source": ".tmp/a03-containers/before-normal/ui-remaining-verification/detail-recommend.png",
+      "sha256": "8b8c2328656ec0888060a05e42f7968ca7718bca53b7503698a17ad96c5a431c"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C08",
+      "title": "相关作品",
+      "path": "images/after-font1-detail-recommend.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-recommend.png",
+      "sha256": "5bd814b25bdb52d82630cf19289c745e316b932cd9390ae8a0facaea9386179d"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C01",
+      "title": "系统缓存确认／取消",
+      "path": "images/after-font1-cache-system-confirm.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/cache-system-confirm.png",
+      "sha256": "e1e0a3c0eedf9efc0376dda5e46c23c86b9b79ed44462cc848fe26935aad0d5a"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C01",
+      "title": "延时确认与取消",
+      "path": "images/after-font1-cache-delayed-confirm.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/cache-delayed-confirm.png",
+      "sha256": "643f0cd5189169bdb8e509477965f07a1f9c4cc4028f090c47711936eb9a1430"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C01",
+      "title": "截图缓存行焦点",
+      "path": "images/after-font1-cache-screenshot-row.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/cache-screenshot-row.png",
+      "sha256": "fcdac7651b3fbdc607efff32f425190ecaa52c21c49c8e9f2f6bd3ede58085d5"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C01",
+      "title": "清理任务夹具后统计",
+      "path": "images/after-font1-cache-cleared.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/cache-cleared.png",
+      "sha256": "449365108ef7999097c571c1f9632a6c02b64d9aa858bcf9e85510b21a42330b"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C02",
+      "title": "未设置与长路径",
+      "path": "images/after-font1-folders-empty-long.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/folders-empty-long.png",
+      "sha256": "2222e745cfac8eaa319f543d330de7355593b465c3d42390bfde79421e977d39"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C02",
+      "title": "目录选择器",
+      "path": "images/after-font1-folders-picker.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/folders-picker.png",
+      "sha256": "3ebbf51fdf0e19063bdfc6f09889dbb32637a53d78ee43851ec5f39dc096dba8"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C02",
+      "title": "遥控器长按清除",
+      "path": "images/after-font1-folders-clear-confirm.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/folders-clear-confirm.png",
+      "sha256": "be221d920acaf650aa864e8f60966d0bb0efbddfbe67b714c9d658235e3864ca"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C03",
+      "title": "手动模式",
+      "path": "images/after-font1-themes-manual.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/themes-manual.png",
+      "sha256": "b460395bcf1395c9d95a9fa8f9947b5e39047e3091fef86744a769dc8979c68d"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C03",
+      "title": "跟随系统",
+      "path": "images/after-font1-themes-system.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/themes-system.png",
+      "sha256": "4c16ba07fbf922d9b8f39e5ec6aabe04fb11115b0a53eb5551010b97f4adecef"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C03",
+      "title": "重启确认可取消",
+      "path": "images/after-font1-themes-restart-confirm.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/themes-restart-confirm.png",
+      "sha256": "a17eb130f5599ce4c0fd3ef4c23fec28c254bb9ccb778b835f3cc3b27edc6230"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C04",
+      "title": "全部真实许可首条",
+      "path": "images/after-font1-license-first.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/license-first.png",
+      "sha256": "92c6a8f335e37c4ffce9ea9ce6f36859395538940b9dc3e9839240d6d18e9514"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C04",
+      "title": "超长许可开头",
+      "path": "images/after-font1-license-long-start.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/license-long-start.png",
+      "sha256": "ad4d4fd07d1408c3b103c56faf84de984b3ab9910ebbeae7cb27839e766c7c58"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C04",
+      "title": "超长许可内部滚动",
+      "path": "images/after-font1-license-long-scrolled.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/license-long-scrolled.png",
+      "sha256": "dec59220d1c917fc818e749d159b489d6f2b6d0badb2bffdc12bc730355d6c41"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C04",
+      "title": "完整列表末条",
+      "path": "images/after-font1-license-last.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/license-last.png",
+      "sha256": "34468482d0641aad8602e47dbddc9b6d92207f182c0dfde241e2a70749eb5c89"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C05",
+      "title": "第一个网站焦点",
+      "path": "images/after-font1-about-first-link.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/about-first-link.png",
+      "sha256": "a508c0a6f0eb77c8df25ce14e88c9c9ec6c84d5df704a0ad1ec0a6087ece9d44"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C05",
+      "title": "第二个网站焦点与滚动",
+      "path": "images/after-font1-about-second-link.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/about-second-link.png",
+      "sha256": "1c24d02f4deb264346d774fd75760fdf479043d688cbadadaefc9b5dc9d08b60"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C01",
+      "title": "普通主题 · 缓存管理",
+      "path": "images/after-font1-light-CacheManagerActivity.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/light-CacheManagerActivity.png",
+      "sha256": "c6c0038e87dd7c438123c3575c98a870a58f4dd760c9929493dda1fa87e36668"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C02",
+      "title": "普通主题 · 常用目录",
+      "path": "images/after-font1-light-CommonlyFolderActivity.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/light-CommonlyFolderActivity.png",
+      "sha256": "32dda4a0626e8c8d320bbce50818d88e3f07c77569d963629c34b6494fb7eb0e"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C03",
+      "title": "普通主题 · 深色模式",
+      "path": "images/after-font1-light-SwitchThemesActivity.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/light-SwitchThemesActivity.png",
+      "sha256": "75d2a4f9349aa9bb3fe0657ea0ec67a4361b8f0639779769eb3587e11653827b"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C04",
+      "title": "普通主题 · 开源许可",
+      "path": "images/after-font1-light-LicenseActivity.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/light-LicenseActivity.png",
+      "sha256": "b5f957757e3ee0393b5631655f30a2a571ee6f5b2fc4d730d7d18a5841c11990"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C05",
+      "title": "普通主题 · 关于与归属",
+      "path": "images/after-font1-light-AboutUsActivity.png",
+      "source": ".tmp/a03-containers/after-normal/a03-verification/light-AboutUsActivity.png",
+      "sha256": "c298c48ec375395c3a409ade448e9314a6b99edceb7ad0a108f52e800b73c3de"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C06",
+      "title": "展开资料与长简介",
+      "path": "images/after-font1-detail-intro-long.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-intro-long.png",
+      "sha256": "5116e883e52d1d1b51b13e0ac5a3ffff2ddbc75f8d04f1ba286c5b9973ab9253"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C06",
+      "title": "无简介",
+      "path": "images/after-font1-detail-intro-empty.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-intro-empty.png",
+      "sha256": "6600643333736ee2c621ee7e48ddb10cbaba2438a3e8327d8f24b65a876adc48"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C07",
+      "title": "独立行内图标焦点",
+      "path": "images/after-font1-detail-episode-action.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-episode-action.png",
+      "sha256": "6dc579f395f35df94c642cc56e4b179bc74a17f063b93cb6ad9b4d9e3cd52cff"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C07",
+      "title": "批量全选",
+      "path": "images/after-font1-detail-episodes-mark.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-episodes-mark.png",
+      "sha256": "6505ac9a6fcd05deca5a5b08928dcebedee9434fd81b8632f4d9debe6e19542b"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C07",
+      "title": "批量反选",
+      "path": "images/after-font1-detail-episodes-inverted.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-episodes-inverted.png",
+      "sha256": "2b4cff1dd83340a6136357edfe61085b7ccfa9ebdc148c0a12cad962f4059c0c"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C07",
+      "title": "空分集",
+      "path": "images/after-font1-detail-episodes-empty.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-episodes-empty.png",
+      "sha256": "380b29d0ce091dea63c683826a20ed834cda32c9873b22da0640c2868f641820"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C08",
+      "title": "三列滚动到底",
+      "path": "images/after-font1-detail-recommend-scroll.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-recommend-scroll.png",
+      "sha256": "42c82acfc637856054bac8d10b475dfb744ad4fa394f9721b89dd45c6ee0de61"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C08",
+      "title": "遥控器返回页签",
+      "path": "images/after-font1-detail-recommend-return.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-recommend-return.png",
+      "sha256": "6b8dc7238d6142846f62bd502625085f03bb5a27d2bb1e4db2c321bfe3ec7ddf"
+    },
+    {
+      "stage": "after",
+      "font": "1",
+      "group": "C08",
+      "title": "无推荐时保留原两页签规则",
+      "path": "images/after-font1-detail-no-recommend-tab.png",
+      "source": ".tmp/a03-containers/after-normal/ui-remaining-verification/detail-no-recommend-tab.png",
+      "sha256": "3c9081e01b491091a745c2bd602a52310e1499470d6404d012ede5612c4fdae9"
+    },
+    {
+      "stage": "before",
+      "font": "1.3",
+      "group": "C01",
+      "title": "缓存管理",
+      "path": "images/before-font13-CacheManagerActivity.png",
+      "source": ".tmp/a03-containers/before-font130/ui-polish-verification/CacheManagerActivity.png",
+      "sha256": "4988c4563c15e6ea617f22044ac39095a1d49aa1f678d0ed2fe1bd2f0afa4f50"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C01",
+      "title": "缓存管理",
+      "path": "images/after-font13-CacheManagerActivity.png",
+      "source": ".tmp/a03-containers/after-font130/ui-polish-verification/CacheManagerActivity.png",
+      "sha256": "ecc1d13ff4311d80937b4dac0374b0671eac103003dc11a7a3dc83ed7e5558b2"
+    },
+    {
+      "stage": "before",
+      "font": "1.3",
+      "group": "C02",
+      "title": "常用目录",
+      "path": "images/before-font13-CommonlyFolderActivity.png",
+      "source": ".tmp/a03-containers/before-font130/ui-polish-verification/CommonlyFolderActivity.png",
+      "sha256": "e5abbb911c4762d6ef804f03abd0b5f4a193b935b5928d2b1ce37ddf9aca7250"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C02",
+      "title": "常用目录",
+      "path": "images/after-font13-CommonlyFolderActivity.png",
+      "source": ".tmp/a03-containers/after-font130/ui-polish-verification/CommonlyFolderActivity.png",
+      "sha256": "5078eb0f0b1dd8b49e789a49a70713ac33189b2f7cd541061b9f05eaf0fef550"
+    },
+    {
+      "stage": "before",
+      "font": "1.3",
+      "group": "C03",
+      "title": "深色模式",
+      "path": "images/before-font13-SwitchThemesActivity.png",
+      "source": ".tmp/a03-containers/before-font130/ui-polish-verification/SwitchThemesActivity.png",
+      "sha256": "08eacf4c8cf8de81d83b0290cfe8a216109a37441210fa4fb09199c246b99790"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C03",
+      "title": "深色模式",
+      "path": "images/after-font13-SwitchThemesActivity.png",
+      "source": ".tmp/a03-containers/after-font130/ui-polish-verification/SwitchThemesActivity.png",
+      "sha256": "c6cfb44a6aee3e43165b1a457a2e0d19bdcefd4abe7ac9798868fcfe5a40f6f3"
+    },
+    {
+      "stage": "before",
+      "font": "1.3",
+      "group": "C04",
+      "title": "开源许可",
+      "path": "images/before-font13-LicenseActivity.png",
+      "source": ".tmp/a03-containers/before-font130/ui-polish-verification/LicenseActivity.png",
+      "sha256": "59234723102394f6ae7c3d101cc74d79c57be00debd460a33697aaaabdeb8acb"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C04",
+      "title": "开源许可",
+      "path": "images/after-font13-LicenseActivity.png",
+      "source": ".tmp/a03-containers/after-font130/ui-polish-verification/LicenseActivity.png",
+      "sha256": "acaa0b2295f1a2cfbcdaf52e51525c3c163167d1e57844fbb1b9075075e0aae5"
+    },
+    {
+      "stage": "before",
+      "font": "1.3",
+      "group": "C05",
+      "title": "关于与归属",
+      "path": "images/before-font13-AboutUsActivity.png",
+      "source": ".tmp/a03-containers/before-font130/ui-polish-verification/AboutUsActivity.png",
+      "sha256": "7c1bbd26339248401d62b3def4bfabc78e9e4aa794a78ece2fbd2c15fee72ab1"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C05",
+      "title": "关于与归属",
+      "path": "images/after-font13-AboutUsActivity.png",
+      "source": ".tmp/a03-containers/after-font130/ui-polish-verification/AboutUsActivity.png",
+      "sha256": "6ddf7b58361c8e3869e2f4d4d53f52e4adee592c58832e1bb9966d59e5aa01c9"
+    },
+    {
+      "stage": "before",
+      "font": "1.3",
+      "group": "C06",
+      "title": "番剧简介",
+      "path": "images/before-font13-detail-intro.png",
+      "source": ".tmp/a03-containers/before-font130/ui-remaining-verification/detail-intro.png",
+      "sha256": "d79575e41c21b99300ee13e3a438230a8349673b0c556b697cedfaf54ddc416a"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C06",
+      "title": "番剧简介",
+      "path": "images/after-font13-detail-intro.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-intro.png",
+      "sha256": "c2bd3f451f83c9ab920d8bc44c840e4a3dfe9725999311b538238f9a1f8b515d"
+    },
+    {
+      "stage": "before",
+      "font": "1.3",
+      "group": "C07",
+      "title": "番剧分集",
+      "path": "images/before-font13-detail-episodes.png",
+      "source": ".tmp/a03-containers/before-font130/ui-remaining-verification/detail-episodes.png",
+      "sha256": "21f1926a190691e2d07c91cd2c196ba4ccc0d683a9939baebeceb4e7ed1da6bd"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C07",
+      "title": "番剧分集",
+      "path": "images/after-font13-detail-episodes.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-episodes.png",
+      "sha256": "9e37e3dea18c61f5c7d8569f60c3688bf452c5fec33d1176ac82b90c71ca62d5"
+    },
+    {
+      "stage": "before",
+      "font": "1.3",
+      "group": "C08",
+      "title": "相关作品",
+      "path": "images/before-font13-detail-recommend.png",
+      "source": ".tmp/a03-containers/before-font130/ui-remaining-verification/detail-recommend.png",
+      "sha256": "a83b32fe48a89c3439c25300bcb8bb76eababb2051f9366078a829f0200aa0c6"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C08",
+      "title": "相关作品",
+      "path": "images/after-font13-detail-recommend.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-recommend.png",
+      "sha256": "c33413e63336d0664e78dd0fe3b63c6fe3c6cb4d13a7dfdec652fc4a02a01195"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C01",
+      "title": "系统缓存确认／取消",
+      "path": "images/after-font13-cache-system-confirm.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/cache-system-confirm.png",
+      "sha256": "b488db670a889b74a99ea568abf3a05eb8a2dcbbbfb962b8145634a3729f15bc"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C01",
+      "title": "延时确认与取消",
+      "path": "images/after-font13-cache-delayed-confirm.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/cache-delayed-confirm.png",
+      "sha256": "69b29418f3f272e2e2c16b06b669d29a35e14307a0be6c37894ced2867ea6721"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C01",
+      "title": "截图缓存行焦点",
+      "path": "images/after-font13-cache-screenshot-row.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/cache-screenshot-row.png",
+      "sha256": "da669b419fb57a966dfebbc83cceb3de4247594d41dffd98fc48385749ce1c6a"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C01",
+      "title": "清理任务夹具后统计",
+      "path": "images/after-font13-cache-cleared.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/cache-cleared.png",
+      "sha256": "c7590b54200d0e415e056466bdb370d4e528436bf827431ab210f81589f1facb"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C02",
+      "title": "未设置与长路径",
+      "path": "images/after-font13-folders-empty-long.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/folders-empty-long.png",
+      "sha256": "23b0fcc70b80dfc2e2cc7b0d7ff41efa5957afc20f6d873c488520533ddb1dbd"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C02",
+      "title": "目录选择器",
+      "path": "images/after-font13-folders-picker.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/folders-picker.png",
+      "sha256": "675863dc260089a7a2c0d4177f1b0605cc92b4586e238860a2f669bf1444fb18"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C02",
+      "title": "遥控器长按清除",
+      "path": "images/after-font13-folders-clear-confirm.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/folders-clear-confirm.png",
+      "sha256": "ce3377b33f2b23fd0d8cdd2dc6c5bb201baedb20873dd6c47005b832e8b9e068"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C03",
+      "title": "手动模式",
+      "path": "images/after-font13-themes-manual.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/themes-manual.png",
+      "sha256": "c6cfb44a6aee3e43165b1a457a2e0d19bdcefd4abe7ac9798868fcfe5a40f6f3"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C03",
+      "title": "跟随系统",
+      "path": "images/after-font13-themes-system.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/themes-system.png",
+      "sha256": "7535b125a3eb549315dcf1cc0d8f816497564e5d2a9bea001c2ea168071f4aa7"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C03",
+      "title": "重启确认可取消",
+      "path": "images/after-font13-themes-restart-confirm.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/themes-restart-confirm.png",
+      "sha256": "605c412d6a7a873b2a85278fc780d95f52f6e428a3b2ef5fb469accedc52e8ad"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C04",
+      "title": "全部真实许可首条",
+      "path": "images/after-font13-license-first.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/license-first.png",
+      "sha256": "35ab2dd9e77ebba9fa5108e58c8be3760aa11ecb11742db2188f2f69a692651b"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C04",
+      "title": "超长许可开头",
+      "path": "images/after-font13-license-long-start.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/license-long-start.png",
+      "sha256": "9b11f37e77fbd2445b163bff18c37a23d02cca3c6b4ef4b85d227a58c74054f4"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C04",
+      "title": "超长许可内部滚动",
+      "path": "images/after-font13-license-long-scrolled.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/license-long-scrolled.png",
+      "sha256": "1e53272df132825aa62cce074dfa514f0393e987fe40f2eb62e6f9b0b3919a2a"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C04",
+      "title": "完整列表末条",
+      "path": "images/after-font13-license-last.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/license-last.png",
+      "sha256": "f9a8d7411db501dce605de6737af1bb3ed2c175a4822d62c0c19a7003f03fe08"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C05",
+      "title": "第一个网站焦点",
+      "path": "images/after-font13-about-first-link.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/about-first-link.png",
+      "sha256": "6ddf7b58361c8e3869e2f4d4d53f52e4adee592c58832e1bb9966d59e5aa01c9"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C05",
+      "title": "第二个网站焦点与滚动",
+      "path": "images/after-font13-about-second-link.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/about-second-link.png",
+      "sha256": "6446e18e157d7b1f2b374f8dfa1fb3ea0625ffac20d50b55f4b683c4671637b7"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C01",
+      "title": "普通主题 · 缓存管理",
+      "path": "images/after-font13-light-CacheManagerActivity.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/light-CacheManagerActivity.png",
+      "sha256": "6e9679583d29f66beb9646f879bffbacbd964d018e5ea5815f59330924a9c88c"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C02",
+      "title": "普通主题 · 常用目录",
+      "path": "images/after-font13-light-CommonlyFolderActivity.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/light-CommonlyFolderActivity.png",
+      "sha256": "14e3bfe0cccdbaf3f2fd291ed83df6d46b9509b83930b13461a7098148bdb159"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C03",
+      "title": "普通主题 · 深色模式",
+      "path": "images/after-font13-light-SwitchThemesActivity.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/light-SwitchThemesActivity.png",
+      "sha256": "223ff338708a8e3afd2890c81e46fda15cea1323b3b0865ebba51dbd587e5c5f"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C04",
+      "title": "普通主题 · 开源许可",
+      "path": "images/after-font13-light-LicenseActivity.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/light-LicenseActivity.png",
+      "sha256": "24bf96621bda2de051537f23e4168ec01b11d1cb54a59126cbd846bd252247c1"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C05",
+      "title": "普通主题 · 关于与归属",
+      "path": "images/after-font13-light-AboutUsActivity.png",
+      "source": ".tmp/a03-containers/after-font130/a03-verification/light-AboutUsActivity.png",
+      "sha256": "e7d305f90812dd23afdbc9e0541c5d8dc2ce476f56365dc1627df46b1030637d"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C06",
+      "title": "展开资料与长简介",
+      "path": "images/after-font13-detail-intro-long.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-intro-long.png",
+      "sha256": "94bbbb01fde889b38d74929df4326e9d9a7b9156684d9f3d0f3b04346f18be3a"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C06",
+      "title": "无简介",
+      "path": "images/after-font13-detail-intro-empty.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-intro-empty.png",
+      "sha256": "42951be445f40ad3c340afaa5c5cebfbe460e254523e086b0dec4380cef2c00f"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C07",
+      "title": "独立行内图标焦点",
+      "path": "images/after-font13-detail-episode-action.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-episode-action.png",
+      "sha256": "e0c30df5a7cbadb048fcd96eb74dc9c824c187868a0dbcca371e46589ef8f035"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C07",
+      "title": "批量全选",
+      "path": "images/after-font13-detail-episodes-mark.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-episodes-mark.png",
+      "sha256": "c7d687fc25e16ff69986f019b471c44981516c77c13aa1dd276b6943db5d24af"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C07",
+      "title": "批量反选",
+      "path": "images/after-font13-detail-episodes-inverted.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-episodes-inverted.png",
+      "sha256": "94fd41ee3fbcde32afc73912ba94ace697a8ed7a090246e2ae78c6215b62a425"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C07",
+      "title": "空分集",
+      "path": "images/after-font13-detail-episodes-empty.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-episodes-empty.png",
+      "sha256": "5cffdb806432411af5ac1140a784babf5c02d6f19c12f97f4f0186f664d7dfd3"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C08",
+      "title": "三列滚动到底",
+      "path": "images/after-font13-detail-recommend-scroll.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-recommend-scroll.png",
+      "sha256": "af43dc743f9f7e719a20b2138df47d8ecf16c03a368def4eb3833bdeb54e7c39"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C08",
+      "title": "遥控器返回页签",
+      "path": "images/after-font13-detail-recommend-return.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-recommend-return.png",
+      "sha256": "1d91c9b233028fc0da1d614e51290fc326cb9b8279d0c864c099caa899370696"
+    },
+    {
+      "stage": "after",
+      "font": "1.3",
+      "group": "C08",
+      "title": "无推荐时保留原两页签规则",
+      "path": "images/after-font13-detail-no-recommend-tab.png",
+      "source": ".tmp/a03-containers/after-font130/ui-remaining-verification/detail-no-recommend-tab.png",
+      "sha256": "fbb6e009d6a909693be69999da344dae1028bc70f93ffc701932268220256aab"
+    }
+  ],
+  "sourceSha256": {
+    "anime_component/src/main/res/drawable/cinema_episode_row.xml": "f91dc4b7e887ef5025b0fe194edf1c5accec2d0a4fd879313983e934e15d2212",
+    "anime_component/src/main/res/layout/activity_anime_detail.xml": "9114538e97f21dda4a6aad8dee70d54985923532447dc842a516f3c4c8b390db",
+    "anime_component/src/main/res/layout/item_anime_episode.xml": "744d033ca795b75479bcc99054cdd9dcc90ec57933d559fc8ecd395e535f7d6a",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/ContainerHierarchyInstrumentedTest.kt": "1c37e68ef074df265e9534091e43eb0f02e0b8dc83d8ee10aa0f3ee8c7c088b2",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/RemainingUiInstrumentedTest.kt": "6a9d50f44c248e13959d6130ffc8ece3218ef9bd7c7907d3de15f07604d9a7f4",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/UiPolishInstrumentedTest.kt": "0c44b951f27ebee6f113e5fa85904ed5bc1003c08e1fc418836a3877973af8d0",
+    "user_component/src/main/res/drawable/cache_row_background.xml": "58b03f9320772b87c868f52922b4d0c75d9adce8f3bd01180a6a7615e055bf81",
+    "user_component/src/main/res/drawable/license_reading_focus.xml": "cdd474a87dde13fd8f019848150a911b311ed387aa5c9225dd79fa670309f9ae",
+    "user_component/src/main/res/layout/activity_about_us.xml": "209c7ee0b615538243059e5953410e016c92f34ec9ba0b3ad6c0252e45bbc971",
+    "user_component/src/main/res/layout/activity_cache_manager.xml": "ff2c9d15bd115dfc0224feff27b101fdae33e2d036b6cc6bc8bcac7d55609782",
+    "user_component/src/main/res/layout/activity_commonly_folder.xml": "df56e13db121d0c8f129a13373d4f294755e3f51cab2815ccf90b73f3cdf67d8",
+    "user_component/src/main/res/layout/activity_license.xml": "5dc5a12fc9f8e3ffb6255f6e022c8d5db99be5bb3d59b387003f0b9473af1f5b",
+    "user_component/src/main/res/layout/activity_switch_themes.xml": "fb417d6d5db79dc3d6fe81ae95de7116fe0aa305b8197d974ac65ae089249957",
+    "user_component/src/main/res/layout/item_cache_type.xml": "053fe0f26f376ea7624f239cb43fa775d38e61c4f636f27d6850dfc1a7206de3",
+    "user_component/src/main/res/layout/item_license.xml": "2a8d5acac95b82a81296db754be556fd1cc134f9911968960db5ec9562c3f94a",
+    "user_component/src/main/res/values-night/license_colors.xml": "1a88a5918f6acca8297bfbfacba6cde05b84b9deeabb4bff9d66fc4e788ba060",
+    "user_component/src/main/res/values/license_colors.xml": "1226e2cedc11561f7b7ae57b718e30530c38c0bc945bb9432f914daf3ace5f95"
+  },
+  "apkSha256": {
+    ".tmp/a03-containers/baseline-main.apk": "30e1c3a1f710f50b0e98b23aa18a5819f4311dec99e3062c1d084061022bf2fe",
+    ".tmp/a03-containers/baseline-test.apk": "dbd4a54dbc48e642939c8b097fc7cbec8ff066cf206d0f46f66aec5d4c58afaa",
+    ".tmp/a03-containers/pre-about-main.apk": "722cf636cb731c31cd143d4e739b36b38f5613784be1296ebe5676f132ac28cc",
+    ".tmp/a03-containers/pre-about-test.apk": "79d118d6c0cf2aad2ea164a2fc2cfe8bc35f893bcecad7a0e13bdb26384fbe4f",
+    ".tmp/a03-containers/final-main.apk": "af7803807b4d56b10f731932abb3ed53916f9fefa81b0aa7206f1d5139ab8b1a",
+    ".tmp/a03-containers/final-test.apk": "39e93cfda55c881592e8df1f9e92d31f65db139a970a6cacbceb54c020d446cc"
+  },
+  "prototypeSha256": "e97c8e03791c1e5e76ca4ffc826b1177a4730934ad6f7c03901bc9a7bc1f1783",
+  "logs": [
+    {
+      "path": "evidence/about-focus-final-gate.log",
+      "sha256": "75c0b83edce907b178d91252534b06acdc23cf454dcaa68df4fb67640b150196"
+    },
+    {
+      "path": "evidence/about-focus-green.log",
+      "sha256": "1255399a2157e58c0a5e5b4743e5819a97107e111fc1536a0d0cff6046329cc0"
+    },
+    {
+      "path": "evidence/about-focus-red-build.log",
+      "sha256": "50390fd01142661cf2c34ac12758e463b525f694b1d9b0cb23876c327bee2f07"
+    },
+    {
+      "path": "evidence/about-focus-red.log",
+      "sha256": "77ef0310a9e0f2ca19c935455bc1527b74daf6052a197237826d7ed3c1b1358c"
+    },
+    {
+      "path": "evidence/after-native-font130.log",
+      "sha256": "03de68acd10ea0cee58e9768cfc4c5ffe38b672b98feb39a20263cefd42df91a"
+    },
+    {
+      "path": "evidence/after-native-normal.log",
+      "sha256": "e665cee92739abc749ee045ff6a7738e3402436c7e78bcf423dd4b35f191026d"
+    },
+    {
+      "path": "evidence/baseline-build.log",
+      "sha256": "09a8c2631b9a9ceb5d514aadfb527d778c4cabd941e1addf232e29dffb7d7793"
+    },
+    {
+      "path": "evidence/baseline-fixed.log",
+      "sha256": "d16fb6204ed968e8b95088d6c87c9b57d7223c4b2c711789df3216a159807018"
+    },
+    {
+      "path": "evidence/baseline-native-font130.log",
+      "sha256": "e1ecba5c6f590ab8ad5dbf817218288c4728e338db7d08f37c4b6643db5afebd"
+    },
+    {
+      "path": "evidence/baseline-native-normal.log",
+      "sha256": "3197cac62ea56c6e9872dab4e1290bbc2e264f9e47a10f14ff89fcf0764f2326"
+    },
+    {
+      "path": "evidence/baseline-reading-font130.log",
+      "sha256": "eef3478ba720561dc698fda45df51988e267c931a638c9367ad97ddefdf7b6e9"
+    },
+    {
+      "path": "evidence/baseline-reading-ready-font130.log",
+      "sha256": "3ce0a785c34aba2ec78fc6f699ef89d8bbe40acb5dd6ae8c8d44580b41bbf2eb"
+    },
+    {
+      "path": "evidence/baseline-retry.log",
+      "sha256": "d52806dad6b52ef5201633937a0d33c2150b6f957270f66b60fc45137ac77748"
+    },
+    {
+      "path": "evidence/baseline-tools-normal.log",
+      "sha256": "608562d1b1cecca56d7b51388d6bead80522bee95c807aff312993a20ddaabab"
+    },
+    {
+      "path": "evidence/cleanup.log",
+      "sha256": "1eb8f5763e19277190fd984d788b650db8ae7c3bec2f69502e3eb07362712429"
+    },
+    {
+      "path": "evidence/debug-build-fixed.log",
+      "sha256": "4ae50a550a2ff0f6c5c7c2f53fd9acd2e837c3c53147632fb54a18079bec8d20"
+    },
+    {
+      "path": "evidence/debug-build.log",
+      "sha256": "bcdf75edc6341d2453f447f004a981b0c8e268a61754802f610691cc544a1417"
+    },
+    {
+      "path": "evidence/device-metrics.log",
+      "sha256": "413f2865a37cb880b56e5339ae190685c7c3b33ba4abfe1b19b225136d3a29fe"
+    },
+    {
+      "path": "evidence/font-path-and-detail-green.log",
+      "sha256": "d3b701ffecb54bf22cdbeb9bb61f29d35967a3c4674a232e5beb5713170af575"
+    },
+    {
+      "path": "evidence/font-path-green-build.log",
+      "sha256": "c1d6376df03cfa905bbc70d5063176906433109966b79d89c9dbf7f5727b25c8"
+    },
+    {
+      "path": "evidence/font-path-red-and-detail.log",
+      "sha256": "314c61be01fb8e45c6b3dd004d4068c2eb167dbf09cdf286285ca6f64967fdb1"
+    },
+    {
+      "path": "evidence/font-path-red-build.log",
+      "sha256": "8ed71d66d907900c62d7b8751425f249861ccc21c6c7e53d39d4797d9672596f"
+    },
+    {
+      "path": "evidence/format-applied.log",
+      "sha256": "3ad44da2077ca37059ceeb95bc027a5f5db5e26ee2fb0ae8ccbc181404d6bb43"
+    },
+    {
+      "path": "evidence/gates-final.log",
+      "sha256": "d23baf07183a465c16f5196fe35c4f6799e1988ada3c711240e6206d25bdb901"
+    },
+    {
+      "path": "evidence/gates-first.log",
+      "sha256": "5caf767d48edf42a3a879366416f2b0a70605ccd6049c8d5d88c5154e119c2b7"
+    },
+    {
+      "path": "evidence/installed-apk-identity.log",
+      "sha256": "a33980cc71b68f2f595efef5d48f110ad73eb007f86e3eff73366141ce6f7e69"
+    },
+    {
+      "path": "evidence/jvm-format-final.log",
+      "sha256": "42ea293b2280c07e9bfc56a9ca73f167885b878a237d65292935bc05e3a686ec"
+    },
+    {
+      "path": "evidence/native-complete-font130.log",
+      "sha256": "b7cd17df7d75a4029fdfb2221eaf10fdff757f8b246fc25a9041e87835d9064f"
+    },
+    {
+      "path": "evidence/native-complete-normal.log",
+      "sha256": "d08c48f21281f675dddc749344e2836b664fd3bfe5ca8a601c68ac39d57ff303"
+    },
+    {
+      "path": "evidence/native-final-font130.log",
+      "sha256": "8e22277f51336850f3050fbeee08f8b1e8181c278b327f411c487152dca14ea0"
+    },
+    {
+      "path": "evidence/native-final-normal.log",
+      "sha256": "d1704800ab598b3e426a1f473a77928af801f3665ce8fa0b2a90a28b6d056252"
+    },
+    {
+      "path": "evidence/pre-about-installed-apk-identity.log",
+      "sha256": "a0b78eb2990204c348822aa7af9186de7c2012b009af7d3ef2e11c61e11e865f"
+    },
+    {
+      "path": "evidence/regression-cinema-fixture-ready-normal.log",
+      "sha256": "5a470c7a625608e5fe6f73810eb94e21f97b52b36b43d219f66a1c2d4d87e224"
+    },
+    {
+      "path": "evidence/regression-complete-font130.log",
+      "sha256": "33a594f3d0da2ac440dce20d5561bb9740f6abc495476522fe10eb6db48eaa84"
+    },
+    {
+      "path": "evidence/regression-complete-normal.log",
+      "sha256": "bfd34396bc337039ddf0ba14269dcc586e733ac2b5ba81d3c0bc539b9f536a1f"
+    },
+    {
+      "path": "evidence/regression-final-normal.log",
+      "sha256": "03eec8e5d2011544a46c3b11fad62c2f9d8a84d3a8fd73f4952a5f6c99b9941c"
+    },
+    {
+      "path": "evidence/regression-font130-fixture-ready.log",
+      "sha256": "f7c4c6abe832feca188a375f853e5efd9b00afaa3eeffbcf3e11d1a01fafffa7"
+    },
+    {
+      "path": "evidence/regression-font130.log",
+      "sha256": "14aeb01fb9e341fd647d920740035a72312c76b94dc5520793eda72a9908602f"
+    },
+    {
+      "path": "evidence/test-final-build.log",
+      "sha256": "aac16f408d3067d673903bb02ca0cd97d28e348d5b3765650132308e2dd7aa60"
+    }
+  ],
+  "jvmTotals": {
+    "tests": 516,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  },
+  "nativeRuns": [
+    {
+      "log": "evidence/native-complete-normal.log",
+      "fontScale": "1.0",
+      "scope": "A03 tools, detail children, empty detail and both About actions",
+      "passedTests": [
+        "emptyDetailChildrenKeepTabsAndReadingReachable",
+        "detailChildrenScrollSortMarkAndReturnUsingRemote",
+        "deepPagesHaveVisibleFocusAndReturnWithRemote",
+        "directorySelectionSwitchAndLongPressClearPersist",
+        "lightThemeToolsKeepContentAndVisibleActions",
+        "aboutActionsScrollFullyIntoViewWithRemote",
+        "cacheConfirmationDelayCancellationAndStatisticsRemainUsable",
+        "themeSavePersistsAndRestartCancellationKeepsTheSavedChoice",
+        "longLicenseScrollsBeforeFocusLeavesAndAllEntriesRemainComplete"
+      ],
+      "failedTests": [],
+      "runner": "com.okamihoro.ddplaytv.debug.test/androidx.test.runner.AndroidJUnitRunner"
+    },
+    {
+      "log": "evidence/native-complete-font130.log",
+      "fontScale": "1.3",
+      "scope": "The same nine A03 cases",
+      "passedTests": [
+        "emptyDetailChildrenKeepTabsAndReadingReachable",
+        "detailChildrenScrollSortMarkAndReturnUsingRemote",
+        "deepPagesHaveVisibleFocusAndReturnWithRemote",
+        "directorySelectionSwitchAndLongPressClearPersist",
+        "lightThemeToolsKeepContentAndVisibleActions",
+        "aboutActionsScrollFullyIntoViewWithRemote",
+        "cacheConfirmationDelayCancellationAndStatisticsRemainUsable",
+        "themeSavePersistsAndRestartCancellationKeepsTheSavedChoice",
+        "longLicenseScrollsBeforeFocusLeavesAndAllEntriesRemainComplete"
+      ],
+      "failedTests": [],
+      "runner": "com.okamihoro.ddplaytv.debug.test/androidx.test.runner.AndroidJUnitRunner"
+    },
+    {
+      "log": "evidence/regression-complete-normal.log",
+      "fontScale": "1.0",
+      "scope": "Cinema/BACK/settings, A02 selectors/subtitles, player episode/panel stack and both real kernels",
+      "passedTests": [
+        "stackChangesKeepOneDimLayerAndClearItForOtherPanelFormsAndRelease",
+        "rightPanelKeepsBothRealKernelsPlayingAndReturnsByRemote",
+        "firstEpisodeSkipsDisabledPreviousAndPanelBackRestoresCaller",
+        "referencePagesSearchAndSettingsAreReachableWithRemote",
+        "primaryAndListSelectorsKeepContinuousFillAndPressedFocus",
+        "subtitleSelectionSurvivesFocusAndDisableRemainsAnAction",
+        "retainedSettingsPersistByDpadAndPcGroupingIsAbsent"
+      ],
+      "failedTests": [],
+      "runner": "com.okamihoro.ddplaytv.debug.test/androidx.test.runner.AndroidJUnitRunner"
+    },
+    {
+      "log": "evidence/regression-complete-font130.log",
+      "fontScale": "1.3",
+      "scope": "A02 selectors and both real kernels with right panel/BACK",
+      "passedTests": [
+        "rightPanelKeepsBothRealKernelsPlayingAndReturnsByRemote",
+        "primaryAndListSelectorsKeepContinuousFillAndPressedFocus"
+      ],
+      "failedTests": [],
+      "runner": "com.okamihoro.ddplaytv.debug.test/androidx.test.runner.AndroidJUnitRunner"
+    }
+  ],
+  "installedApkIdentity": "evidence/installed-apk-identity.log",
+  "nativeImageCount": 92,
+  "comparisonCount": 16,
+  "limits": [
+    "Anime data and covers use local fixtures; the APK renders actual Android views.",
+    "Cache totals include task screenshot output and can differ; screenshots are not retouched.",
+    "Folder groups and license spacing intentionally differ. At font 1.3, shortcut rows now grow to fit text.",
+    "No recommendations retains the original behavior of hiding its tab, instead of adding an empty page.",
+    "No physical-TV operation, live account/marking acceptance, release, version change, staging or commit."
+  ]
+}

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="license_reading_focus_fill">#ECECF0</color>
+    <color name="license_body_text">#65656E</color>
+</resources>

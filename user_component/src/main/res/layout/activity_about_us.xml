@@ -60,12 +60,11 @@
             <androidx.core.widget.NestedScrollView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:padding="24dp"
-                android:background="@drawable/cinema_surface">
+                android:layout_weight="1">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:padding="24dp"
                     android:orientation="vertical">
                     <TextView
                         android:id="@+id/app_describe_tv"

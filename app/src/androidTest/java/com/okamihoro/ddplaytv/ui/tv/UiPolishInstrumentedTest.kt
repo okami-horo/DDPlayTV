@@ -79,6 +79,11 @@ class UiPolishInstrumentedTest {
                 await(scenario) { it.hasWindowFocus() }
                 key(KeyEvent.KEYCODE_DPAD_DOWN)
                 await(scenario) { it.currentFocus?.isShown == true }
+                await(scenario) {
+                    val focus = it.currentFocus ?: return@await false
+                    val visible = Rect()
+                    focus.getGlobalVisibleRect(visible) && visible.height() >= focus.height - 2 && visible.width() >= focus.width - 2
+                }
                 scenario.onActivity { assertFullyVisible(requireNotNull(it.currentFocus)) }
                 scenario.onActivity {
                     assertNull(it.findViewById<androidx.appcompat.widget.Toolbar>(com.xyoye.core_ui_component.R.id.toolbar)?.navigationIcon)

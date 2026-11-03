@@ -1,0 +1,82 @@
+{
+  "verifiedAt": "2026-11-02T18:45:39.767353+08:00",
+  "base": "5324dd7f3c501f149238a83db9f36bc86bab075f",
+  "buildCommand": "scripts/dev-env/gradlew-local.bat :app:assembleRelease --offline",
+  "javaToolOptions": "-Djdk.net.unixdomain.tmpdir=E:/Project/DDPlayTV/.tmp/wh-jvm -Djava.io.tmpdir=E:/Project/DDPlayTV/.tmp/wh-jvm",
+  "buildResult": "BUILD SUCCESSFUL in 3m 24s",
+  "buildLogSha256": "ef73aa577b50aa5e4afab51760f0f146ee44570a31e0a0ace52d4f39d94a82c6",
+  "versionsSourceSha256": "92d8f9a0905f5a0e5ae8dbd59fe9000d256794fd5dd6c16e28f21cbe42c54d15",
+  "validatedA03InputsUnchanged": {
+    "anime_component/src/main/res/drawable/cinema_episode_row.xml": "f91dc4b7e887ef5025b0fe194edf1c5accec2d0a4fd879313983e934e15d2212",
+    "anime_component/src/main/res/layout/activity_anime_detail.xml": "9114538e97f21dda4a6aad8dee70d54985923532447dc842a516f3c4c8b390db",
+    "anime_component/src/main/res/layout/item_anime_episode.xml": "744d033ca795b75479bcc99054cdd9dcc90ec57933d559fc8ecd395e535f7d6a",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/ContainerHierarchyInstrumentedTest.kt": "1c37e68ef074df265e9534091e43eb0f02e0b8dc83d8ee10aa0f3ee8c7c088b2",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/RemainingUiInstrumentedTest.kt": "6a9d50f44c248e13959d6130ffc8ece3218ef9bd7c7907d3de15f07604d9a7f4",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/UiPolishInstrumentedTest.kt": "0c44b951f27ebee6f113e5fa85904ed5bc1003c08e1fc418836a3877973af8d0",
+    "user_component/src/main/res/drawable/cache_row_background.xml": "58b03f9320772b87c868f52922b4d0c75d9adce8f3bd01180a6a7615e055bf81",
+    "user_component/src/main/res/drawable/license_reading_focus.xml": "cdd474a87dde13fd8f019848150a911b311ed387aa5c9225dd79fa670309f9ae",
+    "user_component/src/main/res/layout/activity_about_us.xml": "209c7ee0b615538243059e5953410e016c92f34ec9ba0b3ad6c0252e45bbc971",
+    "user_component/src/main/res/layout/activity_cache_manager.xml": "ff2c9d15bd115dfc0224feff27b101fdae33e2d036b6cc6bc8bcac7d55609782",
+    "user_component/src/main/res/layout/activity_commonly_folder.xml": "df56e13db121d0c8f129a13373d4f294755e3f51cab2815ccf90b73f3cdf67d8",
+    "user_component/src/main/res/layout/activity_license.xml": "5dc5a12fc9f8e3ffb6255f6e022c8d5db99be5bb3d59b387003f0b9473af1f5b",
+    "user_component/src/main/res/layout/activity_switch_themes.xml": "fb417d6d5db79dc3d6fe81ae95de7116fe0aa305b8197d974ac65ae089249957",
+    "user_component/src/main/res/layout/item_cache_type.xml": "053fe0f26f376ea7624f239cb43fa775d38e61c4f636f27d6850dfc1a7206de3",
+    "user_component/src/main/res/layout/item_license.xml": "2a8d5acac95b82a81296db754be556fd1cc134f9911968960db5ec9562c3f94a",
+    "user_component/src/main/res/values-night/license_colors.xml": "1a88a5918f6acca8297bfbfacba6cde05b84b9deeabb4bff9d66fc4e788ba060",
+    "user_component/src/main/res/values/license_colors.xml": "1226e2cedc11561f7b7ae57b718e30530c38c0bc945bb9432f914daf3ace5f95"
+  },
+  "stagedBlobIdentitiesUnchanged": true,
+  "artifacts": [
+    {
+      "path": "app/build/outputs/apk/release/ddplaytv_v4.2.5_universal-release.apk",
+      "bytes": 102396148,
+      "sha256": "edc3fffe6ff6988c30083d946466dc9845c1e2126417afc7e8afd7e97f8e9ce0",
+      "versionName": "4.2.5",
+      "versionCode": 72,
+      "applicationId": "com.okamihoro.ddplaytv",
+      "debuggable": false,
+      "abis": [
+        "arm64-v8a",
+        "armeabi-v7a"
+      ],
+      "signatureV2Verified": true,
+      "certificateSha256": "e1b82b2732cb93db0c809d21e2f0c90ef3bdd4958c2fc89ef217c082a070cdc6",
+      "signatureLog": "release-4.2.5-universal-signature.log"
+    },
+    {
+      "path": "app/build/outputs/apk/release/ddplaytv_v4.2.5_arm64-v8a-release.apk",
+      "bytes": 68326338,
+      "sha256": "356a00281cde0e0d7defed663b905aa978c43c2e0e44464f90460eb7e0517472",
+      "versionName": "4.2.5",
+      "versionCode": 72,
+      "applicationId": "com.okamihoro.ddplaytv",
+      "debuggable": false,
+      "abis": [
+        "arm64-v8a"
+      ],
+      "signatureV2Verified": true,
+      "certificateSha256": "e1b82b2732cb93db0c809d21e2f0c90ef3bdd4958c2fc89ef217c082a070cdc6",
+      "signatureLog": "release-4.2.5-arm64-v8a-signature.log"
+    },
+    {
+      "path": "app/build/outputs/apk/release/ddplaytv_v4.2.5_armeabi-v7a-release.apk",
+      "bytes": 64562678,
+      "sha256": "82b2c4d3695eff6a417f35a455bdf2757e075daa96a73e8f6767d245028d1314",
+      "versionName": "4.2.5",
+      "versionCode": 72,
+      "applicationId": "com.okamihoro.ddplaytv",
+      "debuggable": false,
+      "abis": [
+        "armeabi-v7a"
+      ],
+      "signatureV2Verified": true,
+      "certificateSha256": "e1b82b2732cb93db0c809d21e2f0c90ef3bdd4958c2fc89ef217c082a070cdc6",
+      "signatureLog": "release-4.2.5-armeabi-v7a-signature.log"
+    }
+  ],
+  "runtimeEvidence": "Reuse the unchanged A03 inputs and earlier JVM/DPAD checks; no new runtime test or device operation.",
+  "signingConfiguration": "Existing release configuration used its debug-signing fallback; release credentials were absent.",
+  "limits": [
+    "No APK installation, physical-TV operation, staging or commit."
+  ]
+}

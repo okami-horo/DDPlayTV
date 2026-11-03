@@ -1,0 +1,1028 @@
+[
+  {
+    "report": "anime_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.anime_component.ExampleUnitTest.xml",
+    "sha256": "104616b773e62e1fdac1489ad88d9fd3c4a605d3e7816e437dee967ccfc275be",
+    "name": "com.xyoye.anime_component.ExampleUnitTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "anime_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.anime_component.ui.activities.anime_history.AnimeHistoryFilterTest.xml",
+    "sha256": "db021f8f1e992509b822d75d8f590d7077cdaa57ce916bee2473400a9dd4b058",
+    "name": "com.xyoye.anime_component.ui.activities.anime_history.AnimeHistoryFilterTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "anime_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.anime_component.ui.activities.AnimeCollectionViewModelTest.xml",
+    "sha256": "b1b3c0ef30a8cfa4fe46e088d11c23feaf602644a2bbae41fdec7306e5180929",
+    "name": "com.xyoye.anime_component.ui.activities.AnimeCollectionViewModelTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "anime_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.anime_component.ui.fragment.anime_episode.AnimeEpisodeFragmentViewModelTest.xml",
+    "sha256": "efd3459b4c2e3d74d2986184629437cb7e1a716d0de5a5bec6556656b4519f17",
+    "name": "com.xyoye.anime_component.ui.fragment.anime_episode.AnimeEpisodeFragmentViewModelTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "app/build/test-results/testDebugUnitTest/TEST-com.okamihoro.ddplaytv.ExampleUnitTest.xml",
+    "sha256": "d687662e7d3e3fddac71a055317f93ccfb101df822fc90eaf03c51df081e7826",
+    "name": "com.okamihoro.ddplaytv.ExampleUnitTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_contract_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.playback.handoff.PlaybackContractTest.xml",
+    "sha256": "1ae441e9961934e0a368974898eb37e34096e37a1c443bc648601793f96e28bd",
+    "name": "com.xyoye.common_component.playback.handoff.PlaybackContractTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_contract_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.playback.handoff.SeriesPlaybackDescriptorTest.xml",
+    "sha256": "b3893cb7b5e75545c026a4f04559c706231492b47e7adcfc0d7520b5ad642b16",
+    "name": "com.xyoye.common_component.playback.handoff.SeriesPlaybackDescriptorTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_database_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.database.dao.PlayHistoryLegacyClaimTest.xml",
+    "sha256": "93101607a1afd5d3bb3f07ef2bd01f6090bc5277e9dd728d2cdf33c297472b67",
+    "name": "com.xyoye.common_component.database.dao.PlayHistoryLegacyClaimTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_database_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.database.migration.RoomSchemaMigrationGateTest.xml",
+    "sha256": "9b1399bffea8334867db2897feae4c52ce0ff46a4c338a2bc2d927ebc4d62eac",
+    "name": "com.xyoye.common_component.database.migration.RoomSchemaMigrationGateTest",
+    "tests": 14,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.BuglyReporterTest.xml",
+    "sha256": "914314d22ef44d6c49c1f72e7af7b67104aefa93a02bc58083c8f6cfcc7b6047",
+    "name": "com.xyoye.common_component.log.BuglyReporterTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.http.HttpLogArchiveExporterTest.xml",
+    "sha256": "744fe9f0001eefc73317c3fc7dce4e938715e86a64b354584ea189a733bf150b",
+    "name": "com.xyoye.common_component.log.http.HttpLogArchiveExporterTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.http.HttpLogServerSegmentAtTest.xml",
+    "sha256": "d7c7fd97dd1c8ed6437d21a608b655912aa1c0c23706862fcd2caefeff50025e",
+    "name": "com.xyoye.common_component.log.http.HttpLogServerSegmentAtTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.http.HttpLogServerSegmentsTest.xml",
+    "sha256": "45cd2d0db32988757c9a5be4cc4757d2a996a0f19b663216bca4066c50e5ca41",
+    "name": "com.xyoye.common_component.log.http.HttpLogServerSegmentsTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.LogConfigTableTest.xml",
+    "sha256": "918a9b4996598312ffaa82001da61daeaf10de47e6f26056aa773547abbf1185",
+    "name": "com.xyoye.common_component.log.LogConfigTableTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.LogFacadeTest.xml",
+    "sha256": "c23bc523df8f5469c074a07777565a344d6bf414ed6552db1e13e77d94057d06",
+    "name": "com.xyoye.common_component.log.LogFacadeTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.LogFormatterHighSignalTest.xml",
+    "sha256": "8f125fa282821b7e9bfb5987908422e97988775ac7edf42d09ba6fe3cef565fa",
+    "name": "com.xyoye.common_component.log.LogFormatterHighSignalTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.LogFormatterTest.xml",
+    "sha256": "17a35917aa308dc8e8a7ab9ce13415155bd3e61ab0279f556ef7a47b85437c06",
+    "name": "com.xyoye.common_component.log.LogFormatterTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.LoggingTestBase.xml",
+    "sha256": "0adb50e0648c81a10a80ed4fad72081716f91545f0464ce4c3772c8f85c542e6",
+    "name": "com.xyoye.common_component.log.LoggingTestBase",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.LogLevelTest.xml",
+    "sha256": "d3918e886d1177772fc2d3f2f37ac336005e0686bdf5bc227ab8b5db00c7d63e",
+    "name": "com.xyoye.common_component.log.LogLevelTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.LogPolicyTest.xml",
+    "sha256": "89e5bbbde252fbd6758e0d3887777a27b167c1327f8a5a73ce217b0bcb72e611",
+    "name": "com.xyoye.common_component.log.LogPolicyTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.LogSamplingRuleTest.xml",
+    "sha256": "a615611db04fb09bfcc634d9ec505aa5f4ff5ace8a15bcb5b63d5e5ab286a2e0",
+    "name": "com.xyoye.common_component.log.LogSamplingRuleTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.LogWriterHttpSinkTest.xml",
+    "sha256": "0cf244fc53beb018925b389c2ce28a916515e489a0850d2953362a74d9d70b4e",
+    "name": "com.xyoye.common_component.log.LogWriterHttpSinkTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.log.privacy.SensitiveDataSanitizerTest.xml",
+    "sha256": "1c6eec31598c71bbb97018256065e69975deaec1c0757f77d646978f14b12812",
+    "name": "com.xyoye.common_component.log.privacy.SensitiveDataSanitizerTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_log_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.telemetry.subtitle.SubtitleTelemetryRepositoryTest.xml",
+    "sha256": "740411c8969b5e0270a2b39550dc2b884e7ab7ce1dd61088c9018e08f11a7650",
+    "name": "com.xyoye.common_component.telemetry.subtitle.SubtitleTelemetryRepositoryTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_metadata_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.metadata.MediaNameParserTest.xml",
+    "sha256": "106f9a099db55e57e797f096704542bcf1afcd4086cf6cc06d2905df7c3555d0",
+    "name": "com.xyoye.common_component.metadata.MediaNameParserTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_metadata_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.metadata.MetadataPlaybackRequestsTest.xml",
+    "sha256": "db65862f031c198b81c846b564481bcf22cc3d7d9e922aaf064d7beec17ebfe5",
+    "name": "com.xyoye.common_component.metadata.MetadataPlaybackRequestsTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_metadata_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.metadata.MetadataRepositoryTest.xml",
+    "sha256": "1cda09514bc9714c3aaac2b12caa445c839bfaf0991058ed1ecb6b7c28510e1e",
+    "name": "com.xyoye.common_component.metadata.MetadataRepositoryTest",
+    "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_metadata_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.metadata.PlaybackMetadataIndexerTest.xml",
+    "sha256": "c03dd0557abe8f1e8c80abdd26481ab4bb9cbb24294a6524f3cf394415c99810",
+    "name": "com.xyoye.common_component.metadata.PlaybackMetadataIndexerTest",
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_network_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.network.cloud115.Cloud115ModelsMoshiTest.xml",
+    "sha256": "c6ce3c8e2911e364f625735a1355f1e7cc9c846502c4b6e4a35801beca1ae0ab",
+    "name": "com.xyoye.common_component.network.cloud115.Cloud115ModelsMoshiTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_network_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.network.config.ApiSecurityConfigTest.xml",
+    "sha256": "e970c278eb244fdd8327ff8a58c6a79a41cc625b9c8e825eb940e289bc8327a6",
+    "name": "com.xyoye.common_component.network.config.ApiSecurityConfigTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_network_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.network.DanDanCommentApiTest.xml",
+    "sha256": "1970ab13f517c7f8e47ab3e42e2ed79b801ecf25ae558f0171a700fce7711715",
+    "name": "com.xyoye.common_component.network.DanDanCommentApiTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_network_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.network.helper.DanDanAuthHashTest.xml",
+    "sha256": "2458bbcdc6e6e572c2f639c299b5569345868a76a6cdd028f7e1543e08301ff0",
+    "name": "com.xyoye.common_component.network.helper.DanDanAuthHashTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_network_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.network.open115.Open115ModelsMoshiTest.xml",
+    "sha256": "4935aabe8d703282dda98f20a0eb21ad7ce1f20e7a7b871cecc18e0dc15eef0b",
+    "name": "com.xyoye.common_component.network.open115.Open115ModelsMoshiTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_network_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.network.RetrofitManagerProviderTest.xml",
+    "sha256": "5f43da360d8ddfdefdee28d819d55f1eb7d83a44ac94d6eb53a1aeea505214d7",
+    "name": "com.xyoye.common_component.network.RetrofitManagerProviderTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_network_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.network.tmdb.TmdbClientTest.xml",
+    "sha256": "d1fc8fce4d0820fcf80f00c0237a2e17115d5f58df96a9dcd42b9630aa1f1ebc",
+    "name": "com.xyoye.common_component.network.tmdb.TmdbClientTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_network_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.utils.MoshiCodegenCompatibilityTest.xml",
+    "sha256": "ab6d076bbe7eb3f3825b2789d42d1440691d8631e7ab21a27a4396deaa915ce8",
+    "name": "com.xyoye.common_component.utils.MoshiCodegenCompatibilityTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.source.handoff.PlaybackSourceResolverTest.xml",
+    "sha256": "d00700789b9ab84e58e287f5b8f82ac215212bad7ee3982daf64fa8683d98aad",
+    "name": "com.xyoye.common_component.source.handoff.PlaybackSourceResolverTest",
+    "tests": 20,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.source.PlaybackHistoryRestorationTest.xml",
+    "sha256": "4366240f995cfc5b5b198c16441d8f6ac60fcd85c72a3da019fad2ee95f68476",
+    "name": "com.xyoye.common_component.source.PlaybackHistoryRestorationTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.source.StorageVideoSourceFactoryTest.xml",
+    "sha256": "729522b218efdbade6969ea8e721960b8bc5ac71fe1851c918a81252e5de45d6",
+    "name": "com.xyoye.common_component.source.StorageVideoSourceFactoryTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.catalog.CatalogProtocolTest.xml",
+    "sha256": "1f4582a8fe6de75035a3994df304dcec5160f3b0597c658e44efe4163c74c844",
+    "name": "com.xyoye.common_component.storage.catalog.CatalogProtocolTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.catalog.CatalogSourceReaderTest.xml",
+    "sha256": "becda559daf2e47265d534044627bc52f04f164656d383449def4e05f2d8ed1e",
+    "name": "com.xyoye.common_component.storage.catalog.CatalogSourceReaderTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.cloud115.auth.Cloud115TokenParserTest.xml",
+    "sha256": "44d77c2980ec2c2072134b712c01e8fd1c0b979d57c95a32ca6dea57cae100b1",
+    "name": "com.xyoye.common_component.storage.cloud115.auth.Cloud115TokenParserTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.cloud115.Cloud115StorageQualityTest.xml",
+    "sha256": "0a4294058459cc35367ccbfa37d16501a8ccd5894be0baa14adc2953d65c8914",
+    "name": "com.xyoye.common_component.storage.cloud115.Cloud115StorageQualityTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.cloud115.crypto.M115CryptoTest.xml",
+    "sha256": "f2495078a76cb1a2a4fd29d031e41985e405242df4cce6878f55f7b876092f57",
+    "name": "com.xyoye.common_component.storage.cloud115.crypto.M115CryptoTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.file.helper.CoroutineAwaiterTest.xml",
+    "sha256": "0e87fb3712d804eb653cc49c396ff714ee9274838abd25a687315a1681353221",
+    "name": "com.xyoye.common_component.storage.file.helper.CoroutineAwaiterTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.StorageBrowsingFailureTest.xml",
+    "sha256": "9025bae28936364b8dc0c0ea767e30db317764b66ebc498f62b647b32efe919f",
+    "name": "com.xyoye.common_component.storage.StorageBrowsingFailureTest",
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.transport.FtpPlaybackTransportTest.xml",
+    "sha256": "25b257a7935a9a399f5a4c03129b63551431538f95fea28b154320bc9cc92fd3",
+    "name": "com.xyoye.common_component.storage.transport.FtpPlaybackTransportTest",
+    "tests": 13,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.transport.HttpPlaybackTransportTest.xml",
+    "sha256": "0262cf007d7a158e493963d380900a2cbc2d942e4b0633a72b652616f0db3ff7",
+    "name": "com.xyoye.common_component.storage.transport.HttpPlaybackTransportTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.transport.PlaybackTransportFactoryTest.xml",
+    "sha256": "cd2c55ced68e8907bcaa68f3f11e8920adb1bfe1ce085d2fca65b9c7b5f72a47",
+    "name": "com.xyoye.common_component.storage.transport.PlaybackTransportFactoryTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.transport.PlaybackTransportLeaseTest.xml",
+    "sha256": "b82bec49291ed7436faf5eb9ccf213940448acf154706999ce03da3475c958df",
+    "name": "com.xyoye.common_component.storage.transport.PlaybackTransportLeaseTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.transport.PlaybackTransportProtocolIntegrationTest.xml",
+    "sha256": "67b665156e98c5e2e35b01f0b62ddf811d318cfe8dfe8a9bb9ce0bd6a10bfd04",
+    "name": "com.xyoye.common_component.storage.transport.PlaybackTransportProtocolIntegrationTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.transport.PlaybackTransportRoutingTest.xml",
+    "sha256": "1596b0ca2dfaa857955abd6b6b4dfa46f4c1f3dd6f036ee44e3ba23a85b7a666",
+    "name": "com.xyoye.common_component.storage.transport.PlaybackTransportRoutingTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.storage.transport.SmbPlaybackTransportTest.xml",
+    "sha256": "cec830dc6f804a9e1f6fa72a789f5d7268e94b3d3a4db14475625d8e45b780fc",
+    "name": "com.xyoye.common_component.storage.transport.SmbPlaybackTransportTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.utils.danmu.DanmuFinderImplMatchTest.xml",
+    "sha256": "38c68665549987a04302ee85ab5f095e762e7acc2c2af50794a0b0a54cc43dff",
+    "name": "com.xyoye.common_component.utils.danmu.DanmuFinderImplMatchTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.utils.danmu.DanmuMatchCoordinatorTest.xml",
+    "sha256": "de3a350acd1dce08562df7de8ef96dc83630d9e628c0af31c9b437a3a4fb4de6",
+    "name": "com.xyoye.common_component.utils.danmu.DanmuMatchCoordinatorTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.utils.danmu.helper.DanmuHashCalculatorTest.xml",
+    "sha256": "0484ac632706e58b1329831970d8dc3d59f14cdf034c4f6939d7684e8db03b52",
+    "name": "com.xyoye.common_component.utils.danmu.helper.DanmuHashCalculatorTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.utils.danmu.query.DanmuQueryContentTest.xml",
+    "sha256": "9f4b792d6144a7cf8c7178871047999a87ef5137909aa9e11383f0d5bd8b3c9a",
+    "name": "com.xyoye.common_component.utils.danmu.query.DanmuQueryContentTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.utils.danmu.query.DanmuQuerySearchResultTest.xml",
+    "sha256": "6ea4644b1c9f7ec6836c5703b903b1bee3e8943d1990d5d2b391cdbf3eb15015",
+    "name": "com.xyoye.common_component.utils.danmu.query.DanmuQuerySearchResultTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.utils.danmu.source.DanmuSourceMetadataTest.xml",
+    "sha256": "0bf8b9c05a43da1e4a7c4c3ee7dedb6385a39f4aba956d099a0fc62fccf5beda",
+    "name": "com.xyoye.common_component.utils.danmu.source.DanmuSourceMetadataTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.utils.seven_zip.SequentialOutStreamTest.xml",
+    "sha256": "cbd56efb6097a816e7b33151fb130691ec5f9458fe0d059dc3bdf7c4c487b987",
+    "name": "com.xyoye.common_component.utils.seven_zip.SequentialOutStreamTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_system_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.utils.CacheKeyMapperTest.xml",
+    "sha256": "2c4f6f9f45f0fe895f78683c30ffde331ce00098e6e8a48c2b33f6a2ee4cc284",
+    "name": "com.xyoye.common_component.utils.CacheKeyMapperTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_system_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.utils.EntropyUtilsTest.xml",
+    "sha256": "7ede9715abab81954affacd6d6a43a4e4dae9c4c8406ab297068fff3238a1633",
+    "name": "com.xyoye.common_component.utils.EntropyUtilsTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_ui_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.adapter.AdapterDiffCallBackSafetyTest.xml",
+    "sha256": "ceda194fcacc85334df43fc583dd7fca15107adf8fb3bad8d392cb94c8509106",
+    "name": "com.xyoye.common_component.adapter.AdapterDiffCallBackSafetyTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_ui_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.adapter.AdapterDiffCreatorTest.xml",
+    "sha256": "0227e01963eaefde74355101f45bdb8ec1e6bc69fbeaa35f10a001b8eeaf85a8",
+    "name": "com.xyoye.common_component.adapter.AdapterDiffCreatorTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_ui_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.focus.TvUiDefaultsTest.xml",
+    "sha256": "3c6a57244ca658ae3c721d5e938d92b87d1cd14fb89339e930a0e72eaab10219",
+    "name": "com.xyoye.common_component.focus.TvUiDefaultsTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_ui_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.playback.PlaybackEntryRequestsTest.xml",
+    "sha256": "590d35d024d445065838769bf4f6fd452dfa9cdde8a240c427252a8b4f015558",
+    "name": "com.xyoye.common_component.playback.PlaybackEntryRequestsTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "core_ui_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.common_component.preference.MappingPreferenceDataStoreTest.xml",
+    "sha256": "24e49d119dfd226a8029d3e78871b74584d7baa68f384f3b5634beec943c5053",
+    "name": "com.xyoye.common_component.preference.MappingPreferenceDataStoreTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "data_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.data_component.data.DanmuDataTest.xml",
+    "sha256": "d7e85db6ba6a3f9823cb169be2c6c04c97a51300ee822b0bbd1f55144834be8c",
+    "name": "com.xyoye.data_component.data.DanmuDataTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "data_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.data_component.data.DanmuMatchModelsTest.xml",
+    "sha256": "00cf9b07a1d8db18022716adf23b105cca7f737ba51df02cdcc79b0eb7aab528",
+    "name": "com.xyoye.data_component.data.DanmuMatchModelsTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "data_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.data_component.enums.PlayerTypeTest.xml",
+    "sha256": "ed946dc85777af1e781bf3cbad7fa0eca050b3b94f39ed40232b59258365baee",
+    "name": "com.xyoye.data_component.enums.PlayerTypeTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "data_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.data_component.ExampleUnitTest.xml",
+    "sha256": "117955019484ff3fce0ba0efa562ae5c67236e974717950f6f739e9e39b216f6",
+    "name": "com.xyoye.data_component.ExampleUnitTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "local_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.local_component.ExampleUnitTest.xml",
+    "sha256": "7c316758bded568cd7448273cd2412e7abbd9c1e6f25b64a78b298dde43365ac",
+    "name": "com.xyoye.local_component.ExampleUnitTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "local_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.local_component.ui.metadata.MetadataHistoryTest.xml",
+    "sha256": "d7cc5a4124eeb7a097970c28d0dccf7023febdde0c44f7e6ae89dfa8e6252b7e",
+    "name": "com.xyoye.local_component.ui.metadata.MetadataHistoryTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "local_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.local_component.utils.EpisodeUtilsTest.xml",
+    "sha256": "644dc53a2223612298c8b57d7f7106727e744956e0c12b61c3ab0d6e03ecf52f",
+    "name": "com.xyoye.local_component.utils.EpisodeUtilsTest",
+    "tests": 14,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.open_cc.OpenCCJvmLoadTest.xml",
+    "sha256": "9ea0bb20d97985d1bd6797b989c46fc14c30156640d2df12d26e174faa25bec2",
+    "name": "com.xyoye.open_cc.OpenCCJvmLoadTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.controller.base.TvVideoControllerTest.xml",
+    "sha256": "d5b500449d5367b98aa98451fe15a4b20f9eeb14d5e33d61955361cb53c649c7",
+    "name": "com.xyoye.player.controller.base.TvVideoControllerTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.controller.setting.DanmuMaxLineCommitCoordinatorTest.xml",
+    "sha256": "334740aa075bd7ce3b93fb10b2ee630b7298201ba9364c95ba75bb1370232a95",
+    "name": "com.xyoye.player.controller.setting.DanmuMaxLineCommitCoordinatorTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.controller.setting.SearchDanmuViewTest.xml",
+    "sha256": "68476d70ac871741843a857d38251f8c0797f4a78aee1ad975d3078f2b988ad6",
+    "name": "com.xyoye.player.controller.setting.SearchDanmuViewTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.controller.video.LoadingViewTest.xml",
+    "sha256": "4660cac67a0d7577f8dd71275e4b40ba8983e5293ab3b3eb5e1497a23d22aadf",
+    "name": "com.xyoye.player.controller.video.LoadingViewTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.DanDanVideoPlayerHistoryTest.xml",
+    "sha256": "d462ebbf40d7541dcbfaeffbecf5308e17def3e55e063ea3f21560b098911247",
+    "name": "com.xyoye.player.DanDanVideoPlayerHistoryTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.kernel.impl.media3.LibassSsaStreamDecoderTest.xml",
+    "sha256": "a630eded9887052b51eeec250c9b9a81c37c3a0b21dbc622ca9d808920ed7a18",
+    "name": "com.xyoye.player.kernel.impl.media3.LibassSsaStreamDecoderTest",
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.kernel.impl.media3.Media3PreparedCallbackTest.xml",
+    "sha256": "d050572b922fb9abba318d76d99a7ee24ef8576096f6cdd9ae745f808d1425ab",
+    "name": "com.xyoye.player.kernel.impl.media3.Media3PreparedCallbackTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.kernel.impl.media3.Media3SubtitleFormatClassifierTest.xml",
+    "sha256": "fce33f5978126a89bd8551c531d5d7c5d72cffe4a63bd3b078161010c5db9da2",
+    "name": "com.xyoye.player.kernel.impl.media3.Media3SubtitleFormatClassifierTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.kernel.impl.media3.Media3SubtitleInputTest.xml",
+    "sha256": "e4b72b32a5bd85f6cb7b2d0b97368312b2211a418bca9ffd68b82f7026d3e608",
+    "name": "com.xyoye.player.kernel.impl.media3.Media3SubtitleInputTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.subtitle.backend.SwitchableEmbeddedSubtitleSinkTest.xml",
+    "sha256": "ca71d75e000a12a20507cc46e377ef067248feedeb9d6293bbbbec9947f581cc",
+    "name": "com.xyoye.player.subtitle.backend.SwitchableEmbeddedSubtitleSinkTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.subtitle.gpu.LocalSubtitlePipelineApiTest.xml",
+    "sha256": "8dd9ad79cdf6aa6d089c5b8a4975e3ecb297231c5cdeab512704384374082d6d",
+    "name": "com.xyoye.player.subtitle.gpu.LocalSubtitlePipelineApiTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.subtitle.gpu.SubtitleLoadSheddingPolicyTest.xml",
+    "sha256": "dfd3fae1339e52521f5113caaf487a192f4dc876c672676c345c57e431d03b12",
+    "name": "com.xyoye.player.subtitle.gpu.SubtitleLoadSheddingPolicyTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player.surface.SurfaceFactoryRoutingTest.xml",
+    "sha256": "07f545c4a8eea49fbf3fd271f9746b7de520121600857de9f46bfc049e07206a",
+    "name": "com.xyoye.player.surface.SurfaceFactoryRoutingTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.ExampleUnitTest.xml",
+    "sha256": "384fd6c084a85c4cdaa4e50d644701fcad87609212a9f823c5194351b910e4ff",
+    "name": "com.xyoye.player_component.ExampleUnitTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.handoff.PlaybackHandoffStoreTest.xml",
+    "sha256": "dd493b128eb957c513d92349fe35c09c352cc05b09c313660ecf3e4f19c658c4",
+    "name": "com.xyoye.player_component.playback.handoff.PlaybackHandoffStoreTest",
+    "tests": 16,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.session.ActivePlaybackSessionTest.xml",
+    "sha256": "2e0af8a55b8fb5bff624625f6cf266a7958035ac6cd226871910b5a885cecb46",
+    "name": "com.xyoye.player_component.playback.session.ActivePlaybackSessionTest",
+    "tests": 19,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.session.PlaybackBackendLifecycleTest.xml",
+    "sha256": "cd11d257e918d3efa3644b0657434e0468358b968c687d019994d4cd1bc06f98",
+    "name": "com.xyoye.player_component.playback.session.PlaybackBackendLifecycleTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.session.PlaybackInternalRecoveryTest.xml",
+    "sha256": "f4ae714f55d0e15a6c7127e5f8aea2fd3e2ab80bc7a8e7635a3f581c4b8b5a41",
+    "name": "com.xyoye.player_component.playback.session.PlaybackInternalRecoveryTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.session.PlaybackQueueSessionTest.xml",
+    "sha256": "750a07bf8813da330391489ca97cb6cd491ce97ffe648e0f09d3128acac5e06e",
+    "name": "com.xyoye.player_component.playback.session.PlaybackQueueSessionTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.session.PlaybackRecoveryTest.xml",
+    "sha256": "9382230ffcee1b203e07419f9f1c0f8a5a8f9067fec80a17cc95340a2f79e5f6",
+    "name": "com.xyoye.player_component.playback.session.PlaybackRecoveryTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.session.PlaybackRequestServiceTest.xml",
+    "sha256": "b621a2ef49ed8d5e3797d1d4fdc033806f3f7c3085640474a09a134a335b7d86",
+    "name": "com.xyoye.player_component.playback.session.PlaybackRequestServiceTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.session.PlaybackRoutingTest.xml",
+    "sha256": "c9308ca3b458b14d28d26bdfaf08be27bcc0c25e64b61b6eb6ccc7cae3cd4f4b",
+    "name": "com.xyoye.player_component.playback.session.PlaybackRoutingTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.session.PlaybackSnapshotWriterTest.xml",
+    "sha256": "bf69717f18d9d018c87f524a1a2a02c6486c07a58b4c17bcdfc92ffa4536ab14",
+    "name": "com.xyoye.player_component.playback.session.PlaybackSnapshotWriterTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.session.PlaybackStateProjectionTest.xml",
+    "sha256": "dd9e6e83a5340eada90fa334474d4f6576e157c7401dc11034b8220e82bbd6ed",
+    "name": "com.xyoye.player_component.playback.session.PlaybackStateProjectionTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.playback.session.SeriesPlaybackSessionTest.xml",
+    "sha256": "dd90cc54f8f9da97074ed2e81dadbbb151a3755d91eddb16679f7a3842f99bbf",
+    "name": "com.xyoye.player_component.playback.session.SeriesPlaybackSessionTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.sequential.Media3SequentialPlaybackAdapterTest.xml",
+    "sha256": "bdb791017dc23f17932ebfc0b452504342798b4ec8bec64848965c95f0a4b61e",
+    "name": "com.xyoye.player_component.sequential.Media3SequentialPlaybackAdapterTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.sequential.SequentialPlaybackCoordinatorTest.xml",
+    "sha256": "b5271205aa08d6473d2cdc8e79c2cfa5f7aeda7f3d7bc41bf0435631d7c9bce7",
+    "name": "com.xyoye.player_component.sequential.SequentialPlaybackCoordinatorTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.ui.activities.player.BackPressExitConfirmGuardTest.xml",
+    "sha256": "cf95e1db499bc1e0c9bf447aa0976988ed48a0c0063185bbb6cf76906a491a2c",
+    "name": "com.xyoye.player_component.ui.activities.player.BackPressExitConfirmGuardTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.ui.activities.player.PendingPlaybackResumeTest.xml",
+    "sha256": "95007e80cf4c5e2eb575b9160d6b7893d17a3bf138fb1ad42a4f33369661e3f2",
+    "name": "com.xyoye.player_component.ui.activities.player.PendingPlaybackResumeTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.ui.activities.player.PlayerDanmuViewModelTest.xml",
+    "sha256": "e20965fdf8d0f6c32fa614e41efd89f54601419167ad94235f2688f1eabd3ae5",
+    "name": "com.xyoye.player_component.ui.activities.player.PlayerDanmuViewModelTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.player_component.wrapper.ControlWrapperQualityRegressionTest.xml",
+    "sha256": "da572a9b883ef9fc31228591b9ac746e0c8b90793d2480ac2ec3fbb87bf77591",
+    "name": "com.xyoye.player_component.wrapper.ControlWrapperQualityRegressionTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "player_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.subtitle.ExternalSubtitleManagerTest.xml",
+    "sha256": "2079c19e31fd778011fa984abd6c09987fee037abffe9fd276dda0e6e53d1843",
+    "name": "com.xyoye.subtitle.ExternalSubtitleManagerTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.storage_component.ExampleUnitTest.xml",
+    "sha256": "5e65bf5974159c5966bc49dbf14943035ccc141364b91543640372db45b72997",
+    "name": "com.xyoye.storage_component.ExampleUnitTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivityQualityTest.xml",
+    "sha256": "d837c1b530b97026108390b0a447386248f84da8ff7fd716613a2d8428e5c5c7",
+    "name": "com.xyoye.storage_component.ui.activities.storage_file.StorageFileActivityQualityTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.storage_component.ui.dialog.scanlogin.ScanErrorMapperTest.xml",
+    "sha256": "a2a5a22472351a15afb65e7f58310784bc0b0d56000fee4e1e61b20b35e601a1",
+    "name": "com.xyoye.storage_component.ui.dialog.scanlogin.ScanErrorMapperTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "storage_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.storage_component.ui.fragment.storage_file.StorageFileFragmentViewModelTest.xml",
+    "sha256": "93140d1e98241c921e8e51019cac71e5adb002d9355cb2f87aee8034fe46ae63",
+    "name": "com.xyoye.storage_component.ui.fragment.storage_file.StorageFileFragmentViewModelTest",
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "user_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.user_component.DeveloperPreferenceXmlParityTest.xml",
+    "sha256": "d14d5f73aeab508fe77b118c8141bfaeaf3e9027a9d730a0171f2290af7f3b25",
+    "name": "com.xyoye.user_component.DeveloperPreferenceXmlParityTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "user_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.user_component.ExampleUnitTest.xml",
+    "sha256": "534624283da5ca0b1d1cf8ac2ae0e8bef3c85b112e202654682a152eba557370",
+    "name": "com.xyoye.user_component.ExampleUnitTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "report": "user_component/build/test-results/testDebugUnitTest/TEST-com.xyoye.user_component.ui.fragment.personal.PersonalFragmentViewModelTest.xml",
+    "sha256": "da2473760fb797e855b23421b1fb7e95a2d369f1621016a7d85f678660805d2c",
+    "name": "com.xyoye.user_component.ui.fragment.personal.PersonalFragmentViewModelTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+]

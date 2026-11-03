@@ -126,7 +126,6 @@
                         android:id="@+id/viewpager"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:background="@drawable/cinema_surface"
                         tools:background="@color/transparent"
                         android:layout_weight="1"
                         android:padding="12dp" />

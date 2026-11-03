@@ -6,7 +6,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/background_item_press_corner"
+        android:background="@drawable/cache_row_background"
         android:gravity="center_vertical"
         android:orientation="vertical"
         android:padding="12dp"

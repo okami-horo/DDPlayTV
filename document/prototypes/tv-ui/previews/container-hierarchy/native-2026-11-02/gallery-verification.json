@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-02",
+  "url": "http://127.0.0.1:18106/document/prototypes/tv-ui/previews/container-hierarchy/native-2026-11-02/index.html",
+  "nativeImagesDecoded": 92,
+  "comparisonGroups": 16,
+  "afterStatesPerFont": {
+    "1.0": 38,
+    "1.3": 38
+  },
+  "fonts": [
+    "1.0",
+    "1.3"
+  ],
+  "linksChecked": 95,
+  "fullSizePopup": true,
+  "responsive760": true,
+  "pageErrors": [],
+  "sourceApkImageLogHashesMatch": true,
+  "indexSha256": "b354e2f0f88b2319bdaa5e3efee79f7fe6d82cd16677968e63a35ce82eb1c21e",
+  "verificationSha256": "91df6528299128f58bd6c6ff04b1582ae12c2f40e907880cd26e8e2db4db9359"
+}

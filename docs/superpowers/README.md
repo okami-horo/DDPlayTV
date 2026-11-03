@@ -6,6 +6,7 @@
 
 | 主题 | 设计依据 | 执行状态与证据 |
 | --- | --- | --- |
+| A03 容器与边框减层 | [已确认设计与 C01–C09](designs/2026-11-02-a03-container-hierarchy-design.md)；[设计重建](../../document/prototypes/tv-ui/container-hierarchy-prototype.html) | [已实施与本地验证](plans/2026-11-02-a03-container-hierarchy.md)：五工具页与番剧三个子页减层，修复大字体裁切及分集行内焦点；Debug／test、514 项 JVM／2 项既有跳过、lint／依赖／限定格式通过。普通／1.3 字体分批 16／11 项不同 AVD 场景通过；[92 张原生图与 16 组前后对比](../../document/prototypes/tv-ui/previews/container-hierarchy/native-2026-11-02/index.html)。实体电视／用户验收待完成，未提交 |
 | A06 播放器侧栏与背景层次 | [已确认设计与 M01–M11 要求](designs/2026-11-02-a06-player-panel-layers-design.md)；[交互参考](../../document/prototypes/tv-ui/player-panel-layers-prototype.html) | [已实施与本地验证](plans/2026-11-02-a06-player-panel-layers.md)：九个右侧模板、单一遮罩及普通设置行；Debug／test、514 项 JVM／2 项既有跳过、lint／依赖／限定格式通过，普通／1.3 字体 11／7 项不同 AVD 场景通过。[原生 APK 前后与状态画廊](../../document/prototypes/tv-ui/previews/player-panel-layers/native-2026-11-02/index.html)；未安装 TV，实机与用户验收待完成 |
 | 观看记录与媒体来源分离 | [复用首页、清理虚拟来源与兼容边界及执行记录](designs/2026-11-01-watch-history-source-separation-design.md) | 已按用户授权清理历史来源创建/导航与投屏入口残留，保留记录和投屏接收；Debug/test、505 项 JVM、Debug lint/依赖/限定格式与 11 项不同 AVD 场景通过。未安装 TV；首页展开和旧管理动作新入口未实施 |
 | 统一剧集播放队列 | [作品、单集、实际文件、版本及队列设计；Jellyfin/Plezy/Kodi 对比](designs/2026-11-01-series-playback-queue-design.md) | [整剧跨季、版本选择、恢复与 SQ01–SQ09 验证](plans/2026-11-01-series-playback-queue.md)：已实施，Debug/test 构建、505 项 JVM、lint/依赖/限定格式及 27 项 AVD 通过；2 项既有 JVM 跳过，真实云账号/物理电视验收另计 |

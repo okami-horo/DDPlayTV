@@ -1,0 +1,418 @@
+{
+  "date": "2026-11-02",
+  "revision": "5324dd7f3",
+  "scope": "Design only. Both sides are reconstructions using the same fixtures. No Android code, Gradle, AVD, or television operations.",
+  "canvas": {
+    "width": 1440,
+    "height": 810,
+    "referenceDensityDpi": 240
+  },
+  "cases": [
+    {
+      "page": "cache",
+      "state": "normal",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "cache",
+      "state": "normal",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "cache",
+      "state": "long",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "cache",
+      "state": "long",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "folders",
+      "state": "normal",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "folders",
+      "state": "normal",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "folders",
+      "state": "empty",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "folders",
+      "state": "empty",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "folders",
+      "state": "long",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "folders",
+      "state": "long",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "themes",
+      "state": "normal",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "themes",
+      "state": "normal",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "themes",
+      "state": "system",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "themes",
+      "state": "system",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "license",
+      "state": "normal",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "license",
+      "state": "normal",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "license",
+      "state": "long",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "license",
+      "state": "long",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "about",
+      "state": "normal",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "about",
+      "state": "normal",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "about",
+      "state": "long",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "about",
+      "state": "long",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "intro",
+      "state": "normal",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "intro",
+      "state": "normal",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "intro",
+      "state": "empty",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "intro",
+      "state": "empty",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "intro",
+      "state": "long",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "intro",
+      "state": "long",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "episodes",
+      "state": "normal",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "episodes",
+      "state": "normal",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "episodes",
+      "state": "empty",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "episodes",
+      "state": "empty",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "episodes",
+      "state": "long",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "episodes",
+      "state": "long",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "episodes",
+      "state": "mark",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "episodes",
+      "state": "mark",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "related",
+      "state": "normal",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "related",
+      "state": "normal",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "related",
+      "state": "empty",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "related",
+      "state": "empty",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "related",
+      "state": "long",
+      "font": "1",
+      "pairedContent": true
+    },
+    {
+      "page": "related",
+      "state": "long",
+      "font": "1.3",
+      "pairedContent": true
+    },
+    {
+      "page": "cache",
+      "font": "1.3",
+      "scrollInspected": true
+    },
+    {
+      "page": "folders",
+      "font": "1.3",
+      "scrollInspected": true
+    },
+    {
+      "page": "themes",
+      "font": "1.3",
+      "scrollInspected": true
+    },
+    {
+      "page": "license",
+      "font": "1.3",
+      "scrollInspected": true
+    },
+    {
+      "page": "about",
+      "font": "1.3",
+      "scrollInspected": true
+    },
+    {
+      "page": "intro",
+      "font": "1.3",
+      "scrollInspected": true
+    },
+    {
+      "page": "episodes",
+      "font": "1.3",
+      "scrollInspected": true
+    },
+    {
+      "page": "related",
+      "font": "1.3",
+      "scrollInspected": true
+    }
+  ],
+  "screenshots": [
+    "compare-cache-normal-font-1.png",
+    "compare-cache-long-font-1.3.png",
+    "compare-folders-normal-font-1.png",
+    "compare-folders-empty-font-1.3.png",
+    "compare-folders-long-font-1.3.png",
+    "compare-themes-normal-font-1.png",
+    "compare-themes-system-font-1.3.png",
+    "compare-license-normal-font-1.png",
+    "compare-license-long-font-1.3.png",
+    "compare-about-normal-font-1.png",
+    "compare-about-long-font-1.3.png",
+    "compare-intro-normal-font-1.png",
+    "compare-intro-empty-font-1.3.png",
+    "compare-intro-long-font-1.3.png",
+    "compare-episodes-normal-font-1.png",
+    "compare-episodes-empty-font-1.3.png",
+    "compare-episodes-long-font-1.3.png",
+    "compare-episodes-mark-font-1.3.png",
+    "compare-related-normal-font-1.png",
+    "compare-related-empty-font-1.3.png",
+    "compare-related-long-font-1.3.png",
+    "cache-before.png",
+    "cache-after.png",
+    "episodes-before.png",
+    "episodes-after.png",
+    "related-before.png",
+    "related-after.png",
+    "license-before.png",
+    "license-after.png"
+  ],
+  "scriptErrors": [],
+  "checks": [
+    "All eight pages and their 21 supported page/state combinations at font 1.0 and 1.3",
+    "Paired text is identical; control geometry identical except intentional group spacing in folders/license",
+    "Theme save, follow-system visibility, batch actions and separate icon focus retained",
+    "Tab/selection controls, URL reload, unsupported states disabled",
+    "760px responsive preview and no canvas horizontal overflow",
+    "1.3-font scroll containers exercised; this does not test Android scrolling"
+  ],
+  "sha256": {
+    "document/prototypes/tv-ui/container-hierarchy-prototype.html": "e97c8e03791c1e5e76ca4ffc826b1177a4730934ad6f7c03901bc9a7bc1f1783",
+    "user_component/src/main/res/layout/activity_cache_manager.xml": "3a8834f13e4f736548f1f7cad235407591d83b06b26a069423cbc0a9a1639712",
+    "user_component/src/main/res/layout/item_cache_type.xml": "ddae92662877d64c062f9274cb75a5004f6fc6136379f360a3ff18c1c6c06000",
+    "user_component/src/main/res/layout/activity_commonly_folder.xml": "6581c78a0715fbcf3db57125365a91e19c495867325a19dc21cc37ff778233a8",
+    "user_component/src/main/res/layout/activity_switch_themes.xml": "c46696b9506e3133c3ffcde1128a2db25c2a4c3e759d1c278f9f86c2e06d0eda",
+    "user_component/src/main/res/layout/activity_license.xml": "d42b8284abbee3e395538a42d6e4cfda729c6fc2315c3171c9c31a141028e208",
+    "user_component/src/main/res/layout/item_license.xml": "65ac0b925be7f7ab5022933ff258a25423b9ff748f7e59cee28e912fe3f82792",
+    "user_component/src/main/res/layout/activity_about_us.xml": "ae7e348560e1d846515d9e09f8fcd2e783a606cfce68e3b9fedbe7af208539c7",
+    "anime_component/src/main/res/layout/activity_anime_detail.xml": "5d4e63729d8c667ae790d27a372d4c7f9c29029e029f6dff87c6e41a243e6a2e",
+    "anime_component/src/main/res/layout/fragment_anime_intro.xml": "42d7c8db9170808a1549d93cf6a301e58470c28a59d0814737a561f2a9347544",
+    "anime_component/src/main/res/layout/fragment_anime_episode.xml": "c1fe633b715906d9031699134a6f20470101932aeee39c9ae6efde12baf8e465",
+    "anime_component/src/main/res/layout/item_anime_episode.xml": "0cf3961b186aa548bcf9bc6bfafbbacce2c4f58eb2348846f52b36a34f4f2694",
+    "anime_component/src/main/res/layout/fragment_anime_recommend.xml": "141d9ef8a40956bd39ac36f356ba80949093a1b6639c21d0825bb3ab3be01fb7",
+    "anime_component/src/main/res/layout/item_anime_cinema.xml": "4d279cc305062369ad4a50927300c117046925e7a68c2b27fb9ba9a87c14fc10",
+    "core_ui_component/src/main/res/drawable/cinema_card.xml": "a915af27faea3cdbbac5243ed157cb263a0870e47cd073aee5bef7207db6b944",
+    "core_ui_component/src/main/res/drawable/cinema_button.xml": "fcac1e7d3d4e176ec0bfc16bc63e46d95f8567c6fcc05ca3e43a790fa75a7341",
+    "core_ui_component/src/main/res/values/cinema.xml": "f70d89e928c7e7740f841324d3c1ebde4abe219d13b8b37394d61b8598eca8d6",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-cache-normal-font-1.png": "55ab2fd0b5dea0a3f410ce8a404c33f0a745d37776a6ac592fa0e1b51a442d2c",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-cache-long-font-1.3.png": "07607ce88de95aa0e7fba322412a4035035bd045e0e16b501009371368aea73c",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-folders-normal-font-1.png": "e25790ef6e6ab02f056a9ad996ec2fcb8ec5e4e5665272f849885858b05b35e1",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-folders-empty-font-1.3.png": "d698a09813e0283f349f62da15fa096171144341f07e9e858749411ecff91d43",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-folders-long-font-1.3.png": "0126ccf17efd5ad5bf5321807b9170f935dff74a89b7bf8a11a721157ccbddd5",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-themes-normal-font-1.png": "aca368e863bb37b647b932aa03322caa45d9aea164973ce1caf4418c39503f68",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-themes-system-font-1.3.png": "47b53ce2f02ec5c2a25e110451915ab799bb0e309f281b3596f6776256e9ef34",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-license-normal-font-1.png": "9c00e2c408ebb4617da27ca8e0dda2d2fc6b2124c120911c5c3a2c97e7500262",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-license-long-font-1.3.png": "4ad3982b31076056ac1baaa4f37d028a1e8d857e049df135e7a505f8abb9a3b5",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-about-normal-font-1.png": "2433c7710dfb96f4d07c782a0e3169ad3b0bb523cfd471b7cf1426800d640502",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-about-long-font-1.3.png": "55c696ee967b86c13d1c3b26ffb85383e2b3fcbe07a290956d3226502d15e1f9",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-intro-normal-font-1.png": "707c17ee3943c6eaf777a520a6984b71987f2f6ac83665d34e768daf74981211",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-intro-empty-font-1.3.png": "b115637ee9d0b98885a6d4f804aa37598be0a3323d03a851cd5439a454dea128",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-intro-long-font-1.3.png": "817ae9fa7b9e9e937e6052cf7f12ee690b32e4591d33cc876294166691672c12",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-episodes-normal-font-1.png": "da25b0652ceaee2cc63364db504fbe2303df9717062c0e474225ca772f9d84a6",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-episodes-empty-font-1.3.png": "06acd8823c31ae39e40c373bb401735fa0ac44c97184dddade170b1bc1f8bc57",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-episodes-long-font-1.3.png": "4d698e1566d8160eef279e037b38cceaf6c0397f721eb5f594cd97171b99858d",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-episodes-mark-font-1.3.png": "83963e8ea5c628e758a8e763757d2648c0819ade0b435e43e8b1edf9d85b7af1",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-related-normal-font-1.png": "a3275e99e9b7a6f1b72b3797314d64e168b9ff390bbb16afe954e2613bf4669b",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-related-empty-font-1.3.png": "0a3abde0f08effc594602cc9553ade3bd4f01ef07a08f8fbfc32fbf6826f1aee",
+    "document/prototypes/tv-ui/previews/container-hierarchy/compare-related-long-font-1.3.png": "39e201d1827ab3592bbb3e10509871f69d68fadb4bea3d2de94c6bbcf9edd2f0",
+    "document/prototypes/tv-ui/previews/container-hierarchy/cache-before.png": "6d83774843e8e3c32525fe84cac392741d8356c7f7e4de02fb3415bda1322950",
+    "document/prototypes/tv-ui/previews/container-hierarchy/cache-after.png": "15abf746abb781011f7e727f1b687cc4f5438e194c5aae6d81a0b44a8d392e0d",
+    "document/prototypes/tv-ui/previews/container-hierarchy/episodes-before.png": "1db910bfd8760bbe9fed14ee330d3693b722a02f1005862bb9feea564b4755e7",
+    "document/prototypes/tv-ui/previews/container-hierarchy/episodes-after.png": "3393553300528dd0355adb4ddf5fda89a06cbb9a200f52735df98551e44389a9",
+    "document/prototypes/tv-ui/previews/container-hierarchy/related-before.png": "aa27e33012d76c36986858179cac9562311caa138ea1b206fb7b6b42b9172938",
+    "document/prototypes/tv-ui/previews/container-hierarchy/related-after.png": "5c9aa9cce547fb61db2dbd3f27f47ba45350a91b71a9b1f845410c7d28eccd26",
+    "document/prototypes/tv-ui/previews/container-hierarchy/license-before.png": "d3d764770aafc2c89efed0976f4843d5cb4b779969279d4d74c4719c454398e2",
+    "document/prototypes/tv-ui/previews/container-hierarchy/license-after.png": "812c3ed8ba4fc66e6b6e30c06e1b5ff614cd5a78bf0ff41aaf4bcaa75724d5f5"
+  },
+  "visualInspection": {
+    "viewedFinalComparisons": [
+      "cache-normal-font-1",
+      "folders-normal-font-1",
+      "themes-normal-font-1",
+      "license-normal-font-1",
+      "about-normal-font-1",
+      "intro-normal-font-1",
+      "episodes-normal-font-1",
+      "related-normal-font-1",
+      "episodes-mark-font-1.3",
+      "episodes-empty-font-1.3",
+      "folders-long-font-1.3",
+      "license-long-font-1.3"
+    ],
+    "correctedPreviewDefects": [
+      "Inline toggle needed display:inline-block to retain its dimensions",
+      "Episode row default fill and rounded focus needed explicit reconstruction"
+    ],
+    "scope": "Visual inspection of design references only. Native implementation and behavior remain pending user confirmation."
+  },
+  "finalIntegrity": {
+    "hashesChecked": 46,
+    "markdownLinksChecked": 18,
+    "deliveredPngCount": 29
+  }
+}

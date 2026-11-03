@@ -319,6 +319,13 @@ class RemainingUiInstrumentedTest {
                     assertMeasuredBounds(requireNotNull(list.findContainingItemView(requireNotNull(it.currentFocus))))
                 }
                 screenshot("detail-episodes")
+                key(KeyEvent.KEYCODE_DPAD_RIGHT)
+                scenario.onActivity { assertEquals(AnimeR.id.iv_episode_mark_viewed, it.currentFocus?.id) }
+                screenshot("detail-episode-action")
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                scenario.onActivity { assertEquals(AnimeR.id.iv_episode_mark_viewed, it.currentFocus?.id) }
+                key(KeyEvent.KEYCODE_DPAD_LEFT)
+                scenario.onActivity { assertEquals(AnimeR.id.item_layout, it.currentFocus?.id) }
                 scenario.onActivity { it.findViewById<View>(AnimeR.id.sort_cl).requestFocus() }
                 key(KeyEvent.KEYCODE_DPAD_CENTER)
                 settle()
@@ -345,6 +352,20 @@ class RemainingUiInstrumentedTest {
                     assertTrue(episodes.all { episode -> episode.isMarked })
                 }
                 screenshot("detail-episodes-mark")
+                scenario.onActivity { it.findViewById<View>(AnimeR.id.tv_invert_mark).requestFocus() }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                settle()
+                scenario.onActivity {
+                    val items =
+                        (
+                            it
+                                .findViewById<DpadRecyclerView>(
+                                    AnimeR.id.episode_rv
+                                ).adapter as BaseAdapter
+                        ).items.filterIsInstance<EpisodeData>()
+                    assertTrue(items.none { episode -> episode.isMarked })
+                }
+                screenshot("detail-episodes-inverted")
                 key(KeyEvent.KEYCODE_BACK)
                 scenario.onActivity { assertEquals(AnimeR.id.mark_mode_bt, it.currentFocus?.id) }
                 scenario.onActivity {
@@ -356,6 +377,20 @@ class RemainingUiInstrumentedTest {
                 key(KeyEvent.KEYCODE_DPAD_CENTER)
                 key(KeyEvent.KEYCODE_DPAD_DOWN)
                 screenshot("detail-recommend")
+                val childMonitor = instrumentation.addMonitor(AnimeDetailActivity::class.java.name, null, false)
+                try {
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    val child = instrumentation.waitForMonitorWithTimeout(childMonitor, 6000) as AnimeDetailActivity
+                    instrumentation.runOnMainSync {
+                        (child.getOwnerViewModel() as AnimeDetailViewModel).viewModelScope.coroutineContext.cancelChildren()
+                        child.hideLoading()
+                    }
+                    key(KeyEvent.KEYCODE_BACK)
+                    settle()
+                    scenario.onActivity { assertTrue(it.findViewById<View>(AnimeR.id.recommend_rv).hasFocus()) }
+                } finally {
+                    instrumentation.removeMonitor(childMonitor)
+                }
                 repeat(5) { key(KeyEvent.KEYCODE_DPAD_DOWN) }
                 scenario.onActivity {
                     val list = it.findViewById<DpadRecyclerView>(AnimeR.id.recommend_rv)
@@ -368,12 +403,14 @@ class RemainingUiInstrumentedTest {
                 }
                 screenshot("detail-recommend-scroll")
                 var reachedTabs = false
-                repeat(7) {
+                repeat(12) {
                     if (!reachedTabs) {
                         key(KeyEvent.KEYCODE_DPAD_UP)
+                        settle()
                         scenario.onActivity { reachedTabs = it.findViewById<View>(AnimeR.id.tab_layout).hasFocus() }
                     }
                 }
+                screenshot("detail-recommend-return")
                 assertTrue("Remote must return from recommendations to categories", reachedTabs)
                 scenario.onActivity {
                     model.animeDetailLiveData.value = fixture.copy(episodes = mutableListOf(), summary = null, metadata = null)
@@ -384,6 +421,48 @@ class RemainingUiInstrumentedTest {
                 }
                 key(KeyEvent.KEYCODE_DPAD_CENTER)
                 screenshot("detail-episodes-empty")
+                key(KeyEvent.KEYCODE_BACK)
+            }
+    }
+
+    @Test fun emptyDetailChildrenKeepTabsAndReadingReachable() {
+        ActivityScenario
+            .launch<AnimeDetailActivity>(
+                Intent(context, AnimeDetailActivity::class.java).putExtra("animeArgument", AnimeArgument(id = -1, title = "本地空内容验证"))
+            ).use { scenario ->
+                scenario.onActivity {
+                    val model = it.getOwnerViewModel() as AnimeDetailViewModel
+                    model.viewModelScope.coroutineContext.cancelChildren()
+                    model.animeDetailLiveData.value =
+                        bangumi().copy(
+                            summary = null,
+                            metadata = null,
+                            episodes = mutableListOf(),
+                            relateds = mutableListOf(),
+                            similars = mutableListOf()
+                        )
+                }
+                settle()
+                scenario.onActivity {
+                    assertEquals(
+                        it.getString(AnimeR.string.cinema_no_synopsis),
+                        it.findViewById<TextView>(AnimeR.id.intro_tv).text.toString()
+                    )
+                }
+                screenshot("detail-intro-empty")
+                scenario.onActivity {
+                    val tabs = it.findViewById<DpadRecyclerView>(AnimeR.id.tab_layout)
+                    assertEquals("A detail without recommendations keeps its existing two-tab behavior", 2, tabs.adapter!!.itemCount)
+                    tabs.requestFocus()
+                    tabs.setSelectedPosition(1)
+                }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                settle()
+                scenario.onActivity {
+                    assertTrue(it.findViewById<View>(AnimeR.id.empty_tv).isShown)
+                    assertFalse(it.findViewById<View>(AnimeR.id.mark_mode_bt).isEnabled)
+                }
+                screenshot("detail-no-recommend-tab")
                 key(KeyEvent.KEYCODE_BACK)
             }
     }

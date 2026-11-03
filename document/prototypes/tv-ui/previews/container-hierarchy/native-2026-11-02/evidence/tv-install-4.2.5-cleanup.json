@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-11-02T21:50:44.2958444+08:00",
+  "privateAdbPort": 5089,
+  "tvDisconnected": true,
+  "privateAdbClosed": true,
+  "originalAdbProcessesPreserved": true,
+  "adbProcessesAfter": [
+    {
+      "ProcessId": 57396,
+      "CommandLine": "adb -L tcp:5037 fork-server server --reply-fd 700"
+    }
+  ],
+  "stagedBlobIdentitiesUnchanged": true
+}

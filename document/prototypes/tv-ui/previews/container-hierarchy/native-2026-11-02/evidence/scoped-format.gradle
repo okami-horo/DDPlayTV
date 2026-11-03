@@ -1,0 +1,21 @@
+gradle.projectsEvaluated {
+    if (gradle.rootProject.name == 'buildSrc') return
+    gradle.rootProject.allprojects.each { p ->
+        def extension = p.extensions.findByName('ktlint')
+        if (extension != null) {
+            extension.additionalEditorconfig.put('ij_kotlin_allow_trailing_comma', 'false')
+            extension.additionalEditorconfig.put('ij_kotlin_allow_trailing_comma_on_call_site', 'false')
+            extension.additionalEditorconfig.put('ktlint_standard_trailing-comma-on-call-site', 'disabled')
+            extension.additionalEditorconfig.put('ktlint_standard_trailing-comma-on-declaration-site', 'disabled')
+        }
+    }
+}
+gradle.taskGraph.whenReady { graph ->
+    def wanted = ['app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/ContainerHierarchyInstrumentedTest.kt','app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/RemainingUiInstrumentedTest.kt','app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/UiPolishInstrumentedTest.kt'].collect { gradle.rootProject.file(it) }
+    graph.allTasks.findAll { it.name.startsWith('runKtlint') }.each { task ->
+        task.setSource(task.source.files.findAll { it in wanted })
+        task.outputs.upToDateWhen { false }
+        if (!task.source.files.empty) println('A03_FORMAT ' + task.path + ': ' + task.source.files)
+    }
+}
+
