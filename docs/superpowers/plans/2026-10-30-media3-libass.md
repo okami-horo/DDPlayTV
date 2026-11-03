@@ -1,5 +1,7 @@
 # Media3 libass 实施与验证
 
+> 验收归档：本文对应的 activeContext 待验证项已按[2026-11-03 用户确认](../../../memory-bank/archive/2026-11-completed-work.md#user-confirmed-acceptance-2026-11-03)关闭。下文旧“待验收／未实机验证”表述保留为原执行时点记录；未实施需求和已知工程问题不因此完成。
+
 依据：[接入设计](../designs/2026-10-29-media3-libass-integration-design.md)。本轮用户已授权实现；不提交 Git、不修改 mpv AAR 或视频输出。
 
 ## 实施顺序

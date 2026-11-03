@@ -7,10 +7,10 @@
 | 需要了解 | 入口 |
 | --- | --- |
 | 剧集、文件版本与整剧播放列表 | [统一设计与成熟项目对比](../docs/superpowers/designs/2026-11-01-series-playback-queue-design.md)、[实施与验证](../docs/superpowers/plans/2026-11-01-series-playback-queue.md)（整剧跨季、当前来源优先、缺少时选择版本） |
-| 圆角、图片叠层与卡片/焦点裁切 | [全项目排查、修复与截图证据](architecture/ui-rounding-audit-2026-11-01.md)（F01–F07 已本地验证并于 20:23 安装 TV；实机验收与其余兼容风险仍待处理） |
+| 圆角、图片叠层与卡片/焦点裁切 | [全项目排查、修复与截图证据](architecture/ui-rounding-audit-2026-11-01.md)（本批实机验收已于 2026-11-03 按用户确认关闭，历史证据边界保留） |
 | TV 冗余范围与八类清理结果 | [原始审查](architecture/tv-feature-scope-audit-2026-11-01.md)、[A01–A08 实施与验证](../docs/superpowers/plans/2026-11-01-tv-scope-cleanup.md) |
-| 深层 UI 修复、设计覆盖和剩余验收 | [设计覆盖排查 U01–U10](../docs/superpowers/plans/2026-10-31-ui-design-coverage-audit.md)（历史缺口）、[A/U01–U10 实施与状态](../docs/superpowers/plans/2026-10-31-ui-polish.md)、[补充设计](../docs/superpowers/designs/2026-10-31-ui-polish-design.md) |
-| 播放器左下操作组（已选 A，已实施/部分验收） | [已选 A 设计](../docs/superpowers/designs/2026-10-31-player-controls-design.md)、[后续任务](../docs/superpowers/plans/2026-10-31-player-controls.md)、[交互原型](prototypes/tv-ui/player-controls-prototype.html) |
+| 深层 UI 修复、设计覆盖与验收记录 | [设计覆盖排查 U01–U10](../docs/superpowers/plans/2026-10-31-ui-design-coverage-audit.md)（历史缺口）、[A/U01–U10 实施与状态](../docs/superpowers/plans/2026-10-31-ui-polish.md)、[补充设计](../docs/superpowers/designs/2026-10-31-ui-polish-design.md) |
+| 播放器左下操作组（已选 A，已实施并验收） | [已选 A 设计](../docs/superpowers/designs/2026-10-31-player-controls-design.md)、[实施记录](../docs/superpowers/plans/2026-10-31-player-controls.md)、[交互原型](prototypes/tv-ui/player-controls-prototype.html) |
 | 产品功能与构建入口 | [项目 README](../README.md) |
 | TMDB 统一影视/番剧元数据与 UI 重设计 | [范围与待办](media-library/tmdb-metadata-followup.md)、[刮削与模块设计](../docs/superpowers/designs/2026-10-31-tmdb-media-library-design.md)、[实施与验证](../docs/superpowers/plans/2026-10-31-tmdb-media-library.md)、[网页原型](prototypes/tv-ui/README.md) |
 | 播放触发自动刮削、同目录同剧与问题重试 | [使用方式与边界](media-library/tmdb-metadata-followup.md)、[AM01–AM13 实施验证](../docs/superpowers/plans/2026-11-01-playback-auto-metadata.md)、[设计](../docs/superpowers/designs/2026-10-31-playback-auto-metadata-design.md) |
@@ -30,7 +30,7 @@
 | mpv 原生库与运行参数 | [产物来源与更新](mpv-build-notes.md)、[配置项](mpv_conf_supported_options.md) |
 | 日志收集与问题复现证据 | [日志指南](monitoring/logging-system.md)、[测试证据](monitoring/test_evidence_format.md) |
 | 网络、隐私和依赖说明 | [TLS 策略](architecture/network_tls_policy.md)、[日志脱敏](architecture/log_redaction_policy.md)、[隐私说明](<Privacy policy.md>)、[第三方库](Third_Party_Libraries.md) |
-| 模块归属、辅助工具与工作流待办 | [目录维护待办](architecture/directory-hygiene-followup.md) |
+| 覆盖率归属与环境脚本待办 | [保留的问题与已取消的整理项](architecture/directory-hygiene-followup.md) |
 | 旧计划保留下来的行为决策和未完成修复 | [播放器与焦点决策整理](../docs/superpowers/archive/2026-06-player-focus-decisions.md) |
 
 ## 截图与预览产物
@@ -53,7 +53,7 @@
 | `repository/*/README.md` | 对应本地 AAR 的来源、校验和、授权线索与升级步骤 | 随该工件维护，入口见下表 |
 | `change/` | 面向发布版本的更新说明 | 发布工作流直接读取，移动时必须同步 CI |
 | `memory-bank/` | agent 使用的项目上下文、检索图和历史验证摘要 | 英文；重要事实仍须回到源码和原始证据核对 |
-| `.specify/`、`.spec-workflow/`、`.github/prompts/` | 工作流规则、模板和提示词 | 属于工具输入，非产品功能说明；是否继续使用由 DIR-05 跟踪 |
+| `.specify/`、`.spec-workflow/`、`.github/prompts/` | 工作流规则、模板和提示词 | 属于工具输入，非产品功能说明；2026-11-03 已取消统一工作流的旧待办，现有文件按实际使用保留 |
 | `AGENTS.md` | agent 工作规则 | 不与产品说明、历史对话或执行结果混放 |
 
 ## 架构资料与维护状态

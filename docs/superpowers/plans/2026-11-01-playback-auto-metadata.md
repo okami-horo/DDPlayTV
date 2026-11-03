@@ -1,5 +1,7 @@
 # 播放触发自动刮削实施账本
 
+> 验收归档：本文对应的 activeContext 待验证项已按[2026-11-03 用户确认](../../../memory-bank/archive/2026-11-completed-work.md#user-confirmed-acceptance-2026-11-03)关闭。下文旧“待验收／未实机验证”表述保留为原执行时点记录；未实施需求和已知工程问题不因此完成。
+
 日期：2026-11-01。状态：**实现与本地验证完成；真实来源、准确率与物理电视验收仍开放。**
 
 依据：[已确认设计与 AM01–AM13](../designs/2026-10-31-playback-auto-metadata-design.md)。延续 Cinema 与文件浏览 C。菜单精简提交为 `3ddb8efa7`；本轮实现随后提交为 `cb0c27dff`。实施验证阶段未操作用户电视；用户后续要求安装，最新 Release 已于 2026-11-01 11:37 覆盖安装，详见文末交付记录。
@@ -90,7 +92,7 @@ ktlint 限于本轮 Kotlin/Gradle 文件；不把它称为全仓格式化基线�
 
 用户要求安装最新 Release 后，从干净提交 `cb0c27dff` 构建，日志 `.tmp/tv-release-auto-metadata-build.log` 以 **BUILD SUCCESSFUL in 1m 39s** 结束。版本保持 `4.2.3`/code `70`，arm64 APK 通过 `adb install -r` 覆盖安装到 VIDAA TV `192.168.31.70:5555`，返回 **Success**。回读更新时间为 `2026-11-01 11:37:13`，首次安装时间保持不变，电视端 APK 的 SHA-256 与本次构建一致；保留应用数据。
 
-包体校验、日志和哈希详见 [交付记录](../../../memory-bank/progress.md#automatic-metadata-release-delivery-2026-11-01)。本次仅构建与安装，没有启动电视应用或进行导航、播放测试；真实来源与物理电视验收仍开放。
+包体校验、日志和哈希详见 [交付记录](../../../memory-bank/archive/2026-11-completed-work.md#automatic-metadata-release-delivery-2026-11-01)。本次仅构建与安装，没有启动电视应用或进行导航、播放测试；真实来源与物理电视验收仍开放。
 
 ### 电视首页无剧集反馈排查（2026-11-01）
 

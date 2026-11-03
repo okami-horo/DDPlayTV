@@ -1,5 +1,7 @@
 # mpv 原生字幕接入
 
+> 验收归档：本文对应的 activeContext 待验证项已按[2026-11-03 用户确认](../../../memory-bank/archive/2026-11-completed-work.md#user-confirmed-acceptance-2026-11-03)关闭。下文旧“待验收／未实机验证”表述保留为原执行时点记录；未实施需求和已知工程问题不因此完成。
+
 ## 目标与边界
 
 按用户 2026-10-29 的决定，由固定版本 Plezy AAR 内的 mpv 直接解析、计时和渲染内嵌/外挂字幕。保留 `SurfaceView + vo=mediacodec + hwdec=mediacodec`，视频不经过应用 GPU；独立透明 OSD Surface 位于视频上方、控制器/弹幕下方。Media3 保留现有 libass 链路。

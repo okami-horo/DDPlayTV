@@ -2,25 +2,27 @@
 
 当前功能与开发说明从 [项目文档导航](../../document/README.md) 查阅。本目录保留需要理解“为什么这样设计”和“实际执行到哪里”的资料；文件名中的早期日期不代表实现状态停留在当时。
 
+状态更新（2026-11-03）：用户已确认 activeContext 中本批待验证项及实机测试通过，统一见[验收归档](../../memory-bank/archive/2026-11-completed-work.md#user-confirmed-acceptance-2026-11-03)。旧执行记录中的待验收表述保留原时点，不重新形成任务；随后取消的低价值、有限价值待办见[清理记录](../../memory-bank/archive/2026-11-completed-work.md#backlog-pruning-2026-11-03)。
+
 ## 当前设计与执行证据
 
 | 主题 | 设计依据 | 执行状态与证据 |
 | --- | --- | --- |
-| A03 容器与边框减层 | [已确认设计与 C01–C09](designs/2026-11-02-a03-container-hierarchy-design.md)；[设计重建](../../document/prototypes/tv-ui/container-hierarchy-prototype.html) | [已实施与本地验证](plans/2026-11-02-a03-container-hierarchy.md)：五工具页与番剧三个子页减层，修复大字体裁切及分集行内焦点；Debug／test、514 项 JVM／2 项既有跳过、lint／依赖／限定格式通过。普通／1.3 字体分批 16／11 项不同 AVD 场景通过；[92 张原生图与 16 组前后对比](../../document/prototypes/tv-ui/previews/container-hierarchy/native-2026-11-02/index.html)。实体电视／用户验收待完成，未提交 |
-| A06 播放器侧栏与背景层次 | [已确认设计与 M01–M11 要求](designs/2026-11-02-a06-player-panel-layers-design.md)；[交互参考](../../document/prototypes/tv-ui/player-panel-layers-prototype.html) | [已实施与本地验证](plans/2026-11-02-a06-player-panel-layers.md)：九个右侧模板、单一遮罩及普通设置行；Debug／test、514 项 JVM／2 项既有跳过、lint／依赖／限定格式通过，普通／1.3 字体 11／7 项不同 AVD 场景通过。[原生 APK 前后与状态画廊](../../document/prototypes/tv-ui/previews/player-panel-layers/native-2026-11-02/index.html)；未安装 TV，实机与用户验收待完成 |
-| 观看记录与媒体来源分离 | [复用首页、清理虚拟来源与兼容边界及执行记录](designs/2026-11-01-watch-history-source-separation-design.md) | 已按用户授权清理历史来源创建/导航与投屏入口残留，保留记录和投屏接收；Debug/test、505 项 JVM、Debug lint/依赖/限定格式与 11 项不同 AVD 场景通过。未安装 TV；首页展开和旧管理动作新入口未实施 |
+| A03 容器与边框减层 | [已确认设计与 C01–C09](designs/2026-11-02-a03-container-hierarchy-design.md)；[设计重建](../../document/prototypes/tv-ui/container-hierarchy-prototype.html) | [已实施与本地验证](plans/2026-11-02-a03-container-hierarchy.md)：五工具页与番剧三个子页减层，修复大字体裁切及分集行内焦点；Debug／test、514 项 JVM／2 项既有跳过、lint／依赖／限定格式通过。普通／1.3 字体分批 16／11 项不同 AVD 场景通过；[92 张原生图与 16 组前后对比](../../document/prototypes/tv-ui/previews/container-hierarchy/native-2026-11-02/index.html)。2026-11-03 用户确认实机验收通过 |
+| A06 播放器侧栏与背景层次 | [已确认设计与 M01–M11 要求](designs/2026-11-02-a06-player-panel-layers-design.md)；[交互参考](../../document/prototypes/tv-ui/player-panel-layers-prototype.html) | [已实施与本地验证](plans/2026-11-02-a06-player-panel-layers.md)：九个右侧模板、单一遮罩及普通设置行；Debug／test、514 项 JVM／2 项既有跳过、lint／依赖／限定格式通过，普通／1.3 字体 11／7 项不同 AVD 场景通过。[原生 APK 前后与状态画廊](../../document/prototypes/tv-ui/previews/player-panel-layers/native-2026-11-02/index.html)；2026-11-03 用户确认实机验收通过 |
+| 观看记录与媒体来源分离 | [复用首页、清理虚拟来源与兼容边界及执行记录](designs/2026-11-01-watch-history-source-separation-design.md) | 已按用户授权清理历史来源创建/导航与投屏入口残留，保留记录和投屏接收；Debug/test、505 项 JVM、Debug lint/依赖/限定格式与 11 项不同 AVD 场景通过。本批验收已关闭；首页展开和旧管理动作新入口仍是未实施、未排期提案 |
 | 统一剧集播放队列 | [作品、单集、实际文件、版本及队列设计；Jellyfin/Plezy/Kodi 对比](designs/2026-11-01-series-playback-queue-design.md) | [整剧跨季、版本选择、恢复与 SQ01–SQ09 验证](plans/2026-11-01-series-playback-queue.md)：已实施，Debug/test 构建、505 项 JVM、lint/依赖/限定格式及 27 项 AVD 通过；2 项既有 JVM 跳过，真实云账号/物理电视验收另计 |
 | 旧番剧搜索与发现页退役 | 用户要求确认旧“搜番剧”无用即清理；旧首页链路已无正常入口 | [清理范围、保留能力与验证](plans/2026-11-01-legacy-anime-discovery-cleanup.md)；最新 Release 已于 15:58 覆盖安装至电视，安装包哈希一致 |
 | 遥控器返回入口清理 | 用户确认纯 TV 下删除屏幕返回及播放器面板关闭按钮 | [清理、焦点路径与验证](plans/2026-11-01-remote-back-cleanup.md)：本地构建／JVM／lint 与 24 项 AVD 检查通过；已随 2026-11-01 15:58 Release 安装至电视，运行验收另计 |
 | 首页观看足迹与剧集详情重设计 | [已选 B 沉浸剧集、作品入口与原文件续播](designs/2026-11-01-home-watch-history-design.md) | [WH01–WH10 实施与验证](plans/2026-11-01-home-watch-history.md)：初始 B 已提交为 3e53add08；圆角兼容修正通过本地构建／lint／4 项 AVD 检查，并于 18:07:29 以同版本 Release 4.2.4 / 71 覆盖安装到电视、哈希一致；修正未提交，真机效果与用户验收仍待 |
 | TV 焦点裁切修复 | 用户授权修复排查确认的五处问题，标题重复另轮处理 | [五处修复、回归与截图证据](plans/2026-11-01-focus-clipping.md)：本地构建／测试及常规、放大字体 DPAD 验证通过；已随 2026-11-01 15:58 Release 安装至电视，运行验收另计 |
-| TV 冗余清理 A01–A08 | 用户授权清理[范围审查的八类候选](../../document/architecture/tv-feature-scope-audit-2026-11-01.md) | [实施、Room 22 升级、构建与回归证据](plans/2026-11-01-tv-scope-cleanup.md)；B01–B03 及产品取舍不在本次范围 |
+| TV 冗余清理 A01–A08 | 用户授权清理[范围审查的八类候选](../../document/architecture/tv-feature-scope-audit-2026-11-01.md) | [实施、Room 22 升级、构建与回归证据](plans/2026-11-01-tv-scope-cleanup.md)，本批实机验收已关闭；B01 已取消待办，B03 随旧发现页退役关闭，仅 B02 配色一致性保留按需核对 |
 | TV 旧布局与设计覆盖排查 | [U01–U10：入口、源码与缺稿范围](plans/2026-10-31-ui-design-coverage-audit.md) | 用户随后授权修复；[补充设计](designs/2026-10-31-ui-polish-design.md)、[原生实施/验证与剩余边界](plans/2026-10-31-ui-polish.md)。文件 C 已完成本地实施与验证，见下行 |
 | 播放器左下操作组 | [已选 A 单排分组；只调整按钮组](designs/2026-10-31-player-controls-design.md) | A 已确认并实施；本地行为/截图与未覆盖状态见 [后续任务与 P01–P10](plans/2026-10-31-player-controls.md)。字幕位置与弹幕覆盖标题不属于问题 |
 | TMDB 元数据、文件关联与新媒体库 | [刮削与模块设计](designs/2026-10-31-tmdb-media-library-design.md) | 已授权实施：关联/纠错、Room 19、原生 UI 与首批来源手动扫描；[实施及验证](plans/2026-10-31-tmdb-media-library.md)、[范围与待办](../../document/media-library/tmdb-metadata-followup.md) |
 | 播放触发的自动刮削 | [自动识别、同目录同剧入库与低维护交互](designs/2026-10-31-playback-auto-metadata-design.md) | 已完成并归档；原问题路由承接重新识别/刷新，保留既有绑定与历史。[AM01–AM13 证据](plans/2026-11-01-playback-auto-metadata.md)保留；2026-11-01 用户确认电视实际刮削成功，后续修复和验收见全来源账本 |
 | 全来源自动识别与 PC 来源退役 | 用户要求覆盖全部保留来源，并移除弹弹play PC 端媒体库 | 已验收归档（2026-11-01）：九类来源适配、PC 退役及正式版排障完成，用户确认本次 115 Cloud 电视刮削通过；[全来源账本](plans/2026-11-01-all-source-auto-metadata.md)保留交付证据及其他场景的验证边界 |
-| 文件浏览 C：列表与预览 | [已选 C 设计](designs/2026-10-31-file-browser-design.md) | [原生实施与 C01–C11 本地验收](plans/2026-10-31-file-browser-preview.md)已完成；物理电视、真实云服务和用户验收仍未执行 |
+| 文件浏览 C：列表与预览 | [已选 C 设计](designs/2026-10-31-file-browser-design.md) | [原生实施与 C01–C11 证据](plans/2026-10-31-file-browser-preview.md)已完成；2026-11-03 按用户确认关闭本批验收，历史暂缓及未验收表述已被覆盖 |
 | 文件浏览菜单精简 | [任务、过渡路径与 FM01–FM10 验收](plans/2026-10-31-file-browser-menu-simplification.md) | 已实施：移除文件菜单与行末更多，统一刷新并承接长名阅读；保留播放器控制与旧绑定。本地验证与真实来源/电视边界见账本；后续自动刮削见上行 |
 | 新 UI 前的身份、异步与恢复修复 | [逻辑修复设计](designs/2026-10-30-ui-readiness-repairs-design.md) | [R1–R10 实施与验证](plans/2026-10-30-ui-readiness-repairs.md)已完成本地验证；优先恢复上次位置，已看完分类单独处理；物理电视及真实服务边界保留 |
 | 新 UI 的全局配置收敛 | [全局配置设计](designs/2026-10-30-global-settings-design.md) | 单库偏好移除与 Room 17→18 已实现，验证状态及剩余边界见[实施记录](plans/2026-10-30-global-settings.md)；PC 分组随后随来源退役，见全来源账本 |
@@ -36,11 +38,11 @@
 
 ## 历史决策与保留待办
 
-[2026 年 6 月播放器与焦点决策整理](archive/2026-06-player-focus-decisions.md) 合并了四份旧执行模板，保留字幕开关、弹幕匹配和 DPAD 的有效约束，以及五项尚未完成的弹幕修复／补测。旧模板中的大段示例代码和过时路径已清理，原文可从 Git 历史查询。
+[2026 年 6 月播放器与焦点决策整理](archive/2026-06-player-focus-decisions.md) 合并了四份旧执行模板，保留字幕开关、弹幕匹配和 DPAD 的有效约束。2026-11-03 已取消无当前导航入口的旧绑定页修复，仅保留网络文件名解析、取消传播、非法缓存 ID 三项底层修复与对应回归覆盖。旧模板中的大段示例代码和过时路径已清理，原文可从 Git 历史查询。
 
 字幕简繁转换的现状与待实现需求见 [播放器说明](../../document/player/subtitle-language-conversion.md)。历史架构原始对话不再作为现行方案，模块边界以 [治理文档](../../document/architecture/module_dependency_governance.md) 为准。
 
-顺序续播约束见交接设计，集成与 TV 场景的剩余验收见[播放验证待办](../../document/player/playback-validation-followup.md)。字幕渲染与其他现行指南从[项目文档导航](../../document/README.md)查阅。
+顺序续播约束见交接设计，集成与 TV 场景的已关闭验收及原始证据见[播放验证记录](../../document/player/playback-validation-followup.md)。字幕渲染与其他现行指南从[项目文档导航](../../document/README.md)查阅。
 
 ## 维护方式
 

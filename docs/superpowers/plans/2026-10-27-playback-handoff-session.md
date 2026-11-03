@@ -1,5 +1,7 @@
 # Playback Handoff and Active Session Implementation Plan
 
+> Acceptance closeout: the [2026-11-03 user confirmation](../../../memory-bank/archive/2026-11-completed-work.md#user-confirmed-acceptance-2026-11-03) closes the retained verification items linked from activeContext. Original pending statements below are dated execution evidence; retired scenarios remain superseded and historical test counts are unchanged. Unimplemented work and known engineering issues remain separate.
+
 > Scope updated 2026-10-28: Bilibili-only contracts, implementation instructions and acceptance scenarios have been removed. The original 62/65 is a historical pre-retirement count, not a new verification result; retired scenarios are not marked passed. The three remaining ordinary playback, recovery and navigation acceptance items stay user-owned. Upgrade cleanup and removal evidence are kept in the [retirement record](2026-10-28-remove-bilibili.md).
 
 > Written 2026-10-27 against repository HEAD `f8d4c54c41eb1401107849417afcac68dc88869a` and the revised working-tree designs. Agent-facing execution document. Updated 2026-10-28 from HEAD `b2ce478eb` plus the continuation included in the user-authorized local commit. Tasks 1–13 are complete; Task 14 records automated verification and remaining user-owned acceptance.
@@ -295,9 +297,9 @@ The historical 2026-10-27 run passed 387 related JVM tests, scoped ktlint, modul
 
 - [x] Run all affected JVM tests and full required governance/lint/Debug build. Inspect each Gradle output tail and record BUILD SUCCESSFUL, BUILD FAILED or pre-Gradle wrapper failure accurately. Reuse successful unchanged runs; a blocked download is not a passing test.
 - [x] Exercise real Keystore/MMKV, including missing/corrupt encrypted state, fixed expiry, ID-only bundles, redacted errors and explicit-exit cleanup. Recreate a process with system restoration context; distinguish it from Activity recreation and ordinary force-stop/cold launch, which must not restore playback.
-- [ ] On a device in device state, run instrumentation and the complete entry matrix: storage, history and URL+headers, local anime, external Intent, torrent allowed/blocked, screencast idle/foreground. Verify singleTask notification/external reentry and BACK with no duplicate/interceptor player pages.
-- [ ] Verify HTTP/SMB/FTP/Thunder coexistence through production submission/resolution, plus manual/traditional/native next and kernel fallback. Preserve subtitle/danmaku, history recording, settings persistence, error recovery, background/PIP and mobile behavior. Unavailable credentials/fixtures remain named pending evidence.
-- [ ] Complete a TV-only DPAD path through entry, loading, replacement failure, playback controls/settings, BACK and exit. Check visible/reachable/restored focus and no hidden view stealing focus. Record device/build/commands/results; do not mark completion while a required gate is unverified.
+- [x] Retained storage/history/local-anime/casting and reentry/BACK acceptance: closed by the user on 2026-11-03. Earlier instrumentation remains dated evidence; this adds no automated matrix run. Retired URL/header, external-video and torrent scenarios are superseded, not marked passed.
+- [x] Retained protocol/replacement/next/kernel, subtitle/danmaku, history/settings/error and nonzero process-recovery acceptance: closed by the user on 2026-11-03. Thunder/mobile are retired; unimplemented background/PIP hosting is not claimed.
+- [x] Physical-TV DPAD entry/loading/replacement/controls/settings/BACK/exit and focus acceptance: closed by the user on 2026-11-03. User confirmation is separate from the original command/build/device evidence below.
 
 **Verification and handoff, 2026-10-28 (62/65 checks):** The user owns the three remaining integrated acceptance items. They are not marked passed merely because focused emulator tests passed. No credentials are requested again. The user subsequently authorized committing this verified state.
 
@@ -327,4 +329,4 @@ adb devices -l
 
 Implementation is complete only when the lease prerequisite, all tasks here and handoff design section 17 have evidence. In particular, there must be one business writer, one resource release tree, stable-only request/navigation boundaries, distinct controlled/native persistence tests, working process recovery, gateway-independent local playback and no surviving legacy entry or internal-switch bypass.
 
-The original plan-writing review established design coverage, task dependencies, inspected paths and document consistency. Runtime evidence comes from the dated implementation/verification entries, with its failures and limits retained. Completion remains 62/65 until the user-owned integrated acceptance has evidence; documentation maintenance does not close those checks.
+The original plan-writing review established design coverage, task dependencies, inspected paths and document consistency. Runtime evidence comes from the dated implementation/verification entries, with its failures and limits retained. The retained user-owned acceptance was closed by explicit user confirmation on 2026-11-03. The original 62/65 remains a historical count; no new 65/65 or all-feature automated total is inferred, and retired scenarios remain superseded.

@@ -1,5 +1,7 @@
 # TV 冗余清理 A01–A08（2026-11-01）
 
+> 验收归档：本文对应的 activeContext 待验证项已按[2026-11-03 用户确认](../../../memory-bank/archive/2026-11-completed-work.md#user-confirmed-acceptance-2026-11-03)关闭。下文旧“待验收／未实机验证”表述保留为原执行时点记录；未实施需求和已知工程问题不因此完成。
+
 用户已授权清理[审查报告](../../../document/architecture/tv-feature-scope-audit-2026-11-01.md)中的全部八类候选。实施基线为 `d0ee40e29`，开始时工作区干净。本任务不包含 B01–B03 或账户、横幅等产品设计取舍。
 
 ## 范围与验证

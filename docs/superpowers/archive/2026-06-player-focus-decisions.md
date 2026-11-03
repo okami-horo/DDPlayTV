@@ -32,27 +32,28 @@
 
 ## 尚未完成的弹幕修复
 
-旧修复计划没有实施结果记录，本次核对也发现以下问题仍存在，因此保留为待办，不标记完成。本轮仅整理文档，不修复生产代码。
+2026-11-03 重新核对现用路径并按用户要求清除低收益待办后，保留以下三项底层修复及对应回归覆盖。本轮仅整理待办，不修复生产代码。
 
-- [ ] **手动绑定状态清理**：[BindDanmuSourceFragmentViewModel](../../../local_component/src/main/java/com/xyoye/local_component/ui/fragment/bind_danmu/BindDanmuSourceFragmentViewModel.kt) 的 `matchDanmu()` 在没有可用匹配结果时，没有清除先前的匹配／选择状态。应补充空结果及重复匹配回归，并保留独立搜索结果。
 - [ ] **网络文件名解析**：[NetworkDanmuSource](../../../core_storage_component/src/main/java/com/xyoye/common_component/utils/danmu/source/impl/NetworkDanmuSource.kt) 的回退分支直接调用 `URI(url)`；需要验证并处理无效 URI，保持匹配降级流程可继续。
-- [ ] **协程取消传播**：同一类的重试方法包含泛化 `catch (Exception)`，没有单独重新抛出 `CancellationException`。应验证上层取消不会被转换成普通失败。
+- [ ] **协程取消传播**：同一类的重试方法包含泛化 `catch (Exception)`，没有单独重新抛出 `CancellationException`；还需连同网络请求的 `Result` 包装核对取消语义。当前播放器已有切源取消与请求版本校验，本项属于底层防御性补强，不能据此断言旧结果会绑定到新来源。
 - [ ] **非法缓存 ID**：`DanmuMatchCoordinator.toCachedMatch()` 仍把无法解析为 `Long` 的 episodeId 转为 `0`。应跳过不安全的缓存写入，同时保留此次精确匹配下载结果。
-- [ ] **回归覆盖**：[DanmuMatchCoordinatorTest](../../../core_storage_component/src/test/java/com/xyoye/common_component/utils/danmu/DanmuMatchCoordinatorTest.kt) 当前包含来源支持判断与模糊候选不下载用例，未包含旧计划要求的精确下载、缓存命中、失败标记、空结果和非法 ID 分支。补测时应使用平台无关临时目录，避免现有硬编码 `/tmp`。
+- [ ] **回归覆盖**：[DanmuMatchCoordinatorTest](../../../core_storage_component/src/test/java/com/xyoye/common_component/utils/danmu/DanmuMatchCoordinatorTest.kt) 当前只有模糊候选不下载的一个用例，需补精确下载、缓存命中、失败标记、空结果及非法 ID 分支。现有用例已使用 `TemporaryFolder`，旧的统一 `/tmp` 迁移要求取消；[播放器测试](../../../player_component/src/test/java/com/xyoye/player_component/ui/activities/player/PlayerDanmuViewModelTest.kt) 已覆盖迟到结果、手动优先和搜索取消，后续补测聚焦实际缺口。
+
+已移出：旧手动绑定页的空匹配状态清理。生产调用核对只找到 `RouteTable.Local.BindExtraSource` 的页面注册，没有当前导航调用；其 Fragment 只在初始化时发起匹配。用户未要求恢复入口，因此取消该遗留修复；播放器内的手动弹幕搜索及其测试继续保留。
 
 ## TV 焦点
 
-旧计划引入的职责划分已能在源码中找到：
+以下保留旧计划的职责划分。三项旧焦点代理实现已由后续 [DpadRecyclerView 重写](../plans/2026-10-28-tv-dpad-library-rewrite.md)替代，已删除文件不再列为当前源码入口。
 
 | 职责 | 当前入口 |
 | --- | --- |
 | 页面／弹窗焦点所有者协议 | [DpadFocusOwner](../../../core_ui_component/src/main/java/com/xyoye/common_component/focus/DpadFocusOwner.kt) |
-| 焦点保存、恢复与默认目标 | [DpadFocusScope](../../../core_ui_component/src/main/java/com/xyoye/common_component/focus/DpadFocusScope.kt) |
-| 列表／网格导航与恢复 | [DpadRecyclerFocusDelegate](../../../core_ui_component/src/main/java/com/xyoye/common_component/focus/DpadRecyclerFocusDelegate.kt) |
-| 弹窗显示与关闭后的焦点处理 | [DpadDialogFocusController](../../../core_ui_component/src/main/java/com/xyoye/common_component/focus/DpadDialogFocusController.kt) |
+| 焦点保存、恢复与默认目标 | 原 `DpadFocusScope` 已移除，当前归属见重写记录 |
+| 列表／网格导航与恢复 | 原 `DpadRecyclerFocusDelegate` 已移除，当前列表由库处理 |
+| 弹窗显示与关闭后的焦点处理 | 原 `DpadDialogFocusController` 已移除，当前窗口恢复逻辑见重写记录 |
 | TV 导航栏与内容区边界 | [TvShellFocusCoordinator](../../../app/src/main/java/com/okamihoro/ddplaytv/ui/tv/TvShellFocusCoordinator.kt) |
 
-保留局部焦点所有权，不通过全局监听器持续抢焦点；触摸模式不强行请求 DPAD 焦点。旧 `RecyclerViewFocusDelegate` 仍在迁移期并存，不能据上述类型已存在推断全仓列表／弹窗已全部迁移。
+保留局部焦点所有权，不通过全局监听器持续抢焦点；触摸模式不强行请求 DPAD 焦点。旧 `RecyclerViewFocusDelegate` 及另一套列表代理已随重写删除，不再保留“迁移期并存”待办；实际迁移范围与验证证据以重写记录为准。
 
 [TvMainFocusSmokeTest](../../../app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/TvMainFocusSmokeTest.kt) 与 [DialogDpadFocusSmokeTest](../../../app/src/androidTest/java/com/xyoye/app/quality/DialogDpadFocusSmokeTest.kt) 提供 TV 分支的仪器检查入口。实际测试已采用 `Instrumentation.sendKeyDownUpSync`，不能复用旧计划中的 Activity 直接派发代码来声称覆盖真实按键路由。
 

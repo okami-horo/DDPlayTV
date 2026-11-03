@@ -54,13 +54,13 @@ Android UI 以已选的沉浸放映方案为基准，保留暗色、苹果系风
 
 ## 文件浏览页补充设计（2026-10-31）
 
-用户已选择 **C「列表与预览」**，原型默认打开 C；A/B 只保留作历史对照。用户要求先创建任务、当前暂缓原生改造，见 [C 方案实施任务](../../../docs/superpowers/plans/2026-10-31-file-browser-preview.md)。[文件浏览原型](files-prototype.html?variant=preview) 也可从原型首页右上角进入。
+用户已选择 **C「列表与预览」**，原型默认打开 C；A/B 只保留作历史对照。原生改造已实施，并于 2026-11-03 按用户确认验收关闭，见 [C 方案实施记录](../../../docs/superpowers/plans/2026-10-31-file-browser-preview.md)。设计阶段的暂缓决定已被后续实施覆盖。[文件浏览原型](files-prototype.html?variant=preview) 也可从原型首页右上角进入。
 
 - 访问 `http://127.0.0.1:4173/files-prototype.html?variant=preview`，现有命令启动的服务同时支持这张设计。服务可加端口参数，例如 `node document/prototypes/tv-ui/server.cjs 4174`。
 - 场景选择包含六个目录、视频及长名称、混排、空目录、首次加载失败、加载中、分页追加。
 - 方向键、Enter、Esc、菜单键（键盘 M）可操作；视频行向右到更多按钮，向左返回主操作。
 - [设计说明与边界](../../../docs/superpowers/designs/2026-10-31-file-browser-design.md)，[已选 C 截图](previews/files-preview.png)；历史对照：[A 目录](previews/files-grid.png)、[A 视频](previews/files-videos.png)、[B](previews/files-list.png)。
-- 这是示例数据网页设计，未接入真实来源；没有改动 Android、重新打包或操作电视。已加载内容的刷新失败、分页失败、登录过期等细节仍需补交互稿和原生验收。
+- 网页使用示例数据，不接入真实来源；原生实现、刷新失败、分页失败、登录过期等状态及验收证据以 C 方案实施记录为准，不再由本原型导航重复列为待办。
 
 ## 播放操作局部设计（2026-10-31）
 
