@@ -33,6 +33,9 @@ class SettingController(
     private lateinit var danmuConfigureView: SettingDanmuConfigureView
     private lateinit var offsetTimeView: SettingOffsetTimeView
     private lateinit var subtitleStyleView: SettingSubtitleStyleView
+    private val subtitleQuickView by lazy {
+        SubtitleQuickView(context).also { addView.invoke(it) }
+    }
 
     private val switchSourceView by lazy {
         return@lazy SwitchSourceView(context).also { addView.invoke(it) }
@@ -235,6 +238,8 @@ class SettingController(
                     setTrackType((extra as? TrackType) ?: TrackType.DANMU)
                 }
             }
+
+            SettingViewType.SUBTITLE_QUICK -> return subtitleQuickView
         }
     }
 }

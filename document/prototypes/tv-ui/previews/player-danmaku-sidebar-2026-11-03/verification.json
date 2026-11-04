@@ -1,0 +1,108 @@
+{
+  "date": "2026-11-03",
+  "scope": "Remove the right-panel danmaku master switch; the bottom toggle owns visibility. Keep track management, styles and the subtitle switch.",
+  "authority": "User authorized implementation after assigning the bottom button to the master switch and the right sidebar to detailed settings.",
+  "device": {
+    "serial": "emulator-5572",
+    "avd": "Pixel_5_API_34",
+    "viewport": [
+      1440,
+      810
+    ],
+    "densityDpi": 240,
+    "fontScale": 1.0
+  },
+  "states": [
+    {
+      "id": "S01",
+      "name": "danmaku-tracks-empty",
+      "focus": "tv_add_track",
+      "masterSwitch": "hidden"
+    },
+    {
+      "id": "S02",
+      "name": "danmaku-tracks-loaded",
+      "focus": "rv_track",
+      "masterSwitch": "hidden"
+    },
+    {
+      "id": "S03",
+      "name": "danmaku-style-while-off",
+      "focus": "danmu_size_sb",
+      "editableAndSaved": true
+    }
+  ],
+  "verification": {
+    "red": "instrumentation-red.log: The sidebar must not repeat the bottom danmaku toggle; failed on the prior implementation.",
+    "intermediate": "instrumentation-green.log failed on an incorrect expectation that BACK would restore track_style. Existing SettingTracksView.onViewShowed resets empty-track focus to tv_add_track. The test now verifies that default and re-enters style with DPAD_DOWN.",
+    "final": {
+      "validation.log": "BUILD SUCCESSFUL",
+      "final-test-check.log": "BUILD SUCCESSFUL",
+      "instrumentation-final.log": "OK (4 tests)"
+    },
+    "logsDirectory": ".tmp/danmaku-sidebar/",
+    "visualInspection": [
+      "before.png",
+      "danmaku-tracks-empty.png",
+      "danmaku-tracks-loaded.png",
+      "danmaku-style-while-off.png",
+      "comparison.png"
+    ]
+  },
+  "acceptance": {
+    "localEmulator": "verified",
+    "physicalTvAndUser": "pending"
+  },
+  "limits": [
+    "The fixture frame contains burned-in danmaku; actual loaded-track rendering visibility is verified separately by assertions.",
+    "Existing A06 panel geometry, subtitle placement and bottom-bar progress quantization remain unchanged.",
+    "No physical TV was installed or navigated for this task."
+  ],
+  "sourceSha256": {
+    "player_component/src/main/java/com/xyoye/player/controller/setting/SettingTracksView.kt": "682d28a9b8ba3b347e99dd29f8fd3b4fc5777fb23b9fdc64a7052380cf08d608",
+    "player_component/src/main/res/layout/layout_setting_tracks.xml": "cff4222576475922a64bb7a4cffc7867f5a4d73929a123d2b74c8efb82169371",
+    "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/PlayerPanelLayersInstrumentedTest.kt": "1bb08eb686afbaadf45bdcd1f47bb889a6b5362f1454de7ab1277646283bd4bb"
+  },
+  "screenshots": [
+    {
+      "file": "before.png",
+      "sha256": "59965ab5f18500f3713c019d48e22d28d8b5845daec54429bd33525a35f202d2",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "comparison.png",
+      "sha256": "95f15c11d54d2a8827dfb27dadef0bdb63d8debf96bdcb334b4f0e21602185bd",
+      "size": [
+        936,
+        974
+      ]
+    },
+    {
+      "file": "danmaku-style-while-off.png",
+      "sha256": "08e4480f2462410e18622895d7f7c11766207ee1d43081f9fe55b42bfc992f7d",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "danmaku-tracks-empty.png",
+      "sha256": "f18dcb0e112f3916f6f1e32a95fb2a0fb5ff0252967f5e9154b2c2ae9d21be9c",
+      "size": [
+        1440,
+        810
+      ]
+    },
+    {
+      "file": "danmaku-tracks-loaded.png",
+      "sha256": "9f0a4f28057c45abbab8df6611bc3f5bfc16aa9c26922508fb03f433c9526752",
+      "size": [
+        1440,
+        810
+      ]
+    }
+  ]
+}

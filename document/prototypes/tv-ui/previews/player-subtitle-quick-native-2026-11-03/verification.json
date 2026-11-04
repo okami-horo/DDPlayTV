@@ -1,0 +1,2153 @@
+{
+  "date": "2026-11-03",
+  "kind": "Android native implementation and local verification; physical-TV/user acceptance pending",
+  "viewport": {
+    "width": 1440,
+    "height": 810,
+    "density": 1.5,
+    "fontScales": [
+      1,
+      1.3
+    ]
+  },
+  "designRoute": "player-bottom-refinement-prototype.html?variant=open&review=subtitle&layout=vertical&tracks=many&subtitle=file&option=file&panel=quick",
+  "fixture": "Same nine multilingual labels as the prototype are supplied only by a controlled instrumentation wrapper. Both real kernels separately select a real SRT. Original subtitle rendering position/settings and real first-episode transport availability remain unchanged.",
+  "visualInspectionPending": false,
+  "physicalDeviceVerified": false,
+  "images": [
+    {
+      "file": "font100/arabic-moving.png",
+      "sha256": "cd35cc814c02938c213cfa3b95e54d2afb3ae1c5b7e8c5e5e4f9beaedf1b6884"
+    },
+    {
+      "file": "font100/arabic-waiting.png",
+      "sha256": "93ef82fa4a861eb64fb95e10267be14124695fc004cb84b8a8ac1c6a6e2fa6de"
+    },
+    {
+      "file": "font100/empty-TYPE_EXO_PLAYER.png",
+      "sha256": "c165e48278525ce2202d76fb7e4fee1ac7f542db293eafa3fa64e38db068cdff"
+    },
+    {
+      "file": "font100/empty-TYPE_MPV_PLAYER.png",
+      "sha256": "ddbc8dd945610e691616ffa3b9f17939e4e2a9a39527ef3d8ddde26962ae8600"
+    },
+    {
+      "file": "font100/long-name-moving.png",
+      "sha256": "29b97a36309d6d2c8b75b1ea219e57ea011f65b79efc6053f81f2d2c10cd465e"
+    },
+    {
+      "file": "font100/long-name-waiting.png",
+      "sha256": "d78344dff9ce2a4d1190acc2c353286469887473a3eb0409d1f2157469048e31"
+    },
+    {
+      "file": "font100/off-selected.png",
+      "sha256": "da2bef6df5c5742508f9eb9794be73e9fb9d6eb33087e10937c749127198efb9"
+    },
+    {
+      "file": "font100/selected-TYPE_EXO_PLAYER.png",
+      "sha256": "24ab63b7148f370d3397106237542fe796b25a82ef0e850f287bc97f7021198e"
+    },
+    {
+      "file": "font100/selected-TYPE_MPV_PLAYER.png",
+      "sha256": "8d09f554cb8e1edffce50a5f434b3e2e2de64c578e8624e46fd863620cadf69e"
+    },
+    {
+      "file": "font100/short-focused.png",
+      "sha256": "572ae6d2284b89dcee0cceae99dca5ea47218dd7965c1455d9dd415416ebabe7"
+    },
+    {
+      "file": "font100/sidebar-details-TYPE_EXO_PLAYER.png",
+      "sha256": "9fd1f9d956a0dd77834e844823a08b9af75a2f0a2ea3527e6f4c9199585086ac"
+    },
+    {
+      "file": "font100/sidebar-details-TYPE_MPV_PLAYER.png",
+      "sha256": "6ff1dc27ca5573adc1883de57c4a54e244bafd3bbe8dfbd140587e007c09caab"
+    },
+    {
+      "file": "font130/arabic-moving.png",
+      "sha256": "7896c06b96aae313844cfa90679cdcd88a829f384c3e515366314073bc76d2b3"
+    },
+    {
+      "file": "font130/arabic-waiting.png",
+      "sha256": "f032f2b93d71567ea57579ddf4cf9dab9f2434bc1c1df6e53ab557b83f0ef679"
+    },
+    {
+      "file": "font130/long-name-moving.png",
+      "sha256": "a7e66020bf48d52f69e24e2d1fb649e7748671ff6cd2ac516e770c4b4866689e"
+    },
+    {
+      "file": "font130/long-name-waiting.png",
+      "sha256": "4dc32be8b3b1d379474cbb34c8da71fd115eeba4509a2badf9f3d7da3792f5aa"
+    },
+    {
+      "file": "font130/off-selected.png",
+      "sha256": "09145c7fa8129d26b7eb5b3b05b9b229e7169f51bdddfa114d984c936c498ea5"
+    },
+    {
+      "file": "font130/short-focused.png",
+      "sha256": "a1af26628d86911c62c27ad4dbd454e12c5151cad18278109532d1883485cec9"
+    }
+  ],
+  "geometry": [
+    {
+      "file": "font100/arabic-moving.json",
+      "density": 1.5,
+      "fontScale": 1,
+      "menuBounds": [
+        900,
+        228,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "Deutsch (Deutschland) – Untertitel für Hörgeschädigte",
+          "bounds": [
+            916,
+            291,
+            1354,
+            363
+          ],
+          "nameBounds": [
+            934,
+            314,
+            1296,
+            339
+          ],
+          "checkBounds": [
+            1312,
+            315,
+            1336,
+            339
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 527,
+          "lineWidth": 350,
+          "scrollX": 0
+        },
+        {
+          "name": "Français (Canada) — sous-titres",
+          "bounds": [
+            916,
+            367,
+            1354,
+            439
+          ],
+          "nameBounds": [
+            934,
+            390,
+            1296,
+            415
+          ],
+          "checkBounds": [
+            1312,
+            391,
+            1336,
+            415
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 307,
+          "lineWidth": 307,
+          "scrollX": 0
+        },
+        {
+          "name": "العربية (السعودية) — ترجمة وصفية للصم وضعاف السمع",
+          "bounds": [
+            916,
+            443,
+            1354,
+            515
+          ],
+          "nameBounds": [
+            934,
+            464,
+            1296,
+            494
+          ],
+          "checkBounds": [
+            1312,
+            467,
+            1336,
+            491
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": -1,
+          "marqueeSelected": true,
+          "ellipsize": "MARQUEE",
+          "textWidth": 437,
+          "lineWidth": 437,
+          "scrollX": 1048214
+        },
+        {
+          "name": "[字幕组] 药屋少女的呢喃 第50集 [简体中文&English][WEB-DL 1080p][修订版].ass",
+          "bounds": [
+            916,
+            519,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            539,
+            1296,
+            571
+          ],
+          "checkBounds": [
+            1312,
+            543,
+            1336,
+            567
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 773,
+          "lineWidth": 358,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font100/arabic-waiting.json",
+      "density": 1.5,
+      "fontScale": 1,
+      "menuBounds": [
+        900,
+        228,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "Deutsch (Deutschland) – Untertitel für Hörgeschädigte",
+          "bounds": [
+            916,
+            291,
+            1354,
+            363
+          ],
+          "nameBounds": [
+            934,
+            314,
+            1296,
+            339
+          ],
+          "checkBounds": [
+            1312,
+            315,
+            1336,
+            339
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 527,
+          "lineWidth": 350,
+          "scrollX": 0
+        },
+        {
+          "name": "Français (Canada) — sous-titres",
+          "bounds": [
+            916,
+            367,
+            1354,
+            439
+          ],
+          "nameBounds": [
+            934,
+            390,
+            1296,
+            415
+          ],
+          "checkBounds": [
+            1312,
+            391,
+            1336,
+            415
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 307,
+          "lineWidth": 307,
+          "scrollX": 0
+        },
+        {
+          "name": "العربية (السعودية) — ترجمة وصفية للصم وضعاف السمع",
+          "bounds": [
+            916,
+            443,
+            1354,
+            515
+          ],
+          "nameBounds": [
+            934,
+            464,
+            1296,
+            494
+          ],
+          "checkBounds": [
+            1312,
+            467,
+            1336,
+            491
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": -1,
+          "marqueeSelected": true,
+          "ellipsize": "END",
+          "textWidth": 437,
+          "lineWidth": 352,
+          "scrollX": 1048214
+        },
+        {
+          "name": "[字幕组] 药屋少女的呢喃 第50集 [简体中文&English][WEB-DL 1080p][修订版].ass",
+          "bounds": [
+            916,
+            519,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            539,
+            1296,
+            571
+          ],
+          "checkBounds": [
+            1312,
+            543,
+            1336,
+            567
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 773,
+          "lineWidth": 358,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font100/empty-TYPE_EXO_PLAYER.json",
+      "density": 1.5,
+      "fontScale": 1,
+      "menuBounds": [
+        900,
+        412,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        519,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "关",
+          "bounds": [
+            916,
+            519,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            539,
+            1296,
+            571
+          ],
+          "checkBounds": [
+            1312,
+            543,
+            1336,
+            567
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "END",
+          "textWidth": 22,
+          "lineWidth": 22,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font100/empty-TYPE_MPV_PLAYER.json",
+      "density": 1.5,
+      "fontScale": 1,
+      "menuBounds": [
+        900,
+        412,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        519,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "关",
+          "bounds": [
+            916,
+            519,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            539,
+            1296,
+            571
+          ],
+          "checkBounds": [
+            1312,
+            543,
+            1336,
+            567
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "END",
+          "textWidth": 22,
+          "lineWidth": 22,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font100/long-name-moving.json",
+      "density": 1.5,
+      "fontScale": 1,
+      "menuBounds": [
+        900,
+        228,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "Deutsch (Deutschland) – Untertitel für Hörgeschädigte",
+          "bounds": [
+            916,
+            291,
+            1354,
+            363
+          ],
+          "nameBounds": [
+            934,
+            314,
+            1296,
+            339
+          ],
+          "checkBounds": [
+            1312,
+            315,
+            1336,
+            339
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 527,
+          "lineWidth": 350,
+          "scrollX": 0
+        },
+        {
+          "name": "Français (Canada) — sous-titres",
+          "bounds": [
+            916,
+            367,
+            1354,
+            439
+          ],
+          "nameBounds": [
+            934,
+            390,
+            1296,
+            415
+          ],
+          "checkBounds": [
+            1312,
+            391,
+            1336,
+            415
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 307,
+          "lineWidth": 307,
+          "scrollX": 0
+        },
+        {
+          "name": "العربية (السعودية) — ترجمة وصفية للصم وضعاف السمع",
+          "bounds": [
+            916,
+            443,
+            1354,
+            515
+          ],
+          "nameBounds": [
+            934,
+            464,
+            1296,
+            494
+          ],
+          "checkBounds": [
+            1312,
+            467,
+            1336,
+            491
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": -1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 437,
+          "lineWidth": 352,
+          "scrollX": 1048214
+        },
+        {
+          "name": "[字幕组] 药屋少女的呢喃 第50集 [简体中文&English][WEB-DL 1080p][修订版].ass",
+          "bounds": [
+            916,
+            519,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            539,
+            1296,
+            571
+          ],
+          "checkBounds": [
+            1312,
+            543,
+            1336,
+            567
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "MARQUEE",
+          "textWidth": 773,
+          "lineWidth": 773,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font100/long-name-waiting.json",
+      "density": 1.5,
+      "fontScale": 1,
+      "menuBounds": [
+        900,
+        228,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "Deutsch (Deutschland) – Untertitel für Hörgeschädigte",
+          "bounds": [
+            916,
+            291,
+            1354,
+            363
+          ],
+          "nameBounds": [
+            934,
+            314,
+            1296,
+            339
+          ],
+          "checkBounds": [
+            1312,
+            315,
+            1336,
+            339
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 527,
+          "lineWidth": 350,
+          "scrollX": 0
+        },
+        {
+          "name": "Français (Canada) — sous-titres",
+          "bounds": [
+            916,
+            367,
+            1354,
+            439
+          ],
+          "nameBounds": [
+            934,
+            390,
+            1296,
+            415
+          ],
+          "checkBounds": [
+            1312,
+            391,
+            1336,
+            415
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 307,
+          "lineWidth": 307,
+          "scrollX": 0
+        },
+        {
+          "name": "العربية (السعودية) — ترجمة وصفية للصم وضعاف السمع",
+          "bounds": [
+            916,
+            443,
+            1354,
+            515
+          ],
+          "nameBounds": [
+            934,
+            464,
+            1296,
+            494
+          ],
+          "checkBounds": [
+            1312,
+            467,
+            1336,
+            491
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": -1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 437,
+          "lineWidth": 352,
+          "scrollX": 1048214
+        },
+        {
+          "name": "[字幕组] 药屋少女的呢喃 第50集 [简体中文&English][WEB-DL 1080p][修订版].ass",
+          "bounds": [
+            916,
+            519,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            539,
+            1296,
+            571
+          ],
+          "checkBounds": [
+            1312,
+            543,
+            1336,
+            567
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "END",
+          "textWidth": 773,
+          "lineWidth": 358,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font100/off-selected.json",
+      "density": 1.5,
+      "fontScale": 1,
+      "menuBounds": [
+        900,
+        228,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "关",
+          "bounds": [
+            916,
+            291,
+            1354,
+            363
+          ],
+          "nameBounds": [
+            934,
+            311,
+            1296,
+            343
+          ],
+          "checkBounds": [
+            1312,
+            315,
+            1336,
+            339
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "END",
+          "textWidth": 22,
+          "lineWidth": 22,
+          "scrollX": 0
+        },
+        {
+          "name": "简体中文",
+          "bounds": [
+            916,
+            367,
+            1354,
+            439
+          ],
+          "nameBounds": [
+            934,
+            387,
+            1296,
+            419
+          ],
+          "checkBounds": [
+            1312,
+            391,
+            1336,
+            415
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 88,
+          "lineWidth": 88,
+          "scrollX": 0
+        },
+        {
+          "name": "English",
+          "bounds": [
+            916,
+            443,
+            1354,
+            515
+          ],
+          "nameBounds": [
+            934,
+            466,
+            1296,
+            491
+          ],
+          "checkBounds": [
+            1312,
+            467,
+            1336,
+            491
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 70,
+          "lineWidth": 70,
+          "scrollX": 0
+        },
+        {
+          "name": "简体中文 / English",
+          "bounds": [
+            916,
+            519,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            539,
+            1296,
+            571
+          ],
+          "checkBounds": [
+            1312,
+            543,
+            1336,
+            567
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 177,
+          "lineWidth": 177,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font100/selected-TYPE_EXO_PLAYER.json",
+      "density": 1.5,
+      "fontScale": 1,
+      "menuBounds": [
+        900,
+        380,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        443,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "关",
+          "bounds": [
+            916,
+            443,
+            1354,
+            515
+          ],
+          "nameBounds": [
+            934,
+            463,
+            1296,
+            495
+          ],
+          "checkBounds": [
+            1312,
+            467,
+            1336,
+            491
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 22,
+          "lineWidth": 22,
+          "scrollX": 0
+        },
+        {
+          "name": "a06-subtitle.srt",
+          "bounds": [
+            916,
+            519,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            542,
+            1296,
+            567
+          ],
+          "checkBounds": [
+            1312,
+            543,
+            1336,
+            567
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "END",
+          "textWidth": 145,
+          "lineWidth": 145,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font100/selected-TYPE_MPV_PLAYER.json",
+      "density": 1.5,
+      "fontScale": 1,
+      "menuBounds": [
+        900,
+        380,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        443,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "关",
+          "bounds": [
+            916,
+            443,
+            1354,
+            515
+          ],
+          "nameBounds": [
+            934,
+            463,
+            1296,
+            495
+          ],
+          "checkBounds": [
+            1312,
+            467,
+            1336,
+            491
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 22,
+          "lineWidth": 22,
+          "scrollX": 0
+        },
+        {
+          "name": "a06-subtitle.srt",
+          "bounds": [
+            916,
+            519,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            542,
+            1296,
+            567
+          ],
+          "checkBounds": [
+            1312,
+            543,
+            1336,
+            567
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "END",
+          "textWidth": 145,
+          "lineWidth": 145,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font100/short-focused.json",
+      "density": 1.5,
+      "fontScale": 1,
+      "menuBounds": [
+        900,
+        228,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "关",
+          "bounds": [
+            916,
+            291,
+            1354,
+            363
+          ],
+          "nameBounds": [
+            934,
+            311,
+            1296,
+            343
+          ],
+          "checkBounds": [
+            1312,
+            315,
+            1336,
+            339
+          ],
+          "focused": false,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 22,
+          "lineWidth": 22,
+          "scrollX": 0
+        },
+        {
+          "name": "简体中文",
+          "bounds": [
+            916,
+            367,
+            1354,
+            439
+          ],
+          "nameBounds": [
+            934,
+            387,
+            1296,
+            419
+          ],
+          "checkBounds": [
+            1312,
+            391,
+            1336,
+            415
+          ],
+          "focused": true,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "MARQUEE",
+          "textWidth": 88,
+          "lineWidth": 88,
+          "scrollX": 0
+        },
+        {
+          "name": "English",
+          "bounds": [
+            916,
+            443,
+            1354,
+            515
+          ],
+          "nameBounds": [
+            934,
+            466,
+            1296,
+            491
+          ],
+          "checkBounds": [
+            1312,
+            467,
+            1336,
+            491
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 70,
+          "lineWidth": 70,
+          "scrollX": 0
+        },
+        {
+          "name": "简体中文 / English",
+          "bounds": [
+            916,
+            519,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            539,
+            1296,
+            571
+          ],
+          "checkBounds": [
+            1312,
+            543,
+            1336,
+            567
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 177,
+          "lineWidth": 177,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font130/arabic-moving.json",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "menuBounds": [
+        900,
+        219,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "Deutsch (Deutschland) – Untertitel für Hörgeschädigte",
+          "bounds": [
+            916,
+            207,
+            1354,
+            300
+          ],
+          "nameBounds": [
+            934,
+            236,
+            1296,
+            270
+          ],
+          "checkBounds": [
+            1312,
+            241,
+            1336,
+            265
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 696,
+          "lineWidth": 337,
+          "scrollX": 0
+        },
+        {
+          "name": "Français (Canada) — sous-titres",
+          "bounds": [
+            916,
+            304,
+            1354,
+            397
+          ],
+          "nameBounds": [
+            934,
+            333,
+            1296,
+            367
+          ],
+          "checkBounds": [
+            1312,
+            338,
+            1336,
+            362
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 409,
+          "lineWidth": 356,
+          "scrollX": 0
+        },
+        {
+          "name": "العربية (السعودية) — ترجمة وصفية للصم وضعاف السمع",
+          "bounds": [
+            916,
+            401,
+            1354,
+            494
+          ],
+          "nameBounds": [
+            934,
+            428,
+            1296,
+            467
+          ],
+          "checkBounds": [
+            1312,
+            435,
+            1336,
+            459
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": -1,
+          "marqueeSelected": true,
+          "ellipsize": "MARQUEE",
+          "textWidth": 579,
+          "lineWidth": 579,
+          "scrollX": 1048214
+        },
+        {
+          "name": "[字幕组] 药屋少女的呢喃 第50集 [简体中文&English][WEB-DL 1080p][修订版].ass",
+          "bounds": [
+            916,
+            498,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            523,
+            1296,
+            565
+          ],
+          "checkBounds": [
+            1312,
+            532,
+            1336,
+            556
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 1023,
+          "lineWidth": 332,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font130/arabic-waiting.json",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "menuBounds": [
+        900,
+        219,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "Deutsch (Deutschland) – Untertitel für Hörgeschädigte",
+          "bounds": [
+            916,
+            207,
+            1354,
+            300
+          ],
+          "nameBounds": [
+            934,
+            236,
+            1296,
+            270
+          ],
+          "checkBounds": [
+            1312,
+            241,
+            1336,
+            265
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 696,
+          "lineWidth": 337,
+          "scrollX": 0
+        },
+        {
+          "name": "Français (Canada) — sous-titres",
+          "bounds": [
+            916,
+            304,
+            1354,
+            397
+          ],
+          "nameBounds": [
+            934,
+            333,
+            1296,
+            367
+          ],
+          "checkBounds": [
+            1312,
+            338,
+            1336,
+            362
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 409,
+          "lineWidth": 356,
+          "scrollX": 0
+        },
+        {
+          "name": "العربية (السعودية) — ترجمة وصفية للصم وضعاف السمع",
+          "bounds": [
+            916,
+            401,
+            1354,
+            494
+          ],
+          "nameBounds": [
+            934,
+            428,
+            1296,
+            467
+          ],
+          "checkBounds": [
+            1312,
+            435,
+            1336,
+            459
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": -1,
+          "marqueeSelected": true,
+          "ellipsize": "END",
+          "textWidth": 579,
+          "lineWidth": 361,
+          "scrollX": 1048214
+        },
+        {
+          "name": "[字幕组] 药屋少女的呢喃 第50集 [简体中文&English][WEB-DL 1080p][修订版].ass",
+          "bounds": [
+            916,
+            498,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            523,
+            1296,
+            565
+          ],
+          "checkBounds": [
+            1312,
+            532,
+            1336,
+            556
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 1023,
+          "lineWidth": 332,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font130/long-name-moving.json",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "menuBounds": [
+        900,
+        219,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "Deutsch (Deutschland) – Untertitel für Hörgeschädigte",
+          "bounds": [
+            916,
+            207,
+            1354,
+            300
+          ],
+          "nameBounds": [
+            934,
+            236,
+            1296,
+            270
+          ],
+          "checkBounds": [
+            1312,
+            241,
+            1336,
+            265
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 696,
+          "lineWidth": 337,
+          "scrollX": 0
+        },
+        {
+          "name": "Français (Canada) — sous-titres",
+          "bounds": [
+            916,
+            304,
+            1354,
+            397
+          ],
+          "nameBounds": [
+            934,
+            333,
+            1296,
+            367
+          ],
+          "checkBounds": [
+            1312,
+            338,
+            1336,
+            362
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 409,
+          "lineWidth": 356,
+          "scrollX": 0
+        },
+        {
+          "name": "العربية (السعودية) — ترجمة وصفية للصم وضعاف السمع",
+          "bounds": [
+            916,
+            401,
+            1354,
+            494
+          ],
+          "nameBounds": [
+            934,
+            428,
+            1296,
+            467
+          ],
+          "checkBounds": [
+            1312,
+            435,
+            1336,
+            459
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": -1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 579,
+          "lineWidth": 361,
+          "scrollX": 1048214
+        },
+        {
+          "name": "[字幕组] 药屋少女的呢喃 第50集 [简体中文&English][WEB-DL 1080p][修订版].ass",
+          "bounds": [
+            916,
+            498,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            523,
+            1296,
+            565
+          ],
+          "checkBounds": [
+            1312,
+            532,
+            1336,
+            556
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "MARQUEE",
+          "textWidth": 1023,
+          "lineWidth": 1023,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font130/long-name-waiting.json",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "menuBounds": [
+        900,
+        219,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "Deutsch (Deutschland) – Untertitel für Hörgeschädigte",
+          "bounds": [
+            916,
+            207,
+            1354,
+            300
+          ],
+          "nameBounds": [
+            934,
+            236,
+            1296,
+            270
+          ],
+          "checkBounds": [
+            1312,
+            241,
+            1336,
+            265
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 696,
+          "lineWidth": 337,
+          "scrollX": 0
+        },
+        {
+          "name": "Français (Canada) — sous-titres",
+          "bounds": [
+            916,
+            304,
+            1354,
+            397
+          ],
+          "nameBounds": [
+            934,
+            333,
+            1296,
+            367
+          ],
+          "checkBounds": [
+            1312,
+            338,
+            1336,
+            362
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 409,
+          "lineWidth": 356,
+          "scrollX": 0
+        },
+        {
+          "name": "العربية (السعودية) — ترجمة وصفية للصم وضعاف السمع",
+          "bounds": [
+            916,
+            401,
+            1354,
+            494
+          ],
+          "nameBounds": [
+            934,
+            428,
+            1296,
+            467
+          ],
+          "checkBounds": [
+            1312,
+            435,
+            1336,
+            459
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": -1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 579,
+          "lineWidth": 361,
+          "scrollX": 1048214
+        },
+        {
+          "name": "[字幕组] 药屋少女的呢喃 第50集 [简体中文&English][WEB-DL 1080p][修订版].ass",
+          "bounds": [
+            916,
+            498,
+            1354,
+            591
+          ],
+          "nameBounds": [
+            934,
+            523,
+            1296,
+            565
+          ],
+          "checkBounds": [
+            1312,
+            532,
+            1336,
+            556
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "END",
+          "textWidth": 1023,
+          "lineWidth": 332,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font130/off-selected.json",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "menuBounds": [
+        900,
+        219,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "关",
+          "bounds": [
+            916,
+            291,
+            1354,
+            384
+          ],
+          "nameBounds": [
+            934,
+            316,
+            1296,
+            358
+          ],
+          "checkBounds": [
+            1312,
+            325,
+            1336,
+            349
+          ],
+          "focused": true,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "END",
+          "textWidth": 29,
+          "lineWidth": 29,
+          "scrollX": 0
+        },
+        {
+          "name": "简体中文",
+          "bounds": [
+            916,
+            388,
+            1354,
+            481
+          ],
+          "nameBounds": [
+            934,
+            413,
+            1296,
+            455
+          ],
+          "checkBounds": [
+            1312,
+            422,
+            1336,
+            446
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 116,
+          "lineWidth": 116,
+          "scrollX": 0
+        },
+        {
+          "name": "English",
+          "bounds": [
+            916,
+            485,
+            1354,
+            578
+          ],
+          "nameBounds": [
+            934,
+            514,
+            1296,
+            548
+          ],
+          "checkBounds": [
+            1312,
+            519,
+            1336,
+            543
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 93,
+          "lineWidth": 93,
+          "scrollX": 0
+        },
+        {
+          "name": "简体中文 / English",
+          "bounds": [
+            916,
+            582,
+            1354,
+            675
+          ],
+          "nameBounds": [
+            934,
+            607,
+            1296,
+            649
+          ],
+          "checkBounds": [
+            1312,
+            616,
+            1336,
+            640
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 235,
+          "lineWidth": 235,
+          "scrollX": 0
+        }
+      ]
+    },
+    {
+      "file": "font130/short-focused.json",
+      "density": 1.5,
+      "fontScale": 1.3,
+      "menuBounds": [
+        900,
+        219,
+        1380,
+        607
+      ],
+      "listBounds": [
+        916,
+        291,
+        1364,
+        591
+      ],
+      "rows": [
+        {
+          "name": "关",
+          "bounds": [
+            916,
+            291,
+            1354,
+            384
+          ],
+          "nameBounds": [
+            934,
+            316,
+            1296,
+            358
+          ],
+          "checkBounds": [
+            1312,
+            325,
+            1336,
+            349
+          ],
+          "focused": false,
+          "selected": true,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 29,
+          "lineWidth": 29,
+          "scrollX": 0
+        },
+        {
+          "name": "简体中文",
+          "bounds": [
+            916,
+            388,
+            1354,
+            481
+          ],
+          "nameBounds": [
+            934,
+            413,
+            1296,
+            455
+          ],
+          "checkBounds": [
+            1312,
+            422,
+            1336,
+            446
+          ],
+          "focused": true,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": true,
+          "ellipsize": "MARQUEE",
+          "textWidth": 116,
+          "lineWidth": 116,
+          "scrollX": 0
+        },
+        {
+          "name": "English",
+          "bounds": [
+            916,
+            485,
+            1354,
+            578
+          ],
+          "nameBounds": [
+            934,
+            514,
+            1296,
+            548
+          ],
+          "checkBounds": [
+            1312,
+            519,
+            1336,
+            543
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 93,
+          "lineWidth": 93,
+          "scrollX": 0
+        },
+        {
+          "name": "简体中文 / English",
+          "bounds": [
+            916,
+            582,
+            1354,
+            675
+          ],
+          "nameBounds": [
+            934,
+            607,
+            1296,
+            649
+          ],
+          "checkBounds": [
+            1312,
+            616,
+            1336,
+            640
+          ],
+          "focused": false,
+          "selected": false,
+          "lines": 1,
+          "direction": 1,
+          "marqueeSelected": false,
+          "ellipsize": "END",
+          "textWidth": 235,
+          "lineWidth": 235,
+          "scrollX": 0
+        }
+      ]
+    }
+  ],
+  "sourceHashes": [
+    {
+      "file": "data_component/src/main/java/com/xyoye/data_component/enums/SettingViewType.kt",
+      "sha256": "46e8c37bb30e512b594348c4dbf8d55cc49d89bb2a29215d10f3a57aea0611b0"
+    },
+    {
+      "file": "player_component/src/main/java/com/xyoye/player/controller/setting/SubtitleQuickView.kt",
+      "sha256": "1da88e9c750e3e541550f9d99193e6bbbabfb524e9aab6b8e76edb9ddf52c2fd"
+    },
+    {
+      "file": "player_component/src/main/java/com/xyoye/player/controller/setting/SettingController.kt",
+      "sha256": "4bfa52452d661757bf61aa7ed68cb31909cd324158f9f3dc77bc649ee29355b2"
+    },
+    {
+      "file": "player_component/src/main/java/com/xyoye/player/controller/setting/SettingTracksView.kt",
+      "sha256": "e7e71388720d093ff4aaafb49f4ea9b86088b54dafdaf0af2170fc8edbbf559d"
+    },
+    {
+      "file": "player_component/src/main/java/com/xyoye/player/controller/setting/PlayerSettingView.kt",
+      "sha256": "b3fe1cc420424c645848b972c4ab08c9cf6246f753691f9e253ce77ac0d149c3"
+    },
+    {
+      "file": "player_component/src/main/java/com/xyoye/player/controller/video/PlayerBottomView.kt",
+      "sha256": "524b17af0c2deb7227884ed15062dca9d5ffa5dbbe8470f64ffdd15656f4a361"
+    },
+    {
+      "file": "player_component/src/main/java/com/xyoye/player/info/SettingAction.kt",
+      "sha256": "d6de501622fe4e291b340fa0de752c05c7d4fa82b33bd64392f1ff952ef59014"
+    },
+    {
+      "file": "player_component/src/main/res/layout/layout_subtitle_quick.xml",
+      "sha256": "9e7b7261d3cc6ee9d77d0478bda1ed146097f66a3380e92f768a73e88c5e69dd"
+    },
+    {
+      "file": "player_component/src/main/res/layout/item_subtitle_quick.xml",
+      "sha256": "027d29d2db14e03156bd7e4551629da400fab8ff88626653f94950177e121eef"
+    },
+    {
+      "file": "player_component/src/main/res/drawable/cinema_subtitle_menu.xml",
+      "sha256": "d16a392fd51badbbbbcb10e53286bcc0e576542901be42bbd19d7cd0dba7c121"
+    },
+    {
+      "file": "player_component/src/main/res/drawable/cinema_subtitle_option.xml",
+      "sha256": "6b5654ba82ebab17f67518cd4db48a65990f9b72f9b93f66818caddbf7fce843"
+    },
+    {
+      "file": "player_component/src/main/res/drawable/cinema_subtitle_scrollbar_track.xml",
+      "sha256": "e74982d9881ea9dfc2394c321b7f460758ce15afa443fd4fec900ef473ce88d1"
+    },
+    {
+      "file": "player_component/src/main/res/drawable/cinema_subtitle_scrollbar_thumb.xml",
+      "sha256": "b640269f5957976d00aa6187d8a5638853dd2fba77dbb64776170b49c649ada7"
+    },
+    {
+      "file": "player_component/src/main/res/drawable/cinema_bottom_subtitle.xml",
+      "sha256": "42fb616cd31f17f7fe2773b48ea041ae4051af0163db9a437ffd11ec65c011e4"
+    },
+    {
+      "file": "player_component/src/main/res/drawable/cinema_bottom_subtitle_on.xml",
+      "sha256": "79bea1094978f082587eb682fc814af4874d3960c48763687314b129774959b4"
+    },
+    {
+      "file": "player_component/src/main/res/drawable/cinema_bottom_subtitle_off.xml",
+      "sha256": "10ebeb044cccc9e681be5de41fac794c9e002c6d2f07d44f39d39845d35bdb9b"
+    },
+    {
+      "file": "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/PlayerPanelLayersInstrumentedTest.kt",
+      "sha256": "e4da545f57c800f4cbc49ac6430b23d43c7e7a648390f60dd9cd5290240ebd36"
+    },
+    {
+      "file": "app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/FocusFeedbackInstrumentedTest.kt",
+      "sha256": "0d3a8aad582fd367ea497b4924575ece44316328523586152a7f9bcb146f2dc5"
+    }
+  ],
+  "visualInspection": {
+    "date": "2026-11-03",
+    "viewed": [
+      "comparison.png",
+      "states.png",
+      "font130/long-name-waiting.png",
+      "font100/empty-TYPE_EXO_PLAYER.png",
+      "font100/selected-TYPE_MPV_PLAYER.png",
+      "font100/sidebar-details-TYPE_MPV_PLAYER.png"
+    ],
+    "notes": "Final empty-list, native/prototype comparison and large-font images were viewed after the final scrollbar change. Native menu bounds: [900,228,1380,607] / [900,219,1380,607]; 72/93px rows. Platform title measurement and border-box differences are recorded in the task ledger."
+  },
+  "composites": [
+    {
+      "file": "comparison.png",
+      "sha256": "153b58f66adaeb5bfa6e25649ff3caa2ce380f66495a1f2407da7aeda9930027"
+    },
+    {
+      "file": "states.png",
+      "sha256": "a311c803114e2e79edd4f02b8fd4ae7125118045af380f4038cdd27b6c5ed23f"
+    }
+  ],
+  "apks": [
+    {
+      "file": "app/build/outputs/apk/debug/ddplaytv_v4.2.5-debug_universal-debug.apk",
+      "sha256": "541897e4baf959112c1749d770c31659d41e7da69cca900811fd8b8105f35a03"
+    },
+    {
+      "file": "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+      "sha256": "78ca288bd07d1aff07f865cffde9fc44b89a947e6e5be2be1a8d155cac091421"
+    }
+  ],
+  "results": [
+    {
+      "file": ".tmp/subtitle-quick/validation.log",
+      "result": "BUILD SUCCESSFUL"
+    },
+    {
+      "file": ".tmp/subtitle-quick/validation-visual-final.log",
+      "result": "BUILD SUCCESSFUL"
+    },
+    {
+      "file": ".tmp/subtitle-quick/test-final-build.log",
+      "result": "BUILD SUCCESSFUL"
+    },
+    {
+      "file": ".tmp/subtitle-quick/instrumentation-accepted.log",
+      "result": "OK (8 tests)"
+    },
+    {
+      "file": ".tmp/subtitle-quick/instrumentation-font130.log",
+      "result": "OK (2 tests)"
+    },
+    {
+      "file": ".tmp/subtitle-quick/instrumentation-visual-final.log",
+      "result": "OK (2 tests)"
+    },
+    {
+      "file": ".tmp/subtitle-quick/instrumentation-font130-final.log",
+      "result": "OK (1 test)"
+    }
+  ]
+}

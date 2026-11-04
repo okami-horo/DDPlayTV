@@ -40,8 +40,10 @@ import com.xyoye.player.controller.VideoController
 import com.xyoye.player.controller.setting.BaseSettingView
 import com.xyoye.player.controller.setting.DanmuPanelState
 import com.xyoye.player.controller.setting.DanmuSearchState
+import com.xyoye.player.controller.setting.SubtitleQuickView
 import com.xyoye.player.controller.video.PlayerBottomView
 import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.info.SettingItem
 import com.xyoye.player.wrapper.ControlWrapper
 import com.xyoye.player.wrapper.InterVideoPlayer
 import com.xyoye.player_component.ui.activities.player.PlayerActivity
@@ -78,10 +80,12 @@ class PlayerPanelLayersInstrumentedTest {
         instrumentation.setInTouchMode(false)
     }
 
-    @Test fun bottomDanmakuToggleKeepsFocusAndSynchronizesWithRightPanel() =
+    @Test fun bottomDanmakuToggleKeepsFocusAndSidebarDetailsStayEditable() =
         withPlayback { scenario, controller, _ ->
             val danmu = controller.getDanmuController()
             val original = danmu.isUserDanmuVisible()
+            val savedSize = DanmuConfig.getDanmuSize()
+            val runtimeSize = PlayerInitializer.Danmu.size
             try {
                 scenario.onActivity { danmu.setUserDanmuVisible(true) }
                 key(KeyEvent.KEYCODE_DPAD_DOWN)
@@ -117,10 +121,12 @@ class PlayerPanelLayersInstrumentedTest {
                 scenario.onActivity { assertFalse(it.findViewById<View>(PlayerR.id.danmu_control_iv).isFocusable) }
                 key(KeyEvent.KEYCODE_DPAD_DOWN)
                 await(scenario) { it.currentFocus?.id == PlayerR.id.danmu_control_iv }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
                 key(KeyEvent.KEYCODE_MENU)
                 await(scenario) {
                     activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
-                        panel(controller).hasFocus()
+                        panel(controller).hasFocus() &&
+                        panel(controller).getChildAt(0).translationX == 0f
                 }
                 var trackEntry = false
                 repeat(12) {
@@ -136,15 +142,50 @@ class PlayerPanelLayersInstrumentedTest {
                 assertTrue("Danmaku details must remain reachable from the settings sidebar", trackEntry)
                 key(KeyEvent.KEYCODE_DPAD_CENTER)
                 await(scenario) { activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS && panel(controller).hasFocus() }
+                screenshot("danmaku-tracks-empty", "player-danmaku-sidebar-$phase")
                 scenario.onActivity {
-                    assertTrue(
-                        panel(controller).findViewById<android.widget.CompoundButton>(PlayerR.id.track_visible).isChecked
-                    )
-                }
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                scenario.onActivity {
-                    assertFalse(panel(controller).findViewById<android.widget.CompoundButton>(PlayerR.id.track_visible).isChecked)
+                    val toggle = panel(controller).findViewById<View>(PlayerR.id.track_visible)
+                    assertFalse("The sidebar must not repeat the bottom danmaku toggle", toggle.isShown)
+                    assertFalse("The hidden switch must not take DPAD focus", toggle.requestFocus())
+                    assertTrue(panel(controller).findViewById<View>(PlayerR.id.track_style).isShown)
+                    assertEquals(PlayerR.id.tv_add_track, it.currentFocus?.id)
                     assertDanmakuButton(it, false, false)
+                }
+                key(KeyEvent.KEYCODE_DPAD_DOWN)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.track_style }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.DANMU_STYLE &&
+                        panel(controller).hasFocus()
+                }
+                var size = 0
+                scenario.onActivity { size = it.findViewById<android.widget.SeekBar>(PlayerR.id.danmu_size_sb).progress }
+                key(if (size < 100) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT)
+                scenario.onActivity {
+                    val changed = it.findViewById<android.widget.SeekBar>(PlayerR.id.danmu_size_sb).progress
+                    assertNotEquals("Detailed settings must remain editable while danmaku is off", size, changed)
+                    assertEquals(changed, DanmuConfig.getDanmuSize())
+                    size = changed
+                    assertDanmakuButton(it, false, false)
+                }
+                screenshot("danmaku-style-while-off", "player-danmaku-sidebar-$phase")
+                key(KeyEvent.KEYCODE_BACK)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS &&
+                        it.currentFocus?.id == PlayerR.id.tv_add_track
+                }
+                key(KeyEvent.KEYCODE_DPAD_DOWN)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.track_style }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.DANMU_STYLE &&
+                        panel(controller).hasFocus()
+                }
+                scenario.onActivity { assertEquals(size, it.findViewById<android.widget.SeekBar>(PlayerR.id.danmu_size_sb).progress) }
+                key(KeyEvent.KEYCODE_BACK)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS &&
+                        it.currentFocus?.id == PlayerR.id.tv_add_track
                 }
                 key(KeyEvent.KEYCODE_BACK)
                 await(scenario) {
@@ -175,12 +216,27 @@ class PlayerPanelLayersInstrumentedTest {
                         assertFalse("Turning off a loaded track must hide its rendering view", controller.getChildAt(0).isShown)
                         assertDanmakuButton(it, false, true)
                     }
+                    show(scenario, controller, SettingViewType.TRACKS, TrackType.DANMU)
+                    scenario.onActivity {
+                        assertFalse(panel(controller).findViewById<View>(PlayerR.id.track_visible).isShown)
+                        assertTrue(panel(controller).findViewById<View>(PlayerR.id.track_style).isShown)
+                        assertTrue(panel(controller).findViewById<View>(PlayerR.id.rv_track).hasFocus())
+                        assertDanmakuButton(it, false, false)
+                    }
+                    screenshot("danmaku-tracks-loaded", "player-danmaku-sidebar-$phase")
+                    key(KeyEvent.KEYCODE_BACK)
+                    await(scenario) { it.currentFocus?.id == PlayerR.id.danmu_control_iv }
                 } finally {
                     fixture.delete()
                 }
                 key(KeyEvent.KEYCODE_BACK)
             } finally {
-                scenario.onActivity { danmu.setUserDanmuVisible(original) }
+                scenario.onActivity {
+                    DanmuConfig.putDanmuSize(savedSize)
+                    PlayerInitializer.Danmu.size = runtimeSize
+                    danmu.updateDanmuSize()
+                    danmu.setUserDanmuVisible(original)
+                }
             }
         }
 
@@ -213,6 +269,377 @@ class PlayerPanelLayersInstrumentedTest {
             DanmuConfig.putShowDanmu(original)
         }
     }
+
+    @Test fun subtitleQuickWorksWithBothKernelsAndSidebarContainsOnlyDetails() {
+        for (kernel in listOf(PlayerType.TYPE_EXO_PLAYER, PlayerType.TYPE_MPV_PLAYER)) {
+            withPlayback(kernel) { scenario, controller, _ ->
+                val subtitle = File(context.getExternalFilesDir("a06-fixtures"), "a06-subtitle.srt")
+                subtitle.writeText("1\n00:00:00,000 --> 00:01:50,000\n为什么那次衣服没被撞破啊？\n\n")
+                key(KeyEvent.KEYCODE_DPAD_DOWN)
+                repeat(4) { key(KeyEvent.KEYCODE_DPAD_RIGHT) }
+                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { quickRow(it, 0)?.hasFocus() == true }
+                scenario.onActivity {
+                    assertEquals(1, quickList(it).adapter!!.itemCount)
+                    assertTrue(quickRow(it, 0)!!.isActivated)
+                    assertTrue(it.findViewById<View>(PlayerR.id.subtitle_quick_message).isShown)
+                }
+                captureSubtitle(scenario, "empty-${kernel.name}")
+                key(KeyEvent.KEYCODE_BACK)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                scenario.onActivity { assertTrue(controller.addExtendTrack(VideoTrackBean.subtitle(subtitle.path))) }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { quickList(it).adapter!!.itemCount == 2 && quickRow(it, 1)?.isActivated == true }
+                var position = 0L
+                scenario.onActivity { position = player(it).getCurrentPosition() }
+                SystemClock.sleep(700)
+                scenario.onActivity {
+                    assertTrue("$kernel must keep playing behind the quick panel", player(it).isPlaying())
+                    assertTrue(player(it).getCurrentPosition() > position)
+                }
+                key(KeyEvent.KEYCODE_DPAD_UP)
+                scenario.onActivity {
+                    assertTrue(quickRow(it, 0)!!.hasFocus())
+                    assertFalse(quickRow(it, 0)!!.isActivated)
+                    assertTrue(quickRow(it, 1)!!.isActivated)
+                }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                scenario.onActivity {
+                    assertFalse(controller.getSubtitleController().isUserSubtitleVisible())
+                    assertTrue(controlWrapper(it).getTracks(TrackType.SUBTITLE).any { track -> !track.disable && track.selected })
+                }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { quickRow(it, 0)?.hasFocus() == true }
+                key(KeyEvent.KEYCODE_DPAD_DOWN)
+                key(KeyEvent.KEYCODE_BACK)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                scenario.onActivity { assertFalse(controller.getSubtitleController().isUserSubtitleVisible()) }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { quickRow(it, 0)?.hasFocus() == true }
+                key(KeyEvent.KEYCODE_DPAD_DOWN)
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                scenario.onActivity { assertTrue(controller.getSubtitleController().isUserSubtitleVisible()) }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { quickRow(it, 1)?.hasFocus() == true && quickRow(it, 1)?.isActivated == true }
+                captureSubtitle(scenario, "selected-${kernel.name}")
+                key(KeyEvent.KEYCODE_BACK)
+                key(KeyEvent.KEYCODE_MENU)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                        panel(controller).hasFocus()
+                }
+                scenario.onActivity {
+                    val adapter =
+                        it
+                            .findViewById<RecyclerView>(
+                                PlayerR.id.setting_rv
+                            ).adapter as com.xyoye.common_component.adapter.BaseAdapter
+                    val labels = adapter.items.filterIsInstance<SettingItem>().map { item -> item.display }
+                    assertTrue(labels.containsAll(listOf("样式与位置", "时间同步", "添加外挂字幕")))
+                    assertFalse(labels.contains("字幕轨"))
+                    assertFalse(labels.contains("显示字幕"))
+                }
+                focusPlayerSetting(scenario, "样式与位置")
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.SUBTITLE_STYLE &&
+                        panel(controller).hasFocus()
+                }
+                key(KeyEvent.KEYCODE_BACK)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                        panel(controller).hasFocus() &&
+                        panel(controller).getChildAt(0).translationX == 0f
+                }
+                focusPlayerSetting(scenario, "时间同步")
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) {
+                    it.findViewById<TextView>(PlayerR.id.offset_title)?.text == "字幕时间偏移" &&
+                        panel(controller).hasFocus()
+                }
+                key(KeyEvent.KEYCODE_BACK)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                        panel(controller).hasFocus() &&
+                        panel(controller).getChildAt(0).translationX == 0f
+                }
+                focusPlayerSetting(scenario, "添加外挂字幕")
+                screenshot("sidebar-details-${kernel.name}", "player-subtitle-quick")
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.SWITCH_SOURCE &&
+                        panel(controller).hasFocus()
+                }
+                key(KeyEvent.KEYCODE_BACK)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                        panel(controller).hasFocus()
+                }
+                key(KeyEvent.KEYCODE_BACK)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                key(KeyEvent.KEYCODE_BACK)
+            }
+        }
+    }
+
+    @Test fun subtitleQuickLongNamesStaySingleLineAndOnlyFocusedTextMoves() =
+        withPlayback { scenario, controller, _ ->
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            repeat(4) { key(KeyEvent.KEYCODE_DPAD_RIGHT) }
+            await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+            key(KeyEvent.KEYCODE_DPAD_CENTER)
+            await(scenario) { quickRow(it, 0)?.hasFocus() == true }
+            key(KeyEvent.KEYCODE_BACK)
+            lateinit var original: ControlWrapper
+            val names =
+                listOf(
+                    "简体中文",
+                    "English",
+                    "简体中文 / English",
+                    "繁體中文（台灣）",
+                    "日本語",
+                    "Deutsch (Deutschland) – Untertitel für Hörgeschädigte",
+                    "Français (Canada) — sous-titres",
+                    "العربية (السعودية) — ترجمة وصفية للصم وضعاف السمع",
+                    "[字幕组] 药屋少女的呢喃 第50集 [简体中文&English][WEB-DL 1080p][修订版].ass"
+                )
+            var selected = 8
+            lateinit var quick: SubtitleQuickView
+            scenario.onActivity {
+                player(it).pause()
+                controller.stopFadeOut()
+                bottom(it).onProgressChanged(1_440_000, 582_000)
+                controller.onSubtitleTextOutput(MixedSubtitle.fromText("为什么那次衣服没被撞破啊？"))
+                original = controlWrapper(it)
+                val fixture =
+                    object : InterVideoPlayer by original {
+                        override fun supportAddTrack(type: TrackType) = type == TrackType.SUBTITLE || original.supportAddTrack(type)
+
+                        override fun getTracks(type: TrackType): List<VideoTrackBean> =
+                            if (type ==
+                                TrackType.SUBTITLE
+                            ) {
+                                names.mapIndexed { index, name ->
+                                    VideoTrackBean.internal(
+                                        "$index",
+                                        name,
+                                        type,
+                                        index == selected
+                                    )
+                                }
+                            } else {
+                                original.getTracks(type)
+                            }
+
+                        override fun selectTrack(track: VideoTrackBean) {
+                            selected = track.id!!.toInt()
+                        }
+                    }
+                quick =
+                    (0 until controller.childCount)
+                        .map { index ->
+                            controller.getChildAt(index)
+                        }.filterIsInstance<SubtitleQuickView>()
+                        .single()
+                val wrapper = ControlWrapper(fixture, original, original, original, original)
+                quick.attach(wrapper)
+                bottom(it).attach(wrapper)
+            }
+            try {
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { quickRow(it, 9)?.hasFocus() == true }
+                lateinit var first: Bitmap
+                var tick = Rect()
+                scenario.onActivity {
+                    val row = requireNotNull(quickRow(it, 9))
+                    val name = row.findViewById<TextView>(PlayerR.id.subtitle_quick_name)
+                    assertEquals(1, name.lineCount)
+                    assertTrue(name.isSelected)
+                    assertEquals(8, selected)
+                    tick = bounds(row.findViewById(PlayerR.id.subtitle_quick_check))
+                    first = drawView(name)
+                    val list = quickList(it)
+                    for (index in 0 until list.childCount) {
+                        val other = list.getChildAt(index)
+                        assertEquals(row.width, other.width)
+                        assertEquals(row.height, other.height)
+                        assertEquals(tick.left, bounds(other.findViewById(PlayerR.id.subtitle_quick_check)).left)
+                        assertEquals(other.hasFocus(), other.findViewById<TextView>(PlayerR.id.subtitle_quick_name).isSelected)
+                    }
+                    val visible = Rect()
+                    assertTrue(row.getGlobalVisibleRect(visible))
+                    assertEquals(row.height, visible.height())
+                }
+                SystemClock.sleep(400)
+                scenario.onActivity {
+                    assertTrue(
+                        "Marquee must wait before moving",
+                        first.sameAs(drawView(quickRow(it, 9)!!.findViewById(PlayerR.id.subtitle_quick_name)))
+                    )
+                }
+                captureSubtitle(scenario, "long-name-waiting")
+                SystemClock.sleep(1600)
+                scenario.onActivity {
+                    assertFalse(
+                        "Focused long text must actually move",
+                        first.sameAs(drawView(quickRow(it, 9)!!.findViewById(PlayerR.id.subtitle_quick_name)))
+                    )
+                    assertEquals(tick, bounds(quickRow(it, 9)!!.findViewById(PlayerR.id.subtitle_quick_check)))
+                }
+                captureSubtitle(scenario, "long-name-moving")
+                first.recycle()
+                key(KeyEvent.KEYCODE_DPAD_UP)
+                await(scenario) { quickRow(it, 8)?.hasFocus() == true }
+                scenario.onActivity {
+                    val name = quickRow(it, 8)!!.findViewById<TextView>(PlayerR.id.subtitle_quick_name)
+                    assertEquals(-1, name.layout.getParagraphDirection(0))
+                    assertEquals(1, name.lineCount)
+                    assertEquals(8, selected)
+                    val old = quickRow(it, 9)!!.findViewById<TextView>(PlayerR.id.subtitle_quick_name)
+                    assertFalse(old.isSelected)
+                    assertEquals(android.text.TextUtils.TruncateAt.END, old.ellipsize)
+                    first = drawView(old)
+                }
+                SystemClock.sleep(400)
+                scenario.onActivity {
+                    val reset = drawView(quickRow(it, 9)!!.findViewById(PlayerR.id.subtitle_quick_name))
+                    assertTrue("Unfocused text must stop and stay at its initial position", first.sameAs(reset))
+                    reset.recycle()
+                    first.recycle()
+                }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                assertEquals(7, selected)
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { quickRow(it, 8)?.hasFocus() == true }
+                captureSubtitle(scenario, "arabic-waiting")
+                scenario.onActivity {
+                    first = drawView(quickRow(it, 8)!!.findViewById(PlayerR.id.subtitle_quick_name))
+                    tick = bounds(quickRow(it, 8)!!.findViewById(PlayerR.id.subtitle_quick_check))
+                }
+                SystemClock.sleep(1800)
+                captureSubtitle(scenario, "arabic-moving")
+                scenario.onActivity {
+                    val moving = drawView(quickRow(it, 8)!!.findViewById(PlayerR.id.subtitle_quick_name))
+                    assertFalse("Focused RTL text must also move", first.sameAs(moving))
+                    assertEquals(tick, bounds(quickRow(it, 8)!!.findViewById(PlayerR.id.subtitle_quick_check)))
+                    first.recycle()
+                    moving.recycle()
+                }
+                repeat(8) { key(KeyEvent.KEYCODE_DPAD_UP) }
+                await(scenario) { quickRow(it, 0)?.hasFocus() == true }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                scenario.onActivity { assertFalse(controller.getSubtitleController().isUserSubtitleVisible()) }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { quickRow(it, 0)?.hasFocus() == true }
+                scenario.onActivity { controller.setTrackUpdated(TrackType.SUBTITLE) }
+                await(scenario) { quickRow(it, 0)?.hasFocus() == true && quickRow(it, 0)?.isActivated == true }
+                captureSubtitle(scenario, "off-selected")
+                key(KeyEvent.KEYCODE_DPAD_DOWN)
+                scenario.onActivity {
+                    assertFalse(controller.getSubtitleController().isUserSubtitleVisible())
+                    first = drawView(quickRow(it, 1)!!.findViewById(PlayerR.id.subtitle_quick_name))
+                }
+                SystemClock.sleep(1400)
+                scenario.onActivity {
+                    val short = drawView(quickRow(it, 1)!!.findViewById(PlayerR.id.subtitle_quick_name))
+                    assertTrue("A short name must stay still while focused", first.sameAs(short))
+                    first.recycle()
+                    short.recycle()
+                }
+                captureSubtitle(scenario, "short-focused")
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                scenario.onActivity { assertTrue(controller.getSubtitleController().isUserSubtitleVisible()) }
+                key(KeyEvent.KEYCODE_BACK)
+            } finally {
+                scenario.onActivity {
+                    quick.attach(original)
+                    bottom(it).attach(original)
+                }
+            }
+        }
+
+    private fun quickList(activity: PlayerActivity) = activity.findViewById<RecyclerView>(PlayerR.id.subtitle_quick_list)
+
+    private fun focusPlayerSetting(
+        scenario: ActivityScenario<PlayerActivity>,
+        label: String
+    ) {
+        repeat(20) {
+            var before: CharSequence? = null
+            scenario.onActivity { before = it.currentFocus?.findViewById<TextView>(PlayerR.id.tv_setting)?.text }
+            if (before == label) return
+            key(KeyEvent.KEYCODE_DPAD_DOWN)
+            await(scenario) { it.currentFocus?.findViewById<TextView>(PlayerR.id.tv_setting)?.text != before }
+        }
+        fail("Setting $label was not reachable by DPAD")
+    }
+
+    private fun captureSubtitle(
+        scenario: ActivityScenario<PlayerActivity>,
+        name: String
+    ) {
+        await(scenario) { (quickList(it).parent as View).alpha == 1f }
+        scenario.onActivity { activity ->
+            fun rect(view: View): JSONArray = bounds(view).let { JSONArray(listOf(it.left, it.top, it.right, it.bottom)) }
+            val list = quickList(activity)
+            val rows = JSONArray()
+            for (index in 0 until list.childCount) {
+                val row = list.getChildAt(index)
+                val text = row.findViewById<TextView>(PlayerR.id.subtitle_quick_name)
+                rows.put(
+                    JSONObject()
+                        .put("name", text.text)
+                        .put("bounds", rect(row))
+                        .put("nameBounds", rect(text))
+                        .put("checkBounds", rect(row.findViewById(PlayerR.id.subtitle_quick_check)))
+                        .put("focused", row.hasFocus())
+                        .put("selected", row.isActivated)
+                        .put("lines", text.lineCount)
+                        .put("direction", text.layout.getParagraphDirection(0))
+                        .put("marqueeSelected", text.isSelected)
+                        .put("ellipsize", text.ellipsize.toString())
+                        .put("textWidth", text.paint.measureText(text.text.toString()))
+                        .put("lineWidth", text.layout.getLineWidth(0))
+                        .put("scrollX", text.scrollX)
+                )
+            }
+            File(context.getExternalFilesDir("player-subtitle-quick"), "$name.json").writeText(
+                JSONObject()
+                    .put("density", activity.resources.displayMetrics.density)
+                    .put("fontScale", activity.resources.configuration.fontScale)
+                    .put("menuBounds", rect(list.parent as View))
+                    .put("listBounds", rect(list))
+                    .put("rows", rows)
+                    .toString(2)
+            )
+        }
+        screenshot(name, "player-subtitle-quick", 0)
+    }
+
+    private fun quickRow(
+        activity: PlayerActivity,
+        position: Int
+    ) = quickList(activity)?.findViewHolderForAdapterPosition(position)?.itemView
+
+    private fun controlWrapper(activity: PlayerActivity) =
+        PlayerBottomView::class.java
+            .getDeclaredField(
+                "mControlWrapper"
+            ).apply { isAccessible = true }
+            .get(bottom(activity)) as ControlWrapper
+
+    private fun drawView(view: View): Bitmap =
+        Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888).also {
+            val canvas = Canvas(it)
+            canvas.translate(-view.scrollX.toFloat(), -view.scrollY.toFloat())
+            view.draw(canvas)
+        }
 
     private fun assertDanmakuButton(
         activity: PlayerActivity,
@@ -263,7 +690,8 @@ class PlayerPanelLayersInstrumentedTest {
                 if (id in listOf(PlayerR.id.subtitle_control_iv, PlayerR.id.audio_control)) {
                     key(KeyEvent.KEYCODE_DPAD_CENTER)
                     await(scenario) {
-                        activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS &&
+                        activePanel(controller)?.getSettingViewType() ==
+                            (if (id == PlayerR.id.subtitle_control_iv) SettingViewType.SUBTITLE_QUICK else SettingViewType.TRACKS) &&
                             panel(controller).hasFocus()
                     }
                     screenshot("bottom-panel-$id", "player-bottom-open")
@@ -469,7 +897,10 @@ class PlayerPanelLayersInstrumentedTest {
             key(KeyEvent.KEYCODE_DPAD_DOWN)
             await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
             key(KeyEvent.KEYCODE_DPAD_CENTER)
-            await(scenario) { activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS && panel(controller).hasFocus() }
+            await(scenario) {
+                activePanel(controller)?.getSettingViewType() == SettingViewType.SUBTITLE_QUICK &&
+                    panel(controller).hasFocus()
+            }
             key(KeyEvent.KEYCODE_BACK)
             await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
         }
@@ -657,8 +1088,11 @@ class PlayerPanelLayersInstrumentedTest {
                 undimmedRight = backgroundAlpha(controller, .6f)
                 undimmedMiddle = backgroundAlpha(controller, .55f)
             }
-            key(KeyEvent.KEYCODE_DPAD_CENTER)
-            await(scenario) { activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS && panel(controller).hasFocus() }
+            key(KeyEvent.KEYCODE_MENU)
+            await(scenario) {
+                activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                    panel(controller).hasFocus()
+            }
             SystemClock.sleep(550)
             var alpha = 0
             scenario.onActivity {
@@ -739,8 +1173,11 @@ class PlayerPanelLayersInstrumentedTest {
                 key(KeyEvent.KEYCODE_DPAD_DOWN)
                 repeat(4) { key(KeyEvent.KEYCODE_DPAD_RIGHT) }
                 await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { activePanel(controller)?.getSettingViewType() == SettingViewType.TRACKS && panel(controller).hasFocus() }
+                key(KeyEvent.KEYCODE_MENU)
+                await(scenario) {
+                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                        panel(controller).hasFocus()
+                }
                 var position = 0L
                 scenario.onActivity { position = player(it).getCurrentPosition() }
                 SystemClock.sleep(1200)
@@ -931,10 +1368,11 @@ class PlayerPanelLayersInstrumentedTest {
 
     private fun screenshot(
         name: String,
-        directoryName: String = "a06-$phase"
+        directoryName: String = "a06-$phase",
+        settleMs: Long = 600
     ) {
         instrumentation.waitForIdleSync()
-        SystemClock.sleep(600)
+        SystemClock.sleep(settleMs)
         val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
         val directory = requireNotNull(context.getExternalFilesDir(directoryName))
         File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }

@@ -77,11 +77,8 @@ class SettingTracksView
             viewBinding.tvAddTrack.text = actionText
             viewBinding.tvAddTrack.isVisible = mTrackType != TrackType.VIDEO
 
-            viewBinding.trackVisible.isVisible = mTrackType == TrackType.SUBTITLE || mTrackType == TrackType.DANMU
-            viewBinding.trackStyle.isVisible = viewBinding.trackVisible.isVisible
-            viewBinding.trackVisible.text = if (mTrackType == TrackType.SUBTITLE) "显示字幕" else "显示弹幕"
-            viewBinding.trackVisible.isChecked =
-                if (mTrackType == TrackType.SUBTITLE) mControlWrapper.isUserSubtitleVisible() else mControlWrapper.isUserDanmuVisible()
+            viewBinding.trackVisible.isVisible = false
+            viewBinding.trackStyle.isVisible = mTrackType == TrackType.SUBTITLE || mTrackType == TrackType.DANMU
             refreshTracks()
         }
 
@@ -94,7 +91,6 @@ class SettingTracksView
             if (isInTouchMode) return
             when {
                 tracks.isNotEmpty() -> viewBinding.rvTrack.requestFocus()
-                viewBinding.trackVisible.isVisible -> viewBinding.trackVisible.requestFocus()
                 viewBinding.tvAddTrack.isVisible -> viewBinding.tvAddTrack.requestFocus()
                 else -> viewBinding.tvEmptyTrack.requestFocus()
             }
@@ -140,11 +136,6 @@ class SettingTracksView
         }
 
         private fun initListener() {
-            viewBinding.trackVisible.setOnClickListener {
-                if (mTrackType == TrackType.SUBTITLE) mControlWrapper.toggleSubtitleVisible() else mControlWrapper.toggleDanmuVisible()
-                viewBinding.trackVisible.isChecked =
-                    if (mTrackType == TrackType.SUBTITLE) mControlWrapper.isUserSubtitleVisible() else mControlWrapper.isUserDanmuVisible()
-            }
             viewBinding.trackStyle.setOnClickListener {
                 mControlWrapper.showSettingView(
                     if (mTrackType ==
@@ -183,8 +174,7 @@ class SettingTracksView
             viewBinding.tvEmptyTrack.isVisible = tracks.isEmpty()
             viewBinding.tvEmptyTrack.isFocusable =
                 tracks.isEmpty() &&
-                !viewBinding.tvAddTrack.isVisible &&
-                !viewBinding.trackVisible.isVisible
+                !viewBinding.tvAddTrack.isVisible
         }
 
         fun setTrackType(trackType: TrackType) {

@@ -1,0 +1,4357 @@
+{
+  "date": "2026-11-03",
+  "kind": "HTML subtitle panel design only; waiting for visual confirmation; native UI unchanged",
+  "route": "player-bottom-refinement-prototype.html?variant=open&review=subtitle",
+  "errors": [],
+  "observations": [
+    {
+      "name": "confirmed-bottom-baseline",
+      "state": {},
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": true,
+      "scroll": null
+    },
+    {
+      "name": "on-selected",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "zh",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 690,
+        "y": 446,
+        "width": 690,
+        "height": 161,
+        "top": 446,
+        "right": 1380,
+        "bottom": 607,
+        "left": 690
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "true",
+          "focused": true
+        },
+        {
+          "id": "en",
+          "name": "English",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "dual",
+          "name": "简英双语",
+          "selected": "false",
+          "focused": false
+        }
+      ],
+      "subtitleVisible": true,
+      "scroll": {
+        "left": 0,
+        "width": 640,
+        "total": 640
+      }
+    },
+    {
+      "name": "focus-away",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "en",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 690,
+        "y": 446,
+        "width": 690,
+        "height": 161,
+        "top": 446,
+        "right": 1380,
+        "bottom": 607,
+        "left": 690
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.2962036132812,
+            "width": 58,
+            "height": 58,
+            "top": 699.2962036132812,
+            "right": 1216,
+            "bottom": 757.2962036132812,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "true",
+          "focused": false
+        },
+        {
+          "id": "en",
+          "name": "English",
+          "selected": "false",
+          "focused": true
+        },
+        {
+          "id": "dual",
+          "name": "简英双语",
+          "selected": "false",
+          "focused": false
+        }
+      ],
+      "subtitleVisible": true,
+      "scroll": {
+        "left": 0,
+        "width": 640,
+        "total": 640
+      }
+    },
+    {
+      "name": "off-selected",
+      "state": {
+        "tracks": "multiple",
+        "selected": "off",
+        "focused": "off",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 690,
+        "y": 446,
+        "width": 690,
+        "height": 161,
+        "top": 446,
+        "right": 1380,
+        "bottom": 607,
+        "left": 690
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.4649047851562,
+            "width": 58,
+            "height": 58,
+            "top": 699.4649047851562,
+            "right": 1216,
+            "bottom": 757.4649047851562,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "true",
+          "focused": true
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "en",
+          "name": "English",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "dual",
+          "name": "简英双语",
+          "selected": "false",
+          "focused": false
+        }
+      ],
+      "subtitleVisible": false,
+      "scroll": {
+        "left": 0,
+        "width": 640,
+        "total": 640
+      }
+    },
+    {
+      "name": "single-track",
+      "state": {
+        "tracks": "single",
+        "selected": "zh",
+        "focused": "zh",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 970,
+        "y": 446,
+        "width": 410,
+        "height": 161,
+        "top": 446,
+        "right": 1380,
+        "bottom": 607,
+        "left": 970
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.6603393554688,
+            "width": 58,
+            "height": 58,
+            "top": 699.6603393554688,
+            "right": 1216,
+            "bottom": 757.6603393554688,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "true",
+          "focused": true
+        }
+      ],
+      "subtitleVisible": true,
+      "scroll": {
+        "left": 0,
+        "width": 360,
+        "total": 360
+      }
+    },
+    {
+      "name": "many-tracks",
+      "state": {
+        "tracks": "many",
+        "selected": "zh",
+        "focused": "file",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 690,
+        "y": 403.90625,
+        "width": 690,
+        "height": 203.09375,
+        "top": 403.90625,
+        "right": 1380,
+        "bottom": 607,
+        "left": 690
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.75439453125,
+            "width": 58,
+            "height": 58,
+            "top": 699.75439453125,
+            "right": 1216,
+            "bottom": 757.75439453125,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "true",
+          "focused": false
+        },
+        {
+          "id": "en",
+          "name": "English",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "dual",
+          "name": "简英双语",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "traditional",
+          "name": "繁體中文",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "ja",
+          "name": "日本語",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "ko",
+          "name": "한국어",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "file",
+          "name": "药屋少女的呢喃.S01E50.简体中文.修订版.ass",
+          "selected": "false",
+          "focused": true
+        }
+      ],
+      "subtitleVisible": true,
+      "scroll": {
+        "left": 668,
+        "width": 640,
+        "total": 1308
+      },
+      "longName": "药屋少女的呢喃.S01E50.简体中文.修订版.ass"
+    },
+    {
+      "name": "empty",
+      "state": {
+        "tracks": "empty",
+        "selected": "off",
+        "focused": "off",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 970,
+        "y": 373,
+        "width": 410,
+        "height": 234,
+        "top": 373,
+        "right": 1380,
+        "bottom": 607,
+        "left": 970
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.4659423828125,
+            "width": 58,
+            "height": 58,
+            "top": 699.4659423828125,
+            "right": 1216,
+            "bottom": 757.4659423828125,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "true",
+          "focused": true
+        }
+      ],
+      "subtitleVisible": false,
+      "scroll": {
+        "left": 0,
+        "width": 360,
+        "total": 360
+      }
+    },
+    {
+      "name": "loading",
+      "state": {
+        "tracks": "loading",
+        "selected": "off",
+        "focused": "off",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 970,
+        "y": 399,
+        "width": 410,
+        "height": 208,
+        "top": 399,
+        "right": 1380,
+        "bottom": 607,
+        "left": 970
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.2879638671875,
+            "width": 58,
+            "height": 58,
+            "top": 699.2879638671875,
+            "right": 1216,
+            "bottom": 757.2879638671875,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "true",
+          "focused": true
+        }
+      ],
+      "subtitleVisible": false,
+      "scroll": {
+        "left": 0,
+        "width": 360,
+        "total": 360
+      }
+    },
+    {
+      "name": "error",
+      "state": {
+        "tracks": "error",
+        "selected": "off",
+        "focused": "off",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 970,
+        "y": 314,
+        "width": 410,
+        "height": 293,
+        "top": 314,
+        "right": 1380,
+        "bottom": 607,
+        "left": 970
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.29052734375,
+            "width": 58,
+            "height": 58,
+            "top": 699.29052734375,
+            "right": 1216,
+            "bottom": 757.29052734375,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "true",
+          "focused": true
+        }
+      ],
+      "subtitleVisible": false,
+      "scroll": {
+        "left": 0,
+        "width": 360,
+        "total": 360
+      }
+    },
+    {
+      "name": "details",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "zh",
+        "panel": "details",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.2904052734375,
+            "width": 58,
+            "height": 58,
+            "top": 699.2904052734375,
+            "right": 1216,
+            "bottom": 757.2904052734375,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": true,
+      "scroll": null
+    },
+    {
+      "name": "closed-on",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "zh",
+        "panel": "closed",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": true,
+      "scroll": null
+    },
+    {
+      "name": "closed-off",
+      "state": {
+        "tracks": "multiple",
+        "selected": "off",
+        "focused": "off",
+        "panel": "closed",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": false,
+      "scroll": null
+    },
+    {
+      "name": "font130",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "dual",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 690,
+        "y": 437,
+        "width": 690,
+        "height": 170,
+        "top": 437,
+        "right": 1380,
+        "bottom": 607,
+        "left": 690
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.2924194335938,
+            "width": 58,
+            "height": 58,
+            "top": 699.2924194335938,
+            "right": 1216,
+            "bottom": 757.2924194335938,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "true",
+          "focused": false
+        },
+        {
+          "id": "en",
+          "name": "English",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "dual",
+          "name": "简英双语",
+          "selected": "false",
+          "focused": true
+        }
+      ],
+      "subtitleVisible": true,
+      "scroll": {
+        "left": 148,
+        "width": 640,
+        "total": 788
+      }
+    },
+    {
+      "name": "bright",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "en",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 690,
+        "y": 446,
+        "width": 690,
+        "height": 161,
+        "top": 446,
+        "right": 1380,
+        "bottom": 607,
+        "left": 690
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.7440185546875,
+            "width": 58,
+            "height": 58,
+            "top": 699.7440185546875,
+            "right": 1216,
+            "bottom": 757.7440185546875,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "true",
+          "focused": false
+        },
+        {
+          "id": "en",
+          "name": "English",
+          "selected": "false",
+          "focused": true
+        },
+        {
+          "id": "dual",
+          "name": "简英双语",
+          "selected": "false",
+          "focused": false
+        }
+      ],
+      "subtitleVisible": true,
+      "scroll": {
+        "left": 0,
+        "width": 640,
+        "total": 640
+      }
+    },
+    {
+      "name": "dark",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "en",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 690,
+        "y": 446,
+        "width": 690,
+        "height": 161,
+        "top": 446,
+        "right": 1380,
+        "bottom": 607,
+        "left": 690
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.6647338867188,
+            "width": 58,
+            "height": 58,
+            "top": 699.6647338867188,
+            "right": 1216,
+            "bottom": 757.6647338867188,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "true",
+          "focused": false
+        },
+        {
+          "id": "en",
+          "name": "English",
+          "selected": "false",
+          "focused": true
+        },
+        {
+          "id": "dual",
+          "name": "简英双语",
+          "selected": "false",
+          "focused": false
+        }
+      ],
+      "subtitleVisible": true,
+      "scroll": {
+        "left": 0,
+        "width": 640,
+        "total": 640
+      }
+    },
+    {
+      "name": "browse-without-applying",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "en",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 690,
+        "y": 446,
+        "width": 690,
+        "height": 161,
+        "top": 446,
+        "right": 1380,
+        "bottom": 607,
+        "left": 690
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.0507202148438,
+            "width": 58,
+            "height": 58,
+            "top": 699.0507202148438,
+            "right": 1216,
+            "bottom": 757.0507202148438,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "true",
+          "focused": false
+        },
+        {
+          "id": "en",
+          "name": "English",
+          "selected": "false",
+          "focused": true
+        },
+        {
+          "id": "dual",
+          "name": "简英双语",
+          "selected": "false",
+          "focused": false
+        }
+      ],
+      "subtitleVisible": true,
+      "scroll": {
+        "left": 0,
+        "width": 640,
+        "total": 640
+      }
+    },
+    {
+      "name": "apply-english",
+      "state": {
+        "tracks": "multiple",
+        "selected": "en",
+        "focused": "en",
+        "panel": "closed",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": true,
+      "scroll": null
+    },
+    {
+      "name": "reopen-selected",
+      "state": {
+        "tracks": "multiple",
+        "selected": "en",
+        "focused": "en",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 690,
+        "y": 446,
+        "width": 690,
+        "height": 161,
+        "top": 446,
+        "right": 1380,
+        "bottom": 607,
+        "left": 690
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.0543212890625,
+            "width": 58,
+            "height": 58,
+            "top": 699.0543212890625,
+            "right": 1216,
+            "bottom": 757.0543212890625,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "en",
+          "name": "English",
+          "selected": "true",
+          "focused": true
+        },
+        {
+          "id": "dual",
+          "name": "简英双语",
+          "selected": "false",
+          "focused": false
+        }
+      ],
+      "subtitleVisible": true,
+      "scroll": {
+        "left": 0,
+        "width": 640,
+        "total": 640
+      }
+    },
+    {
+      "name": "turn-off",
+      "state": {
+        "tracks": "multiple",
+        "selected": "off",
+        "focused": "off",
+        "panel": "closed",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": false,
+      "scroll": null
+    },
+    {
+      "name": "cancel-browsing",
+      "state": {
+        "tracks": "multiple",
+        "selected": "off",
+        "focused": "zh",
+        "panel": "closed",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": false,
+      "scroll": null
+    },
+    {
+      "name": "enable-by-selecting-track",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "zh",
+        "panel": "closed",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": true,
+      "scroll": null
+    },
+    {
+      "name": "open-details-by-pointer",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "zh",
+        "panel": "details",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.0533447265625,
+            "width": 58,
+            "height": 58,
+            "top": 699.0533447265625,
+            "right": 1216,
+            "bottom": 757.0533447265625,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": true,
+      "scroll": null
+    },
+    {
+      "name": "return-from-details",
+      "state": {
+        "tracks": "multiple",
+        "selected": "zh",
+        "focused": "zh",
+        "panel": "closed",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": true,
+      "scroll": null
+    },
+    {
+      "name": "retry-by-remote",
+      "state": {
+        "tracks": "multiple",
+        "selected": "off",
+        "focused": "off",
+        "panel": "quick",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "panel": {
+        "x": 690,
+        "y": 446,
+        "width": 690,
+        "height": 161,
+        "top": 446,
+        "right": 1380,
+        "bottom": 607,
+        "left": 690
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699.0565795898438,
+            "width": 58,
+            "height": 58,
+            "top": 699.0565795898438,
+            "right": 1216,
+            "bottom": 757.0565795898438,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [
+        {
+          "id": "off",
+          "name": "关",
+          "selected": "true",
+          "focused": true
+        },
+        {
+          "id": "zh",
+          "name": "简体中文",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "en",
+          "name": "English",
+          "selected": "false",
+          "focused": false
+        },
+        {
+          "id": "dual",
+          "name": "简英双语",
+          "selected": "false",
+          "focused": false
+        }
+      ],
+      "subtitleVisible": false,
+      "scroll": {
+        "left": 0,
+        "width": 640,
+        "total": 640
+      }
+    },
+    {
+      "name": "pointer-track-selection",
+      "state": {
+        "tracks": "multiple",
+        "selected": "dual",
+        "focused": "dual",
+        "panel": "closed",
+        "detailFocus": 0
+      },
+      "bottomFocus": "subtitle",
+      "controlsVisible": true,
+      "seek": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "videoSubtitle": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "actions": [
+        {
+          "key": "rewind",
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "rect": {
+            "x": 126,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 190,
+            "bottom": 762,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "options": [],
+      "subtitleVisible": true,
+      "scroll": null
+    }
+  ]
+}

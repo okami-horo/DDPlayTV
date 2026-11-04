@@ -25,11 +25,11 @@ enum class SettingAction(
 
     DANMU_TIME(SettingActionType.DANMU, "时间", R.drawable.ic_setting_time),
 
-    SUBTITLE_TRACK(SettingActionType.SUBTITLE, "字幕轨", R.drawable.ic_setting_subtitle_track),
+    SUBTITLE_STYLE(SettingActionType.SUBTITLE, "样式与位置", R.drawable.ic_setting_style),
 
-    SUBTITLE_STYLE(SettingActionType.SUBTITLE, "样式", R.drawable.ic_setting_style),
+    SUBTITLE_TIME(SettingActionType.SUBTITLE, "时间同步", R.drawable.ic_setting_time),
 
-    SUBTITLE_TIME(SettingActionType.SUBTITLE, "时间", R.drawable.ic_setting_time),
+    SUBTITLE_ADD(SettingActionType.SUBTITLE, "添加外挂字幕", R.drawable.ic_setting_subtitle_track),
 
     NEXT_EPISODE(SettingActionType.OTHER, "顺序播放", R.drawable.ic_setting_order_play),
 

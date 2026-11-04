@@ -1,0 +1,36 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout
+        android:id="@+id/subtitle_quick_option"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/cinema_subtitle_option"
+        android:focusable="true"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:layoutDirection="ltr"
+        android:paddingHorizontal="12dp"
+        android:tag="@string/focusable_item">
+        <TextView
+            android:id="@+id/subtitle_quick_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:includeFontPadding="false"
+            android:textAlignment="textStart"
+            android:textDirection="firstStrong"
+            android:textColor="@color/cinema_text"
+            android:textSize="14.667sp" />
+        <ImageView
+            android:id="@+id/subtitle_quick_check"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="10.667dp"
+            android:contentDescription="@null"
+            android:src="@drawable/cinema_ic_check"
+            android:importantForAccessibility="no"
+            android:visibility="invisible" />
+    </LinearLayout>
+</layout>

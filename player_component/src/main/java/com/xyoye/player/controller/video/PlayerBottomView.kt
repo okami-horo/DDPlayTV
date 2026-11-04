@@ -66,7 +66,7 @@ class PlayerBottomView(
             actionHandler?.invoke(PlayerAction.ToggleDanmu) ?: mControlWrapper.toggleDanmuVisible()
         }
         viewBinding.subtitleControlIv.setOnClickListener {
-            if (controlsInputEnabled) mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.SUBTITLE)
+            if (controlsInputEnabled) mControlWrapper.showSettingView(SettingViewType.SUBTITLE_QUICK)
         }
         viewBinding.audioControl.setOnClickListener {
             if (controlsInputEnabled) mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.AUDIO)
@@ -134,6 +134,7 @@ class PlayerBottomView(
 
         updateDecodeTypeHint()
         updateDanmuState()
+        updateSubtitleState()
     }
 
     override fun getView() = this
@@ -152,6 +153,7 @@ class PlayerBottomView(
     override fun onVisibilityChanged(isVisible: Boolean) {
         if (isVisible) {
             updateDanmuState()
+            updateSubtitleState()
             if (isControllerVisible) {
                 // Avoid re-focusing play on every DPAD event when controller is already visible.
 
@@ -286,6 +288,7 @@ class PlayerBottomView(
             updateControlsInteractiveState(controlsInputEnabled)
         }
         if (type == TrackType.SUBTITLE) {
+            updateSubtitleState()
             updateControlsInteractiveState(controlsInputEnabled)
         }
     }
@@ -449,6 +452,14 @@ class PlayerBottomView(
         viewBinding.danmuControlLabel.setText(if (visible) R.string.player_danmaku_on else R.string.player_danmaku_off)
         viewBinding.danmuControlIv.contentDescription =
             context.getString(if (visible) R.string.player_danmaku_disable_action else R.string.player_danmaku_enable_action)
+    }
+
+    private fun updateSubtitleState() {
+        val selected = mControlWrapper.getTracks(TrackType.SUBTITLE).firstOrNull { !it.disable && it.selected }
+        val visible = mControlWrapper.isUserSubtitleVisible() && selected != null
+        viewBinding.subtitleControlIv.isSelected = visible
+        viewBinding.subtitleControlIv.contentDescription =
+            if (visible) "字幕：${selected?.name}，按确认选择" else "字幕已关闭，按确认选择"
     }
 
     private fun updateTransportFocusCaption(control: View?) {

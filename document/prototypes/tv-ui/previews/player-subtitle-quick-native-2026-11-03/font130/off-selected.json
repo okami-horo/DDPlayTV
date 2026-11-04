@@ -1,0 +1,138 @@
+{
+  "density": 1.5,
+  "fontScale": 1.3,
+  "menuBounds": [
+    900,
+    219,
+    1380,
+    607
+  ],
+  "listBounds": [
+    916,
+    291,
+    1364,
+    591
+  ],
+  "rows": [
+    {
+      "name": "关",
+      "bounds": [
+        916,
+        291,
+        1354,
+        384
+      ],
+      "nameBounds": [
+        934,
+        316,
+        1296,
+        358
+      ],
+      "checkBounds": [
+        1312,
+        325,
+        1336,
+        349
+      ],
+      "focused": true,
+      "selected": true,
+      "lines": 1,
+      "direction": 1,
+      "marqueeSelected": true,
+      "ellipsize": "END",
+      "textWidth": 29,
+      "lineWidth": 29,
+      "scrollX": 0
+    },
+    {
+      "name": "简体中文",
+      "bounds": [
+        916,
+        388,
+        1354,
+        481
+      ],
+      "nameBounds": [
+        934,
+        413,
+        1296,
+        455
+      ],
+      "checkBounds": [
+        1312,
+        422,
+        1336,
+        446
+      ],
+      "focused": false,
+      "selected": false,
+      "lines": 1,
+      "direction": 1,
+      "marqueeSelected": false,
+      "ellipsize": "END",
+      "textWidth": 116,
+      "lineWidth": 116,
+      "scrollX": 0
+    },
+    {
+      "name": "English",
+      "bounds": [
+        916,
+        485,
+        1354,
+        578
+      ],
+      "nameBounds": [
+        934,
+        514,
+        1296,
+        548
+      ],
+      "checkBounds": [
+        1312,
+        519,
+        1336,
+        543
+      ],
+      "focused": false,
+      "selected": false,
+      "lines": 1,
+      "direction": 1,
+      "marqueeSelected": false,
+      "ellipsize": "END",
+      "textWidth": 93,
+      "lineWidth": 93,
+      "scrollX": 0
+    },
+    {
+      "name": "简体中文 \/ English",
+      "bounds": [
+        916,
+        582,
+        1354,
+        675
+      ],
+      "nameBounds": [
+        934,
+        607,
+        1296,
+        649
+      ],
+      "checkBounds": [
+        1312,
+        616,
+        1336,
+        640
+      ],
+      "focused": false,
+      "selected": false,
+      "lines": 1,
+      "direction": 1,
+      "marqueeSelected": false,
+      "ellipsize": "END",
+      "textWidth": 235,
+      "lineWidth": 235,
+      "scrollX": 0
+    }
+  ]
+}

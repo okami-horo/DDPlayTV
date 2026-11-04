@@ -1,0 +1,138 @@
+{
+  "density": 1.5,
+  "fontScale": 1,
+  "menuBounds": [
+    900,
+    228,
+    1380,
+    607
+  ],
+  "listBounds": [
+    916,
+    291,
+    1364,
+    591
+  ],
+  "rows": [
+    {
+      "name": "Deutsch (Deutschland) – Untertitel für Hörgeschädigte",
+      "bounds": [
+        916,
+        291,
+        1354,
+        363
+      ],
+      "nameBounds": [
+        934,
+        314,
+        1296,
+        339
+      ],
+      "checkBounds": [
+        1312,
+        315,
+        1336,
+        339
+      ],
+      "focused": false,
+      "selected": false,
+      "lines": 1,
+      "direction": 1,
+      "marqueeSelected": false,
+      "ellipsize": "END",
+      "textWidth": 527,
+      "lineWidth": 350,
+      "scrollX": 0
+    },
+    {
+      "name": "Français (Canada) — sous-titres",
+      "bounds": [
+        916,
+        367,
+        1354,
+        439
+      ],
+      "nameBounds": [
+        934,
+        390,
+        1296,
+        415
+      ],
+      "checkBounds": [
+        1312,
+        391,
+        1336,
+        415
+      ],
+      "focused": false,
+      "selected": false,
+      "lines": 1,
+      "direction": 1,
+      "marqueeSelected": false,
+      "ellipsize": "END",
+      "textWidth": 307,
+      "lineWidth": 307,
+      "scrollX": 0
+    },
+    {
+      "name": "العربية (السعودية) — ترجمة وصفية للصم وضعاف السمع",
+      "bounds": [
+        916,
+        443,
+        1354,
+        515
+      ],
+      "nameBounds": [
+        934,
+        464,
+        1296,
+        494
+      ],
+      "checkBounds": [
+        1312,
+        467,
+        1336,
+        491
+      ],
+      "focused": false,
+      "selected": false,
+      "lines": 1,
+      "direction": -1,
+      "marqueeSelected": false,
+      "ellipsize": "END",
+      "textWidth": 437,
+      "lineWidth": 352,
+      "scrollX": 1048214
+    },
+    {
+      "name": "[字幕组] 药屋少女的呢喃 第50集 [简体中文&English][WEB-DL 1080p][修订版].ass",
+      "bounds": [
+        916,
+        519,
+        1354,
+        591
+      ],
+      "nameBounds": [
+        934,
+        539,
+        1296,
+        571
+      ],
+      "checkBounds": [
+        1312,
+        543,
+        1336,
+        567
+      ],
+      "focused": true,
+      "selected": true,
+      "lines": 1,
+      "direction": 1,
+      "marqueeSelected": true,
+      "ellipsize": "END",
+      "textWidth": 773,
+      "lineWidth": 358,
+      "scrollX": 0
+    }
+  ]
+}

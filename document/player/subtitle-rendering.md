@@ -97,6 +97,54 @@ adjustedY = subtitleImageY - offsetPx
 
 参考 [mpv 0.41.0 字幕参数](https://github.com/mpv-player/mpv/blob/v0.41.0/DOCS/man/options.rst)、[固定上游 OSD 实现](https://github.com/edde746/mpv-build/blob/b15bf59c043b45f9ad7fa227b2cc7d3164daf58f/patches/mpv/pool/0100-vo-mediacodec-timed-surface-with-osd-plane.patch) 和 [Plezy Surface 布局](https://github.com/edde746/plezy/blob/1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5/android/app/src/main/kotlin/com/edde746/plezy/shared/PlayerSurfaceHost.kt)。具体实施与验证见[本轮记录](../../docs/superpowers/plans/2026-10-29-mpv-native-subtitles.md)。
 
+<a id="tv-subtitle-luminance"></a>
+
+## 电视画质调整与字幕亮度（2026-11-03 调研）
+
+用户报告：电视设置把画面调暗后，字幕仍然很亮；补充确认两种内核都测试过。本轮核对源码和上游资料，没有操作物理电视，也没有修改播放器。具体设置名称、片源 HDR 状态及逐项亮度测量尚未记录。
+
+**已确认的是视频和软字幕分层输出；最符合现象的解释是电视的视频画质处理没有同样作用于字幕图层。** 后半句属于结合用户观察与实现得出的推断，尚未通过实机合成器或亮度测量证明。此前的字幕功能验收不覆盖这次新增的亮度问题。
+
+### 当前实现证据
+
+| 路径 | 已核对行为 | 对此问题的含义 |
+| --- | --- | --- |
+| Media3 ASS/SSA | `LibassGpuSubtitleSession.attachOverlay()` 创建独立 `SubtitleSurfaceOverlay`；`ass_gpu_bridge.cpp` 直接使用 ASS 颜色和用户透明度绘制 | 字幕没有合入视频像素，没有读取或跟随电视画质亮度的逻辑 |
+| Media3 普通文字／位图 | 沿用 `SubtitleController` 下的字幕视图，独立于视频输出 | 不能把全部字幕的处理能力等同于 libass；新增亮度控制要覆盖这些路径 |
+| mpv | `MpvNativeBridge.VIDEO_OUTPUT=mediacodec`；`setSubtitleSurface()` 绑定第二个 Surface | 与 Media3 一样存在独立字幕层；更换内核不会自动合并输出 |
+| 现有字幕设置 | Media3 有透明度；`MpvSubtitleRendererBackend.updateOpacity()` 无实现，界面明确隐藏该项 | 当前不存在两个内核通用的字幕亮度控制 |
+
+源码入口：[Media3 overlay](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassGpuSubtitleSession.kt)、[应用字幕 shader](../../player_component/src/main/cpp/ass_gpu_bridge.cpp)、[mpv 桥接](../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvNativeBridge.kt)、[mpv 字幕后端](../../player_component/src/main/java/com/xyoye/player/subtitle/backend/MpvSubtitleRendererBackend.kt)、[样式面板](../../player_component/src/main/java/com/xyoye/player/controller/setting/SettingSubtitleStyleView.kt)。固定版本的 [mpv 上游补丁](https://github.com/edde746/mpv-build/blob/b15bf59c043b45f9ad7fa227b2cc7d3164daf58f/patches/mpv/pool/0100-vo-mediacodec-timed-surface-with-osd-plane.patch)也明确将解码视频直送系统合成器，将字幕画到另一个透明 Surface。
+
+历史设备记录为 **Hisense／VIDAA_TV／MT9653，Android 11／API 30**，来自[2026-11-02 安装记录](../../docs/superpowers/plans/2026-11-02-a03-container-hierarchy.md#用户追加安装到电视2026-11-02-2149)，不是本轮重新读取的设备状态。
+
+### 系统与参数边界
+
+- **HDR 可能放大差异，但不能直接定性为 HDR 故障。** Android 的 SDR/HDR 混合显示支持分别调节 SDR 图层，其效果依赖系统版本、硬件和 OEM 配置；Android 13 的改进也不能反推 Android 11 电视已有同等实现。[Android 混合合成说明](https://source.android.com/docs/core/display/mixed-sdr-hdr)
+- **系统背光值不能代替电视画质参数。** `Settings.System.SCREEN_BRIGHTNESS` 定义的是背光；API 34 的 `Display.getHdrSdrRatio()` 返回 HDR 峰值与 SDR 参考白之比，两者都不等于电视菜单中的视频亮度／Gamma 设置。[背光 API](https://developer.android.com/reference/android/provider/Settings.System#SCREEN_BRIGHTNESS)、[HDR/SDR 比例 API](https://developer.android.com/reference/android/view/Display#getHdrSdrRatio())
+- **新版画质 API 不能作为现有设备的通用解法。** Android 16 才引入 Media Quality framework，仍涉及厂商 HAL、能力和权限；其存在不能证明旧电视能公开读回画质设置，也不能证明字幕层自动共享视频处理。[MQF 官方说明](https://developer.android.com/training/tv/mqf)
+- **不能只给字幕 Surface 调 `alpha`。** 官方说明 Android 14 才支持 SurfaceView 的任意 alpha 混合；早期版本会忽略 0 与 1 之间的值。当前实机基线是 Android 11。[SurfaceView 文档](https://developer.android.com/reference/android/view/SurfaceView)
+- **mpv 的现成参数不覆盖当前输出方式。** 锁定版本 `0.41.0` 的 `sub-hdr-peak`／`image-subs-hdr-peak` 仅用于 `vo=gpu-next`，当前使用 `vo=mediacodec`；`sub-color` 主要控制无样式文本，强制覆盖 ASS 样式也不能完整覆盖位图字幕。[固定版本参数文档](https://github.com/mpv-player/mpv/blob/v0.41.0/DOCS/man/options.rst)
+
+### 处理方案评估（均未实施）
+
+| 方案 | 可以解决的部分 | 限制与判断 |
+| --- | --- | --- |
+| 使用现有 Media3 字幕透明度 | 可先缓解字幕过亮 | 会透出背景；不等于降低不透明字幕自身的亮度，mpv 当前也没有等价控制 |
+| 新增独立字幕亮度 | 可保留视频硬解直出，只调暗字幕；建议优先评估 | Media3 要覆盖 libass、普通文字和位图；mpv 需要原生 OSD 扩展或独立字幕后处理，不能只接一个界面滑杆 |
+| 自动读取电视画质后同步字幕 | 理论上可做特定系统／厂商适配 | 本轮没有找到覆盖当前 Android 11 设备及项目支持范围的通用接口；需要设备能力证据，不能承诺自动跟随 |
+| 将字幕真正合入视频再输出 | 有机会让字幕参与同一条视频处理链 | 涉及视频合成路径、颜色空间和 HDR/Dolby Vision；必须另做原型与实机验证，不能当成一个参数修复 |
+
+独立亮度的建议实现方向是在字幕最终颜色输出中降低 RGB，并保持原 alpha、布局与时序。这样可以保留 ASS 配色和不透明度；百分比应表示应用调节系数，不能未经校准宣称等于物理亮度或尼特。mpv 当前锁定补丁的文字、位图和预合成字幕 shader 分支都需要覆盖；原生依赖变更遵循[固定产物与升级流程](../mpv-build-notes.md)，不改写现有 AAR。
+
+mpv 的 `blend-subtitles` 描述的是 GPU 视频合成阶段的行为，不能套用于当前 MediaCodec 直出。改成 TextureView 也不保证接入电视视频画质链路，且官方提示 HDR 可能转成 SDR 并丢失细节；因此本次不建议为此直接替换视频输出。[mpv 固定版本说明](https://github.com/mpv-player/mpv/blob/v0.41.0/DOCS/man/options.rst)、[Android HDR 播放说明](https://developer.android.com/media/grow/hdr-playback)
+
+### 尚需证实的实机行为
+
+下一步若开展真机诊断，使用同一暂停画面，让视频内的参考白／灰块与外挂字幕白／灰块并排，逐项切换实际菜单设置，并分别记录 Media3/mpv、SDR/HDR 和设置值。视频内参考白也不变而中间调变暗，可能只是灰阶曲线变化；视频参考白明显变暗而字幕参考白不变，才更有力地支持图层处理差异。HDR 各层的参考白需要先约定，不能仅凭相同 RGB 数值当成同等物理亮度。
+
+屏幕截图／PixelCopy 可验证应用输出，但不足以证明面板最终画质处理；若拍摄对照，需锁定曝光和白平衡，定量结论需要实际亮度测量。当前结论为源码与资料调研，字幕独立亮度和电视自动跟随都尚未实现、未进行本轮物理电视验证。
+
 ## 验证与已知限制
 
 本节列出维护时可用的测试入口；2026-10-30 的最终命令、结果和初始失败见[实施账本](../../docs/superpowers/plans/2026-10-30-media3-libass.md)，之前的验证见[历史记录](libass-integration-audit.md#已执行验证)。模拟器真实 native 像素测试已执行，物理电视和完整字幕矩阵仍待验收。

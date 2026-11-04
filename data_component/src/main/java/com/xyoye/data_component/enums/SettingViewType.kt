@@ -21,7 +21,6 @@ enum class SettingViewType {
 
     VIDEO_ASPECT,
 
-
     DANMU_CONFIGURE,
 
     DANMU_STYLE,
@@ -32,5 +31,7 @@ enum class SettingViewType {
 
     SUBTITLE_OFFSET_TIME,
 
-    TRACKS
+    TRACKS,
+
+    SUBTITLE_QUICK
 }

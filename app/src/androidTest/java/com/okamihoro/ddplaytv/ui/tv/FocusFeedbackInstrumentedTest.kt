@@ -22,7 +22,6 @@ import com.alibaba.android.arouter.launcher.ARouter
 import com.okamihoro.ddplaytv.R
 import com.okamihoro.ddplaytv.playback.withIndexedPlaybackFile
 import com.rubensousa.dpadrecyclerview.DpadRecyclerView
-import com.xyoye.common_component.adapter.BaseAdapter
 import com.xyoye.common_component.config.PlayerConfig
 import com.xyoye.common_component.playback.handoff.PlaybackNavigation
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
@@ -247,21 +246,24 @@ class FocusFeedbackInstrumentedTest {
                         fun player(activity: PlayerActivity) =
                             activity.findViewById<FrameLayout>(PlayerR.id.player_container).getChildAt(0) as DanDanVideoPlayer
 
-                        fun tracks(activity: PlayerActivity) = activity.findViewById<RecyclerView>(PlayerR.id.rv_track)
+                        fun tracks(activity: PlayerActivity) = activity.findViewById<RecyclerView>(PlayerR.id.subtitle_quick_list)
 
-                        fun items(activity: PlayerActivity) =
-                            (tracks(activity).adapter as BaseAdapter).items.filterIsInstance<VideoTrackBean>()
+                        fun row(
+                            activity: PlayerActivity,
+                            position: Int
+                        ) = tracks(activity).findViewHolderForAdapterPosition(position)?.itemView
+                        lateinit var controller: VideoController
                         await(scenario, 20000) { player(it).isPlaying() && it.hasWindowFocus() }
                         key(KeyEvent.KEYCODE_DPAD_DOWN)
                         await(scenario) { it.findViewById<View>(PlayerR.id.play_iv).isShown }
                         scenario.onActivity { it.findViewById<View>(PlayerR.id.subtitle_control_iv).requestFocus() }
                         key(KeyEvent.KEYCODE_DPAD_CENTER)
-                        await(scenario) { it.currentFocus?.id == PlayerR.id.track_visible && items(it).isEmpty() }
+                        await(scenario) { tracks(it)?.adapter?.itemCount == 1 && row(it, 0)?.hasFocus() == true }
                         screenshot("subtitle-empty")
                         key(KeyEvent.KEYCODE_BACK)
                         await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
                         scenario.onActivity {
-                            val controller =
+                            controller =
                                 PlayerActivity::class.java
                                     .getDeclaredMethod("getVideoController")
                                     .apply { isAccessible = true }
@@ -269,29 +271,40 @@ class FocusFeedbackInstrumentedTest {
                             assertTrue(controller.addExtendTrack(VideoTrackBean.subtitle(subtitle.path)))
                         }
                         key(KeyEvent.KEYCODE_DPAD_CENTER)
-                        await(scenario) { items(it).size == 2 && items(it)[1].selected && tracks(it).hasFocus() }
+                        await(scenario) { tracks(it).adapter?.itemCount == 2 && row(it, 1)?.hasFocus() == true }
+                        key(KeyEvent.KEYCODE_DPAD_UP)
                         scenario.onActivity {
-                            val disable =
-                                requireNotNull(tracks(it).findViewHolderForAdapterPosition(0))
-                                    .itemView
-                                    .findViewById<TextView>(PlayerR.id.tv_name)
+                            val disable = requireNotNull(row(it, 0))
                             assertTrue(disable.isEnabled)
                             assertTrue(disable.isFocusable)
                             assertTrue(disable.hasFocus())
-                            assertFalse(disable.isSelected)
-                            assertTrue(items(it)[1].selected)
+                            assertFalse(disable.isActivated)
+                            assertTrue(row(it, 1)!!.isActivated)
                         }
                         screenshot("subtitle-selected-away")
                         key(KeyEvent.KEYCODE_DPAD_CENTER)
-                        await(scenario) { items(it).first().selected && !items(it)[1].selected }
+                        await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                        scenario.onActivity { assertFalse(controller.getSubtitleController().isUserSubtitleVisible()) }
+                        key(KeyEvent.KEYCODE_DPAD_CENTER)
+                        await(scenario) { row(it, 0)?.hasFocus() == true && row(it, 0)?.isActivated == true }
                         screenshot("subtitle-disabled-selected")
                         key(KeyEvent.KEYCODE_DPAD_DOWN)
                         scenario.onActivity {
-                            assertTrue(items(it).first().selected)
-                            assertFalse(items(it)[1].selected)
+                            assertTrue(row(it, 0)!!.isActivated)
+                            assertFalse(row(it, 1)!!.isActivated)
+                            assertFalse(controller.getSubtitleController().isUserSubtitleVisible())
                         }
+                        key(KeyEvent.KEYCODE_BACK)
+                        await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                        scenario.onActivity { assertFalse(controller.getSubtitleController().isUserSubtitleVisible()) }
                         key(KeyEvent.KEYCODE_DPAD_CENTER)
-                        await(scenario) { items(it)[1].selected && !items(it).first().selected }
+                        await(scenario) { row(it, 0)?.hasFocus() == true }
+                        key(KeyEvent.KEYCODE_DPAD_DOWN)
+                        key(KeyEvent.KEYCODE_DPAD_CENTER)
+                        await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                        scenario.onActivity { assertTrue(controller.getSubtitleController().isUserSubtitleVisible()) }
+                        key(KeyEvent.KEYCODE_DPAD_CENTER)
+                        await(scenario) { row(it, 1)?.hasFocus() == true && row(it, 1)?.isActivated == true }
                         screenshot("subtitle-focused-selected")
                         key(KeyEvent.KEYCODE_BACK)
                         await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }

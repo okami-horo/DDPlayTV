@@ -214,8 +214,8 @@ class PlayerSettingView(
                 mControlWrapper.showSettingView(SettingViewType.DANMU_OFFSET_TIME)
             }
 
-            SettingAction.SUBTITLE_TRACK -> {
-                mControlWrapper.showSettingView(SettingViewType.TRACKS, TrackType.SUBTITLE)
+            SettingAction.SUBTITLE_ADD -> {
+                mControlWrapper.showSettingView(SettingViewType.SWITCH_SOURCE, TrackType.SUBTITLE)
             }
 
             SettingAction.SUBTITLE_STYLE -> {
