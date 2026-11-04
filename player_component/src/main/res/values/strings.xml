@@ -139,6 +139,9 @@
     <string name="player_danmaku_disable_action">弹幕已开启，按确认关闭</string>
     <string name="player_danmaku_enable_action">弹幕已关闭，按确认开启</string>
     <string name="subtitle_switch">字幕</string>
+    <string name="subtitle_language_simplified">简体中文</string>
+    <string name="subtitle_language_traditional">繁体中文</string>
+    <string name="subtitle_track_forced">强制</string>
     <string name="text_setting_subtitle_style">字幕样式设置</string>
 
     <string name="text_no_data">无数据</string>

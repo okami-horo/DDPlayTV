@@ -14,12 +14,27 @@ import com.xyoye.common_component.log.model.LogModule
 
 /** Extends Media3's EBML reader; audio/video and subtitle extraction remain upstream-owned. */
 @UnstableApi
-internal class LibassMatroskaExtractor(
+internal class LibassMatroskaExtractor private constructor(
+    private val delegate: FontAttachmentExtractor
+) : Extractor by delegate {
+    constructor(fontSink: Media3FontAttachmentSink) : this(FontAttachmentExtractor(fontSink))
+
+    override fun release() {
+        // Upstream release is final, so pending attachment ownership ends at this wrapper.
+        delegate.discardPendingFont()
+        delegate.release()
+    }
+}
+
+@UnstableApi
+private class FontAttachmentExtractor(
     private val fontSink: Media3FontAttachmentSink
 ) : MatroskaExtractor(DefaultSubtitleParserFactory(), FLAG_EMIT_RAW_SUBTITLE_DATA) {
     private var attachmentName = ""
     private var attachmentMime = ""
     private var attachmentData: ByteArray? = null
+
+    override fun isLevel1Element(id: Int): Boolean = id == ID_ATTACHMENTS || super.isLevel1Element(id)
 
     override fun getElementType(id: Int): Int =
         when (id) {
@@ -94,7 +109,7 @@ internal class LibassMatroskaExtractor(
         }
     }
 
-    private fun discardPendingFont() {
+    fun discardPendingFont() {
         attachmentData?.let { fontSink.cancel(it.size) }
         attachmentData = null
     }

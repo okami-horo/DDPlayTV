@@ -291,7 +291,7 @@ class AssGpuRenderer(
                 LogFacade.d(
                     LogModule.PLAYER,
                     TAG,
-                    "gpu initEmbeddedTrack codecPrivateSize=${codecPrivate?.size ?: -1} fontDirs=${fontDirs.size} defaultFontSet=${defaultFont != null}",
+                    "gpu initEmbeddedTrack ready=$trackLoaded codecPrivateSize=${codecPrivate?.size ?: -1} fontDirs=${fontDirs.size} defaultFontSet=${defaultFont != null} parsed=${nativeBridge.embeddedTrackInfo()}",
                 )
             }
         }
@@ -305,13 +305,14 @@ class AssGpuRenderer(
         if (released) return
         renderHandler.post {
             if (released) return@post
-            nativeBridge.appendEmbeddedChunk(data, timeMs, durationMs)
             val count = embeddedSampleLogCounter.incrementAndGet()
-            if (PlayerInitializer.isPrintLog && shouldLogEmbeddedSample(count)) {
+            val logSample = PlayerInitializer.isPrintLog && shouldLogEmbeddedSample(count)
+            val parsed = nativeBridge.appendEmbeddedChunk(data, timeMs, durationMs, collectDiagnostics = logSample)
+            if (logSample) {
                 LogFacade.d(
                     LogModule.PLAYER,
                     TAG,
-                    "gpu appendEmbeddedSample size=${data.size} ptsMs=$timeMs durationMs=${durationMs ?: -1}",
+                    "gpu appendEmbeddedSample size=${data.size} ptsMs=$timeMs durationMs=${durationMs ?: -1} parsed=$parsed",
                 )
             }
         }
@@ -382,7 +383,7 @@ class AssGpuRenderer(
             LogFacade.d(
                 LogModule.PLAYER,
                 TAG,
-                "frame contentUs=${request.contentTimeUs} revision=${request.stateRevision} queueUs=$queueUs targetNs=${request.targetPresentTimeNs} targetDeltaUs=$targetDeltaUs presentation=immediate submitted=${result.submitted} cpuLayoutMs=${result.renderLatencyMs} cpuUploadMs=${result.uploadLatencyMs} cpuDrawSwapMs=${result.compositeLatencyMs}"
+                "frame contentUs=${request.contentTimeUs} revision=${request.stateRevision} queueUs=$queueUs targetNs=${request.targetPresentTimeNs} targetDeltaUs=$targetDeltaUs presentation=immediate submitted=${result.submitted} assImages=${result.imageCount} cpuLayoutMs=${result.renderLatencyMs} cpuUploadMs=${result.uploadLatencyMs} cpuDrawSwapMs=${result.compositeLatencyMs}"
             )
         }
 

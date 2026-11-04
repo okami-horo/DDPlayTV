@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @UnstableApi
 class LibassSubtitleDecoderFactory(
+    private val sinkAvailable: () -> Boolean,
     private val sinkProvider: () -> EmbeddedSubtitleSink?
 ) : SubtitleDecoderFactory {
     private val defaultFactory = SubtitleDecoderFactory.DEFAULT
@@ -23,7 +24,7 @@ class LibassSubtitleDecoderFactory(
         sourceInput = input
     }
 
-    internal fun hasSink(): Boolean = sourceInput != null || sinkProvider() != null
+    internal fun hasSink(): Boolean = sourceInput != null || sinkAvailable()
 
     private fun currentSink(): EmbeddedSubtitleSink? = sourceInput?.createDecoderSink(allowDetached = true) ?: sinkProvider()
 

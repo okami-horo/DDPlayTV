@@ -8,6 +8,25 @@ import org.junit.Test
 
 class Media3SubtitleInputTest {
     @Test
+    fun bindingTheSameSink_doesNotResetOrReplayTheTrack() {
+        val input = Media3SubtitleInput()
+        val output = RecordingSink()
+        input.beginMedia()
+        input.setSink(output)
+        val decoder = input.createDecoderSink()!!
+        decoder.onFormat(byteArrayOf(1))
+        decoder.onSample(byteArrayOf(1), 1000, 2000)
+
+        input.setSink(output)
+        input.setSink(output)
+
+        assertEquals(1, output.formats)
+        assertEquals(listOf(1000L), output.samples)
+        decoder.onSample(byteArrayOf(2), 3000, 1000)
+        assertEquals(listOf(1000L, 3000L), output.samples)
+    }
+
+    @Test
     fun replacedDecoder_cannotReclaimTrackWithALateFormat() {
         val input = Media3SubtitleInput()
         val output = RecordingSink()
@@ -145,6 +164,7 @@ class Media3SubtitleInputTest {
         var header: ByteArray? = null
         var releases = 0
         var flushes = 0
+        var formats = 0
 
         override fun onMediaChanged() {
             fonts.clear()
@@ -160,6 +180,7 @@ class Media3SubtitleInputTest {
         }
 
         override fun onFormat(codecPrivate: ByteArray?) {
+            formats++
             header = codecPrivate
         }
 

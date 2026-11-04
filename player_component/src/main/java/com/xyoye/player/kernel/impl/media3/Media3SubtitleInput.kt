@@ -55,11 +55,10 @@ internal class Media3SubtitleInput(
 
     fun setSink(sink: EmbeddedSubtitleSink?) {
         synchronized(lock) {
-            if (target !== sink) {
-                target = sink
-                sink?.onMediaChanged()
-                fonts.forEach { (name, data) -> sink?.onFont(name, data) }
-            }
+            if (target === sink) return
+            target = sink
+            sink?.onMediaChanged()
+            fonts.forEach { (name, data) -> sink?.onFont(name, data) }
             if (trackOwner != null) {
                 sink?.onFormat(codecPrivate)
                 samples.forEach { sink?.onSample(it.data, it.timeUs, it.durationUs) }

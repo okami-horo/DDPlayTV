@@ -18,6 +18,7 @@ import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 @UnstableApi
 class LibassAwareRenderersFactory(
     context: Context,
+    private val embeddedSinkAvailable: () -> Boolean,
     private val embeddedSinkProvider: () -> EmbeddedSubtitleSink?
 ) : DefaultRenderersFactory(context) {
     init {
@@ -70,7 +71,7 @@ class LibassAwareRenderersFactory(
     ) {
         super.buildTextRenderers(context, output, outputLooper, extensionRendererMode, out)
 
-        val decoderFactory = LibassSubtitleDecoderFactory(embeddedSinkProvider)
+        val decoderFactory = LibassSubtitleDecoderFactory(embeddedSinkAvailable, embeddedSinkProvider)
         val insertIndex = out.indexOfFirst { it is TextRenderer }.takeIf { it >= 0 } ?: out.size
         out.removeAll { it is TextRenderer }
         val textRenderer =

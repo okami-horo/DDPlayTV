@@ -9,7 +9,23 @@ class AssGpuNativeBridge {
         val renderLatencyMs: Double,
         val uploadLatencyMs: Double,
         val compositeLatencyMs: Double,
-        val submitted: Boolean = rendered
+        val submitted: Boolean = rendered,
+        val imageCount: Int = -1
+    )
+
+    data class EmbeddedTrackInfo(
+        val eventCount: Int,
+        val styleCount: Int,
+        val hasEventFormat: Boolean
+    )
+
+    enum class EmbeddedSampleOutcome { UNAVAILABLE, ACCEPTED, EMPTY_TEXT, DUPLICATE, REJECTED, UNCHANGED }
+
+    data class EmbeddedSampleDiagnostics(
+        val track: EmbeddedTrackInfo,
+        val addedEvents: Int,
+        val textBytes: Int,
+        val outcome: EmbeddedSampleOutcome
     )
 
     companion object {
@@ -19,7 +35,8 @@ class AssGpuNativeBridge {
     }
 
     private var handle: Long = nativeCreate()
-    private val metricsBuffer = LongArray(3)
+    private val metricsBuffer = LongArray(4)
+    private val embeddedMetricsBuffer = LongArray(6)
 
     val isReady: Boolean
         get() = handle != 0L
@@ -58,6 +75,8 @@ class AssGpuNativeBridge {
             return NativeRenderResult(rendered = false, renderLatencyMs = 0.0, uploadLatencyMs = 0.0, compositeLatencyMs = 0.0)
         }
         metricsBuffer.fill(0)
+        // Native telemetry can also be disabled independently of this request.
+        metricsBuffer[3] = -1
         val status =
             nativeRender(handle, contentTimeUs, targetPresentTimeNs ?: 0L, stateRevision, metricsBuffer.takeIf { telemetryEnabled })
         return NativeRenderResult(
@@ -65,7 +84,8 @@ class AssGpuNativeBridge {
             renderLatencyMs = metricsBuffer[0] / 1000.0,
             uploadLatencyMs = metricsBuffer[1] / 1000.0,
             compositeLatencyMs = metricsBuffer[2] / 1000.0,
-            submitted = status == 1
+            submitted = status == 1,
+            imageCount = if (telemetryEnabled) metricsBuffer[3].toInt() else -1
         )
     }
 
@@ -124,13 +144,29 @@ class AssGpuNativeBridge {
         defaultFont: String?
     ): Boolean = isReady && nativeInitEmbeddedTrack(handle, codecPrivate, fontDirs.toTypedArray(), defaultFont)
 
+    fun embeddedTrackInfo(): EmbeddedTrackInfo? {
+        if (!isReady) return null
+        val info = nativeEmbeddedTrackInfo(handle) ?: return null
+        return EmbeddedTrackInfo(info[0].toInt(), info[1].toInt(), info[2] != 0L)
+    }
+
     fun appendEmbeddedChunk(
         data: ByteArray,
         timeMs: Long,
-        durationMs: Long?
-    ) {
-        if (!isReady) return
-        nativeAppendEmbeddedChunk(handle, data, timeMs, durationMs ?: -1)
+        durationMs: Long?,
+        collectDiagnostics: Boolean = false
+    ): EmbeddedSampleDiagnostics? {
+        if (!isReady) return null
+        val metrics = embeddedMetricsBuffer.takeIf { collectDiagnostics }
+        metrics?.fill(0)
+        nativeAppendEmbeddedChunk(handle, data, timeMs, durationMs ?: -1, metrics)
+        if (metrics == null) return null
+        return EmbeddedSampleDiagnostics(
+            EmbeddedTrackInfo(metrics[0].toInt(), metrics[1].toInt(), metrics[5] != 0L),
+            metrics[2].toInt(),
+            metrics[3].toInt(),
+            EmbeddedSampleOutcome.entries[metrics[4].toInt()]
+        )
     }
 
     fun flushEmbeddedEvents() {
@@ -242,8 +278,11 @@ class AssGpuNativeBridge {
         handle: Long,
         data: ByteArray,
         timeMs: Long,
-        durationMs: Long
+        durationMs: Long,
+        diagnosticsOut: LongArray?
     )
+
+    private external fun nativeEmbeddedTrackInfo(handle: Long): LongArray?
 
     private external fun nativeFlushEmbeddedEvents(handle: Long)
 

@@ -28,6 +28,8 @@ keystore.properties
 .codex/skills/ddplaytv-http-logs/.env
 .codex/skills/ddplaytv-http-logs/.env.local
 Temp/ddplaytv-http-logs/
+# Local subtitle diagnosis artifacts: screenshots, logs and generated probes.
+/Temp/media3-subtitle-diagnosis-*/
 .DS_Store
 Thumbs.db
 *.tmp

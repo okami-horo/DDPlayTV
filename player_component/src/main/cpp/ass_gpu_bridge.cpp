@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <charconv>
 #include <cstdio>
 #include <cstring>
 #include <cstdarg>
@@ -71,6 +72,7 @@ constexpr size_t kSingleFontLimit = 16 * 1024 * 1024;
 constexpr size_t kMediaFontLimit = 32 * 1024 * 1024;
 constexpr size_t kTextureLimit = 64 * 1024 * 1024;
 constexpr size_t kMaxImages = 4096;
+constexpr int kDuplicateDiagnosticLimit = 4096;
 
 struct GpuContext {
     std::mutex mutex;
@@ -94,6 +96,7 @@ struct GpuContext {
     std::vector<std::string> font_dirs;
     size_t font_bytes = 0;
     size_t peak_texture_bytes = 0;
+    size_t last_image_count = 0;
     int gles_version = 3;
     EGLDisplay egl_display = EGL_NO_DISPLAY;
     EGLContext egl_context = EGL_NO_CONTEXT;
@@ -330,6 +333,8 @@ bool EnsureAss(GpuContext *context) {
         context->library = ass_library_init();
         if (context->library == nullptr) return false;
         ass_set_message_cb(context->library, [](int level, const char *fmt, va_list args, void *) {
+            // Verbose libass messages include complete Dialogue packets and header contents.
+            if (level > 5) return;
             char buffer[1024];
             if (fmt != nullptr) {
                 vsnprintf(buffer, sizeof(buffer), fmt, args);
@@ -608,6 +613,7 @@ bool EnsureSurface(GpuContext *context) {
 
 bool ClearSurface(GpuContext *context) {
     context->pending_invalidate = true;
+    context->last_image_count = 0;
     // Clearing must not recreate a destroyed surface or discard subtitle events.
     if (!MakeCurrent(context)) return false;
     glViewport(0, 0, context->width, context->height);
@@ -621,12 +627,12 @@ bool ClearSurface(GpuContext *context) {
 }
 
 void WriteRenderMetrics(JNIEnv *env, jlongArray metrics_out, jlong render_ms, jlong upload_ms,
-                        jlong composite_ms) {
+                        jlong composite_ms, jlong image_count) {
     if (metrics_out == nullptr) {
         return;
     }
-    jlong values[3] = {render_ms, upload_ms, composite_ms};
-    env->SetLongArrayRegion(metrics_out, 0, 3, values);
+    jlong values[4] = {render_ms, upload_ms, composite_ms, image_count};
+    env->SetLongArrayRegion(metrics_out, 0, 4, values);
 }
 
 void UpdateFrameSizeIfNeeded(GpuContext *context) {
@@ -824,16 +830,16 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeInitEmbeddedTrack(
         LogError("Failed to create embedded SSA/ASS track");
         return JNI_FALSE;
     }
-    if (codec_private != nullptr) {
-        const jsize length = env->GetArrayLength(codec_private);
-        if (length > 0) {
-            jbyte *bytes = env->GetByteArrayElements(codec_private, nullptr);
-            if (bytes == nullptr) return JNI_FALSE;
-            ass_process_codec_private(context->track,
-                                      reinterpret_cast<char *>(bytes),
-                                      length);
-            env->ReleaseByteArrayElements(codec_private, bytes, JNI_ABORT);
-        }
+    const jsize length = codec_private == nullptr ? 0 : env->GetArrayLength(codec_private);
+    if (length > 0) {
+        jbyte *bytes = env->GetByteArrayElements(codec_private, nullptr);
+        if (bytes == nullptr) return JNI_FALSE;
+        ass_process_codec_private(context->track, reinterpret_cast<char *>(bytes), length);
+        env->ReleaseByteArrayElements(codec_private, bytes, JNI_ABORT);
+    } else {
+        // Even an absent header needs libass's native event-format fallback.
+        char empty_header[] = "";
+        ass_process_codec_private(context->track, empty_header, 0);
     }
     UpdateFrameSizeIfNeeded(context);
     context->pending_invalidate = true;
@@ -848,7 +854,8 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeAppendEmbeddedChunk(
     jlong handle,
     jbyteArray data,
     jlong time_ms,
-    jlong duration_ms) {
+    jlong duration_ms,
+    jlongArray diagnostics_out) {
     auto *context = reinterpret_cast<GpuContext *>(handle);
     if (context == nullptr) return;
     std::lock_guard<std::mutex> guard(context->mutex);
@@ -858,18 +865,69 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeAppendEmbeddedChunk(
     }
     const jsize length = env->GetArrayLength(data);
     if (length <= 0) {
+        if (diagnostics_out != nullptr) {
+            jlong values[6] = {context->track->n_events, context->track->n_styles, 0, -1, 4,
+                               context->track->event_format != nullptr};
+            env->SetLongArrayRegion(diagnostics_out, 0, 6, values);
+        }
         return;
     }
     jbyte *bytes = env->GetByteArrayElements(data, nullptr);
     if (bytes == nullptr) return;
+    const int previous_events = context->track->n_events;
     const long long safe_duration = duration_ms > 0 ? duration_ms : kDefaultEmbeddedChunkDurationMs;
     ass_process_chunk(context->track,
                       reinterpret_cast<char *>(bytes),
                       length,
                       static_cast<long long>(time_ms),
                       safe_duration);
+    if (diagnostics_out != nullptr) {
+        const int added = context->track->n_events - previous_events;
+        int text_bytes = -1;
+        int outcome = 4; // Rejected; libass did not retain an event.
+        if (added > 0) {
+            const char *text = context->track->events[context->track->n_events - 1].Text;
+            text_bytes = text == nullptr ? 0 : static_cast<int>(std::strlen(text));
+            outcome = text_bytes > 0 ? 1 : 2; // Accepted or accepted empty Text.
+        } else {
+            const char *begin = reinterpret_cast<const char *>(bytes);
+            const char *comma = static_cast<const char *>(std::memchr(begin, ',', length));
+            int read_order = 0;
+            if (comma != nullptr) {
+                const auto parsed = std::from_chars(begin, comma, read_order);
+                if (parsed.ec == std::errc{} && parsed.ptr == comma) {
+                    outcome = previous_events > kDuplicateDiagnosticLimit ? 5 : 4;
+                    // Only diagnostic samples pay for this bounded duplicate lookup.
+                    const int first = std::max(0, previous_events - kDuplicateDiagnosticLimit);
+                    for (int i = previous_events - 1; i >= first; --i) {
+                        if (context->track->events[i].ReadOrder == read_order) {
+                            outcome = 3;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        jlong values[6] = {context->track->n_events, context->track->n_styles, added,
+                           text_bytes, outcome, context->track->event_format != nullptr};
+        env->SetLongArrayRegion(diagnostics_out, 0, 6, values);
+    }
     env->ReleaseByteArrayElements(data, bytes, JNI_ABORT);
     context->pending_invalidate = true;
+}
+
+extern "C" JNIEXPORT jlongArray JNICALL
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeEmbeddedTrackInfo(
+    JNIEnv *env, jobject, jlong handle) {
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr) return nullptr;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    if (context->track == nullptr) return nullptr;
+    jlong values[3] = {context->track->n_events, context->track->n_styles,
+                       context->track->event_format != nullptr};
+    jlongArray result = env->NewLongArray(3);
+    if (result != nullptr) env->SetLongArrayRegion(result, 0, 3, values);
+    return result;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -998,14 +1056,14 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     if (context->window == nullptr || context->renderer == nullptr || context->track == nullptr ||
         context->width <= 0 || context->height <= 0) {
         if (collect_metrics) {
-            WriteRenderMetrics(env, metrics_out, 0, 0, 0);
+            WriteRenderMetrics(env, metrics_out, 0, 0, 0, 0);
         }
         return JNI_FALSE;
     }
     UpdateFrameSizeIfNeeded(context);
     if (!EnsureSurface(context) || !MakeCurrent(context)) {
         if (collect_metrics) {
-            WriteRenderMetrics(env, metrics_out, 0, 0, 0);
+            WriteRenderMetrics(env, metrics_out, 0, 0, 0, 0);
         }
         return JNI_FALSE;
     }
@@ -1024,7 +1082,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     if (change == 0 && !context->pending_invalidate) {
         // libass 表示当前时间戳无需重绘，直接复用上一帧，避免重复上传/绘制开销。
         if (collect_metrics) {
-            WriteRenderMetrics(env, metrics_out, 0, 0, 0);
+            WriteRenderMetrics(env, metrics_out, 0, 0, 0, context->last_image_count);
         }
         return 2; // Reused content; no BufferQueue submission.
     }
@@ -1062,6 +1120,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
                             frame_texture_bytes, image_count, static_cast<long long>(target_present_time_ns));
     }
     context->pending_invalidate = false;
+    context->last_image_count = image_count;
 
     context->texture_pool_pos = 0;
     glViewport(0, 0, context->width, context->height);
@@ -1198,7 +1257,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
         const auto render_latency =
             std::chrono::duration_cast<std::chrono::microseconds>(render_end - render_start).count();
         WriteRenderMetrics(env, metrics_out, render_latency, static_cast<jlong>(upload_ms * 1000.0),
-                           static_cast<jlong>(composite_ms * 1000.0));
+                           static_cast<jlong>(composite_ms * 1000.0), image_count);
     }
     return JNI_TRUE;
 }

@@ -1,5 +1,13 @@
 # Progress
 
+## Release 4.2.7 Packaging (2026-11-04)
+
+At the user's request, incremented 4.2.6 / 73 to **4.2.7 / 74** and built ARM64, ARM32 and universal Release APKs containing the subtitle hardening below. `:app:assembleRelease` ended with `BUILD SUCCESSFUL in 4m 24s`, including vital lint; actual manifest versions/ABIs/non-debuggable state, signatures matching 4.2.6 and ZIP alignment passed. The [packaging record](../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#release-427-2026-11-04) owns paths and hashes. No installation, physical-TV operation, publishing or commit occurred; existing staged content is preserved.
+
+## Media3 Subtitle Hardening (2026-11-04)
+
+Implemented the user-authorized subtitle hardening while preserving UI and Media3/mpv ownership. The [execution ledger](../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#subtitle-hardening-2026-11-04) owns ASS header/query/binding/name/attachment/diagnostic fixes, red/green evidence, successful Debug builds/JVM/lint/scoped Kotlin/governance, 175 player JVM tests, 19 native/Media3 tests, 3 application DPAD regressions and final-package smoke. The [maintenance document](../document/player/subtitle-rendering.md) owns current contracts. Local validation is complete and the task emulator/private adb are closed; the actual 115-video cause and physical-TV/user acceptance remain open. No TV access or commit occurred; subsequent Release packaging is recorded above.
+
 ## Open Player Bottom Bar (2026-11-03)
 
 Implemented the user-confirmed `variant=open` layout with the timeline above nine actions, independent circular track buttons and an episode pill. The [B01–B06 implementation ledger](../docs/superpowers/plans/2026-11-03-player-bottom-open.md) owns successful builds, all Debug JVM/lint/governance checks, scoped Kotlin checks, instrumented DPAD/kernel/persistence regressions, final native screenshot comparison and 1.3-font evidence. Production subtitle settings/placement and A06 are retained. Local verification is complete; physical-TV/user final acceptance remains pending, with no new TV operation authorized.

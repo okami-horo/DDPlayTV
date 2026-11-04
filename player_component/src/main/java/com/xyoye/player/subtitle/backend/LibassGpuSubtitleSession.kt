@@ -156,7 +156,8 @@ internal class LibassGpuSubtitleSession(
         gpuRenderer.clearEmbeddedTrack()
         // External subtitle removed: allow embedded sink again and restore embedded-track mode.
         embeddedSinkController?.setEnabled(true)
-        // Re-register the sink so the kernel can restore its embedded subtitle input.
+        // The external track replaced native events; explicitly rebind to replay cached input.
+        kernelBridge?.setEmbeddedSubtitleSink(null)
         kernelBridge?.setEmbeddedSubtitleSink(embeddedSink)
         recoveryCoordinator.attemptRecovery(SubtitlePipelineFallbackReason.TRACK_CHANGED)
         val positionMs = environment.playerView?.getCurrentPosition() ?: 0L

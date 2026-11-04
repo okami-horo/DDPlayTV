@@ -80,6 +80,7 @@ class Media3VideoPlayer(
     private val subtitleFrameDrivers = mutableSetOf<SubtitleFrameDriver>()
 
     private val trackNameProvider by lazy { DefaultTrackNameProvider(appContext.resources) }
+    private val subtitleTrackNameProvider by lazy { Media3SubtitleTrackNameProvider(appContext.resources) }
 
     override fun initPlayer() {
         if (this::player.isInitialized) {
@@ -109,6 +110,7 @@ class Media3VideoPlayer(
         val renderersFactory =
             LibassAwareRenderersFactory(
                 appContext,
+                embeddedSinkAvailable = { subtitleInput.hasSink() },
                 embeddedSinkProvider = { subtitleInput.createDecoderSink() },
             ).apply {
                 setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
@@ -392,17 +394,24 @@ class Media3VideoPlayer(
 
     override fun getTracks(type: TrackType): List<VideoTrackBean> {
         val media3Type = getTrackType(type) ?: return emptyList()
-        return player.currentTracks.groups.flatMapIndexed { groupIndex, group ->
-            if (group.type != media3Type) {
-                return@flatMapIndexed emptyList()
+        val nameProvider = if (type == TrackType.SUBTITLE) subtitleTrackNameProvider else trackNameProvider
+        val tracks =
+            player.currentTracks.groups.flatMapIndexed { groupIndex, group ->
+                if (group.type != media3Type) {
+                    return@flatMapIndexed emptyList()
+                }
+                mapByLength(group.length) { trackIndex ->
+                    val format = group.getTrackFormat(trackIndex)
+                    val name = nameProvider.getTrackName(format)
+                    val selected = group.isTrackSelected(trackIndex)
+                    val id = "$groupIndex-$trackIndex"
+                    VideoTrackBean.internal(id, name, type, selected)
+                }
             }
-            mapByLength(group.length) { trackIndex ->
-                val format = group.getTrackFormat(trackIndex)
-                val name = trackNameProvider.getTrackName(format)
-                val selected = group.isTrackSelected(trackIndex)
-                val id = "$groupIndex-$trackIndex"
-                VideoTrackBean.internal(id, name, type, selected)
-            }
+        if (type != TrackType.SUBTITLE) return tracks
+        val nameCounts = tracks.groupingBy { it.name }.eachCount()
+        return tracks.mapIndexed { index, track ->
+            if (nameCounts.getValue(track.name) > 1) track.copy(name = "${track.name} · ${index + 1}") else track
         }
     }
 
@@ -683,7 +692,7 @@ class Media3VideoPlayer(
                 if (isMedia3CueTrack) {
                     media3CueTrack = true
                 }
-                val name = trackNameProvider.getTrackName(format)
+                val name = subtitleTrackNameProvider.getTrackName(format)
                 val initDataSummary = formatInitializationDataSummary(format)
                 LogFacade.d(
                     LogModule.PLAYER,

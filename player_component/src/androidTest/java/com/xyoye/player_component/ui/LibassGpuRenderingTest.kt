@@ -5,12 +5,15 @@ import android.media.ImageReader
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
+import androidx.media3.common.Format
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.xyoye.data_component.enums.SubtitlePipelineFallbackReason
 import com.xyoye.data_component.enums.SubtitleViewType
 import com.xyoye.data_component.media3.telemetry.subtitle.SubtitleOutputTarget
+import com.xyoye.player.kernel.impl.media3.LibassSsaStreamDecoder
 import com.xyoye.player.kernel.impl.media3.Media3FontAttachmentSink
+import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import com.xyoye.player.subtitle.backend.LibassEmbeddedSubtitleSink
 import com.xyoye.player.subtitle.backend.SwitchableEmbeddedSubtitleSink
 import com.xyoye.player.subtitle.gpu.AssGpuNativeBridge
@@ -31,6 +34,7 @@ import org.junit.runner.RunWith
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 @RunWith(AndroidJUnit4::class)
 class LibassGpuRenderingTest {
@@ -41,6 +45,137 @@ class LibassGpuRenderingTest {
             width = 640,
             height = 360
         )
+
+    @Test
+    fun decoderHeaders_renderChineseWithMissingEventsPaddingOrNoInitializationData() =
+        withRenderer { bridge, output ->
+            val header = HEADER.substringBefore("[Events]").toByteArray()
+            val media3Format = MEDIA3_FORMAT.toByteArray()
+            val text = "{\\b1}简体、繁體, visible"
+            val raw = "0,0,Default,,0,0,0,,$text"
+            val initializations =
+                listOf(
+                    listOf(media3Format, header),
+                    listOf(media3Format, header + ByteArray(3)),
+                    listOf(media3Format, HEADER.toByteArray() + ByteArray(3)),
+                    listOf(HEADER.toByteArray()),
+                    emptyList(),
+                    listOf(ByteArray(0))
+                )
+            for (initialization in initializations) {
+                val decoded = decodeSample(initialization, raw)
+                assertTrue(bridge.initEmbeddedTrack(decoded.first, emptyList(), "/system/fonts/NotoSansCJK-Regular.ttc"))
+                assertFalse(hasVisiblePixels(output))
+                assertTrue(bridge.embeddedTrackInfo()!!.hasEventFormat)
+                val parsed = bridge.appendEmbeddedChunk(decoded.second, 0, 10_000, collectDiagnostics = true)!!
+                assertEquals(AssGpuNativeBridge.EmbeddedSampleOutcome.ACCEPTED, parsed.outcome)
+                assertEquals(text.toByteArray().size, parsed.textBytes)
+                val frame = bridge.renderFrame(1_000_000, null)
+                assertTrue(frame.rendered)
+                assertTrue(frame.imageCount > 0)
+                assertTrue("decoded ASS must produce actual Chinese glyph pixels", hasVisiblePixels(output))
+            }
+
+            // Controlled regression: the old Media3-specific format loses the Text field in libass.
+            val oldHeader = header + "\n[Events]\n$MEDIA3_FORMAT\n".toByteArray()
+            assertTrue(bridge.initEmbeddedTrack(oldHeader, emptyList(), DEFAULT_FONT))
+            assertFalse(hasVisiblePixels(output))
+            val rejectedText = bridge.appendEmbeddedChunk("0,0,Default,,0,0,0,,Regression".toByteArray(), 0, 10_000, true)!!
+            assertTrue(rejectedText.textBytes <= 0)
+            assertTrue(bridge.renderFrame(1_000_000, null).rendered)
+            assertFalse("the old malformed event format must be detected by pixel verification", hasVisiblePixels(output))
+        }
+
+    @Test
+    fun parserDiagnostics_distinguishDuplicatesEmptyTextAndRejectedPacketsFromVisibleEvents() =
+        withRenderer { bridge, output ->
+            assertTrue(bridge.initEmbeddedTrack(HEADER.toByteArray(), emptyList(), DEFAULT_FONT))
+            assertFalse(hasVisiblePixels(output))
+            val visible = "0,0,Default,,0,0,0,,Private subtitle sentinel"
+            val accepted = bridge.appendEmbeddedChunk(visible.toByteArray(), 0, 2000, true)!!
+            assertEquals(AssGpuNativeBridge.EmbeddedSampleOutcome.ACCEPTED, accepted.outcome)
+            assertEquals(1, accepted.addedEvents)
+            assertTrue(accepted.track.styleCount > 0)
+
+            val duplicate = bridge.appendEmbeddedChunk(visible.toByteArray(), 0, 2000, true)!!
+            assertEquals(AssGpuNativeBridge.EmbeddedSampleOutcome.DUPLICATE, duplicate.outcome)
+            assertEquals(0, duplicate.addedEvents)
+            assertEquals(1, duplicate.track.eventCount)
+
+            val empty = bridge.appendEmbeddedChunk("1,0,Default,,0,0,0,,".toByteArray(), 0, 2000, true)!!
+            assertEquals(AssGpuNativeBridge.EmbeddedSampleOutcome.EMPTY_TEXT, empty.outcome)
+            assertEquals(0, empty.textBytes)
+            assertEquals(2, empty.track.eventCount)
+            val rejected = bridge.appendEmbeddedChunk("broken".toByteArray(), 0, 2000, true)!!
+            assertEquals(AssGpuNativeBridge.EmbeddedSampleOutcome.REJECTED, rejected.outcome)
+            assertEquals(2, rejected.track.eventCount)
+
+            assertTrue(bridge.renderFrame(1_000_000, null).imageCount > 0)
+            assertTrue(hasVisiblePixels(output))
+            bridge.setTelemetryEnabled(false)
+            assertEquals(-1, bridge.renderFrame(1_000_000, null).imageCount)
+            bridge.setTelemetryEnabled(true)
+            assertEquals(-1, bridge.renderFrame(1_000_000, null, telemetryEnabled = false).imageCount)
+            assertEquals(0, bridge.renderFrame(3_000_000, null).imageCount)
+            assertFalse("outside event time must be a transparent frame, not a parser error", hasVisiblePixels(output))
+            bridge.flushEmbeddedEvents()
+            assertFalse(hasVisiblePixels(output))
+            assertEquals(0, bridge.embeddedTrackInfo()!!.eventCount)
+            assertEquals(
+                AssGpuNativeBridge.EmbeddedSampleOutcome.ACCEPTED,
+                bridge.appendEmbeddedChunk(visible.toByteArray(), 0, 2000, true)!!.outcome
+            )
+        }
+
+    private fun decodeSample(
+        initialization: List<ByteArray>,
+        raw: String
+    ): Pair<ByteArray?, ByteArray> {
+        var header: ByteArray? = null
+        val sample = AtomicReference<ByteArray>()
+        val sink =
+            object : EmbeddedSubtitleSink {
+                override fun onFormat(codecPrivate: ByteArray?) {
+                    header = codecPrivate
+                }
+
+                override fun onSample(
+                    data: ByteArray,
+                    timeUs: Long,
+                    durationUs: Long?
+                ) {
+                    assertEquals(0L, timeUs)
+                    assertEquals(10_000_000L, durationUs)
+                    sample.set(data)
+                }
+
+                override fun onFlush() = Unit
+
+                override fun onRelease() = Unit
+            }
+        val format =
+            Format
+                .Builder()
+                .setSampleMimeType("text/x-ssa")
+                .setInitializationData(initialization)
+                .build()
+        val decoder = LibassSsaStreamDecoder(format) { sink }
+        try {
+            val input = decoder.dequeueInputBuffer()!!
+            val payload = "Dialogue: 0:00:00:00,0:00:10:00,$raw".toByteArray()
+            input.ensureSpaceForWrite(payload.size)
+            input.data!!.put(payload)
+            input.flip()
+            input.timeUs = 1_000_000_000_000L
+            input.subsampleOffsetUs = 1_000_000_000_000L
+            decoder.queueInputBuffer(input)
+            val deadline = SystemClock.elapsedRealtime() + 5000
+            while (sample.get() == null && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(10)
+            return header to (sample.get() ?: throw AssertionError("Decoder did not forward the subtitle sample"))
+        } finally {
+            decoder.release()
+        }
+    }
 
     @Test
     fun lateAttachment_changesActualGlyphsSurvivesTracksAndIsClearedWithMedia() =
@@ -385,6 +520,7 @@ class LibassGpuRenderingTest {
     }
 
     private companion object {
+        private const val MEDIA3_FORMAT = "Format: Start, End, ReadOrder, Layer, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
         private const val DEFAULT_FONT = "/system/fonts/Roboto-Regular.ttf"
         private val HEADER =
             """

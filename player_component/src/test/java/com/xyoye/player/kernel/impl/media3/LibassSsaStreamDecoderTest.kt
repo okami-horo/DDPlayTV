@@ -4,8 +4,8 @@ import androidx.media3.common.C
 import androidx.media3.common.Format
 import com.xyoye.common_component.media3.testing.Media3Dependent
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -147,7 +147,7 @@ class LibassSsaStreamDecoderTest {
     }
 
     @Test
-    fun constructor_mergesCodecPrivateWhenEventsSectionMissing() {
+    fun constructor_preservesCodecPrivateWhenEventsSectionMissing() {
         val sink = TestEmbeddedSink()
         val dialogueFormat =
             "Format: Start, End, ReadOrder, Layer, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
@@ -161,15 +161,12 @@ class LibassSsaStreamDecoderTest {
                 .build()
 
         val decoder = LibassSsaStreamDecoder(format, sinkProvider = { sink })
-        val merged = String(sink.lastCodecPrivate ?: ByteArray(0), Charsets.UTF_8)
-
-        assertTrue(merged.contains("[Events]"))
-        assertTrue(merged.contains(String(dialogueFormat, Charsets.UTF_8)))
+        assertArrayEquals(header, sink.lastCodecPrivate)
         decoder.release()
     }
 
     @Test
-    fun constructor_mergesCodecPrivateWhenFormatBelongsToStyleSection() {
+    fun constructor_preservesStyleFormatAndLeavesEventFallbackToLibass() {
         val sink = TestEmbeddedSink()
         val dialogueFormat =
             "Format: Start, End, ReadOrder, Layer, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
@@ -185,12 +182,69 @@ class LibassSsaStreamDecoderTest {
                 .build()
 
         val decoder = LibassSsaStreamDecoder(format, sinkProvider = { sink })
-        val merged = String(sink.lastCodecPrivate ?: ByteArray(0), Charsets.UTF_8)
-
-        assertTrue(merged.contains("[Events]"))
-        assertTrue(merged.contains(String(dialogueFormat, Charsets.UTF_8)))
-        assertFalse(merged == String(styleOnlyHeader, Charsets.UTF_8))
+        assertArrayEquals(styleOnlyHeader, sink.lastCodecPrivate)
         decoder.release()
+    }
+
+    @Test
+    fun constructor_removesAllTrailingNulsWithoutChangingHeaderBytes() {
+        val header =
+            "[Script Info]\nTitle: 简体字幕\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+                .toByteArray(Charsets.UTF_8)
+        for (initializationData in listOf(
+            listOf(header + ByteArray(3)),
+            listOf(
+                "Format: Start, End, ReadOrder, Layer, Style, Name, MarginL, MarginR, MarginV, Effect, Text".toByteArray(),
+                header + ByteArray(3)
+            )
+        )) {
+            val sink = TestEmbeddedSink()
+            val format =
+                Format
+                    .Builder()
+                    .setSampleMimeType("text/x-ssa")
+                    .setInitializationData(initializationData)
+                    .build()
+            val decoder = LibassSsaStreamDecoder(format) { sink }
+            try {
+                assertArrayEquals(header, sink.lastCodecPrivate)
+            } finally {
+                decoder.release()
+            }
+        }
+    }
+
+    @Test
+    fun constructor_preservesCustomEventOrderAndEmbeddedNulBytes() {
+        val header =
+            "[Script Info]\nTitle: before\u0000after\n[Events]\nFormat: Layer, Start, End, Name, Style, MarginL, MarginR, MarginV, Effect, Text\n"
+                .toByteArray(Charsets.UTF_8)
+        val sink = TestEmbeddedSink()
+        val format =
+            Format
+                .Builder()
+                .setSampleMimeType("text/x-ssa")
+                .setInitializationData(listOf(header))
+                .build()
+        val decoder = LibassSsaStreamDecoder(format) { sink }
+        try {
+            assertArrayEquals(header, sink.lastCodecPrivate)
+        } finally {
+            decoder.release()
+        }
+    }
+
+    @Test
+    fun sampleNormalization_preservesChineseOverrideTagsAndCommas() {
+        val decoder = createDecoder()
+        val raw = "17,2,Default,,1,2,3,,{\\pos(12,34)}简体，繁體,逗号\\N第二行"
+        try {
+            val (data, duration) = decoder.normalizeSampleForTest("Dialogue: 0:00:00:00,0:00:02:50,$raw".toByteArray())
+            assertArrayEquals(raw.toByteArray(), data)
+            assertEquals(2_500_000L, duration)
+        } finally {
+            decoder.release()
+        }
     }
 
     private fun createDecoder(): LibassSsaStreamDecoder =

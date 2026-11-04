@@ -2,7 +2,7 @@
 
 > 验收归档：本文对应的 activeContext 待验证项已按[2026-11-03 用户确认](../../memory-bank/archive/2026-11-completed-work.md#user-confirmed-acceptance-2026-11-03)关闭。下文旧“待验收／未实机验证”表述保留为原执行时点记录；未实施需求和已知工程问题不因此完成。
 
-源码核对日期：2026-10-30，Media3 `1.11.1`。本文说明当前实现边界；旧变更的勾选仅是历史任务记录，不作为本轮测试结果。字幕简繁转换属于[另一项待实现需求](subtitle-language-conversion.md)。
+源码核对日期：2026-11-04，Media3 `1.11.1`。libass 头文件及解析契约参考为 `0.17.3`，本轮模拟器 ARM64 运行日志报告现有二进制为 `0.17.4-0-gbbb3c7f1570a4a021e52683f3fbdf74fe492ae84-dirty`；未更换依赖或二进制。本文说明当前实现边界；旧变更的勾选仅是历史任务记录，不作为本轮测试结果。字幕简繁转换属于[另一项待实现需求](subtitle-language-conversion.md)。
 
 问题由来与历史修复见 [libass 接入审查](libass-integration-audit.md)。Media3 已补齐 MKV 字体附件、公开时间映射、媒体/轨道作用域、完整帧请求与几何/资源防线，验证命令及范围见[实施账本](../../docs/superpowers/plans/2026-10-30-media3-libass.md)。目标 GLES 2 电视、复杂字幕矩阵与长期资源曲线仍未关闭。
 
@@ -31,13 +31,15 @@ LibassRendererBackend
 ## 显示、轨道和加载契约
 
 - `SubtitleController.setUserSubtitleVisible()` 同时控制现有视图和 libass renderer。隐藏只提交透明帧，不删除轨道；恢复使用当前播放位置重绘。会话初始化继承控制器可见状态。
-- 清除外挂先释放当前 native track 并清屏，再启用内嵌 sink、按内核能力重放格式/事件。内嵌 decoder 释放会清除其缓存格式；静音时不转发清轨，以免误删正在显示的外挂。sink 的释放结束当前轨道，后续格式可重新初始化。
+- 清除外挂先释放当前 native track 并清屏，再启用内嵌 sink，显式解绑/重绑以重放缓存字体、格式和事件。同对象重复绑定本身幂等，不承担隐式恢复职责。内嵌 decoder 释放会清除其缓存格式；静音时不转发清轨，以免误删正在显示的外挂。sink 的释放结束当前轨道，后续格式可重新初始化。
 - `loadExternalSubtitle()` 挂起等待渲染线程的 native Boolean 结果，不在任务入队时报告成功。加载取消/过期不再接管新请求；失败清除失败轨道并恢复内嵌输入，向用户报告文件加载错误。普通 SRT 等现有格式继续使用文字解析路径。
 - native `flush` 提交透明帧并标记下一次必须重绘，不删除事件；`flushEmbeddedEvents` 才清空流式事件，`clearEmbeddedTrack` 则释放轨道。surface 重建也强制刷新相同时间点，避免 libass 的“图像未变化”判断留下空画面。
 - surface 绑定带修订号，销毁/重新绑定后跳过旧队列任务；JNI 入口检查 Surface 有效性。销毁回调等待渲染线程解绑（最多 1.5 秒，超时记录警告），避免回调返回后继续使用旧窗口。尺寸变化只使用实际的 SurfaceHolder 回调，不在布局变化时提前或重复重建 EGL。
 - Media3 视频 Surface 销毁时，`RenderSurfaceView` 按实际绑定所有者调用 `clearVideoSurface(surface)`；重新创建后再绑定，避免 MediaCodec 向失效窗口继续输出。非零暂停位置的视频/字幕双 Surface 重建已有应用像素回归。
 - 渲染状态和轨道命令按 FIFO 执行。多帧请求合并为一个待渲染任务，并移至已提交状态命令之后，避免暂停时重绘先于显示/seek/切轨操作。
 - Media3 decoder 各自持有输入/输出缓冲池；sink 实例更换时重传 codec private，释放通知最后实际持有轨道的 sink。native 绘制时间保留 64 位毫秒。
+- Media3 能力查询只读取 sink 可用性，创建 decoder 才获取输入代际；查询不能使活动 decoder 失效。字幕名称保留原始标签、语言、角色和强制标记；CHS/CHT 分别显示为简体/繁体，同名加序号，轨道 ID 与选择逻辑保持独立。
+- ASS decoder 选择真实 codec private，只清除尾部 NUL，不拼入 Media3 的 Dialogue 包装格式。缺 Events、空头部或无初始化数据均由 `ass_process_codec_private` 提供原生回退，保留自定义格式、正文原字节及 ASS 标签。
 
 ## Media3 时间、字体与资源
 
@@ -49,7 +51,7 @@ LibassRendererBackend
 
 [Media3MediaSourceHelper](../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3MediaSourceHelper.kt) 为每个 source 创建独立 `Media3SubtitleInput` 并绑定到 MediaItem tag，连续播放预加载沿用此入口。decoder 绑定所属 source 和轨道代际；当前 MediaItem 切换时才接入显示 sink，缓存的字体、头部和样本按顺序重放。旧媒体的字体/样本与旧轨道的格式/释放不能接管新输入。同媒体 seek、切轨、外挂切换和 Surface 重建保留字体；换媒体重置 native track、字体和纹理。
 
-[LibassMatroskaExtractor](../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassMatroskaExtractor.kt) 继承 Media3 的公开 EBML 扩展点，只替换默认 Matroska extractor，其他格式保持官方提取器。附件数据可早于名称/MIME 到达，验证字体类型与 sfnt signature；不使用私有字段反射或第二套解复用器。晚到字体注册后重建 ASS renderer 的字体/字形缓存，保留当前 ASS track 并重绘；字体在内嵌输入静音时仍可注册。
+[LibassMatroskaExtractor](../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassMatroskaExtractor.kt) 在内部使用 Media3 的公开 EBML 扩展点，只替换默认 Matroska extractor，其他格式保持官方提取器。Attachments 登记为一级元素以支持损坏 ID 后的重同步；外层 `Extractor` 委托包装在释放时归还未完成附件的预算，因为上游 `release()` 为 final。附件数据可早于名称/MIME 到达，验证字体类型与 sfnt signature；不使用私有字段反射或第二套解复用器。晚到字体注册后重建 ASS renderer 的字体/字形缓存，保留当前 ASS track 并重绘；字体在内嵌输入静音时仍可注册。
 
 当前防线是单字体 16 MiB、媒体累计 32 MiB，累计包含待注册预留与已保留输入，重复字体去重；不可用/超预算附件跳过并记录原因，沿用回退字体。此限制是输入预算，不能解释为 Java/native 字体总内存上限。覆盖纹理最多 64 MiB、4096 张图像并检查 `GL_MAX_TEXTURE_SIZE`；超限拒绝整帧并进入现有故障策略，不静默丢弃尾部图像。libass cache 显式设置 `ass_set_cache_limits(0, 0)` 使用随附 API 的默认配置，不采用上游 fork 的缓存数值。
 
@@ -147,18 +149,60 @@ mpv 的 `blend-subtitles` 描述的是 GPU 视频合成阶段的行为，不能�
 
 ## 验证与已知限制
 
-本节列出维护时可用的测试入口；2026-10-30 的最终命令、结果和初始失败见[实施账本](../../docs/superpowers/plans/2026-10-30-media3-libass.md)，之前的验证见[历史记录](libass-integration-audit.md#已执行验证)。模拟器真实 native 像素测试已执行，物理电视和完整字幕矩阵仍待验收。
+本节列出维护时可用的测试入口；2026-11-04 的当前构建、175 项播放器 JVM、19 项 native/集成及 3 项应用回归结果见[字幕完善记录](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#subtitle-hardening-2026-11-04)。2026-10-30 的命令、结果和初始失败见[原实施账本](../../docs/superpowers/plans/2026-10-30-media3-libass.md)，更早验证见[历史记录](libass-integration-audit.md#已执行验证)。原 115 视频、本轮物理电视和完整字幕矩阵仍待验收。
 
 | 测试 | 实际覆盖范围 |
 | --- | --- |
 | [LocalSubtitlePipelineApiTest](../../player_component/src/test/java/com/xyoye/player/subtitle/gpu/LocalSubtitlePipelineApiTest.kt) | 降级原因保留、恢复中状态及 recoverable 标记 |
 | [MpvSurfaceLifecycleTest](../../player_component/src/androidTest/java/com/xyoye/player_component/ui/MpvSurfaceLifecycleTest.kt) | 原生 OSD 像素、内嵌/外挂字幕、显示/时间/样式控制、双 Surface 重建、取消与失败清理，以及既有视频/HTTP 回归 |
-| [LibassSsaStreamDecoderTest](../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoderTest.kt) | 解码器初始化、时间基准与 Dialogue 归一化、codec private 向 sink 的格式传递 |
-| [Media3SubtitleInputTest](../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/Media3SubtitleInputTest.kt) | 媒体/轨道代际、预加载、字体预算/去重与 sink 重建 |
-| [LibassGpuRenderingTest](../../player_component/src/androidTest/java/com/xyoye/player_component/ui/LibassGpuRenderingTest.kt) | JNI/EGL/libass 实际像素：附件字体改变字形、同媒体保留/换媒体清理、旋转/PAR/屏幕偏移、状态失效，以及既有显隐、清屏、重建和大时间戳 |
-| [Media3SubtitleCompatibilityTest](../../player_component/src/androidTest/java/com/xyoye/player_component/ui/Media3SubtitleCompatibilityTest.kt) | 原始 ASS/普通 Cue、裁剪/倍速/多 period/seek、真实视频 metadata、缺失与恢复、预加载连续播放隔离；此类自身不检查字幕 native 像素 |
+| [LibassSsaStreamDecoderTest](../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoderTest.kt) | 解码器初始化、时间基准与 Dialogue 归一化、原始 codec private、自定义格式及尾部 NUL |
+| [LibassSubtitleDecoderFactoryTest](../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/LibassSubtitleDecoderFactoryTest.kt) | 能力查询不获取所有权、decoder 获取一次、预加载 detached 输入 |
+| [Media3SubtitleTrackNameProviderTest](../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/Media3SubtitleTrackNameProviderTest.kt) | 简繁标签、语言/角色/强制信息、重名区分与轨道身份 |
+| [Media3SubtitleInputTest](../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/Media3SubtitleInputTest.kt) | 媒体/轨道代际、预加载、字体预算/去重、同 sink 幂等与真正重建 |
+| [LibassMatroskaExtractorTest](../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/LibassMatroskaExtractorTest.kt) | 真实 EBML 附件重同步与中断释放预算 |
+| [LibassGpuRenderingTest](../../player_component/src/androidTest/java/com/xyoye/player_component/ui/LibassGpuRenderingTest.kt) | 应用 decoder → JNI/libass 中文像素、缺 Events/空头部回退、原错误格式反例、解析诊断，以及附件字形、同媒体保留/换媒体清理、旋转/PAR/偏移、显隐/重建/大时间戳 |
+| [Media3SubtitleCompatibilityTest](../../player_component/src/androidTest/java/com/xyoye/player_component/ui/Media3SubtitleCompatibilityTest.kt) | 原始 ASS/普通 Cue、裁剪/倍速/多 period/seek、视频 metadata、预加载隔离；真实 MKV → decoder → GPU 的像素与外挂成功/失败恢复、显隐和 Surface 重建 |
 | [TvDpadRewriteInstrumentedTest](../../app/src/androidTest/java/com/okamihoro/ddplaytv/ui/tv/TvDpadRewriteInstrumentedTest.kt) | 应用真实 Media3 ASS/mpv OSD、PixelCopy、Media3 非零暂停双 Surface 重建、控制层级及 DPAD 面板/返回/暂停继续 |
 
 上述 JVM 用例不证明 EGL surface 恢复、native 坐标、跨内核画面或视觉裁剪正确。修改这些路径时，应在 Media3 和 mpv `mediacodec` 上分别检查内嵌／外挂 ASS/SSA、播放中及暂停时的正负偏移、surface 重建、seek／换轨后的恢复，并记录实际日志和画面结果。
 
 模拟器不能证明物理电视上的 PQ/HDR、字体完整覆盖或复杂字幕性能。性能收益不由删减代码量或减少桥接推断，需同素材真机比较。
+
+<a id="media3-embedded-ass-diagnosis"></a>
+
+## 内嵌 ASS 无字幕与轨道重名（2026-11-03 排查）
+
+用户报告 115 视频在 Media3 下无字幕、mpv 正常，菜单为“关、中文、中文”，并补充旧版也有内嵌字幕问题。首次排查只诊断，未修改播放器源码。用户随后明确要求停止占用电视；后续调查仅使用本地源码、此前日志和参考实现。2026-11-04 用户另行授权实施字幕完善，当前契约见上文，验证进度见[字幕完善方案](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md)。以下保留首次诊断证据，不代表实际片源已验收。
+
+### 首次诊断确认的问题
+
+- **轨道重名**：原 [Media3VideoPlayer.getTracks()](../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3VideoPlayer.kt) 使用 `DefaultTrackNameProvider`。日志两轨分别为 `label=CHS`、`label=CHT`，语言同为 `zh`，默认命名优先语言，均变为“中文”。这是名称丢失区分信息，实际存在两条独立轨道；“关”是正常的显示开关项。
+- **缺少 Events 定义时的头部合成错误**：原 [LibassSsaStreamDecoder.buildCodecPrivateForLibass()](../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoder.kt) 把 Media3 的 `Start, End, ReadOrder, Layer, ...` 格式补入原始 ASS 头部，但后续送给 native 的是原始 Matroska chunk。libass 已先取走 ReadOrder/Layer，再跳过事件格式的前三列；此合成格式会使 Style 等字段错位，正文可能被解释为 Effect，Text 为空。当时 JVM 测试只断言拼接结果，不能发现实际无像素。
+
+### 与参考实现的关键区别
+
+参考固定的 Plezy 提交 `1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5`，对应目录为 `android/libass/src/main/java/com/edde746/plezy/libass/media/`：
+
+| 环节 | Plezy | 首次排查时的本项目实现与判断 |
+| --- | --- | --- |
+| 头部规范化 | [AssHeaderParser.kt](https://github.com/edde746/plezy/blob/1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5/android/libass/src/main/java/com/edde746/plezy/libass/media/parser/AssHeaderParser.kt) 去掉全部尾部 NUL，缺少 Events 时追加 `Layer, Start, End, Style, ...` | 本项目没有去尾部 NUL，缺定义时追加 Media3 专用格式；后者已用构造样本证实会导致无字 |
+| 事件交接 | [AssTrackOutput.kt](https://github.com/edde746/plezy/blob/1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5/android/libass/src/main/java/com/edde746/plezy/libass/media/text/AssTrackOutput.kt) 去掉两个时间字段后调用 readChunk | 本项目经 decoder 去掉相同包装，调用 `ass_process_chunk`；不能仅凭多一层 decoder 判断这里有错 |
+| native 头部入口 | AssHandler 的 readBuffer 最终使用 `ass_process_data` | 本项目使用 `ass_process_codec_private`，后者在缺事件定义时自带标准格式回退。因此“未去尾部 NUL”本身不能直接认定为本次根因 |
+
+[libass 0.17.3 实现](https://github.com/libass/libass/blob/0.17.3/libass/ass.c) 核对了上述格式跳列及 codec-private 回退行为。[Media3 1.11.1 MatroskaExtractor](https://github.com/androidx/media/blob/1.11.1/libraries/extractor/src/main/java/androidx/media3/extractor/mkv/MatroskaExtractor.java) 在输出字幕样本前按首个 NUL 截断；Plezy 使用该缓冲区的实际 limit，也不能自动绕开此截断。mpv 的 FFmpeg 解复用与本项目的 Media3 提取链不同，不能从 mpv 正常推断 Media3 输入正文完整。
+
+### 本地验证及本片的未决边界
+
+构造样本脚本：[header_compat_probe.py](../../Temp/media3-subtitle-diagnosis-2026-11-03/header_compat_probe.py)。它只在电脑生成字幕 MKV，通过本地 FFmpeg `7.0.2` 的 libass 流式接口渲染；实际日志版本为 libass API `0x1703000`、source `0.17.3-6-gc5bb87e2f5d6c18763b4614817c206a4f4d2332a`。这不是 Android 应用、实际片源或电视验证。
+
+同一个 `0,0,Default,,0,0,0,,Regression` 事件，标准头部和缺 Events 的 native 回退均得到 5172 个非零 RGB 字节；补入本项目的 Media3 专用格式后为 0。标准头部和缺 Events 的头部追加尾部 NUL 后仍能显示。六个断言全部通过，[结果](../../Temp/media3-subtitle-diagnosis-2026-11-03/header-probe/results.json)及逐项 FFmpeg 日志保留在同目录。原始 HTTP 日志仅保留于该 Temp 调查目录，不纳入版本控制。
+
+**本片无字幕的唯一根因仍未确认。** 已有日志显示 decoder 收到 `[90,1182]` 两块初始化数据，最终 codec private 仍为 1182 字节，说明本次使用了原头部，未命中上述错误拼接分支。已选中 ASS 轨，格式和事件已送到 GPU，事件时间与播放时间相符；已记录事件剥掉固定 32 字节包装后只有 15～17 字节，且长度随播放阶段变化，值得优先检查正文完整性及原始事件格式。日志没有正文、完整头部或 native 解析事件结果，不能把长度直接等同于截断，也不能凭管线 Active/Rendered 宣称已有可见字幕。
+
+本片问题仍需针对原始头部/事件解析建立证据，不能用修复另一种构造样本代替验证。当前不再操作电视或要求用户下载片源。此前临时打开的 DEBUG 日志级别尚未恢复，已告知用户；未经新的明确授权，不为恢复设置继续操作设备。
+
+### 当前实施与诊断边界（2026-11-04）
+
+用户已明确解除实施延期，本地实现和验证已完成。当前实现修正头部、查询所有权、重复绑定和轨名，并按真实 EBML 复现修复附件重同步/释放；完整范围和逐项验证由[实施记录](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#subtitle-hardening-2026-11-04)维护。
+
+采样日志新增输入包的 NUL 位置/分隔符数、native 事件/样式数、最新事件正文长度与解析结果；重复判断只检查最近 4096 个事件，无法精确区分时报告 `UNCHANGED`。帧指标包含 ASS 图像数，未采集时为 -1；图像存在仍不能代替实际 alpha 像素验证。libass verbose 日志关闭，避免输出完整对白和头部。上述结构信息可缩小后续原片排查范围，但当前没有该视频修复后的新证据。

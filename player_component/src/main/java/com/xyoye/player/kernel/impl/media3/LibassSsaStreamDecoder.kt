@@ -98,10 +98,13 @@ class LibassSsaStreamDecoder(
             val sinkTimeUs = normalizeSampleTimeUs(inputBuffer.timeUs, inputBuffer.subsampleOffsetUs)
             sink?.onSample(normalized.data, sinkTimeUs, normalized.durationUs)
             if (PlayerInitializer.isPrintLog && shouldLog(decodeLogCounter.incrementAndGet())) {
+                val payloadNulAt = payload.indexOf(0.toByte())
+                val normalizedNulAt = normalized.data.indexOf(0.toByte())
+                val normalizedCommas = normalized.data.count { it == SSA_FIELD_SEPARATOR }
                 LogFacade.d(
                     LogModule.PLAYER,
                     LOG_TAG,
-                    "decode sample payloadSize=${payload.size} normalizedSize=${normalized.data.size} sampleTimeUs=${inputBuffer.timeUs} subsampleOffsetUs=${inputBuffer.subsampleOffsetUs} sinkTimeUs=$sinkTimeUs durationUs=${normalized.durationUs ?: -1} sinkPresent=${sink != null}",
+                    "decode sample payloadSize=${payload.size} normalizedSize=${normalized.data.size} payloadNulAt=$payloadNulAt normalizedNulAt=$normalizedNulAt normalizedCommas=$normalizedCommas sampleTimeUs=${inputBuffer.timeUs} subsampleOffsetUs=${inputBuffer.subsampleOffsetUs} sinkTimeUs=$sinkTimeUs durationUs=${normalized.durationUs ?: -1} sinkPresent=${sink != null}",
                 )
             } else if (sink == null && PlayerInitializer.isPrintLog && shouldLog(sinkMissLogCounter.incrementAndGet())) {
                 LogFacade.w(
@@ -198,29 +201,17 @@ class LibassSsaStreamDecoder(
 
     private fun buildCodecPrivateForLibass(initializationData: List<ByteArray>): ByteArray? {
         if (initializationData.isEmpty()) return null
-        if (initializationData.size == 1) return initializationData[0]
-        val first = initializationData[0]
-        val second = initializationData[1]
-        if (!first.startsWith(FORMAT_PREFIX)) {
-            return first
-        }
-        if (second.hasEventsSectionFormat()) {
-            return second
-        }
-        val dialogueFormat = first
-        val codecPrivate = second
-        val eventsHeader = EVENTS_HEADER
-        val newline = NEWLINE
-        val merged = ByteArray(codecPrivate.size + eventsHeader.size + dialogueFormat.size + newline.size)
-        var pos = 0
-        codecPrivate.copyInto(merged, pos)
-        pos += codecPrivate.size
-        eventsHeader.copyInto(merged, pos)
-        pos += eventsHeader.size
-        dialogueFormat.copyInto(merged, pos)
-        pos += dialogueFormat.size
-        newline.copyInto(merged, pos)
-        return merged
+        // Media3's first block describes its Dialogue wrapper, not libass's raw chunks.
+        // ass_process_codec_private supplies the native event format when the header omits it.
+        val header =
+            if (initializationData.size > 1 && initializationData[0].startsWith(FORMAT_PREFIX)) {
+                initializationData[1]
+            } else {
+                initializationData[0]
+            }
+        var length = header.size
+        while (length > 0 && header[length - 1] == 0.toByte()) length--
+        return if (length == header.size) header else header.copyOf(length)
     }
 
     private fun ByteArray.startsWith(prefix: ByteArray): Boolean {
@@ -240,28 +231,6 @@ class LibassSsaStreamDecoder(
             if (this[index] == value) return index
         }
         return -1
-    }
-
-    /**
-     * Ensures the initialization block is structurally complete for ASS events:
-     * [Events] section exists and contains its own `Format:` line.
-     */
-    private fun ByteArray.hasEventsSectionFormat(): Boolean {
-        if (isEmpty()) return false
-        var inEventsSection = false
-        val content = String(this, Charsets.UTF_8)
-        for (rawLine in content.lineSequence()) {
-            val line = rawLine.trim().trimStart('\uFEFF')
-            if (line.isEmpty()) continue
-            if (line.startsWith("[") && line.endsWith("]")) {
-                inEventsSection = line.equals(EVENTS_SECTION_NAME, ignoreCase = true)
-                continue
-            }
-            if (inEventsSection && line.startsWith(FORMAT_PREFIX_TEXT, ignoreCase = true)) {
-                return true
-            }
-        }
-        return false
     }
 
     internal fun normalizeSampleTimeUs(
@@ -304,11 +273,7 @@ class LibassSsaStreamDecoder(
         private val SSA_PREFIX =
             "Dialogue: 0:00:00:00,".toByteArray(Charsets.UTF_8)
         private const val SSA_FIELD_SEPARATOR: Byte = ','.code.toByte()
-        private const val EVENTS_SECTION_NAME = "[Events]"
-        private const val FORMAT_PREFIX_TEXT = "Format:"
-        private val FORMAT_PREFIX = FORMAT_PREFIX_TEXT.toByteArray(Charsets.UTF_8)
-        private val EVENTS_HEADER = "\n[Events]\n".toByteArray(Charsets.UTF_8)
-        private val NEWLINE = "\n".toByteArray(Charsets.UTF_8)
+        private val FORMAT_PREFIX = "Format:".toByteArray(Charsets.UTF_8)
     }
 
     private fun createDecoderOutputBuffer(): SubtitleOutputBuffer =

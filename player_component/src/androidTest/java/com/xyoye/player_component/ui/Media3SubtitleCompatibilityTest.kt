@@ -1,9 +1,11 @@
 package com.xyoye.player_component.ui
 
 import android.graphics.ImageFormat
+import android.graphics.PixelFormat
 import android.media.ImageReader
 import android.net.Uri
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.SystemClock
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -19,12 +21,24 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.xyoye.data_component.enums.SubtitleViewType
+import com.xyoye.data_component.media3.telemetry.subtitle.SubtitleOutputTarget
 import com.xyoye.player.kernel.impl.media3.LibassAwareRenderersFactory
 import com.xyoye.player.kernel.impl.media3.Media3SubtitleFrameDriver
 import com.xyoye.player.kernel.impl.media3.Media3SubtitleInput
 import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
 import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
+import com.xyoye.player.subtitle.backend.LibassEmbeddedSubtitleSink
+import com.xyoye.player.subtitle.backend.SwitchableEmbeddedSubtitleSink
+import com.xyoye.player.subtitle.gpu.AssGpuRenderer
+import com.xyoye.player.subtitle.gpu.LocalSubtitlePipelineApi
+import com.xyoye.player.subtitle.gpu.SubtitlePipelineController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -38,6 +52,128 @@ class Media3SubtitleCompatibilityTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private lateinit var player: ExoPlayer
     private var videoCallback: SubtitleFrameDriver.Callback? = null
+
+    @Test
+    fun realExtractorDecoderAndGpu_renderPixelsAfterSeekVisibilityAndSurfaceRecreation() {
+        val thread = HandlerThread("Media3SubtitlePixels").apply { start() }
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val renderer = AssGpuRenderer(SubtitlePipelineController(LocalSubtitlePipelineApi()), Handler(thread.looper), scope = scope)
+        val target = SubtitleOutputTarget(SubtitleViewType.SurfaceView, width = 640, height = 360)
+        val firstOutput = ImageReader.newInstance(640, 360, PixelFormat.RGBA_8888, 3)
+        var secondOutput: ImageReader? = null
+        val observed = RecordingSink()
+        val forward = SwitchableEmbeddedSubtitleSink(LibassEmbeddedSubtitleSink(renderer, emptyList(), "/system/fonts/Roboto-Regular.ttf"))
+        val sink =
+            object : EmbeddedSubtitleSink by forward {
+                override fun onFormat(codecPrivate: ByteArray?) {
+                    forward.onFormat(codecPrivate)
+                    observed.onFormat(codecPrivate)
+                }
+
+                override fun onSample(
+                    data: ByteArray,
+                    timeUs: Long,
+                    durationUs: Long?
+                ) {
+                    forward.onSample(data, timeUs, durationUs)
+                    observed.onSample(data, timeUs, durationUs)
+                }
+
+                override fun onFlush() {
+                    forward.onFlush()
+                    observed.onFlush()
+                }
+            }
+        val input = Media3SubtitleInput()
+        input.beginMedia()
+        input.setSink(sink)
+        val external = File(instrumentation.targetContext.cacheDir, "media3-external-recovery.ass")
+        try {
+            renderer.bindSurface("embedded-pixels", firstOutput.surface, target)
+            awaitPixels(firstOutput, visible = false)
+            withPlayer(input.createDecoderSink()!!, parseSubtitles = false) { player ->
+                await { observed.samples.any { it.text.contains("Before seek") } }
+                renderer.renderFrame(500_000)
+                awaitPixels(firstOutput, visible = true)
+                renderer.renderFrame(1_000_000)
+                awaitPixels(firstOutput, visible = false)
+
+                val flushes = observed.flushes.get()
+                observed.samples.clear()
+                instrumentation.runOnMainSync { player.seekTo(3500) }
+                await { observed.flushes.get() > flushes && observed.samples.any { it.text.contains("After seek") } }
+                instrumentation.runOnMainSync { player.pause() }
+                renderer.renderFrame(3_500_000)
+                awaitPixels(firstOutput, visible = true)
+
+                external.writeText(observed.codecPrivate.orEmpty() + "\nDialogue: 0,0:00:00.00,0:00:10.00,Default,,0,0,0,,External\n")
+                forward.setEnabled(false)
+                assertTrue(runBlocking { renderer.loadTrack(external.path, emptyList(), "/system/fonts/Roboto-Regular.ttf") })
+                awaitPixels(firstOutput, visible = false)
+                renderer.renderFrame(3_500_000)
+                awaitPixels(firstOutput, visible = true)
+                renderer.clearEmbeddedTrack()
+                forward.setEnabled(true)
+                input.setSink(null)
+                input.setSink(sink)
+                renderer.renderFrame(3_500_000)
+                awaitPixels(firstOutput, visible = true)
+
+                forward.setEnabled(false)
+                assertTrue(!runBlocking { renderer.loadTrack(external.path + ".missing", emptyList(), "/system/fonts/Roboto-Regular.ttf") })
+                renderer.clearEmbeddedTrack()
+                forward.setEnabled(true)
+                input.setSink(null)
+                input.setSink(sink)
+                renderer.renderFrame(3_500_000)
+                awaitPixels(firstOutput, visible = true)
+
+                renderer.setVisible(false)
+                awaitPixels(firstOutput, visible = false)
+                renderer.setVisible(true)
+                renderer.renderFrame(3_500_000)
+                awaitPixels(firstOutput, visible = true)
+
+                renderer.detachSurface()
+                val replacement = ImageReader.newInstance(640, 360, PixelFormat.RGBA_8888, 3)
+                secondOutput = replacement
+                renderer.bindSurface("embedded-pixels", replacement.surface, target)
+                awaitPixels(replacement, visible = false)
+                renderer.renderFrame(3_500_000)
+                awaitPixels(replacement, visible = true)
+            }
+        } finally {
+            renderer.release()
+            thread.quitSafely()
+            thread.join(1500)
+            scope.cancel()
+            firstOutput.close()
+            secondOutput?.close()
+            external.delete()
+        }
+    }
+
+    private fun awaitPixels(
+        output: ImageReader,
+        visible: Boolean
+    ) {
+        val deadline = SystemClock.elapsedRealtime() + 5000
+        while (SystemClock.elapsedRealtime() < deadline) {
+            val image = output.acquireLatestImage()
+            if (image != null) {
+                val hasPixels =
+                    image.use {
+                        val plane = it.planes[0]
+                        (0 until it.height).any { y ->
+                            (0 until it.width).any { x -> plane.buffer.get(y * plane.rowStride + x * plane.pixelStride + 3).toInt() != 0 }
+                        }
+                    }
+                if (hasPixels == visible) return
+            }
+            SystemClock.sleep(10)
+        }
+        throw AssertionError("Media3 subtitle output did not reach visible=$visible")
+    }
 
     @Test
     fun preloadedPlaylist_activatesTheMatchingInputAndIsolatesLatePreviousMediaFonts() {
@@ -319,8 +455,9 @@ class Media3SubtitleCompatibilityTest {
                 player =
                     ExoPlayer
                         .Builder(context)
-                        .setRenderersFactory(LibassAwareRenderersFactory(context, embeddedSinkProvider = { sink }))
-                        .build()
+                        .setRenderersFactory(
+                            LibassAwareRenderersFactory(context, embeddedSinkAvailable = { sink != null }, embeddedSinkProvider = { sink })
+                        ).build()
                 player.trackSelectionParameters =
                     player.trackSelectionParameters
                         .buildUpon()
