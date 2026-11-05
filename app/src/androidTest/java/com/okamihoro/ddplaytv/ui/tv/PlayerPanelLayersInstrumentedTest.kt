@@ -24,6 +24,8 @@ import com.google.android.material.slider.Slider
 import com.okamihoro.ddplaytv.playback.withIndexedPlaybackFile
 import com.xyoye.common_component.config.DanmuConfig
 import com.xyoye.common_component.config.PlayerConfig
+import com.xyoye.common_component.config.SubtitleConfig
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.playback.handoff.PlaybackNavigation
 import com.xyoye.common_component.playback.handoff.PlaybackRequestInput
 import com.xyoye.common_component.playback.handoff.PlaybackRequestOrigin
@@ -41,6 +43,7 @@ import com.xyoye.player.controller.setting.BaseSettingView
 import com.xyoye.player.controller.setting.DanmuPanelState
 import com.xyoye.player.controller.setting.DanmuSearchState
 import com.xyoye.player.controller.setting.SubtitleQuickView
+import com.xyoye.player.controller.setting.SettingSubtitleStyleView
 import com.xyoye.player.controller.video.PlayerBottomView
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingItem
@@ -271,119 +274,269 @@ class PlayerPanelLayersInstrumentedTest {
     }
 
     @Test fun subtitleQuickWorksWithBothKernelsAndSidebarContainsOnlyDetails() {
-        for (kernel in listOf(PlayerType.TYPE_EXO_PLAYER, PlayerType.TYPE_MPV_PLAYER)) {
-            withPlayback(kernel) { scenario, controller, _ ->
-                val subtitle = File(context.getExternalFilesDir("a06-fixtures"), "a06-subtitle.srt")
-                subtitle.writeText("1\n00:00:00,000 --> 00:01:50,000\n为什么那次衣服没被撞破啊？\n\n")
-                key(KeyEvent.KEYCODE_DPAD_DOWN)
-                repeat(4) { key(KeyEvent.KEYCODE_DPAD_RIGHT) }
-                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { quickRow(it, 0)?.hasFocus() == true }
-                scenario.onActivity {
-                    assertEquals(1, quickList(it).adapter!!.itemCount)
-                    assertTrue(quickRow(it, 0)!!.isActivated)
-                    assertTrue(it.findViewById<View>(PlayerR.id.subtitle_quick_message).isShown)
+        val savedOffset = SubtitlePreferenceUpdater.currentOffset()
+        try {
+            for (kernel in listOf(PlayerType.TYPE_EXO_PLAYER, PlayerType.TYPE_MPV_PLAYER)) {
+                SubtitlePreferenceUpdater.persistOffset(1500)
+                withPlayback(kernel) { scenario, controller, _ ->
+                    val subtitle = File(context.getExternalFilesDir("a06-fixtures"), "a06-subtitle.srt")
+                    subtitle.writeText("1\n00:00:00,000 --> 00:01:50,000\n为什么那次衣服没被撞破啊？\n\n")
+                    key(KeyEvent.KEYCODE_DPAD_DOWN)
+                    repeat(4) { key(KeyEvent.KEYCODE_DPAD_RIGHT) }
+                    await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) { quickRow(it, 0)?.hasFocus() == true }
+                    scenario.onActivity {
+                        assertEquals(1, quickList(it).adapter!!.itemCount)
+                        assertTrue(quickRow(it, 0)!!.isActivated)
+                        assertTrue(it.findViewById<View>(PlayerR.id.subtitle_quick_message).isShown)
+                    }
+                    captureSubtitle(scenario, "empty-${kernel.name}")
+                    key(KeyEvent.KEYCODE_BACK)
+                    await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                    scenario.onActivity { assertTrue(controller.addExtendTrack(VideoTrackBean.subtitle(subtitle.path))) }
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) { quickList(it).adapter!!.itemCount == 2 && quickRow(it, 1)?.isActivated == true }
+                    var position = 0L
+                    scenario.onActivity { position = player(it).getCurrentPosition() }
+                    SystemClock.sleep(700)
+                    scenario.onActivity {
+                        assertTrue("$kernel must keep playing behind the quick panel", player(it).isPlaying())
+                        assertTrue(player(it).getCurrentPosition() > position)
+                    }
+                    key(KeyEvent.KEYCODE_DPAD_UP)
+                    scenario.onActivity {
+                        assertTrue(quickRow(it, 0)!!.hasFocus())
+                        assertFalse(quickRow(it, 0)!!.isActivated)
+                        assertTrue(quickRow(it, 1)!!.isActivated)
+                    }
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                    scenario.onActivity {
+                        assertFalse(controller.getSubtitleController().isUserSubtitleVisible())
+                        assertTrue(controlWrapper(it).getTracks(TrackType.SUBTITLE).any { track -> !track.disable && track.selected })
+                    }
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) { quickRow(it, 0)?.hasFocus() == true }
+                    key(KeyEvent.KEYCODE_DPAD_DOWN)
+                    key(KeyEvent.KEYCODE_BACK)
+                    await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                    scenario.onActivity { assertFalse(controller.getSubtitleController().isUserSubtitleVisible()) }
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) { quickRow(it, 0)?.hasFocus() == true }
+                    key(KeyEvent.KEYCODE_DPAD_DOWN)
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                    scenario.onActivity { assertTrue(controller.getSubtitleController().isUserSubtitleVisible()) }
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) { quickRow(it, 1)?.hasFocus() == true && quickRow(it, 1)?.isActivated == true }
+                    captureSubtitle(scenario, "selected-${kernel.name}")
+                    key(KeyEvent.KEYCODE_BACK)
+                    key(KeyEvent.KEYCODE_MENU)
+                    await(scenario) {
+                        activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                            panel(controller).hasFocus()
+                    }
+                    scenario.onActivity {
+                        val adapter =
+                            it
+                                .findViewById<RecyclerView>(
+                                    PlayerR.id.setting_rv
+                                ).adapter as com.xyoye.common_component.adapter.BaseAdapter
+                        val labels = adapter.items.filterIsInstance<SettingItem>().map { item -> item.display }
+                        assertTrue(labels.containsAll(listOf("样式与位置", "时间同步", "添加外挂字幕")))
+                        assertFalse(labels.contains("字幕轨"))
+                        assertFalse(labels.contains("显示字幕"))
+                    }
+                    focusPlayerSetting(scenario, "样式与位置")
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) {
+                        activePanel(controller)?.getSettingViewType() == SettingViewType.SUBTITLE_STYLE &&
+                            panel(controller).hasFocus()
+                    }
+                    scenario.onActivity {
+                        val nativeText = kernel == PlayerType.TYPE_EXO_PLAYER
+                        assertEquals(nativeText, it.findViewById<View>(PlayerR.id.subtitle_size_sb).isShown)
+                        assertEquals(nativeText, it.findViewById<View>(PlayerR.id.subtitle_color_sb).isShown)
+                        assertEquals(nativeText, it.findViewById<View>(PlayerR.id.subtitle_stroke_color_sb).isShown)
+                        assertEquals(nativeText, it.findViewById<View>(PlayerR.id.subtitle_alpha_sb).isShown)
+                        if (nativeText) assertEquals(PlayerR.id.subtitle_size_sb, it.currentFocus?.id)
+                    }
+                    if (kernel == PlayerType.TYPE_EXO_PLAYER) {
+                        for (control in listOf(PlayerR.id.subtitle_stroke_width_sb, PlayerR.id.subtitle_color_sb,
+                            PlayerR.id.subtitle_stroke_color_sb, PlayerR.id.subtitle_alpha_sb, PlayerR.id.subtitle_vertical_offset_sb)) {
+                            key(KeyEvent.KEYCODE_DPAD_DOWN)
+                            await(scenario) { it.currentFocus?.id == control }
+                        }
+                        repeat(5) { key(KeyEvent.KEYCODE_DPAD_UP) }
+                        await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_size_sb }
+                    } else {
+                        key(KeyEvent.KEYCODE_DPAD_UP)
+                        await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_font_scale_offset_sb }
+                        key(KeyEvent.KEYCODE_DPAD_DOWN)
+                        await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_vertical_offset_sb }
+                    }
+                    screenshot("style-text-${kernel.name}", "subtitle-feature-fixes")
+                    key(KeyEvent.KEYCODE_BACK)
+                    await(scenario) {
+                        activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                            panel(controller).hasFocus() &&
+                            panel(controller).getChildAt(0).translationX == 0f
+                    }
+                    focusPlayerSetting(scenario, "时间同步")
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) {
+                        it.findViewById<TextView>(PlayerR.id.offset_title)?.text == "字幕时间偏移" &&
+                            panel(controller).hasFocus()
+                    }
+                    scenario.onActivity {
+                        assertEquals("1.5秒", it.findViewById<TextView>(PlayerR.id.tv_display).text.toString())
+                        assertEquals("提前", it.findViewById<TextView>(PlayerR.id.tv_status).text.toString())
+                        it.findViewById<View>(PlayerR.id.tv_reduce_half).requestFocus()
+                    }
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    scenario.onActivity {
+                        assertEquals("1秒", it.findViewById<TextView>(PlayerR.id.tv_display).text.toString())
+                        assertEquals(1000L, SubtitlePreferenceUpdater.currentOffset())
+                        it.findViewById<View>(PlayerR.id.tv_reset).requestFocus()
+                    }
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    scenario.onActivity {
+                        assertEquals("0秒", it.findViewById<TextView>(PlayerR.id.tv_display).text.toString())
+                        assertEquals(0L, SubtitlePreferenceUpdater.currentOffset())
+                        assertEquals(PlayerR.id.tv_add_half, it.currentFocus?.id)
+                    }
+                    key(KeyEvent.KEYCODE_BACK)
+                    await(scenario) {
+                        activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                            panel(controller).hasFocus() &&
+                            panel(controller).getChildAt(0).translationX == 0f
+                    }
+                    focusPlayerSetting(scenario, "添加外挂字幕")
+                    screenshot("sidebar-details-${kernel.name}", "player-subtitle-quick")
+                    key(KeyEvent.KEYCODE_DPAD_CENTER)
+                    await(scenario) {
+                        activePanel(controller)?.getSettingViewType() == SettingViewType.SWITCH_SOURCE &&
+                            panel(controller).hasFocus()
+                    }
+                    key(KeyEvent.KEYCODE_BACK)
+                    await(scenario) {
+                        activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
+                            panel(controller).hasFocus()
+                    }
+                    key(KeyEvent.KEYCODE_BACK)
+                    await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
+                    key(KeyEvent.KEYCODE_BACK)
                 }
-                captureSubtitle(scenario, "empty-${kernel.name}")
-                key(KeyEvent.KEYCODE_BACK)
-                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
-                scenario.onActivity { assertTrue(controller.addExtendTrack(VideoTrackBean.subtitle(subtitle.path))) }
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { quickList(it).adapter!!.itemCount == 2 && quickRow(it, 1)?.isActivated == true }
-                var position = 0L
-                scenario.onActivity { position = player(it).getCurrentPosition() }
-                SystemClock.sleep(700)
-                scenario.onActivity {
-                    assertTrue("$kernel must keep playing behind the quick panel", player(it).isPlaying())
-                    assertTrue(player(it).getCurrentPosition() > position)
-                }
-                key(KeyEvent.KEYCODE_DPAD_UP)
-                scenario.onActivity {
-                    assertTrue(quickRow(it, 0)!!.hasFocus())
-                    assertFalse(quickRow(it, 0)!!.isActivated)
-                    assertTrue(quickRow(it, 1)!!.isActivated)
-                }
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
-                scenario.onActivity {
-                    assertFalse(controller.getSubtitleController().isUserSubtitleVisible())
-                    assertTrue(controlWrapper(it).getTracks(TrackType.SUBTITLE).any { track -> !track.disable && track.selected })
-                }
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { quickRow(it, 0)?.hasFocus() == true }
-                key(KeyEvent.KEYCODE_DPAD_DOWN)
-                key(KeyEvent.KEYCODE_BACK)
-                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
-                scenario.onActivity { assertFalse(controller.getSubtitleController().isUserSubtitleVisible()) }
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { quickRow(it, 0)?.hasFocus() == true }
-                key(KeyEvent.KEYCODE_DPAD_DOWN)
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
-                scenario.onActivity { assertTrue(controller.getSubtitleController().isUserSubtitleVisible()) }
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) { quickRow(it, 1)?.hasFocus() == true && quickRow(it, 1)?.isActivated == true }
-                captureSubtitle(scenario, "selected-${kernel.name}")
-                key(KeyEvent.KEYCODE_BACK)
-                key(KeyEvent.KEYCODE_MENU)
-                await(scenario) {
-                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
-                        panel(controller).hasFocus()
-                }
-                scenario.onActivity {
-                    val adapter =
-                        it
-                            .findViewById<RecyclerView>(
-                                PlayerR.id.setting_rv
-                            ).adapter as com.xyoye.common_component.adapter.BaseAdapter
-                    val labels = adapter.items.filterIsInstance<SettingItem>().map { item -> item.display }
-                    assertTrue(labels.containsAll(listOf("样式与位置", "时间同步", "添加外挂字幕")))
-                    assertFalse(labels.contains("字幕轨"))
-                    assertFalse(labels.contains("显示字幕"))
-                }
-                focusPlayerSetting(scenario, "样式与位置")
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) {
-                    activePanel(controller)?.getSettingViewType() == SettingViewType.SUBTITLE_STYLE &&
-                        panel(controller).hasFocus()
-                }
-                key(KeyEvent.KEYCODE_BACK)
-                await(scenario) {
-                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
-                        panel(controller).hasFocus() &&
-                        panel(controller).getChildAt(0).translationX == 0f
-                }
-                focusPlayerSetting(scenario, "时间同步")
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) {
-                    it.findViewById<TextView>(PlayerR.id.offset_title)?.text == "字幕时间偏移" &&
-                        panel(controller).hasFocus()
-                }
-                key(KeyEvent.KEYCODE_BACK)
-                await(scenario) {
-                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
-                        panel(controller).hasFocus() &&
-                        panel(controller).getChildAt(0).translationX == 0f
-                }
-                focusPlayerSetting(scenario, "添加外挂字幕")
-                screenshot("sidebar-details-${kernel.name}", "player-subtitle-quick")
-                key(KeyEvent.KEYCODE_DPAD_CENTER)
-                await(scenario) {
-                    activePanel(controller)?.getSettingViewType() == SettingViewType.SWITCH_SOURCE &&
-                        panel(controller).hasFocus()
-                }
-                key(KeyEvent.KEYCODE_BACK)
-                await(scenario) {
-                    activePanel(controller)?.getSettingViewType() == SettingViewType.PLAYER_SETTING &&
-                        panel(controller).hasFocus()
-                }
-                key(KeyEvent.KEYCODE_BACK)
-                await(scenario) { it.currentFocus?.id == PlayerR.id.subtitle_control_iv }
-                key(KeyEvent.KEYCODE_BACK)
             }
+        } finally {
+            SubtitlePreferenceUpdater.persistOffset(savedOffset)
         }
     }
+
+    @Test fun subtitleStyleFollowsActiveFormatAndPreservesHiddenSettingsOnReset() =
+        withPlayback { scenario, controller, _ ->
+            val settings = PlayerInitializer.Subtitle
+            val previous = intArrayOf(settings.textSize, settings.strokeWidth, settings.textColor, settings.strokeColor,
+                settings.alpha, settings.fontScaleOffsetPercent, settings.verticalOffset)
+            lateinit var style: SettingSubtitleStyleView
+            lateinit var original: ControlWrapper
+            var styleAttached = false
+            var mime = "application/x-subrip"
+            try {
+                scenario.onActivity {
+                    settings.textSize = 71
+                    settings.strokeWidth = settings.DEFAULT_STROKE
+                    settings.textColor = settings.DEFAULT_TEXT_COLOR
+                    settings.strokeColor = settings.DEFAULT_STROKE_COLOR
+                    settings.alpha = settings.DEFAULT_ALPHA
+                    settings.verticalOffset = settings.DEFAULT_VERTICAL_OFFSET
+                    settings.fontScaleOffsetPercent = 125
+                }
+                show(scenario, controller, SettingViewType.SUBTITLE_STYLE)
+                scenario.onActivity {
+                    style = panel(controller) as SettingSubtitleStyleView
+                    original = controlWrapper(it)
+                    val fixture = object : InterVideoPlayer by original {
+                        override fun getTracks(type: TrackType): List<VideoTrackBean> =
+                            if (type == TrackType.SUBTITLE) {
+                                listOf(VideoTrackBean.internal("fixture", "Format capability fixture", type, true, mime))
+                            } else original.getTracks(type)
+                    }
+                    style.attach(ControlWrapper(fixture, original, original, original, original))
+                    styleAttached = true
+                    style.onTrackChanged(TrackType.SUBTITLE)
+                    assertTrue(it.findViewById<View>(PlayerR.id.subtitle_size_sb).isShown)
+                    assertFalse(it.findViewById<View>(PlayerR.id.subtitle_font_scale_offset_sb).isShown)
+                    it.findViewById<View>(PlayerR.id.tv_reset_subtitle_config).requestFocus()
+                }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                scenario.onActivity {
+                    assertEquals(settings.DEFAULT_SIZE, settings.textSize)
+                    assertEquals(125, settings.fontScaleOffsetPercent)
+                    assertFalse(it.findViewById<View>(PlayerR.id.tv_reset_subtitle_config).isShown)
+                    assertEquals(PlayerR.id.subtitle_size_sb, it.currentFocus?.id)
+                    settings.textSize = 73
+                    it.findViewById<View>(PlayerR.id.subtitle_size_sb).requestFocus()
+                    mime = "text/x-ssa"
+                    style.onTrackChanged(TrackType.SUBTITLE)
+                    assertFalse(it.findViewById<View>(PlayerR.id.subtitle_size_sb).isShown)
+                    assertTrue(it.findViewById<View>(PlayerR.id.subtitle_font_scale_offset_sb).isShown)
+                    assertTrue(it.findViewById<View>(PlayerR.id.subtitle_alpha_sb).isShown)
+                    assertEquals(PlayerR.id.subtitle_vertical_offset_sb, it.currentFocus?.id)
+                }
+                screenshot("style-ass", "subtitle-feature-fixes")
+                scenario.onActivity { it.findViewById<View>(PlayerR.id.tv_reset_subtitle_config).requestFocus() }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                scenario.onActivity {
+                    assertEquals(0, settings.fontScaleOffsetPercent)
+                    assertEquals(73, settings.textSize)
+                    assertFalse(it.findViewById<View>(PlayerR.id.tv_reset_subtitle_config).isShown)
+                    assertEquals(PlayerR.id.subtitle_vertical_offset_sb, it.currentFocus?.id)
+                    settings.fontScaleOffsetPercent = 180
+                    mime = "application/pgs"
+                    style.onTrackChanged(TrackType.SUBTITLE)
+                    assertFalse(it.findViewById<View>(PlayerR.id.subtitle_size_sb).isShown)
+                    assertFalse(it.findViewById<View>(PlayerR.id.subtitle_font_scale_offset_sb).isShown)
+                    assertTrue(it.findViewById<View>(PlayerR.id.subtitle_alpha_sb).isShown)
+                    assertFalse(it.findViewById<View>(PlayerR.id.tv_reset_subtitle_config).isShown)
+                    it.findViewById<View>(PlayerR.id.subtitle_alpha_sb).requestFocus()
+                }
+                key(KeyEvent.KEYCODE_DPAD_LEFT)
+                scenario.onActivity {
+                    assertTrue(settings.alpha < settings.DEFAULT_ALPHA)
+                    assertEquals(settings.alpha, SubtitleConfig.getAlpha())
+                    it.findViewById<View>(PlayerR.id.tv_reset_subtitle_config).requestFocus()
+                }
+                key(KeyEvent.KEYCODE_DPAD_CENTER)
+                scenario.onActivity {
+                    assertEquals(settings.DEFAULT_ALPHA, settings.alpha)
+                    assertEquals(180, settings.fontScaleOffsetPercent)
+                    assertEquals(73, settings.textSize)
+                    assertEquals(PlayerR.id.subtitle_alpha_sb, it.currentFocus?.id)
+                }
+                screenshot("style-bitmap", "subtitle-feature-fixes")
+                key(KeyEvent.KEYCODE_BACK)
+            } finally {
+                scenario.onActivity {
+                    if (styleAttached) style.attach(original)
+                    settings.textSize = previous[0]
+                    settings.strokeWidth = previous[1]
+                    settings.textColor = previous[2]
+                    settings.strokeColor = previous[3]
+                    settings.alpha = previous[4]
+                    settings.fontScaleOffsetPercent = previous[5]
+                    settings.verticalOffset = previous[6]
+                    SubtitleConfig.putTextSize(previous[0])
+                    SubtitleConfig.putStrokeWidth(previous[1])
+                    SubtitleConfig.putTextColor(previous[2])
+                    SubtitleConfig.putStrokeColor(previous[3])
+                    SubtitleConfig.putAlpha(previous[4])
+                    SubtitleConfig.putSubtitleFontScaleOffsetPercent(previous[5])
+                    SubtitleConfig.putVerticalOffset(previous[6])
+                }
+            }
+        }
 
     @Test fun subtitleQuickLongNamesStaySingleLineAndOnlyFocusedTextMoves() =
         withPlayback { scenario, controller, _ ->

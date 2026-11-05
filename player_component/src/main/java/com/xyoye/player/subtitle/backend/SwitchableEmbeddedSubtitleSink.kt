@@ -78,6 +78,15 @@ class SwitchableEmbeddedSubtitleSink(
         }
     }
 
+    override fun onDocument(
+        data: ByteArray,
+        timeOffsetUs: Long
+    ) {
+        synchronized(lock) {
+            if (enabled) delegate.onDocument(data, timeOffsetUs)
+        }
+    }
+
     override fun onFlush() {
         synchronized(lock) {
             if (enabled) delegate.onFlush()

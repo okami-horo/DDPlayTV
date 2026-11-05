@@ -1,5 +1,6 @@
 package com.xyoye.player.kernel.inter
 
+import com.xyoye.data_component.enums.TrackType
 import com.xyoye.subtitle.MixedSubtitle
 
 /**
@@ -26,6 +27,8 @@ interface VideoPlayerEventListener {
     )
 
     fun onSubtitleTextOutput(subtitle: MixedSubtitle)
+
+    fun onTracksChanged(type: TrackType) = Unit
 
     companion object {
         val NO_OP: VideoPlayerEventListener =

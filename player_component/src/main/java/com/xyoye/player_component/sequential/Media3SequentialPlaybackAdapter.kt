@@ -4,9 +4,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.source.base.BaseVideoSource
-import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper
 
 @UnstableApi
@@ -251,7 +249,6 @@ class Media3SequentialPlaybackAdapter private constructor(
                 Media3MediaSourceHelper.getMediaSource(
                     uri = nextSource.getVideoUrl(),
                     headers = nextSource.getHttpHeader(),
-                    parseSubtitlesDuringExtraction = PlayerInitializer.Subtitle.backend != SubtitleRendererBackend.LIBASS,
                     mediaId = mediaId
                 )
             player.addMediaSource(mediaSource)

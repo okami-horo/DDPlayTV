@@ -13,10 +13,21 @@ interface InterVideoTrack {
      */
     fun supportAddTrack(type: TrackType): Boolean
 
+    fun supportAddTrack(track: VideoTrackBean): Boolean = supportAddTrack(track.type)
+
     /**
      * 添加轨道
      */
     fun addTrack(track: VideoTrackBean): Boolean
+
+    fun addTrack(
+        track: VideoTrackBean,
+        onAdded: (VideoTrackBean) -> Unit
+    ): Boolean {
+        val added = addTrack(track)
+        if (added) onAdded(track)
+        return added
+    }
 
     /**
      * 获取轨道

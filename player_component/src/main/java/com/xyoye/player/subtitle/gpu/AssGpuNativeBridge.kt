@@ -144,6 +144,13 @@ class AssGpuNativeBridge {
         defaultFont: String?
     ): Boolean = isReady && nativeInitEmbeddedTrack(handle, codecPrivate, fontDirs.toTypedArray(), defaultFont)
 
+    fun readDocument(
+        data: ByteArray,
+        timeOffsetUs: Long,
+        fontDirs: List<String>,
+        defaultFont: String?
+    ): Boolean = isReady && nativeReadDocument(handle, data, timeOffsetUs / 1000, fontDirs.toTypedArray(), defaultFont)
+
     fun embeddedTrackInfo(): EmbeddedTrackInfo? {
         if (!isReady) return null
         val info = nativeEmbeddedTrackInfo(handle) ?: return null
@@ -192,6 +199,14 @@ class AssGpuNativeBridge {
     }
 
     private external fun nativeCreate(): Long
+
+    private external fun nativeReadDocument(
+        handle: Long,
+        data: ByteArray,
+        timeOffsetMs: Long,
+        fontDirs: Array<String>,
+        defaultFont: String?
+    ): Boolean
 
     private external fun nativeDestroy(handle: Long)
 

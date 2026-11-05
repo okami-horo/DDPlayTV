@@ -23,6 +23,45 @@ import org.junit.Test
 
 class ControlWrapperQualityRegressionTest {
     @Test
+    fun unsupportedExternalFormat_usesTheCompatibilityControllerAndRemainsInTheMenu() {
+        val video =
+            FakeVideoPlayer().apply {
+                setTrackSupport(TrackType.SUBTITLE, true)
+                supportsSubtitleFile = { it.name.endsWith(".srt") }
+            }
+        val subtitles = FakeSubtitleController().apply { setTrackSupport(TrackType.SUBTITLE, true) }
+        val wrapper = ControlWrapper(video, FakeVideoController(), FakeDanmuController(), subtitles, FakeSettingController())
+        val track = VideoTrackBean(name = "legacy.stl", type = TrackType.SUBTITLE, trackResource = "legacy.stl")
+        assertTrue(wrapper.addTrack(track))
+        assertEquals(listOf(track), subtitles.addedTracks)
+        assertEquals(listOf(track), subtitles.selectedTracks)
+        subtitles.setTracks(TrackType.SUBTITLE, listOf(track))
+        assertTrue(wrapper.getTracks(TrackType.SUBTITLE).any { it.name == "legacy.stl" })
+    }
+
+    @Test
+    fun asynchronousExternalLoad_keepsThePreviousSelectionUntilTheTrackIsReady() {
+        val video =
+            FakeVideoPlayer().apply {
+                setTrackSupport(TrackType.SUBTITLE, true)
+                delayAddition = true
+            }
+        val subtitles = FakeSubtitleController()
+        val controls = FakeVideoController()
+        val wrapper = ControlWrapper(video, controls, FakeDanmuController(), subtitles, FakeSettingController())
+        val track = VideoTrackBean(name = "external.srt", type = TrackType.SUBTITLE, trackResource = "external.srt")
+        assertTrue(wrapper.addTrack(track))
+        assertTrue(video.selectedTracks.isEmpty())
+        assertTrue(subtitles.deselectedTypes.isEmpty())
+        assertTrue(controls.addedTracks.isEmpty())
+        val ready = track.copy(id = "subtitle:ready", internal = true)
+        video.completeAddition!!.invoke(ready)
+        assertEquals(listOf(ready), video.selectedTracks)
+        assertEquals(listOf(TrackType.SUBTITLE), subtitles.deselectedTypes)
+        assertEquals(listOf(ready), controls.addedTracks)
+    }
+
+    @Test
     fun seekToUpdatesDanmuAndControllerProgressByPlayState() {
         val videoPlayer = FakeVideoPlayer()
         val videoController = FakeVideoController()
@@ -170,6 +209,9 @@ private data class DanmuSeekCall(
 )
 
 private class FakeVideoPlayer : InterVideoPlayer {
+    var supportsSubtitleFile: ((VideoTrackBean) -> Boolean)? = null
+    var delayAddition = false
+    var completeAddition: ((VideoTrackBean) -> Unit)? = null
     var playing: Boolean = false
     var lockedSilence: Boolean = false
     private var volume = PointF(1f, 1f)
@@ -266,7 +308,17 @@ private class FakeVideoPlayer : InterVideoPlayer {
 
     override fun supportAddTrack(type: TrackType): Boolean = type in supportTrackTypes
 
+    override fun supportAddTrack(track: VideoTrackBean): Boolean = supportsSubtitleFile?.invoke(track) ?: supportAddTrack(track.type)
+
     override fun addTrack(track: VideoTrackBean): Boolean = true
+
+    override fun addTrack(
+        track: VideoTrackBean,
+        onAdded: (VideoTrackBean) -> Unit
+    ): Boolean {
+        if (delayAddition) completeAddition = onAdded else onAdded(track)
+        return true
+    }
 
     override fun getTracks(type: TrackType): List<VideoTrackBean> = tracks[type].orEmpty()
 
@@ -476,9 +528,9 @@ private class FakeDanmuController :
         // no-op
     }
 
-    override fun supportAddTrack(type: TrackType): Boolean = super.supportAddTrack(type)
+    override fun supportAddTrack(type: TrackType): Boolean = super<FakeTrackController>.supportAddTrack(type)
 
-    override fun addTrack(track: VideoTrackBean): Boolean = super.addTrack(track)
+    override fun addTrack(track: VideoTrackBean): Boolean = super<FakeTrackController>.addTrack(track)
 
     override fun getTracks(type: TrackType): List<VideoTrackBean> = super.getTracks(type)
 
@@ -542,9 +594,9 @@ private class FakeSubtitleController :
         // no-op
     }
 
-    override fun supportAddTrack(type: TrackType): Boolean = super.supportAddTrack(type)
+    override fun supportAddTrack(type: TrackType): Boolean = super<FakeTrackController>.supportAddTrack(type)
 
-    override fun addTrack(track: VideoTrackBean): Boolean = super.addTrack(track)
+    override fun addTrack(track: VideoTrackBean): Boolean = super<FakeTrackController>.addTrack(track)
 
     override fun getTracks(type: TrackType): List<VideoTrackBean> = super.getTracks(type)
 

@@ -4,6 +4,7 @@ import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
+import java.util.WeakHashMap
 
 interface Media3FontAttachmentSink {
     fun reserve(size: Int): Boolean
@@ -20,14 +21,16 @@ interface Media3FontAttachmentSink {
 @UnstableApi
 internal class Media3SubtitleInput(
     private val singleFontLimit: Int = 16 * 1024 * 1024,
-    private val mediaFontLimit: Int = 32 * 1024 * 1024
+    private val mediaFontLimit: Int = 32 * 1024 * 1024,
+    val requestHeaders: Map<String, String>? = null,
+    val cacheEnabled: Boolean = false
 ) {
     private val lock = Any()
     private var mediaRevision = 0L
-    private var decoderRevision = 0L
     private var target: EmbeddedSubtitleSink? = null
-    private var trackOwner: Any? = null
-    private var codecPrivate: ByteArray? = null
+    private val tracks = mutableMapOf<String, Track>()
+    private var selectedId: String? = null
+    private var periodPositionUs = 0L
 
     private data class Sample(
         val data: ByteArray,
@@ -35,7 +38,6 @@ internal class Media3SubtitleInput(
         val durationUs: Long?
     )
 
-    private val samples = mutableListOf<Sample>()
     private val fonts = mutableListOf<Pair<String, ByteArray>>()
     private var fontBytes = 0
     private var pendingFontBytes = 0
@@ -43,9 +45,10 @@ internal class Media3SubtitleInput(
     fun beginMedia(): Media3FontAttachmentSink =
         synchronized(lock) {
             mediaRevision++
-            trackOwner = null
-            codecPrivate = null
-            samples.clear()
+            tracks.clear()
+            synchronized(trackInputs) { trackInputs[this]?.clear() }
+            selectedId = null
+            periodPositionUs = 0L
             fonts.clear()
             fontBytes = 0
             pendingFontBytes = 0
@@ -59,64 +62,114 @@ internal class Media3SubtitleInput(
             target = sink
             sink?.onMediaChanged()
             fonts.forEach { (name, data) -> sink?.onFont(name, data) }
-            if (trackOwner != null) {
-                sink?.onFormat(codecPrivate)
-                samples.forEach { sink?.onSample(it.data, it.timeUs, it.durationUs) }
-            }
+            replayTrack()
         }
     }
 
     fun hasSink(): Boolean = synchronized(lock) { target != null }
 
-    fun createDecoderSink(allowDetached: Boolean = false): EmbeddedSubtitleSink? =
+    /** Extraction can run ahead of playback. Only the renderer's selected track reaches the View. */
+    fun createTrack(id: String): EmbeddedSubtitleSink =
         synchronized(lock) {
-            if (target == null && !allowDetached) return@synchronized null
-            val revision = mediaRevision
-            val decoder = ++decoderRevision
-            val owner = Any()
-            object : EmbeddedSubtitleSink {
-                override fun onFormat(codecPrivate: ByteArray?) {
-                    synchronized(lock) {
-                        if (revision != mediaRevision || decoder != decoderRevision) return
-                        trackOwner = owner
-                        this@Media3SubtitleInput.codecPrivate = codecPrivate
-                        samples.clear()
-                        target?.onFormat(codecPrivate)
-                    }
-                }
+            synchronized(trackInputs) { trackInputs.getOrPut(this) { mutableSetOf() }.add(id) }
+            Track(id, mediaRevision).also { tracks[id] = it }
+        }
 
-                override fun onSample(
-                    data: ByteArray,
-                    timeUs: Long,
-                    durationUs: Long?
-                ) {
-                    synchronized(lock) {
-                        if (revision != mediaRevision || decoder != decoderRevision || trackOwner !== owner) return
-                        samples.add(Sample(data, timeUs, durationUs))
-                        target?.onSample(data, timeUs, durationUs)
-                    }
-                }
+    fun refreshSelectedTrack() {
+        synchronized(lock) {
+            if (selectedId == null) return
+            target?.onFlush()
+            replayTrack()
+        }
+    }
 
-                override fun onFlush() {
-                    synchronized(lock) {
-                        if (revision == mediaRevision && decoder == decoderRevision && trackOwner === owner) {
-                            samples.clear()
-                            target?.onFlush()
-                        }
-                    }
-                }
+    fun selectTrack(
+        id: String?,
+        positionInWindowUs: Long = 0L
+    ) {
+        synchronized(lock) {
+            if (selectedId == id && periodPositionUs == positionInWindowUs) return
+            val hadSelection = selectedId != null
+            selectedId = id
+            periodPositionUs = positionInWindowUs
+            if (hadSelection) target?.onRelease()
+            replayTrack()
+        }
+    }
 
-                override fun onRelease() {
-                    synchronized(lock) {
-                        if (revision != mediaRevision || decoder != decoderRevision || trackOwner !== owner) return
-                        trackOwner = null
-                        codecPrivate = null
-                        samples.clear()
-                        target?.onRelease()
-                    }
-                }
+    private fun replayTrack() {
+        val track = tracks[selectedId] ?: return
+        if (!track.hasFormat) return
+        target?.onFormat(track.codecPrivate)
+        track.document?.let { target?.onDocument(it, periodPositionUs + track.documentOffsetUs) }
+        track.samples.forEach { target?.onSample(it.data, it.timeUs + periodPositionUs, it.durationUs) }
+    }
+
+    private inner class Track(
+        val id: String,
+        val revision: Long
+    ) : EmbeddedSubtitleSink {
+        var codecPrivate: ByteArray? = null
+        var hasFormat = false
+        var document: ByteArray? = null
+        var documentOffsetUs = 0L
+        val samples = mutableListOf<Sample>()
+
+        private fun isCurrent(): Boolean = revision == mediaRevision && tracks[id] === this
+
+        override fun onFormat(codecPrivate: ByteArray?) {
+            synchronized(lock) {
+                if (!isCurrent()) return
+                this.codecPrivate = codecPrivate?.copyOf()
+                hasFormat = true
+                document = null
+                samples.clear()
+                if (selectedId == id) target?.onFormat(this.codecPrivate)
             }
         }
+
+        override fun onDocument(
+            data: ByteArray,
+            timeOffsetUs: Long
+        ) {
+            synchronized(lock) {
+                if (!isCurrent()) return
+                document = data.copyOf()
+                documentOffsetUs = timeOffsetUs
+                if (selectedId == id) target?.onDocument(document!!, timeOffsetUs + periodPositionUs)
+            }
+        }
+
+        override fun onSample(
+            data: ByteArray,
+            timeUs: Long,
+            durationUs: Long?
+        ) {
+            synchronized(lock) {
+                if (!isCurrent()) return
+                val sample = Sample(data.copyOf(), timeUs, durationUs)
+                samples.add(sample)
+                if (selectedId == id) target?.onSample(sample.data, timeUs + periodPositionUs, durationUs)
+            }
+        }
+
+        override fun onFlush() {
+            synchronized(lock) {
+                if (!isCurrent()) return
+                samples.clear()
+                if (selectedId == id) target?.onFlush()
+            }
+        }
+
+        override fun onRelease() {
+            synchronized(lock) {
+                if (!isCurrent()) return
+                tracks.remove(id)
+                synchronized(trackInputs) { trackInputs[this@Media3SubtitleInput]?.remove(id) }
+                if (selectedId == id) target?.onRelease()
+            }
+        }
+    }
 
     private fun fontSink(revision: Long): Media3FontAttachmentSink =
         object : Media3FontAttachmentSink {
@@ -155,4 +208,22 @@ internal class Media3SubtitleInput(
                 }
             }
         }
+
+    companion object {
+        // ConcatenatingMediaSource2 exposes a synthetic window item without the child's tag.
+        // Weak ownership lets a renderer resolve the actual extracted track without retaining sources.
+        private val trackInputs = WeakHashMap<Media3SubtitleInput, MutableSet<String>>()
+
+        fun findTrackInput(id: String?): Media3SubtitleInput? =
+            synchronized(trackInputs) {
+                if (id == null) {
+                    null
+                } else {
+                    trackInputs.entries
+                        .filter { id in it.value }
+                        .singleOrNull()
+                        ?.key
+                }
+            }
+    }
 }

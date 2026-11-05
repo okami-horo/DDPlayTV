@@ -7,8 +7,14 @@ import java.util.Locale
 
 @androidx.annotation.OptIn(UnstableApi::class)
 internal object Media3SubtitleFormatClassifier {
-    fun isMedia3CueFormat(format: Format): Boolean =
-        format.sampleMimeType == MimeTypes.APPLICATION_MEDIA3_CUES
+    fun originalMimeType(format: Format): String? =
+        when {
+            isSsaFamilyTrack(format) -> MimeTypes.TEXT_SSA
+            isMedia3CueFormat(format) -> normalizeToken(format.codecs)
+            else -> normalizeToken(format.sampleMimeType)
+        }
+
+    fun isMedia3CueFormat(format: Format): Boolean = format.sampleMimeType == MimeTypes.APPLICATION_MEDIA3_CUES
 
     fun isSsaFamilyTrack(format: Format): Boolean =
         isSsaMime(format.sampleMimeType) ||

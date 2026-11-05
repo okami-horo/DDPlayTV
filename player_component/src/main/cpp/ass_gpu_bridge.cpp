@@ -806,6 +806,32 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeLoadTrack(
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeReadDocument(
+    JNIEnv *env, jobject /*thiz*/, jlong handle, jbyteArray data, jlong time_offset_ms,
+    jobjectArray font_dirs, jstring default_font) {
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr || data == nullptr) return JNI_FALSE;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    if (!EnsureAss(context)) return JNI_FALSE;
+    ConfigureFonts(context, JStringToUtf8(env, default_font), JObjectArrayToStrings(env, font_dirs));
+    if (context->track != nullptr) ass_free_track(context->track);
+    context->track = nullptr;
+    ClearSurface(context);
+    const jsize length = env->GetArrayLength(data);
+    std::vector<char> document(static_cast<size_t>(length) + 1, '\0');
+    env->GetByteArrayRegion(data, 0, length, reinterpret_cast<jbyte *>(document.data()));
+    if (env->ExceptionCheck()) return JNI_FALSE;
+    context->track = ass_read_memory(context->library, document.data(), length, nullptr);
+    if (context->track == nullptr) return JNI_FALSE;
+    for (int i = 0; i < context->track->n_events; ++i) {
+        context->track->events[i].Start += time_offset_ms;
+    }
+    UpdateFrameSizeIfNeeded(context);
+    context->pending_invalidate = true;
+    return JNI_TRUE;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
 Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeInitEmbeddedTrack(
     JNIEnv *env,
     jobject /*thiz*/,

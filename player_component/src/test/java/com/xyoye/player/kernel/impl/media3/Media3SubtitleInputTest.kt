@@ -8,12 +8,39 @@ import org.junit.Test
 
 class Media3SubtitleInputTest {
     @Test
+    fun extractionCachesAllTracks_butOnlySelectionDeliversEventsInTheContentWindow() {
+        val input = Media3SubtitleInput()
+        input.beginMedia()
+        val first = input.createTrack("chs")
+        val second = input.createTrack("cht")
+        first.onFormat(byteArrayOf(1))
+        second.onFormat(byteArrayOf(2))
+        first.onSample(byteArrayOf(1), 4_000_000, 3_000_000)
+        second.onSample(byteArrayOf(2), 5_000_000, 2_000_000)
+        val output = RecordingSink()
+        input.setSink(output)
+        assertTrue(output.samples.isEmpty())
+
+        input.selectTrack("chs", -5_000_000)
+        assertEquals(listOf(-1_000_000L), output.samples)
+        output.samples.clear()
+        input.selectTrack("cht", 10_000_000)
+        assertEquals(2, output.header!!.single().toInt())
+        assertEquals(listOf(15_000_000L), output.samples)
+        first.onSample(byteArrayOf(1), 8_000_000, 1_000_000)
+        assertEquals(listOf(15_000_000L), output.samples)
+        input.selectTrack(null)
+        second.onSample(byteArrayOf(2), 9_000_000, 1_000_000)
+        assertEquals(listOf(15_000_000L), output.samples)
+    }
+
+    @Test
     fun bindingTheSameSink_doesNotResetOrReplayTheTrack() {
         val input = Media3SubtitleInput()
         val output = RecordingSink()
         input.beginMedia()
         input.setSink(output)
-        val decoder = input.createDecoderSink()!!
+        val decoder = input.createSelectedTrack()
         decoder.onFormat(byteArrayOf(1))
         decoder.onSample(byteArrayOf(1), 1000, 2000)
 
@@ -27,14 +54,14 @@ class Media3SubtitleInputTest {
     }
 
     @Test
-    fun replacedDecoder_cannotReclaimTrackWithALateFormat() {
+    fun replacedExtractorTrack_cannotReclaimSelectionWithALateFormat() {
         val input = Media3SubtitleInput()
         val output = RecordingSink()
         input.beginMedia()
         input.setSink(output)
-        val oldTrack = input.createDecoderSink()!!
+        val oldTrack = input.createSelectedTrack()
         oldTrack.onFormat(byteArrayOf(1))
-        val newTrack = input.createDecoderSink()!!
+        val newTrack = input.createSelectedTrack()
         newTrack.onFormat(byteArrayOf(2))
         oldTrack.onFormat(byteArrayOf(1))
         oldTrack.onSample(byteArrayOf(1), 1000, 1000)
@@ -49,12 +76,12 @@ class Media3SubtitleInputTest {
         val output = RecordingSink()
         input.setSink(output)
         val oldFonts = input.beginMedia()
-        val oldTrack = input.createDecoderSink()!!
+        val oldTrack = input.createSelectedTrack()
         oldTrack.onFormat(byteArrayOf(1))
         assertTrue(oldFonts.reserve(4))
 
         val newFonts = input.beginMedia()
-        val newTrack = input.createDecoderSink()!!
+        val newTrack = input.createSelectedTrack()
         newTrack.onFormat(byteArrayOf(2))
         assertTrue(newFonts.reserve(4))
         newFonts.onFont("new.ttf", byteArrayOf(2, 2, 2, 2))
@@ -79,10 +106,10 @@ class Media3SubtitleInputTest {
         fonts.onFont("cached.ttf", byteArrayOf(0, 1, 0, 0))
         val first = RecordingSink()
         input.setSink(first)
-        val oldTrack = input.createDecoderSink()!!
+        val oldTrack = input.createSelectedTrack()
         oldTrack.onFormat(byteArrayOf(1))
         oldTrack.onFlush()
-        val replacement = input.createDecoderSink()!!
+        val replacement = input.createSelectedTrack()
         replacement.onFormat(byteArrayOf(2))
         oldTrack.onRelease()
         input.setSink(null)
@@ -123,13 +150,13 @@ class Media3SubtitleInputTest {
         val current = Media3SubtitleInput()
         current.beginMedia()
         current.setSink(output)
-        val oldTrack = current.createDecoderSink()!!
+        val oldTrack = current.createSelectedTrack()
         oldTrack.onFormat(byteArrayOf(1))
         oldTrack.onSample(byteArrayOf(1), 1000, 2000)
 
         val next = Media3SubtitleInput()
         val nextFonts = next.beginMedia()
-        val nextTrack = next.createDecoderSink(allowDetached = true)!!
+        val nextTrack = next.createSelectedTrack()
         nextTrack.onFormat(byteArrayOf(2))
         nextTrack.onSample(byteArrayOf(2), 3000, 2000)
         assertTrue(nextFonts.reserve(4))
@@ -156,6 +183,12 @@ class Media3SubtitleInputTest {
         }
         assertEquals(listOf("font.ttf"), output.fonts)
         assertTrue(fonts.reserve(8))
+    }
+
+    private fun Media3SubtitleInput.createSelectedTrack(): EmbeddedSubtitleSink {
+        val track = createTrack("track")
+        selectTrack("track")
+        return track
     }
 
     private class RecordingSink : EmbeddedSubtitleSink {

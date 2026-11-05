@@ -83,8 +83,8 @@ class ExternalSubtitleView(
                 mSubtitleManager.release()
             }
 
-            PlayState.STATE_COMPLETED, PlayState.STATE_ERROR, PlayState.STATE_PAUSED -> {
-                sendEmptySubtitle()
+            PlayState.STATE_COMPLETED, PlayState.STATE_ERROR -> {
+                if (mTrackSelected) sendEmptySubtitle()
             }
 
             else -> {

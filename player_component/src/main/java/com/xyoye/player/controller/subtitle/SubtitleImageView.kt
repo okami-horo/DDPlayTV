@@ -1,22 +1,27 @@
 package com.xyoye.player.controller.subtitle
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Point
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import androidx.media3.common.text.Cue
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
+import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.player.controller.video.InterControllerView
+import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.wrapper.ControlWrapper
 
 /**
  * Created by xyoye on 2020/12/21.
  *
- * 仅用于显示ExoPlayer内置字幕中的图片字幕
+ * Displays complete Media3 text and bitmap Cues in the video viewport.
  */
 
 @UnstableApi
@@ -38,8 +43,7 @@ class SubtitleImageView(
         }
 
     init {
-        subtitleView.setUserDefaultStyle()
-        subtitleView.setUserDefaultTextSize()
+        updateStyle()
         addView(subtitleView)
     }
 
@@ -154,6 +158,7 @@ class SubtitleImageView(
         if (changed) {
             subtitleView.layoutParams = layoutParams
         }
+        subtitleView.translationY = -height * PlayerInitializer.Subtitle.verticalOffset / 100f
         return true
     }
 
@@ -162,5 +167,21 @@ class SubtitleImageView(
     fun setSubtitle(cues: List<Cue>?) {
         lastCues = cues
         subtitleView.setCues(cues)
+    }
+
+    fun updateStyle() {
+        val settings = PlayerInitializer.Subtitle
+        subtitleView.setFixedTextSize(TypedValue.COMPLEX_UNIT_DIP, 40f * settings.textSize / 100f)
+        val edge =
+            when {
+                settings.strokeWidth > 0 -> CaptionStyleCompat.EDGE_TYPE_OUTLINE
+                SubtitleConfig.isShadowEnabled() -> CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW
+                else -> CaptionStyleCompat.EDGE_TYPE_NONE
+            }
+        subtitleView.setStyle(
+            CaptionStyleCompat(settings.textColor, Color.TRANSPARENT, Color.TRANSPARENT, edge, settings.strokeColor, null)
+        )
+        subtitleView.alpha = settings.alpha.coerceIn(0, 100) / 100f
+        subtitleView.translationY = -subtitleView.height * settings.verticalOffset / 100f
     }
 }

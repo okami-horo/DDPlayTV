@@ -4,12 +4,15 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.KeyEvent
 import androidx.core.view.isVisible
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import com.xyoye.common_component.config.SubtitleConfig
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.extension.observeProgressChange
 import com.xyoye.data_component.enums.SettingViewType
+import com.xyoye.data_component.enums.TrackType
 import com.xyoye.player.info.PlayerInitializer
+import com.xyoye.player.kernel.impl.media3.Media3SubtitleFormatClassifier
 import com.xyoye.player.subtitle.backend.SubtitleRendererRegistry
 import com.xyoye.player_component.R
 import com.xyoye.player_component.databinding.LayoutSettingSubtitleStyleBinding
@@ -30,6 +33,10 @@ class SettingSubtitleStyleView(
         private const val FONT_SCALE_OFFSET_MAX = 400
     }
 
+    private enum class StyleMode { TEXT, ASS, BITMAP, MPV }
+
+    private var styleMode = StyleMode.TEXT
+
     init {
         initSettingListener()
     }
@@ -48,11 +55,19 @@ class SettingSubtitleStyleView(
     }
 
     override fun onViewShowed() {
-        if (isLibassMode()) {
-            viewBinding.subtitleVerticalOffsetSb.requestFocus()
-        } else {
-            viewBinding.subtitleSizeSb.requestFocus()
+        when (styleMode) {
+            StyleMode.TEXT -> viewBinding.subtitleSizeSb.requestFocus()
+            StyleMode.BITMAP -> viewBinding.subtitleAlphaSb.requestFocus()
+            StyleMode.ASS, StyleMode.MPV -> viewBinding.subtitleVerticalOffsetSb.requestFocus()
         }
+    }
+
+    override fun onTrackChanged(type: TrackType) {
+        if (type != TrackType.SUBTITLE || !isSettingShowing()) return
+        val focused = findFocus()
+        applyBackendVisibility()
+        applySubtitleStyleStatus()
+        if (focused != null && !focused.isShown) onViewShowed()
     }
 
     private fun applySubtitleStyleStatus() {
@@ -107,9 +122,18 @@ class SettingSubtitleStyleView(
     }
 
     private fun applyBackendVisibility() {
-        val enableLegacyStyling = !isLibassMode()
-        val enableLibassScaling = isLibassMode()
-        // libass 使用字幕文件自身样式，仅保留字号/颜色/描边等在传统后端
+        val track = mControlWrapper.getTracks(TrackType.SUBTITLE).firstOrNull { it.selected && !it.disable }
+        styleMode =
+            when {
+                isMpvMode() -> StyleMode.MPV
+                Media3SubtitleFormatClassifier.isSsaMime(track?.subtitleMimeType) -> StyleMode.ASS
+                track?.subtitleMimeType in setOf(MimeTypes.APPLICATION_PGS, MimeTypes.APPLICATION_VOBSUB, MimeTypes.APPLICATION_DVBSUBS) ->
+                    StyleMode.BITMAP
+                else -> StyleMode.TEXT
+            }
+        val enableLegacyStyling = styleMode == StyleMode.TEXT
+        val enableLibassScaling = styleMode == StyleMode.ASS || styleMode == StyleMode.MPV
+        // 按当前轨道的实际渲染能力显示设置，ASS 保留文件样式，位图没有文字样式。
         viewBinding.subtitleSizeRow.isVisible = enableLegacyStyling
         viewBinding.subtitleSizeSb.isVisible = enableLegacyStyling
         viewBinding.subtitleStrokeWidthRow.isVisible = enableLegacyStyling
@@ -118,10 +142,10 @@ class SettingSubtitleStyleView(
         viewBinding.subtitleColorSb.isVisible = enableLegacyStyling
         viewBinding.subtitleStrokeColorRow.isVisible = enableLegacyStyling
         viewBinding.subtitleStrokeColorSb.isVisible = enableLegacyStyling
-        viewBinding.subtitleAlphaRow.isVisible = !isMpvMode()
-        viewBinding.subtitleAlphaSb.isVisible = !isMpvMode()
-        viewBinding.subtitleNativeStyleTips.isVisible = isMpvMode()
-        // 字号偏移仅对 libass 生效
+        viewBinding.subtitleAlphaRow.isVisible = styleMode != StyleMode.MPV
+        viewBinding.subtitleAlphaSb.isVisible = styleMode != StyleMode.MPV
+        viewBinding.subtitleNativeStyleTips.isVisible = styleMode == StyleMode.MPV
+        // 字号偏移供 libass / mpv 使用，普通文字使用独立的文字大小。
         viewBinding.subtitleFontScaleOffsetRow.isVisible = enableLibassScaling
         viewBinding.subtitleFontScaleOffsetSb.isVisible = enableLibassScaling
     }
@@ -269,9 +293,6 @@ class SettingSubtitleStyleView(
         SubtitleConfig.putSubtitleFontScaleOffsetPercent(clampedOffset)
         PlayerInitializer.Subtitle.fontScaleOffsetPercent = clampedOffset
         SubtitleRendererRegistry.current()?.updateFontScaleOffset(clampedOffset)
-        // Media3 内置字幕（非 ASS/SSA）仍由传统字幕视图渲染，字号偏移需同步刷新文字大小/描边。
-        mControlWrapper.updateTextSize()
-        mControlWrapper.updateStrokeWidth()
         onConfigChanged()
     }
 
@@ -292,16 +313,14 @@ class SettingSubtitleStyleView(
     }
 
     private fun resetConfig() {
-        if (isMpvMode()) {
+        updateVerticalOffset(PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET)
+        if (styleMode != StyleMode.MPV) updateAlpha(PlayerInitializer.Subtitle.DEFAULT_ALPHA)
+        if (styleMode == StyleMode.ASS || styleMode == StyleMode.MPV) {
             updateFontScaleOffset(PlayerInitializer.Subtitle.DEFAULT_FONT_SCALE_OFFSET_PERCENT)
-            updateVerticalOffset(PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET)
-            return
         }
+        if (styleMode != StyleMode.TEXT) return
         updateSize(PlayerInitializer.Subtitle.DEFAULT_SIZE)
         updateStrokeWidth(PlayerInitializer.Subtitle.DEFAULT_STROKE)
-        updateAlpha(PlayerInitializer.Subtitle.DEFAULT_ALPHA)
-        updateFontScaleOffset(PlayerInitializer.Subtitle.DEFAULT_FONT_SCALE_OFFSET_PERCENT)
-        updateVerticalOffset(PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET)
 
         val defaultTextColor = PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR
         val textColorPosition = viewBinding.subtitleColorSb.getPositionFromColor(defaultTextColor)
@@ -314,21 +333,28 @@ class SettingSubtitleStyleView(
     }
 
     private fun onConfigChanged() {
+        val resetFocused = viewBinding.tvResetSubtitleConfig.hasFocus()
         viewBinding.tvResetSubtitleConfig.isVisible = isConfigChanged()
+        if (resetFocused && !viewBinding.tvResetSubtitleConfig.isVisible) onViewShowed()
     }
 
     private fun isConfigChanged(): Boolean {
-        if (isMpvMode()) {
-            return PlayerInitializer.Subtitle.fontScaleOffsetPercent != PlayerInitializer.Subtitle.DEFAULT_FONT_SCALE_OFFSET_PERCENT ||
-                PlayerInitializer.Subtitle.verticalOffset != PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET
-        }
-        return PlayerInitializer.Subtitle.textSize != PlayerInitializer.Subtitle.DEFAULT_SIZE ||
-            PlayerInitializer.Subtitle.strokeWidth != PlayerInitializer.Subtitle.DEFAULT_STROKE ||
-            PlayerInitializer.Subtitle.textColor != PlayerInitializer.Subtitle.DEFAULT_TEXT_COLOR ||
-            PlayerInitializer.Subtitle.strokeColor != PlayerInitializer.Subtitle.DEFAULT_STROKE_COLOR ||
-            PlayerInitializer.Subtitle.alpha != PlayerInitializer.Subtitle.DEFAULT_ALPHA ||
-            PlayerInitializer.Subtitle.fontScaleOffsetPercent != PlayerInitializer.Subtitle.DEFAULT_FONT_SCALE_OFFSET_PERCENT ||
-            PlayerInitializer.Subtitle.verticalOffset != PlayerInitializer.Subtitle.DEFAULT_VERTICAL_OFFSET
+        val settings = PlayerInitializer.Subtitle
+        return settings.verticalOffset != settings.DEFAULT_VERTICAL_OFFSET ||
+            (styleMode != StyleMode.MPV && settings.alpha != settings.DEFAULT_ALPHA) ||
+            (
+                (styleMode == StyleMode.ASS || styleMode == StyleMode.MPV) &&
+                    settings.fontScaleOffsetPercent != settings.DEFAULT_FONT_SCALE_OFFSET_PERCENT
+            ) ||
+            (
+                styleMode == StyleMode.TEXT &&
+                    (
+                        settings.textSize != settings.DEFAULT_SIZE ||
+                            settings.strokeWidth != settings.DEFAULT_STROKE ||
+                            settings.textColor != settings.DEFAULT_TEXT_COLOR ||
+                            settings.strokeColor != settings.DEFAULT_STROKE_COLOR
+                    )
+            )
     }
 
     private fun offsetValueToProgress(value: Int): Int = value + VERTICAL_OFFSET_MAX
@@ -345,9 +371,6 @@ class SettingSubtitleStyleView(
         } else {
             "$offsetPercent%"
         }
-
-    private fun isLibassMode(): Boolean =
-        (SubtitleRendererRegistry.current()?.backend ?: PlayerInitializer.Subtitle.backend) != SubtitleRendererBackend.LEGACY_CANVAS
 
     private fun isMpvMode(): Boolean = SubtitleRendererRegistry.current()?.backend == SubtitleRendererBackend.MPV_NATIVE
 }

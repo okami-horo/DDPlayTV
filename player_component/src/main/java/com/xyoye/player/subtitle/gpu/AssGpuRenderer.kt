@@ -297,6 +297,18 @@ class AssGpuRenderer(
         }
     }
 
+    fun readDocument(
+        data: ByteArray,
+        timeOffsetUs: Long,
+        fontDirs: List<String>,
+        defaultFont: String?
+    ) {
+        if (released) return
+        postStateCommand {
+            trackLoaded = nativeBridge.readDocument(data, timeOffsetUs, fontDirs, defaultFont)
+        }
+    }
+
     fun appendEmbeddedSample(
         data: ByteArray,
         timeMs: Long,

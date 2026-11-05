@@ -14,7 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.xyoye.cache.CacheManager
-import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.common_component.log.LogFacade
 import com.xyoye.common_component.log.model.LogModule
@@ -330,6 +329,10 @@ class DanDanVideoPlayer(
         }
     }
 
+    override fun onTracksChanged(type: TrackType) {
+        mVideoController?.setTrackUpdated(type)
+    }
+
     private fun initPlayer() {
         mAudioFocusHelper.enable = PlayerInitializer.isEnableAudioFocus
         // 初始化播放器
@@ -556,7 +559,6 @@ class DanDanVideoPlayer(
     }
 
     override fun updateSubtitleOffsetTime() {
-        SubtitlePreferenceUpdater.persistOffset(PlayerInitializer.Subtitle.offsetPosition)
         if (this::mVideoPlayer.isInitialized && mCurrentPlayState != PlayState.STATE_IDLE) {
             mVideoPlayer.setSubtitleOffset(PlayerInitializer.Subtitle.offsetPosition)
         }
@@ -570,12 +572,20 @@ class DanDanVideoPlayer(
         return mVideoPlayer.supportAddTrack(type)
     }
 
+    override fun supportAddTrack(track: VideoTrackBean): Boolean =
+        this::mVideoPlayer.isInitialized && mCurrentPlayState != PlayState.STATE_IDLE && mVideoPlayer.supportAddTrack(track)
+
     override fun addTrack(track: VideoTrackBean): Boolean {
         if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {
             return false
         }
         return mVideoPlayer.addTrack(track)
     }
+
+    override fun addTrack(
+        track: VideoTrackBean,
+        onAdded: (VideoTrackBean) -> Unit
+    ): Boolean = this::mVideoPlayer.isInitialized && mCurrentPlayState != PlayState.STATE_IDLE && mVideoPlayer.addTrack(track, onAdded)
 
     override fun getTracks(type: TrackType): List<VideoTrackBean> {
         if (this::mVideoPlayer.isInitialized.not() || mCurrentPlayState == PlayState.STATE_IDLE) {

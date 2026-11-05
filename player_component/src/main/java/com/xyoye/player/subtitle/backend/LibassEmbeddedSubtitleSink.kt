@@ -79,6 +79,17 @@ class LibassEmbeddedSubtitleSink(
         }
     }
 
+    override fun onDocument(
+        data: ByteArray,
+        timeOffsetUs: Long
+    ) {
+        synchronized(lock) {
+            renderer.readDocument(data, timeOffsetUs, fontDirectories, defaultFont)
+            initialized = true
+            onContentChanged()
+        }
+    }
+
     override fun onFlush() {
         synchronized(lock) {
             renderer.flushEmbeddedEvents()

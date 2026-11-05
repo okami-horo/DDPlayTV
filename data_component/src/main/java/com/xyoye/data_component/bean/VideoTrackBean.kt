@@ -21,15 +21,19 @@ data class VideoTrackBean(
     // 是否是禁用轨道
     val disable: Boolean = false,
     // 是否是内部轨道
-    val internal: Boolean = false
+    val internal: Boolean = false,
+    // 字幕原始 MIME，提取阶段转换为 Media3 Cue 后仍保留
+    val subtitleMimeType: String? = null
 ) {
     companion object {
         fun internal(
             id: String,
             name: String,
             type: TrackType,
-            selected: Boolean
-        ): VideoTrackBean = VideoTrackBean(id = id, name = name, type = type, selected = selected, internal = true)
+            selected: Boolean,
+            subtitleMimeType: String? = null
+        ): VideoTrackBean =
+            VideoTrackBean(id = id, name = name, type = type, selected = selected, internal = true, subtitleMimeType = subtitleMimeType)
 
         fun subtitle(subtitlePath: String): VideoTrackBean {
             val name = Uri.parse(subtitlePath).lastPathSegment.orEmpty()

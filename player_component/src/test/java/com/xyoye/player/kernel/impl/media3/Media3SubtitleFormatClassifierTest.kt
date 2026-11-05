@@ -1,13 +1,37 @@
 package com.xyoye.player.kernel.impl.media3
 
 import androidx.media3.common.Format
+import androidx.media3.common.MimeTypes
 import com.xyoye.common_component.media3.testing.Media3Dependent
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @Media3Dependent("Ensure Media3 subtitle format classification stays stable for libass bypass")
 class Media3SubtitleFormatClassifierTest {
+    @Test
+    fun originalMimeType_retainsTextAssAndBitmapIdentityAfterCueConversion() {
+        for (mimeType in listOf(
+            MimeTypes.APPLICATION_SUBRIP,
+            MimeTypes.TEXT_VTT,
+            MimeTypes.TEXT_SSA,
+            MimeTypes.APPLICATION_PGS,
+            MimeTypes.APPLICATION_VOBSUB,
+            MimeTypes.APPLICATION_DVBSUBS
+        )) {
+            val raw = Format.Builder().setSampleMimeType(mimeType).build()
+            val cues =
+                Format
+                    .Builder()
+                    .setSampleMimeType(MimeTypes.APPLICATION_MEDIA3_CUES)
+                    .setCodecs(mimeType)
+                    .build()
+            assertEquals(mimeType, Media3SubtitleFormatClassifier.originalMimeType(raw))
+            assertEquals(mimeType, Media3SubtitleFormatClassifier.originalMimeType(cues))
+        }
+    }
+
     @Test
     fun isSsaMime_matchesKnownSsaAliases() {
         assertTrue(Media3SubtitleFormatClassifier.isSsaMime("text/x-ssa"))

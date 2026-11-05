@@ -3,7 +3,6 @@ package com.xyoye.player.controller.subtitle
 import android.content.Context
 import android.graphics.Point
 import android.util.AttributeSet
-import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.data_component.enums.PlayState
 import com.xyoye.player.controller.video.InterControllerView
 import com.xyoye.player.info.PlayerInitializer
@@ -70,16 +69,14 @@ class SubtitleTextView(
     fun isEmptySubtitle() = lastSubtitle.isEmpty()
 
     fun updateTextSize() {
-        val fontScale = subtitleFontScale()
         val textSize = PlayerInitializer.Subtitle.textSize
-        val realSize = (40f * textSize / 100f * fontScale).toInt()
+        val realSize = (40f * textSize / 100f).toInt()
         setTextSize(realSize)
     }
 
     fun updateStrokeWidth() {
-        val fontScale = subtitleFontScale()
         val strokeWidth = PlayerInitializer.Subtitle.strokeWidth
-        val realWidth = (10f * strokeWidth / 100f * fontScale).toInt()
+        val realWidth = (10f * strokeWidth / 100f).toInt()
         setStrokeWidth(realWidth)
     }
 
@@ -106,24 +103,5 @@ class SubtitleTextView(
     fun updateShadow() {
         // 直接调用父类的updateShadowLayer方法来更新阴影设置
         updateShadowLayer()
-    }
-
-    private fun subtitleFontScale(): Float {
-        if (PlayerInitializer.Subtitle.backend != SubtitleRendererBackend.LIBASS) {
-            return 1f
-        }
-        val offsetPercent =
-            PlayerInitializer.Subtitle.fontScaleOffsetPercent.coerceIn(
-                FONT_SCALE_OFFSET_MIN,
-                FONT_SCALE_OFFSET_MAX
-            )
-        return (1f + offsetPercent / 100f).coerceIn(MIN_FONT_SCALE, MAX_FONT_SCALE)
-    }
-
-    private companion object {
-        private const val FONT_SCALE_OFFSET_MIN = -50
-        private const val FONT_SCALE_OFFSET_MAX = 400
-        private const val MIN_FONT_SCALE = 0.1f
-        private const val MAX_FONT_SCALE = 5f
     }
 }

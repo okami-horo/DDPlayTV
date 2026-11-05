@@ -1,6 +1,7 @@
 package com.xyoye.player.info
 
 import android.graphics.Color
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
 import com.xyoye.common_component.enums.SubtitleRendererBackend
 import com.xyoye.data_component.enums.DanmakuLanguage
 import com.xyoye.data_component.enums.PlayerType
@@ -69,7 +70,9 @@ object PlayerInitializer {
         const val DEFAULT_VERTICAL_OFFSET = 0
         val DEFAULT_BACKEND = SubtitleRendererBackend.LIBASS
 
-        var offsetPosition = DEFAULT_POSITION
+        var offsetPosition: Long
+            get() = SubtitlePreferenceUpdater.currentOffset()
+            set(value) = SubtitlePreferenceUpdater.persistOffset(value)
 
         var textSize = DEFAULT_SIZE
         var strokeWidth = DEFAULT_STROKE

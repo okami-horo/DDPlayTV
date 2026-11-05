@@ -9,9 +9,12 @@ import androidx.media3.common.text.Cue
 data class MixedSubtitle(
     val type: SubtitleType,
     val text: List<SubtitleText>?,
-    val bitmaps: List<Cue>? = null
+    val bitmaps: List<Cue>? = null,
+    val cues: List<Cue>? = null
 ) {
     companion object {
+        fun fromCues(cues: List<Cue>): MixedSubtitle = MixedSubtitle(SubtitleType.TEXT, null, cues = cues.toList())
+
         fun fromText(subtitleText: String?): MixedSubtitle {
             val text = SubtitleUtils.caption2Subtitle(subtitleText)
             return MixedSubtitle(SubtitleType.TEXT, text)

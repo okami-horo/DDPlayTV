@@ -15,14 +15,15 @@ import androidx.media3.exoplayer.source.SampleStream
 import androidx.media3.extractor.metadata.id3.BinaryFrame
 import java.nio.ByteBuffer
 
-/** Supplies an explicit renderer-to-window offset with each ASS input format. */
+/** Associates extracted ASS tracks and video timestamps with the active content window. */
 @UnstableApi
 internal class LibassTimelineRenderer(
     val delegateRenderer: Renderer,
-    private val decoderFactory: LibassSubtitleDecoderFactory? = null
+    private val subtitleOffsetUs: () -> Long = { 0L }
 ) : ForwardingRenderer(delegateRenderer) {
     private var timeline: Timeline = Timeline.EMPTY
     private var sourceStream: SampleStream? = null
+    private var subtitleInput: Media3SubtitleInput? = null
 
     override fun setTimeline(timeline: Timeline) {
         this.timeline = timeline
@@ -41,7 +42,7 @@ internal class LibassTimelineRenderer(
         mediaPeriodId: MediaPeriodId
     ) {
         sourceStream = stream
-        selectSource(mediaPeriodId)
+        selectSource(mediaPeriodId, formats.firstOrNull())
         super.enable(
             configuration,
             mapFormats(formats, mediaPeriodId),
@@ -63,7 +64,7 @@ internal class LibassTimelineRenderer(
         mediaPeriodId: MediaPeriodId
     ) {
         sourceStream = stream
-        selectSource(mediaPeriodId)
+        selectSource(mediaPeriodId, formats.firstOrNull())
         super.replaceStream(mapFormats(formats, mediaPeriodId), mapStream(stream, mediaPeriodId), startPositionUs, offsetUs, mediaPeriodId)
     }
 
@@ -73,12 +74,32 @@ internal class LibassTimelineRenderer(
     override fun disable() {
         super.disable()
         sourceStream = null
-        decoderFactory?.useSource(null)
+        subtitleInput?.selectTrack(null)
+        subtitleInput = null
     }
 
-    private fun selectSource(periodId: MediaPeriodId) {
+    override fun render(
+        positionUs: Long,
+        elapsedRealtimeUs: Long
+    ) {
+        super.render(positionUs + subtitleOffsetUs(), elapsedRealtimeUs)
+    }
+
+    override fun resetPosition(
+        positionUs: Long,
+        resetStreams: Boolean
+    ) {
+        subtitleInput?.refreshSelectedTrack()
+        super.resetPosition(positionUs + subtitleOffsetUs(), resetStreams)
+    }
+
+    private fun selectSource(
+        periodId: MediaPeriodId,
+        format: Format?
+    ) {
+        if (trackType != C.TRACK_TYPE_TEXT) return
         val index = timeline.getIndexOfPeriod(periodId.periodUid)
-        val input =
+        val taggedInput =
             if (index == C.INDEX_UNSET) {
                 null
             } else {
@@ -88,7 +109,11 @@ internal class LibassTimelineRenderer(
                     .mediaItem.localConfiguration
                     ?.tag as? Media3SubtitleInput
             }
-        decoderFactory?.useSource(input)
+        val input = taggedInput ?: Media3SubtitleInput.findTrackInput(format?.id)
+        if (subtitleInput !== input) subtitleInput?.selectTrack(null)
+        subtitleInput = input
+        val selectedId = format?.takeIf { Media3SubtitleFormatClassifier.isSsaFamilyTrack(it) }?.id
+        input?.selectTrack(selectedId, periodPositionUs(periodId))
     }
 
     private fun periodPositionUs(periodId: MediaPeriodId): Long {
@@ -127,13 +152,8 @@ internal class LibassTimelineRenderer(
                     val periodPositionUs = periodPositionUs(periodId)
                     if (format != null && trackType == C.TRACK_TYPE_VIDEO) {
                         holder.format = videoFormat(format, periodPositionUs)
-                    } else if (decoderFactory?.hasSink() == true &&
-                        format != null &&
-                        Media3SubtitleFormatClassifier.isSsaMime(format.sampleMimeType)
-                    ) {
-                        // BaseRenderer adds its real streamOffsetUs to this value, and to sample.timeUs.
-                        // Their difference is therefore sample period time + period position in window.
-                        holder.format = format.buildUpon().setSubsampleOffsetUs(-periodPositionUs).build()
+                    } else if (format != null && trackType == C.TRACK_TYPE_TEXT) {
+                        selectSource(periodId, format)
                     }
                 }
                 return result

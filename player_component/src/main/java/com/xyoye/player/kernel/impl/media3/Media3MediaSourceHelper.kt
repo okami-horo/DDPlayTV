@@ -3,21 +3,19 @@ package com.xyoye.player.kernel.impl.media3
 import android.net.Uri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.HttpDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
-import androidx.media3.exoplayer.dash.DashMediaSource
-import androidx.media3.exoplayer.hls.HlsMediaSource
-import androidx.media3.exoplayer.smoothstreaming.SsMediaSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.extractor.DefaultExtractorsFactory
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.utils.PathHelper
 import java.util.Locale
@@ -33,78 +31,73 @@ object Media3MediaSourceHelper {
             appContext.applicationInfo.name,
         )
 
-    private val httpFactory =
-        LoggingHttpDataSourceFactory()
-            .setUserAgent(userAgent)
-            .setAllowCrossProtocolRedirects(true)
+    fun createMediaSourceFactory(): MediaSource.Factory =
+        object : MediaSource.Factory by DefaultMediaSourceFactory(appContext) {
+            override fun createMediaSource(mediaItem: MediaItem): MediaSource = getMediaSource(mediaItem)
+        }
 
     fun getMediaSource(
         uri: String,
         headers: Map<String, String>? = null,
         isCacheEnabled: Boolean = false,
-        parseSubtitlesDuringExtraction: Boolean = true,
         mediaId: String? = null,
-    ): MediaSource {
-        val contentUri = Uri.parse(uri)
-        val subtitleInput = Media3SubtitleInput()
-        val fontAttachmentSink = subtitleInput.beginMedia()
-        val mediaItemBuilder =
+        subtitles: List<MediaItem.SubtitleConfiguration> = emptyList(),
+    ): MediaSource =
+        getMediaSource(
             MediaItem
                 .Builder()
-                .setUri(contentUri)
-                .setTag(subtitleInput)
+                .setUri(uri)
+                .setSubtitleConfigurations(subtitles)
                 .apply {
-                    if (!mediaId.isNullOrBlank()) {
-                        setMediaId(mediaId)
-                    }
-                }
+                    if (!mediaId.isNullOrBlank()) setMediaId(mediaId)
+                }.build(),
+            headers,
+            isCacheEnabled
+        )
 
+    fun getMediaSource(
+        mediaItem: MediaItem,
+        headers: Map<String, String>? = null,
+        isCacheEnabled: Boolean = false
+    ): MediaSource {
+        val local = requireNotNull(mediaItem.localConfiguration)
+        val contentUri = local.uri
         val headersWithDefaults = headers?.toMap()
-
-        headersWithDefaults?.let { applyHeaders(it) }
+        val subtitleInput = Media3SubtitleInput(requestHeaders = headersWithDefaults, cacheEnabled = isCacheEnabled)
+        val fontAttachmentSink = subtitleInput.beginMedia()
+        val mediaItemBuilder = mediaItem.buildUpon().setTag(subtitleInput)
+        val httpFactory =
+            LoggingHttpDataSourceFactory()
+                .setUserAgent(headersWithDefaults?.entries?.find { it.key.equals("User-Agent", true) }?.value ?: userAgent)
+                .setAllowCrossProtocolRedirects(true)
+                .setDefaultRequestProperties(headersWithDefaults.orEmpty())
 
         val dataSourceFactory =
             if (isCacheEnabled) {
-                cacheDataSource()
+                cacheDataSource(httpFactory)
             } else {
                 DefaultDataSource.Factory(appContext, httpFactory)
             }
 
-        val resolvedContentType = resolveContentType(uri, contentUri, headersWithDefaults)
+        val resolvedContentType =
+            if (local.mimeType != null) {
+                C.CONTENT_TYPE_OTHER
+            } else {
+                resolveContentType(contentUri.toString(), contentUri, httpFactory)
+            }
 
-        val mediaItem = mediaItemBuilder.build()
-
-        return when (resolvedContentType) {
-            C.CONTENT_TYPE_DASH ->
-                DashMediaSource
-                    .Factory(dataSourceFactory)
-                    .experimentalParseSubtitlesDuringExtraction(parseSubtitlesDuringExtraction)
-                    .createMediaSource(mediaItem)
-            C.CONTENT_TYPE_SS ->
-                SsMediaSource
-                    .Factory(dataSourceFactory)
-                    .experimentalParseSubtitlesDuringExtraction(parseSubtitlesDuringExtraction)
-                    .createMediaSource(mediaItem)
-            C.CONTENT_TYPE_HLS ->
-                HlsMediaSource
-                    .Factory(dataSourceFactory)
-                    .experimentalParseSubtitlesDuringExtraction(parseSubtitlesDuringExtraction)
-                    .createMediaSource(mediaItem)
-            else ->
-                ProgressiveMediaSource
-                    .Factory(
-                        dataSourceFactory,
-                        if (!parseSubtitlesDuringExtraction) {
-                            LibassExtractorsFactory(fontAttachmentSink)
-                        } else {
-                            DefaultExtractorsFactory()
-                                .experimentalSetTextTrackTranscodingEnabled(parseSubtitlesDuringExtraction)
-                        },
-                    ).createMediaSource(mediaItem)
+        when (resolvedContentType) {
+            C.CONTENT_TYPE_DASH -> mediaItemBuilder.setMimeType(MimeTypes.APPLICATION_MPD)
+            C.CONTENT_TYPE_SS -> mediaItemBuilder.setMimeType(MimeTypes.APPLICATION_SS)
+            C.CONTENT_TYPE_HLS -> mediaItemBuilder.setMimeType(MimeTypes.APPLICATION_M3U8)
         }
+        val parserFactory = LibassSubtitleParserFactory(subtitleInput)
+        return DefaultMediaSourceFactory(dataSourceFactory, LibassExtractorsFactory(fontAttachmentSink, subtitleInput, parserFactory))
+            .setSubtitleParserFactory(parserFactory)
+            .createMediaSource(mediaItemBuilder.build())
     }
 
-    private fun cacheDataSource(): CacheDataSource.Factory {
+    private fun cacheDataSource(httpFactory: HttpDataSource.Factory): CacheDataSource.Factory {
         if (!this::cache.isInitialized) {
             cache =
                 SimpleCache(
@@ -123,14 +116,14 @@ object Media3MediaSourceHelper {
     private fun resolveContentType(
         rawUri: String,
         contentUri: Uri,
-        headers: Map<String, String>?
+        httpFactory: HttpDataSource.Factory
     ): Int {
         val byExtension = inferContentType(rawUri)
         if (byExtension != C.CONTENT_TYPE_OTHER) {
             return byExtension
         }
 
-        val contentType = sniffHttpContentType(contentUri, headers)
+        val contentType = sniffHttpContentType(contentUri, httpFactory)
         if (contentType != null && isHlsMime(contentType)) {
             Media3Diagnostics.logContentTypeOverride(rawUri, contentType, "hls_by_content_type")
             return C.CONTENT_TYPE_HLS
@@ -140,13 +133,12 @@ object Media3MediaSourceHelper {
 
     private fun sniffHttpContentType(
         contentUri: Uri,
-        headers: Map<String, String>?
+        httpFactory: HttpDataSource.Factory
     ): String? {
         if (contentUri.scheme != "http" && contentUri.scheme != "https") {
             return null
         }
         val dataSource = httpFactory.createDataSource()
-        headers?.forEach { dataSource.setRequestProperty(it.key, it.value) }
         val dataSpec =
             DataSpec
                 .Builder()
@@ -154,14 +146,15 @@ object Media3MediaSourceHelper {
                 .setHttpMethod(DataSpec.HTTP_METHOD_HEAD)
                 .build()
         return runCatching {
-            dataSource.open(dataSpec)
-            val contentType =
+            try {
+                dataSource.open(dataSpec)
                 dataSource.responseHeaders.entries
                     .firstOrNull { it.key.equals("Content-Type", ignoreCase = true) }
                     ?.value
                     ?.firstOrNull()
-            dataSource.close()
-            contentType
+            } finally {
+                dataSource.close()
+            }
         }.getOrNull()
     }
 
@@ -178,13 +171,6 @@ object Media3MediaSourceHelper {
     private fun isHlsMime(contentType: String): Boolean {
         val lower = contentType.lowercase(Locale.getDefault())
         return lower.contains("application/vnd.apple.mpegurl") || lower.contains("application/x-mpegurl")
-    }
-
-    private fun applyHeaders(headers: Map<String, String>) {
-        headers.entries.find { it.key.equals("User-Agent", ignoreCase = true) }?.let {
-            httpFactory.setUserAgent(it.value)
-        }
-        httpFactory.setDefaultRequestProperties(headers)
     }
 
     fun setCache(cacheInstance: Cache) {

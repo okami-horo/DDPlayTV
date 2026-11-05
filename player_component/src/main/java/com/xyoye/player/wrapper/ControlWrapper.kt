@@ -43,13 +43,27 @@ class ControlWrapper(
 
     override fun supportAddTrack(type: TrackType): Boolean = mVideoPlayer.supportAddTrack(type)
 
-    override fun addTrack(track: VideoTrackBean): Boolean {
+    override fun supportAddTrack(track: VideoTrackBean): Boolean = mVideoPlayer.supportAddTrack(track)
+
+    override fun addTrack(track: VideoTrackBean): Boolean = addTrack(track) {}
+
+    override fun addTrack(
+        track: VideoTrackBean,
+        onAdded: (VideoTrackBean) -> Unit
+    ): Boolean {
+        val complete: (VideoTrackBean) -> Unit = { added ->
+            selectTrack(added)
+            mController.setTrackAdded(added)
+            onAdded(added)
+        }
+        if (mVideoPlayer.supportAddTrack(track)) {
+            return mVideoPlayer.addTrack(track, complete)
+        }
         // 如果视频播放器支持添加轨道，则直接添加
         // 否则由支持轨道的控制器添加
         val trackType = track.type
         val added =
             when {
-                mVideoPlayer.supportAddTrack(trackType) -> mVideoPlayer.addTrack(track)
                 mSubtitleController.supportAddTrack(trackType) -> mSubtitleController.addTrack(track)
                 mDanmuController.supportAddTrack(trackType) -> mDanmuController.addTrack(track)
                 else -> false
@@ -57,15 +71,14 @@ class ControlWrapper(
 
         if (added) {
             // 添加轨道成功，设置轨道选中
-            selectTrack(track)
-            mController.setTrackAdded(track)
+            complete(track)
         }
         return added
     }
 
     override fun getTracks(type: TrackType): List<VideoTrackBean> {
         val tracks =
-            if (mVideoPlayer.supportAddTrack(type)) {
+            if (type != TrackType.SUBTITLE && mVideoPlayer.supportAddTrack(type)) {
                 // 如果视频播放器支持添加轨道，则直接获取播放器的轨道
                 mVideoPlayer.getTracks(type)
             } else {
@@ -96,7 +109,7 @@ class ControlWrapper(
         // 否则由支持轨道的控制器选中，并取消播放器中同类型轨道的选中
         val trackType = track.type
         when {
-            track.internal || mVideoPlayer.supportAddTrack(trackType) -> {
+            track.internal || mVideoPlayer.supportAddTrack(track) -> {
                 mVideoPlayer.selectTrack(track)
                 mSubtitleController.deselectTrack(trackType)
                 mDanmuController.deselectTrack(trackType)

@@ -6,13 +6,20 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
 import androidx.media3.common.Format
+import androidx.media3.extractor.Extractor
+import androidx.media3.extractor.PositionHolder
+import androidx.media3.test.utils.FakeExtractorInput
+import androidx.media3.test.utils.FakeExtractorOutput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.xyoye.data_component.enums.SubtitlePipelineFallbackReason
 import com.xyoye.data_component.enums.SubtitleViewType
 import com.xyoye.data_component.media3.telemetry.subtitle.SubtitleOutputTarget
-import com.xyoye.player.kernel.impl.media3.LibassSsaStreamDecoder
+import com.xyoye.player.kernel.impl.media3.LibassMatroskaExtractor
+import com.xyoye.player.kernel.impl.media3.LibassSubtitleParserFactory
+import com.xyoye.player.kernel.impl.media3.Media3AssSample
 import com.xyoye.player.kernel.impl.media3.Media3FontAttachmentSink
+import com.xyoye.player.kernel.impl.media3.Media3SubtitleInput
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import com.xyoye.player.subtitle.backend.LibassEmbeddedSubtitleSink
 import com.xyoye.player.subtitle.backend.SwitchableEmbeddedSubtitleSink
@@ -38,6 +45,78 @@ import java.util.concurrent.atomic.AtomicReference
 
 @RunWith(AndroidJUnit4::class)
 class LibassGpuRenderingTest {
+    @Test
+    fun compressedAndPlainMkv_generateTheSameActualAssPixels() =
+        withRenderer { bridge, output ->
+            var expected: Long? = null
+            for (asset in listOf("subtitle-plain.mkv", "subtitle-zlib-explicit.mkv", "subtitle-zlib-default.mkv")) {
+                val input = Media3SubtitleInput()
+                val fonts = input.beginMedia()
+                input.setSink(
+                    object : EmbeddedSubtitleSink {
+                        override fun onFormat(codecPrivate: ByteArray?) {
+                            assertTrue(bridge.initEmbeddedTrack(codecPrivate, emptyList(), DEFAULT_FONT))
+                            hasVisiblePixels(output)
+                        }
+
+                        override fun onSample(
+                            data: ByteArray,
+                            timeUs: Long,
+                            durationUs: Long?
+                        ) {
+                            bridge.appendEmbeddedChunk(data, timeUs / 1000, durationUs?.div(1000))
+                        }
+
+                        override fun onFlush() = bridge.flushEmbeddedEvents()
+
+                        override fun onRelease() = bridge.clearEmbeddedTrack()
+                    }
+                )
+                val extractor = LibassMatroskaExtractor(fonts, input, LibassSubtitleParserFactory(input))
+                val extracted = FakeExtractorOutput()
+                extractor.init(extracted)
+                val data =
+                    InstrumentationRegistry
+                        .getInstrumentation()
+                        .context.assets
+                        .open("media3/$asset")
+                        .use { it.readBytes() }
+                val stream = FakeExtractorInput.Builder().setData(data).build()
+                try {
+                    while (extractor.read(stream, PositionHolder()) != Extractor.RESULT_END_OF_INPUT) { }
+                    input.selectTrack(
+                        extracted.trackOutputs
+                            .valueAt(0)
+                            .lastFormat!!
+                            .id
+                    )
+                    assertTrue(bridge.renderFrame(500_000, null).imageCount > 0)
+                    val pixels = pixelSignature(output)
+                    assertTrue(pixels != 0L)
+                    if (expected == null) expected = pixels else assertEquals(expected, pixels)
+                    bridge.renderFrame(2_000_000, null)
+                    assertFalse(hasVisiblePixels(output))
+                } finally {
+                    extractor.release()
+                }
+            }
+        }
+
+    @Test
+    fun fullAssDocument_preservesNativeEventsAndAppliesTheContentWindowOffset() =
+        withRenderer { bridge, output ->
+            val document = (HEADER + "\nDialogue: 0,0:00:03.00,0:00:04.00,Default,,0,0,0,,{\\pos(200,180)}External\n").toByteArray()
+            assertTrue(bridge.readDocument(document, -2_000_000, emptyList(), DEFAULT_FONT))
+            hasVisiblePixels(output)
+            assertEquals(1, bridge.embeddedTrackInfo()!!.eventCount)
+            bridge.renderFrame(500_000, null)
+            assertFalse(hasVisiblePixels(output))
+            assertTrue(bridge.renderFrame(1_500_000, null).imageCount > 0)
+            assertTrue(hasVisiblePixels(output))
+            bridge.renderFrame(2_000_000, null)
+            assertFalse(hasVisiblePixels(output))
+        }
+
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val target =
         SubtitleOutputTarget(
@@ -159,22 +238,10 @@ class LibassGpuRenderingTest {
                 .setSampleMimeType("text/x-ssa")
                 .setInitializationData(initialization)
                 .build()
-        val decoder = LibassSsaStreamDecoder(format) { sink }
-        try {
-            val input = decoder.dequeueInputBuffer()!!
-            val payload = "Dialogue: 0:00:00:00,0:00:10:00,$raw".toByteArray()
-            input.ensureSpaceForWrite(payload.size)
-            input.data!!.put(payload)
-            input.flip()
-            input.timeUs = 1_000_000_000_000L
-            input.subsampleOffsetUs = 1_000_000_000_000L
-            decoder.queueInputBuffer(input)
-            val deadline = SystemClock.elapsedRealtime() + 5000
-            while (sample.get() == null && SystemClock.elapsedRealtime() < deadline) SystemClock.sleep(10)
-            return header to (sample.get() ?: throw AssertionError("Decoder did not forward the subtitle sample"))
-        } finally {
-            decoder.release()
-        }
+        sink.onFormat(Media3AssSample.codecPrivate(format.initializationData))
+        val (data, durationUs) = Media3AssSample.normalize("Dialogue: 0:00:00:00,0:00:10:00,$raw".toByteArray())
+        sink.onSample(data, 0L, durationUs)
+        return header to sample.get()
     }
 
     @Test

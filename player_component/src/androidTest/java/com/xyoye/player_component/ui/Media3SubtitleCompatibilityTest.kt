@@ -1,5 +1,7 @@
 package com.xyoye.player_component.ui
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.ImageFormat
 import android.graphics.PixelFormat
 import android.media.ImageReader
@@ -7,9 +9,14 @@ import android.net.Uri
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
+import android.view.View
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.text.Cue
 import androidx.media3.common.text.CueGroup
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
@@ -21,12 +28,20 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.xyoye.common_component.config.SubtitlePreferenceUpdater
+import com.xyoye.data_component.bean.VideoTrackBean
 import com.xyoye.data_component.enums.SubtitleViewType
+import com.xyoye.data_component.enums.TrackType
 import com.xyoye.data_component.media3.telemetry.subtitle.SubtitleOutputTarget
+import com.xyoye.player.controller.subtitle.SubtitleImageView
+import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.kernel.impl.media3.LibassAwareRenderersFactory
+import com.xyoye.player.kernel.impl.media3.LibassExtractorsFactory
+import com.xyoye.player.kernel.impl.media3.Media3MediaSourceHelper
 import com.xyoye.player.kernel.impl.media3.Media3SubtitleFrameDriver
 import com.xyoye.player.kernel.impl.media3.Media3SubtitleInput
 import com.xyoye.player.kernel.impl.media3.Media3VideoPlayer
+import com.xyoye.player.kernel.inter.VideoPlayerEventListener
 import com.xyoye.player.kernel.subtitle.SubtitleFrameDriver
 import com.xyoye.player.subtitle.backend.EmbeddedSubtitleSink
 import com.xyoye.player.subtitle.backend.LibassEmbeddedSubtitleSink
@@ -34,8 +49,10 @@ import com.xyoye.player.subtitle.backend.SwitchableEmbeddedSubtitleSink
 import com.xyoye.player.subtitle.gpu.AssGpuRenderer
 import com.xyoye.player.subtitle.gpu.LocalSubtitlePipelineApi
 import com.xyoye.player.subtitle.gpu.SubtitlePipelineController
+import com.xyoye.subtitle.MixedSubtitle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
@@ -46,12 +63,328 @@ import org.junit.runner.RunWith
 import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 @RunWith(AndroidJUnit4::class)
 class Media3SubtitleCompatibilityTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private lateinit var player: ExoPlayer
     private var videoCallback: SubtitleFrameDriver.Callback? = null
+
+    @Test
+    fun ordinaryTextSize_isIndependentOfAssFontScale() {
+        onMain {
+            val settings = PlayerInitializer.Subtitle
+            val oldScale = settings.fontScaleOffsetPercent
+            try {
+                settings.fontScaleOffsetPercent = 0
+                val view = SubtitleImageView(instrumentation.targetContext)
+                view.setSubtitle(listOf(Cue.Builder().setText("Native text size").build()))
+                val specWidth = View.MeasureSpec.makeMeasureSpec(640, View.MeasureSpec.EXACTLY)
+                val specHeight = View.MeasureSpec.makeMeasureSpec(360, View.MeasureSpec.EXACTLY)
+                view.measure(specWidth, specHeight)
+                view.layout(0, 0, 640, 360)
+                val before = Bitmap.createBitmap(640, 360, Bitmap.Config.ARGB_8888)
+                val after = Bitmap.createBitmap(640, 360, Bitmap.Config.ARGB_8888)
+                try {
+                    view.draw(Canvas(before))
+                    settings.fontScaleOffsetPercent = 200
+                    view.updateStyle()
+                    view.draw(Canvas(after))
+                    assertTrue("ASS scale must not resize native text", before.sameAs(after))
+                    val pixels = IntArray(640 * 360)
+                    before.getPixels(pixels, 0, 640, 0, 0, 640, 360)
+                    assertTrue("The fixture must render text", pixels.any { it != 0 })
+                } finally {
+                    before.recycle()
+                    after.recycle()
+                }
+            } finally {
+                settings.fontScaleOffsetPercent = oldScale
+            }
+        }
+    }
+
+    @Test
+    fun kernelDefaultMediaItemFactory_preservesClippingMetadataAndAssInput() {
+        val context = instrumentation.targetContext
+        val video = File(context.cacheDir, "default-factory-video.mkv")
+        instrumentation.context.assets.open("media3/subtitle-compatibility.mkv").use { source ->
+            video.outputStream().use { source.copyTo(it) }
+        }
+        val kernel = Media3VideoPlayer(context)
+        val sink = RecordingSink()
+        try {
+            onMain {
+                kernel.initPlayer()
+                kernel.setEmbeddedSubtitleSink(sink)
+                player = kernel.exoPlayerOrNull()!!
+                player.trackSelectionParameters =
+                    player.trackSelectionParameters
+                        .buildUpon()
+                        .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, true)
+                        .setSelectUndeterminedTextLanguage(true)
+                        .build()
+                player.setMediaItem(
+                    MediaItem
+                        .Builder()
+                        .setUri(Uri.fromFile(video))
+                        .setMediaId("clipped-item")
+                        .setMimeType(MimeTypes.VIDEO_MATROSKA)
+                        .setMediaMetadata(MediaMetadata.Builder().setTitle("Preserved title").build())
+                        .setClippingConfiguration(
+                            MediaItem.ClippingConfiguration
+                                .Builder()
+                                .setStartPositionMs(500)
+                                .setEndPositionMs(4500)
+                                .build()
+                        ).build()
+                )
+                player.prepare()
+                player.pause()
+            }
+            await { sink.samples.any { it.text.contains("Before seek") } }
+            assertEquals(-500_000L, sink.samples.first { it.text.contains("Before seek") }.timeUs)
+            onMain {
+                val item = player.currentMediaItem!!
+                assertEquals("clipped-item", item.mediaId)
+                assertEquals("Preserved title", item.mediaMetadata.title.toString())
+                assertEquals(500L, item.clippingConfiguration.startPositionMs)
+                assertEquals(4500L, item.clippingConfiguration.endPositionMs)
+                assertEquals(MimeTypes.VIDEO_MATROSKA, item.localConfiguration!!.mimeType)
+                assertEquals(null, player.playerError)
+            }
+        } finally {
+            onMain { kernel.release() }
+            video.delete()
+        }
+    }
+
+    @Test
+    fun externalAssSrtVttAndTtml_useRealTracksAndPreservePauseSpeedPositionAndQueue() {
+        val context = instrumentation.targetContext
+        val video = File(context.cacheDir, "external-track-video.mkv")
+        instrumentation.context.assets.open("media3/subtitle-compatibility.mkv").use { source ->
+            video.outputStream().use { source.copyTo(it) }
+        }
+        val kernel = Media3VideoPlayer(context)
+        val sink = RecordingSink()
+        val cues = CopyOnWriteArrayList<MixedSubtitle>()
+        val errors = CopyOnWriteArrayList<Exception?>()
+        val files = mutableListOf<File>()
+        try {
+            onMain {
+                kernel.setPlayerEventListener(
+                    object : VideoPlayerEventListener by VideoPlayerEventListener.NO_OP {
+                        override fun onSubtitleTextOutput(subtitle: MixedSubtitle) {
+                            cues.add(subtitle)
+                        }
+
+                        override fun onError(e: Exception?) {
+                            errors.add(e)
+                        }
+                    }
+                )
+                kernel.initPlayer()
+                player = kernel.exoPlayerOrNull()!!
+                player.trackSelectionParameters =
+                    player.trackSelectionParameters
+                        .buildUpon()
+                        .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, true)
+                        .setSelectUndeterminedTextLanguage(true)
+                        .build()
+                kernel.setEmbeddedSubtitleSink(sink)
+                kernel.setDataSource(video.path, null)
+                kernel.prepareAsync()
+                kernel.pause()
+                kernel.setSpeed(1.5f)
+            }
+            await { onMain { player.playbackState == Player.STATE_READY } }
+            onMain {
+                player.addMediaSource(Media3MediaSourceHelper.getMediaSource(video.path, mediaId = "queued-next"))
+                kernel.seekTo(1500)
+            }
+            await { onMain { player.playbackState == Player.STATE_READY && player.contentPosition == 1500L } }
+            val ass =
+                instrumentation.context.assets
+                    .open("media3/subtitle-compatibility.ass")
+                    .bufferedReader()
+                    .use { it.readText() }
+            val documents =
+                listOf(
+                    "srt" to "1\n00:00:00,000 --> 00:00:10,000\nExternal SRT\n\n",
+                    "vtt" to "WEBVTT\n\n00:00.000 --> 00:10.000 line:20% position:25%\nExternal VTT\n\n",
+                    "ttml" to
+                        "<tt xmlns=\"http://www.w3.org/ns/ttml\"><body><div><p begin=\"0s\" end=\"10s\">External TTML</p></div></body></tt>",
+                    "ass" to ass
+                )
+            for ((extension, content) in documents) {
+                val file =
+                    File(context.cacheDir, "external-track.$extension").also {
+                        it.writeText(content)
+                        files.add(it)
+                    }
+                cues.clear()
+                assertTrue(onMain { kernel.addTrack(VideoTrackBean.subtitle(file.path)) })
+                await { onMain { kernel.getTracks(TrackType.SUBTITLE).any { it.selected && it.name.contains(file.name) } } }
+                await { onMain { player.playbackState == Player.STATE_READY } }
+                onMain {
+                    val expectedMime =
+                        when (extension) {
+                            "srt" -> MimeTypes.APPLICATION_SUBRIP
+                            "vtt" -> MimeTypes.TEXT_VTT
+                            "ttml" -> MimeTypes.APPLICATION_TTML
+                            else -> MimeTypes.TEXT_SSA
+                        }
+                    assertEquals(expectedMime, kernel.getTracks(TrackType.SUBTITLE).single { it.selected }.subtitleMimeType)
+                    assertEquals(2, player.mediaItemCount)
+                    assertEquals("queued-next", player.getMediaItemAt(1).mediaId)
+                    assertEquals(1500L, player.contentPosition)
+                    assertEquals(false, player.playWhenReady)
+                    assertEquals(1.5f, player.playbackParameters.speed)
+                    assertEquals(1, kernel.getTracks(TrackType.SUBTITLE).count { it.selected })
+                }
+                val attachedItem = onMain { player.currentMediaItem }
+                val attachedTracks = onMain { kernel.getTracks(TrackType.SUBTITLE).size }
+                val duplicateCallbacks = AtomicInteger()
+                assertTrue(
+                    onMain {
+                        kernel.addTrack(VideoTrackBean.subtitle(Uri.fromFile(file).toString())) {
+                            duplicateCallbacks.incrementAndGet()
+                        }
+                    }
+                )
+                await { duplicateCallbacks.get() == 1 }
+                onMain {
+                    assertEquals("Adding the same resource must reuse its track", attachedTracks, kernel.getTracks(TrackType.SUBTITLE).size)
+                    assertEquals("An attached subtitle must not recreate playback", attachedItem, player.currentMediaItem)
+                }
+                if (extension == "ass") {
+                    await { sink.documents.any { it == content } }
+                } else {
+                    await { cues.any { subtitle -> subtitle.cues?.any { it.text.toString().contains("External") } == true } }
+                    if (extension == "vtt") {
+                        assertTrue(cues.any { subtitle -> subtitle.cues?.any { it.position == 0.25f && it.line == 0.2f } == true })
+                    }
+                    if (extension == "srt") {
+                        try {
+                            onMain {
+                                // The controller saves the preference before notifying its kernel.
+                                SubtitlePreferenceUpdater.persistOffset(-2500)
+                                kernel.setSubtitleOffset(-2500)
+                            }
+                            await { cues.lastOrNull()?.cues?.isEmpty() == true }
+                            await {
+                                onMain {
+                                    player.playbackState == Player.STATE_READY &&
+                                        kernel.getTracks(TrackType.SUBTITLE).any { it.selected && it.name.contains(file.name) }
+                                }
+                            }
+                            onMain { kernel.setSubtitleOffset(0) }
+                            await { cues.lastOrNull()?.cues?.any { it.text.toString().contains("External SRT") } == true }
+                            onMain { kernel.setSubtitleOffset(9000) }
+                            await { cues.lastOrNull()?.cues?.isEmpty() == true }
+                            await {
+                                onMain {
+                                    player.playbackState == Player.STATE_READY &&
+                                        kernel.getTracks(TrackType.SUBTITLE).any { it.selected && it.name.contains(file.name) }
+                                }
+                            }
+                        } finally {
+                            onMain { kernel.setSubtitleOffset(0) }
+                        }
+                        await { cues.lastOrNull()?.cues?.any { it.text.toString().contains("External SRT") } == true }
+                        onMain {
+                            assertEquals(1500L, player.contentPosition)
+                            assertEquals(false, player.playWhenReady)
+                            assertEquals(1.5f, player.playbackParameters.speed)
+                            assertEquals(2, player.mediaItemCount)
+                            assertEquals("queued-next", player.getMediaItemAt(1).mediaId)
+                        }
+                    }
+                }
+            }
+            val activeItem = onMain { player.currentMediaItem }
+            val selectedTrack = onMain { kernel.getTracks(TrackType.SUBTITLE).single { it.selected } }
+            val jobField = Media3VideoPlayer::class.java.getDeclaredField("subtitleLoadJob").apply { isAccessible = true }
+            val invalid =
+                File(context.cacheDir, "invalid-subtitle.srt").also {
+                    it.writeText("no subtitle cues")
+                    files.add(it)
+                }
+            val callbacks = AtomicInteger()
+            val invalidJob =
+                onMain {
+                    assertTrue(kernel.addTrack(VideoTrackBean.subtitle(invalid.path)) { callbacks.incrementAndGet() })
+                    jobField.get(kernel) as? Job
+                }
+            runBlocking { invalidJob?.join() }
+            onMain {
+                assertEquals(activeItem, player.currentMediaItem)
+                assertEquals(selectedTrack.id, kernel.getTracks(TrackType.SUBTITLE).single { it.selected }.id)
+            }
+            repeat(20) {
+                val cancelledJob =
+                    onMain {
+                        assertTrue(kernel.addTrack(VideoTrackBean.subtitle(files.first().path)) { callbacks.incrementAndGet() })
+                        val job = jobField.get(kernel) as? Job
+                        kernel.selectTrack(selectedTrack)
+                        job
+                    }
+                runBlocking { cancelledJob?.join() }
+            }
+            onMain {
+                assertEquals(activeItem, player.currentMediaItem)
+                assertEquals(selectedTrack.id, kernel.getTracks(TrackType.SUBTITLE).single { it.selected }.id)
+                assertEquals(1500L, player.contentPosition)
+                assertEquals(false, player.playWhenReady)
+                assertEquals(1.5f, player.playbackParameters.speed)
+                assertEquals(2, player.mediaItemCount)
+            }
+            assertEquals(0, callbacks.get())
+            assertTrue("subtitle additions must not fail playback: $errors", errors.isEmpty())
+        } finally {
+            onMain { kernel.release() }
+            video.delete()
+            files.forEach { it.delete() }
+        }
+    }
+
+    @Test
+    fun zlibAndPlainMkv_selectTheActualSimplifiedAndTraditionalAssTracks() {
+        for (asset in listOf("subtitle-plain.mkv", "subtitle-zlib-explicit.mkv", "subtitle-zlib-default.mkv")) {
+            val sink = RecordingSink()
+            withPlayer(sink, false, fixtureAsset = asset) { player ->
+                await { sink.samples.any { it.text.contains("简体") } }
+                assertTrue(sink.samples.all { !it.text.contains("繁體") })
+                instrumentation.runOnMainSync {
+                    player.pause()
+                    val (traditional, trackIndex) =
+                        player.currentTracks.groups
+                            .flatMap { group ->
+                                if (group.type != C.TRACK_TYPE_TEXT) emptyList() else (0 until group.length).map { group to it }
+                            }.first { (group, index) ->
+                                group
+                                    .getTrackFormat(index)
+                                    .label
+                                    .orEmpty()
+                                    .contains("CHT")
+                            }
+                    sink.samples.clear()
+                    player.trackSelectionParameters =
+                        player.trackSelectionParameters
+                            .buildUpon()
+                            .setOverrideForType(TrackSelectionOverride(traditional.mediaTrackGroup, trackIndex))
+                            .build()
+                }
+                await { sink.samples.any { it.text.contains("繁體") } }
+                assertTrue(sink.samples.all { !it.text.contains("简体") })
+                val first = sink.samples.first { it.text.contains("Before seek") }
+                assertEquals(0L, first.timeUs)
+                assertEquals(1_000_000L, first.durationUs)
+            }
+        }
+    }
 
     @Test
     fun realExtractorDecoderAndGpu_renderPixelsAfterSeekVisibilityAndSurfaceRecreation() {
@@ -91,7 +424,7 @@ class Media3SubtitleCompatibilityTest {
         try {
             renderer.bindSurface("embedded-pixels", firstOutput.surface, target)
             awaitPixels(firstOutput, visible = false)
-            withPlayer(input.createDecoderSink()!!, parseSubtitles = false) { player ->
+            withPlayer(sink, parseSubtitles = false, subtitleInput = input) { player ->
                 await { observed.samples.any { it.text.contains("Before seek") } }
                 renderer.renderFrame(500_000)
                 awaitPixels(firstOutput, visible = true)
@@ -190,10 +523,15 @@ class Media3SubtitleCompatibilityTest {
         instrumentation.runOnMainSync { kernel.setEmbeddedSubtitleSink(sink) }
         try {
             withPlayer(sink, false, sourceTransform = { source ->
-                val factory =
+                val firstFactory =
                     ProgressiveMediaSource.Factory(
                         DefaultDataSource.Factory(instrumentation.targetContext),
-                        DefaultExtractorsFactory().experimentalSetTextTrackTranscodingEnabled(false)
+                        LibassExtractorsFactory(firstFonts, first)
+                    )
+                val secondFactory =
+                    ProgressiveMediaSource.Factory(
+                        DefaultDataSource.Factory(instrumentation.targetContext),
+                        LibassExtractorsFactory(secondFonts, second)
                     )
                 player.addListener(
                     object : Player.Listener {
@@ -206,13 +544,13 @@ class Media3SubtitleCompatibilityTest {
                     }
                 )
                 ConcatenatingMediaSource(
-                    factory.createMediaSource(
+                    firstFactory.createMediaSource(
                         source.mediaItem
                             .buildUpon()
                             .setTag(first)
                             .build()
                     ),
-                    factory.createMediaSource(
+                    secondFactory.createMediaSource(
                         source.mediaItem
                             .buildUpon()
                             .setTag(second)
@@ -441,11 +779,13 @@ class Media3SubtitleCompatibilityTest {
         onCues: (List<String>) -> Unit = {},
         sourceTransform: (MediaSource) -> MediaSource = { it },
         videoFrames: MutableList<Long>? = null,
+        subtitleInput: Media3SubtitleInput? = null,
+        fixtureAsset: String = "subtitle-compatibility.mkv",
         verify: (ExoPlayer) -> Unit
     ) {
         val context = instrumentation.targetContext
         val fixture = File(context.cacheDir, "media3-subtitle-compatibility.mkv")
-        instrumentation.context.assets.open("media3/subtitle-compatibility.mkv").use { input ->
+        instrumentation.context.assets.open("media3/$fixtureAsset").use { input ->
             fixture.outputStream().use { input.copyTo(it) }
         }
         var videoOutput: ImageReader? = null
@@ -456,7 +796,7 @@ class Media3SubtitleCompatibilityTest {
                     ExoPlayer
                         .Builder(context)
                         .setRenderersFactory(
-                            LibassAwareRenderersFactory(context, embeddedSinkAvailable = { sink != null }, embeddedSinkProvider = { sink })
+                            LibassAwareRenderersFactory(context)
                         ).build()
                 player.trackSelectionParameters =
                     player.trackSelectionParameters
@@ -497,13 +837,22 @@ class Media3SubtitleCompatibilityTest {
                         }
                     }
                 )
+                val input = subtitleInput ?: Media3SubtitleInput()
+                val fonts = input.beginMedia()
+                input.setSink(sink)
                 player.setMediaSource(
                     sourceTransform(
                         ProgressiveMediaSource
                             .Factory(
                                 DefaultDataSource.Factory(context),
-                                DefaultExtractorsFactory().experimentalSetTextTrackTranscodingEnabled(parseSubtitles)
-                            ).createMediaSource(MediaItem.fromUri(Uri.fromFile(fixture)))
+                                if (parseSubtitles) DefaultExtractorsFactory() else LibassExtractorsFactory(fonts, input)
+                            ).createMediaSource(
+                                MediaItem
+                                    .Builder()
+                                    .setUri(Uri.fromFile(fixture))
+                                    .setTag(input)
+                                    .build()
+                            )
                     )
                 )
                 player.prepare()
@@ -530,6 +879,12 @@ class Media3SubtitleCompatibilityTest {
         assertTrue("Media3 did not deliver the expected subtitle within 10 seconds", condition())
     }
 
+    private fun <T> onMain(block: () -> T): T {
+        val result = AtomicReference<T>()
+        instrumentation.runOnMainSync { result.set(block()) }
+        return result.get()
+    }
+
     private class RecordingSink : EmbeddedSubtitleSink {
         @Volatile var codecPrivate: String? = null
         val samples = CopyOnWriteArrayList<Sample>()
@@ -537,10 +892,12 @@ class Media3SubtitleCompatibilityTest {
         val releases = AtomicInteger()
         val formats = AtomicInteger()
         val fonts = CopyOnWriteArrayList<String>()
+        val documents = CopyOnWriteArrayList<String>()
 
         override fun onMediaChanged() {
             fonts.clear()
             samples.clear()
+            documents.clear()
         }
 
         override fun onFont(
@@ -553,6 +910,13 @@ class Media3SubtitleCompatibilityTest {
         override fun onFormat(codecPrivate: ByteArray?) {
             formats.incrementAndGet()
             this.codecPrivate = codecPrivate?.toString(Charsets.UTF_8)
+        }
+
+        override fun onDocument(
+            data: ByteArray,
+            timeOffsetUs: Long
+        ) {
+            documents.add(data.toString(Charsets.UTF_8))
         }
 
         override fun onSample(

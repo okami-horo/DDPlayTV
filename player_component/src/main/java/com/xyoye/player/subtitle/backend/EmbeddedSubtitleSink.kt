@@ -16,6 +16,11 @@ interface EmbeddedSubtitleSink {
 
     fun onFormat(codecPrivate: ByteArray?)
 
+    fun onDocument(
+        data: ByteArray,
+        timeOffsetUs: Long = 0L
+    ) = Unit
+
     fun onSample(
         data: ByteArray,
         timeUs: Long,

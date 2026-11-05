@@ -38,30 +38,37 @@ class SubtitleController(
 
     override fun updateTextSize() {
         subtitleTextView.updateTextSize()
+        subtitleImageView.updateStyle()
     }
 
     override fun updateStrokeWidth() {
         subtitleTextView.updateStrokeWidth()
+        subtitleImageView.updateStyle()
     }
 
     override fun updateTextColor() {
         subtitleTextView.updateTextColor()
+        subtitleImageView.updateStyle()
     }
 
     override fun updateStrokeColor() {
         subtitleTextView.updateStrokeColor()
+        subtitleImageView.updateStyle()
     }
 
     override fun updateAlpha() {
         subtitleTextView.updateAlpha()
+        subtitleImageView.updateStyle()
     }
 
     override fun updateVerticalOffset() {
         subtitleTextView.updateVerticalOffset()
+        subtitleImageView.updateStyle()
     }
 
     override fun updateShadow() {
         subtitleTextView.updateShadow()
+        subtitleImageView.updateStyle()
     }
 
     override fun toggleSubtitleVisible() {
@@ -106,6 +113,11 @@ class SubtitleController(
     }
 
     private fun applySubtitle(subtitle: MixedSubtitle) {
+        subtitle.cues?.let {
+            subtitleTextView.setSubtitle(null)
+            subtitleImageView.setSubtitle(it)
+            return
+        }
         when (subtitle.type) {
             SubtitleType.TEXT -> {
                 // 显示文字字幕前，清空图片字幕
