@@ -395,7 +395,7 @@ class AssGpuRenderer(
             LogFacade.d(
                 LogModule.PLAYER,
                 TAG,
-                "frame contentUs=${request.contentTimeUs} revision=${request.stateRevision} queueUs=$queueUs targetNs=${request.targetPresentTimeNs} targetDeltaUs=$targetDeltaUs presentation=immediate submitted=${result.submitted} assImages=${result.imageCount} cpuLayoutMs=${result.renderLatencyMs} cpuUploadMs=${result.uploadLatencyMs} cpuDrawSwapMs=${result.compositeLatencyMs}"
+                "frame contentUs=${request.contentTimeUs} revision=${request.stateRevision} queueUs=$queueUs targetNs=${request.targetPresentTimeNs} targetDeltaUs=$targetDeltaUs presentation=immediate submitted=${result.submitted} assImages=${result.imageCount} atlasPages=${result.atlasPages} draws=${result.drawCalls} binds=${result.textureBinds} uploadBytes=${result.uploadedBytes} textureBytes=${result.textureBytes} stagingBytes=${result.stagingBytes} cpuLayoutMs=${result.renderLatencyMs} cpuPackMs=${result.packLatencyMs} cpuUploadMs=${result.uploadLatencyMs} cpuDrawSwapMs=${result.compositeLatencyMs}"
             )
         }
 

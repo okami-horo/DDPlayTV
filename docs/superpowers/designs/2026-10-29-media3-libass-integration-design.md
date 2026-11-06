@@ -1,6 +1,6 @@
 # Media3 应用 libass 接入完善设计
 
-初稿：2026-10-29。实施更新：2026-10-30。状态：**时间、字体作用域、完整帧请求及几何/资源防线已实现；验证和剩余设备验收见[实施账本](../plans/2026-10-30-media3-libass.md)**。精确呈现、atlas、线程拆分及预热仍按测量门槛决定是否启用。
+初稿：2026-10-29。基础实施：2026-10-30；Atlas 更新：2026-11-05。**时间、字体作用域、完整帧请求及几何/资源防线已实现，基础验证见[实施账本](../plans/2026-10-30-media3-libass.md)；Atlas 图集与合批已实施并完成本地对照验证，见[实施记录](../plans/2026-11-04-media3-subtitle-hardening.md#atlas-rendering-implementation-2026-11-05)。** Atlas 的收益只在所列模拟器测得，物理电视性能未测；精确呈现、线程拆分及预热保持未启用。下文早期基线按原日期保留，当前管线以维护说明及最新实施记录为准。
 
 本设计仅完善 **Media3 的应用 libass 管线**。mpv 已由固定 Plezy AAR 负责字幕解析、字体、时钟与原生 OSD，不再向应用 libass 转交 ASS 事件；正文中的旧共享管线、应用时钟、字体提取缺口及位图切内核要求已移除。mpv 在本文中只作为现有边界与共用控制／Surface 变更的回归对象，实施和历史验证见[原生字幕记录](../plans/2026-10-29-mpv-native-subtitles.md)。
 
@@ -43,13 +43,13 @@ Jellyfin 使用视频 SurfaceView 和独立 ASS TextureView；DDPlayTV 使用独
 
 | 当前入口 | 已有能力 | 本设计关注的差异 |
 | --- | --- | --- |
-| [Media3VideoPlayer](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3VideoPlayer.kt)、[LibassAwareRenderersFactory](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassAwareRenderersFactory.kt) | 官方 Media3 视频链路；自定义 legacy ASS decoder，避免普通 Cue 重复输出 | 评估原始事件与字体的适配出口，保持 Media3 依赖集中 |
-| [LibassSsaStreamDecoder](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoder.kt)、[LibassTimelineRenderer](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassTimelineRenderer.kt) | 原始事件/duration、公开 stream/period/window 映射，已移除 `1e12 us` 猜测 | 保留 Media3 legacy decoder API 耦合；升级时重新验证 |
+| [Media3VideoPlayer](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3VideoPlayer.kt)、[LibassAwareRenderersFactory](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassAwareRenderersFactory.kt) | 官方 Media3 视频链路；提取阶段接入原始 ASS，避免普通 Cue 重复输出 | 评估原始事件与字体的适配出口，保持 Media3 依赖集中 |
+| [LibassSubtitleExtractorOutput](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassSubtitleExtractorOutput.kt)、[LibassTimelineRenderer](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassTimelineRenderer.kt) | 原始事件/duration、公开 stream/period/window 映射，已移除 `1e12 us` 猜测 | 公开 ExtractorOutput/TrackOutput 与时序适配；升级时重新验证 |
 | [Media3SubtitleFrameDriver](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3SubtitleFrameDriver.kt)、[SubtitleFrameDriver](../../../player_component/src/main/java/com/xyoye/player/kernel/subtitle/SubtitleFrameDriver.kt) | 内容微秒、可选目标纳秒、随视频 Format 的 period 标记；metadata 超时后位置驱动 | 仅立即提交，未宣称精确呈现；tunneling 的真实设备路径仍需单独验收 |
 | [MpvSubtitleRendererBackend](../../../player_component/src/main/java/com/xyoye/player/subtitle/backend/MpvSubtitleRendererBackend.kt)、[MpvNativeBridge](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/mpv/MpvNativeBridge.kt) | 原生内嵌／外挂字幕、独立 OSD Surface 与加载所有权；mpv 不再实现应用字幕 `SubtitleKernelBridge` | 保留现有边界；不接入本文的应用时钟、字体注册、帧请求或 GL 调度 |
 | [LibassGpuSubtitleSession](../../../player_component/src/main/java/com/xyoye/player/subtitle/backend/LibassGpuSubtitleSession.kt)、[AssGpuRenderer](../../../player_component/src/main/java/com/xyoye/player/subtitle/gpu/AssGpuRenderer.kt) | 内外轨仲裁、FIFO 命令、不可变帧快照、状态与 Surface 失效、释放和受控恢复 | 单渲染线程与立即提交；不提前引入多槽和双线程 |
 | [LibassMatroskaExtractor](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/LibassMatroskaExtractor.kt)、[Media3SubtitleInput](../../../player_component/src/main/java/com/xyoye/player/kernel/impl/media3/Media3SubtitleInput.kt) | 公开 EBML 扩展点、媒体独立字体和样本缓存，支持预加载及旧输入隔离 | 字体 guardrail 为单份 16 MiB/媒体累计 32 MiB，尚未由代表性 TV 样本定型 |
-| [ass_gpu_bridge.cpp](../../../player_component/src/main/cpp/ass_gpu_bridge.cpp) | GLES 2／3、字体注册、真实 storage/PAR/旋转、静态复用、64 MiB 覆盖纹理预算及完整帧拒绝 | 逐 ASS_Image 上传／绘制；无实际 presentation timestamp，缓存显式采用 libass 默认值 |
+| [ass_gpu_bridge.cpp](../../../player_component/src/main/cpp/ass_gpu_bridge.cpp) | GLES 2／3、字体注册、真实 storage/PAR/旋转、静态复用、64 MiB 覆盖纹理预算及完整帧拒绝 | 有序多页 Atlas 合批，容量/精度不适用时保留逐图像路径；无实际 presentation timestamp，缓存显式采用 libass 默认值 |
 | [SubtitleSurfaceOverlay](../../../player_component/src/main/java/com/xyoye/player/subtitle/ui/SubtitleSurfaceOverlay.kt) | 两个后端分别使用的透明 SurfaceView 容器，对齐视频 View，surface 有序解绑／重建 | Media3 需分离源视频、栅格和显示尺寸；共用容器的几何／生命周期改动须回归两后端；全窗口字幕属于后续产品选择 |
 
 已有显隐、清轨、GLES 2、加载结果与恢复修复继续有效。静态内容已有 `change == 0 && !pending_invalidate` 复用，不能重复列为缺失能力。未显式配置 libass cache limit 也不代表 libass 没有默认缓存限制。
@@ -262,7 +262,7 @@ A1 与 B 的正确性优先，A2 字体出口不与精确呈现调度互相阻�
 
 ### 12.3 测量方法
 
-复用现有 [LibassSsaStreamDecoderTest](../../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/LibassSsaStreamDecoderTest.kt)、[LibassGpuRenderingTest](../../../player_component/src/androidTest/java/com/xyoye/player_component/ui/LibassGpuRenderingTest.kt)、[Media3SubtitleCompatibilityTest](../../../player_component/src/androidTest/java/com/xyoye/player_component/ui/Media3SubtitleCompatibilityTest.kt)，按行为缺口增加用例。JVM sink 断言不替代 native 像素；native 像素也不替代真实呈现时序。
+复用现有 [Media3AssSampleTest](../../../player_component/src/test/java/com/xyoye/player/kernel/impl/media3/Media3AssSampleTest.kt)、[LibassGpuRenderingTest](../../../player_component/src/androidTest/java/com/xyoye/player_component/ui/LibassGpuRenderingTest.kt)、[Media3SubtitleCompatibilityTest](../../../player_component/src/androidTest/java/com/xyoye/player_component/ui/Media3SubtitleCompatibilityTest.kt)，并以 [AssAtlasRenderingTest](../../../player_component/src/androidTest/java/com/xyoye/player_component/ui/AssAtlasRenderingTest.kt)覆盖图集像素、合批及资源行为。JVM sink 断言不替代 native 像素；native 像素也不替代真实呈现时序。
 
 已有 [MpvSurfaceLifecycleTest](../../../player_component/src/androidTest/java/com/xyoye/player_component/ui/MpvSurfaceLifecycleTest.kt) 已包含原生 OSD 像素、字幕控制、外挂加载／取消和视频／字幕双 Surface 重建，不再是仅视频出帧测试。其暂停重建用例比较实际稳定的媒体位置，不以低帧率素材的 seek 请求值代替实际落点。既有通过记录见[mpv 执行账本](../plans/2026-10-29-mpv-native-subtitles.md)；它不替代 Media3 组合重建用例、精确呈现时序或完整字体／位图矩阵。
 

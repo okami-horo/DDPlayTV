@@ -395,9 +395,15 @@ UI、Off 隐藏并保留选中轨、CHS/CHT 命名、既有设置和 mpv 原生�
 
 ## 待办：参考 Plezy 升级 Atlas 字幕渲染管线（2026-11-04）
 
-- [ ] 参考 Plezy 的 Atlas 设计，评估并升级 Media3/libass 当前逐图像纹理绘制路径，通过图集与合批减少纹理切换和绘制调用，并验证实际收益。
+- [x] 参考 Plezy 的 Atlas 设计，评估并升级 Media3/libass 当前逐图像纹理绘制路径，通过图集与合批减少纹理切换和绘制调用，并验证实际收益。
 
-**状态：用户要求记录为待办，尚未实施。** 参考入口为固定 Plezy 提交的 [AssSubtitleAtlasPipeline.kt](https://github.com/edde746/plezy/blob/1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5/android/libass/src/main/java/com/edde746/plezy/libass/media/widget/AssSubtitleAtlasPipeline.kt)；实施前需读取对应图集打包、GL 合成和资源管理源码。现有 [Atlas 正确性与测量门槛](../designs/2026-10-29-media3-libass-integration-design.md#9-atlas-采用条件与正确性)继续适用，不能将预期效率写成已有实测结果。
+2026-11-05：用户已授权完成本项，实现及本地验证完成。基线为 `ba9d6d045`、干净工作区；本轮证据目录为 `.tmp/atlas-rendering/`。先给现有路径增加测量和测试控制，再取得优化前数据，随后实现并用同一设备对比。实施范围不包含压缩字幕容错或原片故障修复；仅使用任务模拟器，不操作物理电视。
+
+1. 基线与参考：核对固定 Plezy 提交的 `AssPack.c/.h`、`AssKt.c` 和 `AssSubtitleAtlasPipeline.kt`，记录当前布局、上传、绘制/提交、纹理切换和资源峰值。
+2. 有界图集：在现有串行 native 线程内按原合成顺序打包，以顶点携带颜色合批；复制边缘像素保持线性采样，超出图集容量时保留受预算约束的逐图像路径，不丢弃字幕。
+3. 验证：GLES 2/3 逐通道对照、多页/扩容/同时间重绘/透明度/Surface/换媒体回归，实际性能和资源比较；构建、lint、JVM、播放器集成及 DPAD 冒烟分别记录。
+
+**状态：2026-11-05 实现及本地验证完成；像素、性能、资源与验证范围见[实施记录](#atlas-rendering-implementation-2026-11-05)。** 参考入口为固定 Plezy 提交的 [AssSubtitleAtlasPipeline.kt](https://github.com/edde746/plezy/blob/1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5/android/libass/src/main/java/com/edde746/plezy/libass/media/widget/AssSubtitleAtlasPipeline.kt)；实施前已读取对应图集打包、GL 合成和资源管理源码。现有 [Atlas 正确性与测量门槛](../designs/2026-10-29-media3-libass-integration-design.md#9-atlas-采用条件与正确性)继续适用，不能将模拟器结果扩大为物理电视收益。
 
 实施边界与验收：
 
@@ -465,3 +471,66 @@ verifyModuleDependencies -I .tmp/subtitle-feature-fixes/scoped-format.gradle
 本轮仅构建和安装模拟器 Debug，没有修改版本、打包 Release、安装电视、暂存或提交；16:45 的电视 Release 不包含本轮三项修复。普通 Cue 偏移仍可能短暂缓冲；原生描边/阴影能力限制保留。跨集语义偏好、文字/位图几何、压缩块容错、Atlas 未随本轮实施，原 115 视频的根因与用户复测仍未关闭。截图和测试日志不加入 Git。
 
 文档收尾：五份相关文档的 174 个本地链接、64 个锚点引用均存在，显式锚点无重复，见 `doc-links-final.json`；`git diff --check` 通过，暂存区为空。再次只读复查确认任务模拟器进程与私有端口监听均为 0。
+
+<a id="atlas-rendering-implementation-2026-11-05"></a>
+
+## Atlas 图集与合批实施（2026-11-05）
+
+用户要求完成既有 Atlas 待办。本轮基于 `ba9d6d045`；进入时工作区干净。仅改应用 Media3/libass 绘制、测量及相关测试，mpv、提取器、时钟、字体输入、选轨与现有恢复所有权保持。任务模拟器为 API 34 / `emulator-5576`，私有 ADB `5095`，SwiftShader 与 ARM64 translation；原始证据保留在忽略的 `.tmp/atlas-rendering/`。
+
+### 参考映射与实现
+
+参考 Plezy 固定提交 `1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5` 的 `AssSubtitleAtlasPipeline.kt`、`AssKt.c` 与本轮实际读取的 [AssPack.c](https://github.com/edde746/plezy/blob/1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5/android/libass/src/main/cpp/AssPack.c) / [AssPack.h](https://github.com/edde746/plezy/blob/1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5/android/libass/src/main/cpp/AssPack.h)：借鉴顶点携带颜色、连续合成区间装页、每页上传/绘制和强制重绘的职责，不复制其双线程、槽位、精确呈现、推测、预热或默认大缓冲。
+
+- [ass_atlas.h](../../../player_component/src/main/cpp/ass_atlas.h) 使用顺序 shelf 打包，页数单调递增，最多四页。页宽按面积/最宽图像选择，页高按实际占用取整，默认边长不超过 2048 或实际 GL 限制；原链表绘制顺序不变。
+- [ass_gpu_bridge.cpp](../../../player_component/src/main/cpp/ass_gpu_bridge.cpp) 复用一个 CPU 页缓冲和一份顶点流，每页一次纹理上传与 draw，整帧一次顶点上传。复制四周一像素边缘，保留 stride、原颜色/覆盖率/逐图像透明度、旋转、偏移及裁剪。
+- 超过图集页数、加边缘后尺寸不合适、单图像及 GLES 2 缺少足够 fragment highp 时保留原逐图像路径，继续受 64 MiB/4096 图像/GL 尺寸防线约束；不截断内容，不引入 RGBA 合成语义变化。
+- 首次、扩容、内容变化、样式/几何与 Surface 失效均重新填充；`changed == 0` 且当前内容有效时继续复用。换媒体释放 CPU 页/顶点/布局缓存和原字体/轨道/纹理，JNI 前后版本检查及串行线程保持。
+- [AssGpuNativeBridge](../../../player_component/src/main/java/com/xyoye/player/subtitle/gpu/AssGpuNativeBridge.kt) 增加 pack、draw/bind、上传字节、纹理/staging、页数与 GLES 统计。测试控制仅供附着 Surface 前选择对照路径/缩小页/指定 GLES，无产品设置或持久化。pack 成本纳入现有节流预算；没有改变节流参数。
+
+### 已取得的对照数据
+
+`baseline-build.log` 尾部为 **BUILD SUCCESSFUL in 7m 4s**。优化前仅加入测量/测试控制的 APK 已单独保存；`baseline-tests.log` 的三项检查中，benchmark 通过，另两项分别在“必须合批”和“必须多页”处失败，确认检测到了原路径的缺口。
+
+第一轮实现的五项检查通过，多页夹具因实际图像尺寸使其超过四页而进入正确回退，测试准备修正为能装入三页的小页夹具，后续该项通过。第一轮测量还显示逐字节清空 staging 的成本，改为 `memset` 后重新构建和测量；没有用删除内容换性能。
+
+以下为最终 native 代码的同包对照；每组 180 帧、前 30 帧预热，后 150 帧全部为实际提交。素材包含中文移动对白、动画/卡拉 OK，以及 180 个半透明交叠图像。测试时未并行运行 Gradle；相同设备、字体、640×360 输出、时间序列和透明度。耗时为 `renderFrame()` CPU 调用中位数，包含排版/打包/上传/draw/swap，不是 GPU 完成或实际呈现时序。
+
+| 素材 | GLES | 原路径 → Atlas draw/bind | 原路径 → Atlas 耗时 | 降幅 |
+| --- | --- | --- | --- | --- |
+| 移动对白 | 2 | 3 → 1 | 1.190 → 0.792 ms | 33.4% |
+| 卡拉 OK | 2 | 9 → 1 | 3.089 → 2.296 ms | 25.7% |
+| 密集叠加 | 2 | 180 → 1 | 14.892 → 6.299 ms | 57.7% |
+| 移动对白 | 3 | 3 → 1 | 3.168 → 0.860 ms | 72.9% |
+| 卡拉 OK | 3 | 9 → 1 | 9.078 → 2.211 ms | 75.6% |
+| 密集叠加 | 3 | 180 → 1 | 14.678 → 6.184 ms | 57.9% |
+
+原始逐帧数据为 `baseline-benchmark.json`、`atlas-benchmark-first.json` 和 `atlas-benchmark-final.json`。最终 Atlas pack 中位数为 0.025–0.040 ms（对白/卡拉 OK）与 0.352–0.359 ms（密集叠加）；上传分别约 0.112–0.126 ms 和 0.465–0.477 ms。图集增加上传/分配面积：对白纹理峰值由 32,207 增至 65,536 字节，卡拉 OK 由 41,079 增至 65,536 字节，密集叠加由 552,960 增至 1,048,576 字节。密集样本 CPU staging 为 1,087,256 字节，含一页像素、顶点和布局容量。纹理统计不含 VBO/驱动/libass；每个图像 192 字节的 VBO 数据继续受 4096 图像上限约束。
+
+GLES 2/3 像素回归对比 RGBA 全通道，容差 2/255；覆盖交叠、描边/阴影、中文、动画、卡拉 OK、透明度、多页、小页回退、同时间重绘及 Surface 重建。已实际查看 `pixel-comparison.png` 的原路径/Atlas 对照，GLES 3 三个主要样本最大通道差分别为 0、1、2/255，没有位置、层叠或内容差异。旋转 0/90/180/270、非方形像素、缩放与垂直偏移的逐像素回归亦通过。原始 PNG 位于 `pixels/`。
+
+### 最终验证与边界
+
+最终 Gradle 调用经已有 `.tmp/watch-history/gradle.ps1` 使用本地 wrapper 和进程级环境，不改仓库构建配置：
+
+```text
+testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest lint
+:player_component:ktlintCheck verifyModuleDependencies
+-I .tmp/atlas-rendering/scoped-format.gradle
+-Pkotlin.compiler.execution.strategy=in-process --offline --console=plain --continue
+```
+
+| 范围 | 结果与证据 |
+| --- | --- |
+| 构建与静态检查 | `verification.log` 尾部为 **`BUILD SUCCESSFUL in 7m 39s`**，1117 项任务；Debug 应用、根 `lint` 和模块依赖治理通过，native 同时构建 ARM64/ARM32。ktlint 定域于本轮修改的 Kotlin 文件，不代表全仓格式检查；播放器测试 APK 的最终构建记录 `atlas-focused-build.log` 同样为 `BUILD SUCCESSFUL` |
+| JVM | `junit-summary.json` 按当前包含模块汇总 XML：**536 项，534 通过、2 项既有跳过，0 failures/errors**；播放器 178 项全部通过，新增回归确认打包成本计入现有节流预算 |
+| GLES 与播放器 | `player-final.log` 为 **`OK (37 tests)`**，其中 7 项新 Atlas 用例；覆盖 GLES 2/3 画面与合批、多页/回退、旋转/PAR/缩放/偏移、整帧预算拒绝与恢复、seek/字体/Surface/媒体清理，以及已有 Media3/mpv 字幕和时钟契约 |
+| 循环与释放 | 每个 GLES 执行 3 轮、每轮 1800 帧、16 ms 节奏，并反复 seek/调整字体。`atlas-resource-cycles-final.json` 的六轮纹理峰值均为 65,536 字节，CPU staging 均为 67,736 字节；释放断言通过。native heap 快照约 23.735–23.747 MB，无单调增长；进程 PSS 快照约 221–227 MB。这些是所列循环与快照，不能据此宣称数小时播放或进程峰值内存已验证 |
+| 真实视频掉帧 | `atlas-video-drops.json` 的 GLES 2/3 × 两条路径各运行 8 秒，均解码并以视频驱动 16 帧字幕，视频掉帧均为 0。夹具本身帧率低，不能据此宣称高帧率/4K 播放掉帧改善 |
+| 应用与 DPAD | `app-final.log` 为 **`OK (6 tests)`**：真实 Media3 ASS 像素、弹幕层、DPAD/暂停/BACK/双 Surface 重建，mpv 原生字幕与设置/返回，以及四项设置持久化/重建回归。合计 43 项设备用例通过 |
+| 最终包冒烟与画面 | ARM64 Debug `4.2.7-debug / 74` SHA-256 为 `ff35eabdad263370f9827801992eec536538a7a75f912ed619bc9fb03998dd33`。实际查看 Media3/mpv 字幕截图及启动/媒体库/BACK 截图，1440×810 / 240dpi，字幕与焦点可见；冷启动后纯 DPAD 进入媒体库、返回导航项并退出，`smoke-exit.txt` 确认 Launcher 恢复 |
+| 环境清理 | `cleanup-status.json` 记录 **2026-11-05 11:59:53 +08:00**：任务模拟器 5576 及私有 ADB 5095 已关闭，对应进程和 5576/5577/5095 监听均为 0；未重置默认 ADB 或访问物理电视 |
+
+本轮没有修改版本、打包 Release、安装电视、暂存或提交；电视现有 Release 不含本轮 Atlas。当前收益只代表所列 API 34 模拟器，图集内存/上传面积代价见上表，不代表物理电视 SoC、PQ/HDR 或原 115 视频已经验收。压缩字幕局部容错仍是独立未实施待办；精确呈现、线程拆分和预热保持未启用。
+
+文档收尾：同步维护说明、设计导航、历史状态提示与 memory，Atlas 待办已勾选完成。初次链接检查发现设计文档两处已删除旧 decoder 的链接，已映射到当前提取器和样本回归。最终八份文档的 268 个本地链接、73 个锚点引用均存在，显式锚点无重复，UTF-8 与尾随空白检查通过，见 `doc-links-final.json`；`git diff --check` 通过，暂存区为空。

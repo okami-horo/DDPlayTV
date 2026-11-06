@@ -6,9 +6,13 @@
 
 问题由来与历史修复见 [libass 接入审查](libass-integration-audit.md)。Media3 已补齐 MKV 字体附件、公开时间映射、媒体/轨道作用域、完整帧请求与几何/资源防线，验证命令及范围见[实施账本](../../docs/superpowers/plans/2026-10-30-media3-libass.md)。目标 GLES 2 电视、复杂字幕矩阵与长期资源曲线仍未关闭。
 
-职责、契约与测量门槛见[接入完善设计](../../docs/superpowers/designs/2026-10-29-media3-libass-integration-design.md)。当前使用单渲染线程、逐图像纹理与立即提交；精确呈现、atlas、线程拆分和预热均未启用。
+职责、契约与测量门槛见[接入完善设计](../../docs/superpowers/designs/2026-10-29-media3-libass-integration-design.md)。当前使用单渲染线程、Atlas 图集合批与立即提交，图集不适用时保留逐图像路径；精确呈现、线程拆分和预热均未启用。
 
-参考 Plezy 升级 Atlas 绘制管线已记为[待办](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#libass-atlas-rendering-todo-2026-11-04)，尚未实施。验收需比较画面正确性、实际渲染开销与内存，不将 Atlas 与其他调度优化捆绑启用。
+2026-11-05 用户授权的 [Atlas 实施与对照验证](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#atlas-rendering-implementation-2026-11-05)记录参考映射、像素/性能/资源数据及验收边界。实现采用有序多页图集与顶点颜色，不将 Atlas 与其他调度优化捆绑启用。
+
+图集按原 `ASS_Image` 顺序装页，每页包含连续的合成区间，使用六个顶点绘制每张图像；每页一次纹理上传和一次 draw，整帧一次顶点上传。每张图像四周复制一像素边缘，以保持原 `GL_LINEAR + CLAMP_TO_EDGE` 的采样；颜色、反向 ASS 透明度和用户透明度在每个图像上应用，不先合成 RGBA 后整体缩放透明度。旋转、垂直偏移和输出裁剪语义不变。
+
+默认页边长上限为 `min(GL_MAX_TEXTURE_SIZE, 2048)`，宽度按图像面积与最宽图像选择，页高按实际占用取整；最多四页，CPU 复用一页上传缓冲。保留原 64 MiB 纹理和 4096 图像防线；超过图集页数、图像加边缘后不适合图集、单图像或 GLES 2 缺少足够 fragment highp 时使用原逐图像路径。不会因图集放不下而截断尾部字幕。静态帧仍直接复用，样式、几何、Surface 重建及内容变化时重新打包；换媒体释放字体、轨道、纹理和 CPU 图集/顶点缓冲。物理电视性能与长期资源仍按设备证据判断。
 
 ## 渲染职责
 
@@ -78,7 +82,7 @@ Block 层还原 MKV 文字轨的显式/缺省 zlib 和 header stripping，早于
 
 源视频 storage width/height、像素比和媒体旋转独立传入；ASS raster frame 与 Surface output 分开，默认比例保持 1.0，GL 映射 90/180/270 度媒体旋转。Surface 仍对齐视频 View，不改变 fit/fill/zoom 的既有裁剪。当前未启用降采样，这些限制尚未在代表性物理电视上定型。事件保留到 flush/换轨/媒体释放，不擅自裁剪可能被 seek 使用的数据；长期内存和队列曲线仍待测量。
 
-诊断日志包含 `queueUs`、`targetDeltaUs`、CPU layout/upload/draw+swap、纹理峰值、字体累计和 `presentation=immediate`。native 区分实际提交与静态复用；CPU 阶段耗时与目标差值不代表 GPU 完成或实际显示时间。既有 25ms/连续 5 次/500ms 冷却策略保留，动画负载下的影响仍需实机对照。
+诊断日志包含 `queueUs`、`targetDeltaUs`、CPU layout/pack/upload/draw+swap、图集页数、draw/bind 次数、上传字节、纹理与 CPU staging 分配、字体累计和 `presentation=immediate`。staging 包含上传缓冲、顶点与布局元数据；纹理统计不包含 libass cache、驱动开销或整个进程内存。native 区分实际提交与静态复用；CPU 阶段耗时与目标差值不代表 GPU 完成或实际显示时间。图集打包耗时计入既有 25ms/连续 5 次/500ms 冷却策略，动画负载下的影响仍需实机对照。
 
 ## 降级与恢复
 

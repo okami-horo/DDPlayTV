@@ -10,7 +10,15 @@ class AssGpuNativeBridge {
         val uploadLatencyMs: Double,
         val compositeLatencyMs: Double,
         val submitted: Boolean = rendered,
-        val imageCount: Int = -1
+        val imageCount: Int = -1,
+        val packLatencyMs: Double = 0.0,
+        val drawCalls: Int = 0,
+        val textureBinds: Int = 0,
+        val uploadedBytes: Long = 0,
+        val textureBytes: Long = 0,
+        val stagingBytes: Long = 0,
+        val atlasPages: Int = 0,
+        val glesVersion: Int = 0
     )
 
     data class EmbeddedTrackInfo(
@@ -35,7 +43,7 @@ class AssGpuNativeBridge {
     }
 
     private var handle: Long = nativeCreate()
-    private val metricsBuffer = LongArray(4)
+    private val metricsBuffer = LongArray(12)
     private val embeddedMetricsBuffer = LongArray(6)
 
     val isReady: Boolean
@@ -85,9 +93,24 @@ class AssGpuNativeBridge {
             uploadLatencyMs = metricsBuffer[1] / 1000.0,
             compositeLatencyMs = metricsBuffer[2] / 1000.0,
             submitted = status == 1,
-            imageCount = if (telemetryEnabled) metricsBuffer[3].toInt() else -1
+            imageCount = if (telemetryEnabled) metricsBuffer[3].toInt() else -1,
+            packLatencyMs = metricsBuffer[4] / 1000.0,
+            drawCalls = metricsBuffer[5].toInt(),
+            textureBinds = metricsBuffer[6].toInt(),
+            uploadedBytes = metricsBuffer[7],
+            textureBytes = metricsBuffer[8],
+            stagingBytes = metricsBuffer[9],
+            atlasPages = metricsBuffer[10].toInt(),
+            glesVersion = metricsBuffer[11].toInt()
         )
     }
+
+    /** Selects a comparison path before attaching a surface; never changes production settings. */
+    internal fun configureForTesting(
+        atlasEnabled: Boolean,
+        maxPageSize: Int = 0,
+        glesVersion: Int = 0
+    ): Boolean = isReady && nativeConfigureForTesting(handle, atlasEnabled, maxPageSize, glesVersion)
 
     fun setTelemetryEnabled(enabled: Boolean) {
         if (!isReady) return
@@ -199,6 +222,13 @@ class AssGpuNativeBridge {
     }
 
     private external fun nativeCreate(): Long
+
+    private external fun nativeConfigureForTesting(
+        handle: Long,
+        atlasEnabled: Boolean,
+        maxPageSize: Int,
+        glesVersion: Int
+    ): Boolean
 
     private external fun nativeReadDocument(
         handle: Long,

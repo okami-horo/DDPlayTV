@@ -19,6 +19,7 @@
 #include <new>
 #include <string>
 #include <vector>
+#include "ass_atlas.h"
 
 #ifndef EGL_RECORDABLE_ANDROID
 #define EGL_RECORDABLE_ANDROID 0x3142
@@ -29,42 +30,48 @@ constexpr const char *kGpuLogTag = "AssGpuBridge";
 constexpr const char *kVertexShaderSrc = R"(#version 300 es
 layout (location = 0) in vec2 aPosition;
 layout (location = 1) in vec2 aTexCoord;
-out vec2 vTexCoord;
+layout (location = 2) in vec4 aColor;
+out highp vec2 vTexCoord;
+out mediump vec4 vColor;
 void main() {
     vTexCoord = aTexCoord;
+    vColor = aColor;
     gl_Position = vec4(aPosition, 0.0, 1.0);
 }
 )";
 constexpr const char *kFragmentShaderSrc = R"(#version 300 es
 precision mediump float;
-in vec2 vTexCoord;
+in highp vec2 vTexCoord;
+in mediump vec4 vColor;
 uniform sampler2D uBitmap;
-uniform vec4 uColor;
 out vec4 outColor;
 void main() {
     float coverage = texture(uBitmap, vTexCoord).r;
-    float alpha = uColor.a * coverage;
-    vec3 rgb = uColor.rgb * alpha;
+    float alpha = vColor.a * coverage;
+    vec3 rgb = vColor.rgb * alpha;
     outColor = vec4(rgb, alpha);
 }
 )";
 constexpr const char *kVertexShaderSrcEs2 = R"(
 attribute vec2 aPosition;
 attribute vec2 aTexCoord;
-varying vec2 vTexCoord;
+attribute vec4 aColor;
+varying highp vec2 vTexCoord;
+varying mediump vec4 vColor;
 void main() {
     vTexCoord = aTexCoord;
+    vColor = aColor;
     gl_Position = vec4(aPosition, 0.0, 1.0);
 }
 )";
 constexpr const char *kFragmentShaderSrcEs2 = R"(
 precision mediump float;
-varying vec2 vTexCoord;
+varying highp vec2 vTexCoord;
+varying mediump vec4 vColor;
 uniform sampler2D uBitmap;
-uniform vec4 uColor;
 void main() {
-    float alpha = uColor.a * texture2D(uBitmap, vTexCoord).a;
-    gl_FragColor = vec4(uColor.rgb * alpha, alpha);
+    float alpha = vColor.a * texture2D(uBitmap, vTexCoord).a;
+    gl_FragColor = vec4(vColor.rgb * alpha, alpha);
 }
 )";
 constexpr long long kDefaultEmbeddedChunkDurationMs = 5000;
@@ -98,13 +105,21 @@ struct GpuContext {
     size_t peak_texture_bytes = 0;
     size_t last_image_count = 0;
     int gles_version = 3;
+    int forced_gles_version = 0;
+    bool atlas_enabled = true;
+    bool atlas_supported = true;
+    int max_page_size = 0;
+    jlong pack_us = 0;
+    size_t draw_calls = 0;
+    size_t texture_binds = 0;
+    size_t uploaded_bytes = 0;
+    size_t atlas_pages = 0;
     EGLDisplay egl_display = EGL_NO_DISPLAY;
     EGLContext egl_context = EGL_NO_CONTEXT;
     EGLSurface egl_surface = EGL_NO_SURFACE;
     EGLConfig egl_config = nullptr;
     GLuint program = 0;
     GLuint vertex_buffer = 0;
-    GLint uniform_color = -1;
     GLint uniform_sampler = -1;
     ASS_Library *library = nullptr;
     ASS_Renderer *renderer = nullptr;
@@ -122,6 +137,8 @@ struct GpuContext {
     std::vector<TextureEntry> texture_pool;
     size_t texture_pool_pos = 0;
     std::vector<uint8_t> upload_buffer;
+    ass_atlas::Layout atlas_layout;
+    std::vector<float> vertices;
 };
 
 struct ScoredConfig {
@@ -198,7 +215,7 @@ EGLint GetConfigAttr(EGLDisplay display, EGLConfig config, EGLint attribute) {
     return value;
 }
 
-std::vector<ScoredConfig> EnumerateAndScoreConfigs(EGLDisplay display, int window_format) {
+std::vector<ScoredConfig> EnumerateAndScoreConfigs(EGLDisplay display, int window_format, int forced_version) {
     EGLint config_count = 0;
     if (display == EGL_NO_DISPLAY ||
         eglGetConfigs(display, nullptr, 0, &config_count) != EGL_TRUE || config_count <= 0) {
@@ -224,10 +241,12 @@ std::vector<ScoredConfig> EnumerateAndScoreConfigs(EGLDisplay display, int windo
         if (!es3 && !es2) {
             continue;
         }
+        if (forced_version == 2 && !es2) continue;
+        if (forced_version == 3 && !es3) continue;
 
         ScoredConfig candidate;
         candidate.config = cfg;
-        candidate.gles_version = es3 ? 3 : 2;
+        candidate.gles_version = forced_version == 2 ? 2 : (es3 ? 3 : 2);
         candidate.alpha = GetConfigAttr(display, cfg, EGL_ALPHA_SIZE);
         // The subtitle surface must remain transparent over the video.
         if (candidate.alpha < 8) continue;
@@ -255,7 +274,7 @@ std::vector<ScoredConfig> EnumerateAndScoreConfigs(EGLDisplay display, int windo
         }
         candidate.score = score;
         scored.push_back(candidate);
-        if (es3 && es2) {
+        if (es3 && es2 && forced_version == 0) {
             candidate.gles_version = 2;
             candidate.score -= 4;
             scored.push_back(candidate);
@@ -417,8 +436,18 @@ GLuint CompileShader(GLenum type, const char *source) {
 bool EnsureProgram(GpuContext *context) {
     if (context->program != 0) return true;
     const bool es3 = context->gles_version >= 3;
-    GLuint vertex = CompileShader(GL_VERTEX_SHADER, es3 ? kVertexShaderSrc : kVertexShaderSrcEs2);
-    GLuint fragment = CompileShader(GL_FRAGMENT_SHADER, es3 ? kFragmentShaderSrc : kFragmentShaderSrcEs2);
+    std::string vertex_source = es3 ? kVertexShaderSrc : kVertexShaderSrcEs2;
+    std::string fragment_source = es3 ? kFragmentShaderSrc : kFragmentShaderSrcEs2;
+    GLint range[2] = {};
+    GLint precision = 0;
+    glGetShaderPrecisionFormat(GL_FRAGMENT_SHADER, GL_HIGH_FLOAT, range, &precision);
+    context->atlas_supported = es3 || precision >= 16;
+    if (!context->atlas_supported) {
+        vertex_source.replace(vertex_source.find("highp"), 5, "mediump");
+        fragment_source.replace(fragment_source.find("highp"), 5, "mediump");
+    }
+    GLuint vertex = CompileShader(GL_VERTEX_SHADER, vertex_source.c_str());
+    GLuint fragment = CompileShader(GL_FRAGMENT_SHADER, fragment_source.c_str());
     if (vertex == 0 || fragment == 0) {
         if (vertex != 0) glDeleteShader(vertex);
         if (fragment != 0) glDeleteShader(fragment);
@@ -429,6 +458,7 @@ bool EnsureProgram(GpuContext *context) {
     glAttachShader(program, fragment);
     glBindAttribLocation(program, 0, "aPosition");
     glBindAttribLocation(program, 1, "aTexCoord");
+    glBindAttribLocation(program, 2, "aColor");
     glLinkProgram(program);
     glDeleteShader(vertex);
     glDeleteShader(fragment);
@@ -444,7 +474,6 @@ bool EnsureProgram(GpuContext *context) {
         return false;
     }
     context->program = program;
-    context->uniform_color = glGetUniformLocation(program, "uColor");
     context->uniform_sampler = glGetUniformLocation(program, "uBitmap");
     glUseProgram(context->program);
     glUniform1i(context->uniform_sampler, 0);
@@ -499,7 +528,6 @@ void DestroyEgl(GpuContext *context, bool destroy_context = true) {
         eglTerminate(context->egl_display);
         context->egl_display = EGL_NO_DISPLAY;
     }
-    context->uniform_color = -1;
     context->uniform_sampler = -1;
     context->egl_config = nullptr;
     context->pending_invalidate = true;
@@ -527,7 +555,7 @@ bool InitEglAndSurface(GpuContext *context) {
     }
 
     const int window_format = ANativeWindow_getFormat(context->window);
-    const auto scored_configs = EnumerateAndScoreConfigs(context->egl_display, window_format);
+    const auto scored_configs = EnumerateAndScoreConfigs(context->egl_display, window_format, context->forced_gles_version);
     if (scored_configs.empty()) {
         DumpEglConfigs(context->egl_display);
         DestroyEgl(context);
@@ -626,13 +654,23 @@ bool ClearSurface(GpuContext *context) {
     return true;
 }
 
-void WriteRenderMetrics(JNIEnv *env, jlongArray metrics_out, jlong render_ms, jlong upload_ms,
+void WriteRenderMetrics(JNIEnv *env, jlongArray metrics_out, GpuContext *context, jlong render_ms, jlong upload_ms,
                         jlong composite_ms, jlong image_count) {
     if (metrics_out == nullptr) {
         return;
     }
-    jlong values[4] = {render_ms, upload_ms, composite_ms, image_count};
-    env->SetLongArrayRegion(metrics_out, 0, 4, values);
+    size_t texture_bytes = 0;
+    for (const auto &entry : context->texture_pool) {
+        texture_bytes += static_cast<size_t>(entry.width) * entry.height;
+    }
+    jlong values[12] = {render_ms, upload_ms, composite_ms, image_count, context->pack_us,
+        static_cast<jlong>(context->draw_calls), static_cast<jlong>(context->texture_binds),
+        static_cast<jlong>(context->uploaded_bytes), static_cast<jlong>(texture_bytes),
+        static_cast<jlong>(context->upload_buffer.capacity() + context->vertices.capacity() * sizeof(float) +
+            context->atlas_layout.images.capacity() * sizeof(ass_atlas::Placement) +
+            context->atlas_layout.pages.capacity() * sizeof(ass_atlas::Page)), static_cast<jlong>(context->atlas_pages),
+        context->gles_version};
+    env->SetLongArrayRegion(metrics_out, 0, 12, values);
 }
 
 void UpdateFrameSizeIfNeeded(GpuContext *context) {
@@ -659,6 +697,7 @@ GpuContext::TextureEntry &AcquireTexture(GpuContext *context, int width, int hei
     auto &entry = context->texture_pool[context->texture_pool_pos++];
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, entry.id);
+    context->texture_binds++;
     if (!entry.params_set) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -676,6 +715,96 @@ GpuContext::TextureEntry &AcquireTexture(GpuContext *context, int width, int hei
     }
     return entry;
 }
+
+void DrawAtlas(GpuContext *context, bool collect_metrics, double &upload_ms, double &composite_ms) {
+    using Clock = std::chrono::steady_clock;
+    const auto elapsed_us = [](Clock::time_point start) {
+        return std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start).count();
+    };
+    const auto &layout = context->atlas_layout;
+    auto pack_start = collect_metrics ? Clock::now() : Clock::time_point{};
+    context->vertices.resize(layout.images.size() * 48);
+    const int corners[6] = {0, 1, 2, 1, 3, 2};
+    for (const auto &page : layout.pages) {
+        for (size_t index = page.first; index < page.first + page.count; ++index) {
+            const auto &placed = layout.images[index];
+            const auto *image = placed.image;
+            const float left = static_cast<float>(image->dst_x) / context->last_frame_width * 2.0F - 1.0F;
+            const float right = static_cast<float>(image->dst_x + image->w) / context->last_frame_width * 2.0F - 1.0F;
+            const float top = 1.0F - static_cast<float>(image->dst_y) / context->last_frame_height * 2.0F;
+            const float bottom = 1.0F - static_cast<float>(image->dst_y + image->h) / context->last_frame_height * 2.0F;
+            const float u0 = static_cast<float>(placed.x) / layout.width;
+            const float u1 = static_cast<float>(placed.x + image->w) / layout.width;
+            const float v0 = static_cast<float>(placed.y) / page.height;
+            const float v1 = static_cast<float>(placed.y + image->h) / page.height;
+            const float xy[4][2] = {{left, top}, {right, top}, {left, bottom}, {right, bottom}};
+            const float uv[4][2] = {{u0, v0}, {u1, v0}, {u0, v1}, {u1, v1}};
+            float *vertex = context->vertices.data() + index * 48;
+            for (const int corner : corners) {
+                float x = xy[corner][0];
+                float y = xy[corner][1];
+                const float original_x = x;
+                switch (context->video_rotation) {
+                    case 90: x = y; y = -original_x; break;
+                    case 180: x = -x; y = -y; break;
+                    case 270: x = -y; y = original_x; break;
+                    default: break;
+                }
+                *vertex++ = x;
+                *vertex++ = y + 2.0F * context->user_vertical_offset_percent / 100.0F;
+                *vertex++ = uv[corner][0];
+                *vertex++ = uv[corner][1];
+                *vertex++ = static_cast<float>((image->color >> 24) & 255) / 255.0F;
+                *vertex++ = static_cast<float>((image->color >> 16) & 255) / 255.0F;
+                *vertex++ = static_cast<float>((image->color >> 8) & 255) / 255.0F;
+                *vertex++ = static_cast<float>(AssAlphaToAndroid(image->color)) / 255.0F * context->user_alpha;
+            }
+        }
+    }
+    if (collect_metrics) context->pack_us += elapsed_us(pack_start);
+    auto upload_start = collect_metrics ? Clock::now() : Clock::time_point{};
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(context->vertices.size() * sizeof(float)),
+                 context->vertices.data(), GL_STREAM_DRAW);
+    if (collect_metrics) upload_ms += elapsed_us(upload_start) / 1000.0;
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, nullptr);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, reinterpret_cast<void *>(sizeof(float) * 2));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, reinterpret_cast<void *>(sizeof(float) * 4));
+    glEnableVertexAttribArray(2);
+    for (const auto &page : layout.pages) {
+        pack_start = collect_metrics ? Clock::now() : Clock::time_point{};
+        const size_t bytes = static_cast<size_t>(layout.width) * page.height;
+        context->upload_buffer.resize(bytes);
+        std::memset(context->upload_buffer.data(), 0, bytes);
+        for (size_t index = page.first; index < page.first + page.count; ++index) {
+            const auto &placed = layout.images[index];
+            const auto *image = placed.image;
+            auto *destination = context->upload_buffer.data() + static_cast<size_t>(placed.y) * layout.width + placed.x;
+            for (int y = 0; y < image->h; ++y) {
+                const uint8_t *source = image->bitmap + static_cast<size_t>(y) * image->stride;
+                auto *row = destination + static_cast<size_t>(y) * layout.width;
+                std::memcpy(row, source, image->w);
+                row[-1] = source[0];
+                row[image->w] = source[image->w - 1];
+            }
+            std::memcpy(destination - layout.width - 1, destination - 1, image->w + 2);
+            std::memcpy(destination + static_cast<size_t>(image->h) * layout.width - 1,
+                        destination + static_cast<size_t>(image->h - 1) * layout.width - 1, image->w + 2);
+        }
+        if (collect_metrics) context->pack_us += elapsed_us(pack_start);
+        upload_start = collect_metrics ? Clock::now() : Clock::time_point{};
+        AcquireTexture(context, layout.width, page.height);
+        const GLenum format = context->gles_version >= 3 ? GL_RED : GL_ALPHA;
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, layout.width, page.height, format, GL_UNSIGNED_BYTE,
+                        context->upload_buffer.data());
+        context->uploaded_bytes += bytes;
+        if (collect_metrics) upload_ms += elapsed_us(upload_start) / 1000.0;
+        const auto draw_start = collect_metrics ? Clock::now() : Clock::time_point{};
+        glDrawArrays(GL_TRIANGLES, static_cast<GLint>(page.first * 6), static_cast<GLsizei>(page.count * 6));
+        context->draw_calls++;
+        if (collect_metrics) composite_ms += elapsed_us(draw_start) / 1000.0;
+    }
+    context->atlas_pages = layout.pages.size();
+}
 }  // namespace
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -689,6 +818,20 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeCreate(
     }
     LogInfo("GPU context created");
     return reinterpret_cast<jlong>(context);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeConfigureForTesting(
+    JNIEnv *, jobject, jlong handle, jboolean atlas_enabled, jint max_page_size, jint gles_version) {
+    auto *context = reinterpret_cast<GpuContext *>(handle);
+    if (context == nullptr) return JNI_FALSE;
+    std::lock_guard<std::mutex> guard(context->mutex);
+    if (context->window != nullptr || max_page_size < 0 ||
+        (gles_version != 0 && gles_version != 2 && gles_version != 3)) return JNI_FALSE;
+    context->atlas_enabled = atlas_enabled;
+    context->max_page_size = max_page_size;
+    context->forced_gles_version = gles_version;
+    return JNI_TRUE;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1030,6 +1173,8 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeResetMedia(
         context->texture_pool.clear();
     }
     std::vector<uint8_t>().swap(context->upload_buffer);
+    std::vector<float>().swap(context->vertices);
+    context->atlas_layout = {};
     ClearSurface(context);
     LogInfo("Media subtitle track/fonts/textures cleared");
 }
@@ -1076,20 +1221,25 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     }
     std::lock_guard<std::mutex> guard(context->mutex);
     if (context->state_revision.load() != state_revision) return JNI_FALSE;
+    context->pack_us = 0;
+    context->draw_calls = 0;
+    context->texture_binds = 0;
+    context->uploaded_bytes = 0;
+    context->atlas_pages = 0;
     // Preserved for diagnostics; precise scheduling remains disabled pending device measurements.
     context->target_present_time_ns = target_present_time_ns;
     const bool collect_metrics = metrics_out != nullptr && context->telemetry_enabled;
     if (context->window == nullptr || context->renderer == nullptr || context->track == nullptr ||
         context->width <= 0 || context->height <= 0) {
         if (collect_metrics) {
-            WriteRenderMetrics(env, metrics_out, 0, 0, 0, 0);
+            WriteRenderMetrics(env, metrics_out, context, 0, 0, 0, 0);
         }
         return JNI_FALSE;
     }
     UpdateFrameSizeIfNeeded(context);
     if (!EnsureSurface(context) || !MakeCurrent(context)) {
         if (collect_metrics) {
-            WriteRenderMetrics(env, metrics_out, 0, 0, 0, 0);
+            WriteRenderMetrics(env, metrics_out, context, 0, 0, 0, 0);
         }
         return JNI_FALSE;
     }
@@ -1108,7 +1258,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
     if (change == 0 && !context->pending_invalidate) {
         // libass 表示当前时间戳无需重绘，直接复用上一帧，避免重复上传/绘制开销。
         if (collect_metrics) {
-            WriteRenderMetrics(env, metrics_out, 0, 0, 0, context->last_image_count);
+            WriteRenderMetrics(env, metrics_out, context, 0, 0, 0, context->last_image_count);
         }
         return 2; // Reused content; no BufferQueue submission.
     }
@@ -1131,19 +1281,36 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
         }
         frame_texture_bytes += bytes;
     }
+    const auto plan_start = collect_metrics ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
+    const int page_size = std::min(max_texture_size, context->max_page_size > 0 ? context->max_page_size : 2048);
+    const bool use_atlas = image_count > 1 && context->atlas_enabled && context->atlas_supported &&
+        ass_atlas::Plan(img, page_size, kTextureLimit, context->atlas_layout);
+    if (collect_metrics) {
+        context->pack_us = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now() - plan_start).count();
+    }
+    size_t required_textures = image_count;
+    size_t required_bytes = frame_texture_bytes;
+    if (use_atlas) {
+        required_textures = context->atlas_layout.pages.size();
+        required_bytes = 0;
+        for (const auto &page : context->atlas_layout.pages) {
+            required_bytes += static_cast<size_t>(context->atlas_layout.width) * page.height;
+        }
+    }
     // Discard unused retained textures, and resize changed slots before allocating new storage.
     size_t retained_bytes = 0;
     for (const auto &entry : context->texture_pool) {
         retained_bytes += static_cast<size_t>(entry.width) * static_cast<size_t>(entry.height);
     }
-    if (context->texture_pool.size() > image_count || retained_bytes + frame_texture_bytes > kTextureLimit) {
+    if (context->texture_pool.size() > required_textures || retained_bytes + required_bytes > kTextureLimit) {
         for (const auto &entry : context->texture_pool) glDeleteTextures(1, &entry.id);
         context->texture_pool.clear();
     }
-    if (frame_texture_bytes > context->peak_texture_bytes) {
-        context->peak_texture_bytes = frame_texture_bytes;
+    if (required_bytes > context->peak_texture_bytes) {
+        context->peak_texture_bytes = required_bytes;
         __android_log_print(ANDROID_LOG_DEBUG, kGpuLogTag, "texturePeakBytes=%zu images=%zu targetNs=%lld presentation=immediate",
-                            frame_texture_bytes, image_count, static_cast<long long>(target_present_time_ns));
+                            required_bytes, image_count, static_cast<long long>(target_present_time_ns));
     }
     context->pending_invalidate = false;
     context->last_image_count = image_count;
@@ -1158,105 +1325,111 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
 
     glUseProgram(context->program);
     glBindBuffer(GL_ARRAY_BUFFER, context->vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 16, nullptr, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
-                          reinterpret_cast<void *>(0));
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
-                          reinterpret_cast<void *>(sizeof(float) * 2));
     glEnableVertexAttribArray(1);
 
     const float vertical_offset_ndc = 2.0F * context->user_vertical_offset_percent / 100.0F;
 
-    for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
-        if (cur->w <= 0 || cur->h <= 0 || cur->bitmap == nullptr || cur->stride < cur->w) continue;
-        const float base_alpha = static_cast<float>(AssAlphaToAndroid(cur->color)) / 255.0F;
-        const float final_alpha = base_alpha * context->user_alpha;
-        if (final_alpha <= 0.0F) continue;
+    if (use_atlas) {
+        DrawAtlas(context, collect_metrics, upload_ms, composite_ms);
+    } else {
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 16, nullptr, GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, nullptr);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
+                              reinterpret_cast<void *>(sizeof(float) * 2));
+        glDisableVertexAttribArray(2);
+        for (ASS_Image *cur = img; cur != nullptr; cur = cur->next) {
+            if (cur->w <= 0 || cur->h <= 0 || cur->bitmap == nullptr || cur->stride < cur->w) continue;
+            const float base_alpha = static_cast<float>(AssAlphaToAndroid(cur->color)) / 255.0F;
+            const float final_alpha = base_alpha * context->user_alpha;
+            if (final_alpha <= 0.0F) continue;
 
-        const std::chrono::steady_clock::time_point upload_start =
-            collect_metrics ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
-        AcquireTexture(context, cur->w, cur->h);
-        if (context->gles_version >= 3 && cur->bitmap != nullptr && cur->stride > 0 &&
-            cur->stride >= cur->w) {
-            if (cur->stride != cur->w) {
-                glPixelStorei(GL_UNPACK_ROW_LENGTH, cur->stride);
+            const std::chrono::steady_clock::time_point upload_start =
+                collect_metrics ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
+            AcquireTexture(context, cur->w, cur->h);
+            context->uploaded_bytes += static_cast<size_t>(cur->w) * cur->h;
+            if (context->gles_version >= 3 && cur->bitmap != nullptr && cur->stride > 0 &&
+                cur->stride >= cur->w) {
+                if (cur->stride != cur->w) {
+                    glPixelStorei(GL_UNPACK_ROW_LENGTH, cur->stride);
+                }
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h, GL_RED, GL_UNSIGNED_BYTE,
+                                cur->bitmap);
+                if (cur->stride != cur->w) {
+                    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+                }
+            } else {
+                const size_t required = static_cast<size_t>(cur->w) * static_cast<size_t>(cur->h);
+                if (context->upload_buffer.size() < required) {
+                    context->upload_buffer.resize(required);
+                }
+                uint8_t *coverage = context->upload_buffer.data();
+                for (int y = 0; y < cur->h; ++y) {
+                    const uint8_t *src_row = cur->bitmap + y * cur->stride;
+                    std::memcpy(coverage + static_cast<size_t>(y * cur->w), src_row,
+                                static_cast<size_t>(cur->w));
+                }
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h,
+                                context->gles_version >= 3 ? GL_RED : GL_ALPHA, GL_UNSIGNED_BYTE,
+                                coverage);
             }
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h, GL_RED, GL_UNSIGNED_BYTE,
-                            cur->bitmap);
-            if (cur->stride != cur->w) {
-                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+            if (collect_metrics) {
+                const auto upload_end = std::chrono::steady_clock::now();
+                upload_ms += std::chrono::duration_cast<std::chrono::microseconds>(upload_end - upload_start)
+                                 .count() /
+                             1000.0;
             }
-        } else {
-            const size_t required = static_cast<size_t>(cur->w) * static_cast<size_t>(cur->h);
-            if (context->upload_buffer.size() < required) {
-                context->upload_buffer.resize(required);
-            }
-            uint8_t *coverage = context->upload_buffer.data();
-            for (int y = 0; y < cur->h; ++y) {
-                const uint8_t *src_row = cur->bitmap + y * cur->stride;
-                std::memcpy(coverage + static_cast<size_t>(y * cur->w), src_row,
-                            static_cast<size_t>(cur->w));
-            }
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cur->w, cur->h,
-                            context->gles_version >= 3 ? GL_RED : GL_ALPHA, GL_UNSIGNED_BYTE,
-                            coverage);
-        }
-        if (collect_metrics) {
-            const auto upload_end = std::chrono::steady_clock::now();
-            upload_ms += std::chrono::duration_cast<std::chrono::microseconds>(upload_end - upload_start)
-                             .count() /
-                         1000.0;
-        }
 
-        const float left = (static_cast<float>(cur->dst_x) / static_cast<float>(context->last_frame_width)) *
-                               2.0F -
-                           1.0F;
-        const float right = (static_cast<float>(cur->dst_x + cur->w) /
-                             static_cast<float>(context->last_frame_width)) *
-                                 2.0F -
-                             1.0F;
-        const float adjusted_dst_y = static_cast<float>(cur->dst_y);
-        const float top = 1.0F -
-                          (adjusted_dst_y / static_cast<float>(context->last_frame_height)) *
-                               2.0F;
-        const float bottom =
-            1.0F -
-            ((adjusted_dst_y + static_cast<float>(cur->h)) / static_cast<float>(context->last_frame_height)) *
-                2.0F;
+            const float left = (static_cast<float>(cur->dst_x) / static_cast<float>(context->last_frame_width)) *
+                                   2.0F -
+                               1.0F;
+            const float right = (static_cast<float>(cur->dst_x + cur->w) /
+                                 static_cast<float>(context->last_frame_width)) *
+                                     2.0F -
+                                 1.0F;
+            const float adjusted_dst_y = static_cast<float>(cur->dst_y);
+            const float top = 1.0F -
+                              (adjusted_dst_y / static_cast<float>(context->last_frame_height)) *
+                                   2.0F;
+            const float bottom =
+                1.0F -
+                ((adjusted_dst_y + static_cast<float>(cur->h)) / static_cast<float>(context->last_frame_height)) *
+                    2.0F;
 
-        const std::chrono::steady_clock::time_point draw_start =
-            collect_metrics ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
-        const float red = static_cast<float>((cur->color >> 24) & 0xFF) / 255.0F;
-        const float green = static_cast<float>((cur->color >> 16) & 0xFF) / 255.0F;
-        const float blue = static_cast<float>((cur->color >> 8) & 0xFF) / 255.0F;
-        glUniform4f(context->uniform_color, red, green, blue, final_alpha);
+            const std::chrono::steady_clock::time_point draw_start =
+                collect_metrics ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
+            const float red = static_cast<float>((cur->color >> 24) & 0xFF) / 255.0F;
+            const float green = static_cast<float>((cur->color >> 16) & 0xFF) / 255.0F;
+            const float blue = static_cast<float>((cur->color >> 8) & 0xFF) / 255.0F;
+            glVertexAttrib4f(2, red, green, blue, final_alpha);
 
-        float vertices[] = {
-            left,  top,    0.0F, 0.0F,  // left-top
-            right, top,    1.0F, 0.0F,  // right-top
-            left,  bottom, 0.0F, 1.0F,  // left-bottom
-            right, bottom, 1.0F, 1.0F   // right-bottom
-        };
-        for (int i = 0; i < 16; i += 4) {
-            const float x = vertices[i];
-            const float y = vertices[i + 1];
-            switch (context->video_rotation) {
-                case 90: vertices[i] = y; vertices[i + 1] = -x; break;
-                case 180: vertices[i] = -x; vertices[i + 1] = -y; break;
-                case 270: vertices[i] = -y; vertices[i + 1] = x; break;
-                default: break;
+            float vertices[] = {
+                left,  top,    0.0F, 0.0F,  // left-top
+                right, top,    1.0F, 0.0F,  // right-top
+                left,  bottom, 0.0F, 1.0F,  // left-bottom
+                right, bottom, 1.0F, 1.0F   // right-bottom
+            };
+            for (int i = 0; i < 16; i += 4) {
+                const float x = vertices[i];
+                const float y = vertices[i + 1];
+                switch (context->video_rotation) {
+                    case 90: vertices[i] = y; vertices[i + 1] = -x; break;
+                    case 180: vertices[i] = -x; vertices[i + 1] = -y; break;
+                    case 270: vertices[i] = -y; vertices[i + 1] = x; break;
+                    default: break;
+                }
+                vertices[i + 1] += vertical_offset_ndc;
             }
-            vertices[i + 1] += vertical_offset_ndc;
-        }
 
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        if (collect_metrics) {
-            const auto draw_end = std::chrono::steady_clock::now();
-            composite_ms += std::chrono::duration_cast<std::chrono::microseconds>(draw_end - draw_start)
-                                .count() /
-                            1000.0;
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            context->draw_calls++;
+            if (collect_metrics) {
+                const auto draw_end = std::chrono::steady_clock::now();
+                composite_ms += std::chrono::duration_cast<std::chrono::microseconds>(draw_end - draw_start)
+                                    .count() /
+                                1000.0;
+            }
         }
     }
 
@@ -1282,7 +1455,7 @@ Java_com_xyoye_player_subtitle_gpu_AssGpuNativeBridge_nativeRender(
 
         const auto render_latency =
             std::chrono::duration_cast<std::chrono::microseconds>(render_end - render_start).count();
-        WriteRenderMetrics(env, metrics_out, render_latency, static_cast<jlong>(upload_ms * 1000.0),
+        WriteRenderMetrics(env, metrics_out, context, render_latency, static_cast<jlong>(upload_ms * 1000.0),
                            static_cast<jlong>(composite_ms * 1000.0), image_count);
     }
     return JNI_TRUE;

@@ -2,6 +2,8 @@
 
 > 验收归档：本文对应的 activeContext 待验证项已按[2026-11-03 用户确认](../../../memory-bank/archive/2026-11-completed-work.md#user-confirmed-acceptance-2026-11-03)关闭。下文旧“待验收／未实机验证”表述保留为原执行时点记录；未实施需求和已知工程问题不因此完成。
 
+后续更新（2026-11-05）：[Atlas 图集与合批](2026-11-04-media3-subtitle-hardening.md#atlas-rendering-implementation-2026-11-05)已实施并完成本地像素、性能、资源及播放器回归。本文的逐图像/atlas 未启用和未测收益表述保留原实施时点；当前管线见[维护说明](../../../document/player/subtitle-rendering.md)。精确呈现、线程拆分和预热仍未启用，物理电视 Atlas 性能未测。
+
 依据：[接入设计](../designs/2026-10-29-media3-libass-integration-design.md)。本轮用户已授权实现；不提交 Git、不修改 mpv AAR 或视频输出。
 
 ## 实施顺序

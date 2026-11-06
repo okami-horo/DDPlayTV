@@ -53,7 +53,7 @@ class SubtitleTelemetryCollector(
             TelemetrySample(
                 timestampMs = System.currentTimeMillis(),
                 subtitlePtsMs = subtitlePtsMs,
-                renderLatencyMs = result.renderLatencyMs.toDouble(),
+                renderLatencyMs = result.renderLatencyMs + result.packLatencyMs,
                 uploadLatencyMs = result.uploadLatencyMs.toDouble(),
                 compositeLatencyMs = result.compositeLatencyMs.toDouble(),
                 frameStatus = frameStatus,
