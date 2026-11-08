@@ -1,5 +1,13 @@
 # DDPlayTV 深色 UI 网页原型
 
+## 剧集详情大画面提案（2026-11-08，待确认）
+
+[打开设计稿](series-detail-prototype.html?review=cinema&variant=hero)。底部可切换 A「全景剧场」、B「画面与列表」及现状结构；顶部可查看缺图、多季、空态、加载、失败、长标题与 130% 字号。推荐 A，尚未选定或实施原生。
+
+运行 `node document/prototypes/tv-ui/server.cjs 4191`，访问 `http://127.0.0.1:4191/series-detail-prototype.html?review=cinema&variant=hero`。方向键 / Enter / Esc 操作；`node document/prototypes/tv-ui/render-series-cinema.cjs` 生成网页截图及观察记录。
+
+完整范围、SC01–SC13 矩阵、素材说明与验证边界见[本次设计](../../../docs/superpowers/designs/2026-11-08-series-cinema-design.md)。旧 `?variant=B` 仍展示原来的已选稿。
+
 ## 本地截图与预览
 
 生成的预览图和原生验证截图仅在本地归档，图片链接需恢复原路径后查看；HTML、生成脚本和验证记录仍随仓库维护。六张交互原型输入素材继续追踪，具体范围和恢复方式见 [截图保存约定](../../README.md#截图与预览产物)。

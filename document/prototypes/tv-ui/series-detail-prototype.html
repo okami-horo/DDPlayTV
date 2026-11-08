@@ -34,6 +34,7 @@
   <span class="note" id="review-note">设计原型 · 尚未接入应用</span>
 </footer>
 <script>
+if (new URLSearchParams(location.search).get('review') !== 'cinema') {
 const stage=document.getElementById('stage'), viewport=document.getElementById('viewport');
 const params=new URLSearchParams(location.search);
 const variant='B';
@@ -102,6 +103,8 @@ document.getElementById('scenario').onchange=event=>{scenario=event.target.value
 document.getElementById('before').onclick=()=>{const panel=document.createElement('div');panel.id='before-overlay';panel.className='before-overlay';panel.innerHTML=`<img src="${assets}tv-before.png" alt="电视上的详情页，2026年11月1日截图"><button id="close-before">返回设计预览</button>`;document.body.append(panel);panel.querySelector('button').onclick=()=>{panel.remove();defaultFocus();};panel.querySelector('button').focus();};
 function resize(){const box=document.getElementById('workspace');const fullscreen=!!document.fullscreenElement;const scale=Math.min(fullscreen?innerWidth/1440:(box.clientWidth-52)/1440,fullscreen?innerHeight/810:box.clientHeight/810,fullscreen?10:1);if(!fullscreen){viewport.style.width=1440*scale+'px';viewport.style.height=810*scale+'px';}stage.style.transform=`scale(${scale})`;}
 document.getElementById('fullscreen').onclick=async()=>{if(document.fullscreenElement)await document.exitFullscreen();else await viewport.requestFullscreen();resize();defaultFocus();};new ResizeObserver(resize).observe(document.getElementById('workspace'));document.addEventListener('fullscreenchange',resize);render();resize();
+}
 </script>
+<script src="series-cinema-prototype.js"></script>
 </body>
 </html>
