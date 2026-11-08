@@ -128,6 +128,8 @@ adjustedY = subtitleImageY - offsetPx
 
 ## 电视画质调整与字幕亮度（2026-11-03 调研）
 
+**追踪状态（2026-11-08）：用户明确不再追踪字幕过亮问题，已移出待办。** 以下仅保留历史调研和方案评估，不安排亮度控制实现或真机诊断；停止追踪不表示相关方案已实现。
+
 用户报告：电视设置把画面调暗后，字幕仍然很亮；补充确认两种内核都测试过。本轮核对源码和上游资料，没有操作物理电视，也没有修改播放器。具体设置名称、片源 HDR 状态及逐项亮度测量尚未记录。
 
 **已确认的是视频和软字幕分层输出；最符合现象的解释是电视的视频画质处理没有同样作用于字幕图层。** 后半句属于结合用户观察与实现得出的推断，尚未通过实机合成器或亮度测量证明。此前的字幕功能验收不覆盖这次新增的亮度问题。
@@ -174,7 +176,7 @@ mpv 的 `blend-subtitles` 描述的是 GPU 视频合成阶段的行为，不能�
 
 ## 验证与已知限制
 
-本节列出维护时可用的测试入口。2026-11-04 最新[功能修复记录](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#subtitle-feature-fixes-2026-11-04)包含成功的 Debug 构建、JVM/Debug lint/定域格式/依赖检查：535 项 JVM 中 533 通过、2 跳过，播放器 177 项全部通过；另有 26 项播放器与 4 项应用模拟器回归，以及两项 1.3 字体重跑和实际截图检查。此前的[管线实施](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#plezy-subtitle-implementation-2026-11-04)、[初次完善](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#subtitle-hardening-2026-11-04)、[2026-10-30 账本](../../docs/superpowers/plans/2026-10-30-media3-libass.md)和[更早历史](libass-integration-audit.md#已执行验证)保留各自时点的结果。原 115 视频、本轮物理电视和完整字幕矩阵仍待验收；最新三项修复尚未进入电视 Release。
+本节列出维护时可用的测试入口。2026-11-04 最新[功能修复记录](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#subtitle-feature-fixes-2026-11-04)包含成功的 Debug 构建、JVM/Debug lint/定域格式/依赖检查：535 项 JVM 中 533 通过、2 跳过，播放器 177 项全部通过；另有 26 项播放器与 4 项应用模拟器回归，以及两项 1.3 字体重跑和实际截图检查。此前的[管线实施](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#plezy-subtitle-implementation-2026-11-04)、[初次完善](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#subtitle-hardening-2026-11-04)、[2026-10-30 账本](../../docs/superpowers/plans/2026-10-30-media3-libass.md)和[更早历史](libass-integration-audit.md#已执行验证)保留各自时点的结果。原 115 视频问题已于 2026-11-08 按用户确认关闭；上述功能修复的物理电视验收和完整字幕矩阵仍按各自记录处理，最新三项修复尚无电视 Release 交付记录。
 
 | 测试 | 实际覆盖范围 |
 | --- | --- |
@@ -202,7 +204,9 @@ mpv 的 `blend-subtitles` 描述的是 GPU 视频合成阶段的行为，不能�
 
 ## 内嵌 ASS 无字幕与轨道重名（2026-11-03 排查）
 
-用户报告 115 视频在 Media3 下无字幕、mpv 正常，菜单为“关、中文、中文”，并补充旧版也有内嵌字幕问题。首次排查只诊断，未修改播放器源码。用户随后明确要求停止占用电视；后续调查仅使用本地源码、此前日志和参考实现。2026-11-04 用户另行授权实施字幕完善，当前契约见上文，验证进度见[字幕完善方案](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md)。以下保留首次诊断证据，不代表实际片源已验收。
+**当前状态（2026-11-08）：用户确认 115 原视频的 Media3 无字幕问题已经修复，已关闭。** [关闭记录](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#original-115-user-closeout-2026-11-08)记录确认依据；以下保留首次诊断证据，不再构成原片复测或根因追查任务。
+
+用户最初报告 115 视频在 Media3 下无字幕、mpv 正常，菜单为“关、中文、中文”，并补充旧版也有内嵌字幕问题。首次排查只诊断，未修改播放器源码。用户随后明确要求停止占用电视；后续调查仅使用本地源码、此前日志和参考实现。2026-11-04 用户另行授权实施字幕完善，当前契约见上文，实施及验证过程见[字幕完善方案](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md)。
 
 ### 首次诊断确认的问题
 
@@ -221,7 +225,7 @@ mpv 的 `blend-subtitles` 描述的是 GPU 视频合成阶段的行为，不能�
 
 [libass 0.17.3 实现](https://github.com/libass/libass/blob/0.17.3/libass/ass.c) 核对了上述格式跳列及 codec-private 回退行为。[Media3 1.11.1 MatroskaExtractor](https://github.com/androidx/media/blob/1.11.1/libraries/extractor/src/main/java/androidx/media3/extractor/mkv/MatroskaExtractor.java) 在输出字幕样本前按首个 NUL 截断；Plezy 使用该缓冲区的实际 limit，也不能自动绕开此截断。mpv 的 FFmpeg 解复用与本项目的 Media3 提取链不同，不能从 mpv 正常推断 Media3 输入正文完整。
 
-### 本地验证及本片的未决边界
+### 历史本地验证及原片证据边界
 
 构造样本脚本：[header_compat_probe.py](../../Temp/media3-subtitle-diagnosis-2026-11-03/header_compat_probe.py)。它只在电脑生成字幕 MKV，通过本地 FFmpeg `7.0.2` 的 libass 流式接口渲染；实际日志版本为 libass API `0x1703000`、source `0.17.3-6-gc5bb87e2f5d6c18763b4614817c206a4f4d2332a`。这不是 Android 应用、实际片源或电视验证。
 
@@ -229,10 +233,10 @@ mpv 的 `blend-subtitles` 描述的是 GPU 视频合成阶段的行为，不能�
 
 **本片无字幕的唯一根因仍未确认。** 已有日志显示 decoder 收到 `[90,1182]` 两块初始化数据，最终 codec private 仍为 1182 字节，说明本次使用了原头部，未命中上述错误拼接分支。已选中 ASS 轨，格式和事件已送到 GPU，事件时间与播放时间相符；已记录事件剥掉固定 32 字节包装后只有 15～17 字节，且长度随播放阶段变化，值得优先检查正文完整性及原始事件格式。日志没有正文、完整头部或 native 解析事件结果，不能把长度直接等同于截断，也不能凭管线 Active/Rendered 宣称已有可见字幕。
 
-本片问题仍需针对原始头部/事件解析建立证据，不能用修复另一种构造样本代替验证。当前不再操作电视或要求用户下载片源。此前临时打开的 DEBUG 日志级别尚未恢复，已告知用户；未经新的明确授权，不为恢复设置继续操作设备。
+当时尚缺原始头部/事件解析证据，修复另一种构造样本不能代替原片验证；原问题现已按用户确认关闭，不再要求补证或下载片源。此前临时打开的 DEBUG 日志级别尚未恢复，已告知用户；未经新的明确授权，不为恢复设置继续操作设备。
 
 ### 当前实施与诊断边界（2026-11-04）
 
 用户已明确解除实施延期，本地实现和验证已完成。当前实现修正头部、查询所有权、重复绑定和轨名，并按真实 EBML 复现修复附件重同步/释放；完整范围和逐项验证由[实施记录](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#subtitle-hardening-2026-11-04)维护。
 
-采样日志新增输入包的 NUL 位置/分隔符数、native 事件/样式数、最新事件正文长度与解析结果；重复判断只检查最近 4096 个事件，无法精确区分时报告 `UNCHANGED`。帧指标包含 ASS 图像数，未采集时为 -1；图像存在仍不能代替实际 alpha 像素验证。libass verbose 日志关闭，避免输出完整对白和头部。上述结构信息可缩小后续原片排查范围，但当前没有该视频修复后的新证据。
+采样日志新增输入包的 NUL 位置/分隔符数、native 事件/样式数、最新事件正文长度与解析结果；重复判断只检查最近 4096 个事件，无法精确区分时报告 `UNCHANGED`。帧指标包含 ASS 图像数，未采集时为 -1；图像存在仍不能代替实际 alpha 像素验证。libass verbose 日志关闭，避免输出完整对白和头部。当时没有该视频修复后的结构或像素证据；2026-11-08 的关闭依据是用户确认，没有补采这些诊断数据。

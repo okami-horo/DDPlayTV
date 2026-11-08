@@ -12,7 +12,7 @@
 - Plezy：固定提交 [`1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5`](https://github.com/edde746/plezy/tree/1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5)，核对 Android ExoPlayer、Dart 轨道策略和对应测试源码，未运行 Plezy。
 - 覆盖：选轨与命名、Off/显隐、跨集继承、外挂加载、时间偏移、样式能力、文字/位图布局及预加载资源所有权。入口为本项目 `SubtitleQuickView → ControlWrapper → Media3VideoPlayer / SubtitleController`，参考入口为 `TrackManager → TrackSelectionService → PlayerAndroid → ExoPlayerCore`。
 - 本项目相关职责分布在 `player_component` 的播放/显示、`data_component` 的轨道数据、`core_system_component` 的设置、`core_storage_component` 的同目录外挂匹配。建议保持现有模块边界。
-- 评估阶段未评估整个应用，也未重新测量复杂 ASS 性能、HDR/PQ、全部字体与字幕格式；当时没有操作电视、启动模拟器、构建或安装。后续修复使用任务模拟器，具体测试与限制由上方修复账本维护，原 115 视频仍待用户复测。
+- 评估阶段未评估整个应用，也未重新测量复杂 ASS 性能、HDR/PQ、全部字体与字幕格式；当时没有操作电视、启动模拟器、构建或安装。后续修复使用任务模拟器，具体测试与限制由上方修复账本维护；原 115 视频问题后来于 2026-11-08 按用户确认关闭。
 - 下文“源码确认”“风险”及尚未运行的描述均属于修复前评估时点，不可替代运行证据；随后已修三项的复现与最终结果见上方修复账本。更早测试见[管线实施账本](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#plezy-subtitle-implementation-2026-11-04)。
 
 ## 逐项取舍
@@ -133,4 +133,4 @@ Dart 不受此版本 ast-grep 支持，使用定向源码读取；负面结论�
 
 Plezy 的跨平台能力也不能直接计入 Android Media3：其 [PlayerAndroid](https://github.com/edde746/plezy/blob/1dd75b3e5e95913cdaa5b8c22911490e72dfb7c5/lib/mpv/player/platform/player_android.dart#L64) 明确不支持第二字幕轨。因此本轮没有把双字幕、在线服务同步或新增设置面板列为必须补齐的项目差距。
 
-**原 115 视频仍待新版用户复测。** 这份方案比较不能证明原片已恢复，也不能把任何新发现自动认定为它无字幕的唯一原因。
+**原 115 视频问题已于 2026-11-08 按用户确认关闭。** [关闭记录](../../docs/superpowers/plans/2026-11-04-media3-subtitle-hardening.md#original-115-user-closeout-2026-11-08)记录确认依据；这份历史方案比较本身不能证明恢复，也不能把其中任何发现自动认定为无字幕的唯一原因。
