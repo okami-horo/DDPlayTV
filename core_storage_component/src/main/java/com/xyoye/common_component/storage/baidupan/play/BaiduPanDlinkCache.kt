@@ -1,12 +1,13 @@
 package com.xyoye.common_component.storage.baidupan.play
 
+import com.xyoye.common_component.storage.isRecoverableNetworkFailure
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 百度网盘 dlink 缓存（按 fsId）。
  *
  * - 优先使用未过期缓存
- * - 强制刷新失败时允许回退旧值（即便已过期）
+ * - 可恢复的网络故障允许回退旧值（即便已过期）
  */
 class BaiduPanDlinkCache {
     data class Entry(
@@ -55,6 +56,7 @@ class BaiduPanDlinkCache {
         }.onSuccess { fresh ->
             put(fresh)
         }.getOrElse { e ->
+            if (!e.isRecoverableNetworkFailure()) throw e
             cached?.let { return it }
             throw e
         }

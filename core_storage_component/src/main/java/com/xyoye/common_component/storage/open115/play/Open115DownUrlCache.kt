@@ -1,5 +1,6 @@
 package com.xyoye.common_component.storage.open115.play
 
+import com.xyoye.common_component.storage.isRecoverableNetworkFailure
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
@@ -7,7 +8,7 @@ import java.util.concurrent.TimeUnit
  * 115 Open downurl 缓存（按 fid）。
  *
  * - 优先使用未过期缓存（短 TTL）
- * - 强制刷新失败时允许回退旧值（即便已过期）
+ * - 可恢复的网络故障允许回退旧值（即便已过期）
  */
 class Open115DownUrlCache {
     data class Entry(
@@ -65,6 +66,7 @@ class Open115DownUrlCache {
         }.onSuccess { fresh ->
             put(fresh)
         }.getOrElse { e ->
+            if (!e.isRecoverableNetworkFailure()) throw e
             cached?.let { return it }
             throw e
         }

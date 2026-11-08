@@ -2,15 +2,16 @@ package com.xyoye.common_component.utils.danmu.source.impl
 
 import android.net.Uri
 import com.xyoye.common_component.network.repository.ResourceRepository
+import com.xyoye.common_component.network.request.NetworkException
 import com.xyoye.common_component.utils.danmu.source.AbstractDanmuSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.InputStream
 import java.io.InterruptedIOException
+import java.net.SocketException
 import java.net.URI
 import java.net.URLDecoder
-import java.net.SocketException
-import java.net.SocketTimeoutException
 
 /**
  * Created by xyoye on 2024/1/14.
@@ -27,7 +28,8 @@ class NetworkDanmuSource(
 
     override suspend fun fileName(): String? {
         val segment = Uri.parse(url)?.lastPathSegment ?: URI(url).path?.substringAfterLast("/") ?: return null
-        return URLDecoder.decode(segment, "UTF-8")
+        return URLDecoder
+            .decode(segment, "UTF-8")
             .substringBeforeLast(".")
             .ifBlank { null }
     }
@@ -38,8 +40,8 @@ class NetworkDanmuSource(
         retryWithBackoff {
             ResourceRepository
                 .getResourceResponseBody(url, headers)
-                .getOrNull()
-                ?.byteStream()
+                .getOrThrow()
+                .byteStream()
         }
 
     /**
@@ -56,28 +58,15 @@ class NetworkDanmuSource(
         repeat(maxRetries) { retryCount ->
             try {
                 return operation()
-            } catch (e: SocketException) {
-                if (retryCount == maxRetries - 1) {
-                    return null
-                }
-                delay(currentDelay)
-                currentDelay = minOf(currentDelay * 2, maxDelay)
-            } catch (e: SocketTimeoutException) {
-                if (retryCount == maxRetries - 1) {
-                    return null
-                }
-                delay(currentDelay)
-                currentDelay = minOf(currentDelay * 2, maxDelay)
-            } catch (e: InterruptedIOException) {
-                if (retryCount == maxRetries - 1) {
-                    return null
-                }
-                delay(currentDelay)
-                currentDelay = minOf(currentDelay * 2, maxDelay)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                // 其他异常直接返回null，不进行重试
-                return null
+                val cause = if (e is NetworkException) e.cause else e
+                if (cause is CancellationException) throw cause
+                if (retryCount == maxRetries - 1 || (cause !is SocketException && cause !is InterruptedIOException)) return null
             }
+            delay(currentDelay)
+            currentDelay = minOf(currentDelay * 2, maxDelay)
         }
 
         return null

@@ -42,8 +42,8 @@ import com.xyoye.player.controller.VideoController
 import com.xyoye.player.controller.setting.BaseSettingView
 import com.xyoye.player.controller.setting.DanmuPanelState
 import com.xyoye.player.controller.setting.DanmuSearchState
-import com.xyoye.player.controller.setting.SubtitleQuickView
 import com.xyoye.player.controller.setting.SettingSubtitleStyleView
+import com.xyoye.player.controller.setting.SubtitleQuickView
 import com.xyoye.player.controller.video.PlayerBottomView
 import com.xyoye.player.info.PlayerInitializer
 import com.xyoye.player.info.SettingItem
@@ -363,8 +363,13 @@ class PlayerPanelLayersInstrumentedTest {
                         if (nativeText) assertEquals(PlayerR.id.subtitle_size_sb, it.currentFocus?.id)
                     }
                     if (kernel == PlayerType.TYPE_EXO_PLAYER) {
-                        for (control in listOf(PlayerR.id.subtitle_stroke_width_sb, PlayerR.id.subtitle_color_sb,
-                            PlayerR.id.subtitle_stroke_color_sb, PlayerR.id.subtitle_alpha_sb, PlayerR.id.subtitle_vertical_offset_sb)) {
+                        for (control in listOf(
+                            PlayerR.id.subtitle_stroke_width_sb,
+                            PlayerR.id.subtitle_color_sb,
+                            PlayerR.id.subtitle_stroke_color_sb,
+                            PlayerR.id.subtitle_alpha_sb,
+                            PlayerR.id.subtitle_vertical_offset_sb
+                        )) {
                             key(KeyEvent.KEYCODE_DPAD_DOWN)
                             await(scenario) { it.currentFocus?.id == control }
                         }
@@ -437,8 +442,16 @@ class PlayerPanelLayersInstrumentedTest {
     @Test fun subtitleStyleFollowsActiveFormatAndPreservesHiddenSettingsOnReset() =
         withPlayback { scenario, controller, _ ->
             val settings = PlayerInitializer.Subtitle
-            val previous = intArrayOf(settings.textSize, settings.strokeWidth, settings.textColor, settings.strokeColor,
-                settings.alpha, settings.fontScaleOffsetPercent, settings.verticalOffset)
+            val previous =
+                intArrayOf(
+                    settings.textSize,
+                    settings.strokeWidth,
+                    settings.textColor,
+                    settings.strokeColor,
+                    settings.alpha,
+                    settings.fontScaleOffsetPercent,
+                    settings.verticalOffset
+                )
             lateinit var style: SettingSubtitleStyleView
             lateinit var original: ControlWrapper
             var styleAttached = false
@@ -457,12 +470,15 @@ class PlayerPanelLayersInstrumentedTest {
                 scenario.onActivity {
                     style = panel(controller) as SettingSubtitleStyleView
                     original = controlWrapper(it)
-                    val fixture = object : InterVideoPlayer by original {
-                        override fun getTracks(type: TrackType): List<VideoTrackBean> =
-                            if (type == TrackType.SUBTITLE) {
-                                listOf(VideoTrackBean.internal("fixture", "Format capability fixture", type, true, mime))
-                            } else original.getTracks(type)
-                    }
+                    val fixture =
+                        object : InterVideoPlayer by original {
+                            override fun getTracks(type: TrackType): List<VideoTrackBean> =
+                                if (type == TrackType.SUBTITLE) {
+                                    listOf(VideoTrackBean.internal("fixture", "Format capability fixture", type, true, mime))
+                                } else {
+                                    original.getTracks(type)
+                                }
+                        }
                     style.attach(ControlWrapper(fixture, original, original, original, original))
                     styleAttached = true
                     style.onTrackChanged(TrackType.SUBTITLE)

@@ -18,12 +18,9 @@ object MediaLibraryCredentialStore {
         ensureMigrationScheduled()
     }
 
-    fun readPassword(
-        libraryId: Int,
-        failOnUnavailable: Boolean = false
-    ): String? {
+    fun readPassword(libraryId: Int): String? {
         ensureMigrationScheduled()
-        return readCredential(keyPassword(libraryId), failOnUnavailable)
+        return readCredential(keyPassword(libraryId))
     }
 
     fun writePassword(
@@ -48,23 +45,10 @@ object MediaLibraryCredentialStore {
 
     private fun keyRemoteSecret(libraryId: Int): String = "rs_$libraryId"
 
-    private fun readCredential(
-        key: String,
-        failOnUnavailable: Boolean
-    ): String? {
+    private fun readCredential(key: String): String? {
         val stored = kv.decodeString(key)?.takeIf { it.isNotBlank() } ?: return null
         if (crypto.isEncrypted(stored)) {
-            val decrypted = crypto.decrypt(stored)
-            if (decrypted == null) {
-                if (failOnUnavailable) throw CredentialUnavailableException()
-                kv.removeValueForKey(key)
-                LogFacade.w(
-                    module = LogModule.STORAGE,
-                    tag = TAG,
-                    message = "decrypt failed, clear key=$key",
-                )
-            }
-            return decrypted
+            return crypto.decrypt(stored) ?: throw CredentialUnavailableException()
         }
 
         // legacy plain → migrate to encrypted
@@ -72,11 +56,10 @@ object MediaLibraryCredentialStore {
         if (encrypted != null) {
             kv.encode(key, encrypted)
         } else {
-            kv.removeValueForKey(key)
             LogFacade.w(
                 module = LogModule.STORAGE,
                 tag = TAG,
-                message = "encrypt failed, clear legacy plain key=$key",
+                message = "encrypt failed, retain legacy credential key=$key",
             )
         }
         return stored
@@ -94,15 +77,13 @@ object MediaLibraryCredentialStore {
 
         val encrypted = crypto.encrypt(plain)
         if (encrypted != null) {
-            kv.encode(key, encrypted)
-            return true
+            return kv.encode(key, encrypted)
         }
 
-        kv.removeValueForKey(key)
         LogFacade.w(
             module = LogModule.STORAGE,
             tag = TAG,
-            message = "encrypt failed, clear key=$key",
+            message = "encrypt failed, retain existing credential key=$key",
         )
         return false
     }
@@ -112,4 +93,4 @@ object MediaLibraryCredentialStore {
     }
 }
 
-internal class CredentialUnavailableException : Exception("Media library credential unavailable")
+class CredentialUnavailableException : Exception("安全存储暂时不可用，请稍后重试")

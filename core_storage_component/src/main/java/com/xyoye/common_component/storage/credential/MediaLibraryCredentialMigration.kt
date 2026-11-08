@@ -51,12 +51,13 @@ internal object MediaLibraryCredentialMigration {
                 dao.clearPassword(libraryId)
             } else {
                 val saved = MediaLibraryCredentialStore.writePassword(libraryId, legacyPassword)
-                dao.clearPassword(libraryId)
-                if (!saved) {
+                if (saved) {
+                    dao.clearPassword(libraryId)
+                } else {
                     LogFacade.w(
                         module = LogModule.STORAGE,
                         tag = TAG,
-                        message = "encrypt failed, legacy password cleared from db libraryId=$libraryId",
+                        message = "credential persistence failed, retain legacy password in db libraryId=$libraryId",
                     )
                 }
             }

@@ -3,11 +3,13 @@ package com.xyoye.common_component.storage.baidupan.auth
 import com.xyoye.common_component.config.BaiduPanOpenApiConfig
 import com.xyoye.common_component.network.RetrofitManager
 import com.xyoye.common_component.network.config.Api
+import com.xyoye.common_component.network.repository.BaiduPanOAuthException
 import com.xyoye.common_component.network.request.PassThroughException
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.JsonHelper
 import com.xyoye.data_component.data.baidupan.oauth.BaiduPanOAuthError
 import com.xyoye.data_component.data.baidupan.oauth.BaiduPanTokenResponse
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
@@ -80,12 +82,14 @@ class BaiduPanTokenManager(
                             )
                         }
 
-                        clearAuth()
-                        throw BaiduPanReAuthRequiredException(
-                            oauthError.errorDescription?.takeIf { it.isNotBlank() }
-                                ?: oauthError.error?.takeIf { it.isNotBlank() }
-                                ?: "百度网盘登录已失效，请重新扫码授权",
-                        )
+                        if (oauthError.error == "invalid_grant" || oauthError.error == "expired_token") {
+                            clearAuth()
+                            throw BaiduPanReAuthRequiredException(
+                                oauthError.errorDescription?.takeIf { it.isNotBlank() }
+                                    ?: "百度网盘登录已失效，请重新扫码授权",
+                            )
+                        }
+                        throw BaiduPanOAuthException.from(oauthError)
                     }
 
                     val token = JsonHelper.parseJson<BaiduPanTokenResponse>(payload)
@@ -107,6 +111,7 @@ class BaiduPanTokenManager(
 
                     token.accessToken
                 }.getOrElse { t ->
+                    if (t is CancellationException) throw t
                     ErrorReportHelper.postCatchedExceptionWithContext(
                         t,
                         "BaiduPanTokenManager",
@@ -114,15 +119,7 @@ class BaiduPanTokenManager(
                         "storageKey=$storageKey forceRefresh=$forceRefresh",
                     )
 
-                    when (t) {
-                        is BaiduPanNotConfiguredException -> throw t
-                        is BaiduPanReAuthRequiredException -> throw t
-                        is PassThroughException -> throw t
-                        else -> {
-                            clearAuth()
-                            throw BaiduPanReAuthRequiredException("百度网盘登录已失效，请重新扫码授权", t)
-                        }
-                    }
+                    throw t
                 }
             }
 }

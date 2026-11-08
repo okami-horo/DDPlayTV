@@ -5,7 +5,9 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.xyoye.common_component.base.BaseActivity
 import com.xyoye.common_component.config.RouteTable
+import com.xyoye.common_component.storage.credential.CredentialUnavailableException
 import com.xyoye.common_component.storage.credential.MediaLibraryCredentialResolver
+import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
 import com.xyoye.data_component.enums.MediaType
 import com.xyoye.storage_component.BR
@@ -79,7 +81,14 @@ class StoragePlusActivity : BaseActivity<StoragePlusViewModel, ActivityStoragePl
     }
 
     private fun showDialog() {
-        val resolvedEditData = editData?.let { MediaLibraryCredentialResolver.resolve(it) }
+        val resolvedEditData =
+            try {
+                editData?.let { MediaLibraryCredentialResolver.resolve(it) }
+            } catch (e: CredentialUnavailableException) {
+                ToastCenter.showError(e.message.orEmpty())
+                finish()
+                return
+            }
         val dialog =
             when (mediaType) {
                 MediaType.EXTERNAL_STORAGE -> ExternalStorageEditDialog(this, resolvedEditData)

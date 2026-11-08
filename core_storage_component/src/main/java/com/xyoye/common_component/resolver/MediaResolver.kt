@@ -6,6 +6,7 @@ import android.provider.MediaStore
 import com.xyoye.common_component.base.app.BaseApplication
 import com.xyoye.common_component.utils.getDirPath
 import com.xyoye.data_component.entity.VideoEntity
+import java.io.IOException
 
 /**
  * Created by xyoye on 2020/7/29.
@@ -33,15 +34,12 @@ class MediaResolver {
                     null,
                     null,
                     null,
-                )
-            return readVideoFormCursor(cursor)
+                ) ?: throw IOException("MediaStore video query unavailable")
+            return cursor.use { readVideoFormCursor(it) }
         }
 
-        private fun readVideoFormCursor(cursor: Cursor?): MutableList<VideoEntity> {
+        private fun readVideoFormCursor(cursor: Cursor): MutableList<VideoEntity> {
             val videoList = mutableListOf<VideoEntity>()
-            if (cursor == null) {
-                return videoList
-            }
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(0)
                 val filePath = cursor.getString(1)
@@ -61,7 +59,6 @@ class MediaResolver {
                     ),
                 )
             }
-            cursor.close()
             return videoList
         }
     }

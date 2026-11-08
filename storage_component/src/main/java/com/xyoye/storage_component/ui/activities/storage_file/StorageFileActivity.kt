@@ -28,6 +28,7 @@ import com.xyoye.common_component.playback.handoff.PlaybackSubmissionResult
 import com.xyoye.common_component.playback.userMessage
 import com.xyoye.common_component.storage.Storage
 import com.xyoye.common_component.storage.StorageFactory
+import com.xyoye.common_component.storage.credential.CredentialUnavailableException
 import com.xyoye.common_component.storage.file.StorageFile
 import com.xyoye.common_component.storage.impl.FtpStorage
 import com.xyoye.common_component.utils.SupervisorScope
@@ -120,7 +121,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         restoredRouteNames = savedInstanceState?.getStringArrayList("directory_names").orEmpty()
 
         if (checkBundle().not()) {
-            super.onCreate(savedInstanceState)
+            super.onCreate(null)
             finish()
             return
         }
@@ -134,6 +135,7 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
     }
 
     override fun initView() {
+        if (!this::storage.isInitialized) return
         dataBinding.sourceTitle.text = storageLibrary?.displayName
         mMenus = StorageFileMenus(this, ::onSearchTextChanged, ::onSortOptionChanged)
         dataBinding.browserNav1.isSelected = true
@@ -304,8 +306,12 @@ class StorageFileActivity : BaseActivity<StorageFileViewModel, ActivityStorageFi
         storageLibrary
             ?: return false
         val storage =
-            StorageFactory.createStorage(storageLibrary!!)
-                ?: return false
+            try {
+                StorageFactory.createStorage(storageLibrary!!) ?: return false
+            } catch (e: CredentialUnavailableException) {
+                ToastCenter.showError(e.message.orEmpty())
+                return false
+            }
 
         this.storage = storage
         return true

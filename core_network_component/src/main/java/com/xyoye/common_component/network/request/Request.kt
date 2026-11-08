@@ -4,6 +4,7 @@ import com.xyoye.common_component.log.privacy.SensitiveDataSanitizer
 import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.data_component.data.CommonJsonData
 import com.xyoye.data_component.data.CommonJsonModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -53,6 +54,8 @@ class Request {
                 }
 
                 return@withContext Result.success(result)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 val safeParams = SensitiveDataSanitizer.sanitizeParams(requestParams)
                 ErrorReportHelper.postCatchedExceptionWithContext(
@@ -83,6 +86,8 @@ class Request {
                 }
 
                 return@withContext Result.success(result)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 val safeParams = SensitiveDataSanitizer.sanitizeParams(requestParams)
                 val safeJson = requestJson?.let { SensitiveDataSanitizer.sanitizeFreeText(it) }

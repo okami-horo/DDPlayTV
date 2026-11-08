@@ -8,6 +8,7 @@ import com.xyoye.common_component.utils.ErrorReportHelper
 import com.xyoye.common_component.utils.isVideoFile
 import com.xyoye.data_component.entity.VideoEntity
 import java.io.File
+import java.io.IOException
 
 /**
  * Created by xyoye on 2024/2/4
@@ -26,13 +27,16 @@ object VideoScan {
                 "VideoScan.traverse",
                 "遍历视频文件失败: $filePath",
             )
-            emptyList()
+            throw e
         }
 
     /**
      * 遍历文件内的视频文件，包括文件自身
      */
     private fun traverse(file: File): List<VideoEntity> {
+        if (!file.exists() || !file.canRead()) {
+            throw IOException("Video scan path unavailable: ${file.absolutePath}")
+        }
         if (file.isFile) {
             return if (file.isInvalid()) {
                 return emptyList()
@@ -43,13 +47,10 @@ object VideoScan {
             }
         }
 
-        if (file.exists().not() || file.canRead().not()) {
-            return emptyList()
-        }
-        return file
-            .listFiles()
-            ?.flatMap { traverse(it) }
-            ?: emptyList()
+        val children =
+            file.listFiles()
+                ?: throw IOException("Cannot list video scan directory: ${file.absolutePath}")
+        return children.flatMap { traverse(it) }
     }
 
     /**

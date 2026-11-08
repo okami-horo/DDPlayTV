@@ -7,6 +7,7 @@ import com.xyoye.common_component.base.BaseViewModel
 import com.xyoye.common_component.database.repository.MediaLibraryRepository
 import com.xyoye.common_component.storage.StorageFactory
 import com.xyoye.common_component.storage.cloud115.auth.Cloud115AuthStore
+import com.xyoye.common_component.storage.credential.CredentialUnavailableException
 import com.xyoye.common_component.storage.credential.MediaLibraryCredentialStore
 import com.xyoye.common_component.weight.ToastCenter
 import com.xyoye.data_component.entity.MediaLibraryEntity
@@ -97,6 +98,15 @@ class StoragePlusViewModel : BaseViewModel() {
             upsertLibrary.remoteSecret = null
 
             upsertLibrary.id = oldLibraryId ?: upsertLibrary.id
+            val isExistingLibrary = upsertLibrary.id > 0
+            if (isExistingLibrary && !MediaLibraryCredentialStore.writePassword(upsertLibrary.id, pendingPassword)) {
+                if (showToast) {
+                    withContext(Dispatchers.Main) {
+                        ToastCenter.showWarning("安全存储暂时不可用，未保存修改，请稍后重试")
+                    }
+                }
+                return@launch
+            }
             MediaLibraryRepository.insert(upsertLibrary, invalidateRequests = true)
             val savedLibrary =
                 MediaLibraryRepository.getByUrl(upsertLibrary.url, upsertLibrary.mediaType)
@@ -106,7 +116,7 @@ class StoragePlusViewModel : BaseViewModel() {
             }
 
             val savedLibraryId = savedLibrary.id
-            if (savedLibraryId > 0) {
+            if (savedLibraryId > 0 && !isExistingLibrary) {
                 val passwordSaved = MediaLibraryCredentialStore.writePassword(savedLibraryId, pendingPassword)
                 MediaLibraryRepository.invalidateCatalogRequests(savedLibraryId)
                 if (showToast && pendingPassword != null && !passwordSaved) {
@@ -123,12 +133,19 @@ class StoragePlusViewModel : BaseViewModel() {
     }
 
     fun testStorage(library: MediaLibraryEntity) {
-        val storage = StorageFactory.createStorage(library)
         viewModelScope.launch(Dispatchers.IO) {
             showLoading()
-            val status = storage?.test() ?: false
-            hideLoading()
-            _testLiveData.postValue(status)
+            try {
+                val storage = StorageFactory.createStorage(library)
+                _testLiveData.postValue(storage?.test() ?: false)
+            } catch (e: CredentialUnavailableException) {
+                withContext(Dispatchers.Main) {
+                    ToastCenter.showError(e.message.orEmpty())
+                }
+                _testLiveData.postValue(false)
+            } finally {
+                hideLoading()
+            }
         }
     }
 }

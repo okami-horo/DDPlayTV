@@ -74,40 +74,32 @@ class KeystoreAesGcmCrypto(
     private fun getOrCreateSecretKeyM(): SecretKey? =
         runCatching {
             val keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
-            val existing = keyStore.getKey(aesKeyAlias, null) as? SecretKey
-            if (existing != null) return existing
-
-            val keyGenerator = KeyGenerator.getInstance("AES", KEYSTORE_PROVIDER)
-            val spec =
-                android.security.keystore.KeyGenParameterSpec
-                    .Builder(
-                        aesKeyAlias,
-                        android.security.keystore.KeyProperties.PURPOSE_ENCRYPT or
-                            android.security.keystore.KeyProperties.PURPOSE_DECRYPT,
-                    ).setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
-                    .setRandomizedEncryptionRequired(true)
-                    .setKeySize(256)
-                    .build()
-            keyGenerator.init(spec)
-            keyGenerator.generateKey()
-        }.recoverCatching {
-            // 某些设备/ROM 可能不支持 256 bit AES，回退 128 bit
-            val keyGenerator = KeyGenerator.getInstance("AES", KEYSTORE_PROVIDER)
-            val spec =
-                android.security.keystore.KeyGenParameterSpec
-                    .Builder(
-                        aesKeyAlias,
-                        android.security.keystore.KeyProperties.PURPOSE_ENCRYPT or
-                            android.security.keystore.KeyProperties.PURPOSE_DECRYPT,
-                    ).setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
-                    .setRandomizedEncryptionRequired(true)
-                    .setKeySize(128)
-                    .build()
-            keyGenerator.init(spec)
-            keyGenerator.generateKey()
+            if (keyStore.containsAlias(aesKeyAlias)) {
+                return keyStore.getKey(aesKeyAlias, null) as? SecretKey
+            }
+            // Only a new key may fall back to 128 bits; read failures must preserve existing keys.
+            runCatching { generateSecretKeyM(256) }
+                .recoverCatching { generateSecretKeyM(128) }
+                .getOrThrow()
         }.getOrNull()
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun generateSecretKeyM(keySize: Int): SecretKey {
+        val keyGenerator = KeyGenerator.getInstance("AES", KEYSTORE_PROVIDER)
+        val spec =
+            android.security.keystore.KeyGenParameterSpec
+                .Builder(
+                    aesKeyAlias,
+                    android.security.keystore.KeyProperties.PURPOSE_ENCRYPT or
+                        android.security.keystore.KeyProperties.PURPOSE_DECRYPT
+                ).setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setRandomizedEncryptionRequired(true)
+                .setKeySize(keySize)
+                .build()
+        keyGenerator.init(spec)
+        return keyGenerator.generateKey()
+    }
 
     private fun getOrCreateSecretKeyPreM(): SecretKey? =
         runCatching {

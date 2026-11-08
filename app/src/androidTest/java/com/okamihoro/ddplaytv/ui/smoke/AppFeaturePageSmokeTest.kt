@@ -24,7 +24,6 @@ import com.xyoye.user_component.ui.activities.license.LicenseActivity
 import com.xyoye.user_component.ui.activities.login.LoginActivity
 import com.xyoye.user_component.ui.activities.scan_manager.ScanManagerActivity
 import com.xyoye.user_component.ui.activities.user_info.UserInfoActivity
-import com.xyoye.user_component.ui.fragment.personal.PersonalFragment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -65,7 +64,7 @@ class AppFeaturePageSmokeTest {
             sendDpad(KeyEvent.KEYCODE_DPAD_CENTER)
             scenario.onActivity { activity ->
                 activity.supportFragmentManager.executePendingTransactions()
-                assertFragmentTagIs<PersonalFragment>(activity, "tag_fragment_tv_personal")
+                assertFragmentTagIs<com.xyoye.user_component.ui.fragment.CinemaSettingsFragment>(activity, "tag_fragment_tv_settings")
             }
             repeat(3) { sendDpad(KeyEvent.KEYCODE_DPAD_LEFT) }
             sendDpad(KeyEvent.KEYCODE_DPAD_CENTER)

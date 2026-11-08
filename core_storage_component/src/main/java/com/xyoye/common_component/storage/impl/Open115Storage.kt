@@ -403,12 +403,7 @@ class Open115Storage internal constructor(
                 continue
             }
 
-            val breadcrumbIds =
-                try {
-                    folderInfoCache.resolveBreadcrumbIds(item.parentId.orEmpty())
-                } catch (_: Exception) {
-                    emptyList()
-                }
+            val breadcrumbIds = folderInfoCache.resolveBreadcrumbIds(item.parentId.orEmpty())
             val parentPath = buildParentPath(breadcrumbIds)
             files.add(
                 Open115StorageFile(

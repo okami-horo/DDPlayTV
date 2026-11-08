@@ -8,7 +8,6 @@ internal class Open115FolderInfoCache(
     private val repository: Open115Repository
 ) {
     private val parentIdCache = ConcurrentHashMap<String, String>()
-    private val breadcrumbIdCache = ConcurrentHashMap<String, List<String>>()
 
     fun cacheParent(
         folderId: String,
@@ -28,34 +27,27 @@ internal class Open115FolderInfoCache(
 
     suspend fun resolveBreadcrumbIds(folderId: String): List<String> {
         val folder = folderId.trim()
-        if (folder.isBlank() || folder == Open115Storage.ROOT_CID) {
+        require(folder.isNotBlank()) { "Missing 115 folder id" }
+        if (folder == Open115Storage.ROOT_CID) {
             return emptyList()
         }
-
-        breadcrumbIdCache[folder]?.let { return it }
 
         val visited = HashSet<String>()
         val chain = mutableListOf<String>()
         var current = folder
 
-        while (current != Open115Storage.ROOT_CID && visited.add(current)) {
+        while (current != Open115Storage.ROOT_CID) {
+            check(visited.add(current)) { "Cyclic 115 folder parent chain" }
             chain.add(current)
 
             val parent =
                 parentIdCache[current]
-                    ?: runCatching { fetchParentId(current) }
-                        .getOrDefault(Open115Storage.ROOT_CID)
+                    ?: fetchParentId(current)
                         .also { parentIdCache.putIfAbsent(current, it) }
             current = parent
         }
 
-        val breadcrumb = chain.asReversed()
-        for (index in breadcrumb.indices) {
-            val id = breadcrumb[index]
-            breadcrumbIdCache.putIfAbsent(id, breadcrumb.subList(0, index + 1).toList())
-        }
-
-        return breadcrumbIdCache[folder].orEmpty()
+        return chain.asReversed()
     }
 
     private suspend fun fetchParentId(folderId: String): String {
@@ -64,6 +56,6 @@ internal class Open115FolderInfoCache(
             ?.parentId
             ?.trim()
             ?.takeIf { it.isNotBlank() }
-            ?: Open115Storage.ROOT_CID
+            ?: throw IllegalStateException("Missing parent in 115 folder response")
     }
 }
