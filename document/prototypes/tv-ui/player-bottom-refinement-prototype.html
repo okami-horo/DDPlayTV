@@ -73,6 +73,7 @@
 const params=new URLSearchParams(location.search);
 const reviewDanmaku=params.get('review')==='danmaku';
 const options={variant:['compare-open','open','current','new','compare'],danmaku:['on','off'],scene:['middle','playing','first','last','single','unseekable'],focus:['forward','rewind','previous','next','play','picker','subtitle','audio','danmaku','none'],background:['cinema','bright','dark']};
+if(params.get('review')==='remote')options.scene.push('loading','error');
 const state=Object.fromEntries(Object.entries(options).map(([key,values])=>[key,values.includes(params.get(key))?params.get(key):values[0]]));
 if(reviewDanmaku){
   state.variant='open';
@@ -160,5 +161,6 @@ document.body.classList.toggle('capture',params.get('capture')==='1');
 new ResizeObserver(fit).observe(document.getElementById('screens'));render();
 </script>
 <script src="player-subtitle-menu-prototype.js"></script>
+<script src="player-remote-simplification-prototype.js"></script>
 </body>
 </html>

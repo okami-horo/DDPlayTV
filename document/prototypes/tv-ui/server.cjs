@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const pages = new Set(['index.html', 'files-prototype.html', 'player-controls-prototype.html', 'player-bottom-refinement-prototype.html', 'player-subtitle-menu-prototype.js', 'series-detail-prototype.html', 'deep-pages.html', 'remaining-pages.html', 'previews/player-controls-baseline.png', 'previews/player-panel-layers/cinema-frame.jpg', 'previews/series-detail/poster.png', 'previews/series-detail/episode-1.png', 'previews/series-detail/episode-2.png', 'previews/series-detail/tv-before.png']);
 const port = Number(process.argv[2] || 4173);
+pages.add('player-remote-simplification-prototype.js');
 http.createServer((request, response) => {
   const page = request.url.split('?')[0].slice(1) || 'index.html';
   if (!pages.has(page)) {

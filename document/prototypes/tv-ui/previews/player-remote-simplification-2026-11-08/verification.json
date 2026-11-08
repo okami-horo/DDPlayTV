@@ -1,0 +1,8038 @@
+{
+  "date": "2026-11-08",
+  "kind": "HTML design preview only",
+  "errors": [],
+  "observations": [
+    {
+      "name": "baseline-full",
+      "layout": "baseline",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "rewind",
+        "play",
+        "forward",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "rewind",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 114,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 126,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 190,
+            "bottom": 760,
+            "left": 126
+          }
+        },
+        {
+          "key": "forward",
+          "disabled": false,
+          "rect": {
+            "x": 202,
+            "y": 703,
+            "width": 54,
+            "height": 54,
+            "top": 703,
+            "right": 256,
+            "bottom": 757,
+            "left": 202
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 274,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 320,
+            "bottom": 757,
+            "left": 274
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 330,
+            "y": 703,
+            "width": 46,
+            "height": 54,
+            "top": 703,
+            "right": 376,
+            "bottom": 757,
+            "left": 330
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 386,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 476,
+            "bottom": 755,
+            "left": 386
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "retain-full",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 118,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.396) 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-full",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-playing",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "playing",
+      "focus": "play",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-first",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 1,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "first",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-last",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 52,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "last",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-single",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "single",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-unseekable",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "unseekable",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-loading",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "loading",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-error",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "error",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "retain-first",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 1,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "first",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 118,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": true,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.396) 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "retain-last",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 52,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "last",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 118,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": true,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.396) 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "retain-single",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "single",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 118,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.396) 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "retain-unseekable",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "unseekable",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 118,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.396) 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-bright",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-dark",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "compact-font130",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1.3,
+      "toast": "",
+      "scene": "middle",
+      "focus": "danmaku",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 114,
+            "height": 54,
+            "top": 703,
+            "right": 262,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1130,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1188,
+            "bottom": 759,
+            "left": 1130
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1226,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1284,
+            "bottom": 759,
+            "left": 1226
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "dpad-picker",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "picker",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 701,
+            "width": 112,
+            "height": 54,
+            "top": 701,
+            "right": 260,
+            "bottom": 755,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "episodes",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "picker",
+      "panelIndex": 49,
+      "returnFocus": "picker",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "picker",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "panelBounds": {
+        "x": 60,
+        "y": 212.203125,
+        "width": 480,
+        "height": 394.796875,
+        "top": 212.203125,
+        "right": 540,
+        "bottom": 607,
+        "left": 60
+      },
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "episode-confirm",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 50,
+      "returnFocus": "picker",
+      "episode": 51,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "picker",
+      "position": 0,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 701,
+            "width": 112,
+            "height": 54,
+            "top": 701,
+            "right": 260,
+            "bottom": 755,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "subtitle",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "subtitle",
+      "panelIndex": 1,
+      "returnFocus": "subtitle",
+      "episode": 51,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 0,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "panelBounds": {
+        "x": 900,
+        "y": 256.203125,
+        "width": 480,
+        "height": 350.796875,
+        "top": 256.203125,
+        "right": 1380,
+        "bottom": 607,
+        "left": 900
+      },
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "subtitle-browse",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "subtitle",
+      "panelIndex": 2,
+      "returnFocus": "subtitle",
+      "episode": 51,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 0,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "panelBounds": {
+        "x": 900,
+        "y": 256.203125,
+        "width": 480,
+        "height": 350.796875,
+        "top": 256.203125,
+        "right": 1380,
+        "bottom": 607,
+        "left": 900
+      },
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "subtitle-off",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "subtitle",
+      "episode": 51,
+      "subtitle": "关",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 0,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "subtitle-back",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 1,
+      "returnFocus": "subtitle",
+      "episode": 51,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 0,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "audio",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "audio",
+      "panelIndex": 0,
+      "returnFocus": "audio",
+      "episode": 51,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "audio",
+      "position": 0,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "panelBounds": {
+        "x": 900,
+        "y": 384.203125,
+        "width": 480,
+        "height": 222.796875,
+        "top": 384.203125,
+        "right": 1380,
+        "bottom": 607,
+        "left": 900
+      },
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "danmaku-off",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "audio",
+      "episode": 51,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "danmaku",
+      "position": 0,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "hidden-seek",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "audio",
+      "episode": 51,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "快进 10 秒\n00:10 / 24:00",
+      "scene": "middle",
+      "focus": "danmaku",
+      "position": 10,
+      "playing": true,
+      "controlsVisible": false,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [],
+      "playAppearance": null
+    },
+    {
+      "name": "hidden-play-toggle",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "audio",
+      "episode": 51,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "暂停",
+      "scene": "middle",
+      "focus": "danmaku",
+      "position": 10,
+      "playing": false,
+      "controlsVisible": false,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [],
+      "playAppearance": null
+    },
+    {
+      "name": "restore-focus",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "audio",
+      "episode": 51,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "暂停",
+      "scene": "middle",
+      "focus": "danmaku",
+      "position": 10,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "empty-subtitle",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "subtitle",
+      "panelIndex": 0,
+      "returnFocus": "subtitle",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": true,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "panelBounds": {
+        "x": 900,
+        "y": 409.203125,
+        "width": 480,
+        "height": 197.796875,
+        "top": 409.203125,
+        "right": 1380,
+        "bottom": 607,
+        "left": 900
+      },
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "empty-audio",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "audio",
+      "panelIndex": 0,
+      "returnFocus": "audio",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": true,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "audio",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 112,
+            "height": 54,
+            "top": 703,
+            "right": 260,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "panelBounds": {
+        "x": 900,
+        "y": 473.203125,
+        "width": 480,
+        "height": 133.796875,
+        "top": 473.203125,
+        "right": 1380,
+        "bottom": 607,
+        "left": 900
+      },
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "subtitle-font130",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "subtitle",
+      "panelIndex": 1,
+      "returnFocus": "subtitle",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1.3,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 148,
+            "y": 703,
+            "width": 114,
+            "height": 54,
+            "top": 703,
+            "right": 262,
+            "bottom": 757,
+            "left": 148
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1130,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1188,
+            "bottom": 759,
+            "left": 1130
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1226,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1284,
+            "bottom": 759,
+            "left": 1226
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "panelBounds": {
+        "x": 900,
+        "y": 203.5625,
+        "width": 480,
+        "height": 403.4375,
+        "top": 203.5625,
+        "right": 1380,
+        "bottom": 607,
+        "left": 900
+      },
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "unseekable-shortcut",
+      "layout": "compact",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "当前视频暂不可跳转",
+      "scene": "unseekable",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": false,
+      "keys": [
+        "play",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "controls": [],
+      "playAppearance": null
+    },
+    {
+      "name": "play-original-middle-subtitle",
+      "layout": "retain",
+      "playstyle": "original",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 146,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 204,
+            "bottom": 759,
+            "left": 146
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 214,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 272,
+            "bottom": 759,
+            "left": 214
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 282,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 372,
+            "bottom": 755,
+            "left": 282
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "play-original-middle-play",
+      "layout": "retain",
+      "playstyle": "original",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 146,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 204,
+            "bottom": 759,
+            "left": 146
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 214,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 272,
+            "bottom": 759,
+            "left": 214
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 282,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 372,
+            "bottom": 755,
+            "left": 282
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "play-original-playing-subtitle",
+      "layout": "retain",
+      "playstyle": "original",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "playing",
+      "focus": "subtitle",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 698,
+            "width": 64,
+            "height": 64,
+            "top": 698,
+            "right": 124,
+            "bottom": 762,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 146,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 204,
+            "bottom": 759,
+            "left": 146
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 214,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 272,
+            "bottom": 759,
+            "left": 214
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 282,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 372,
+            "bottom": 755,
+            "left": 282
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "play-original-playing-play",
+      "layout": "retain",
+      "playstyle": "original",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "playing",
+      "focus": "play",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 696,
+            "width": 64,
+            "height": 64,
+            "top": 696,
+            "right": 124,
+            "bottom": 760,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 146,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 204,
+            "bottom": 759,
+            "left": 146
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 214,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 272,
+            "bottom": 759,
+            "left": 214
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 282,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 372,
+            "bottom": 755,
+            "left": 282
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "64px",
+        "shadow": "rgb(102, 103, 115) 0px 0px 0px 2px inset, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "play-focus-middle-subtitle",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "play-focus-middle-play",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 118,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.396) 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "play-focus-playing-subtitle",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "playing",
+      "focus": "subtitle",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "play-focus-playing-play",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "playing",
+      "focus": "play",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 118,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.396) 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "play-pressed",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": true,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "play",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 700,
+            "width": 58,
+            "height": 58,
+            "top": 700,
+            "right": 118,
+            "bottom": 758,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(222, 222, 230)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.396) 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 2px 8px 0px",
+        "label": "暂停",
+        "pressed": true,
+        "selected": null
+      }
+    },
+    {
+      "name": "play-released",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "play",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 118,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.396) 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "b-focus-previous",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "previous",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 198,
+            "bottom": 757,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "b-focus-next",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "next",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 266,
+            "bottom": 757,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "b-focus-picker",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "picker",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 703,
+            "width": 90,
+            "height": 50,
+            "top": 703,
+            "right": 366,
+            "bottom": 753,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "b-focus-subtitle",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "b-focus-audio",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "audio",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1298,
+            "bottom": 757,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "b-focus-danmaku",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "danmaku",
+      "position": 582,
+      "playing": true,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1380,
+            "bottom": 757,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "暂停",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "play-panel-open",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "subtitle",
+      "panelIndex": 1,
+      "returnFocus": "subtitle",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "panelBounds": {
+        "x": 900,
+        "y": 256.203125,
+        "width": 480,
+        "height": 350.796875,
+        "top": 256.203125,
+        "right": 1380,
+        "bottom": 607,
+        "left": 900
+      },
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "b-play-bright",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "b-play-dark",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "subtitle",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 1216,
+            "bottom": 757,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "b-play-font130",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1.3,
+      "toast": "",
+      "scene": "middle",
+      "focus": "play",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 118,
+            "bottom": 757,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 114,
+            "height": 50,
+            "top": 705,
+            "right": 390,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1130,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1188,
+            "bottom": 759,
+            "left": 1130
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1226,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1284,
+            "bottom": 759,
+            "left": 1226
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgb(245, 245, 247)",
+        "image": "none",
+        "color": "rgb(23, 24, 29)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.396) 0px 0px 0px 2px, rgba(0, 0, 0, 0.2) 0px 4px 16px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "episode-previous-round-font1",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "previous",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 198,
+            "bottom": 757,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "episode-previous-round-font1.3",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1.3,
+      "toast": "",
+      "scene": "middle",
+      "focus": "previous",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 198,
+            "bottom": 757,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 266,
+            "bottom": 759,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 114,
+            "height": 50,
+            "top": 705,
+            "right": 390,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1130,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1188,
+            "bottom": 759,
+            "left": 1130
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1226,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1284,
+            "bottom": 759,
+            "left": 1226
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "episode-next-round-font1",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1,
+      "toast": "",
+      "scene": "middle",
+      "focus": "next",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 266,
+            "bottom": 757,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 90,
+            "height": 50,
+            "top": 705,
+            "right": 366,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1158,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1216,
+            "bottom": 759,
+            "left": 1158
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1240,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1298,
+            "bottom": 759,
+            "left": 1240
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    },
+    {
+      "name": "episode-next-round-font1.3",
+      "layout": "retain",
+      "playstyle": "focus",
+      "pressed": false,
+      "panel": "",
+      "panelIndex": 0,
+      "returnFocus": "play",
+      "episode": 50,
+      "subtitle": "简体中文",
+      "audio": "日语 · 立体声",
+      "empty": false,
+      "font": 1.3,
+      "toast": "",
+      "scene": "middle",
+      "focus": "next",
+      "position": 582,
+      "playing": false,
+      "controlsVisible": true,
+      "keys": [
+        "play",
+        "previous",
+        "next",
+        "picker",
+        "subtitle",
+        "audio",
+        "danmaku"
+      ],
+      "subtitleBounds": {
+        "x": 488,
+        "y": 720,
+        "width": 403,
+        "height": 37.1875,
+        "top": 720,
+        "right": 891,
+        "bottom": 757.1875,
+        "left": 488
+      },
+      "timeline": {
+        "x": 60,
+        "y": 669,
+        "width": 1320,
+        "height": 5,
+        "top": 669,
+        "right": 1380,
+        "bottom": 674,
+        "left": 60
+      },
+      "controls": [
+        {
+          "key": "play",
+          "disabled": false,
+          "rect": {
+            "x": 60,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 118,
+            "bottom": 759,
+            "left": 60
+          }
+        },
+        {
+          "key": "previous",
+          "disabled": false,
+          "rect": {
+            "x": 140,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 198,
+            "bottom": 759,
+            "left": 140
+          }
+        },
+        {
+          "key": "next",
+          "disabled": false,
+          "rect": {
+            "x": 208,
+            "y": 699,
+            "width": 58,
+            "height": 58,
+            "top": 699,
+            "right": 266,
+            "bottom": 757,
+            "left": 208
+          }
+        },
+        {
+          "key": "picker",
+          "disabled": false,
+          "rect": {
+            "x": 276,
+            "y": 705,
+            "width": 114,
+            "height": 50,
+            "top": 705,
+            "right": 390,
+            "bottom": 755,
+            "left": 276
+          }
+        },
+        {
+          "key": "subtitle",
+          "disabled": false,
+          "rect": {
+            "x": 1130,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1188,
+            "bottom": 759,
+            "left": 1130
+          }
+        },
+        {
+          "key": "audio",
+          "disabled": false,
+          "rect": {
+            "x": 1226,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1284,
+            "bottom": 759,
+            "left": 1226
+          }
+        },
+        {
+          "key": "danmaku",
+          "disabled": false,
+          "rect": {
+            "x": 1322,
+            "y": 701,
+            "width": 58,
+            "height": 58,
+            "top": 701,
+            "right": 1380,
+            "bottom": 759,
+            "left": 1322
+          }
+        }
+      ],
+      "playAppearance": {
+        "background": "rgba(0, 0, 0, 0)",
+        "image": "linear-gradient(145deg, rgba(202, 208, 223, 0.196), rgba(138, 146, 167, 0.14))",
+        "color": "rgb(245, 245, 247)",
+        "width": "58px",
+        "shadow": "rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.133) 0px 3px 12px 0px",
+        "label": "播放",
+        "pressed": false,
+        "selected": null
+      }
+    }
+  ]
+}
